@@ -2,66 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg: #ffffff;
-  --bg2: #f8fafb;
-  --bg3: #f0f4f0;
-  --border: #e8eeed;
-  --border2: #d1dbd9;
-  --text: #0d1f1c;
-  --text2: #3d5452;
-  --text3: #8aa8a5;
-  --accent: #16a34a;
-  --accent2: #15803d;
-  --accent-light: #f0fdf4;
-  --accent-border: #bbf7d0;
-  --red: #dc2626;
-  --red-light: #fef2f2;
-  --amber: #d97706;
-  --amber-light: #fffbeb;
-  --sidebar: #0d1f1c;
-  --sidebar-text: #a3b8b5;
-  --sidebar-active: #16a34a;
-}
-
 * { box-sizing: border-box; }
 
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: #f9fafb;
+  color: #111827;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-@keyframes pulse-mic {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
-}
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse-record { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-.animate-pulse-mic { animation: pulse-mic 1.5s ease-in-out infinite; }
-.animate-fade-in { animation: fade-in 0.25s ease-out; }
-.spinner { animation: spin 0.7s linear infinite; }
+.spinner { animation: spin 0.8s linear infinite; }
+.fade-in { animation: fade-in 0.2s ease-out; }
+.pulse-record { animation: pulse-record 1.2s ease-in-out infinite; }
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
 
 input, textarea, select {
-  background: var(--bg) !important;
-  border: 1px solid var(--border) !important;
-  color: var(--text) !important;
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  color: #111827 !important;
   border-radius: 8px;
+  font-family: inherit;
 }
-input::placeholder, textarea::placeholder { color: var(--text3) !important; }
+input::placeholder, textarea::placeholder { color: #9ca3af !important; }
 input:focus, textarea:focus, select:focus {
-  border-color: var(--accent) !important;
+  border-color: #16a34a !important;
   outline: none !important;
-  box-shadow: 0 0 0 3px rgba(22,163,74,0.12) !important;
+  box-shadow: 0 0 0 3px rgba(22,163,74,0.1) !important;
 }
+
+.nav-item:hover { background: #f9fafb !important; }
