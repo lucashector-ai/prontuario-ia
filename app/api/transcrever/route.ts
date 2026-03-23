@@ -12,22 +12,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nenhum áudio enviado' }, { status: 400 })
     }
 
-    // Força extensão mp4 que o Mac usa nativamente
-    const nomeArquivo = audioFile.name.endsWith('.mp4') || audioFile.name.endsWith('.webm') || audioFile.name.endsWith('.ogg')
-      ? audioFile.name
-      : audioFile.name + '.mp4'
-
-    const arquivoCorrigido = new File([audioFile], nomeArquivo, { type: audioFile.type })
-
     const transcription = await openai.audio.transcriptions.create({
-      file: arquivoCorrigido,
+      file: audioFile,
       model: 'whisper-1',
       language: 'pt',
+      temperature: 0,
       prompt:
-        'Transcrição de consulta médica em português brasileiro. ' +
-        'Termos comuns: hipertensão, diabetes, pressão arterial, glicemia, ' +
-        'hemograma, colesterol, triglicerídeos, amoxicilina, losartana, ' +
-        'metformina, omeprazol, dor epigástrica, dispneia, cefaleia.',
+        'Consulta médica em português brasileiro. ' +
+        'Medicamentos: losartana, metformina, omeprazol, atenolol, sinvastatina, ' +
+        'amoxicilina, azitromicina, dipirona, ibuprofeno, paracetamol, ' +
+        'enalapril, anlodipino, hidroclorotiazida, levotiroxina, AAS. ' +
+        'Exames: hemograma, glicemia, HbA1c, TSH, T4 livre, creatinina, ' +
+        'ureia, TGO, TGP, colesterol total, triglicerídeos, PSA, EAS. ' +
+        'Termos: pressão arterial, frequência cardíaca, saturação, ' +
+        'dor epigástrica, dispneia, cefaleia, tontura, edema, ' +
+        'hipertensão, diabetes mellitus, hipotireoidismo, dislipidemia, ' +
+        'CID, SOAP, retorno, encaminhamento, solicitação de exame.',
     })
 
     return NextResponse.json({ texto: transcription.text })
