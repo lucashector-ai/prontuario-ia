@@ -25,6 +25,16 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
   const samplesRef = useRef<Float32Array[]>([])
   const textoRef = useRef('')
 
+  // Detecta se o chunk tem voz real (não silêncio/ruído)
+  const temVoz = (samples: Float32Array): boolean => {
+    // Calcula RMS (volume médio)
+    let sum = 0
+    for (let i = 0; i < samples.length; i++) sum += samples[i] * samples[i]
+    const rms = Math.sqrt(sum / samples.length)
+    // Limiar: abaixo de 0.01 é silêncio/ruído de fundo
+    return rms > 0.01
+  }
+
   const float32ToWav = (samples: Float32Array, sampleRate: number): Blob => {
     const buffer = new ArrayBuffer(44 + samples.length * 2)
     const view = new DataView(buffer)
@@ -54,22 +64,47 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
 
   const enviarAudio = useCallback(async () => {
     if (samplesRef.current.length === 0) return
+
+    // Junta todos os chunks
     const total = samplesRef.current.reduce((acc, a) => acc + a.length, 0)
-    if (total < 8000) return
+    if (total < 16000) { samplesRef.current = []; return } // menos de 1 segundo
+
     const merged = new Float32Array(total)
     let offset = 0
     for (const chunk of samplesRef.current) { merged.set(chunk, offset); offset += chunk.length }
     samplesRef.current = []
+
+    // Verifica se tem voz real — se não tiver, descarta sem enviar para o Whisper
+    if (!temVoz(merged)) {
+      console.log('Silêncio detectado — descartando chunk')
+      return
+    }
+
     const sampleRate = audioContextRef.current?.sampleRate || 16000
     const wav = float32ToWav(merged, sampleRate)
+
     setTranscrevendo(true)
     try {
       const form = new FormData()
       form.append('audio', wav, 'audio.wav')
       const res = await fetch('/api/transcrever', { method: 'POST', body: form })
       const data = await res.json()
+
       if (data.texto?.trim()) {
-        textoRef.current = (textoRef.current + ' ' + data.texto).trim()
+        // Filtra respostas que claramente são alucinações do Whisper
+        const texto = data.texto.trim()
+        const alucinacoes = [
+          'www.', '.com', '.br', '.pt', 'acesse o site', 'visite o nosso',
+          'para mais informações', 'inscreva-se', 'obrigado por assistir',
+          'legendas', 'transcrição', 'subtitle', 'music', '♪', '(música)'
+        ]
+        const ehAlucinacao = alucinacoes.some(p => texto.toLowerCase().includes(p))
+        if (ehAlucinacao) {
+          console.log('Alucinação detectada — descartando:', texto)
+          return
+        }
+
+        textoRef.current = (textoRef.current + ' ' + texto).trim()
         setTranscricaoAcumulada(textoRef.current)
         onNovoTexto(textoRef.current)
       }
@@ -81,7 +116,13 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
     setErro(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        }
       })
       streamRef.current = stream
       const ctx = new AudioContext({ sampleRate: 16000 })
