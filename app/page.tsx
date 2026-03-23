@@ -76,7 +76,7 @@ export default function Home() {
         }),
       })
       setConsultaSalva(true)
-    } catch (e) { console.error('Erro ao salvar consulta:', e) }
+    } catch (e) { console.error('Erro ao salvar:', e) }
   }
 
   const handleGerarReceita = async () => {
@@ -147,7 +147,7 @@ export default function Home() {
         <div className="space-y-4">
           <div className="bg-white rounded-2xl border border-slate-200 p-6">
             <p className="text-slate-500 text-sm mb-6">Clique em <strong>Iniciar gravação</strong> antes de começar a consulta.</p>
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-4">
               {!gravando ? (
                 <button onClick={handleIniciar} disabled={estado === 'processando'}
                   className="flex items-center gap-3 bg-red-500 hover:bg-red-600 disabled:bg-slate-300 text-white font-medium px-8 py-4 rounded-2xl transition-colors text-sm">
@@ -161,14 +161,18 @@ export default function Home() {
               )}
             </div>
             {gravando && (
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-2 mb-2">
                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 <span className="text-red-500 text-xs font-medium">Gravando — fale normalmente com o paciente</span>
-              )}
-              {transcrevendo && (
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <svg className="animate-spin w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                <span className="text-slate-400 text-xs">Transcrevendo...
+              </div>
+            )}
+            {transcrevendo && (
+              <div className="flex items-center justify-center gap-2">
+                <svg className="animate-spin w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                <span className="text-slate-400 text-xs">Transcrevendo...</span>
               </div>
             )}
             {erro && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-600 text-xs mt-3">{erro}</div>}
@@ -241,7 +245,7 @@ export default function Home() {
                   <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} />
                   {copiado && <p className="text-center text-green-600 text-xs">Copiado!</p>}
                   <button onClick={handleGerarReceita} disabled={gerandoReceita}
-                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-sm font-medium transition-colors mt-2">
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-sm font-medium transition-colors">
                     {gerandoReceita ? (
                       <span className="flex items-center justify-center gap-2">
                         <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
