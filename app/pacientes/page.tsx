@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Sidebar } from '@/components/Sidebar'
 
 export default function Pacientes() {
   const router = useRouter()
@@ -21,20 +22,18 @@ export default function Pacientes() {
     carregarPacientes(med.id)
   }, [router])
 
-  const carregarPacientes = async (medicoId: string) => {
-    const res = await fetch(`/api/pacientes?medico_id=${medicoId}`)
+  const carregarPacientes = async (id: string) => {
+    const res = await fetch(`/api/pacientes?medico_id=${id}`)
     const data = await res.json()
     setPacientes(data.pacientes || [])
     setCarregando(false)
   }
 
   const salvarPaciente = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!medico) return
+    e.preventDefault(); if (!medico) return
     setSalvando(true)
     const res = await fetch('/api/pacientes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...form, medico_id: medico.id }),
     })
     const data = await res.json()
@@ -48,128 +47,130 @@ export default function Pacientes() {
 
   const calcularIdade = (nasc: string) => {
     if (!nasc) return null
-    const hoje = new Date()
-    const dn = new Date(nasc)
+    const hoje = new Date(); const dn = new Date(nasc)
     let idade = hoje.getFullYear() - dn.getFullYear()
     if (hoje.getMonth() < dn.getMonth() || (hoje.getMonth() === dn.getMonth() && hoje.getDate() < dn.getDate())) idade--
     return idade
   }
 
-  const pacientesFiltrados = pacientes.filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()))
+  const filtrados = pacientes.filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()))
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => router.push('/')} className="text-slate-400 hover:text-slate-600">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7"/>
-              </svg>
-            </button>
-            <h1 className="text-lg font-semibold text-slate-900">Meus pacientes</h1>
+    <div style={{ display: 'flex', height: '100vh', background: '#f8fafb', overflow: 'hidden' }}>
+      <Sidebar activeHref="/pacientes" />
+
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ padding: '16px 28px', borderBottom: '1px solid #e8eeed', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Meus pacientes</h1>
+            <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{pacientes.length} paciente{pacientes.length !== 1 ? 's' : ''} cadastrado{pacientes.length !== 1 ? 's' : ''}</p>
           </div>
-          <button onClick={() => setMostrarForm(true)}
-            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
-            </svg>
+          <button onClick={() => setMostrarForm(true)} style={{
+            display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', borderRadius: 8,
+            background: '#16a34a', border: 'none', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Novo paciente
           </button>
         </div>
-      </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-        {mostrarForm && (
-          <div className="bg-white border border-slate-200 rounded-2xl p-6">
-            <h2 className="text-base font-semibold text-slate-800 mb-4">Cadastrar paciente</h2>
-            <form onSubmit={salvarPaciente} className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1.5">Nome completo *</label>
-                <input required value={form.nome} onChange={e => setForm(f => ({...f, nome: e.target.value}))}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
-                  placeholder="Nome do paciente"/>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1.5">Data de nascimento</label>
-                <input type="date" value={form.data_nascimento} onChange={e => setForm(f => ({...f, data_nascimento: e.target.value}))}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"/>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1.5">Sexo</label>
-                <select value={form.sexo} onChange={e => setForm(f => ({...f, sexo: e.target.value}))}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300">
-                  <option value="">Selecionar</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Feminino">Feminino</option>
-                  <option value="Outro">Outro</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1.5">Telefone</label>
-                <input value={form.telefone} onChange={e => setForm(f => ({...f, telefone: e.target.value}))}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
-                  placeholder="(11) 99999-9999"/>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1.5">E-mail</label>
-                <input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
-                  placeholder="email@paciente.com"/>
-              </div>
-              <div className="col-span-2 flex gap-3">
-                <button type="submit" disabled={salvando}
-                  className="flex-1 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-400 text-white font-medium py-2.5 rounded-xl transition-colors text-sm">
-                  {salvando ? 'Salvando...' : 'Salvar paciente'}
-                </button>
-                <button type="button" onClick={() => setMostrarForm(false)}
-                  className="px-6 border border-slate-200 hover:bg-slate-50 text-slate-500 rounded-xl text-sm">
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+        <div style={{ flex: 1, overflow: 'auto', padding: 28 }}>
+          <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
-        <div className="relative">
-          <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-          <input value={busca} onChange={e => setBusca(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 bg-white"
-            placeholder="Buscar paciente por nome..."/>
-        </div>
-
-        {carregando ? (
-          <div className="text-center py-12 text-slate-400 text-sm">Carregando...</div>
-        ) : pacientesFiltrados.length === 0 ? (
-          <div className="text-center py-12 text-slate-300">
-            <svg className="w-10 h-10 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <p className="text-sm text-slate-400">{busca ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado ainda'}</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {pacientesFiltrados.map((p) => {
-              const idade = calcularIdade(p.data_nascimento)
-              const iniciais = p.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
-              return (
-                <div key={p.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4 hover:border-slate-300 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-semibold text-slate-600 shrink-0">
-                    {iniciais}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-800 text-sm">{p.nome}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      {[p.sexo, idade ? `${idade} anos` : null, p.telefone].filter(Boolean).join(' · ')}
-                    </p>
-                  </div>
+            {/* Form modal inline */}
+            {mostrarForm && (
+              <div style={{ background: 'white', border: '1px solid #e8eeed', borderRadius: 14, padding: 24, marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Cadastrar paciente</h2>
+                  <button onClick={() => setMostrarForm(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#8aa8a5', fontSize: 18 }}>✕</button>
                 </div>
-              )
-            })}
+                <form onSubmit={salvarPaciente} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  {[
+                    { label: 'Nome completo', key: 'nome', type: 'text', placeholder: 'Nome do paciente', full: true, required: true },
+                    { label: 'Data de nascimento', key: 'data_nascimento', type: 'date', placeholder: '', full: false, required: false },
+                    { label: 'Telefone', key: 'telefone', type: 'text', placeholder: '(11) 99999-9999', full: false, required: false },
+                    { label: 'E-mail', key: 'email', type: 'email', placeholder: 'email@paciente.com', full: false, required: false },
+                  ].map(({ label, key, type, placeholder, full, required }) => (
+                    <div key={key} style={{ gridColumn: full ? '1 / -1' : 'span 1' }}>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: '#8aa8a5', display: 'block', marginBottom: 6, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                        {label}{required && <span style={{ color: '#16a34a', marginLeft: 3 }}>*</span>}
+                      </label>
+                      <input type={type} required={required} value={(form as any)[key]}
+                        onChange={e => setForm(f => ({...f, [key]: e.target.value}))}
+                        style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8 }}
+                        placeholder={placeholder}/>
+                    </div>
+                  ))}
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: '#8aa8a5', display: 'block', marginBottom: 6, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Sexo</label>
+                    <select value={form.sexo} onChange={e => setForm(f => ({...f, sexo: e.target.value}))}
+                      style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8 }}>
+                      <option value="">Selecionar</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Feminino">Feminino</option>
+                      <option value="Outro">Outro</option>
+                    </select>
+                  </div>
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
+                    <button type="submit" disabled={salvando} style={{ flex: 1, padding: '10px', borderRadius: 9, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      {salvando ? 'Salvando...' : 'Salvar paciente'}
+                    </button>
+                    <button type="button" onClick={() => setMostrarForm(false)} style={{ padding: '10px 20px', borderRadius: 9, border: '1px solid #e8eeed', background: 'white', color: '#3d5452', fontSize: 13, cursor: 'pointer' }}>
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Busca */}
+            <div style={{ position: 'relative', marginBottom: 16 }}>
+              <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8aa8a5" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input value={busca} onChange={e => setBusca(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px 10px 36px', fontSize: 13, borderRadius: 10, background: 'white' }}
+                placeholder="Buscar paciente por nome..."/>
+            </div>
+
+            {/* Lista */}
+            {carregando ? (
+              <p style={{ textAlign: 'center', color: '#8aa8a5', fontSize: 13, padding: 40 }}>Carregando...</p>
+            ) : filtrados.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 60 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: '#f0fdf4', border: '1.5px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                </div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: '#0d1f1c', margin: '0 0 6px' }}>
+                  {busca ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
+                </p>
+                <p style={{ fontSize: 13, color: '#8aa8a5', margin: 0 }}>
+                  {busca ? 'Tente outro nome' : 'Clique em "Novo paciente" para começar'}
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {filtrados.map(p => {
+                  const idade = calcularIdade(p.data_nascimento)
+                  const ini = p.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
+                  return (
+                    <div key={p.id} style={{ background: 'white', border: '1px solid #e8eeed', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, transition: 'border-color 0.15s' }}>
+                      <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#f0fdf4', border: '1.5px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#16a34a', flexShrink: 0 }}>
+                        {ini}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#0d1f1c', margin: 0 }}>{p.nome}</p>
+                        <p style={{ fontSize: 12, color: '#8aa8a5', margin: '2px 0 0' }}>
+                          {[p.sexo, idade ? `${idade} anos` : null, p.telefone].filter(Boolean).join(' · ')}
+                        </p>
+                      </div>
+                      {p.email && <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{p.email}</p>}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </main>
     </div>
   )

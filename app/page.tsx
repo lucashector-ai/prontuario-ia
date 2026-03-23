@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGravador } from '@/lib/useGravador'
 import { ProntuarioCard } from '@/components/ProntuarioCard'
+import { Sidebar } from '@/components/Sidebar'
 import { ReceitaCard } from '@/components/ReceitaCard'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
