@@ -135,6 +135,8 @@ export default function Home() {
               <p className="text-sm font-medium text-slate-700">{medico.nome}</p>
               <p className="text-xs text-slate-400">{medico.especialidade || medico.crm}</p>
             </div>
+            <a href="/historico" className="text-xs text-slate-400 hover:text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors">Histórico</a>
+            <a href="/pacientes" className="text-xs text-slate-400 hover:text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors">Pacientes</a>
             <button onClick={handleLogout}
               className="text-xs text-slate-400 hover:text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors">
               Sair
@@ -242,7 +244,7 @@ export default function Home() {
                       <span className="text-xs text-slate-400">{new Date().toLocaleDateString('pt-BR')}</span>
                     </div>
                   </div>
-                  <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} />
+                  <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} />
                   {copiado && <p className="text-center text-green-600 text-xs">Copiado!</p>}
                   <button onClick={handleGerarReceita} disabled={gerandoReceita}
                     className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-sm font-medium transition-colors">
@@ -261,7 +263,7 @@ export default function Home() {
               {abaDir === 'receita' && (
                 <div>
                   {receita ? (
-                    <ReceitaCard receita={receita} nomeMedico={medico?.nome} onImprimir={() => window.print()} />
+                    <ReceitaCard receita={receita} nomeMedico={medico?.nome} crm={medico?.crm} especialidade={medico?.especialidade} onImprimir={() => window.print()} />
                   ) : (
                     <div className="flex flex-col items-center justify-center gap-3 py-12">
                       <p className="text-slate-400 text-sm">Nenhuma receita gerada ainda.</p>
