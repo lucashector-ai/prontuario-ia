@@ -117,7 +117,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
       source.connect(processor)
       processor.connect(ctx.destination)
       setGravando(true)
-      intervaloRef.current = setInterval(enviarAudio, 5000)
+      intervaloRef.current = setInterval(enviarAudio, 3000)
     } catch (e: any) {
       setErro('Não foi possível acessar o microfone. Verifique as permissões.')
     }
