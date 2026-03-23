@@ -18,65 +18,78 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
   const [transcricaoAcumulada, setTranscricaoAcumulada] = useState('')
   const [erro, setErro] = useState<string | null>(null)
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const chunksRef = useRef<Blob[]>([])
-  const intervaloRef = useRef<NodeJS.Timeout | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const processorRef = useRef<ScriptProcessorNode | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const analyserRef = useRef<AnalyserNode | null>(null)
-  const audioCtxRef = useRef<AudioContext | null>(null)
+  const intervaloRef = useRef<NodeJS.Timeout | null>(null)
+  const samplesRef = useRef<Float32Array[]>([])
   const textoRef = useRef('')
 
-  // Detecta volume atual do microfone via AnalyserNode
-  const getVolume = (): number => {
-    if (!analyserRef.current) return 0
-    const data = new Uint8Array(analyserRef.current.frequencyBinCount)
-    analyserRef.current.getByteFrequencyData(data)
-    return data.reduce((a, b) => a + b, 0) / data.length
+  // Detecta voz com limiar bem baixo (0.001) para não bloquear fala real
+  const temVoz = (samples: Float32Array): boolean => {
+    let sum = 0
+    for (let i = 0; i < samples.length; i++) sum += samples[i] * samples[i]
+    const rms = Math.sqrt(sum / samples.length)
+    return rms > 0.001
   }
 
-  const enviarChunks = useCallback(async () => {
-    if (chunksRef.current.length === 0) return
-
-    // Verifica volume — se abaixo de 5 (escala 0-255) é silêncio
-    const volume = getVolume()
-    if (volume < 5) {
-      console.log('Silêncio — descartando, volume:', volume)
-      chunksRef.current = []
-      return
+  const float32ToWav = (samples: Float32Array, sampleRate: number): Blob => {
+    const buffer = new ArrayBuffer(44 + samples.length * 2)
+    const view = new DataView(buffer)
+    const write = (off: number, str: string) => {
+      for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i))
     }
+    write(0, 'RIFF'); view.setUint32(4, 36 + samples.length * 2, true)
+    write(8, 'WAVE'); write(12, 'fmt '); view.setUint32(16, 16, true)
+    view.setUint16(20, 1, true); view.setUint16(22, 1, true)
+    view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true)
+    view.setUint16(32, 2, true); view.setUint16(34, 16, true)
+    write(36, 'data'); view.setUint32(40, samples.length * 2, true)
+    let off = 44
+    for (let i = 0; i < samples.length; i++, off += 2) {
+      const s = Math.max(-1, Math.min(1, samples[i]))
+      view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7fff, true)
+    }
+    return new Blob([buffer], { type: 'audio/wav' })
+  }
 
-    const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm'
-    const blob = new Blob(chunksRef.current, { type: mimeType })
-    chunksRef.current = []
+  const enviarAudio = useCallback(async () => {
+    if (samplesRef.current.length === 0) return
+    const total = samplesRef.current.reduce((acc, a) => acc + a.length, 0)
+    if (total < 8000) { samplesRef.current = []; return }
 
-    if (blob.size < 5000) return // muito pequeno
+    const merged = new Float32Array(total)
+    let offset = 0
+    for (const chunk of samplesRef.current) { merged.set(chunk, offset); offset += chunk.length }
+    samplesRef.current = []
 
-    const ext = mimeType.includes('mp4') ? 'mp4'
-              : mimeType.includes('ogg') ? 'ogg'
-              : 'webm'
+    // Só descarta se for silêncio absoluto
+    if (!temVoz(merged)) return
+
+    const sampleRate = audioContextRef.current?.sampleRate || 16000
+    const wav = float32ToWav(merged, sampleRate)
 
     setTranscrevendo(true)
     try {
       const form = new FormData()
-      form.append('audio', blob, `audio.${ext}`)
+      form.append('audio', wav, 'audio.wav')
       const res = await fetch('/api/transcrever', { method: 'POST', body: form })
       const data = await res.json()
 
       if (data.texto?.trim()) {
         const texto = data.texto.trim()
-        // Filtra alucinações conhecidas do Whisper
-        const padroes = ['www.', '.com', '.br', '.pt', 'para mais informações',
-          'inscreva-se', 'obrigado por assistir', 'legendas', '♪', 'música',
-          'acesse o site', 'visite o nosso', 'nova acrópole', 'opus dei',
-          'marco paret', 'transcrição automática']
-        const ehAlucinacao = padroes.some(p => texto.toLowerCase().includes(p))
-        if (ehAlucinacao) { console.log('Alucinação filtrada:', texto); return }
+        // Filtra apenas alucinações óbvias
+        const alucinacoes = ['www.', 'acesse o site', 'visite o nosso site',
+          'para mais informações, visite', 'inscreva-se', 'obrigado por assistir',
+          '♪', 'subtitle', 'legenda']
+        const ehAlucinacao = alucinacoes.some(p => texto.toLowerCase().includes(p))
+        if (ehAlucinacao) return
 
         textoRef.current = (textoRef.current + ' ' + texto).trim()
         setTranscricaoAcumulada(textoRef.current)
         onNovoTexto(textoRef.current)
       }
-    } catch (e) { console.error('Erro transcrição:', e) }
+    } catch (e) { console.error('Erro:', e) }
     finally { setTranscrevendo(false) }
   }, [onNovoTexto])
 
@@ -85,54 +98,44 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
+          sampleRate: 16000,
+          channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
         }
       })
       streamRef.current = stream
-
-      // Analyser para detectar volume em tempo real
-      const ctx = new AudioContext()
-      audioCtxRef.current = ctx
+      const ctx = new AudioContext({ sampleRate: 16000 })
+      audioContextRef.current = ctx
       const source = ctx.createMediaStreamSource(stream)
-      const analyser = ctx.createAnalyser()
-      analyser.fftSize = 256
-      source.connect(analyser)
-      analyserRef.current = analyser
-
-      // Detecta formato suportado
-      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', '']
-        .find(m => m === '' || MediaRecorder.isTypeSupported(m)) || ''
-
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {})
-      mediaRecorderRef.current = recorder
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data)
+      const processor = ctx.createScriptProcessor(4096, 1, 1)
+      processorRef.current = processor
+      processor.onaudioprocess = (e) => {
+        samplesRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)))
       }
-      recorder.start(1000)
+      source.connect(processor)
+      processor.connect(ctx.destination)
       setGravando(true)
-
-      // Envia a cada 5 segundos
-      intervaloRef.current = setInterval(enviarChunks, 5000)
+      intervaloRef.current = setInterval(enviarAudio, 5000)
     } catch (e: any) {
-      setErro('Não foi possível acessar o microfone. Verifique as permissões do navegador.')
+      setErro('Não foi possível acessar o microfone. Verifique as permissões.')
     }
-  }, [enviarChunks])
+  }, [enviarAudio])
 
   const pararGravacao = useCallback(() => {
     if (intervaloRef.current) clearInterval(intervaloRef.current)
-    if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop()
+    processorRef.current?.disconnect()
+    audioContextRef.current?.close()
     streamRef.current?.getTracks().forEach(t => t.stop())
-    audioCtxRef.current?.close()
-    setTimeout(enviarChunks, 500)
+    setTimeout(enviarAudio, 300)
     setGravando(false)
-  }, [enviarChunks])
+  }, [enviarAudio])
 
   const limpar = useCallback(() => {
     textoRef.current = ''
     setTranscricaoAcumulada('')
-    chunksRef.current = []
+    samplesRef.current = []
     setErro(null)
     setTranscrevendo(false)
   }, [])
