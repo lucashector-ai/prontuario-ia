@@ -4,6 +4,7 @@ import { useRef, useState, useCallback } from 'react'
 
 interface UseGravadorReturn {
   gravando: boolean
+  transcrevendo: boolean
   transcricaoAcumulada: string
   iniciarGravacao: () => Promise<void>
   pararGravacao: () => void
@@ -13,6 +14,7 @@ interface UseGravadorReturn {
 
 export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorReturn {
   const [gravando, setGravando] = useState(false)
+  const [transcrevendo, setTranscrevendo] = useState(false)
   const [transcricaoAcumulada, setTranscricaoAcumulada] = useState('')
   const [erro, setErro] = useState<string | null>(null)
 
@@ -26,11 +28,13 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
   const float32ToWav = (samples: Float32Array, sampleRate: number): Blob => {
     const buffer = new ArrayBuffer(44 + samples.length * 2)
     const view = new DataView(buffer)
-    const writeStr = (off: number, str: string) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)) }
-    writeStr(0, 'RIFF')
+    const write = (off: number, str: string) => {
+      for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i))
+    }
+    write(0, 'RIFF')
     view.setUint32(4, 36 + samples.length * 2, true)
-    writeStr(8, 'WAVE')
-    writeStr(12, 'fmt ')
+    write(8, 'WAVE')
+    write(12, 'fmt ')
     view.setUint32(16, 16, true)
     view.setUint16(20, 1, true)
     view.setUint16(22, 1, true)
@@ -38,7 +42,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
     view.setUint32(28, sampleRate * 2, true)
     view.setUint16(32, 2, true)
     view.setUint16(34, 16, true)
-    writeStr(36, 'data')
+    write(36, 'data')
     view.setUint32(40, samples.length * 2, true)
     let off = 44
     for (let i = 0; i < samples.length; i++, off += 2) {
@@ -51,35 +55,34 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
   const enviarAudio = useCallback(async () => {
     if (samplesRef.current.length === 0) return
     const total = samplesRef.current.reduce((acc, a) => acc + a.length, 0)
-    if (total < 4000) return
+    if (total < 8000) return
     const merged = new Float32Array(total)
     let offset = 0
     for (const chunk of samplesRef.current) { merged.set(chunk, offset); offset += chunk.length }
     samplesRef.current = []
-
     const sampleRate = audioContextRef.current?.sampleRate || 16000
     const wav = float32ToWav(merged, sampleRate)
-
+    setTranscrevendo(true)
     try {
       const form = new FormData()
       form.append('audio', wav, 'audio.wav')
       const res = await fetch('/api/transcrever', { method: 'POST', body: form })
       const data = await res.json()
       if (data.texto?.trim()) {
-        textoRef.current += ' ' + data.texto
-        const limpo = textoRef.current.trim()
-        setTranscricaoAcumulada(limpo)
-        onNovoTexto(limpo)
+        textoRef.current = (textoRef.current + ' ' + data.texto).trim()
+        setTranscricaoAcumulada(textoRef.current)
+        onNovoTexto(textoRef.current)
       }
-    } catch (e) {
-      console.error('Erro transcrição:', e)
-    }
+    } catch (e) { console.error('Erro:', e) }
+    finally { setTranscrevendo(false) }
   }, [onNovoTexto])
 
   const iniciarGravacao = useCallback(async () => {
     setErro(null)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      })
       streamRef.current = stream
       const ctx = new AudioContext({ sampleRate: 16000 })
       audioContextRef.current = ctx
@@ -87,13 +90,12 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
       const processor = ctx.createScriptProcessor(4096, 1, 1)
       processorRef.current = processor
       processor.onaudioprocess = (e) => {
-        const data = e.inputBuffer.getChannelData(0)
-        samplesRef.current.push(new Float32Array(data))
+        samplesRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)))
       }
       source.connect(processor)
       processor.connect(ctx.destination)
       setGravando(true)
-      intervaloRef.current = setInterval(enviarAudio, 8000)
+      intervaloRef.current = setInterval(enviarAudio, 5000)
     } catch (e: any) {
       setErro('Não foi possível acessar o microfone. Verifique as permissões do navegador.')
     }
@@ -113,7 +115,8 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
     setTranscricaoAcumulada('')
     samplesRef.current = []
     setErro(null)
+    setTranscrevendo(false)
   }, [])
 
-  return { gravando, transcricaoAcumulada, iniciarGravacao, pararGravacao, limpar, erro }
+  return { gravando, transcrevendo, transcricaoAcumulada, iniciarGravacao, pararGravacao, limpar, erro }
 }
