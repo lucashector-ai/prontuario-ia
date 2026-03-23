@@ -8,43 +8,42 @@ export function ReceitaCard({ receita, nomeMedico, crm, especialidade, onImprimi
   const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
 
   return (
-    <div className="space-y-4">
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-        <div className="bg-slate-800 px-5 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white font-semibold text-base">{nomeMedico || 'Médico responsável'}</p>
-              {especialidade && <p className="text-slate-300 text-xs mt-0.5">{especialidade}</p>}
-              {crm && <p className="text-slate-400 text-xs">{crm}</p>}
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-slate-400">Receituário médico</p>
-              <p className="text-slate-300 text-xs mt-0.5">{hoje}</p>
-            </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', margin: 0 }}>{nomeMedico || 'Médico responsável'}</p>
+            <p style={{ fontSize: 11, color: 'var(--text3)', margin: '2px 0 0' }}>{[especialidade, crm].filter(Boolean).join(' · ')}</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: 10, color: 'var(--text3)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Receituário</p>
+            <p style={{ fontSize: 11, color: 'var(--text3)', margin: '2px 0 0' }}>{hoje}</p>
           </div>
         </div>
 
-        <div className="px-5 py-4 space-y-3">
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {receita.medicamentos?.map((med, i) => (
-            <div key={i} className="flex gap-3 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
-              <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-slate-600 text-xs font-bold">{i + 1}</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-slate-900 text-sm">{med.nome} {med.dose}</p>
-                <div className="flex flex-wrap gap-2 mt-1">
+            <div key={i} style={{ display: 'flex', gap: 12, paddingBottom: 10, borderBottom: i < receita.medicamentos.length - 1 ? '1px solid var(--border)' : 'none' }}>
+              <div style={{
+                width: 26, height: 26, borderRadius: '50%', background: 'rgba(99,102,241,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 700, color: 'var(--accent2)', flexShrink: 0
+              }}>{i + 1}</div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', margin: '0 0 6px' }}>{med.nome} {med.dose}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                   {med.via && med.via !== 'conforme orientação médica' && (
-                    <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{med.via}</span>
+                    <span style={{ fontSize: 11, color: '#818cf8', background: 'rgba(99,102,241,0.1)', padding: '2px 8px', borderRadius: 20 }}>{med.via}</span>
                   )}
                   {med.frequencia && med.frequencia !== 'conforme orientação médica' && (
-                    <span className="text-xs bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full">{med.frequencia}</span>
+                    <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(16,185,129,0.1)', padding: '2px 8px', borderRadius: 20 }}>{med.frequencia}</span>
                   )}
                   {med.duracao && med.duracao !== 'conforme orientação médica' && (
-                    <span className="text-xs bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full">{med.duracao}</span>
+                    <span style={{ fontSize: 11, color: '#fbbf24', background: 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: 20 }}>{med.duracao}</span>
                   )}
                 </div>
                 {med.instrucoes && med.instrucoes !== 'conforme orientação médica' && (
-                  <p className="text-xs text-slate-400 mt-1 italic">{med.instrucoes}</p>
+                  <p style={{ fontSize: 11, color: 'var(--text3)', margin: '6px 0 0', fontStyle: 'italic' }}>{med.instrucoes}</p>
                 )}
               </div>
             </div>
@@ -52,29 +51,29 @@ export function ReceitaCard({ receita, nomeMedico, crm, especialidade, onImprimi
         </div>
 
         {receita.observacoes && (
-          <div className="mx-5 mb-4 bg-amber-50 border border-amber-100 rounded-xl p-3">
-            <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">Orientações</p>
-            <p className="text-sm text-amber-800">{receita.observacoes}</p>
+          <div style={{ margin: '0 16px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 8, padding: '10px 12px' }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#fbbf24', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Orientações</p>
+            <p style={{ fontSize: 12, color: '#fcd34d', margin: 0 }}>{receita.observacoes}</p>
           </div>
         )}
 
-        <div className="border-t border-slate-100 px-5 py-4">
-          <div className="flex justify-between items-end">
-            <p className="text-xs text-slate-400">Válido por 30 dias</p>
-            <div className="text-center">
-              <div className="w-36 border-t border-slate-400 pt-1">
-                <p className="text-xs text-slate-500">{nomeMedico}</p>
-                {crm && <p className="text-xs text-slate-400">{crm}</p>}
-              </div>
-            </div>
+        <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <p style={{ fontSize: 11, color: 'var(--text3)', margin: 0 }}>Válido por 30 dias</p>
+          <div style={{ textAlign: 'center', borderTop: '1px solid var(--border2)', paddingTop: 6, minWidth: 120 }}>
+            <p style={{ fontSize: 11, color: 'var(--text3)', margin: 0 }}>{nomeMedico}</p>
+            {crm && <p style={{ fontSize: 10, color: 'var(--text3)', margin: '2px 0 0', opacity: 0.6 }}>{crm}</p>}
           </div>
         </div>
       </div>
 
       <button onClick={onImprimir}
-        className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        style={{
+          padding: '10px', borderRadius: 10, border: '1px solid var(--border)',
+          background: 'transparent', color: 'var(--text2)', fontSize: 12, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, transition: 'all 0.15s'
+        }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
         </svg>
         Imprimir receita
       </button>

@@ -1,75 +1,64 @@
 'use client'
 
 interface CID { codigo: string; descricao: string; justificativa: string }
-interface Prontuario {
-  subjetivo: string; objetivo: string; avaliacao: string; plano: string
-  cids: CID[]; alertas: string[]
-}
+interface Prontuario { subjetivo: string; objetivo: string; avaliacao: string; plano: string; cids: CID[]; alertas: string[] }
 interface Props { prontuario: Prontuario; onCopiar: () => void; nomeMedico?: string; crm?: string }
 
-export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm }: Props) {
-  const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+const secoes = [
+  { key: 'subjetivo', letra: 'S', titulo: 'Subjetivo', sub: 'Queixas e história', accent: '#6366f1', bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.2)' },
+  { key: 'objetivo',  letra: 'O', titulo: 'Objetivo',  sub: 'Exame físico',       accent: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
+  { key: 'avaliacao', letra: 'A', titulo: 'Avaliação',  sub: 'Hipótese diagnóstica', accent: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)' },
+  { key: 'plano',     letra: 'P', titulo: 'Plano',      sub: 'Conduta e prescrição', accent: '#ec4899', bg: 'rgba(236,72,153,0.08)', border: 'rgba(236,72,153,0.2)' },
+]
 
+export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm }: Props) {
   return (
-    <div className="space-y-3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {prontuario.alertas?.length > 0 && (
-        <div className="bg-red-50 border-l-4 border-red-500 rounded-r-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <svg className="w-4 h-4 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5C2.57 18.333 3.532 20 5.072 20z"/>
+        <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '12px 14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+              <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
             </svg>
-            <p className="text-red-700 font-semibold text-xs uppercase tracking-wide">Alertas clínicos</p>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#ef4444', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Alertas clínicos</span>
           </div>
-          <ul className="space-y-1">
-            {prontuario.alertas.map((a, i) => <li key={i} className="text-red-700 text-sm flex items-start gap-2"><span className="text-red-400 mt-0.5">•</span>{a}</li>)}
-          </ul>
+          {prontuario.alertas.map((a, i) => (
+            <p key={i} style={{ fontSize: 12, color: '#fca5a5', margin: '2px 0', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+              <span style={{ color: '#ef4444', marginTop: 2 }}>·</span>{a}
+            </p>
+          ))}
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3">
-        {[
-          { key: 'subjetivo', letra: 'S', titulo: 'Subjetivo', sub: 'Queixas e história', cor: 'blue' },
-          { key: 'objetivo',  letra: 'O', titulo: 'Objetivo',  sub: 'Exame físico e sinais', cor: 'teal' },
-          { key: 'avaliacao', letra: 'A', titulo: 'Avaliação',  sub: 'Hipótese diagnóstica', cor: 'violet' },
-          { key: 'plano',     letra: 'P', titulo: 'Plano',      sub: 'Conduta e prescrição', cor: 'orange' },
-        ].map(({ key, letra, titulo, sub, cor }) => {
-          const cores: Record<string, string> = {
-            blue:   'bg-blue-50 border-blue-200 text-blue-900 ring-blue-400',
-            teal:   'bg-teal-50 border-teal-200 text-teal-900 ring-teal-400',
-            violet: 'bg-violet-50 border-violet-200 text-violet-900 ring-violet-400',
-            orange: 'bg-orange-50 border-orange-200 text-orange-900 ring-orange-400',
-          }
-          const letraCores: Record<string, string> = {
-            blue: 'bg-blue-600 text-white', teal: 'bg-teal-600 text-white',
-            violet: 'bg-violet-600 text-white', orange: 'bg-orange-500 text-white',
-          }
-          return (
-            <div key={key} className={`${cores[cor].split(' ').slice(0,2).join(' ')} border rounded-xl p-4`}>
-              <div className="flex items-center gap-3 mb-2">
-                <span className={`${letraCores[cor]} w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0`}>{letra}</span>
-                <div>
-                  <p className="font-semibold text-sm text-slate-800">{titulo}</p>
-                  <p className="text-xs text-slate-500">{sub}</p>
-                </div>
-              </div>
-              <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line pl-10">
-                {(prontuario as any)[key] || 'Não mencionado na consulta'}
-              </p>
+      {secoes.map(({ key, letra, titulo, sub, accent, bg, border }) => (
+        <div key={key} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '12px 14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{
+              width: 26, height: 26, borderRadius: 6, background: accent,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontWeight: 800, color: 'white', flexShrink: 0
+            }}>{letra}</div>
+            <div>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'white', margin: 0, lineHeight: 1.2 }}>{titulo}</p>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{sub}</p>
             </div>
-          )
-        })}
-      </div>
+          </div>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.7, margin: 0, paddingLeft: 36, whiteSpace: 'pre-line' }}>
+            {(prontuario as any)[key] || 'Não mencionado na consulta'}
+          </p>
+        </div>
+      ))}
 
       {prontuario.cids?.length > 0 && (
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-          <p className="text-slate-500 font-semibold text-xs uppercase tracking-wide mb-3">CID-10 sugeridos</p>
-          <div className="space-y-2">
+        <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px' }}>
+          <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 10px' }}>CID-10 sugeridos</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {prontuario.cids.map((cid, i) => (
-              <div key={i} className="flex items-start gap-3 bg-white rounded-lg p-2.5 border border-slate-100">
-                <span className="bg-slate-800 text-white text-xs font-mono px-2 py-1 rounded-md shrink-0 mt-0.5">{cid.codigo}</span>
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'var(--bg2)', borderRadius: 8, padding: '8px 10px' }}>
+                <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: 'var(--accent2)', background: 'rgba(99,102,241,0.15)', padding: '2px 8px', borderRadius: 6, flexShrink: 0 }}>{cid.codigo}</span>
                 <div>
-                  <p className="text-slate-800 text-sm font-medium">{cid.descricao}</p>
-                  <p className="text-slate-400 text-xs mt-0.5">{cid.justificativa}</p>
+                  <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', margin: 0 }}>{cid.descricao}</p>
+                  <p style={{ fontSize: 11, color: 'var(--text3)', margin: '2px 0 0' }}>{cid.justificativa}</p>
                 </div>
               </div>
             ))}
@@ -77,27 +66,19 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm }: Props)
         </div>
       )}
 
-      {(nomeMedico || crm) && (
-        <div className="border border-slate-200 rounded-xl p-4 bg-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{hoje}</p>
-              <p className="text-sm font-medium text-slate-800">{nomeMedico}</p>
-              {crm && <p className="text-xs text-slate-500">{crm}</p>}
-            </div>
-            <div className="w-24 border-t-2 border-slate-300 text-center pt-1">
-              <p className="text-xs text-slate-400">assinatura</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       <button onClick={onCopiar}
-        className="w-full py-2.5 border border-slate-200 rounded-xl text-slate-500 text-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        style={{
+          padding: '9px', borderRadius: 10, border: '1px solid var(--border)',
+          background: 'transparent', color: 'var(--text3)', fontSize: 12, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+          transition: 'all 0.15s'
+        }}
+        onMouseOver={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.color = 'var(--text2)' }}
+        onMouseOut={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text3)' }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
         </svg>
-        Copiar prontuário completo
+        Copiar prontuário
       </button>
     </div>
   )

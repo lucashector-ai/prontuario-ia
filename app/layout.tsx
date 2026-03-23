@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Prontuário IA',
-  description: 'Prontuário médico gerado por voz com inteligência artificial',
+  title: 'MedIA — Prontuário Inteligente',
+  description: 'Plataforma de documentação clínica com inteligência artificial',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
