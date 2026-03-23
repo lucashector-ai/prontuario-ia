@@ -24,102 +24,116 @@ export default function Login() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr',
-        background: 'white', borderRadius: 20, overflow: 'hidden',
-        width: '100%', maxWidth: 960,
-        boxShadow: '0 8px 48px rgba(0,0,0,0.12)',
-      }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
 
-        {/* Painel esquerdo — imagem */}
-        <div style={{ position: 'relative', minHeight: 580 }}>
-          <img
-            src="/doctor.png"
-            alt="Médico em consulta"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
-          {/* Overlay escuro gradiente */}
+      {/* Painel esquerdo — imagem ocupa metade da tela */}
+      <div style={{ flex: '0 0 45%', position: 'relative', overflow: 'hidden' }}>
+        <img
+          src="/doctor.png"
+          alt="Médico em consulta"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
+        />
+        {/* Overlay gradiente */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to top, rgba(4,47,31,0.95) 0%, rgba(5,60,40,0.5) 45%, rgba(0,0,0,0.15) 100%)',
+        }}/>
+
+        {/* Logo */}
+        <div style={{ position: 'absolute', top: 32, left: 36, display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to top, rgba(6,78,59,0.92) 0%, rgba(6,78,59,0.4) 50%, rgba(0,0,0,0.1) 100%)',
-          }}/>
-          {/* Logo */}
-          <div style={{ position: 'absolute', top: 28, left: 28, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-              </svg>
-            </div>
-            <span style={{ fontSize: 17, fontWeight: 700, color: 'white' }}>MedIA</span>
+            width: 36, height: 36, borderRadius: 10,
+            background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
           </div>
-          {/* Texto inferior */}
-          <div style={{ position: 'absolute', bottom: 36, left: 32, right: 32 }}>
-            <p style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 12px', lineHeight: 1.4 }}>
-              "Reduzi 70% do tempo de documentação clínica."
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white', flexShrink: 0 }}>DS</div>
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0 }}>Dr. Daniel Santos</p>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', margin: 0 }}>Clínico Geral — São Paulo</p>
-              </div>
+          <span style={{ fontSize: 18, fontWeight: 700, color: 'white', letterSpacing: '-0.3px' }}>MedIA</span>
+        </div>
+
+        {/* Texto na parte inferior */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 40px 48px' }}>
+          <p style={{ fontSize: 22, fontWeight: 800, color: 'white', margin: '0 0 20px', lineHeight: 1.4, letterSpacing: '-0.3px' }}>
+            "Reduzi 70% do tempo de documentação clínica com o MedIA."
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.2)', border: '1.5px solid rgba(255,255,255,0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, fontWeight: 700, color: 'white', flexShrink: 0,
+            }}>DS</div>
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: 0 }}>Dr. Daniel Santos</p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', margin: 0 }}>Clínico Geral — São Paulo</p>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Painel direito — formulário */}
-        <div style={{ padding: '64px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ maxWidth: 340 }}>
-            <div style={{ marginBottom: 36 }}>
-              <h1 style={{ fontSize: 26, fontWeight: 800, color: '#111827', margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-                Bem-vindo de volta
-              </h1>
-              <p style={{ fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
-                Entre na sua conta para continuar atendendo.
-              </p>
+      {/* Painel direito — formulário ocupa o restante */}
+      <div style={{
+        flex: 1, background: 'white',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '48px 64px',
+      }}>
+        <div style={{ width: '100%', maxWidth: 380 }}>
+          <div style={{ marginBottom: 40 }}>
+            <h1 style={{ fontSize: 30, fontWeight: 800, color: '#111827', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
+              Bem-vindo de volta
+            </h1>
+            <p style={{ fontSize: 15, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+              Entre na sua conta para continuar atendendo seus pacientes.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 8 }}>E-mail</label>
+              <input
+                type="email" required value={form.email}
+                onChange={e => setForm(f => ({...f, email: e.target.value}))}
+                style={{ width: '100%', padding: '12px 16px', fontSize: 14, borderRadius: 10, border: '1.5px solid #e5e7eb', background: 'white', color: '#111827', transition: 'border-color 0.15s' }}
+                placeholder="seu@email.com.br"
+              />
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 7 }}>E-mail</label>
-                <input type="email" required value={form.email}
-                  onChange={e => setForm(f => ({...f, email: e.target.value}))}
-                  style={{ width: '100%', padding: '11px 14px', fontSize: 14, borderRadius: 10 }}
-                  placeholder="seu@email.com.br"/>
-              </div>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 7 }}>Senha</label>
-                <input type="password" required value={form.senha}
-                  onChange={e => setForm(f => ({...f, senha: e.target.value}))}
-                  style={{ width: '100%', padding: '11px 14px', fontSize: 14, borderRadius: 10 }}
-                  placeholder="••••••••"/>
-              </div>
-
-              {erro && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '10px 14px' }}>
-                  <p style={{ fontSize: 13, color: '#dc2626', margin: 0 }}>{erro}</p>
-                </div>
-              )}
-
-              <button type="submit" disabled={carregando} style={{
-                marginTop: 4, padding: '13px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                background: carregando ? '#bbf7d0' : '#16a34a', color: 'white',
-                fontSize: 14, fontWeight: 700, transition: 'all 0.15s',
-                letterSpacing: '0.01em',
-              }}>
-                {carregando ? 'Entrando...' : 'Entrar'}
-              </button>
-            </form>
-
-            <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid #f3f4f6' }}>
-              <p style={{ textAlign: 'center', fontSize: 13, color: '#9ca3af', margin: 0 }}>
-                Não tem conta?{' '}
-                <a href="/cadastro" style={{ color: '#16a34a', textDecoration: 'none', fontWeight: 600 }}>
-                  Criar conta gratuita →
-                </a>
-              </p>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 8 }}>Senha</label>
+              <input
+                type="password" required value={form.senha}
+                onChange={e => setForm(f => ({...f, senha: e.target.value}))}
+                style={{ width: '100%', padding: '12px 16px', fontSize: 14, borderRadius: 10, border: '1.5px solid #e5e7eb', background: 'white', color: '#111827' }}
+                placeholder="••••••••"
+              />
             </div>
+
+            {erro && (
+              <div style={{ background: '#fef2f2', border: '1.5px solid #fecaca', borderRadius: 10, padding: '11px 16px' }}>
+                <p style={{ fontSize: 13, color: '#dc2626', margin: 0, fontWeight: 500 }}>{erro}</p>
+              </div>
+            )}
+
+            <button type="submit" disabled={carregando} style={{
+              padding: '14px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              background: carregando ? '#86efac' : '#16a34a',
+              color: 'white', fontSize: 15, fontWeight: 700,
+              letterSpacing: '0.01em', marginTop: 4,
+              transition: 'background 0.15s',
+            }}>
+              {carregando ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+
+          <div style={{ marginTop: 32, paddingTop: 28, borderTop: '1px solid #f3f4f6', textAlign: 'center' }}>
+            <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>
+              Não tem conta?{' '}
+              <a href="/cadastro" style={{ color: '#16a34a', textDecoration: 'none', fontWeight: 700 }}>
+                Criar conta gratuita →
+              </a>
+            </p>
           </div>
         </div>
       </div>
