@@ -1,1 +1,382 @@
+'use client'
 
+import { useEffect, useState } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { Sidebar } from '@/components/Sidebar'
+
+type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario'
+
+const TIPO_CORES: Record<string, {bg:string;text:string;border:string}> = {
+  consulta: {bg:'#f0fdf4',text:'#16a34a',border:'#bbf7d0'},
+  retorno:  {bg:'#eff6ff',text:'#2563eb',border:'#bfdbfe'},
+  exame:    {bg:'#f5f3ff',text:'#7c3aed',border:'#ddd6fe'},
+  urgencia: {bg:'#fef2f2',text:'#dc2626',border:'#fecaca'},
+}
+const STATUS_CORES: Record<string, {bg:string;text:string}> = {
+  agendado:   {bg:'#eff6ff',text:'#2563eb'},
+  confirmado: {bg:'#f0fdf4',text:'#16a34a'},
+  cancelado:  {bg:'#fef2f2',text:'#dc2626'},
+  realizado:  {bg:'#f3f4f6',text:'#6b7280'},
+}
+
+export default function PacienteDetalhe() {
+  const router = useRouter()
+  const params = useParams()
+  const id = params.id as string
+  const [medico, setMedico] = useState<any>(null)
+  const [paciente, setPaciente] = useState<any>(null)
+  const [consultas, setConsultas] = useState<any[]>([])
+  const [agendamentos, setAgendamentos] = useState<any[]>([])
+  const [aba, setAba] = useState<Aba>('overview')
+  const [carregando, setCarregando] = useState(true)
+  const [editando, setEditando] = useState(false)
+  const [editForm, setEditForm] = useState<any>({})
+  const [salvando, setSalvando] = useState(false)
+  const [modalAg, setModalAg] = useState(false)
+  const [agForm, setAgForm] = useState({data_hora:'',tipo:'consulta',motivo:'',observacoes:''})
+  const [salvandoAg, setSalvandoAg] = useState(false)
+  const [consultaAberta, setConsultaAberta] = useState<any>(null)
+
+  useEffect(() => {
+    const m = localStorage.getItem('medico')
+    if (!m) { router.push('/login'); return }
+    const med = JSON.parse(m); setMedico(med); carregar(med.id)
+  }, [id])
+
+  const carregar = async (medicoId: string) => {
+    const [pR, cR, aR] = await Promise.all([
+      fetch('/api/pacientes/' + id),
+      supabase.from('consultas').select('*').eq('medico_id', medicoId).order('criado_em', {ascending:false}),
+      fetch('/api/agendamentos?paciente_id=' + id),
+    ])
+    const pd = await pR.json(); const ad = await aR.json()
+    if (pd.paciente) { setPaciente(pd.paciente); setEditForm(pd.paciente) }
+    setConsultas(cR.data || []); setAgendamentos(ad.agendamentos || [])
+    setCarregando(false)
+  }
+
+  const salvarPaciente = async () => {
+    setSalvando(true)
+    const r = await fetch('/api/pacientes/' + id, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(editForm)})
+    const d = await r.json()
+    if (d.paciente) { setPaciente(d.paciente); setEditando(false) }
+    setSalvando(false)
+  }
+
+  const salvarAg = async (e: React.FormEvent) => {
+    e.preventDefault(); setSalvandoAg(true)
+    const r = await fetch('/api/agendamentos', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...agForm,paciente_id:id,medico_id:medico.id,status:'agendado'})})
+    const d = await r.json()
+    if (d.agendamento) {
+      setAgendamentos(prev => [...prev, d.agendamento].sort((a,b) => new Date(a.data_hora).getTime()-new Date(b.data_hora).getTime()))
+      setModalAg(false); setAgForm({data_hora:'',tipo:'consulta',motivo:'',observacoes:''})
+    }
+    setSalvandoAg(false)
+  }
+
+  const atualizarAg = async (agId: string, status: string) => {
+    const r = await fetch('/api/agendamentos', {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:agId,status})})
+    const d = await r.json()
+    if (d.agendamento) setAgendamentos(prev => prev.map(a => a.id===agId ? d.agendamento : a))
+  }
+
+  const deletarAg = async (agId: string) => {
+    if (!confirm('Deletar agendamento?')) return
+    await fetch('/api/agendamentos?id='+agId, {method:'DELETE'})
+    setAgendamentos(prev => prev.filter(a => a.id!==agId))
+  }
+
+  const calcIdade = (nasc: string) => {
+    if (!nasc) return null
+    const h = new Date(); const d = new Date(nasc); let i = h.getFullYear()-d.getFullYear()
+    if (h.getMonth()<d.getMonth()||(h.getMonth()===d.getMonth()&&h.getDate()<d.getDate())) i--
+    return i
+  }
+
+  const fmt = (s: string) => new Date(s).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})
+  const fmtH = (s: string) => new Date(s).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+  const fmtF = (s: string) => new Date(s).toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+
+  const ini = paciente?.nome?.split(' ').map((n:string)=>n[0]).slice(0,2).join('').toUpperCase()||'?'
+  const idadePac = calcIdade(paciente?.data_nascimento)
+  const prox = agendamentos.find(a=>a.status==='agendado'&&new Date(a.data_hora)>new Date())
+
+  const secoes = [
+    {key:'subjetivo',letra:'S',titulo:'Subjetivo',cor:'#2563eb',bg:'#eff6ff',border:'#bfdbfe'},
+    {key:'objetivo', letra:'O',titulo:'Objetivo', cor:'#0d9488',bg:'#f0fdfa',border:'#99f6e4'},
+    {key:'avaliacao',letra:'A',titulo:'Avaliacao',cor:'#7c3aed',bg:'#f5f3ff',border:'#ddd6fe'},
+    {key:'plano',    letra:'P',titulo:'Plano',    cor:'#16a34a',bg:'#f0fdf4',border:'#bbf7d0'},
+  ]
+
+  return (
+    <div style={{display:'flex',height:'100vh',background:'#f9fafb',overflow:'hidden'}}>
+      <Sidebar activeHref="/pacientes" />
+      <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        {carregando ? (
+          <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <div style={{width:40,height:40,borderRadius:'50%',border:'3px solid #dcfce7',borderTopColor:'#16a34a',animation:'spin 0.8s linear infinite'}}/>
+          </div>
+        ) : (<>
+          <div style={{background:'white',borderBottom:'1px solid #e5e7eb',padding:'0 28px',height:64,display:'flex',alignItems:'center',gap:16,flexShrink:0}}>
+            <button onClick={()=>router.push('/pacientes')} style={{background:'none',border:'none',cursor:'pointer',color:'#6b7280',display:'flex',alignItems:'center',gap:6,fontSize:13}}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Pacientes
+            </button>
+            <span style={{color:'#d1d5db'}}>/</span>
+            <div style={{display:'flex',alignItems:'center',gap:10,flex:1}}>
+              <div style={{width:36,height:36,borderRadius:'50%',background:'#f0fdf4',border:'2px solid #bbf7d0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#16a34a'}}>{ini}</div>
+              <div>
+                <p style={{fontSize:15,fontWeight:700,color:'#111827',margin:0}}>{paciente?.nome}</p>
+                <p style={{fontSize:11,color:'#9ca3af',margin:0}}>{[paciente?.sexo,idadePac?idadePac+' anos':null].filter(Boolean).join(' · ')}</p>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>setModalAg(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'1px solid #bbf7d0',background:'#f0fdf4',color:'#16a34a',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar</button>
+              <a href="/" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:'#16a34a',color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
+            </div>
+          </div>
+          <div style={{background:'white',borderBottom:'1px solid #e5e7eb',padding:'0 28px',display:'flex',flexShrink:0}}>
+            {([{id:'overview',label:'Visao geral'},{id:'consultas',label:'Consultas ('+consultas.length+')'},{id:'agendamentos',label:'Agenda ('+agendamentos.filter(a=>a.status!=='cancelado').length+')'},{id:'prontuario',label:'Prontuario'}] as {id:Aba;label:string}[]).map(tab=>(
+              <button key={tab.id} onClick={()=>setAba(tab.id)} style={{padding:'14px 16px',background:'transparent',border:'none',cursor:'pointer',fontSize:13,fontWeight:aba===tab.id?600:400,color:aba===tab.id?'#111827':'#6b7280',borderBottom:aba===tab.id?'2px solid #16a34a':'2px solid transparent',marginBottom:-1}}>{tab.label}</button>
+            ))}
+          </div>
+          <div style={{flex:1,overflow:'auto',padding:28}}>
+            {aba==='overview'&&(
+              <div style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:20,maxWidth:1100}}>
+                <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                  <div style={{background:'white',border:'1px solid #e5e7eb',borderRadius:14,overflow:'hidden'}}>
+                    <div style={{background:'linear-gradient(135deg,#f0fdf4,#dcfce7)',padding:'24px 20px',textAlign:'center',borderBottom:'1px solid #e5e7eb'}}>
+                      <div style={{width:64,height:64,borderRadius:'50%',background:'white',border:'3px solid #bbf7d0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,color:'#16a34a',margin:'0 auto 12px'}}>{ini}</div>
+                      <h2 style={{fontSize:16,fontWeight:700,color:'#111827',margin:'0 0 4px'}}>{paciente?.nome}</h2>
+                      <p style={{fontSize:12,color:'#6b7280',margin:0}}>{[paciente?.sexo,idadePac?idadePac+' anos':null].filter(Boolean).join(' · ')}</p>
+                      {prox&&<div style={{marginTop:12,background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:8,padding:'6px 12px'}}><p style={{fontSize:11,color:'#2563eb',margin:0}}>Prox: {fmt(prox.data_hora)} {fmtH(prox.data_hora)}</p></div>}
+                    </div>
+                    <div style={{padding:'16px 20px'}}>
+                      <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
+                        <p style={{fontSize:11,fontWeight:700,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.06em',margin:0}}>Dados pessoais</p>
+                        <button onClick={()=>setEditando(!editando)} style={{fontSize:11,color:'#16a34a',background:'none',border:'none',cursor:'pointer',fontWeight:600}}>{editando?'Cancelar':'Editar'}</button>
+                      </div>
+                      {editando?(
+                        <div style={{display:'flex',flexDirection:'column',gap:9}}>
+                          {['nome','cpf','telefone','email','endereco','convenio','nr_carteirinha'].map(k=>(
+                            <div key={k}>
+                              <label style={{fontSize:11,fontWeight:600,color:'#6b7280',display:'block',marginBottom:3,textTransform:'capitalize'}}>{k}</label>
+                              <input value={editForm[k]||''} onChange={e=>setEditForm((p:any)=>({...p,[k]:e.target.value}))} style={{width:'100%',padding:'7px 10px',fontSize:12,borderRadius:7,border:'1px solid #e5e7eb'}}/>
+                            </div>
+                          ))}
+                          {['alergias','comorbidades','medicamentos_uso'].map(k=>(
+                            <div key={k}>
+                              <label style={{fontSize:11,fontWeight:600,color:'#6b7280',display:'block',marginBottom:3,textTransform:'capitalize'}}>{k.replace('_',' ')}</label>
+                              <textarea value={editForm[k]||''} onChange={e=>setEditForm((p:any)=>({...p,[k]:e.target.value}))} style={{width:'100%',padding:'7px 10px',fontSize:12,borderRadius:7,border:'1px solid #e5e7eb',minHeight:52,resize:'vertical'}}/>
+                            </div>
+                          ))}
+                          <button onClick={salvarPaciente} disabled={salvando} style={{padding:'9px',borderRadius:8,border:'none',background:'#16a34a',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>{salvando?'Salvando...':'Salvar'}</button>
+                        </div>
+                      ):(
+                        <div style={{display:'flex',flexDirection:'column',gap:9}}>
+                          {[{l:'CPF',v:paciente?.cpf},{l:'Tel',v:paciente?.telefone},{l:'Email',v:paciente?.email},{l:'Endereco',v:paciente?.endereco},{l:'Convenio',v:paciente?.convenio},{l:'Carteirinha',v:paciente?.nr_carteirinha}].filter(f=>f.v).map(f=>(
+                            <div key={f.l} style={{display:'flex',justifyContent:'space-between'}}>
+                              <span style={{fontSize:12,color:'#9ca3af'}}>{f.l}</span>
+                              <span style={{fontSize:12,color:'#374151',fontWeight:500}}>{f.v}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {(paciente?.alergias||paciente?.comorbidades||paciente?.medicamentos_uso)&&!editando&&(
+                    <div style={{background:'white',border:'1px solid #e5e7eb',borderRadius:14,padding:'16px 20px',display:'flex',flexDirection:'column',gap:10}}>
+                      {paciente.alergias&&<div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#dc2626',margin:'0 0 3px',textTransform:'uppercase'}}>Alergias</p><p style={{fontSize:12,color:'#b91c1c',margin:0}}>{paciente.alergias}</p></div>}
+                      {paciente.comorbidades&&<div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#d97706',margin:'0 0 3px',textTransform:'uppercase'}}>Comorbidades</p><p style={{fontSize:12,color:'#92400e',margin:0}}>{paciente.comorbidades}</p></div>}
+                      {paciente.medicamentos_uso&&<div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#16a34a',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:12,color:'#166534',margin:0}}>{paciente.medicamentos_uso}</p></div>}
+                    </div>
+                  )}
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+                    {[{l:'Consultas',v:String(consultas.length),c:'#2563eb'},{l:'Agendamentos',v:String(agendamentos.filter(a=>a.status!=='cancelado').length),c:'#16a34a'},{l:'Proximo',v:prox?fmt(prox.data_hora):'Nao agendado',c:'#7c3aed'}].map(m=>(
+                      <div key={m.l} style={{background:'white',border:'1px solid #e5e7eb',borderRadius:12,padding:'16px 18px'}}>
+                        <p style={{fontSize:22,fontWeight:800,color:m.c,margin:'0 0 4px'}}>{m.v}</p>
+                        <p style={{fontSize:12,color:'#9ca3af',margin:0}}>{m.l}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{background:'white',border:'1px solid #e5e7eb',borderRadius:14,overflow:'hidden'}}>
+                    <div style={{padding:'14px 20px',borderBottom:'1px solid #f3f4f6',display:'flex',justifyContent:'space-between'}}>
+                      <p style={{fontSize:13,fontWeight:700,color:'#111827',margin:0}}>Ultimas consultas</p>
+                      <button onClick={()=>setAba('consultas')} style={{fontSize:12,color:'#16a34a',background:'none',border:'none',cursor:'pointer',fontWeight:600}}>Ver todas</button>
+                    </div>
+                    {consultas.length===0?<div style={{padding:24,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta</p></div>
+                    :consultas.slice(0,4).map(c=>(
+                      <div key={c.id} onClick={()=>{setConsultaAberta(c);setAba('consultas')}} style={{padding:'12px 20px',borderBottom:'1px solid #f9fafb',cursor:'pointer'}}>
+                        <p style={{fontSize:11,color:'#9ca3af',margin:'0 0 3px'}}>{fmt(c.criado_em)}</p>
+                        <p style={{fontSize:12,color:'#374151',margin:0}}>{(c.subjetivo||'').substring(0,80)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {aba==='consultas'&&(
+              <div style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:20,maxWidth:1100}}>
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {consultas.length===0?<div style={{background:'white',border:'1px solid #e5e7eb',borderRadius:12,padding:24,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta</p></div>
+                  :consultas.map(c=>(
+                    <div key={c.id} onClick={()=>setConsultaAberta(consultaAberta?.id===c.id?null:c)} style={{background:'white',border:'1px solid '+(consultaAberta?.id===c.id?'#bbf7d0':'#e5e7eb'),borderRadius:12,padding:'12px 16px',cursor:'pointer'}}>
+                      <p style={{fontSize:11,color:'#9ca3af',margin:'0 0 4px'}}>{fmt(c.criado_em)}</p>
+                      <p style={{fontSize:12,color:'#374151',margin:'0 0 7px'}}>{(c.subjetivo||'').substring(0,90)}</p>
+                      <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#16a34a',background:'#f0fdf4',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700,border:'1px solid #bbf7d0'}}>{cid.codigo}</span>)}</div>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  {consultaAberta?(
+                    <div style={{background:'white',border:'1px solid #e5e7eb',borderRadius:14}}>
+                      <div style={{padding:'14px 20px',borderBottom:'1px solid #f3f4f6'}}><p style={{fontSize:14,fontWeight:700,color:'#111827',margin:0}}>{fmtF(consultaAberta.criado_em)}</p></div>
+                      <div style={{padding:20}}>
+                        {secoes.map(s=>(
+                          <div key={s.key} style={{background:s.bg,border:'1px solid '+s.border,borderRadius:10,padding:'12px 14px',marginBottom:10}}>
+                            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+                              <div style={{width:22,height:22,borderRadius:6,background:s.cor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'white'}}>{s.letra}</div>
+                              <p style={{fontSize:12,fontWeight:700,color:'#111827',margin:0}}>{s.titulo}</p>
+                            </div>
+                            <p style={{fontSize:12,color:'#374151',margin:0,lineHeight:1.7,paddingLeft:30}}>{consultaAberta[s.key]||'--'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ):<div style={{background:'white',border:'1px dashed #e5e7eb',borderRadius:14,padding:40,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Selecione uma consulta</p></div>}
+                </div>
+              </div>
+            )}
+            {aba==='agendamentos'&&(
+              <div style={{maxWidth:800}}>
+                <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
+                  <button onClick={()=>setModalAg(true)} style={{padding:'8px 16px',borderRadius:8,border:'none',background:'#16a34a',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>+ Novo agendamento</button>
+                </div>
+                {agendamentos.length===0?(
+                  <div style={{background:'white',border:'1px dashed #e5e7eb',borderRadius:14,padding:40,textAlign:'center'}}>
+                    <p style={{fontSize:14,fontWeight:600,color:'#374151',margin:'0 0 12px'}}>Nenhum agendamento</p>
+                    <button onClick={()=>setModalAg(true)} style={{padding:'8px 20px',borderRadius:8,border:'none',background:'#16a34a',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar agora</button>
+                  </div>
+                ):(
+                  <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                    {agendamentos.map(ag=>{
+                      const tc=TIPO_CORES[ag.tipo]||TIPO_CORES.consulta
+                      const sc=STATUS_CORES[ag.status]||STATUS_CORES.agendado
+                      const passado=new Date(ag.data_hora)<new Date()
+                      return(
+                        <div key={ag.id} style={{background:'white',border:'1px solid #e5e7eb',borderRadius:12,padding:'16px 20px',display:'flex',gap:16,opacity:ag.status==='cancelado'?0.5:1}}>
+                          <div style={{background:tc.bg,border:'1px solid '+tc.border,borderRadius:10,padding:'8px 12px',textAlign:'center',flexShrink:0,minWidth:56}}>
+                            <p style={{fontSize:18,fontWeight:800,color:tc.text,margin:0,lineHeight:1}}>{new Date(ag.data_hora).getDate()}</p>
+                            <p style={{fontSize:10,color:tc.text,margin:0,textTransform:'uppercase'}}>{new Date(ag.data_hora).toLocaleDateString('pt-BR',{month:'short'})}</p>
+                            <p style={{fontSize:11,color:tc.text,margin:0}}>{fmtH(ag.data_hora)}</p>
+                          </div>
+                          <div style={{flex:1}}>
+                            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                              <p style={{fontSize:14,fontWeight:700,color:'#111827',margin:0}}>{ag.motivo||'Consulta'}</p>
+                              <span style={{fontSize:10,background:tc.bg,color:tc.text,padding:'1px 7px',borderRadius:20,border:'1px solid '+tc.border,fontWeight:600}}>{ag.tipo}</span>
+                              <span style={{fontSize:10,background:sc.bg,color:sc.text,padding:'1px 7px',borderRadius:20,fontWeight:600}}>{ag.status}</span>
+                            </div>
+                            {ag.observacoes&&<p style={{fontSize:12,color:'#6b7280',margin:'0 0 8px'}}>{ag.observacoes}</p>}
+                            <div style={{display:'flex',gap:8}}>
+                              {!passado&&ag.status==='agendado'&&<>
+                                <button onClick={()=>atualizarAg(ag.id,'confirmado')} style={{fontSize:11,color:'#16a34a',background:'#f0fdf4',border:'1px solid #bbf7d0',padding:'3px 10px',borderRadius:6,cursor:'pointer',fontWeight:600}}>Confirmar</button>
+                                <button onClick={()=>atualizarAg(ag.id,'cancelado')} style={{fontSize:11,color:'#dc2626',background:'#fef2f2',border:'1px solid #fecaca',padding:'3px 10px',borderRadius:6,cursor:'pointer',fontWeight:600}}>Cancelar</button>
+                              </>}
+                              {passado&&ag.status!=='realizado'&&ag.status!=='cancelado'&&(
+                                <button onClick={()=>atualizarAg(ag.id,'realizado')} style={{fontSize:11,color:'#6b7280',background:'#f3f4f6',border:'1px solid #e5e7eb',padding:'3px 10px',borderRadius:6,cursor:'pointer',fontWeight:600}}>Marcar realizado</button>
+                              )}
+                            </div>
+                          </div>
+                          <button onClick={()=>deletarAg(ag.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#d1d5db'}}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+            {aba==='prontuario'&&(
+              <div style={{maxWidth:800}}>
+                <div style={{background:'white',border:'1px solid #e5e7eb',borderRadius:14,padding:'20px 24px',marginBottom:20}}>
+                  <h2 style={{fontSize:15,fontWeight:700,color:'#111827',margin:'0 0 14px'}}>Resumo clinico</h2>
+                  {(paciente?.alergias||paciente?.comorbidades||paciente?.medicamentos_uso)?(
+                    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                      {paciente.alergias&&<div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#dc2626',margin:'0 0 3px',textTransform:'uppercase'}}>Alergias</p><p style={{fontSize:13,color:'#b91c1c',margin:0}}>{paciente.alergias}</p></div>}
+                      {paciente.comorbidades&&<div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#d97706',margin:'0 0 3px',textTransform:'uppercase'}}>Comorbidades</p><p style={{fontSize:13,color:'#92400e',margin:0}}>{paciente.comorbidades}</p></div>}
+                      {paciente.medicamentos_uso&&<div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#16a34a',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:13,color:'#166534',margin:0}}>{paciente.medicamentos_uso}</p></div>}
+                    </div>
+                  ):<p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhum dado clinico preenchido.</p>}
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                  {consultas.map((c,idx)=>(
+                    <div key={c.id} style={{background:'white',border:'1px solid #e5e7eb',borderRadius:12,overflow:'hidden'}}>
+                      <div style={{padding:'10px 18px',background:'#f9fafb',borderBottom:'1px solid #f3f4f6',display:'flex',justifyContent:'space-between'}}>
+                        <p style={{fontSize:13,fontWeight:600,color:'#374151',margin:0}}>#{consultas.length-idx} {fmtF(c.criado_em)}</p>
+                        <div style={{display:'flex',gap:4}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#16a34a',background:'#f0fdf4',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700,border:'1px solid #bbf7d0'}}>{cid.codigo}</span>)}</div>
+                      </div>
+                      <div style={{padding:'14px 18px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                        {secoes.map(s=>(
+                          <div key={s.key} style={{background:s.bg,border:'1px solid '+s.border,borderRadius:8,padding:'10px 12px'}}>
+                            <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:5}}>
+                              <div style={{width:20,height:20,borderRadius:5,background:s.cor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:'white'}}>{s.letra}</div>
+                              <p style={{fontSize:11,fontWeight:700,color:'#374151',margin:0}}>{s.titulo}</p>
+                            </div>
+                            <p style={{fontSize:11,color:'#374151',margin:0,lineHeight:1.6,paddingLeft:27}}>{c[s.key]||'--'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </>)}
+      </main>
+      {modalAg&&(
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:50,padding:24}}>
+          <div style={{background:'white',borderRadius:16,width:'100%',maxWidth:440,padding:28,boxShadow:'0 20px 60px rgba(0,0,0,0.15)'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+              <h3 style={{fontSize:16,fontWeight:700,color:'#111827',margin:0}}>Agendar consulta</h3>
+              <button onClick={()=>setModalAg(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af',fontSize:18,lineHeight:1}}>x</button>
+            </div>
+            <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 14px',marginBottom:18}}>
+              <p style={{fontSize:13,fontWeight:600,color:'#166534',margin:'0 0 2px'}}>{paciente?.nome}</p>
+              <p style={{fontSize:11,color:'#6b7280',margin:0}}>{[paciente?.sexo,idadePac?idadePac+' anos':null].filter(Boolean).join(' · ')}</p>
+            </div>
+            <form onSubmit={salvarAg} style={{display:'flex',flexDirection:'column',gap:14}}>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Data e hora</label>
+                <input type="datetime-local" required value={agForm.data_hora} onChange={e=>setAgForm(f=>({...f,data_hora:e.target.value}))} style={{width:'100%',padding:'10px 12px',fontSize:13,borderRadius:8,border:'1.5px solid #e5e7eb'}}/>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Tipo</label>
+                <select value={agForm.tipo} onChange={e=>setAgForm(f=>({...f,tipo:e.target.value}))} style={{width:'100%',padding:'10px 12px',fontSize:13,borderRadius:8,border:'1.5px solid #e5e7eb'}}>
+                  <option value="consulta">Consulta</option>
+                  <option value="retorno">Retorno</option>
+                  <option value="exame">Exame</option>
+                  <option value="urgencia">Urgencia</option>
+                </select>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Motivo</label>
+                <input value={agForm.motivo} onChange={e=>setAgForm(f=>({...f,motivo:e.target.value}))} style={{width:'100%',padding:'10px 12px',fontSize:13,borderRadius:8,border:'1.5px solid #e5e7eb'}} placeholder="Cefaleia, retorno..."/>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Observacoes</label>
+                <textarea value={agForm.observacoes} onChange={e=>setAgForm(f=>({...f,observacoes:e.target.value}))} style={{width:'100%',padding:'10px 12px',fontSize:13,borderRadius:8,border:'1.5px solid #e5e7eb',minHeight:64,resize:'vertical'}}/>
+              </div>
+              <button type="submit" disabled={salvandoAg} style={{padding:'12px',borderRadius:9,border:'none',background:'#16a34a',color:'white',fontSize:14,fontWeight:700,cursor:'pointer'}}>{salvandoAg?'Salvando...':'Confirmar agendamento'}</button>
+            </form>
+          </div>
+        </div>
+      )}
+      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+    </div>
+  )
+}
