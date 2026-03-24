@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+// Usa service role para bypassar RLS no webhook (sem autenticacao de usuario)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'media_whatsapp_2026'
@@ -26,11 +32,12 @@ REGRAS:
 - Para opcao 2: informe os agendamentos cadastrados do paciente
 - Para opcao 3: pergunte qual consulta deseja cancelar/remarcar
 - Para opcao 4: responda sobre horarios (seg-sex 8h-18h), endereco e convenios
-- Para opcao 5: avise que um atendente entrara em contato em breve
+- Para opcao 5: avise que um atendente entrara em contato em breve e mude modo para humano
 - NUNCA de diagnosticos ou orientacoes medicas
 - Para emergencias: "Ligue 192 (SAMU) ou va ao pronto-socorro mais proximo"
 - Se nao entender: repita o menu principal
-- Para confirmar agendamento inclua no final: [AGENDAR:{"data":"YYYY-MM-DDTHH:mm:00","motivo":"motivo"}]`
+- Para confirmar agendamento inclua: [AGENDAR:{"data":"YYYY-MM-DDTHH:mm:00","motivo":"motivo"}]
+- Se paciente pedir atendente humano inclua: [HUMANO]`
 
 async function getConfig(phoneNumberId: string) {
   const { data } = await supabase
@@ -42,30 +49,40 @@ async function getConfig(phoneNumberId: string) {
   return data
 }
 
-async function enviar(para: string, texto: string, token: string, phoneId: string) {
-  const r = await fetch('https://graph.facebook.com/v20.0/' + phoneId + '/messages', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messaging_product: 'whatsapp', to: para, type: 'text', text: { body: texto } })
-  })
-  return r.json()
+async function enviarWpp(para: string, texto: string, token: string, phoneId: string) {
+  console.log('Enviando WPP para:', para, 'phoneId:', phoneId)
+  try {
+    const r = await fetch('https://graph.facebook.com/v20.0/' + phoneId + '/messages', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messaging_product: 'whatsapp', to: para, type: 'text', text: { body: texto } })
+    })
+    const d = await r.json()
+    console.log('Resultado WPP:', JSON.stringify(d))
+    return d
+  } catch (e) {
+    console.error('Erro ao enviar WPP:', e)
+    throw e
+  }
 }
 
 async function getOuCriarConversa(telefone: string, nome: string, medicoId: string | null) {
-  const query = supabase.from('whatsapp_conversas').select('*').eq('telefone', telefone)
-  if (medicoId) query.eq('medico_id', medicoId)
-  const { data: existente } = await query.single()
+  let query = supabase.from('whatsapp_conversas').select('*').eq('telefone', telefone)
+  if (medicoId) query = query.eq('medico_id', medicoId)
+  const { data: existente } = await query.maybeSingle()
 
   if (existente) {
     await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString(), nome_contato: nome || existente.nome_contato }).eq('id', existente.id)
     return existente
   }
+
   const { data: paciente } = medicoId
-    ? await supabase.from('pacientes').select('id').eq('telefone', telefone).eq('medico_id', medicoId).single()
+    ? await supabase.from('pacientes').select('id').eq('telefone', telefone).eq('medico_id', medicoId).maybeSingle()
     : { data: null }
 
   const { data: nova } = await supabase.from('whatsapp_conversas').insert({
-    telefone, nome_contato: nome, paciente_id: paciente?.id, medico_id: medicoId, status: 'ativa'
+    telefone, nome_contato: nome || telefone, paciente_id: paciente?.id,
+    medico_id: medicoId, status: 'ativa', modo: 'ia'
   }).select().single()
   return nova
 }
@@ -76,7 +93,8 @@ async function getHistorico(conversaId: string) {
 }
 
 async function getContexto(conversaId: string, pacienteId: string | null, medicoId: string | null) {
-  const isNova = !(await supabase.from('whatsapp_mensagens').select('id').eq('conversa_id', conversaId).limit(1)).data?.length
+  const { data: msgs } = await supabase.from('whatsapp_mensagens').select('id').eq('conversa_id', conversaId).limit(1)
+  const isNova = !msgs?.length
 
   let paciente = null, agendamentos: any[] = [], horarios: string[] = []
 
@@ -110,40 +128,23 @@ async function getContexto(conversaId: string, pacienteId: string | null, medico
   return { isNova, paciente, agendamentos, horarios }
 }
 
-async function processarComIA(mensagem: string, historico: any[], contexto: any, config: any) {
-  const { isNova, paciente, agendamentos, horarios } = contexto
-  const sofiaPrompt = config?.sofia_prompt || PROMPT_PADRAO
+async function processarIA(mensagem: string, historico: any[], contexto: any, config: any) {
+  const prompt = config?.sofia_prompt || PROMPT_PADRAO
   const nomeClinica = config?.nome_exibicao || 'Clinica MedIA'
 
-  const systemPrompt = sofiaPrompt + `
+  const system = prompt + `\n\nCONTEXTO:\n- Clinica: ${nomeClinica}\n- Paciente: ${contexto.paciente?.nome || 'Nao identificado'}\n- Agendamentos: ${contexto.agendamentos?.length ? contexto.agendamentos.map((a: any) => new Date(a.data_hora).toLocaleString('pt-BR') + ' - ' + a.motivo).join(', ') : 'Nenhum'}\n- Horarios disponiveis: ${contexto.horarios?.length ? contexto.horarios.join(', ') : 'Consultar por telefone'}\n- Primeira mensagem: ${contexto.isNova ? 'SIM - envie boas-vindas e menu' : 'NAO'}`
 
-CONTEXTO ATUAL:
-- Clinica: ${nomeClinica}
-- Paciente identificado: ${paciente?.nome || 'Nao identificado'}
-- Agendamentos proximos: ${agendamentos.length > 0 ? agendamentos.map((a: any) => new Date(a.data_hora).toLocaleString('pt-BR') + ' - ' + a.motivo).join(', ') : 'Nenhum'}
-- Horarios disponiveis: ${horarios.length > 0 ? horarios.join(', ') : 'Consultar por telefone'}
-- E a primeira mensagem desta conversa: ${isNova ? 'SIM - envie boas-vindas e o menu' : 'NAO - continue o contexto'}
+  const msgs = historico.slice(-15).map((h: any) => ({ role: h.tipo === 'recebida' ? 'user' as const : 'assistant' as const, content: h.conteudo }))
+  msgs.push({ role: 'user', content: mensagem })
 
-INSTRUCAO: Responda de forma natural e continue o fluxo. Se for primeira mensagem, envie o menu completo.`
-
-  const messages = historico.slice(-15).map((h: any) => ({
-    role: h.tipo === 'recebida' ? 'user' as const : 'assistant' as const,
-    content: h.conteudo
-  }))
-  messages.push({ role: 'user', content: mensagem })
-
-  const response = await anthropic.messages.create({
-    model: 'claude-opus-4-5',
-    max_tokens: 600,
-    system: systemPrompt,
-    messages
-  })
-
-  const texto = response.content[0].type === 'text' ? response.content[0].text : ''
-  const match = texto.match(/\[AGENDAR:({[^}]+})\]/)
+  const res = await anthropic.messages.create({ model: 'claude-opus-4-5', max_tokens: 600, system, messages: msgs })
+  const texto = res.content[0].type === 'text' ? res.content[0].text : ''
+  const agendarMatch = texto.match(/\[AGENDAR:({[^}]+})\]/)
+  const humano = texto.includes('[HUMANO]')
   return {
-    texto: texto.replace(/\[AGENDAR:[^\]]+\]/g, '').trim(),
-    agendarData: match ? JSON.parse(match[1]) : null
+    texto: texto.replace(/\[AGENDAR:[^\]]+\]/g, '').replace('[HUMANO]', '').trim(),
+    agendarData: agendarMatch ? JSON.parse(agendarMatch[1]) : null,
+    humano
   }
 }
 
@@ -165,37 +166,46 @@ export async function POST(req: NextRequest) {
     const phoneNumberId = value?.metadata?.phone_number_id
     const config = await getConfig(phoneNumberId)
 
-    // Se sofia estiver pausada, apenas salva a mensagem sem responder
-    if (config?.sofia_ativo === false) {
-      for (const msg of messages) {
-        if (msg.type !== 'text') continue
-        const conversa = await getOuCriarConversa(msg.from, value.contacts?.[0]?.profile?.name || '', config?.medico_id || null)
-        if (conversa) await supabase.from('whatsapp_mensagens').insert({ conversa_id: conversa.id, tipo: 'recebida', conteudo: msg.text?.body || '', metadata: { wamid: msg.id } })
-      }
-      return NextResponse.json({ ok: true })
-    }
+    const token = config?.access_token || process.env.WHATSAPP_TOKEN || ''
+    const phoneId = config?.phone_number_id || phoneNumberId || process.env.WHATSAPP_PHONE_ID || ''
+    const medicoId = config?.medico_id || null
+
+    console.log('Config encontrada:', config ? 'sim' : 'nao', '| phoneNumberId:', phoneNumberId)
 
     for (const msg of messages) {
       if (msg.type !== 'text') continue
       const telefone = msg.from
       const texto = msg.text?.body || ''
-      const nomeContato = value.contacts?.[0]?.profile?.name || ''
-      const medicoId = config?.medico_id || null
-      const token = config?.access_token || process.env.WHATSAPP_TOKEN || ''
-      const phoneId = phoneNumberId || process.env.WHATSAPP_PHONE_ID || ''
+      const nomeContato = value.contacts?.[0]?.profile?.name || telefone
 
       const conversa = await getOuCriarConversa(telefone, nomeContato, medicoId)
       if (!conversa) continue
 
-      await supabase.from('whatsapp_mensagens').insert({ conversa_id: conversa.id, tipo: 'recebida', conteudo: texto, metadata: { wamid: msg.id } })
+      await supabase.from('whatsapp_mensagens').insert({
+        conversa_id: conversa.id, tipo: 'recebida', conteudo: texto,
+        metadata: { wamid: msg.id, timestamp: msg.timestamp }
+      })
+
+      // Se modo humano, apenas salva - nao responde com IA
+      if (conversa.modo === 'humano') {
+        console.log('Modo humano - nao respondendo com IA')
+        continue
+      }
+
+      // Se sofia pausada globalmente
+      if (config?.sofia_ativo === false) {
+        console.log('Sofia pausada - nao respondendo')
+        continue
+      }
 
       const [historico, contexto] = await Promise.all([
         getHistorico(conversa.id),
         getContexto(conversa.id, conversa.paciente_id, medicoId)
       ])
 
-      const { texto: resposta, agendarData } = await processarComIA(texto, historico, contexto, config)
+      const { texto: resposta, agendarData, humano } = await processarIA(texto, historico, contexto, config)
 
+      // Cria agendamento se necessario
       if (agendarData && medicoId) {
         await supabase.from('agendamentos').insert({
           medico_id: medicoId, paciente_id: conversa.paciente_id,
@@ -204,10 +214,22 @@ export async function POST(req: NextRequest) {
         })
       }
 
-      await supabase.from('whatsapp_mensagens').insert({ conversa_id: conversa.id, tipo: 'enviada', conteudo: resposta, metadata: { ia: true, agendou: !!agendarData } })
+      // Muda para modo humano se IA solicitou
+      if (humano) {
+        await supabase.from('whatsapp_conversas').update({ modo: 'humano' }).eq('id', conversa.id)
+      }
+
+      // Salva resposta e envia
+      await supabase.from('whatsapp_mensagens').insert({
+        conversa_id: conversa.id, tipo: 'enviada', conteudo: resposta,
+        metadata: { ia: true, agendou: !!agendarData }
+      })
       await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString() }).eq('id', conversa.id)
-      await enviar(telefone, resposta, token, phoneId)
+
+      // ENVIA DE VOLTA para o WhatsApp
+      await enviarWpp(telefone, resposta, token, phoneId)
     }
+
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     console.error('Webhook error:', e)
