@@ -22,14 +22,15 @@ export function Sidebar({ activeHref }: Props) {
       items: [
         { href: '/dashboard', label: 'Dashboard', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> },
         { href: '/', label: 'Nova consulta', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg> },
-        { href: '/agenda', label: 'Agenda', icon: <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'><rect x='3' y='4' width='18' height='18' rx='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg> },
-        { href: '/historico', label: 'Histórico', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> },
+        { href: '/agenda', label: 'Agenda', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+        { href: '/historico', label: 'Historico', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> },
         { href: '/pacientes', label: 'Pacientes', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg> },
       ]
     },
     {
       label: 'Ferramentas',
       items: [
+        { href: '/whatsapp', label: 'WhatsApp IA', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> },
         { href: '/exames', label: 'Analisar exames', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg> },
       ]
     }
@@ -40,7 +41,6 @@ export function Sidebar({ activeHref }: Props) {
       width: 220, background: 'white', borderRight: '1px solid #e5e7eb',
       display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100vh',
     }}>
-      {/* Logo */}
       <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #f3f4f6' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -50,12 +50,11 @@ export function Sidebar({ activeHref }: Props) {
           </div>
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.2 }}>MedIA</p>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Prontuário inteligente</p>
+            <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Prontuario inteligente</p>
           </div>
         </div>
       </div>
 
-      {/* Nav por grupos */}
       <nav style={{ padding: '12px', flex: 1, overflow: 'auto' }}>
         {grupos.map(grupo => (
           <div key={grupo.label} style={{ marginBottom: 16 }}>
@@ -71,7 +70,6 @@ export function Sidebar({ activeHref }: Props) {
                   color: active ? '#16a34a' : '#374151',
                   fontSize: 13, fontWeight: active ? 600 : 400,
                   border: active ? '1px solid #dcfce7' : '1px solid transparent',
-                  transition: 'all 0.1s',
                 }}>
                   <span style={{ flexShrink: 0, opacity: active ? 1 : 0.5 }}>{item.icon}</span>
                   {item.label}
@@ -82,13 +80,12 @@ export function Sidebar({ activeHref }: Props) {
         ))}
       </nav>
 
-      {/* User footer */}
       <div style={{ padding: '12px 16px', borderTop: '1px solid #f3f4f6' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 6px', borderRadius: 8 }}>
           <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#f0fdf4', border: '1.5px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#16a34a', flexShrink: 0 }}>{iniciais}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{medico?.nome || '—'}</p>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{medico?.especialidade || medico?.crm || '—'}</p>
+            <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{medico?.nome || 'Medico'}</p>
+            <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{medico?.especialidade || medico?.crm || 'Clinica'}</p>
           </div>
           <button onClick={() => { localStorage.removeItem('medico'); router.push('/login') }} title="Sair"
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 4, borderRadius: 5, flexShrink: 0 }}>
