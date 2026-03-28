@@ -1,9 +1,9 @@
 'use client'
-import { useEffect, useRef, useState, use } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export default function Sala({ params }: { params: Promise<{ sala_id: string }> }) {
-  const { sala_id } = use(params)
+export default function Sala({ params }: { params: { sala_id: string } }) {
+  const { sala_id } = params
 
   const localRef = useRef<HTMLVideoElement>(null)
   const remoteRef = useRef<HTMLVideoElement>(null)
