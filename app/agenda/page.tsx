@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
@@ -38,9 +38,23 @@ export default function Agenda() {
   const [viewMode, setViewMode] = useState<'semana' | 'dia'>('semana')
   const [diaSelecionado, setDiaSelecionado] = useState(new Date())
   const [dragging, setDragging] = useState<string | null>(null)
+  const [comVideo, setComVideo] = useState(false)
+  const [salaLink, setSalaLink] = useState('')
+  const [salaId, setSalaId] = useState('')
 
   const diasSemana = getWeekDays(semana)
   const hoje = new Date().toDateString()
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('nova_teleconsulta') === '1') {
+        setComVideo(true)
+        setModal({ open: true })
+        window.history.replaceState({}, '', '/agenda')
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const m = localStorage.getItem('medico')
@@ -110,12 +124,29 @@ export default function Agenda() {
         }).eq('id', modal.ag.id).select(`*, pacientes(nome)`).single()
         if (data) setAgendamentos(prev => prev.map(a => a.id === data.id ? data : a))
       } else {
+        let meetLinkFinal = ''
+        let meetCodeFinal = ''
+        if (comVideo) {
+          const tcRes = await fetch('/api/teleconsulta', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ medico_id: medico.id, paciente_id: form.paciente_id || null, titulo: form.motivo || 'Teleconsulta' })
+          })
+          const tcData = await tcRes.json()
+          if (tcData.teleconsulta) {
+            meetCodeFinal = tcData.teleconsulta.sala_id
+            meetLinkFinal = window.location.origin + '/sala/' + meetCodeFinal
+            setSalaLink(meetLinkFinal)
+            setSalaId(meetCodeFinal)
+          }
+        }
         const { data } = await supabase.from('agendamentos').insert({
           medico_id: medico.id,
           paciente_id: form.paciente_id || null,
           data_hora: new Date(form.data_hora).toISOString(),
           tipo: form.tipo, motivo: form.motivo, observacoes: form.observacoes,
           status: 'agendado',
+          meet_link: meetLinkFinal || null,
+          meet_code: meetCodeFinal || null,
         }).select(`*, pacientes(nome)`).single()
         if (data) setAgendamentos(prev => [...prev, data])
       }
@@ -371,6 +402,28 @@ export default function Agenda() {
                 </div>
               )}
 
+              {/* Toggle video */}
+              {!modal.ag && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: comVideo ? '#f0fdf4' : '#f9fafb', borderRadius: 10, border: '1px solid ' + (comVideo ? '#bbf7d0' : '#e5e7eb') }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={comVideo ? '#16a34a' : '#9ca3af'} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: comVideo ? '#166534' : '#374151', margin: 0 }}>Incluir sala de video</p>
+                      <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Link gerado automaticamente</p>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => { setComVideo(!comVideo); setSalaLink(''); setSalaId('') }} style={{ width: 42, height: 24, borderRadius: 12, border: 'none', background: comVideo ? '#16a34a' : '#d1d5db', cursor: 'pointer', position: 'relative' as const, flexShrink: 0 }}>
+                    <span style={{ position: 'absolute' as const, top: 2, left: comVideo ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}/>
+                  </button>
+                </div>
+              )}
+              {salaLink && (
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                  <span style={{ fontSize: 11, color: '#1d4ed8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{salaLink}</span>
+                  <button type="button" onClick={() => { navigator.clipboard.writeText(salaLink); window.open('/sala/' + salaId, '_blank') }} style={{ fontSize: 11, color: '#2563eb', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>Copiar e abrir</button>
+                </div>
+              )}
               {/* Botões */}
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
                 <button type="submit" disabled={salvando} style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: '#16a34a', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
