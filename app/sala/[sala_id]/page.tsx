@@ -32,11 +32,11 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const carregarSala = async () => {
     const { data } = await supabase
       .from('teleconsultas')
-      .select('id, sala_id, titulo, status, medico_id, paciente_id')
+      .select('*')
       .eq('sala_id', sala_id)
-      .maybeSingle()
+      .single()
     if (!data) { setErro('Sala nao encontrada ou link expirado.'); return }
-    if (!data || data.status === 'encerrada') { setErro('Esta consulta ja foi encerrada.'); return }
+    if (data.status === 'encerrada') { setErro('Esta consulta ja foi encerrada.'); return }
     setSala(data)
   }
 
