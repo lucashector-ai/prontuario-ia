@@ -54,7 +54,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   }, [sala_id])
 
   const carregarSala = async () => {
-    const { data } = await sb.from('teleconsultas').select('*, medicos(nome), pacientes(nome)').eq('sala_id', sala_id).single()
+    const { data } = await sb.from('teleconsultas').select('*').eq('sala_id', sala_id).single()
     if (!data) { setErro('Sala nao encontrada ou link expirado.'); return }
     // Reabre sala se estava encerrada (paciente acessando antes do medico)
     if (data.status === 'encerrada') {
@@ -172,7 +172,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .on('broadcast', { event: 'chat' }, ({ payload }) => {
         if (payload.de === papel) return
-        setChat(p => [...p, { de: payload.de === 'medico' ? (sala?.medicos?.nome || 'Medico') : 'Paciente', msg: payload.dados, hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }])
+        setChat(p => [...p, { de: payload.de === 'medico' ? (null || 'Medico') : 'Paciente', msg: payload.dados, hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }])
       })
       .on('broadcast', { event: 'encerrar' }, () => encerrarLocal())
       .subscribe(async (s) => {
