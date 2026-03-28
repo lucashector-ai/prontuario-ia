@@ -27,8 +27,8 @@ export default function Teleconsulta() {
     setConsultas(d.teleconsultas || [])
   }
 
-  const criar = async (e: React.FormEvent) => {
-    e.preventDefault(); setCriando(true)
+  const criar = async () => {
+    setCriando(true)
     const r = await fetch('/api/teleconsulta', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ medico_id: medico.id, ...form, titulo: form.titulo || 'Teleconsulta' })
@@ -160,7 +160,7 @@ export default function Teleconsulta() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
           <div style={{ background: 'white', borderRadius: 16, padding: '24px', width: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 20px' }}>Nova teleconsulta</h2>
-            <form onSubmit={criar} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 5 }}>Paciente</label>
                 <select value={form.paciente_id} onChange={e => setForm(f => ({ ...f, paciente_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }}>
@@ -179,7 +179,7 @@ export default function Teleconsulta() {
                 <button type="button" onClick={() => setModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 9, border: '1px solid #e5e7eb', background: 'white', fontSize: 13, cursor: 'pointer', color: '#6b7280' }}>Cancelar</button>
                 <button type="submit" disabled={criando} style={{ flex: 1, padding: '10px', borderRadius: 9, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{criando ? 'Criando...' : 'Criar sala'}</button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
