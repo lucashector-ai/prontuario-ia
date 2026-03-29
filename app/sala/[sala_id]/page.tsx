@@ -33,6 +33,9 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [micOkEspera, setMicOkEspera] = useState(false)
   const [entrando, setEntrando] = useState(false)
   const [remoteConectado, setRemoteConectado] = useState(false)
+  const [anexos, setAnexos] = useState<{nome:string;url:string;tipo:string;de:string;hora:string}[]>([])
+  const [enviandoAnexo, setEnviandoAnexo] = useState(false)
+  const anexoInputRef = useRef<HTMLInputElement>(null)
 
   const localRef = useRef<HTMLVideoElement>(null)
   const remoteRef = useRef<HTMLVideoElement>(null)
@@ -60,13 +63,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chat])
-
-  // Quando a tela de chamada monta, conecta o stream local ao video PiP
-  useEffect(() => {
-    if (tela === 'chamada' && streamRef.current && localRef.current) {
-      localRef.current.srcObject = streamRef.current
-    }
-  }, [tela])
 
   useEffect(() => {
     if (chatAberto) setNaoLidas(0)
@@ -157,6 +153,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         remoteRef.current.srcObject = e.streams[0]
         setRemoteConectado(true)
         setEntrando(false)
+        tocarSom('entrada')
         timerRef.current = setInterval(() => setTimer(t => t + 1), 1000)
         sb.from('teleconsultas').update({ status: 'em_andamento', iniciada_em: new Date().toISOString() }).eq('sala_id', sala_id)
       }
@@ -202,13 +199,24 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         if (payload.de === papel) return
         if (papel === 'medico') fazerOffer(pc)
       })
+      .on('broadcast', { event: 'anexo' }, ({ payload }) => {
+        if (payload.de === papelRef.current) return
+        const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        const papel = papelRef.current
+        setAnexos(p => [...p, { ...payload.dados, de: papel === 'medico' ? 'Paciente' : 'Medico', hora }])
+        setNaoLidas(n => n + 1)
+        tocarSom('mensagem')
+        if (!chatAberto) setNaoLidas(n => n + 1)
+      })
       .on('broadcast', { event: 'chat' }, ({ payload }) => {
         if (payload.de === papel) return
         const nova = { de: payload.de === 'medico' ? 'Medico' : 'Paciente', msg: payload.dados, hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }
         setChat(p => [...p, nova])
         setNaoLidas(n => n + 1)
+        tocarSom('mensagem')
       })
       .on('broadcast', { event: 'encerrar' }, () => {
+        tocarSom('saida')
         encerrarLocal()
         if (papelRef.current === 'paciente') setTimeout(() => { try { window.close() } catch {} }, 3000)
       })
@@ -254,7 +262,55 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   const toggleMic = () => { streamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; setMicOn(t.enabled) }) }
   const toggleCam = () => { streamRef.current?.getVideoTracks().forEach(t => { t.enabled = !t.enabled; setCamOn(t.enabled) }) }
+  const tocarSom = (tipo: 'entrada' | 'saida' | 'mensagem') => {
+    try {
+      const ctx = new AudioContext()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      gain.gain.setValueAtTime(0.3, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6)
+      if (tipo === 'entrada') {
+        // Dois tons ascendentes — "ding dong"
+        osc.frequency.setValueAtTime(520, ctx.currentTime)
+        osc.frequency.setValueAtTime(660, ctx.currentTime + 0.15)
+      } else if (tipo === 'saida') {
+        // Dois tons descendentes
+        osc.frequency.setValueAtTime(660, ctx.currentTime)
+        osc.frequency.setValueAtTime(440, ctx.currentTime + 0.15)
+      } else {
+        // Mensagem — tom curto suave
+        osc.frequency.setValueAtTime(880, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2)
+      }
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + 0.6)
+    } catch {}
+  }
+
   const fmtTimer = (s: number) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0')
+
+  const enviarAnexo = async (file: File) => {
+    if (!file || enviandoAnexo) return
+    setEnviandoAnexo(true)
+    try {
+      // Converte para base64
+      const base64 = await new Promise<string>((res, rej) => {
+        const reader = new FileReader()
+        reader.onload = () => res(reader.result as string)
+        reader.onerror = rej
+        reader.readAsDataURL(file)
+      })
+      const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      const anexo = { nome: file.name, url: base64, tipo: file.type, de: 'Voce', hora }
+      setAnexos(p => [...p, anexo])
+      // Envia pelo broadcast (base64 funciona para imagens/PDFs pequenos)
+      send('anexo', { nome: file.name, url: base64, tipo: file.type })
+      if (!chatAberto) { setChatAberto(true); setNaoLidas(0) }
+    } catch { console.error('Erro ao enviar anexo') }
+    setEnviandoAnexo(false)
+  }
 
   const enviarChat = () => {
     if (!msgInput.trim()) return
@@ -468,7 +524,11 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           </div>
         </div>
 
-        {/* Painel de chat — desliza da direita */}
+        {/* Input de arquivo oculto */}
+        <input ref={anexoInputRef} type="file" accept="image/*,.pdf" style={{ display:'none' }}
+          onChange={e => { const f = e.target.files?.[0]; if (f) enviarAnexo(f); e.target.value = '' }}/>
+
+      {/* Painel de chat — desliza da direita */}
         {chatAberto && (
           <div style={{ width: 'clamp(260px, 30vw, 320px)', background: '#1e293b', display: 'flex', flexDirection: 'column', borderLeft: '1px solid #334155', flexShrink: 0, animation: 'slideIn 0.2s ease' }}>
             <div style={{ padding: '10px 14px', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -478,16 +538,46 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               </button>
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {chat.length === 0 && <p style={{ fontSize: 12, color: '#475569', textAlign: 'center', marginTop: 20 }}>Nenhuma mensagem</p>}
-              {chat.map((m, i) => (
-                <div key={i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
-                  <p style={{ fontSize: 10, color: m.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 3px' }}>{m.de} · {m.hora}</p>
-                  <p style={{ fontSize: 12, color: '#cbd5e1', margin: 0, lineHeight: 1.5 }}>{m.msg}</p>
-                </div>
+              {chat.length === 0 && anexos.length === 0 && <p style={{ fontSize: 12, color: '#475569', textAlign: 'center', marginTop: 20 }}>Nenhuma mensagem</p>}
+              {/* Mescla chat e anexos por hora */}
+              {[...chat.map(m => ({...m, _tipo:'msg'})), ...anexos.map(a => ({...a, _tipo:'anexo'}))].map((item, i) => (
+                item._tipo === 'anexo' ? (
+                  <div key={'a'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
+                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 5px' }}>{item.de} · {item.hora}</p>
+                    {item.tipo?.startsWith('image/') ? (
+                      <a href={item.url} target="_blank" rel="noreferrer">
+                        <img src={item.url} alt={item.nome} style={{ width: '100%', borderRadius: 6, cursor: 'pointer', maxHeight: 160, objectFit: 'cover' }}/>
+                        <p style={{ fontSize: 11, color: '#475569', margin: '4px 0 0' }}>{item.nome}</p>
+                      </a>
+                    ) : (
+                      <a href={item.url} download={item.nome} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e293b', padding: '8px 10px', borderRadius: 6, textDecoration: 'none' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <div>
+                          <p style={{ fontSize: 11, color: '#cbd5e1', margin: 0, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.nome}</p>
+                          <p style={{ fontSize: 10, color: '#475569', margin: 0 }}>Clique para baixar</p>
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <div key={'m'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
+                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 3px' }}>{item.de} · {item.hora}</p>
+                    <p style={{ fontSize: 12, color: '#cbd5e1', margin: 0, lineHeight: 1.5 }}>{item.msg}</p>
+                  </div>
+                )
               ))}
+
               <div ref={endRef}/>
             </div>
             <div style={{ padding: '10px', borderTop: '1px solid #334155', display: 'flex', gap: 6 }}>
+              <button onClick={() => anexoInputRef.current?.click()} disabled={enviandoAnexo}
+                style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #334155', background: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                title="Enviar arquivo">
+                {enviandoAnexo
+                  ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid #475569', borderTopColor: '#16a34a', animation: 'spin 0.8s linear infinite' }}/>
+                  : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+                }
+              </button>
               <input value={msgInput} onChange={e => setMsgInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarChat()}
                 style={{ flex: 1, padding: '8px 10px', fontSize: 12, borderRadius: 8, border: '1px solid #334155', background: '#0f172a', color: 'white', outline: 'none' }} placeholder="Mensagem..."/>
               <button onClick={enviarChat} style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: '#16a34a', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
