@@ -101,6 +101,17 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     pcRef.current = pc
     stream.getTracks().forEach(t => pc.addTrack(t, stream))
 
+    // Keepalive: data channel para evitar timeout da conexao WebRTC
+    try {
+      const dc = pc.createDataChannel('keepalive')
+      dc.onopen = () => {
+        const ping = setInterval(() => {
+          try { if (dc.readyState === 'open') dc.send('ping') } catch {}
+          if (dc.readyState === 'closed') clearInterval(ping)
+        }, 10000)
+      }
+    } catch {}
+
     pc.ontrack = (e) => {
       log('ontrack - stream remoto chegou')
       if (remoteRef.current && e.streams[0]) {
@@ -124,7 +135,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         log('FALHOU - tentando restart ICE')
         pc.restartIce()
       }
-      if (pc.connectionState === 'disconnected') setStatus('encerrado')
+      if (pc.connectionState === 'disconnected') {
+        log('Queda momentanea - aguardando reconexao ICE...')
+        // Nao encerra automaticamente
+      }
     }
 
     pc.onicegatheringstatechange = () => log('iceGathering: ' + pc.iceGatheringState)
@@ -174,7 +188,12 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         if (payload.de === papel) return
         setChat(p => [...p, { de: payload.de === 'medico' ? 'Medico' : 'Paciente', msg: payload.dados, hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }])
       })
-      .on('broadcast', { event: 'encerrar' }, () => encerrarLocal())
+      .on('broadcast', { event: 'encerrar' }, () => {
+        encerrarLocal()
+        if (papelRef.current === 'paciente') {
+          setTimeout(() => { try { window.close() } catch {} }, 3000)
+        }
+      })
       .subscribe(async (s) => {
         log('Canal subscribe: ' + s)
         if (s === 'SUBSCRIBED') {
@@ -215,6 +234,9 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     send('encerrar', {})
     await sb.from('teleconsultas').update({ status: 'encerrada', encerrada_em: new Date().toISOString(), duracao_segundos: timer }).eq('sala_id', sala_id)
     encerrarLocal()
+    if (papelRef.current === 'paciente') {
+      setTimeout(() => { try { window.close() } catch {} }, 3000)
+    }
   }
 
   const toggleMic = () => { streamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; setMicOn(t.enabled) }) }
@@ -244,7 +266,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       </div>
       <p style={{ fontSize:20, color:'white', fontWeight:700, margin:0 }}>Consulta encerrada</p>
       {timer > 0 && <p style={{ fontSize:14, color:'#64748b', margin:0 }}>Duracao: {fmtTimer(timer)}</p>}
-      {isMedico && <a href="/teleconsulta" style={{ marginTop:8, padding:'10px 24px', background:'#16a34a', color:'white', borderRadius:10, textDecoration:'none', fontSize:14, fontWeight:600 }}>Voltar</a>}
+      {isMedico
+        ? <a href="/teleconsulta" style={{ marginTop:8, padding:'10px 24px', background:'#16a34a', color:'white', borderRadius:10, textDecoration:'none', fontSize:14, fontWeight:600 }}>Voltar para teleconsultas</a>
+        : <p style={{ fontSize:13, color:'#475569', margin:0 }}>Esta pagina sera fechada em instantes...</p>
+      }
     </div>
   )
 
