@@ -544,16 +544,16 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                 item._tipo === 'anexo' ? (
                   <div key={'a'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
                     <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 5px' }}>{item.de} · {item.hora}</p>
-                    {item.tipo?.startsWith('image/') ? (
-                      <a href={item.url} target="_blank" rel="noreferrer">
-                        <img src={item.url} alt={item.nome} style={{ width: '100%', borderRadius: 6, cursor: 'pointer', maxHeight: 160, objectFit: 'cover' }}/>
-                        <p style={{ fontSize: 11, color: '#475569', margin: '4px 0 0' }}>{item.nome}</p>
+                    {(item as any).tipo?.startsWith('image/') ? (
+                      <a href={(item as any).url} target="_blank" rel="noreferrer">
+                        <img src={(item as any).url} alt={(item as any).nome} style={{ width: '100%', borderRadius: 6, cursor: 'pointer', maxHeight: 160, objectFit: 'cover' }}/>
+                        <p style={{ fontSize: 11, color: '#475569', margin: '4px 0 0' }}>{(item as any).nome}</p>
                       </a>
                     ) : (
-                      <a href={item.url} download={item.nome} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e293b', padding: '8px 10px', borderRadius: 6, textDecoration: 'none' }}>
+                      <a href={(item as any).url} download={(item as any).nome} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e293b', padding: '8px 10px', borderRadius: 6, textDecoration: 'none' }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                         <div>
-                          <p style={{ fontSize: 11, color: '#cbd5e1', margin: 0, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.nome}</p>
+                          <p style={{ fontSize: 11, color: '#cbd5e1', margin: 0, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(item as any).nome}</p>
                           <p style={{ fontSize: 10, color: '#475569', margin: 0 }}>Clique para baixar</p>
                         </div>
                       </a>
@@ -562,7 +562,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                 ) : (
                   <div key={'m'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
                     <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 3px' }}>{item.de} · {item.hora}</p>
-                    <p style={{ fontSize: 12, color: '#cbd5e1', margin: 0, lineHeight: 1.5 }}>{item.msg}</p>
+                    <p style={{ fontSize: 12, color: '#cbd5e1', margin: 0, lineHeight: 1.5 }}>{(item as any).msg}</p>
                   </div>
                 )
               ))}
