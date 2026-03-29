@@ -32,6 +32,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [camOkEspera, setCamOkEspera] = useState(false)
   const [micOkEspera, setMicOkEspera] = useState(false)
   const [entrando, setEntrando] = useState(false)
+  const [remoteConectado, setRemoteConectado] = useState(false)
 
   const localRef = useRef<HTMLVideoElement>(null)
   const remoteRef = useRef<HTMLVideoElement>(null)
@@ -147,7 +148,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     pc.ontrack = (e) => {
       if (remoteRef.current && e.streams[0]) {
         remoteRef.current.srcObject = e.streams[0]
-        setTela('chamada')
+        setRemoteConectado(true)
         setEntrando(false)
         timerRef.current = setInterval(() => setTimer(t => t + 1), 1000)
         sb.from('teleconsultas').update({ status: 'em_andamento', iniciada_em: new Date().toISOString() }).eq('sala_id', sala_id)
@@ -206,8 +207,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .subscribe(async (s) => {
         if (s === 'SUBSCRIBED') {
+          // Transiciona para tela de chamada imediatamente (overlay mostra aguardando)
+          setTela('chamada')
+          setEntrando(false)
           send('pronto', { papel })
-          if (papel === 'medico') setEntrando(true)
         }
       })
 
@@ -406,7 +409,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', maxWidth: '100%', maxHeight: '100%' }}/>
 
           {/* Overlay aguardando */}
-          {tela !== 'chamada' && (
+          {!remoteConectado && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', flexDirection: 'column', gap: 16 }}>
               <div style={{ width: 56, height: 56, borderRadius: '50%', border: '3px solid #16a34a', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
               <p style={{ fontSize: 15, color: 'white', fontWeight: 600, margin: 0 }}>
@@ -430,7 +433,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           )}
 
           {/* Botao flutuante do chat */}
-          {tela === 'chamada' && (
+          {tela === 'chamada' && remoteConectado && (
             <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
               style={{ position: 'absolute', bottom: 72, left: 12, width: 44, height: 44, borderRadius: '50%', border: 'none', background: chatAberto ? '#16a34a' : 'rgba(30,41,59,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
