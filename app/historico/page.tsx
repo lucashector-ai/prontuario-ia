@@ -11,6 +11,9 @@ export default function Historico() {
   const [consultas, setConsultas] = useState<any[]>([])
   const [carregando, setCarregando] = useState(true)
   const [selecionada, setSelecionada] = useState<any>(null)
+  const [busca, setBusca] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState<'todos'|'teleconsulta'|'presencial'>('todos')
+  const [mostrarTranscricao, setMostrarTranscricao] = useState(false)
   const [editando, setEditando] = useState(false)
   const [editForm, setEditForm] = useState<any>({})
   const [salvando, setSalvando] = useState(false)
@@ -65,6 +68,23 @@ export default function Historico() {
     { key: 'plano',     titulo: 'P — Plano',      cor: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
   ]
 
+  const consultasFiltradas = consultas.filter(c => {
+    const q = busca.toLowerCase().trim()
+    const matchBusca = !q || (
+      c.pacientes?.nome?.toLowerCase().includes(q) ||
+      c.subjetivo?.toLowerCase().includes(q) ||
+      c.objetivo?.toLowerCase().includes(q) ||
+      c.avaliacao?.toLowerCase().includes(q) ||
+      c.plano?.toLowerCase().includes(q) ||
+      c.transcricao?.toLowerCase().includes(q) ||
+      (Array.isArray(c.cids) && c.cids.some((cid: any) => (cid.codigo + ' ' + cid.descricao).toLowerCase().includes(q)))
+    )
+    const matchTipo = filtroTipo === 'todos' ||
+      (filtroTipo === 'teleconsulta' && c.transcricao) ||
+      (filtroTipo === 'presencial' && !c.transcricao)
+    return matchBusca && matchTipo
+  })
+
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f8fafb', overflow: 'hidden' }}>
       <Sidebar activeHref="/historico" />
@@ -84,19 +104,42 @@ export default function Historico() {
 
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden' }}>
           {/* Lista */}
-          <div style={{ borderRight: '1px solid #e8eeed', overflow: 'auto', background: 'white', padding: '12px 10px' }}>
+          <div style={{ borderRight: '1px solid #e8eeed', overflow: 'auto', background: 'white', padding: '12px 10px', display:'flex', flexDirection:'column', gap:0 }}>
+          {/* Busca e filtros */}
+          <div style={{ padding:'0 2px 10px', flexShrink:0 }}>
+            <div style={{ position:'relative', marginBottom:8 }}>
+              <svg style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)' }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar por paciente, CID, sintoma..." style={{ width:'100%', padding:'8px 10px 8px 28px', fontSize:12, borderRadius:8, border:'1px solid #e5e7eb', background:'#f9fafb', outline:'none', color:'#374151' }}/>
+            </div>
+            <div style={{ display:'flex', gap:4 }}>
+              {(['todos','teleconsulta','presencial'] as const).map(t => (
+                <button key={t} onClick={() => setFiltroTipo(t)}
+                  style={{ flex:1, padding:'5px 0', fontSize:11, fontWeight:600, borderRadius:6, border:'1px solid', cursor:'pointer',
+                    background: filtroTipo === t ? '#16a34a' : 'white',
+                    color: filtroTipo === t ? 'white' : '#6b7280',
+                    borderColor: filtroTipo === t ? '#16a34a' : '#e5e7eb' }}>
+                  {t === 'todos' ? 'Todos' : t === 'teleconsulta' ? '📹 Video' : '🏥 Presencial'}
+                </button>
+              ))}
+            </div>
+          </div>
             {carregando ? (
               <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Carregando...</p>
             ) : consultas.length === 0 ? (
               <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Nenhuma consulta registrada</p>
-            ) : consultas.map(c => (
+            ) : consultasFiltradas.length === 0 ? (
+              <p style={{ fontSize: 12, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Nenhum resultado para "{busca}"</p>
+            ) : consultasFiltradas.map(c => (
               <div key={c.id} onClick={() => handleSelecionar(c)} style={{
                 padding: '12px', borderRadius: 10, marginBottom: 6, cursor: 'pointer',
                 background: selecionada?.id === c.id ? '#f0fdf4' : 'white',
                 border: `1px solid ${selecionada?.id === c.id ? '#bbf7d0' : '#e8eeed'}`,
                 transition: 'all 0.15s', position: 'relative',
               }}>
-                <p style={{ fontSize: 11, color: '#8aa8a5', margin: '0 0 4px', fontWeight: 500 }}>{fmt(c.criado_em)}</p>
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
+                <p style={{ fontSize: 11, color: '#8aa8a5', margin: 0, fontWeight: 500 }}>{fmt(c.criado_em)}</p>
+                {c.transcricao && <span style={{ fontSize: 9, fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: 10 }}>📹 Teleconsulta</span>}
+              </div>
                 <p style={{ fontSize: 12, color: '#3d5452', margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, lineHeight: 1.5 }}>
                   {c.subjetivo?.substring(0, 90) || 'Consulta sem detalhes'}
                 </p>
@@ -175,6 +218,21 @@ export default function Historico() {
                             <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#16a34a' }}>{cid.codigo}</span>
                             <span style={{ fontSize: 12, color: '#3d5452' }}>{cid.descricao}</span>
                           </div>
+              {/* Transcricao colapsavel */}
+              {selecionada.transcricao && (
+                <div style={{ marginTop:16 }}>
+                  <button onClick={() => setMostrarTranscricao(!mostrarTranscricao)}
+                    style={{ display:'flex', alignItems:'center', gap:6, background:'none', border:'none', cursor:'pointer', padding:0, marginBottom:8 }}>
+                    <span style={{ fontSize:11, fontWeight:700, color:'#374151', textTransform:'uppercase', letterSpacing:'0.06em' }}>📝 Transcricao da consulta</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" style={{ transform: mostrarTranscricao ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                  {mostrarTranscricao && (
+                    <div style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:8, padding:'10px 12px', fontSize:12, color:'#475569', lineHeight:1.7, maxHeight:200, overflow:'auto', whiteSpace:'pre-wrap' }}>
+                      {selecionada.transcricao}
+                    </div>
+                  )}
+                </div>
+              )}
                         ))}
                       </div>
                     </div>
