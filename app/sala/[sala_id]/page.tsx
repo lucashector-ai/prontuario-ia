@@ -36,6 +36,14 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [anexos, setAnexos] = useState<{nome:string;url:string;tipo:string;de:string;hora:string}[]>([])
   const [enviandoAnexo, setEnviandoAnexo] = useState(false)
   const anexoInputRef = useRef<HTMLInputElement>(null)
+  // Fase 4: Transcrição
+  const [gravando, setGravando] = useState(false)
+  const [transcricao, setTranscricao] = useState('')
+  const [processando, setProcessando] = useState(false)
+  const [prontuarioModal, setProntuarioModal] = useState(false)
+  const [prontuarioData, setProntuarioData] = useState<any>(null)
+  const recorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
 
   const localRef = useRef<HTMLVideoElement>(null)
   const remoteRef = useRef<HTMLVideoElement>(null)
@@ -283,6 +291,69 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   const toggleMic = () => { streamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; setMicOn(t.enabled) }) }
   const toggleCam = () => { streamRef.current?.getVideoTracks().forEach(t => { t.enabled = !t.enabled; setCamOn(t.enabled) }) }
+  // Inicia gravação — captura o áudio local do médico
+  const iniciarGravacao = () => {
+    if (!streamRef.current) return
+    // Pega só as faixas de áudio do stream local
+    const audioStream = new MediaStream(streamRef.current.getAudioTracks())
+    const recorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' })
+    chunksRef.current = []
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunksRef.current.push(e.data)
+    }
+    // Envia chunk a cada 30s para transcrição incremental
+    recorder.start(30000)
+    recorderRef.current = recorder
+    setGravando(true)
+  }
+
+  const pararGravacao = () => {
+    recorderRef.current?.stop()
+    setGravando(false)
+  }
+
+  const toggleGravacao = () => {
+    if (gravando) pararGravacao()
+    else iniciarGravacao()
+  }
+
+  // Transcreve os chunks acumulados via Whisper
+  const transcreverAudio = async (): Promise<string> => {
+    if (chunksRef.current.length === 0) return transcricao
+    const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+    if (blob.size < 1000) return transcricao
+    const fd = new FormData()
+    fd.append('audio', new File([blob], 'consulta.webm', { type: 'audio/webm' }))
+    try {
+      const r = await fetch('/api/transcrever', { method: 'POST', body: fd })
+      const d = await r.json()
+      if (d.texto) {
+        const nova = transcricao ? transcricao + ' ' + d.texto : d.texto
+        setTranscricao(nova)
+        return nova
+      }
+    } catch {}
+    return transcricao
+  }
+
+  // Gera prontuário a partir da transcrição via Claude
+  const gerarProntuario = async (textoTranscricao: string) => {
+    if (!textoTranscricao.trim()) return
+    setProcessando(true)
+    try {
+      const r = await fetch('/api/estruturar', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcricao: textoTranscricao })
+      })
+      const d = await r.json()
+      if (d.estruturado || d.prontuario || d) {
+        setProntuarioData(d)
+        setProntuarioModal(true)
+      }
+    } catch {}
+    setProcessando(false)
+  }
+
   const tocarSom = (tipo: 'entrada' | 'saida' | 'mensagem') => {
     try {
       const ctx = new AudioContext()
@@ -477,6 +548,22 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 700, fontFamily: 'monospace' }}>{fmtTimer(timer)}</span>
             </div>
           )}
+          {isMedico && tela === 'chamada' && (
+            <button onClick={toggleGravacao}
+              style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer',
+                background: gravando ? 'rgba(220,38,38,0.15)' : 'rgba(22,163,74,0.15)',
+                color: gravando ? '#f87171' : '#86efac' }}>
+              <span style={{ width:7, height:7, borderRadius:'50%', background: gravando ? '#ef4444' : '#22c55e', display:'inline-block',
+                animation: gravando ? 'pulse 1s infinite' : 'none' }}/>
+              <span style={{ fontSize:11, fontWeight:600 }}>{gravando ? 'Gravando...' : 'Gravar'}</span>
+            </button>
+          )}
+          {isMedico && processando && (
+            <div style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, background:'rgba(234,179,8,0.15)' }}>
+              <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid rgba(234,179,8,0.4)', borderTopColor:'#eab308', animation:'spin 0.8s linear infinite' }}/>
+              <span style={{ fontSize:11, color:'#fbbf24', fontWeight:600 }}>Gerando prontuario...</span>
+            </div>
+          )}
           <span style={{ fontSize: 10, color: '#475569', background: '#0f172a', border: '1px solid #1e293b', padding: '3px 8px', borderRadius: 6 }}>
             {isMedico ? '👨‍⚕️ Medico' : '👤 Paciente'}
           </span>
@@ -609,9 +696,78 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         )}
       </div>
 
+      {/* Modal prontuario pos-consulta */}
+      {prontuarioModal && prontuarioData && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:999, padding:16 }}>
+          <div style={{ background:'#1e293b', borderRadius:16, width:'100%', maxWidth:600, maxHeight:'85vh', display:'flex', flexDirection:'column', border:'1px solid #334155' }}>
+            <div style={{ padding:'16px 20px', borderBottom:'1px solid #334155', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:32, height:32, borderRadius:8, background:'#14532d', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <div>
+                  <p style={{ fontSize:14, fontWeight:700, color:'white', margin:0 }}>Prontuario gerado pela IA</p>
+                  <p style={{ fontSize:11, color:'#64748b', margin:0 }}>Baseado na transcricao da consulta — revise antes de salvar</p>
+                </div>
+              </div>
+              <button onClick={() => setProntuarioModal(false)} style={{ background:'none', border:'none', color:'#475569', cursor:'pointer' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div style={{ flex:1, overflow:'auto', padding:'16px 20px', display:'flex', flexDirection:'column', gap:14 }}>
+              {/* Transcrição */}
+              {transcricao && (
+                <div>
+                  <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>Transcricao</p>
+                  <div style={{ background:'#0f172a', borderRadius:8, padding:'10px 12px', fontSize:12, color:'#94a3b8', lineHeight:1.6, maxHeight:80, overflow:'auto' }}>
+                    {transcricao}
+                  </div>
+                </div>
+              )}
+              {/* Campos do prontuário */}
+              {['subjetivo','objetivo','avaliacao','plano'].map(campo => (
+                prontuarioData[campo] && (
+                  <div key={campo}>
+                    <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>
+                      {campo === 'subjetivo' ? 'S — Subjetivo' : campo === 'objetivo' ? 'O — Objetivo' : campo === 'avaliacao' ? 'A — Avaliacao / CID' : 'P — Plano'}
+                    </p>
+                    <textarea defaultValue={prontuarioData[campo]} rows={3}
+                      style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical', outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
+                  </div>
+                )
+              ))}
+              {prontuarioData.receita && (
+                <div>
+                  <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>Receita / Prescricao</p>
+                  <textarea defaultValue={prontuarioData.receita} rows={3}
+                    style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical', outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
+                </div>
+              )}
+              {/* Se API retornar formato diferente, mostra o raw */}
+              {!prontuarioData.subjetivo && !prontuarioData.objetivo && (
+                <div>
+                  <p style={{ fontSize:11, fontWeight:600, color:'#64748b', margin:'0 0 6px' }}>Conteudo gerado</p>
+                  <textarea defaultValue={typeof prontuarioData === 'string' ? prontuarioData : JSON.stringify(prontuarioData, null, 2)} rows={8}
+                    style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical', outline:'none', fontFamily:'monospace' }}/>
+                </div>
+              )}
+            </div>
+            <div style={{ padding:'14px 20px', borderTop:'1px solid #334155', display:'flex', gap:10, flexShrink:0 }}>
+              <a href="/historico" style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background:'#16a34a', color:'white', fontSize:13, fontWeight:700, cursor:'pointer', textAlign:'center', textDecoration:'none', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                Ir para historico e salvar
+              </a>
+              <button onClick={() => setProntuarioModal(false)} style={{ padding:'10px 18px', borderRadius:9, border:'1px solid #334155', background:'transparent', color:'#64748b', fontSize:13, cursor:'pointer' }}>
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background: #0f172a; overflow: hidden; }
         @media (max-width: 640px) {
