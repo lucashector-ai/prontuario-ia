@@ -42,6 +42,9 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [processando, setProcessando] = useState(false)
   const [prontuarioModal, setProntuarioModal] = useState(false)
   const [prontuarioData, setProntuarioData] = useState<any>(null)
+  const [salvando, setSalvando] = useState(false)
+  const [salvado, setSalvado] = useState(false)
+  const camposRef = useRef<Record<string, string>>({})
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
 
@@ -373,6 +376,39 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       }
     } catch {}
     setProcessando(false)
+  }
+
+  const salvarProntuario = async () => {
+    if (salvando || salvado) return
+    setSalvando(true)
+    try {
+      const med = JSON.parse(localStorage.getItem('medico') || '{}')
+      const campos = camposRef.current
+      const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
+      const body = {
+        medico_id: med.id,
+        paciente_id: sala?.paciente_id || null,
+        data_consulta: new Date().toISOString(),
+        transcricao: transcricao || '',
+        subjetivo:  campos.subjetivo  ?? pd.subjetivo  ?? '',
+        objetivo:   campos.objetivo   ?? pd.objetivo   ?? '',
+        avaliacao:  campos.avaliacao  ?? pd.avaliacao  ?? '',
+        plano:      campos.plano      ?? pd.plano      ?? '',
+        cids:       pd.cids    ?? [],
+        alertas:    pd.alertas ?? [],
+        receita:    campos.receita ?? pd.receita ?? '',
+      }
+      const r = await fetch('/api/consultas', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      const d = await r.json()
+      if (d.id) {
+        setSalvado(true)
+        setTimeout(() => { window.location.href = '/historico' }, 1500)
+      }
+    } catch (err) { console.error('Erro salvar:', err) }
+    setSalvando(false)
   }
 
   const tocarSom = (tipo: 'entrada' | 'saida' | 'mensagem') => {
@@ -746,37 +782,41 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                 </div>
               )}
               {/* Campos do prontuário */}
-              {['subjetivo','objetivo','avaliacao','plano'].map(campo => (
-                prontuarioData[campo] && (
+              {['subjetivo','objetivo','avaliacao','plano'].map(campo => {
+                const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
+                const val = pd[campo] ?? ''
+                if (!val) return null
+                const label = campo === 'subjetivo' ? 'S — Subjetivo' : campo === 'objetivo' ? 'O — Objetivo' : campo === 'avaliacao' ? 'A — Avaliacao / CID' : 'P — Plano'
+                return (
                   <div key={campo}>
-                    <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>
-                      {campo === 'subjetivo' ? 'S — Subjetivo' : campo === 'objetivo' ? 'O — Objetivo' : campo === 'avaliacao' ? 'A — Avaliacao / CID' : 'P — Plano'}
-                    </p>
-                    <textarea defaultValue={prontuarioData[campo]} rows={3}
-                      style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical', outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
+                    <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase' as const, letterSpacing:'0.05em', margin:'0 0 6px' }}>{label}</p>
+                    <textarea defaultValue={val} rows={3} onChange={e => { camposRef.current[campo] = e.target.value }}
+                      style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
                   </div>
                 )
-              ))}
-              {prontuarioData.receita && (
-                <div>
-                  <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>Receita / Prescricao</p>
-                  <textarea defaultValue={prontuarioData.receita} rows={3}
-                    style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical', outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
-                </div>
-              )}
-              {/* Se API retornar formato diferente, mostra o raw */}
-              {!prontuarioData.subjetivo && !prontuarioData.objetivo && (
-                <div>
-                  <p style={{ fontSize:11, fontWeight:600, color:'#64748b', margin:'0 0 6px' }}>Conteudo gerado</p>
-                  <textarea defaultValue={typeof prontuarioData === 'string' ? prontuarioData : JSON.stringify(prontuarioData, null, 2)} rows={8}
-                    style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical', outline:'none', fontFamily:'monospace' }}/>
-                </div>
-              )}
+              })}
+              {(() => {
+                const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
+                const rec = pd.receita ?? ''
+                return rec ? (
+                  <div>
+                    <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase' as const, letterSpacing:'0.05em', margin:'0 0 6px' }}>Receita / Prescricao</p>
+                    <textarea defaultValue={rec} rows={3} onChange={e => { camposRef.current.receita = e.target.value }}
+                      style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
+                  </div>
+                ) : null
+              })()}
             </div>
             <div style={{ padding:'14px 20px', borderTop:'1px solid #334155', display:'flex', gap:10, flexShrink:0 }}>
-              <a href="/historico" style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background:'#16a34a', color:'white', fontSize:13, fontWeight:700, cursor:'pointer', textAlign:'center', textDecoration:'none', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                Ir para historico e salvar
-              </a>
+              <button onClick={salvarProntuario} disabled={salvando || salvado}
+                style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background: salvado ? '#14532d' : '#16a34a', color:'white', fontSize:13, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                {salvado
+                  ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Salvo! Abrindo historico...</>
+                  : salvando
+                  ? <><div style={{ width:14, height:14, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'white', animation:'spin 0.8s linear infinite' }}/>Salvando...</>
+                  : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Salvar no historico</>
+                }
+              </button>
               <button onClick={() => setProntuarioModal(false)} style={{ padding:'10px 18px', borderRadius:9, border:'1px solid #334155', background:'transparent', color:'#64748b', fontSize:13, cursor:'pointer' }}>
                 Fechar
               </button>
