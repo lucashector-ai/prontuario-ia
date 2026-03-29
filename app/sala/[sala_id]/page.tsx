@@ -255,6 +255,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               localRef.current.srcObject = streamRef.current
             }
           }, 200)
+          // Medico: inicia gravacao automaticamente
+          if (papel === 'medico') setTimeout(() => iniciarGravacao(), 500)
         }
       })
 
@@ -285,8 +287,27 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const encerrar = async () => {
     send('encerrar', {})
     await sb.from('teleconsultas').update({ status: 'encerrada', encerrada_em: new Date().toISOString(), duracao_segundos: timer }).eq('sala_id', sala_id)
+    // Para gravacao
+    if (recorderRef.current && recorderRef.current.state !== 'inactive') {
+      recorderRef.current.stop()
+      setGravando(false)
+    }
     encerrarLocal()
-    if (papelRef.current === 'paciente') setTimeout(() => { try { window.close() } catch {} }, 3000)
+    if (papelRef.current === 'paciente') {
+      setTimeout(() => { try { window.close() } catch {} }, 3000)
+      return
+    }
+    // Medico: transcreve e gera prontuario
+    if (papelRef.current === 'medico') {
+      setProcessando(true)
+      await new Promise(res => setTimeout(res, 300))
+      const texto = await transcreverAudio()
+      if (texto && texto.trim().length > 10) {
+        await gerarProntuario(texto)
+      } else {
+        setProcessando(false)
+      }
+    }
   }
 
   const toggleMic = () => { streamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; setMicOn(t.enabled) }) }
