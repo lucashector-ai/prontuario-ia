@@ -32,7 +32,7 @@ export default function Historico() {
 
   const handleSelecionar = (c: any) => {
     setSelecionada(c); setEditando(false)
-    setEditForm({ subjetivo: c.subjetivo, objetivo: c.objetivo, avaliacao: c.avaliacao, plano: c.plano })
+    setEditForm({ subjetivo: c.subjetivo, objetivo: c.objetivo, avaliacao: c.avaliacao, plano: c.plano, receita: c.receita })
   }
 
   const handleSalvar = async () => {
@@ -141,6 +141,12 @@ export default function Historico() {
                         <button onClick={() => handleDeletar(selecionada.id)} style={{ fontSize: 12, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '7px 14px', borderRadius: 8, cursor: 'pointer' }}>
                           Deletar
                         </button>
+                            <a href={'/api/pdf-receita?consulta_id=' + selecionada.id + '&medico_id=' + medico?.id}
+                              target="_blank" rel="noreferrer"
+                              style={{ fontSize: 12, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '7px 14px', borderRadius: 8, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                              PDF Receita
+                            </a>
                       </>
                     )}
                   </div>
