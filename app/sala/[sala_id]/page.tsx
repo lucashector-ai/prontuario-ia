@@ -61,6 +61,13 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chat])
 
+  // Quando a tela de chamada monta, conecta o stream local ao video PiP
+  useEffect(() => {
+    if (tela === 'chamada' && streamRef.current && localRef.current) {
+      localRef.current.srcObject = streamRef.current
+    }
+  }, [tela])
+
   useEffect(() => {
     if (chatAberto) setNaoLidas(0)
   }, [chatAberto])
