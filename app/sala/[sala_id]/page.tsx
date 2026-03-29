@@ -68,6 +68,22 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     if (chatAberto) setNaoLidas(0)
   }, [chatAberto])
 
+  // Conecta stream local ao PiP quando tela de chamada renderiza
+  // Usa setTimeout pois o ref pode não estar pronto no primeiro tick
+  useEffect(() => {
+    if (tela === 'chamada' && streamRef.current) {
+      const conectar = () => {
+        if (localRef.current && streamRef.current) {
+          localRef.current.srcObject = streamRef.current
+        }
+      }
+      conectar()
+      // Retry após 100ms por segurança (ref pode estar null no primeiro tick)
+      const t = setTimeout(conectar, 100)
+      return () => clearTimeout(t)
+    }
+  }, [tela])
+
   const carregarSala = async () => {
     const { data } = await sb.from('teleconsultas').select('*').eq('sala_id', sala_id).single()
     if (!data) { setErro('Sala nao encontrada ou link expirado.'); setTela('erro'); return }
@@ -222,10 +238,15 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .subscribe(async (s) => {
         if (s === 'SUBSCRIBED') {
-          // Transiciona para tela de chamada imediatamente (overlay mostra aguardando)
           setTela('chamada')
           setEntrando(false)
           send('pronto', { papel })
+          // Garante que o PiP recebe o stream após render
+          setTimeout(() => {
+            if (localRef.current && streamRef.current) {
+              localRef.current.srcObject = streamRef.current
+            }
+          }, 200)
         }
       })
 
