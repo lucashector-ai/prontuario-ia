@@ -27,6 +27,7 @@ export default function PacienteDetalhe() {
   const [medico, setMedico] = useState<any>(null)
   const [paciente, setPaciente] = useState<any>(null)
   const [consultas, setConsultas] = useState<any[]>([])
+  const [transcricoesAbertas, setTranscricoesAbertas] = useState<Set<string>>(new Set())
   const [agendamentos, setAgendamentos] = useState<any[]>([])
   const [aba, setAba] = useState<Aba>('overview')
   const [carregando, setCarregando] = useState(true)
@@ -317,6 +318,7 @@ export default function PacienteDetalhe() {
                     <div key={c.id} style={{background:'white',border:'1px solid #e5e7eb',borderRadius:12,overflow:'hidden'}}>
                       <div style={{padding:'10px 18px',background:'#f9fafb',borderBottom:'1px solid #f3f4f6',display:'flex',justifyContent:'space-between'}}>
                         <p style={{fontSize:13,fontWeight:600,color:'#374151',margin:0}}>#{consultas.length-idx} {fmtF(c.criado_em)}</p>
+                            {c.transcricao && <span style={{fontSize:9,fontWeight:700,color:'#1d4ed8',background:'#eff6ff',border:'1px solid #bfdbfe',padding:'2px 7px',borderRadius:10}}>📹 Teleconsulta</span>}
                         <div style={{display:'flex',gap:4}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#16a34a',background:'#f0fdf4',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700,border:'1px solid #bbf7d0'}}>{cid.codigo}</span>)}</div>
                       </div>
                       <div style={{padding:'14px 18px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
@@ -329,6 +331,39 @@ export default function PacienteDetalhe() {
                             <p style={{fontSize:11,color:'#374151',margin:0,lineHeight:1.6,paddingLeft:27}}>{c[s.key]||'--'}</p>
                           </div>
                         ))}
+                      </div>
+                      {/* Receita */}
+                      {c.receita && (
+                        <div style={{padding:'10px 18px',borderTop:'1px solid #f3f4f6'}}>
+                          <p style={{fontSize:11,fontWeight:700,color:'#374151',textTransform:'uppercase' as const,letterSpacing:'0.05em',margin:'0 0 6px'}}>Receita / Prescricao</p>
+                          <p style={{fontSize:11,color:'#6b7280',margin:0,lineHeight:1.6,whiteSpace:'pre-wrap' as const}}>{c.receita}</p>
+                        </div>
+                      )}
+                      {/* Transcricao colapsavel */}
+                      {c.transcricao && (
+                        <div style={{padding:'8px 18px',borderTop:'1px solid #f3f4f6'}}>
+                          <button onClick={() => {
+                            const s = new Set(transcricoesAbertas)
+                            s.has(c.id) ? s.delete(c.id) : s.add(c.id)
+                            setTranscricoesAbertas(s)
+                          }} style={{display:'flex',alignItems:'center',gap:5,background:'none',border:'none',cursor:'pointer',padding:0}}>
+                            <span style={{fontSize:11,fontWeight:600,color:'#374151'}}>📝 Transcricao</span>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" style={{transform:transcricoesAbertas.has(c.id)?'rotate(180deg)':'none',transition:'transform 0.2s'}}><polyline points="6 9 12 15 18 9"/></svg>
+                          </button>
+                          {transcricoesAbertas.has(c.id) && (
+                            <div style={{marginTop:6,background:'#f8fafc',borderRadius:7,padding:'8px 10px',fontSize:11,color:'#475569',lineHeight:1.7,maxHeight:160,overflow:'auto',whiteSpace:'pre-wrap' as const}}>
+                              {c.transcricao}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* Botoes */}
+                      <div style={{padding:'8px 18px 12px',borderTop:'1px solid #f3f4f6',display:'flex',gap:8}}>
+                        <a href={'/api/pdf-receita?consulta_id='+c.id+'&medico_id='+medico?.id} target="_blank" rel="noreferrer"
+                          style={{fontSize:11,color:'#1d4ed8',background:'#eff6ff',border:'1px solid #bfdbfe',padding:'5px 10px',borderRadius:6,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:4}}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                          PDF Receita
+                        </a>
                       </div>
                     </div>
                   ))}
