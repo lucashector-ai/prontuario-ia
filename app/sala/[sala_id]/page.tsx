@@ -58,6 +58,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const chunksRef = useRef<Blob[]>([])
 
   const localRef = useRef<HTMLVideoElement>(null)
+  const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteRef = useRef<HTMLVideoElement>(null)
   const esperaRef = useRef<HTMLVideoElement>(null)
   const pcRef = useRef<RTCPeerConnection | null>(null)
