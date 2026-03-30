@@ -15,11 +15,6 @@ export default function Historico() {
   const [editForm, setEditForm] = useState<any>({})
   const [salvando, setSalvando] = useState(false)
   const [deletando, setDeletando] = useState<string | null>(null)
-  const [busca, setBusca] = useState('')
-  const [filtroTipo, setFiltroTipo] = useState<'todos'|'teleconsulta'|'presencial'>('todos')
-  const [mostrarTranscricao, setMostrarTranscricao] = useState(false)
-  const [enviandoWpp, setEnviandoWpp] = useState(false)
-  const [wppOk, setWppOk] = useState<string|null>(null)
 
   useEffect(() => {
     const m = localStorage.getItem('medico')
@@ -33,20 +28,6 @@ export default function Historico() {
     const { data } = await supabase.from('consultas').select('*').eq('medico_id', id).order('criado_em', { ascending: false })
     setConsultas(data || [])
     setCarregando(false)
-  }
-
-  const enviarReceitaWpp = async () => {
-    if (!selecionada || enviandoWpp) return
-    setEnviandoWpp(true)
-    try {
-      const { data: pac } = await supabase.from('pacientes').select('nome, telefone').eq('id', selecionada.paciente_id).single()
-      if (!pac?.telefone) { alert('Paciente sem telefone cadastrado.'); setEnviandoWpp(false); return }
-      const dataStr = new Date(selecionada.criado_em).toLocaleDateString('pt-BR')
-      const msg = 'Ola ' + (pac.nome?.split(' ')[0] || 'paciente') + '! Receita de ' + dataStr + ':\n\n' + (selecionada.receita || selecionada.plano || '') + '\n\n' + (medico?.nome || '')
-      await fetch('/api/whatsapp/enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telefone: pac.telefone, texto: msg, medico_id: medico?.id }) })
-      setWppOk(pac.nome); setTimeout(() => setWppOk(null), 4000)
-    } catch (err) { console.error(err) }
-    setEnviandoWpp(false)
   }
 
   const handleSelecionar = (c: any) => {
@@ -67,7 +48,7 @@ export default function Historico() {
   }
 
   const handleDeletar = async (id: string) => {
-    if (!confirm('Deletar esta consulta? Esta acao nao pode ser desfeita.')) return
+    if (!confirm('Deletar esta consulta? Esta ação não pode ser desfeita.')) return
     setDeletando(id)
     await supabase.from('consultas').delete().eq('id', id)
     setConsultas(prev => prev.filter(c => c.id !== id))
@@ -78,20 +59,11 @@ export default function Historico() {
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
   const secoes = [
-    { key: 'subjetivo', titulo: 'S  -  Subjetivo', cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-    { key: 'objetivo',  titulo: 'O  -  Objetivo',  cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
-    { key: 'avaliacao', titulo: 'A  -  Avaliacao',  cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
-    { key: 'plano',     titulo: 'P  -  Plano',      cor: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
+    { key: 'subjetivo', titulo: 'S — Subjetivo', cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+    { key: 'objetivo',  titulo: 'O — Objetivo',  cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
+    { key: 'avaliacao', titulo: 'A — Avaliação',  cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
+    { key: 'plano',     titulo: 'P — Plano',      cor: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
   ]
-
-  const consultasFiltradas = consultas.filter((item) => {
-    const q = busca.toLowerCase().trim()
-    if (q === '' && filtroTipo === 'todos') return true
-    const campos = [item.pacientes?.nome, item.subjetivo, item.objetivo, item.avaliacao, item.plano, item.transcricao]
-    const matchBusca = q === '' || campos.some((v: any) => v?.toLowerCase().includes(q)) || (Array.isArray(item.cids) && item.cids.some((cid: any) => (cid.codigo + ' ' + cid.descricao).toLowerCase().includes(q)))
-    const matchTipo = filtroTipo === 'todos' || (filtroTipo === 'teleconsulta' && !!item.transcricao) || (filtroTipo === 'presencial' && !item.transcricao)
-    return matchBusca && matchTipo
-  })
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f8fafb', overflow: 'hidden' }}>
@@ -101,7 +73,7 @@ export default function Historico() {
         {/* Header */}
         <div style={{ padding: '16px 28px', borderBottom: '1px solid #e8eeed', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Historico de consultas</h1>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Histórico de consultas</h1>
             <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{consultas.length} consultas registradas</p>
           </div>
           <a href="/" style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '7px 16px', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -113,31 +85,18 @@ export default function Historico() {
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden' }}>
           {/* Lista */}
           <div style={{ borderRight: '1px solid #e8eeed', overflow: 'auto', background: 'white', padding: '12px 10px' }}>
-            <div style={{ padding: '0 2px 10px' }}>
-                <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar paciente, CID..." style={{ width: '100%', padding: '8px 10px', fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb', background: '#f9fafb', outline: 'none', color: '#374151', marginBottom: 6 }}/>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {(['todos', 'teleconsulta', 'presencial'] as const).map(t => (
-                    <button key={t} onClick={() => setFiltroTipo(t)} style={{ flex: 1, padding: '5px 0', fontSize: 11, fontWeight: 600, borderRadius: 6, border: '1px solid', cursor: 'pointer', background: filtroTipo === t ? '#16a34a' : 'white', color: filtroTipo === t ? 'white' : '#6b7280', borderColor: filtroTipo === t ? '#16a34a' : '#e5e7eb' }}>
-                      {t === 'todos' ? 'Todos' : t === 'teleconsulta' ? 'Video' : 'Presencial'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {carregando ? (
+            {carregando ? (
               <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Carregando...</p>
             ) : consultas.length === 0 ? (
               <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Nenhuma consulta registrada</p>
-            ) : consultasFiltradas.map(c => (
+            ) : consultas.map(c => (
               <div key={c.id} onClick={() => handleSelecionar(c)} style={{
                 padding: '12px', borderRadius: 10, marginBottom: 6, cursor: 'pointer',
                 background: selecionada?.id === c.id ? '#f0fdf4' : 'white',
                 border: `1px solid ${selecionada?.id === c.id ? '#bbf7d0' : '#e8eeed'}`,
                 transition: 'all 0.15s', position: 'relative',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <p style={{ fontSize: 11, color: '#8aa8a5', margin: 0, fontWeight: 500 }}>{fmt(c.criado_em)}</p>
-                {c.transcricao && <span style={{ fontSize: 9, fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: 10 }}>Video</span>}
-              </div>
+                <p style={{ fontSize: 11, color: '#8aa8a5', margin: '0 0 4px', fontWeight: 500 }}>{fmt(c.criado_em)}</p>
                 <p style={{ fontSize: 12, color: '#3d5452', margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, lineHeight: 1.5 }}>
                   {c.subjetivo?.substring(0, 90) || 'Consulta sem detalhes'}
                 </p>
@@ -151,7 +110,7 @@ export default function Historico() {
                 <button onClick={e => { e.stopPropagation(); handleDeletar(c.id) }} disabled={deletando === c.id}
                   className="del-btn"
                   style={{ position: 'absolute', top: 8, right: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', cursor: 'pointer', padding: '2px 7px', borderRadius: 6, fontSize: 11, opacity: 0, transition: 'opacity 0.15s' }}>
-                  {deletando === c.id ? '...' : 'x'}
+                  {deletando === c.id ? '...' : '✕'}
                 </button>
               </div>
             ))}
@@ -167,7 +126,7 @@ export default function Historico() {
                     {editando ? (
                       <>
                         <button onClick={handleSalvar} disabled={salvando} style={{ fontSize: 12, fontWeight: 600, color: 'white', background: '#16a34a', border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
-                          {salvando ? 'Salvando...' : 'Salvar alteracoes'}
+                          {salvando ? 'Salvando...' : 'Salvar alterações'}
                         </button>
                         <button onClick={() => setEditando(false)} style={{ fontSize: 12, color: '#3d5452', background: 'white', border: '1px solid #e8eeed', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
                           Cancelar
@@ -188,11 +147,6 @@ export default function Historico() {
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                               PDF Receita
                             </a>
-                            {selecionada.paciente_id && (
-                              <button onClick={enviarReceitaWpp} disabled={enviandoWpp} style={{ fontSize: 12, color: '#166534', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '7px 14px', borderRadius: 8, cursor: enviandoWpp ? 'default' : 'pointer' }}>
-                                {wppOk ? 'Enviado!' : enviandoWpp ? 'Enviando...' : 'WhatsApp'}
-                              </button>
-                            )}
                       </>
                     )}
                   </div>
@@ -207,7 +161,7 @@ export default function Historico() {
                           onChange={e => setEditForm((f: any) => ({...f, [key]: e.target.value}))}
                           style={{ width: '100%', minHeight: 80, fontSize: 13, lineHeight: 1.6, padding: '8px', resize: 'vertical', borderRadius: 8, border: '1px solid #e8eeed', background: 'white', color: '#3d5452' }}/>
                       ) : (
-                        <p style={{ fontSize: 13, color: '#3d5452', margin: 0, lineHeight: 1.7 }}>{(selecionada as any)[key] || ' - '}</p>
+                        <p style={{ fontSize: 13, color: '#3d5452', margin: 0, lineHeight: 1.7 }}>{(selecionada as any)[key] || '—'}</p>
                       )}
                     </div>
                   ))}
@@ -221,16 +175,6 @@ export default function Historico() {
                             <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#16a34a' }}>{cid.codigo}</span>
                             <span style={{ fontSize: 12, color: '#3d5452' }}>{cid.descricao}</span>
                           </div>
-                {selecionada.transcricao && (
-                  <div style={{ marginTop: 12 }}>
-                    <button onClick={() => setMostrarTranscricao(!mostrarTranscricao)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, color: '#374151', padding: 0 }}>
-                      Transcricao {mostrarTranscricao ? '(fechar)' : '(ver)'}
-                    </button>
-                    {mostrarTranscricao && (
-                      <div style={{ marginTop: 6, background: '#f8fafc', borderRadius: 8, padding: '8px 10px', fontSize: 11, color: '#475569', lineHeight: 1.7, maxHeight: 180, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{selecionada.transcricao}</div>
-                    )}
-                  </div>
-                )}
                         ))}
                       </div>
                     </div>
