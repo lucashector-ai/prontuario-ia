@@ -545,6 +545,12 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   //  TELAS 
 
+  useEffect(() => {
+    if (tela === 'chamada' && localVideoRef.current && streamRef.current) {
+      localVideoRef.current.srcObject = streamRef.current
+    }
+  }, [tela])
+
   if (tela === 'carregando') return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
       <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid #16a34a', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
@@ -668,11 +674,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   )
 
 
-  useEffect(() => {
-    if (tela === 'chamada' && localVideoRef.current && streamRef.current) {
-      localVideoRef.current.srcObject = streamRef.current
-    }
-  }, [tela])
   return (
     <div style={{ width: '100vw', height: '100dvh', background: '#0f172a', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
