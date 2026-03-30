@@ -41,10 +41,15 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [micOkEspera, setMicOkEspera] = useState(false)
   const [entrando, setEntrando] = useState(false)
   const [remoteConectado, setRemoteConectado] = useState(false)
+  const [localFalando, setLocalFalando] = useState(false)
+  const [remoteFalando, setRemoteFalando] = useState(false)
+  const analyserLocalRef = useRef<AnalyserNode|null>(null)
+  const analyserRemoteRef = useRef<AnalyserNode|null>(null)
+  const localVideoRef = useRef<HTMLVideoElement|null>(null)
   const [anexos, setAnexos] = useState<{nome:string;url:string;tipo:string;de:string;hora:string}[]>([])
   const [enviandoAnexo, setEnviandoAnexo] = useState(false)
   const anexoInputRef = useRef<HTMLInputElement>(null)
-  // Fase 4: Transcrição
+  // Fase 4: Transcrio
   const [gravando, setGravando] = useState(false)
   const [gravandoPausado, setGravandoPausado] = useState(false)
   const [transcricao, setTranscricao] = useState('')
@@ -96,16 +101,17 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   }, [chatAberto])
 
   // Conecta stream local ao PiP quando tela de chamada renderiza
-  // Usa setTimeout pois o ref pode não estar pronto no primeiro tick
+  // Usa setTimeout pois o ref pode no estar pronto no primeiro tick
   useEffect(() => {
     if (tela === 'chamada' && streamRef.current) {
       const conectar = () => {
         if (localRef.current && streamRef.current) {
           localRef.current.srcObject = streamRef.current
+        if (localVideoRef.current && streamRef.current) localVideoRef.current.srcObject = streamRef.current
         }
       }
       conectar()
-      // Retry após 100ms por segurança (ref pode estar null no primeiro tick)
+      // Retry aps 100ms por segurana (ref pode estar null no primeiro tick)
       const t = setTimeout(conectar, 100)
       return () => clearTimeout(t)
     }
@@ -123,7 +129,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     iniciarEspera()
   }
 
-  // ────── SALA DE ESPERA ──────
+  //  SALA DE ESPERA 
   const iniciarEspera = async () => {
     setTela('espera')
     try {
@@ -160,7 +166,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     cancelAnimationFrame(volFrameRef.current)
   }
 
-  // ────── ENTRAR NA CHAMADA ──────
+  //  ENTRAR NA CHAMADA 
   const entrarNaChamada = async () => {
     setEntrando(true)
     pararEspera()
@@ -175,6 +181,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       return
     }
     streamRef.current = stream
+      iniciarDetectorVoz(stream, setLocalFalando, analyserLocalRef)
     if (localRef.current) localRef.current.srcObject = stream
 
     const pc = new RTCPeerConnection(ICE)
@@ -196,6 +203,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       if (remoteRef.current && e.streams[0]) {
         remoteRef.current.srcObject = e.streams[0]
         setRemoteConectado(true)
+        if (remoteRef.current?.srcObject) iniciarDetectorVoz(remoteRef.current.srcObject as MediaStream, setRemoteFalando, analyserRemoteRef)
         setEntrando(false)
         tocarSom('entrada')
         if (!timerRef.current) timerRef.current = setInterval(() => setTimer(t => t + 1), 1000)
@@ -209,7 +217,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === 'disconnected') {
-        // Queda momentanea — nao encerra
+        // Queda momentanea  nao encerra
       }
       if (pc.connectionState === 'failed') pc.restartIce()
     }
@@ -274,7 +282,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           setTela('chamada')
           setEntrando(false)
           send('pronto', { papel })
-          // Garante que o PiP recebe o stream após render
+          // Garante que o PiP recebe o stream aps render
           setTimeout(() => {
             if (localRef.current && streamRef.current) {
               localRef.current.srcObject = streamRef.current
@@ -360,17 +368,17 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   const toggleMic = () => { streamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; setMicOn(t.enabled) }) }
   const toggleCam = () => { streamRef.current?.getVideoTracks().forEach(t => { t.enabled = !t.enabled; setCamOn(t.enabled) }) }
-  // Inicia gravação — captura o áudio local do médico
+  // Inicia gravao  captura o udio local do mdico
   const iniciarGravacao = () => {
     if (!streamRef.current) return
-    // Pega só as faixas de áudio do stream local
+    // Pega s as faixas de udio do stream local
     const audioStream = new MediaStream(streamRef.current.getAudioTracks())
     const recorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' })
     chunksRef.current = []
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data)
     }
-    // Envia chunk a cada 30s para transcrição incremental
+    // Envia chunk a cada 30s para transcrio incremental
     recorder.start(30000)
     recorderRef.current = recorder
     setGravando(true)
@@ -416,7 +424,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     return transcricao
   }
 
-  // Gera prontuário a partir da transcrição via Claude
+  // Gera pronturio a partir da transcrio via Claude
   const gerarProntuario = async (textoTranscricao: string) => {
     if (!textoTranscricao.trim()) return
     setProcessando(true)
@@ -476,6 +484,26 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       setAudioOutputs(devices.filter(d => d.kind === 'audiooutput'))
     } catch (e) { console.error('Devices:', e) }
   }
+
+  const iniciarDetectorVoz = (stream: MediaStream, setFalando: (v:boolean)=>void, analyserRef: React.MutableRefObject<AnalyserNode|null>) => {
+    try {
+      const ctx = new AudioContext()
+      const source = ctx.createMediaStreamSource(stream)
+      const analyser = ctx.createAnalyser()
+      analyser.fftSize = 512
+      analyser.smoothingTimeConstant = 0.3
+      source.connect(analyser)
+      analyserRef.current = analyser
+      const data = new Uint8Array(analyser.frequencyBinCount)
+      const check = () => {
+        analyser.getByteFrequencyData(data)
+        const avg = data.slice(0, 64).reduce((a,b)=>a+b,0) / 64
+        setFalando(avg > 15)
+        requestAnimationFrame(check)
+      }
+      check()
+    } catch(e) {}
+  }
   const tocarSom = (tipo: 'entrada' | 'saida' | 'mensagem') => {
     try {
       const ctx = new AudioContext()
@@ -486,7 +514,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       gain.gain.setValueAtTime(0.3, ctx.currentTime)
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6)
       if (tipo === 'entrada') {
-        // Dois tons ascendentes — "ding dong"
+        // Dois tons ascendentes  "ding dong"
         osc.frequency.setValueAtTime(520, ctx.currentTime)
         osc.frequency.setValueAtTime(660, ctx.currentTime + 0.15)
       } else if (tipo === 'saida') {
@@ -494,7 +522,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         osc.frequency.setValueAtTime(660, ctx.currentTime)
         osc.frequency.setValueAtTime(440, ctx.currentTime + 0.15)
       } else {
-        // Mensagem — tom curto suave
+        // Mensagem  tom curto suave
         osc.frequency.setValueAtTime(880, ctx.currentTime)
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2)
       }
@@ -533,7 +561,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     send('chat', msg)
   }
 
-  // ────── TELAS ──────
+  //  TELAS 
 
   if (tela === 'carregando') return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
@@ -570,7 +598,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 
-  // ────── SALA DE ESPERA ──────
+  //  SALA DE ESPERA 
   if (tela === 'espera') return (
     <div style={{ minHeight: '100dvh', background: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
       <div style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -598,7 +626,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           {/* Badge status */}
           <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6 }}>
             <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: camOkEspera ? 'rgba(22,163,74,0.85)' : 'rgba(220,38,38,0.85)', color: 'white' }}>
-              {camOkEspera ? '📹 Camera OK' : '📹 Sem camera'}
+              {camOkEspera ? ' Camera OK' : ' Sem camera'}
             </span>
           </div>
         </div>
@@ -638,7 +666,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           ) : (
             <>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-              Estou pronto — entrar na sala
+              Estou pronto  entrar na sala
             </>
           )}
         </button>
@@ -657,7 +685,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 
-  // ────── TELA DA CHAMADA ──────
+  //  TELA DA CHAMADA 
   return (
     <div style={{ width: '100vw', height: '100dvh', background: '#0f172a', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
@@ -683,7 +711,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             </div>
           )}
           <span style={{ fontSize: 10, color: '#475569', background: '#0f172a', border: '1px solid #1e293b', padding: '3px 8px', borderRadius: 6 }}>
-            {isMedico ? '👨‍⚕️ Medico' : '👤 Paciente'}
+            {isMedico ? ' Medico' : ' Paciente'}
           </span>
         </div>
       </div>
@@ -691,11 +719,11 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       {/* Corpo: video + chat */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
 
-        {/* Area de video — usa letterbox para video portrait no desktop */}
+        {/* Area de video  usa letterbox para video portrait no desktop */}
         <div style={{ flex: 1, position: 'relative', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', minWidth: 0 }}>
           {/* Video remoto: object-fit:contain garante letterbox para mobile portrait */}
           <video ref={remoteRef} autoPlay playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', maxWidth: '100%', maxHeight: '100%' }}/>
+            style={{ outline: remoteFalando ? '3px solid #22c55e' : 'none', outlineOffset: -3, width: '100%', height: '100%', objectFit: 'contain', background: '#000', maxWidth: '100%', maxHeight: '100%' }}/>
 
           {/* Overlay aguardando */}
           {!remoteConectado && (
@@ -707,11 +735,18 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             </div>
           )}
 
-          {/* Video local PiP — canto inferior direito */}
+          {/* Video local PiP  canto inferior direito */}
           
 
 
           {/* Barra de controles estilo Meet */}
+                    {/* Camera local PiP - medico */}
+          {streamRef && (
+            <div style={{ position: 'absolute', bottom: 84, right: 12, width: 160, aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', border: localFalando ? '2px solid #22c55e' : '2px solid rgba(255,255,255,0.15)', transition: 'border-color 0.2s', zIndex: 15, background: '#0f172a', boxShadow: localFalando ? '0 0 12px rgba(34,197,94,0.5)' : 'none' }}>
+              <video ref={localVideoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
+            </div>
+          )}
+
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 72, background: 'linear-gradient(transparent, rgba(15,23,42,0.95))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', zIndex: 20 }}>
             {/* Esquerda: info da chamada */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 160 }}>
@@ -810,7 +845,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         <input ref={anexoInputRef} type="file" accept="image/*,.pdf" style={{ display:'none' }}
           onChange={e => { const f = e.target.files?.[0]; if (f) enviarAnexo(f); e.target.value = '' }}/>
 
-      {/* Painel de chat — desliza da direita */}
+      {/* Painel de chat  desliza da direita */}
         {chatAberto && (
           <div style={{ width: 'clamp(260px, 30vw, 320px)', background: '#1e293b', display: 'flex', flexDirection: 'column', borderLeft: '1px solid #334155', flexShrink: 0, animation: 'slideIn 0.2s ease' }}>
             <div style={{ padding: '10px 14px', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -825,7 +860,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               {[...chat.map(m => ({...m, _tipo:'msg'})), ...anexos.map(a => ({...a, _tipo:'anexo'}))].map((item, i) => (
                 item._tipo === 'anexo' ? (
                   <div key={'a'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
-                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 5px' }}>{item.de} · {item.hora}</p>
+                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 5px' }}>{item.de}  {item.hora}</p>
                     {(item as any).tipo?.startsWith('image/') ? (
                       <a href={(item as any).url} onClick={e => { e.preventDefault(); setArquivoAberto({ url: (item as any).url, nome: (item as any).nome || 'imagem', tipo: (item as any).tipo || 'image/jpeg' }) }}>
                         <img src={(item as any).url} alt={(item as any).nome} style={{ width: '100%', borderRadius: 6, cursor: 'pointer', maxHeight: 160, objectFit: 'cover' }}/>
@@ -843,7 +878,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   </div>
                 ) : (
                   <div key={'m'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
-                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 3px' }}>{item.de} · {item.hora}</p>
+                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 3px' }}>{item.de}  {item.hora}</p>
                     <p style={{ fontSize: 12, color: '#cbd5e1', margin: 0, lineHeight: 1.5 }}>{(item as any).msg}</p>
                   </div>
                 )
@@ -881,7 +916,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                 </div>
                 <div>
                   <p style={{ fontSize:14, fontWeight:700, color:'white', margin:0 }}>Prontuario gerado pela IA</p>
-                  <p style={{ fontSize:11, color:'#64748b', margin:0 }}>Baseado na transcricao da consulta — revise antes de salvar</p>
+                  <p style={{ fontSize:11, color:'#64748b', margin:0 }}>Baseado na transcricao da consulta  revise antes de salvar</p>
                 </div>
               </div>
               <button onClick={() => setProntuarioModal(false)} style={{ background:'none', border:'none', color:'#475569', cursor:'pointer' }}>
@@ -889,7 +924,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               </button>
             </div>
             <div style={{ flex:1, overflow:'auto', padding:'16px 20px', display:'flex', flexDirection:'column', gap:14 }}>
-              {/* Transcrição */}
+              {/* Transcrio */}
               {transcricao && (
                 <div>
                   <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>Transcricao</p>
@@ -898,12 +933,12 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   </div>
                 </div>
               )}
-              {/* Campos do prontuário */}
+              {/* Campos do pronturio */}
               {['subjetivo','objetivo','avaliacao','plano'].map(campo => {
                 const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
                 const val = pd[campo] ?? ''
                 if (!val) return null
-                const label = campo === 'subjetivo' ? 'S — Subjetivo' : campo === 'objetivo' ? 'O — Objetivo' : campo === 'avaliacao' ? 'A — Avaliacao / CID' : 'P — Plano'
+                const label = campo === 'subjetivo' ? 'S  Subjetivo' : campo === 'objetivo' ? 'O  Objetivo' : campo === 'avaliacao' ? 'A  Avaliacao / CID' : 'P  Plano'
                 return (
                   <div key={campo}>
                     <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase' as const, letterSpacing:'0.05em', margin:'0 0 6px' }}>{label}</p>
@@ -953,7 +988,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                 Baixar
               </a>
               <button onClick={() => setArquivoAberto(null)}
-                style={{ background:'none', border:'none', color:'#94a3b8', cursor:'pointer', fontSize:20, lineHeight:1 }}>✕</button>
+                style={{ background:'none', border:'none', color:'#94a3b8', cursor:'pointer', fontSize:20, lineHeight:1 }}></button>
             </div>
             {arquivoAberto.tipo.startsWith('image/') ? (
               <img src={arquivoAberto.url} alt={arquivoAberto.nome} style={{ maxWidth:'85vw', maxHeight:'80vh', borderRadius:8, objectFit:'contain' }}/>
