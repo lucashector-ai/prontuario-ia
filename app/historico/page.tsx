@@ -11,15 +11,15 @@ export default function Historico() {
   const [consultas, setConsultas] = useState<any[]>([])
   const [carregando, setCarregando] = useState(true)
   const [selecionada, setSelecionada] = useState<any>(null)
-  const [busca, setBusca] = useState('')
-  const [filtroTipo, setFiltroTipo] = useState<'todos'|'teleconsulta'|'presencial'>('todos')
-  const [mostrarTranscricao, setMostrarTranscricao] = useState(false)
   const [editando, setEditando] = useState(false)
   const [editForm, setEditForm] = useState<any>({})
   const [salvando, setSalvando] = useState(false)
+  const [deletando, setDeletando] = useState<string | null>(null)
+  const [busca, setBusca] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState<'todos'|'teleconsulta'|'presencial'>('todos')
+  const [mostrarTranscricao, setMostrarTranscricao] = useState(false)
   const [enviandoWpp, setEnviandoWpp] = useState(false)
   const [wppOk, setWppOk] = useState<string|null>(null)
-  const [deletando, setDeletando] = useState<string | null>(null)
 
   useEffect(() => {
     const m = localStorage.getItem('medico')
@@ -39,26 +39,18 @@ export default function Historico() {
     if (!selecionada || enviandoWpp) return
     setEnviandoWpp(true)
     try {
-      // Busca telefone do paciente
       const { data: pac } = await supabase.from('pacientes').select('nome, telefone').eq('id', selecionada.paciente_id).single()
       if (!pac?.telefone) { alert('Paciente sem telefone cadastrado.'); setEnviandoWpp(false); return }
-      const receita = selecionada.receita || selecionada.plano || ''
-      const data = new Date(selecionada.criado_em).toLocaleDateString('pt-BR')
-      const msg = 'Ola ' + (pac.nome?.split(' ')[0] || 'paciente') + '! Segue sua receita da consulta de ' + data + ':\n\n' +
-        (receita || 'Consulte o medico para mais detalhes.') +
-        '\n\nDr(a). ' + (medico?.nome || '') + '  -  ' + (medico?.especialidade || '')
-      await fetch('/api/whatsapp/enviar', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telefone: pac.telefone, texto: msg, medico_id: medico?.id })
-      })
-      setWppOk(pac.nome)
-      setTimeout(() => setWppOk(null), 4000)
+      const dataStr = new Date(selecionada.criado_em).toLocaleDateString('pt-BR')
+      const msg = 'Ola ' + (pac.nome?.split(' ')[0] || 'paciente') + '! Receita de ' + dataStr + ':\n\n' + (selecionada.receita || selecionada.plano || '') + '\n\n' + (medico?.nome || '')
+      await fetch('/api/whatsapp/enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telefone: pac.telefone, texto: msg, medico_id: medico?.id }) })
+      setWppOk(pac.nome); setTimeout(() => setWppOk(null), 4000)
     } catch (err) { console.error(err) }
     setEnviandoWpp(false)
   }
 
   const handleSelecionar = (c: any) => {
-    setWppOk(null); setSelecionada(c); setEditando(false)
+    setSelecionada(c); setEditando(false)
     setEditForm({ subjetivo: c.subjetivo, objetivo: c.objetivo, avaliacao: c.avaliacao, plano: c.plano, receita: c.receita })
   }
 
@@ -83,15 +75,6 @@ export default function Historico() {
     setDeletando(null)
   }
 
-
-  const consultasFiltradas = consultas.filter((consulta) => {
-    const q = busca.toLowerCase().trim()
-    const campos = [consulta.pacientes?.nome, consulta.subjetivo, consulta.objetivo, consulta.avaliacao, consulta.plano, consulta.transcricao]
-    const matchBusca = q === '' || campos.some((v: any) => v?.toLowerCase().includes(q)) || (Array.isArray(consulta.cids) && consulta.cids.some((cid: any) => (cid.codigo + ' ' + cid.descricao).toLowerCase().includes(q)))
-    const matchTipo = filtroTipo === 'todos' || (filtroTipo === 'teleconsulta' && !!consulta.transcricao) || (filtroTipo === 'presencial' && !consulta.transcricao)
-    return matchBusca && matchTipo
-  })
-
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
   const secoes = [
@@ -101,6 +84,14 @@ export default function Historico() {
     { key: 'plano',     titulo: 'P  -  Plano',      cor: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
   ]
 
+  const consultasFiltradas = consultas.filter((item) => {
+    const q = busca.toLowerCase().trim()
+    if (q === '' && filtroTipo === 'todos') return true
+    const campos = [item.pacientes?.nome, item.subjetivo, item.objetivo, item.avaliacao, item.plano, item.transcricao]
+    const matchBusca = q === '' || campos.some((v: any) => v?.toLowerCase().includes(q)) || (Array.isArray(item.cids) && item.cids.some((cid: any) => (cid.codigo + ' ' + cid.descricao).toLowerCase().includes(q)))
+    const matchTipo = filtroTipo === 'todos' || (filtroTipo === 'teleconsulta' && !!item.transcricao) || (filtroTipo === 'presencial' && !item.transcricao)
+    return matchBusca && matchTipo
+  })
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f8fafb', overflow: 'hidden' }}>
@@ -121,31 +112,21 @@ export default function Historico() {
 
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden' }}>
           {/* Lista */}
-          <div style={{ borderRight: '1px solid #e8eeed', overflow: 'auto', background: 'white', padding: '12px 10px', display:'flex', flexDirection:'column', gap:0 }}>
-          {/* Busca e filtros */}
-          <div style={{ padding:'0 2px 10px', flexShrink:0 }}>
-            <div style={{ position:'relative', marginBottom:8 }}>
-              <svg style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)' }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar por paciente, CID, sintoma..." style={{ width:'100%', padding:'8px 10px 8px 28px', fontSize:12, borderRadius:8, border:'1px solid #e5e7eb', background:'#f9fafb', outline:'none', color:'#374151' }}/>
-            </div>
-            <div style={{ display:'flex', gap:4 }}>
-              {(['todos','teleconsulta','presencial'] as const).map(t => (
-                <button key={t} onClick={() => setFiltroTipo(t)}
-                  style={{ flex:1, padding:'5px 0', fontSize:11, fontWeight:600, borderRadius:6, border:'1px solid', cursor:'pointer',
-                    background: filtroTipo === t ? '#16a34a' : 'white',
-                    color: filtroTipo === t ? 'white' : '#6b7280',
-                    borderColor: filtroTipo === t ? '#16a34a' : '#e5e7eb' }}>
-                  {t === 'todos' ? 'Todos' : t === 'teleconsulta' ? '[video] Video' : '[clinic] Presencial'}
-                </button>
-              ))}
-            </div>
-          </div>
-            {carregando ? (
+          <div style={{ borderRight: '1px solid #e8eeed', overflow: 'auto', background: 'white', padding: '12px 10px' }}>
+            <div style={{ padding: '0 2px 10px' }}>
+                <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar paciente, CID..." style={{ width: '100%', padding: '8px 10px', fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb', background: '#f9fafb', outline: 'none', color: '#374151', marginBottom: 6 }}/>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {(['todos', 'teleconsulta', 'presencial'] as const).map(t => (
+                    <button key={t} onClick={() => setFiltroTipo(t)} style={{ flex: 1, padding: '5px 0', fontSize: 11, fontWeight: 600, borderRadius: 6, border: '1px solid', cursor: 'pointer', background: filtroTipo === t ? '#16a34a' : 'white', color: filtroTipo === t ? 'white' : '#6b7280', borderColor: filtroTipo === t ? '#16a34a' : '#e5e7eb' }}>
+                      {t === 'todos' ? 'Todos' : t === 'teleconsulta' ? 'Video' : 'Presencial'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {carregando ? (
               <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Carregando...</p>
             ) : consultas.length === 0 ? (
               <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Nenhuma consulta registrada</p>
-            ) : consultasFiltradas.length === 0 ? (
-              <p style={{ fontSize: 12, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Nenhum resultado para "{busca}"</p>
             ) : consultasFiltradas.map(c => (
               <div key={c.id} onClick={() => handleSelecionar(c)} style={{
                 padding: '12px', borderRadius: 10, marginBottom: 6, cursor: 'pointer',
@@ -153,9 +134,9 @@ export default function Historico() {
                 border: `1px solid ${selecionada?.id === c.id ? '#bbf7d0' : '#e8eeed'}`,
                 transition: 'all 0.15s', position: 'relative',
               }}>
-                <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                 <p style={{ fontSize: 11, color: '#8aa8a5', margin: 0, fontWeight: 500 }}>{fmt(c.criado_em)}</p>
-                {c.transcricao && <span style={{ fontSize: 9, fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: 10 }}>[video] Teleconsulta</span>}
+                {c.transcricao && <span style={{ fontSize: 9, fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: 10 }}>Video</span>}
               </div>
                 <p style={{ fontSize: 12, color: '#3d5452', margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, lineHeight: 1.5 }}>
                   {c.subjetivo?.substring(0, 90) || 'Consulta sem detalhes'}
@@ -208,17 +189,8 @@ export default function Historico() {
                               PDF Receita
                             </a>
                             {selecionada.paciente_id && (
-                              <button onClick={enviarReceitaWpp} disabled={enviandoWpp}
-                                style={{ fontSize:12, color:'#166534', background:'#f0fdf4', border:'1px solid #bbf7d0', padding:'7px 14px', borderRadius:8, cursor: enviandoWpp ? 'default' : 'pointer', display:'inline-flex', alignItems:'center', gap:5 }}>
-                                {wppOk
-                                  ? <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Enviado!</>
-                                  : enviandoWpp
-                                  ? <><div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid #bbf7d0', borderTopColor:'#16a34a', animation:'spin 0.8s linear infinite' }}/>Enviando...</>
-                                  : <>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                                    WhatsApp
-                                  </>
-                                }
+                              <button onClick={enviarReceitaWpp} disabled={enviandoWpp} style={{ fontSize: 12, color: '#166534', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '7px 14px', borderRadius: 8, cursor: enviandoWpp ? 'default' : 'pointer' }}>
+                                {wppOk ? 'Enviado!' : enviandoWpp ? 'Enviando...' : 'WhatsApp'}
                               </button>
                             )}
                       </>
@@ -249,21 +221,16 @@ export default function Historico() {
                             <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#16a34a' }}>{cid.codigo}</span>
                             <span style={{ fontSize: 12, color: '#3d5452' }}>{cid.descricao}</span>
                           </div>
-              {/* Transcricao colapsavel */}
-              {selecionada.transcricao && (
-                <div style={{ marginTop:16 }}>
-                  <button onClick={() => setMostrarTranscricao(!mostrarTranscricao)}
-                    style={{ display:'flex', alignItems:'center', gap:6, background:'none', border:'none', cursor:'pointer', padding:0, marginBottom:8 }}>
-                    <span style={{ fontSize:11, fontWeight:700, color:'#374151', textTransform:'uppercase', letterSpacing:'0.06em' }}>[doc] Transcricao da consulta</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" style={{ transform: mostrarTranscricao ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}><polyline points="6 9 12 15 18 9"/></svg>
-                  </button>
-                  {mostrarTranscricao && (
-                    <div style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:8, padding:'10px 12px', fontSize:12, color:'#475569', lineHeight:1.7, maxHeight:200, overflow:'auto', whiteSpace:'pre-wrap' }}>
-                      {selecionada.transcricao}
-                    </div>
-                  )}
-                </div>
-              )}
+                {selecionada.transcricao && (
+                  <div style={{ marginTop: 12 }}>
+                    <button onClick={() => setMostrarTranscricao(!mostrarTranscricao)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, color: '#374151', padding: 0 }}>
+                      Transcricao {mostrarTranscricao ? '(fechar)' : '(ver)'}
+                    </button>
+                    {mostrarTranscricao && (
+                      <div style={{ marginTop: 6, background: '#f8fafc', borderRadius: 8, padding: '8px 10px', fontSize: 11, color: '#475569', lineHeight: 1.7, maxHeight: 180, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{selecionada.transcricao}</div>
+                    )}
+                  </div>
+                )}
                         ))}
                       </div>
                     </div>
