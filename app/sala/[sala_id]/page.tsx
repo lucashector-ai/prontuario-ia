@@ -119,7 +119,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     if (tela === 'chamada' && v && stream && !v.srcObject) {
       v.srcObject = stream
     }
-  })
+  }, [tela])
 
   const carregarSala = async () => {
     const { data } = await sb.from('teleconsultas').select('*').eq('sala_id', sala_id).single()
