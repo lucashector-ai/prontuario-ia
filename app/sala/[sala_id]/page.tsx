@@ -41,11 +41,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [micOkEspera, setMicOkEspera] = useState(false)
   const [entrando, setEntrando] = useState(false)
   const [remoteConectado, setRemoteConectado] = useState(false)
-  const localVideoRef = useRef<HTMLVideoElement|null>(null)
   const [anexos, setAnexos] = useState<{nome:string;url:string;tipo:string;de:string;hora:string}[]>([])
   const [enviandoAnexo, setEnviandoAnexo] = useState(false)
   const anexoInputRef = useRef<HTMLInputElement>(null)
-  // Fase 4: Transcrio
+  // Fase 4: Transcrição
   const [gravando, setGravando] = useState(false)
   const [gravandoPausado, setGravandoPausado] = useState(false)
   const [transcricao, setTranscricao] = useState('')
@@ -97,17 +96,16 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   }, [chatAberto])
 
   // Conecta stream local ao PiP quando tela de chamada renderiza
-  // Usa setTimeout pois o ref pode no estar pronto no primeiro tick
+  // Usa setTimeout pois o ref pode não estar pronto no primeiro tick
   useEffect(() => {
     if (tela === 'chamada' && streamRef.current) {
       const conectar = () => {
         if (localRef.current && streamRef.current) {
           localRef.current.srcObject = streamRef.current
-        
         }
       }
       conectar()
-      // Retry aps 100ms por segurana (ref pode estar null no primeiro tick)
+      // Retry após 100ms por segurança (ref pode estar null no primeiro tick)
       const t = setTimeout(conectar, 100)
       return () => clearTimeout(t)
     }
@@ -125,7 +123,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     iniciarEspera()
   }
 
-  //  SALA DE ESPERA 
+  // ────── SALA DE ESPERA ──────
   const iniciarEspera = async () => {
     setTela('espera')
     try {
@@ -162,7 +160,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     cancelAnimationFrame(volFrameRef.current)
   }
 
-  //  ENTRAR NA CHAMADA 
+  // ────── ENTRAR NA CHAMADA ──────
   const entrarNaChamada = async () => {
     setEntrando(true)
     pararEspera()
@@ -211,7 +209,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === 'disconnected') {
-        // Queda momentanea  nao encerra
+        // Queda momentanea — nao encerra
       }
       if (pc.connectionState === 'failed') pc.restartIce()
     }
@@ -276,7 +274,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           setTela('chamada')
           setEntrando(false)
           send('pronto', { papel })
-          // Garante que o PiP recebe o stream aps render
+          // Garante que o PiP recebe o stream após render
           setTimeout(() => {
             if (localRef.current && streamRef.current) {
               localRef.current.srcObject = streamRef.current
@@ -341,11 +339,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     if (recorderRef.current && recorderRef.current.state !== 'inactive') {
       recorderRef.current.stop()
       setGravando(false)
-      // Dispara transcricao e prontuario automaticamente
-      setTimeout(() => transcreverAudio(), 1500)
-    } else if (papelRef.current === 'medico') {
-      // Sem gravacao - ainda assim mostra modal
-      setTela('encerrado')
     }
     encerrarLocal()
     if (papelRef.current === 'paciente') {
@@ -367,17 +360,17 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   const toggleMic = () => { streamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; setMicOn(t.enabled) }) }
   const toggleCam = () => { streamRef.current?.getVideoTracks().forEach(t => { t.enabled = !t.enabled; setCamOn(t.enabled) }) }
-  // Inicia gravao  captura o udio local do mdico
+  // Inicia gravação — captura o áudio local do médico
   const iniciarGravacao = () => {
     if (!streamRef.current) return
-    // Pega s as faixas de udio do stream local
+    // Pega só as faixas de áudio do stream local
     const audioStream = new MediaStream(streamRef.current.getAudioTracks())
     const recorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' })
     chunksRef.current = []
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data)
     }
-    // Envia chunk a cada 30s para transcrio incremental
+    // Envia chunk a cada 30s para transcrição incremental
     recorder.start(30000)
     recorderRef.current = recorder
     setGravando(true)
@@ -423,7 +416,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     return transcricao
   }
 
-  // Gera pronturio a partir da transcrio via Claude
+  // Gera prontuário a partir da transcrição via Claude
   const gerarProntuario = async (textoTranscricao: string) => {
     if (!textoTranscricao.trim()) return
     setProcessando(true)
@@ -483,8 +476,32 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       setAudioOutputs(devices.filter(d => d.kind === 'audiooutput'))
     } catch (e) { console.error('Devices:', e) }
   }
-
-  
+  const tocarSom = (tipo: 'entrada' | 'saida' | 'mensagem') => {
+    try {
+      const ctx = new AudioContext()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      gain.gain.setValueAtTime(0.3, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6)
+      if (tipo === 'entrada') {
+        // Dois tons ascendentes — "ding dong"
+        osc.frequency.setValueAtTime(520, ctx.currentTime)
+        osc.frequency.setValueAtTime(660, ctx.currentTime + 0.15)
+      } else if (tipo === 'saida') {
+        // Dois tons descendentes
+        osc.frequency.setValueAtTime(660, ctx.currentTime)
+        osc.frequency.setValueAtTime(440, ctx.currentTime + 0.15)
+      } else {
+        // Mensagem — tom curto suave
+        osc.frequency.setValueAtTime(880, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2)
+      }
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + 0.6)
+    } catch {}
+  }
 
   const fmtTimer = (s: number) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0')
 
@@ -516,7 +533,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     send('chat', msg)
   }
 
-  //  TELAS 
+  // ────── TELAS ──────
 
   if (tela === 'carregando') return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
@@ -553,7 +570,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 
-  //  SALA DE ESPERA 
+  // ────── SALA DE ESPERA ──────
   if (tela === 'espera') return (
     <div style={{ minHeight: '100dvh', background: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
       <div style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -581,7 +598,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           {/* Badge status */}
           <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6 }}>
             <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: camOkEspera ? 'rgba(22,163,74,0.85)' : 'rgba(220,38,38,0.85)', color: 'white' }}>
-              {camOkEspera ? ' Camera OK' : ' Sem camera'}
+              {camOkEspera ? '📹 Camera OK' : '📹 Sem camera'}
             </span>
           </div>
         </div>
@@ -621,7 +638,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           ) : (
             <>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-              Estou pronto  entrar na sala
+              Estou pronto — entrar na sala
             </>
           )}
         </button>
@@ -640,36 +657,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 
-  //  TELA DA CHAMADA 
-  const tocarSom = (tipo: 'entrada' | 'saida' | 'mensagem') => {
-    try {
-      const ctx = new AudioContext()
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain); gain.connect(ctx.destination)
-      gain.gain.setValueAtTime(0.3, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
-      if (tipo === 'entrada') {
-        osc.frequency.setValueAtTime(520, ctx.currentTime)
-        osc.frequency.setValueAtTime(660, ctx.currentTime + 0.15)
-      } else if (tipo === 'saida') {
-        osc.frequency.setValueAtTime(440, ctx.currentTime)
-        osc.frequency.setValueAtTime(330, ctx.currentTime + 0.15)
-      } else {
-        osc.frequency.setValueAtTime(880, ctx.currentTime)
-      }
-      osc.start(ctx.currentTime)
-      osc.stop(ctx.currentTime + 0.5)
-    } catch(e) {}
-  }
-
-  // Conecta stream ao PiP da camera local
-  useEffect(() => {
-    if (tela === 'chamada' && localVideoRef.current && streamRef.current) {
-      localVideoRef.current.srcObject = streamRef.current
-    }
-  }, [tela])
-
+  // ────── TELA DA CHAMADA ──────
   return (
     <div style={{ width: '100vw', height: '100dvh', background: '#0f172a', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
@@ -695,7 +683,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             </div>
           )}
           <span style={{ fontSize: 10, color: '#475569', background: '#0f172a', border: '1px solid #1e293b', padding: '3px 8px', borderRadius: 6 }}>
-            {isMedico ? ' Medico' : ' Paciente'}
+            {isMedico ? '👨‍⚕️ Medico' : '👤 Paciente'}
           </span>
         </div>
       </div>
@@ -703,19 +691,11 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       {/* Corpo: video + chat */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
 
-        {/* Area de video  usa letterbox para video portrait no desktop */}
+        {/* Area de video — usa letterbox para video portrait no desktop */}
         <div style={{ flex: 1, position: 'relative', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', minWidth: 0 }}>
           {/* Video remoto: object-fit:contain garante letterbox para mobile portrait */}
           <video ref={remoteRef} autoPlay playsInline
             style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', maxWidth: '100%', maxHeight: '100%' }}/>
-          {/* Indicador de gravacao */}
-          {gravando && papelRef.current === 'medico' && (
-            <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(220,38,38,0.85)', borderRadius: 8, padding: '4px 10px', zIndex: 20 }}>
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'white', animation: 'pulse 1.5s infinite' }}/>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'white', letterSpacing: '0.05em' }}>{gravandoPausado ? 'PAUSADO' : 'REC'}</span>
-            </div>
-          )}
-
 
           {/* Overlay aguardando */}
           {!remoteConectado && (
@@ -727,76 +707,110 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             </div>
           )}
 
-          {/* Video local PiP  canto inferior direito */}
+          {/* Video local PiP — canto inferior direito */}
           
 
 
-          {/* Camera local PiP */}
-          <div style={{ position: 'absolute', bottom: 84, right: 12, width: 'clamp(80px, 20vw, 140px)', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.2)', zIndex: 15, background: '#000' }}>
-            <video ref={localVideoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
-          </div>
-
           {/* Barra de controles estilo Meet */}
-                    {/* Camera local PiP - medico */}
-          {(tela === 'chamada') && (
-            <div style={{ position: 'absolute', bottom: 84, right: 12, width: 'clamp(100px, 22vw, 160px)', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.15)', zIndex: 15, background: '#0f172a' }}>
-              <video ref={localVideoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 72, background: 'linear-gradient(transparent, rgba(15,23,42,0.95))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', zIndex: 20 }}>
+            {/* Esquerda: info da chamada */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 160 }}>
+              <div style={{ background: 'rgba(30,41,59,0.8)', borderRadius: 8, padding: '4px 10px' }}>
+                <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{Math.floor(timer/60).toString().padStart(2,'0')}:{(timer%60).toString().padStart(2,'0')}</p>
+              </div>
+              
             </div>
-          )}
 
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 'clamp(64px,10vh,80px)', background: 'linear-gradient(transparent, rgba(5,10,25,0.97))', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, padding: '0 16px' }}>
-            {/* Botoes centrais */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px,2.5vw,18px)' }}>
-              {/* Microfone */}
-              <button onClick={toggleMic} title={micOn ? 'Silenciar' : 'Ativar mic'}
-                style={{ width: 'clamp(48px,12vw,56px)', height: 'clamp(48px,12vw,56px)', borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.18)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-                  {micOn
-                    ? <><path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/><path d='M19 10v2a7 7 0 01-14 0v-2'/><line x1='12' y1='19' x2='12' y2='23'/><line x1='8' y1='23' x2='16' y2='23'/></>
-                    : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6'/><path d='M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23'/><line x1='12' y1='19' x2='12' y2='23'/><line x1='8' y1='23' x2='16' y2='23'/></>
-                  }
+            {/* Centro: botoes principais */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* Mute */}
+              <button onClick={toggleMic} title={micOn ? 'Silenciar' : 'Ativar microfone'}
+                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.15)' : '#dc2626', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1, transition: 'background 0.2s' }}>
+                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
+                  {micOn ? <><path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/><path d='M19 10v2a7 7 0 01-14 0v-2'/><line x1='12' y1='19' x2='12' y2='23'/><line x1='8' y1='23' x2='16' y2='23'/></> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6'/><path d='M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23'/><line x1='12' y1='19' x2='12' y2='23'/><line x1='8' y1='23' x2='16' y2='23'/></>}
                 </svg>
               </button>
+
               {/* Camera */}
-              <button onClick={toggleCam} title={camOn ? 'Desligar cam' : 'Ligar cam'}
-                style={{ width: 'clamp(48px,12vw,56px)', height: 'clamp(48px,12vw,56px)', borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.18)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-                  {camOn
-                    ? <path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/>
-                    : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>
-                  }
+              <button onClick={toggleCam} title={camOn ? 'Desligar camera' : 'Ligar camera'}
+                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.15)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}>
+                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
+                  {camOn ? <path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34M11 5.15A9.06 9.06 0 0115 5'/></>}
                 </svg>
               </button>
+
+              {/* Pausar gravacao (so medico) */}
+              
+
               {/* Encerrar */}
               <button onClick={encerrar} title='Encerrar consulta'
-                style={{ width: 'clamp(48px,12vw,56px)', height: 'clamp(48px,12vw,56px)', borderRadius: '50%', border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>
+                style={{ width: 56, height: 48, borderRadius: 24, border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0 14px' }}>
+                <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M10.68 13.31a16 16 0 003.41 2.6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.5 1.22 2 2 0 012.44 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006.01 6.1zM17 5l5 5M22 5l-5 5'/></svg>
               </button>
+            </div>
+
+            {/* Direita: chat + configuracoes */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 160, justifyContent: 'flex-end' }}>
+              {/* Chat */}
+              <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }} title='Chat'
+                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? '#16a34a' : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>
+                {naoLidas > 0 && <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }}/>}
+              </button>
+
               {/* Configuracoes */}
               {papelRef.current === 'medico' && (
                 <button onClick={() => { setConfigAberto(o => !o); carregarDispositivos() }} title='Configuracoes'
-                  style={{ width: 'clamp(44px,11vw,52px)', height: 'clamp(44px,11vw,52px)', borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: configAberto ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z'/></svg>
                 </button>
               )}
             </div>
-            {/* Chat - canto direito absoluto */}
-            <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }} title='Chat'
-              style={{ position: 'absolute', right: 'clamp(8px,2vw,16px)', width: 'clamp(44px,11vw,52px)', height: 'clamp(44px,11vw,52px)', borderRadius: '50%', border: 'none', background: chatAberto ? '#16a34a' : 'rgba(255,255,255,0.18)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>
-              {naoLidas > 0 && <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }}/>}
-            </button>
           </div>
 
           {/* Painel de configuracoes */}
-          
+          {configAberto && (
+            <div style={{ position: 'absolute', bottom: 80, right: 16, width: 300, background: '#1e293b', borderRadius: 12, border: '1px solid #334155', padding: 16, zIndex: 30 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0 }}>Configuracoes</p>
+                <button onClick={() => setConfigAberto(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>x</button>
+              </div>
+              {audioInputs.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <p style={{ fontSize: 11, color: '#64748b', margin: '0 0 4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Microfone</p>
+                  <select value={audioInputId} onChange={e => setAudioInputId(e.target.value)}
+                    style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
+                    {audioInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Microfone ' + d.deviceId.slice(0,4)}</option>)}
+                  </select>
+                </div>
+              )}
+              {videoInputs.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <p style={{ fontSize: 11, color: '#64748b', margin: '0 0 4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Camera</p>
+                  <select value={videoInputId} onChange={e => setVideoInputId(e.target.value)}
+                    style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
+                    {videoInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Camera ' + d.deviceId.slice(0,4)}</option>)}
+                  </select>
+                </div>
+              )}
+              {audioOutputs.length > 0 && (
+                <div>
+                  <p style={{ fontSize: 11, color: '#64748b', margin: '0 0 4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Alto-falante</p>
+                  <select value={audioOutputId} onChange={e => setAudioOutputId(e.target.value)}
+                    style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
+                    {audioOutputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Alto-falante ' + d.deviceId.slice(0,4)}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Input de arquivo oculto */}
         <input ref={anexoInputRef} type="file" accept="image/*,.pdf" style={{ display:'none' }}
           onChange={e => { const f = e.target.files?.[0]; if (f) enviarAnexo(f); e.target.value = '' }}/>
 
-      {/* Painel de chat  desliza da direita */}
+      {/* Painel de chat — desliza da direita */}
         {chatAberto && (
           <div style={{ width: 'clamp(260px, 30vw, 320px)', background: '#1e293b', display: 'flex', flexDirection: 'column', borderLeft: '1px solid #334155', flexShrink: 0, animation: 'slideIn 0.2s ease' }}>
             <div style={{ padding: '10px 14px', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -811,7 +825,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               {[...chat.map(m => ({...m, _tipo:'msg'})), ...anexos.map(a => ({...a, _tipo:'anexo'}))].map((item, i) => (
                 item._tipo === 'anexo' ? (
                   <div key={'a'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
-                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 5px' }}>{item.de}  {item.hora}</p>
+                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 5px' }}>{item.de} · {item.hora}</p>
                     {(item as any).tipo?.startsWith('image/') ? (
                       <a href={(item as any).url} onClick={e => { e.preventDefault(); setArquivoAberto({ url: (item as any).url, nome: (item as any).nome || 'imagem', tipo: (item as any).tipo || 'image/jpeg' }) }}>
                         <img src={(item as any).url} alt={(item as any).nome} style={{ width: '100%', borderRadius: 6, cursor: 'pointer', maxHeight: 160, objectFit: 'cover' }}/>
@@ -829,7 +843,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   </div>
                 ) : (
                   <div key={'m'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
-                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 3px' }}>{item.de}  {item.hora}</p>
+                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 3px' }}>{item.de} · {item.hora}</p>
                     <p style={{ fontSize: 12, color: '#cbd5e1', margin: 0, lineHeight: 1.5 }}>{(item as any).msg}</p>
                   </div>
                 )
@@ -867,7 +881,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                 </div>
                 <div>
                   <p style={{ fontSize:14, fontWeight:700, color:'white', margin:0 }}>Prontuario gerado pela IA</p>
-                  <p style={{ fontSize:11, color:'#64748b', margin:0 }}>Baseado na transcricao da consulta  revise antes de salvar</p>
+                  <p style={{ fontSize:11, color:'#64748b', margin:0 }}>Baseado na transcricao da consulta — revise antes de salvar</p>
                 </div>
               </div>
               <button onClick={() => setProntuarioModal(false)} style={{ background:'none', border:'none', color:'#475569', cursor:'pointer' }}>
@@ -875,7 +889,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               </button>
             </div>
             <div style={{ flex:1, overflow:'auto', padding:'16px 20px', display:'flex', flexDirection:'column', gap:14 }}>
-              {/* Transcrio */}
+              {/* Transcrição */}
               {transcricao && (
                 <div>
                   <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>Transcricao</p>
@@ -884,12 +898,12 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   </div>
                 </div>
               )}
-              {/* Campos do pronturio */}
+              {/* Campos do prontuário */}
               {['subjetivo','objetivo','avaliacao','plano'].map(campo => {
                 const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
                 const val = pd[campo] ?? ''
                 if (!val) return null
-                const label = campo === 'subjetivo' ? 'S  Subjetivo' : campo === 'objetivo' ? 'O  Objetivo' : campo === 'avaliacao' ? 'A  Avaliacao / CID' : 'P  Plano'
+                const label = campo === 'subjetivo' ? 'S — Subjetivo' : campo === 'objetivo' ? 'O — Objetivo' : campo === 'avaliacao' ? 'A — Avaliacao / CID' : 'P — Plano'
                 return (
                   <div key={campo}>
                     <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase' as const, letterSpacing:'0.05em', margin:'0 0 6px' }}>{label}</p>
@@ -939,7 +953,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                 Baixar
               </a>
               <button onClick={() => setArquivoAberto(null)}
-                style={{ background:'none', border:'none', color:'#94a3b8', cursor:'pointer', fontSize:20, lineHeight:1 }}></button>
+                style={{ background:'none', border:'none', color:'#94a3b8', cursor:'pointer', fontSize:20, lineHeight:1 }}>✕</button>
             </div>
             {arquivoAberto.tipo.startsWith('image/') ? (
               <img src={arquivoAberto.url} alt={arquivoAberto.nome} style={{ maxWidth:'85vw', maxHeight:'80vh', borderRadius:8, objectFit:'contain' }}/>
