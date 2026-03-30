@@ -135,7 +135,7 @@ export default function Historico() {
                     background: filtroTipo === t ? '#16a34a' : 'white',
                     color: filtroTipo === t ? 'white' : '#6b7280',
                     borderColor: filtroTipo === t ? '#16a34a' : '#e5e7eb' }}>
-                  {t === 'todos' ? 'Todos' : t === 'teleconsulta' ? '📹 Video' : '🏥 Presencial'}
+                  {t === 'todos' ? 'Todos' : t === 'teleconsulta' ? '[video] Video' : '[clinic] Presencial'}
                 </button>
               ))}
             </div>
@@ -155,7 +155,7 @@ export default function Historico() {
               }}>
                 <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
                 <p style={{ fontSize: 11, color: '#8aa8a5', margin: 0, fontWeight: 500 }}>{fmt(c.criado_em)}</p>
-                {c.transcricao && <span style={{ fontSize: 9, fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: 10 }}>📹 Teleconsulta</span>}
+                {c.transcricao && <span style={{ fontSize: 9, fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: 10 }}>[video] Teleconsulta</span>}
               </div>
                 <p style={{ fontSize: 12, color: '#3d5452', margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, lineHeight: 1.5 }}>
                   {c.subjetivo?.substring(0, 90) || 'Consulta sem detalhes'}
@@ -170,7 +170,7 @@ export default function Historico() {
                 <button onClick={e => { e.stopPropagation(); handleDeletar(c.id) }} disabled={deletando === c.id}
                   className="del-btn"
                   style={{ position: 'absolute', top: 8, right: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', cursor: 'pointer', padding: '2px 7px', borderRadius: 6, fontSize: 11, opacity: 0, transition: 'opacity 0.15s' }}>
-                  {deletando === c.id ? '...' : '✕'}
+                  {deletando === c.id ? '...' : 'x'}
                 </button>
               </div>
             ))}
@@ -254,7 +254,7 @@ export default function Historico() {
                 <div style={{ marginTop:16 }}>
                   <button onClick={() => setMostrarTranscricao(!mostrarTranscricao)}
                     style={{ display:'flex', alignItems:'center', gap:6, background:'none', border:'none', cursor:'pointer', padding:0, marginBottom:8 }}>
-                    <span style={{ fontSize:11, fontWeight:700, color:'#374151', textTransform:'uppercase', letterSpacing:'0.06em' }}>📝 Transcricao da consulta</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:'#374151', textTransform:'uppercase', letterSpacing:'0.06em' }}>[doc] Transcricao da consulta</span>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" style={{ transform: mostrarTranscricao ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}><polyline points="6 9 12 15 18 9"/></svg>
                   </button>
                   {mostrarTranscricao && (
