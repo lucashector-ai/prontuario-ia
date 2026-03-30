@@ -8,44 +8,28 @@ export async function POST(req: NextRequest) {
     const form = await req.formData()
     const file = form.get('file') as File
     if (!file) return NextResponse.json({ error: 'Arquivo nao enviado' }, { status: 400 })
-
     const bytes = await file.arrayBuffer()
     const base64 = Buffer.from(bytes).toString('base64')
-    const mediaType = file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' | 'application/pdf'
-
     const isImage = file.type.startsWith('image/')
     const isPdf = file.type === 'application/pdf'
-
-    if (!isImage && !isPdf) {
-      return NextResponse.json({ error: 'Formato invalido. Envie JPG, PNG ou PDF.' }, { status: 400 })
-    }
-
-    const content: any[] = [
-      {
-        type: isPdf ? 'document' : 'image',
-        source: { type: 'base64', media_type: mediaType, data: base64 }
-      },
-      {
-        type: 'text',
-        text: \`Voce e um medico especialista analisando um exame medico. Analise este exame de forma completa e didatica.
-
-Estruture sua resposta assim:
-1. TIPO DE EXAME: identifique o tipo de exame
-2. VALORES ENCONTRADOS: liste todos os valores com as referencias normais
-3. O QUE ESTA ALTERADO: destaque valores fora do normal (use linguagem clara)
-4. INTERPRETACAO CLINICA: explique o que os resultados significam clinicamente
-5. OBSERVACOES: pontos importantes ou que merecem atencao medica
-
-Use linguagem clara e acessivel. Seja detalhado mas objetivo.\`
-      }
-    ]
-
+    if (!isImage && !isPdf) return NextResponse.json({ error: 'Formato invalido. Envie JPG, PNG ou PDF.' }, { status: 400 })
+    const mediaType = file.type as any
+    const srcBlock: any = isPdf
+      ? { type: 'document', source: { type: 'base64', media_type: mediaType, data: base64 } }
+      : { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } }
+    const prompt = 'Voce e um medico especialista analisando um exame medico. Analise este exame de forma completa e didatica.\n\n'
+      + 'Estruture sua resposta assim:\n'
+      + '1. TIPO DE EXAME: identifique o tipo\n'
+      + '2. VALORES ENCONTRADOS: liste todos os valores com as referencias normais\n'
+      + '3. O QUE ESTA ALTERADO: destaque valores fora do normal\n'
+      + '4. INTERPRETACAO CLINICA: explique o que os resultados significam\n'
+      + '5. OBSERVACOES: pontos importantes que merecem atencao medica\n\n'
+      + 'Use linguagem clara e acessivel. Seja detalhado mas objetivo.'
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-5',
       max_tokens: 2000,
-      messages: [{ role: 'user', content }]
+      messages: [{ role: 'user', content: [srcBlock, { type: 'text', text: prompt }] }]
     })
-
     const analise = (message.content[0] as any).text
     return NextResponse.json({ analise })
   } catch (err: any) {
