@@ -67,7 +67,7 @@ export default function Historico() {
   }
 
   const handleDeletar = async (id: string) => {
-    if (!confirm('Deletar esta consulta? Esta ação não pode ser desfeita.')) return
+    if (!confirm('Deletar esta consulta? Esta acao nao pode ser desfeita.')) return
     setDeletando(id)
     await supabase.from('consultas').delete().eq('id', id)
     setConsultas(prev => prev.filter(c => c.id !== id))
@@ -80,7 +80,7 @@ export default function Historico() {
   const secoes = [
     { key: 'subjetivo', titulo: 'S  -  Subjetivo', cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
     { key: 'objetivo',  titulo: 'O  -  Objetivo',  cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
-    { key: 'avaliacao', titulo: 'A  -  Avaliação',  cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
+    { key: 'avaliacao', titulo: 'A  -  Avaliacao',  cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
     { key: 'plano',     titulo: 'P  -  Plano',      cor: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
   ]
 
@@ -101,7 +101,7 @@ export default function Historico() {
         {/* Header */}
         <div style={{ padding: '16px 28px', borderBottom: '1px solid #e8eeed', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Histórico de consultas</h1>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Historico de consultas</h1>
             <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{consultas.length} consultas registradas</p>
           </div>
           <a href="/" style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '7px 16px', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -167,7 +167,7 @@ export default function Historico() {
                     {editando ? (
                       <>
                         <button onClick={handleSalvar} disabled={salvando} style={{ fontSize: 12, fontWeight: 600, color: 'white', background: '#16a34a', border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
-                          {salvando ? 'Salvando...' : 'Salvar alterações'}
+                          {salvando ? 'Salvando...' : 'Salvar alteracoes'}
                         </button>
                         <button onClick={() => setEditando(false)} style={{ fontSize: 12, color: '#3d5452', background: 'white', border: '1px solid #e8eeed', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
                           Cancelar
