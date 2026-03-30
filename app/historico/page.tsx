@@ -83,6 +83,15 @@ export default function Historico() {
     setDeletando(null)
   }
 
+
+  const consultasFiltradas = consultas.filter((consulta) => {
+    const q = busca.toLowerCase().trim()
+    const campos = [consulta.pacientes?.nome, consulta.subjetivo, consulta.objetivo, consulta.avaliacao, consulta.plano, consulta.transcricao]
+    const matchBusca = q === '' || campos.some((v: any) => v?.toLowerCase().includes(q)) || (Array.isArray(consulta.cids) && consulta.cids.some((cid: any) => (cid.codigo + ' ' + cid.descricao).toLowerCase().includes(q)))
+    const matchTipo = filtroTipo === 'todos' || (filtroTipo === 'teleconsulta' && !!consulta.transcricao) || (filtroTipo === 'presencial' && !consulta.transcricao)
+    return matchBusca && matchTipo
+  })
+
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
   const secoes = [
@@ -92,22 +101,6 @@ export default function Historico() {
     { key: 'plano',     titulo: 'P — Plano',      cor: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
   ]
 
-  const consultasFiltradas = consultas.filter((consulta) => {
-    const q = busca.toLowerCase().trim()
-    const matchBusca = !q || (
-      consulta.pacientes?.nome?.toLowerCase().includes(q) ||
-      consulta.subjetivo?.toLowerCase().includes(q) ||
-      consulta.objetivo?.toLowerCase().includes(q) ||
-      consulta.avaliacao?.toLowerCase().includes(q) ||
-      consulta.plano?.toLowerCase().includes(q) ||
-      consulta.transcricao?.toLowerCase().includes(q) ||
-      (Array.isArray(consulta.cids) && consulta.cids.some((cid: any) => (cid.codigo + ' ' + cid.descricao).toLowerCase().includes(q)))
-    )
-    const matchTipo = filtroTipo === 'todos' ||
-      (filtroTipo === 'teleconsulta' && consulta.transcricao) ||
-      (filtroTipo === 'presencial' && !consulta.transcricao)
-    return matchBusca && matchTipo
-  })
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f8fafb', overflow: 'hidden' }}>
