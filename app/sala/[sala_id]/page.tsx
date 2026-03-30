@@ -38,6 +38,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const anexoInputRef = useRef<HTMLInputElement>(null)
   // Fase 4: Transcrição
   const [gravando, setGravando] = useState(false)
+  const [gravandoPausado, setGravandoPausado] = useState(false)
   const [transcricao, setTranscricao] = useState('')
   const [processando, setProcessando] = useState(false)
   const [prontuarioModal, setProntuarioModal] = useState(false)
@@ -181,7 +182,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         setRemoteConectado(true)
         setEntrando(false)
         tocarSom('entrada')
-        timerRef.current = setInterval(() => setTimer(t => t + 1), 1000)
+        if (!timerRef.current) timerRef.current = setInterval(() => setTimer(t => t + 1), 1000)
         sb.from('teleconsultas').update({ status: 'em_andamento', iniciada_em: new Date().toISOString() }).eq('sala_id', sala_id)
       }
     }
@@ -245,7 +246,11 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       .on('broadcast', { event: 'encerrar' }, () => {
         tocarSom('saida')
         encerrarLocal()
-        if (papelRef.current === 'paciente') setTimeout(() => { try { window.close() } catch {} }, 3000)
+        if (papelRef.current === 'paciente') {
+        clearInterval(timerRef.current as any)
+        setTimer(0)
+        setTimeout(() => { try { window.close() } catch {} window.location.href = '/login' }, 2000)
+      }
       })
       .subscribe(async (s) => {
         if (s === 'SUBSCRIBED') {
@@ -342,6 +347,17 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   }
 
   // Transcreve os chunks acumulados via Whisper
+  const pausarGravacao = () => {
+    if (!recorderRef.current) return
+    if (recorderRef.current.state === 'recording') {
+      recorderRef.current.pause()
+      setGravandoPausado(true)
+    } else if (recorderRef.current.state === 'paused') {
+      recorderRef.current.resume()
+      setGravandoPausado(false)
+    }
+  }
+
   const transcreverAudio = async (): Promise<string> => {
     if (chunksRef.current.length === 0) return transcricao
     const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
