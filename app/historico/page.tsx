@@ -46,7 +46,7 @@ export default function Historico() {
       const data = new Date(selecionada.criado_em).toLocaleDateString('pt-BR')
       const msg = 'Ola ' + (pac.nome?.split(' ')[0] || 'paciente') + '! Segue sua receita da consulta de ' + data + ':\n\n' +
         (receita || 'Consulte o medico para mais detalhes.') +
-        '\n\nDr(a). ' + (medico?.nome || '') + ' — ' + (medico?.especialidade || '')
+        '\n\nDr(a). ' + (medico?.nome || '') + '  -  ' + (medico?.especialidade || '')
       await fetch('/api/whatsapp/enviar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telefone: pac.telefone, texto: msg, medico_id: medico?.id })
@@ -95,10 +95,10 @@ export default function Historico() {
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
   const secoes = [
-    { key: 'subjetivo', titulo: 'S — Subjetivo', cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-    { key: 'objetivo',  titulo: 'O — Objetivo',  cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
-    { key: 'avaliacao', titulo: 'A — Avaliação',  cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
-    { key: 'plano',     titulo: 'P — Plano',      cor: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
+    { key: 'subjetivo', titulo: 'S  -  Subjetivo', cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+    { key: 'objetivo',  titulo: 'O  -  Objetivo',  cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
+    { key: 'avaliacao', titulo: 'A  -  Avaliação',  cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
+    { key: 'plano',     titulo: 'P  -  Plano',      cor: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
   ]
 
 
@@ -235,7 +235,7 @@ export default function Historico() {
                           onChange={e => setEditForm((f: any) => ({...f, [key]: e.target.value}))}
                           style={{ width: '100%', minHeight: 80, fontSize: 13, lineHeight: 1.6, padding: '8px', resize: 'vertical', borderRadius: 8, border: '1px solid #e8eeed', background: 'white', color: '#3d5452' }}/>
                       ) : (
-                        <p style={{ fontSize: 13, color: '#3d5452', margin: 0, lineHeight: 1.7 }}>{(selecionada as any)[key] || '—'}</p>
+                        <p style={{ fontSize: 13, color: '#3d5452', margin: 0, lineHeight: 1.7 }}>{(selecionada as any)[key] || ' - '}</p>
                       )}
                     </div>
                   ))}
