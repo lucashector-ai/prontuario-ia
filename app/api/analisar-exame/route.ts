@@ -17,11 +17,12 @@ export async function POST(req: NextRequest) {
     const srcBlock: any = isPdf
       ? { type: 'document', source: { type: 'base64', media_type: mediaType, data: base64 } }
       : { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } }
-    const prompt = 'Voce e um medico especialista analisando um exame medico. Analise este exame de forma completa e didatica.\n\n'
+    const prompt = 'Voce e um medico especialista analisando um exame medico. '
+      + 'Analise este exame de forma completa e didatica.\n\n'
       + 'Estruture sua resposta assim:\n'
       + '1. TIPO DE EXAME: identifique o tipo\n'
       + '2. VALORES ENCONTRADOS: liste todos os valores com as referencias normais\n'
-      + '3. O QUE ESTA ALTERADO: destaque valores fora do normal\n'
+      + '3. O QUE ESTA ALTERADO: destaque valores fora do normal em linguagem clara\n'
       + '4. INTERPRETACAO CLINICA: explique o que os resultados significam\n'
       + '5. OBSERVACOES: pontos importantes que merecem atencao medica\n\n'
       + 'Use linguagem clara e acessivel. Seja detalhado mas objetivo.'
@@ -33,7 +34,6 @@ export async function POST(req: NextRequest) {
     const analise = (message.content[0] as any).text
     return NextResponse.json({ analise })
   } catch (err: any) {
-    console.error('Erro analisar-exame:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

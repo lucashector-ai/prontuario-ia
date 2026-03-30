@@ -689,6 +689,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
           {/* Controles */}
           <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 12, zIndex: 20 }}>
+            <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? '#16a34a' : 'rgba(30,41,59,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>{naoLidas > 0 && <span style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }}/>}</button>
             <button onClick={toggleMic} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(30,41,59,0.9)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                 {micOn ? <><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></> : <><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></>}
@@ -726,7 +727,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   <div key={'a'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
                     <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#16a34a' : '#60a5fa', fontWeight: 700, margin: '0 0 5px' }}>{item.de} · {item.hora}</p>
                     {(item as any).tipo?.startsWith('image/') ? (
-                      <a href={(item as any).url} target="_blank" rel="noreferrer">
+                      <a href={(item as any).url} download={(item as any).nome || "imagem"} onClick={e => { e.preventDefault(); const link = document.createElement("a"); link.href = (item as any).url; link.download = (item as any).nome || "imagem"; document.body.appendChild(link); link.click(); document.body.removeChild(link) }}>
                         <img src={(item as any).url} alt={(item as any).nome} style={{ width: '100%', borderRadius: 6, cursor: 'pointer', maxHeight: 160, objectFit: 'cover' }}/>
                         <p style={{ fontSize: 11, color: '#475569', margin: '4px 0 0' }}>{(item as any).nome}</p>
                       </a>
