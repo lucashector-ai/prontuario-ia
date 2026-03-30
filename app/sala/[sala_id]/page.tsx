@@ -723,7 +723,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         <div style={{ flex: 1, position: 'relative', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', minWidth: 0 }}>
           {/* Video remoto: object-fit:contain garante letterbox para mobile portrait */}
           <video ref={remoteRef} autoPlay playsInline
-            style={{ outline: remoteFalando ? '3px solid #22c55e' : 'none', outlineOffset: -3, width: '100%', height: '100%', objectFit: 'contain', background: '#000', maxWidth: '100%', maxHeight: '100%' }}/>
+            style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', maxWidth: '100%', maxHeight: '100%' }}/>
 
           {/* Overlay aguardando */}
           {!remoteConectado && (
@@ -741,13 +741,13 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
           {/* Barra de controles estilo Meet */}
                     {/* Camera local PiP - medico */}
-          {streamRef && (
-            <div style={{ position: 'absolute', bottom: 84, right: 12, width: 160, aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', border: localFalando ? '2px solid #22c55e' : '2px solid rgba(255,255,255,0.15)', transition: 'border-color 0.2s', zIndex: 15, background: '#0f172a', boxShadow: localFalando ? '0 0 12px rgba(34,197,94,0.5)' : 'none' }}>
+          {(tela === 'chamada') && (
+            <div style={{ position: 'absolute', bottom: 84, right: 12, width: 'clamp(100px, 22vw, 160px)', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.15)', zIndex: 15, background: '#0f172a' }}>
               <video ref={localVideoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
             </div>
           )}
 
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 72, background: 'linear-gradient(transparent, rgba(15,23,42,0.95))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', zIndex: 20 }}>
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, minHeight: 72, background: 'linear-gradient(transparent, rgba(15,23,42,0.98))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', zIndex: 20, flexWrap: 'wrap', gap: 8 }}>
             {/* Esquerda: info da chamada */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 160 }}>
               <div style={{ background: 'rgba(30,41,59,0.8)', borderRadius: 8, padding: '4px 10px' }}>
@@ -779,7 +779,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
               {/* Encerrar */}
               <button onClick={encerrar} title='Encerrar consulta'
-                style={{ width: 56, height: 48, borderRadius: 24, border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0 14px' }}>
+                style={{ width: 'clamp(44px,6vw,56px)', height: 'clamp(36px,5vw,48px)', borderRadius: 24, border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0 14px' }}>
                 <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M10.68 13.31a16 16 0 003.41 2.6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.5 1.22 2 2 0 012.44 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006.01 6.1zM17 5l5 5M22 5l-5 5'/></svg>
               </button>
             </div>
