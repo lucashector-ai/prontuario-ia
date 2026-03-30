@@ -38,3 +38,4 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   return NextResponse.json({ msg: 'Use POST com agendamento_id' })
 }
+// deploy seg 30 mar 2026 11:21:13 -03
