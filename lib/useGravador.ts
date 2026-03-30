@@ -8,6 +8,8 @@ interface UseGravadorReturn {
   transcricaoAcumulada: string
   iniciarGravacao: () => Promise<void>
   pararGravacao: () => void
+  pausarGravacao: () => void
+  gravandoPausado: boolean
   limpar: () => void
   erro: string | null
 }
@@ -17,6 +19,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
   const [transcrevendo, setTranscrevendo] = useState(false)
   const [transcricaoAcumulada, setTranscricaoAcumulada] = useState('')
   const [erro, setErro] = useState<string | null>(null)
+  const [gravandoPausado, setGravandoPausado] = useState(false)
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const processorRef = useRef<ScriptProcessorNode | null>(null)
@@ -25,7 +28,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
   const samplesRef = useRef<Float32Array[]>([])
   const textoRef = useRef('')
 
-  // Detecta voz com limiar bem baixo (0.001) para não bloquear fala real
+  // Detecta voz com limiar bem baixo (0.001) para no bloquear fala real
   const temVoz = (samples: Float32Array): boolean => {
     let sum = 0
     for (let i = 0; i < samples.length; i++) sum += samples[i] * samples[i]
@@ -63,7 +66,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
     for (const chunk of samplesRef.current) { merged.set(chunk, offset); offset += chunk.length }
     samplesRef.current = []
 
-    // Só descarta se for silêncio absoluto
+    // S descarta se for silncio absoluto
     if (!temVoz(merged)) return
 
     const sampleRate = audioContextRef.current?.sampleRate || 16000
@@ -78,10 +81,10 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
 
       if (data.texto?.trim()) {
         const texto = data.texto.trim()
-        // Filtra apenas alucinações óbvias
+        // Filtra apenas alucinaes bvias
         const alucinacoes = ['www.', 'acesse o site', 'visite o nosso site',
-          'para mais informações, visite', 'inscreva-se', 'obrigado por assistir',
-          '♪', 'subtitle', 'legenda']
+          'para mais informaes, visite', 'inscreva-se', 'obrigado por assistir',
+          '', 'subtitle', 'legenda']
         const ehAlucinacao = alucinacoes.some(p => texto.toLowerCase().includes(p))
         if (ehAlucinacao) return
 
@@ -119,7 +122,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
       setGravando(true)
       intervaloRef.current = setInterval(enviarAudio, 3000)
     } catch (e: any) {
-      setErro('Não foi possível acessar o microfone. Verifique as permissões.')
+      setErro('No foi possvel acessar o microfone. Verifique as permisses.')
     }
   }, [enviarAudio])
 
@@ -140,5 +143,25 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
     setTranscrevendo(false)
   }, [])
 
-  return { gravando, transcrevendo, transcricaoAcumulada, iniciarGravacao, pararGravacao, limpar, erro }
+  const pausarGravacao = () => {
+    if (!gravando) return
+    if (!gravandoPausado) {
+      // Pausa: para de coletar samples e limpa o intervalo
+      if (intervaloRef.current) clearInterval(intervaloRef.current)
+      intervaloRef.current = null
+      processorRef.current?.disconnect()
+      setGravandoPausado(true)
+    } else {
+      // Retoma: reconecta o processor e reinicia o intervalo
+      if (processorRef.current && audioContextRef.current && streamRef.current) {
+        const source = audioContextRef.current.createMediaStreamSource(streamRef.current)
+        source.connect(processorRef.current)
+        processorRef.current.connect(audioContextRef.current.destination)
+      }
+      intervaloRef.current = setInterval(enviarAudio, 3000)
+      setGravandoPausado(false)
+    }
+  }
+
+  return { gravando, transcrevendo, transcricaoAcumulada, iniciarGravacao, pararGravacao, pausarGravacao, gravandoPausado, limpar, erro }
 }

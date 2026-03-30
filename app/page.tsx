@@ -30,7 +30,7 @@ export default function Home() {
   }, [router])
 
   const handleNovoTexto = useCallback((t: string) => setTranscricao(t), [])
-  const { gravando, transcrevendo, iniciarGravacao, pararGravacao, limpar, erro } = useGravador(handleNovoTexto)
+  const { gravando, transcrevendo, iniciarGravacao, pararGravacao, pausarGravacao, gravandoPausado, limpar, erro } = useGravador(handleNovoTexto)
 
   const handleIniciar = async () => {
     limpar(); setProntuario(null); setReceita(null)
@@ -84,13 +84,13 @@ export default function Home() {
   const handleCopiar = () => {
     if (!prontuario) return
     const t = [
-      `PRONTUÁRIO — ${new Date().toLocaleDateString('pt-BR')}`,
+      `PRONTURIO  -  ${new Date().toLocaleDateString('pt-BR')}`,
       medico ? `${medico.nome} | ${medico.crm}` : '', '',
       'SUBJETIVO', prontuario.subjetivo, '',
       'OBJETIVO', prontuario.objetivo, '',
-      'AVALIAÇÃO', prontuario.avaliacao, '',
+      'AVALIACAO', prontuario.avaliacao, '',
       'PLANO', prontuario.plano, '',
-      'CID-10', ...(prontuario.cids||[]).map((c:any) => `${c.codigo} — ${c.descricao}`),
+      'CID-10', ...(prontuario.cids||[]).map((c:any) => `${c.codigo}  -  ${c.descricao}`),
     ].join('\n')
     navigator.clipboard.writeText(t)
     setCopiado(true); setTimeout(() => setCopiado(false), 2000)
@@ -119,7 +119,7 @@ export default function Home() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {consultaSalva && (
               <span style={{ fontSize: 12, color: '#16a34a', background: '#f0fdf4', border: '1px solid #dcfce7', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
-                ✓ Salvo
+                 Salvo
               </span>
             )}
             {estado === 'pronto' && (
@@ -133,19 +133,19 @@ export default function Home() {
         {/* Content */}
         <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
 
-          {/* Left — Gravação + Transcrição */}
+          {/* Left  -  Gravacao + Transcricao */}
           <div style={{ borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>
 
-            {/* Gravação section */}
+            {/* Gravacao section */}
             <div style={{ padding: '28px 32px', borderBottom: '1px solid #f3f4f6' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>Gravação da consulta</p>
-                  <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Fale normalmente. A transcrição é gerada em tempo real.</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>Gravacao da consulta</p>
+                  <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Fale normalmente. A transcricao e gerada em tempo real.</p>
                 </div>
                 {gravando && (
                   <span className="pulse-record" style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
-                    • REC
+                     REC
                   </span>
                 )}
               </div>
@@ -161,9 +161,11 @@ export default function Home() {
                       <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
                       <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
                     </svg>
-                    Iniciar gravação
+                    Iniciar gravacao
                   </button>
                 ) : (
+                  <>
+                  <button onClick={pausarGravacao} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 8, border: '1.5px solid ' + (gravandoPausado ? '#d97706' : '#475569'), background: gravandoPausado ? '#451a03' : '#1e293b', color: gravandoPausado ? '#fbbf24' : '#94a3b8', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{gravandoPausado ? 'RETOMAR' : 'PAUSAR'}</button>
                   <button onClick={handleParar} style={{
                     display: 'flex', alignItems: 'center', gap: 8,
                     padding: '9px 20px', borderRadius: 8,
@@ -175,6 +177,7 @@ export default function Home() {
                     </svg>
                     Parar
                   </button>
+                  </>
                 )}
 
                 {transcrevendo && (
@@ -200,7 +203,7 @@ export default function Home() {
                     ) : (
                       <>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        Gerar prontuário
+                        Gerar prontuario
                       </>
                     )}
                   </button>
@@ -219,10 +222,10 @@ export default function Home() {
               )}
             </div>
 
-            {/* Transcrição section */}
+            {/* Transcricao section */}
             <div style={{ flex: 1, padding: '24px 32px', overflow: 'auto' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>Transcrição</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>Transcricao</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {transcricao && (
                     <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5 }}>
@@ -245,14 +248,14 @@ export default function Home() {
                     <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
                   </svg>
                   <p style={{ fontSize: 13, color: '#9ca3af', margin: 0, textAlign: 'center' }}>
-                    {gravando ? 'Aguardando fala...' : 'Inicie a gravação para começar'}
+                    {gravando ? 'Aguardando fala...' : 'Inicie a gravacao para comecar'}
                   </p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Right — Prontuário / Receita */}
+          {/* Right  -  Prontuario / Receita */}
           <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f9fafb' }}>
 
             {estado === 'processando' && (
@@ -260,7 +263,7 @@ export default function Home() {
                 <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #dcfce7', borderTopColor: '#16a34a', animation: 'spin 0.8s linear infinite' }}/>
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>Analisando consulta</p>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Estruturando prontuário SOAP com IA...</p>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Estruturando prontuario SOAP com IA...</p>
                 </div>
               </div>
             )}
@@ -277,7 +280,7 @@ export default function Home() {
                       borderBottom: aba === tab ? '2px solid #16a34a' : '2px solid transparent',
                       marginBottom: -1,
                     }}>
-                      {tab === 'prontuario' ? 'Prontuário' : `Receita${receita ? ' ✓' : ''}`}
+                      {tab === 'prontuario' ? 'Prontuario' : `Receita${receita ? ' ' : ''}`}
                     </button>
                   ))}
                 </div>
@@ -295,10 +298,10 @@ export default function Home() {
                         {gerandoReceita ? (
                           <><svg className="spinner" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M2 12h4M18 12h4"/></svg>Gerando receita...</>
                         ) : (
-                          <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>Gerar receita médica</>
+                          <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>Gerar receita medica</>
                         )}
                       </button>
-                      {copiado && <p style={{ textAlign: 'center', fontSize: 12, color: '#16a34a', marginTop: 8, fontWeight: 500 }}>✓ Copiado!</p>}
+                      {copiado && <p style={{ textAlign: 'center', fontSize: 12, color: '#16a34a', marginTop: 8, fontWeight: 500 }}> Copiado!</p>}
                     </>
                   )}
                   {aba === 'receita' && receita && (
@@ -309,8 +312,8 @@ export default function Home() {
                       <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', border: '1px solid #dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                       </div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Gerar receita médica</p>
-                      <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px' }}>Extraída automaticamente do prontuário gerado.</p>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Gerar receita medica</p>
+                      <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px' }}>Extraida automaticamente do prontuario gerado.</p>
                       <button onClick={handleGerarReceita} style={{ padding: '9px 22px', borderRadius: 8, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                         Gerar receita
                       </button>
@@ -328,13 +331,13 @@ export default function Home() {
                   </svg>
                 </div>
                 <div style={{ textAlign: 'center', maxWidth: 300 }}>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 8px' }}>Prontuário estruturado por IA</p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 8px' }}>Prontuario estruturado por IA</p>
                   <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
-                    Grave a consulta ao lado. O prontuário SOAP, CIDs sugeridos e receita médica serão gerados automaticamente.
+                    Grave a consulta ao lado. O prontuario SOAP, CIDs sugeridos e receita medica serao gerados automaticamente.
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {['Prontuário SOAP', 'CID-10 automático', 'Receita médica', 'Salvo no banco'].map(f => (
+                  {['Prontuario SOAP', 'CID-10 automatico', 'Receita medica', 'Salvo no banco'].map(f => (
                     <span key={f} style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', border: '1px solid #dcfce7', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{f}</span>
                   ))}
                 </div>

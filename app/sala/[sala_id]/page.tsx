@@ -71,6 +71,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const iceBufRef = useRef<RTCIceCandidateInit[]>([])
   const remoteSetRef = useRef(false)
   const endRef = useRef<HTMLDivElement>(null)
+  const chatRef = useRef<{de:string;msg:string;hora:string}[]>([])
+  const anexosRef = useRef<{nome:string;url:string;tipo:string;de:string;hora:string}[]>([])
 
   useEffect(() => {
     const med = localStorage.getItem('medico')
@@ -81,8 +83,13 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   }, [sala_id])
 
   useEffect(() => {
+    chatRef.current = chat
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chat])
+
+  useEffect(() => {
+    anexosRef.current = anexos
+  }, [anexos])
 
   useEffect(() => {
     if (chatAberto) setNaoLidas(0)
@@ -304,13 +311,30 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   const encerrar = async () => {
     send('encerrar', {})
-    // Salva resumo do historico de chat
-    if (chat.length > 0 || anexos.length > 0) {
-      const resumo = chat.map(m => m.de + ': ' + m.msg).join('\n')
-      const totalAnexos = anexos.length
-      await sb.from('teleconsultas').update({ chat_resumo: resumo, total_anexos: totalAnexos }).eq('sala_id', sala_id)
+    // Usa refs para evitar closure stale com state desatualizado
+    const mensagens = chatRef.current
+    const anexosAtual = anexosRef.current
+    // Salva historico completo de mensagens no banco
+    if (mensagens.length > 0) {
+      const msgRows = mensagens.map(m => ({
+        sala_id,
+        de: m.de,
+        msg: m.msg,
+        hora: m.hora,
+        criado_em: new Date().toISOString()
+      }))
+      const { error } = await sb.from('sala_mensagens').insert(msgRows)
+      if (error) console.error('Erro ao salvar mensagens:', error)
     }
-    await sb.from('teleconsultas').update({ status: 'encerrada', encerrada_em: new Date().toISOString(), duracao_segundos: timer }).eq('sala_id', sala_id)
+    // Atualiza resumo na teleconsulta
+    const resumo = mensagens.map(m => m.de + ': ' + m.msg).join('\n')
+    const { error: errResumo } = await sb.from('teleconsultas').update({
+      chat_resumo: resumo || null,
+      total_anexos: anexosAtual.length
+    }).eq('sala_id', sala_id)
+    if (errResumo) console.error('Erro ao salvar resumo:', errResumo)
+    const { error: errStatus } = await sb.from('teleconsultas').update({ status: 'encerrada', encerrada_em: new Date().toISOString(), duracao_segundos: timer }).eq('sala_id', sala_id)
+    if (errStatus) console.error('Erro ao atualizar status:', errStatus)
     // Para gravacao
     if (recorderRef.current && recorderRef.current.state !== 'inactive') {
       recorderRef.current.stop()
@@ -652,16 +676,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 700, fontFamily: 'monospace' }}>{fmtTimer(timer)}</span>
             </div>
           )}
-          {isMedico && tela === 'chamada' && (
-            <button onClick={toggleGravacao}
-              style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer',
-                background: gravando ? 'rgba(220,38,38,0.15)' : 'rgba(22,163,74,0.15)',
-                color: gravando ? '#f87171' : '#86efac' }}>
-              <span style={{ width:7, height:7, borderRadius:'50%', background: gravando ? '#ef4444' : '#22c55e', display:'inline-block',
-                animation: gravando ? 'pulse 1s infinite' : 'none' }}/>
-              <span style={{ fontSize:11, fontWeight:600 }}>{gravando ? 'Gravando...' : 'Gravar'}</span>
-            </button>
-          )}
           {isMedico && processando && (
             <div style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, background:'rgba(234,179,8,0.15)' }}>
               <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid rgba(234,179,8,0.4)', borderTopColor:'#eab308', animation:'spin 0.8s linear infinite' }}/>
@@ -694,29 +708,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           )}
 
           {/* Video local PiP — canto inferior direito */}
-          {(tela === 'chamada' || entrando) && (
-            <div style={{ position: 'absolute', bottom: 72, right: 12, width: 'clamp(100px, 22vw, 160px)', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', border: '2px solid #1e293b', background: '#111', zIndex: 10 }}>
-              <video ref={localRef} autoPlay playsInline muted
-                style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
-              {!camOn && (
-                <div style={{ position: 'absolute', inset: 0, background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8"/></svg>
-                </div>
-              )}
-              <p style={{ position: 'absolute', bottom: 3, left: 0, right: 0, textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.7)', margin: 0 }}>Voce</p>
-            </div>
-          )}
+          
 
-          {/* Botao flutuante do chat */}
-          {tela === 'chamada' && remoteConectado && (
-            <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
-              style={{ position: 'absolute', bottom: 72, left: 12, width: 44, height: 44, borderRadius: '50%', border: 'none', background: chatAberto ? '#16a34a' : 'rgba(30,41,59,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-              {naoLidas > 0 && !chatAberto && (
-                <span style={{ position: 'absolute', top: -2, right: -2, width: 18, height: 18, borderRadius: '50%', background: '#ef4444', fontSize: 10, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{naoLidas}</span>
-              )}
-            </button>
-          )}
 
           {/* Barra de controles estilo Meet */}
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 72, background: 'linear-gradient(transparent, rgba(15,23,42,0.95))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', zIndex: 20 }}>
@@ -725,12 +718,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               <div style={{ background: 'rgba(30,41,59,0.8)', borderRadius: 8, padding: '4px 10px' }}>
                 <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{Math.floor(timer/60).toString().padStart(2,'0')}:{(timer%60).toString().padStart(2,'0')}</p>
               </div>
-              {gravando && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(220,38,38,0.2)', borderRadius: 8, padding: '4px 8px', border: '1px solid rgba(220,38,38,0.4)' }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1.5s infinite' }}/>
-                  <p style={{ fontSize: 10, color: '#fca5a5', margin: 0, fontWeight: 700 }}>{gravandoPausado ? 'PAUSADO' : 'REC'}</p>
-                </div>
-              )}
+              
             </div>
 
             {/* Centro: botoes principais */}
@@ -752,14 +740,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               </button>
 
               {/* Pausar gravacao (so medico) */}
-              {gravando && papelRef.current === 'medico' && (
-                <button onClick={pausarGravacao} title={gravandoPausado ? 'Retomar gravacao' : 'Pausar gravacao'}
-                  style={{ width: 48, height: 48, borderRadius: '50%', border: '2px solid #64748b', background: 'rgba(30,41,59,0.8)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width='18' height='18' viewBox='0 0 24 24' fill='white' stroke='white' strokeWidth='1'>
-                    {gravandoPausado ? <polygon points='5 3 19 12 5 21 5 3'/> : <><rect x='6' y='4' width='4' height='16'/><rect x='14' y='4' width='4' height='16'/></>}
-                  </svg>
-                </button>
-              )}
+              
 
               {/* Encerrar */}
               <button onClick={encerrar} title='Encerrar consulta'
@@ -961,9 +942,36 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         </div>
       )}
 
+      {/* Visor inline de arquivo (imagem/PDF) */}
+      {arquivoAberto && (
+        <div onClick={() => setArquivoAberto(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:16, cursor:'pointer' }}>
+          <div onClick={e => e.stopPropagation()} style={{ position:'relative', maxWidth:'90vw', maxHeight:'90vh', display:'flex', flexDirection:'column', alignItems:'center', cursor:'default' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+              <p style={{ fontSize:13, color:'white', fontWeight:600, margin:0 }}>{arquivoAberto.nome}</p>
+              <a href={arquivoAberto.url} download={arquivoAberto.nome} onClick={e => e.stopPropagation()}
+                style={{ fontSize:11, color:'#60a5fa', background:'rgba(96,165,250,0.15)', padding:'4px 10px', borderRadius:6, textDecoration:'none', fontWeight:600 }}>
+                Baixar
+              </a>
+              <button onClick={() => setArquivoAberto(null)}
+                style={{ background:'none', border:'none', color:'#94a3b8', cursor:'pointer', fontSize:20, lineHeight:1 }}>✕</button>
+            </div>
+            {arquivoAberto.tipo.startsWith('image/') ? (
+              <img src={arquivoAberto.url} alt={arquivoAberto.nome} style={{ maxWidth:'85vw', maxHeight:'80vh', borderRadius:8, objectFit:'contain' }}/>
+            ) : arquivoAberto.tipo === 'application/pdf' ? (
+              <iframe src={arquivoAberto.url} title={arquivoAberto.nome} style={{ width:'80vw', height:'80vh', borderRadius:8, border:'none', background:'white' }}/>
+            ) : (
+              <div style={{ background:'#1e293b', borderRadius:12, padding:'32px 24px', textAlign:'center' }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <p style={{ fontSize:13, color:'#94a3b8', margin:'12px 0 0' }}>Tipo nao suportado para preview</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <style>{`
           @keyframes shrink { from { transform: scaleX(1) } to { transform: scaleX(0) } }
-          
+
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
