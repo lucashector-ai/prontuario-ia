@@ -975,3 +975,4 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 }
+// deploy seg 30 mar 2026 20:47:05 -03
