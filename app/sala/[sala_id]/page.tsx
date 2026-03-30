@@ -667,13 +667,12 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 
-  //  TELA DA CHAMADA 
+
   useEffect(() => {
     if (tela === 'chamada' && localVideoRef.current && streamRef.current) {
       localVideoRef.current.srcObject = streamRef.current
     }
   }, [tela])
-
   return (
     <div style={{ width: '100vw', height: '100dvh', background: '#0f172a', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
