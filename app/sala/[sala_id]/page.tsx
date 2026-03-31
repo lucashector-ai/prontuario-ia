@@ -436,6 +436,14 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     setSalvando(false)
   }
 
+  const carregarDispositivos = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      setAudioInputs(devices.filter(d => d.kind === 'audioinput'))
+      setVideoInputs(devices.filter(d => d.kind === 'videoinput'))
+    } catch(e) {}
+  }
+
   const tocarSom = (tipo: 'entrada' | 'saida' | 'mensagem') => {
     try {
       const ctx = new AudioContext()
