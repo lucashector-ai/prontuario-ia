@@ -259,12 +259,16 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .on('broadcast', { event: 'encerrar' }, () => {
         tocarSom('saida')
-        encerrarLocal()
         if (papelRef.current === 'paciente') {
-        clearInterval(timerRef.current as any)
-        setTimer(0)
-        setTimeout(() => { try { window.close() } catch {} window.location.href = '/login' }, 0)
-      }
+          clearInterval(timerRef.current as any)
+          streamRef.current?.getTracks().forEach(t => t.stop())
+          pcRef.current?.close()
+          channelRef.current?.unsubscribe()
+          try { window.close() } catch {}
+          window.location.href = '/login'
+        } else {
+          encerrarLocal()
+        }
       })
       .subscribe(async (s) => {
         if (s === 'SUBSCRIBED') {
