@@ -107,9 +107,9 @@ export default function Home() {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F9FAFC' }}>
       <Sidebar activeHref="/" />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '16px 16px 16px 0' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '20px 20px 20px 0' }}>
         {/* Top header */}
-        <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Nova consulta</h1>
             <span style={{ fontSize: 12, color: '#9ca3af', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5 }}>
@@ -118,12 +118,12 @@ export default function Home() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {consultaSalva && (
-              <span style={{ fontSize: 12, color: '#6043C1', background: '#F9FAFC', border: '1px solid #ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
+              <span style={{ fontSize: 12, color: '#6043C1', background: '#f0fdf4', border: '1px solid #ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
                  Salvo
               </span>
             )}
             {estado === 'pronto' && (
-              <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
+              <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', border: '1px solid #e5e7eb', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
                 + Nova consulta
               </button>
             )}
@@ -134,10 +134,10 @@ export default function Home() {
         <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
 
           {/* Left  -  Gravacao + Transcricao */}
-          <div style={{ borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white'>
+          <div style={{ borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>
 
             {/* Gravacao section */}
-            <div style={{ padding: '28px 32px', borderBottom: 'none' }}>
+            <div style={{ padding: '28px 32px', borderBottom: '1px solid #f3f4f6' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>Gravacao da consulta</p>
@@ -233,7 +233,7 @@ export default function Home() {
                     </span>
                   )}
                   {transcricao && (
-                    <button onClick={handleNovo} style={{ fontSize: 11, color: '#6b7280', background: 'none', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: '2px 8px', borderRadius: 5, cursor: 'pointer' }}>
+                    <button onClick={handleNovo} style={{ fontSize: 11, color: '#6b7280', background: 'none', border: '1px solid #e5e7eb', padding: '2px 8px', borderRadius: 5, cursor: 'pointer' }}>
                       Limpar
                     </button>
                   )}
@@ -271,7 +271,7 @@ export default function Home() {
             {estado === 'pronto' && prontuario && (
               <div className="fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white', borderLeft: '1px solid #e5e7eb' }}>
                 {/* Tab bar */}
-                <div style={{ display: 'flex', borderBottom: 'none', padding: '0 20px', background: 'white', flexShrink: 0 }}>
+                <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', padding: '0 20px', background: 'white', flexShrink: 0 }}>
                   {(['prontuario', 'receita'] as Aba[]).map(tab => (
                     <button key={tab} onClick={() => setAba(tab)} style={{
                       padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
@@ -309,7 +309,7 @@ export default function Home() {
                   )}
                   {aba === 'receita' && !receita && (
                     <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-                      <div style={{ width: 48, height: 48, borderRadius: 12, background: '#F9FAFC', border: '1px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', border: '1px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                       </div>
                       <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Gerar receita medica</p>
@@ -325,7 +325,7 @@ export default function Home() {
 
             {(estado === 'idle' || estado === 'gravando') && !prontuario && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 48, background: 'white' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#F9FAFC', border: '1.5px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', border: '1.5px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
                     <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
@@ -338,7 +338,7 @@ export default function Home() {
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {['Prontuario SOAP', 'CID-10 automatico', 'Receita medica', 'Salvo no banco'].map(f => (
-                    <span key={f} style={{ fontSize: 11, color: '#6043C1', background: '#F9FAFC', border: '1px solid #ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{f}</span>
+                    <span key={f} style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', border: '1px solid #ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{f}</span>
                   ))}
                 </div>
               </div>
