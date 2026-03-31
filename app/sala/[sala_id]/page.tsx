@@ -586,36 +586,80 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   )
 
   if (tela === 'precall') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', gap: 20, padding: 24 }}>
-      <h1 style={{ color: 'white', fontSize: 20, fontWeight: 700, margin: 0 }}>Testar camera e microfone</h1>
-      <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>Verifique se sua camera e microfone estao funcionando antes de entrar.</p>
-      <div style={{ width: 'min(400px,90vw)', aspectRatio: '16/9', borderRadius: 12, overflow: 'hidden', background: '#111', border: '2px solid #1e293b', position: 'relative' }}>
-        <video ref={esperaRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
-        <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
-          <button onClick={toggleMic} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.2)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-              {micOn ? <><path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/><path d='M19 10v2a7 7 0 01-14 0v-2'/><line x1='12' y1='19' x2='12' y2='23'/></> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6'/></>}
-            </svg>
+    <div style={{ minHeight: '100dvh', background: '#202124', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <div style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#1a73e8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 0112 19a19.5 19.5 0 01-7-3.07A19.79 19.79 0 01.5 9 2 2 0 012.44 7h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.91 14.91A16 16 0 0019 19.09l.77-.77a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z'/></svg>
+          </div>
+          <span style={{ color: 'white', fontWeight: 600, fontSize: 15 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}</span>
+        </div>
+        <span style={{ color: '#9aa0a6', fontSize: 13 }}>MedIA</span>
+      </div>
+      {/* Conteudo principal */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 48, padding: '0 24px', flexWrap: 'wrap' }}>
+        {/* Preview camera */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+          <div style={{ width: 'min(480px,90vw)', aspectRatio: '4/3', borderRadius: 12, overflow: 'hidden', background: '#3c4043', position: 'relative' }}>
+            <video ref={esperaRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
+            {!camOn && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#3c4043' }}>
+                <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#5f6368', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width='36' height='36' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='1.5'><path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>
+                </div>
+              </div>
+            )}
+            {/* Controles sobre o video */}
+            <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 12 }}>
+              <button onClick={toggleMic}
+                style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.15)' : '#ea4335', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
+                  {micOn ? <><path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/><path d='M19 10v2a7 7 0 01-14 0v-2'/><line x1='12' y1='19' x2='12' y2='23'/></> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6'/></>}
+                </svg>
+              </button>
+              <button onClick={toggleCam}
+                style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.15)' : '#ea4335', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
+                  {camOn ? <path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>}
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {micOn ? (
+              <span style={{ color: '#9aa0a6', fontSize: 13 }}>Microfone ativo</span>
+            ) : (
+              <span style={{ color: '#ea4335', fontSize: 13 }}>Microfone desligado</span>
+            )}
+          </div>
+        </div>
+        {/* Painel direito */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 280, maxWidth: 360 }}>
+          <div>
+            <h1 style={{ color: 'white', fontSize: 28, fontWeight: 400, margin: '0 0 8px' }}>Pronto para entrar?</h1>
+            <p style={{ color: '#9aa0a6', fontSize: 14, margin: 0 }}>Ninguem mais esta na consulta</p>
+          </div>
+          <button onClick={() => {
+            if (esperaStreamRef.current) {
+              streamRef.current = esperaStreamRef.current
+              if (localRef.current) localRef.current.srcObject = esperaStreamRef.current
+            }
+            setTela('chamada')
+          }}
+            style={{ padding: '14px 28px', borderRadius: 24, border: 'none', background: '#1a73e8', color: 'white', fontSize: 15, fontWeight: 500, cursor: 'pointer', transition: 'background 0.2s' }}>
+            Entrar agora
           </button>
-          <button onClick={toggleCam} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.2)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-              {camOn ? <path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>}
-            </svg>
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <p style={{ color: '#9aa0a6', fontSize: 12, margin: 0 }}>
+              {micOn ? 'Microfone: ligado' : 'Microfone: desligado'} &nbsp;|&nbsp; {camOn ? 'Camera: ligada' : 'Camera: desligada'}
+            </p>
+          </div>
         </div>
       </div>
-      <button onClick={() => {
-          if (esperaStreamRef.current) {
-            streamRef.current = esperaStreamRef.current
-            if (localRef.current) localRef.current.srcObject = esperaStreamRef.current
-          }
-          setTela('chamada')
-        }}
-        style={{ padding: '12px 32px', borderRadius: 10, border: 'none', background: '#16a34a', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-        Entrar na consulta
-      </button>
     </div>
   )
+
 
   if (tela === 'espera') return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', gap: 20, padding: 24 }}>
