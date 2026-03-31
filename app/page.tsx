@@ -271,7 +271,7 @@ export default function Home() {
             {estado === 'pronto' && prontuario && (
               <div className="fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white', borderLeft: '1px solid #e5e7eb' }}>
                 {/* Tab bar */}
-                <div style={{ display: 'flex', borderBottom: 'none', padding: '0 20px', background: 'white', flexShrink: 0 }}>, borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }
+                <div style={{ display: 'flex', borderBottom: 'none', padding: '0 20px', background: 'white', flexShrink: 0 }}>
                   {(['prontuario', 'receita'] as Aba[]).map(tab => (
                     <button key={tab} onClick={() => setAba(tab)} style={{
                       padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
