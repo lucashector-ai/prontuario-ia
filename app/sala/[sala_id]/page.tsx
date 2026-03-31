@@ -265,7 +265,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .subscribe(async (s) => {
         if (s === 'SUBSCRIBED') {
-          if (!streamRef.current && esperaStreamRef.current) { streamRef.current = esperaStreamRef.current }
           setTela('chamada')
           if (localRef.current && streamRef.current) localRef.current.srcObject = streamRef.current
           setEntrando(false)
