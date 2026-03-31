@@ -7,7 +7,7 @@ import { Sidebar } from '@/components/Sidebar'
 
 const TIPOS = {
   consulta:  { label: 'Consulta',  bg: '#dbeafe', text: '#1d4ed8', border: '#93c5fd', dot: '#2563eb' },
-  retorno:   { label: 'Retorno',   bg: '#d1fae5', text: '#065f46', border: '#a78bfa', dot: '#6043C1' },
+  retorno:   { label: 'Retorno',   bg: '#ede9fb', text: '#4e35a3', border: '#a78bfa', dot: '#6043C1' },
   exame:     { label: 'Exame',     bg: '#ede9fe', text: '#5b21b6', border: '#c4b5fd', dot: '#7c3aed' },
   urgencia:  { label: 'Urgência',  bg: '#fee2e2', text: '#991b1b', border: '#fca5a5', dot: '#dc2626' },
 }
@@ -175,7 +175,7 @@ export default function Agenda() {
     <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
       <Sidebar activeHref="/agenda" />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' , padding: 16 }}>
         {/* Header */}
         <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

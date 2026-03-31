@@ -66,12 +66,12 @@ export default function Historico() {
   ]
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f8fafb', overflow: 'hidden', borderRadius: 12 }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden', gap: 16, padding: 16 }}>
       <Sidebar activeHref="/historico" />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: 12 }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
         {/* Header */}
-        <div style={{ padding: '16px 28px', borderBottom: '1px solid #e8eeed', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ padding: '16px 20px', borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Histórico de consultas</h1>
             <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{consultas.length} consultas registradas</p>
@@ -84,7 +84,7 @@ export default function Historico() {
 
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden', borderRadius: 12 }}>
           {/* Lista */}
-          <div style={{ borderRight: 'none', overflow: 'auto', background: 'white', padding: '12px 10px' }}>
+          <div style={{ borderRight: 'none', overflow: 'auto', background: 'white', padding: '12px 10px', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', height: '100%' }}>
             {carregando ? (
               <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Carregando...</p>
             ) : consultas.length === 0 ? (

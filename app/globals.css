@@ -62,3 +62,13 @@ input:focus, textarea:focus, select:focus {
   box-shadow: var(--card-shadow);
   border: none;
 }
+
+/* Override verde residual */
+.bg-green-50, .bg-green-100, .bg-green-200 { background-color: #ede9fb !important; }
+.text-green-500, .text-green-600, .text-green-700, .text-green-800 { color: #6043C1 !important; }
+.border-green-200, .border-green-300, .border-green-400, .border-green-500 { border-color: #d4c9f7 !important; }
+.hover\:bg-green-50:hover, .hover\:bg-green-100:hover { background-color: #ede9fb !important; }
+.hover\:text-green-600:hover, .hover\:text-green-700:hover { color: #6043C1 !important; }
+.focus\:ring-green-500:focus, .focus\:border-green-500:focus { --tw-ring-color: #6043C1 !important; border-color: #6043C1 !important; }
+.ring-green-500 { --tw-ring-color: #6043C1 !important; }
+.checked\:bg-green-600:checked { background-color: #6043C1 !important; }

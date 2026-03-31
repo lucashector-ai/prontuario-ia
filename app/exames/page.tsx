@@ -58,11 +58,11 @@ export default function Exames() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
       <Sidebar activeHref="/exames" />
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '0 32px', height: 56, borderBottom: 'none', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ padding: '0 32px', height: 56, borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Análise de exames</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>IA interpreta laudos e resultados laboratoriais</p>
