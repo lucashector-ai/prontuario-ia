@@ -241,6 +241,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         if (payload.de === papel) return
         if (pcRef.current && pcRef.current.signalingState === 'stable') fazerOffer(pcRef.current)
         if (papel === 'paciente' && !pcRef.current) entrarNaChamada()
+      })
       .on('broadcast', { event: 'anexo' }, ({ payload }) => {
         if (payload.de === papelRef.current) return
         const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
