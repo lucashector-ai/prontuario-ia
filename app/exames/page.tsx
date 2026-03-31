@@ -107,7 +107,7 @@ export default function Exames() {
             <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }}
               onChange={e => { const f = e.target.files?.[0]; if (f) handleImagem(f) }}/>
 
-            <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 12, padding: '16px 20px' }}>
+            <div style={{ background: '#F9FAFC', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 12, padding: '16px 20px' }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 8 }}>
                 Contexto clínico <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>(opcional)</span>
               </label>
@@ -150,7 +150,7 @@ export default function Exames() {
           {analise && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, overflow: 'auto' }}>
               {/* Header do exame */}
-              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 12, padding: '16px 20px' }}>
+              <div style={{ background: '#F9FAFC', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 12, padding: '16px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>{analise.tipo_exame}</p>
@@ -203,7 +203,7 @@ export default function Exames() {
               )}
 
               {/* Conclusão */}
-              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 12, padding: '16px 20px' }}>
+              <div style={{ background: '#F9FAFC', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 12, padding: '16px 20px' }}>
                 <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Conclusão clínica</p>
                 <p style={{ fontSize: 13, color: '#374151', margin: 0, lineHeight: 1.7 }}>{analise.conclusao}</p>
               </div>
