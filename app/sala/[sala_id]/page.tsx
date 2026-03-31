@@ -88,7 +88,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   // Conecta stream local ao PiP quando tela de chamada renderiza
   // Usa setTimeout pois o ref pode no estar pronto no primeiro tick
   useEffect(() => {
-    if (tela === 'chamada' && streamRef.current) {
+    if ((tela === 'chamada' || tela === 'precall') && streamRef.current) {
       const conectar = () => {
         if (localRef.current && streamRef.current) {
           localRef.current.srcObject = streamRef.current
@@ -508,6 +508,13 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       if (localRef.current && streamRef.current) {
         localRef.current.srcObject = streamRef.current
       }
+    }
+  }, [tela])
+
+  // Conecta stream ao video na precall
+  useEffect(() => {
+    if (tela === 'precall' && localRef.current && streamRef.current) {
+      localRef.current.srcObject = streamRef.current
     }
   }, [tela])
 
