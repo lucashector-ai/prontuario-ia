@@ -239,11 +239,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .on('broadcast', { event: 'pronto' }, ({ payload }) => {
         if (payload.de === papel) return
-        // Quem tem pc faz o offer para quem acabou de entrar
-        if (pcRef.current && pcRef.current.signalingState === 'stable') {
-          fazerOffer(pcRef.current)
-        }
-      }
+        if (pcRef.current && pcRef.current.signalingState === 'stable') fazerOffer(pcRef.current)
       })
       .on('broadcast', { event: 'anexo' }, ({ payload }) => {
         if (payload.de === papelRef.current) return
