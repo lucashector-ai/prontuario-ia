@@ -119,7 +119,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     if (papelRef.current === 'medico') {
       setTela('precall')
     } else {
-      setTela('espera')
+      setTela('chamada')
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
