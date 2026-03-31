@@ -121,7 +121,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     if (papelRef.current === 'medico') {
       setTela('precall')
     } else {
-      setTela('espera')
+      entrarNaChamada()
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -193,6 +193,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       if (remoteRef.current && e.streams[0]) {
         remoteRef.current.srcObject = e.streams[0]
         setRemoteConectado(true)
+        setTela('chamada')
         setEntrando(false)
         tocarSom('entrada')
         if (!timerRef.current) timerRef.current = setInterval(() => setTimer(t => t + 1), 1000)
@@ -269,7 +270,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .subscribe(async (s) => {
         if (s === 'SUBSCRIBED') {
-          setTela('chamada')
+          if (papelRef.current === 'medico') setTela('chamada')
           if (localRef.current && streamRef.current) localRef.current.srcObject = streamRef.current
           setEntrando(false)
           send('pronto', { papel })
