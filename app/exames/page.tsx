@@ -54,7 +54,7 @@ export default function Exames() {
   const statusCor = (s: string) => {
     if (s === 'critico') return { bg: '#fef2f2', border: '#fecaca', text: '#dc2626', badge: '#dc2626', badgeBg: '#fef2f2' }
     if (s === 'alterado') return { bg: '#fffbeb', border: '#fde68a', text: '#92400e', badge: '#d97706', badgeBg: '#fffbeb' }
-    return { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534', badge: '#16a34a', badgeBg: '#f0fdf4' }
+    return { bg: '#f0fdf4', border: '#d4c9f7', text: '#6043C1', badge: '#6043C1', badgeBg: '#f0fdf4' }
   }
 
   return (
@@ -78,7 +78,7 @@ export default function Exames() {
               onDragOver={e => e.preventDefault()}
               onClick={() => !preview && inputRef.current?.click()}
               style={{
-                background: 'white', border: `2px dashed ${preview ? '#bbf7d0' : '#e5e7eb'}`,
+                background: 'white', border: `2px dashed ${preview ? '#d4c9f7' : '#e5e7eb'}`,
                 borderRadius: 14, overflow: 'hidden', cursor: preview ? 'default' : 'pointer',
                 minHeight: 280, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 transition: 'border-color 0.15s',
@@ -93,8 +93,8 @@ export default function Exames() {
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: 40 }}>
-                  <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', border: '1.5px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.5">
+                  <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                     </svg>
                   </div>
@@ -124,7 +124,7 @@ export default function Exames() {
 
             <button onClick={handleAnalisar} disabled={!imagem || analisando} style={{
               padding: '12px', borderRadius: 10, border: 'none', cursor: imagem ? 'pointer' : 'not-allowed',
-              background: !imagem ? '#f3f4f6' : analisando ? '#bbf7d0' : '#16a34a',
+              background: !imagem ? '#f3f4f6' : analisando ? '#d4c9f7' : '#6043C1',
               color: !imagem ? '#9ca3af' : 'white', fontSize: 14, fontWeight: 700,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>
@@ -156,7 +156,7 @@ export default function Exames() {
                     <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>{analise.tipo_exame}</p>
                     {analise.data_exame && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Data: {analise.data_exame}</p>}
                   </div>
-                  <span style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '3px 10px', borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', border: '1px solid #d4c9f7', padding: '3px 10px', borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
                     ✓ Analisado pela IA
                   </span>
                 </div>
@@ -210,14 +210,14 @@ export default function Exames() {
 
               {/* Recomendações */}
               {analise.recomendacoes?.length > 0 && (
-                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '16px 20px' }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Recomendações</p>
+                <div style={{ background: '#f0fdf4', border: '1px solid #d4c9f7', borderRadius: 12, padding: '16px 20px' }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Recomendações</p>
                   {analise.recomendacoes.map((r: string, i: number) => (
                     <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 6 }}>
-                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
                       </div>
-                      <p style={{ fontSize: 13, color: '#166534', margin: 0, lineHeight: 1.6 }}>{r}</p>
+                      <p style={{ fontSize: 13, color: '#6043C1', margin: 0, lineHeight: 1.6 }}>{r}</p>
                     </div>
                   ))}
                 </div>

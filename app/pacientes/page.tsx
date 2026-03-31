@@ -63,7 +63,7 @@ export default function Pacientes() {
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Meus pacientes</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{pacientes.length} paciente{pacientes.length !== 1 ? 's' : ''}</p>
           </div>
-          <button onClick={() => setMostrarForm(true)} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => setMostrarForm(true)} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Novo paciente
           </button>
@@ -107,7 +107,7 @@ export default function Pacientes() {
                     </select>
                   </div>
                   <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
-                    <button type="submit" disabled={salvando} style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                    <button type="submit" disabled={salvando} style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                       {salvando ? 'Cadastrando...' : 'Cadastrar e abrir ficha'}
                     </button>
                     <button type="button" onClick={() => setMostrarForm(false)} style={{ padding: '11px 20px', borderRadius: 9, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
@@ -127,8 +127,8 @@ export default function Pacientes() {
               <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: 40 }}>Carregando...</p>
             ) : filtrados.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', border: '1.5px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
                 </div>
                 <p style={{ fontSize: 14, fontWeight: 600, color: '#374151', margin: '0 0 6px' }}>{busca ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}</p>
                 <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>{busca ? 'Tente outro nome' : 'Clique em "Novo paciente" para começar'}</p>
@@ -141,9 +141,9 @@ export default function Pacientes() {
                   return (
                     <div key={p.id} onClick={() => router.push(`/pacientes/${p.id}`)}
                       style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
-                      onMouseOver={e => { e.currentTarget.style.borderColor = '#bbf7d0'; e.currentTarget.style.background = '#fafffe' }}
+                      onMouseOver={e => { e.currentTarget.style.borderColor = '#d4c9f7'; e.currentTarget.style.background = '#fafffe' }}
                       onMouseOut={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.background = 'white' }}>
-                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f0fdf4', border: '1.5px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#16a34a', flexShrink: 0 }}>{ini}</div>
+                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f0fdf4', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#6043C1', flexShrink: 0 }}>{ini}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>{p.nome}</p>
                         <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>{[p.sexo, idade ? `${idade} anos` : null, p.telefone].filter(Boolean).join(' · ')}</p>

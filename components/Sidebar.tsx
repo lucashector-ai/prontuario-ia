@@ -39,12 +39,12 @@ export function Sidebar({ activeHref }: Props) {
 
   return (
     <aside style={{
-      width: 220, background: 'white', borderRight: '1px solid #e5e7eb',
+      width: 220, background: 'transparent', borderRight: 'none',
       display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100vh',
     }}>
       <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #f3f4f6' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
             </svg>
@@ -67,10 +67,10 @@ export function Sidebar({ activeHref }: Props) {
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '7px 10px', borderRadius: 7, marginBottom: 1,
                   textDecoration: 'none',
-                  background: active ? '#f0fdf4' : 'transparent',
-                  color: active ? '#16a34a' : '#374151',
+                  background: active ? '#ede9fb' : 'transparent',
+                  color: active ? '#6043C1' : '#374151',
                   fontSize: 13, fontWeight: active ? 600 : 400,
-                  border: active ? '1px solid #dcfce7' : '1px solid transparent',
+                  border: active ? '1px solid #ede9fb' : '1px solid transparent',
                 }}>
                   <span style={{ flexShrink: 0, opacity: active ? 1 : 0.5 }}>{item.icon}</span>
                   {item.label}
@@ -83,7 +83,7 @@ export function Sidebar({ activeHref }: Props) {
 
       <div style={{ padding: '12px 16px', borderTop: '1px solid #f3f4f6' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 6px', borderRadius: 8 }}>
-          <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#f0fdf4', border: '1.5px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#16a34a', flexShrink: 0 }}>{iniciais}</div>
+          <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#ede9fb', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#6043C1', flexShrink: 0 }}>{iniciais}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{medico?.nome || 'Medico'}</p>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{medico?.especialidade || medico?.crm || 'Clinica'}</p>

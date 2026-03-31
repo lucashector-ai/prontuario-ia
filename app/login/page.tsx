@@ -118,7 +118,7 @@ export default function Login() {
 
             <button type="submit" disabled={carregando} style={{
               padding: '14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-              background: carregando ? '#86efac' : '#16a34a',
+              background: carregando ? '#86efac' : '#6043C1',
               color: 'white', fontSize: 15, fontWeight: 700,
               letterSpacing: '0.01em', marginTop: 4,
               transition: 'background 0.15s',
@@ -130,7 +130,7 @@ export default function Login() {
           <div style={{ marginTop: 32, paddingTop: 28, borderTop: '1px solid #f3f4f6', textAlign: 'center' }}>
             <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>
               Não tem conta?{' '}
-              <a href="/cadastro" style={{ color: '#16a34a', textDecoration: 'none', fontWeight: 700 }}>
+              <a href="/cadastro" style={{ color: '#6043C1', textDecoration: 'none', fontWeight: 700 }}>
                 Criar conta gratuita →
               </a>
             </p>

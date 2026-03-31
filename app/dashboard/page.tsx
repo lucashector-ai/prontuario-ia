@@ -124,7 +124,7 @@ export default function Dashboard() {
         <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
           {carregando ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid #dcfce7', borderTopColor: '#16a34a', animation: 'spin 0.8s linear infinite' }}/>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid #ede9fb', borderTopColor: '#6043C1', animation: 'spin 0.8s linear infinite' }}/>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1200 }}>
@@ -138,14 +138,14 @@ export default function Dashboard() {
                   },
                   {
                     label: 'Pacientes cadastrados', valor: dados.totalPacientes || 0, icon: '👥',
-                    sub: 'total na clínica', cor: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0'
+                    sub: 'total na clínica', cor: '#6043C1', bg: '#f0fdf4', border: '#d4c9f7'
                   },
                   {
                     label: 'Consultas no período', valor: dados.consultasPeriodo, icon: '📅',
                     sub: variacao >= 0 ? `+${variacao}% vs anterior` : `${variacao}% vs anterior`,
-                    cor: variacao >= 0 ? '#16a34a' : '#dc2626',
+                    cor: variacao >= 0 ? '#6043C1' : '#dc2626',
                     bg: variacao >= 0 ? '#f0fdf4' : '#fef2f2',
-                    border: variacao >= 0 ? '#bbf7d0' : '#fecaca'
+                    border: variacao >= 0 ? '#d4c9f7' : '#fecaca'
                   },
                   {
                     label: 'CIDs registrados', valor: Object.keys(dados.topCids).length, icon: '🏷',
@@ -172,7 +172,7 @@ export default function Dashboard() {
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Consultas por dia</p>
                       <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>Últimos 14 dias</p>
                     </div>
-                    <span style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
+                    <span style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', border: '1px solid #d4c9f7', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
                       {dados.porDia.reduce((a: number, d: any) => a + d.total, 0)} total
                     </span>
                   </div>
@@ -186,7 +186,7 @@ export default function Dashboard() {
                           {d.total > 0 && (
                             <span style={{ fontSize: 9, color: '#6b7280', fontWeight: 600 }}>{d.total}</span>
                           )}
-                          <div style={{ width: '100%', height: `${altura}px`, borderRadius: '4px 4px 0 0', background: isToday ? '#16a34a' : d.total > 0 ? '#86efac' : '#f3f4f6', transition: 'height 0.3s' }}/>
+                          <div style={{ width: '100%', height: `${altura}px`, borderRadius: '4px 4px 0 0', background: isToday ? '#6043C1' : d.total > 0 ? '#86efac' : '#f3f4f6', transition: 'height 0.3s' }}/>
                           {i % 3 === 0 && (
                             <span style={{ fontSize: 9, color: '#9ca3af', whiteSpace: 'nowrap', transform: 'rotate(-30deg)', transformOrigin: 'center' }}>
                               {fmt(d.dia)}
@@ -198,7 +198,7 @@ export default function Dashboard() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16, paddingTop: 12, borderTop: '1px solid #f3f4f6' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: 2, background: '#16a34a' }}/>
+                      <div style={{ width: 10, height: 10, borderRadius: 2, background: '#6043C1' }}/>
                       <span style={{ fontSize: 11, color: '#6b7280' }}>Hoje</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -216,24 +216,24 @@ export default function Dashboard() {
                 <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden' }}>
                   <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Próximos agendamentos</p>
-                    <a href="/pacientes" style={{ fontSize: 11, color: '#16a34a', textDecoration: 'none', fontWeight: 600 }}>Ver todos →</a>
+                    <a href="/pacientes" style={{ fontSize: 11, color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>Ver todos →</a>
                   </div>
                   {dados.proximosAgendamentos.length === 0 ? (
                     <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                       <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 12px' }}>Nenhum agendamento</p>
-                      <a href="/pacientes" style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, textDecoration: 'none' }}>+ Agendar consulta</a>
+                      <a href="/pacientes" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Agendar consulta</a>
                     </div>
                   ) : dados.proximosAgendamentos.map((ag: any, i: number) => (
                     <div key={ag.id} style={{ padding: '12px 20px', borderBottom: i < dados.proximosAgendamentos.length - 1 ? '1px solid #f9fafb' : 'none', display: 'flex', gap: 12, alignItems: 'center' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <p style={{ fontSize: 14, fontWeight: 800, color: '#16a34a', margin: 0, lineHeight: 1 }}>{new Date(ag.data_hora).getDate()}</p>
-                        <p style={{ fontSize: 9, color: '#16a34a', margin: 0, textTransform: 'uppercase' }}>{new Date(ag.data_hora).toLocaleDateString('pt-BR', { month: 'short' })}</p>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f0fdf4', border: '1px solid #d4c9f7', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <p style={{ fontSize: 14, fontWeight: 800, color: '#6043C1', margin: 0, lineHeight: 1 }}>{new Date(ag.data_hora).getDate()}</p>
+                        <p style={{ fontSize: 9, color: '#6043C1', margin: 0, textTransform: 'uppercase' }}>{new Date(ag.data_hora).toLocaleDateString('pt-BR', { month: 'short' })}</p>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ag.motivo || 'Consulta'}</p>
                         <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{new Date(ag.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
-                      <span style={{ fontSize: 10, color: ag.status === 'confirmado' ? '#16a34a' : '#2563eb', background: ag.status === 'confirmado' ? '#f0fdf4' : '#eff6ff', padding: '2px 8px', borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>{ag.status}</span>
+                      <span style={{ fontSize: 10, color: ag.status === 'confirmado' ? '#6043C1' : '#2563eb', background: ag.status === 'confirmado' ? '#f0fdf4' : '#eff6ff', padding: '2px 8px', borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>{ag.status}</span>
                     </div>
                   ))}
                 </div>
@@ -256,7 +256,7 @@ export default function Dashboard() {
                       {dados.topCids.map((cid: any, i: number) => {
                         const maxTotal = dados.topCids[0]?.total || 1
                         const pct = Math.round((cid.total / maxTotal) * 100)
-                        const cores = ['#2563eb','#16a34a','#7c3aed','#d97706','#0d9488','#dc2626','#0891b2','#9333ea']
+                        const cores = ['#2563eb','#6043C1','#7c3aed','#d97706','#0d9488','#dc2626','#0891b2','#9333ea']
                         const cor = cores[i % cores.length]
                         return (
                           <div key={cid.codigo} style={{ padding: '10px 20px' }}>
@@ -281,12 +281,12 @@ export default function Dashboard() {
                 <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden' }}>
                   <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Últimas consultas</p>
-                    <a href="/historico" style={{ fontSize: 11, color: '#16a34a', textDecoration: 'none', fontWeight: 600 }}>Ver histórico →</a>
+                    <a href="/historico" style={{ fontSize: 11, color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>Ver histórico →</a>
                   </div>
                   {dados.consultasRecentes.length === 0 ? (
                     <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                       <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 12px' }}>Nenhuma consulta no período</p>
-                      <a href="/" style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, textDecoration: 'none' }}>+ Nova consulta</a>
+                      <a href="/" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Nova consulta</a>
                     </div>
                   ) : dados.consultasRecentes.map((c: any, i: number) => (
                     <div key={c.id} style={{ padding: '12px 20px', borderBottom: i < dados.consultasRecentes.length - 1 ? '1px solid #f9fafb' : 'none' }}>
@@ -299,7 +299,7 @@ export default function Dashboard() {
                         </div>
                         <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
                           {(c.cids || []).slice(0, 2).map((cid: any) => (
-                            <span key={cid.codigo} style={{ fontSize: 9, color: '#16a34a', background: '#f0fdf4', padding: '1px 5px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700, border: '1px solid #bbf7d0' }}>{cid.codigo}</span>
+                            <span key={cid.codigo} style={{ fontSize: 9, color: '#6043C1', background: '#f0fdf4', padding: '1px 5px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700, border: '1px solid #d4c9f7' }}>{cid.codigo}</span>
                           ))}
                         </div>
                       </div>

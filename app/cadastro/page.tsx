@@ -27,8 +27,8 @@ export default function Cadastro() {
   if (sucesso) return (
     <div style={{ height: '100vh', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f0fdf4', border: '2px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f0fdf4', border: '2px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
         </div>
         <h2 style={{ fontSize: 24, fontWeight: 800, color: '#111827', margin: '0 0 8px' }}>Conta criada!</h2>
         <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Redirecionando para o login...</p>
@@ -74,7 +74,7 @@ export default function Cadastro() {
               'Dados protegidos pela LGPD',
             ].map(f => (
               <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#16a34a', border: '1px solid #4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#6043C1', border: '1px solid #4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
                 </div>
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>{f}</span>
@@ -110,7 +110,7 @@ export default function Cadastro() {
             ].map(({ label, key, type, placeholder, required }) => (
               <div key={key}>
                 <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 7 }}>
-                  {label}{required && <span style={{ color: '#16a34a', marginLeft: 3 }}>*</span>}
+                  {label}{required && <span style={{ color: '#6043C1', marginLeft: 3 }}>*</span>}
                 </label>
                 <input
                   type={type} required={required} value={(form as any)[key]}
@@ -129,7 +129,7 @@ export default function Cadastro() {
 
             <button type="submit" disabled={carregando} style={{
               marginTop: 4, padding: '13px', borderRadius: 10, border: 'none', cursor: 'pointer',
-              background: carregando ? '#86efac' : '#16a34a',
+              background: carregando ? '#86efac' : '#6043C1',
               color: 'white', fontSize: 15, fontWeight: 700, letterSpacing: '0.01em',
             }}>
               {carregando ? 'Criando conta...' : 'Criar conta gratuita'}
@@ -139,7 +139,7 @@ export default function Cadastro() {
           <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid #f3f4f6', textAlign: 'center' }}>
             <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>
               Já tem conta?{' '}
-              <a href="/login" style={{ color: '#16a34a', textDecoration: 'none', fontWeight: 700 }}>
+              <a href="/login" style={{ color: '#6043C1', textDecoration: 'none', fontWeight: 700 }}>
                 Entrar →
               </a>
             </p>
