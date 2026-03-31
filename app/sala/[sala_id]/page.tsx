@@ -264,6 +264,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       .subscribe(async (s) => {
         if (s === 'SUBSCRIBED') {
           setTela('chamada')
+          if (localRef.current && streamRef.current) localRef.current.srcObject = streamRef.current
           setEntrando(false)
           send('pronto', { papel })
           // Garante que o PiP recebe o stream aps render
@@ -589,7 +590,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       <h1 style={{ color: 'white', fontSize: 20, fontWeight: 700, margin: 0 }}>Testar camera e microfone</h1>
       <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>Verifique se sua camera e microfone estao funcionando antes de entrar.</p>
       <div style={{ width: 'min(400px,90vw)', aspectRatio: '16/9', borderRadius: 12, overflow: 'hidden', background: '#111', border: '2px solid #1e293b', position: 'relative' }}>
-        <video ref={localRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
+        <video ref={esperaRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
         <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
           <button onClick={toggleMic} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.2)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
@@ -603,7 +604,13 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           </button>
         </div>
       </div>
-      <button onClick={() => { setTela('chamada') }}
+      <button onClick={() => {
+          if (esperaStreamRef.current) {
+            streamRef.current = esperaStreamRef.current
+            if (localRef.current) localRef.current.srcObject = esperaStreamRef.current
+          }
+          setTela('chamada')
+        }}
         style={{ padding: '12px 32px', borderRadius: 10, border: 'none', background: '#16a34a', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
         Entrar na consulta
       </button>
