@@ -551,12 +551,11 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             <h2 style={{ color: '#60a5fa', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Transcricao da consulta</h2>
             <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{transcricaoFinal}</p>
           </div>
-        ) : transcrevendo ? (
-          <div style={{ background: '#1e293b', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 16, height: 16, border: '2px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/>
+        ) : (
+          <div style={{ background: '#1e293b', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #334155', textAlign: 'center' }}>
             <p style={{ color: '#64748b', fontSize: 13, margin: 0 }}>Processando transcricao...</p>
           </div>
-        ) : null}
+        )}
 
         {/* Prontuario */}
         {prontuarioFinal && (
