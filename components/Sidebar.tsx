@@ -42,7 +42,7 @@ export function Sidebar({ activeHref }: Props) {
       width: 220, background: 'transparent', borderRight: 'none',
       display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100vh',
     }}>
-      <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #f3f4f6' }}>
+      <div style={{ padding: '20px 20px 16px', borderBottom: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">

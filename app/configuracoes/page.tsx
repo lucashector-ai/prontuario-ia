@@ -77,8 +77,8 @@ export default function Configuracoes() {
           )}
 
           {/* Card de conexao */}
-          <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden', marginBottom: 24 }}>
-            <div style={{ padding: '18px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 24 }}>
+            <div style={{ padding: '18px 24px', borderBottom: 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📱</div>
               <div>
                 <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>{config ? 'Atualizar' : 'Conectar'} WhatsApp Business</h2>
@@ -118,8 +118,8 @@ export default function Configuracoes() {
           </div>
 
           {/* Instrucoes do webhook */}
-          <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden' }}>
-            <div style={{ padding: '18px 24px', borderBottom: '1px solid #f3f4f6' }}>
+          <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
+            <div style={{ padding: '18px 24px', borderBottom: 'none' }}>
               <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Configurar webhook no Meta</h2>
               <p style={{ fontSize: 12, color: '#6b7280', margin: '4px 0 0' }}>Configure uma vez e todas as mensagens chegam automaticamente</p>
             </div>
@@ -143,8 +143,8 @@ export default function Configuracoes() {
                   <div key={item.label}>
                     <p style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</p>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <code style={{ flex: 1, padding: '8px 12px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, color: '#374151', fontFamily: 'monospace' }}>{item.valor}</code>
-                      <button onClick={() => navigator.clipboard.writeText(item.valor)} style={{ padding: '7px 12px', background: 'white', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 11, color: '#6b7280', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}>Copiar</button>
+                      <code style={{ flex: 1, padding: '8px 12px', background: '#f9fafb', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 7, fontSize: 12, color: '#374151', fontFamily: 'monospace' }}>{item.valor}</code>
+                      <button onClick={() => navigator.clipboard.writeText(item.valor)} style={{ padding: '7px 12px', background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 7, fontSize: 11, color: '#6b7280', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}>Copiar</button>
                     </div>
                   </div>
                 ))}

@@ -109,7 +109,7 @@ export default function Home() {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top header */}
-        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Nova consulta</h1>
             <span style={{ fontSize: 12, color: '#9ca3af', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5 }}>
@@ -123,7 +123,7 @@ export default function Home() {
               </span>
             )}
             {estado === 'pronto' && (
-              <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', border: '1px solid #e5e7eb', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
+              <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
                 + Nova consulta
               </button>
             )}
@@ -137,7 +137,7 @@ export default function Home() {
           <div style={{ borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>
 
             {/* Gravacao section */}
-            <div style={{ padding: '28px 32px', borderBottom: '1px solid #f3f4f6' }}>
+            <div style={{ padding: '28px 32px', borderBottom: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>Gravacao da consulta</p>
@@ -233,7 +233,7 @@ export default function Home() {
                     </span>
                   )}
                   {transcricao && (
-                    <button onClick={handleNovo} style={{ fontSize: 11, color: '#6b7280', background: 'none', border: '1px solid #e5e7eb', padding: '2px 8px', borderRadius: 5, cursor: 'pointer' }}>
+                    <button onClick={handleNovo} style={{ fontSize: 11, color: '#6b7280', background: 'none', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: '2px 8px', borderRadius: 5, cursor: 'pointer' }}>
                       Limpar
                     </button>
                   )}
@@ -271,7 +271,7 @@ export default function Home() {
             {estado === 'pronto' && prontuario && (
               <div className="fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white', borderLeft: '1px solid #e5e7eb' }}>
                 {/* Tab bar */}
-                <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', padding: '0 20px', background: 'white', flexShrink: 0 }}>
+                <div style={{ display: 'flex', borderBottom: 'none', padding: '0 20px', background: 'white', flexShrink: 0 }}>
                   {(['prontuario', 'receita'] as Aba[]).map(tab => (
                     <button key={tab} onClick={() => setAba(tab)} style={{
                       padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer',

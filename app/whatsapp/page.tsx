@@ -264,7 +264,7 @@ REGRAS:
       <main style={{ flex: 1, display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
 
         {/* Header */}
-        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 24px', flexShrink: 0 }}>
+        <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 24px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, paddingTop: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -293,9 +293,9 @@ REGRAS:
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
             {/* Lista conversas */}
             <div style={{ width: 300, background: 'white', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-              <div style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ padding: '10px 12px', borderBottom: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, padding: '7px 10px', fontSize: 12, borderRadius: 7, border: '1px solid #e5e7eb', background: '#f9fafb', outline: 'none' }} placeholder="Buscar..."/>
+                  <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, padding: '7px 10px', fontSize: 12, borderRadius: 7, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', background: '#f9fafb', outline: 'none' }} placeholder="Buscar..."/>
                   <button onClick={() => setNovaConversa(true)} title="Nova conversa" style={{ width: 34, height: 34, borderRadius: 7, border: 'none', background: '#6043C1', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                   </button>
@@ -311,13 +311,13 @@ REGRAS:
 
               {/* Modal nova conversa */}
               {novaConversa && (
-                <div style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', background: '#F9FAFC' }}>
+                <div style={{ padding: '12px', borderBottom: 'none', background: '#F9FAFC' }}>
                   <p style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', margin: '0 0 8px' }}>Nova conversa</p>
                   <input value={novoTel} onChange={e => setNovoTel(e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 12, borderRadius: 7, border: '1px solid #d4c9f7', marginBottom: 6, outline: 'none' }} placeholder="Numero (ex: 5511999887766)"/>
                   <input value={novaMsgTexto} onChange={e => setNovaMsgTexto(e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 12, borderRadius: 7, border: '1px solid #d4c9f7', marginBottom: 8, outline: 'none' }} placeholder="Primeira mensagem..."/>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={iniciarConversa} disabled={iniciando || !novoTel || !novaMsgTexto} style={{ flex: 1, padding: '7px', fontSize: 11, fontWeight: 700, borderRadius: 7, border: 'none', background: '#6043C1', color: 'white', cursor: 'pointer' }}>{iniciando ? 'Enviando...' : 'Iniciar'}</button>
-                    <button onClick={() => { setNovaConversa(false); setNovoTel(''); setNovaMsgTexto('') }} style={{ padding: '7px 12px', fontSize: 11, borderRadius: 7, border: '1px solid #e5e7eb', background: 'white', cursor: 'pointer', color: '#6b7280' }}>Cancelar</button>
+                    <button onClick={() => { setNovaConversa(false); setNovoTel(''); setNovaMsgTexto('') }} style={{ padding: '7px 12px', fontSize: 11, borderRadius: 7, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', background: 'white', cursor: 'pointer', color: '#6b7280' }}>Cancelar</button>
                   </div>
                 </div>
               )}
@@ -358,7 +358,7 @@ REGRAS:
             {ativa ? (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#f0f2f5' }}>
                 {/* Header conversa */}
-                <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                <div style={{ background: 'transparent', borderBottom: 'none', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                   <div style={{ position: 'relative' }}>
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#6043C1' }}>{ini(nomeCv(ativa))}</div>
                     <span style={{ position: 'absolute', bottom: 0, right: 0, width: 11, height: 11, borderRadius: '50%', background: ativa.modo === 'humano' ? '#f59e0b' : '#6043C1', border: '2px solid white' }}/>
@@ -418,7 +418,7 @@ REGRAS:
 
                 {/* Input */}
                 <div style={{ background: 'white', borderTop: '1px solid #e5e7eb', padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-end', flexShrink: 0 }}>
-                  <textarea value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }} style={{ flex: 1, padding: '9px 12px', fontSize: 12, borderRadius: 20, border: '1px solid #e5e7eb', resize: 'none', minHeight: 40, maxHeight: 100, lineHeight: 1.5, outline: 'none' }} placeholder="Mensagem... (Enter para enviar)"/>
+                  <textarea value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }} style={{ flex: 1, padding: '9px 12px', fontSize: 12, borderRadius: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', resize: 'none', minHeight: 40, maxHeight: 100, lineHeight: 1.5, outline: 'none' }} placeholder="Mensagem... (Enter para enviar)"/>
                   <button onClick={enviar} disabled={!msg.trim() || enviando} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: msg.trim() ? '#6043C1' : '#e5e7eb', cursor: msg.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                   </button>
@@ -440,8 +440,8 @@ REGRAS:
         {aba === 'sofia' && (
           <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
             <div style={{ maxWidth: 720 }}>
-              <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', borderBottom: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Sofia IA — Assistente Virtual</h2>
                     <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Configure como a IA se comporta em todas as conversas</p>
@@ -466,7 +466,7 @@ REGRAS:
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={salvarSofia} disabled={salvandoSofia} style={{ padding: '9px 20px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvandoSofia ? 'Salvando...' : 'Salvar'}</button>
-                    <button onClick={() => setSofiaPrompt(PROMPT_DEFAULT)} style={{ padding: '9px 14px', borderRadius: 9, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>Restaurar padrao</button>
+                    <button onClick={() => setSofiaPrompt(PROMPT_DEFAULT)} style={{ padding: '9px 14px', borderRadius: 9, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', background: 'white', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>Restaurar padrao</button>
                     {sofiaMsg && <span style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, alignSelf: 'center' }}>{sofiaMsg}</span>}
                   </div>
                 </div>
@@ -479,8 +479,8 @@ REGRAS:
         {aba === 'equipe' && (
           <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
             <div style={{ maxWidth: 680 }}>
-              <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6' }}>
+              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
+                <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Equipe de atendimento</h2>
                   <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Atendentes podem acessar a plataforma e responder conversas com o proprio nome</p>
                 </div>
@@ -499,8 +499,8 @@ REGRAS:
                   ))}
                 </div>
               </div>
-              <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6' }}>
+              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Adicionar atendente</h2>
                 </div>
                 <form onSubmit={adicionarAtendente} style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -548,8 +548,8 @@ REGRAS:
                   <button onClick={async () => { await fetch('/api/whatsapp-config?medico_id=' + medico.id, { method: 'DELETE' }); setConfig(null) }} style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Desconectar</button>
                 </div>
               )}
-              <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6' }}>
+              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
+                <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>{config ? 'Atualizar' : 'Conectar'} numero WhatsApp</h2>
                   <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Cada clinica usa seu proprio numero oficial</p>
                 </div>
@@ -571,8 +571,8 @@ REGRAS:
                   <button type="submit" disabled={salvando} style={{ padding: '10px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvando ? 'Validando...' : config ? 'Atualizar' : 'Conectar WhatsApp'}</button>
                 </form>
               </div>
-              <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6' }}>
+              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Webhook Meta</h2>
                 </div>
                 <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -580,8 +580,8 @@ REGRAS:
                     <div key={item.label}>
                       <p style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</p>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <code style={{ flex: 1, padding: '7px 10px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 12, fontFamily: 'monospace', color: '#374151' }}>{item.valor}</code>
-                        <button onClick={() => navigator.clipboard.writeText(item.valor)} style={{ padding: '6px 10px', background: 'white', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, color: '#6b7280', cursor: 'pointer' }}>Copiar</button>
+                        <code style={{ flex: 1, padding: '7px 10px', background: '#f9fafb', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 6, fontSize: 12, fontFamily: 'monospace', color: '#374151' }}>{item.valor}</code>
+                        <button onClick={() => navigator.clipboard.writeText(item.valor)} style={{ padding: '6px 10px', background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 6, fontSize: 11, color: '#6b7280', cursor: 'pointer' }}>Copiar</button>
                       </div>
                     </div>
                   ))}

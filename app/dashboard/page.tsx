@@ -214,7 +214,7 @@ export default function Dashboard() {
 
                 {/* Próximos agendamentos */}
                 <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
-                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ padding: '16px 20px', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Próximos agendamentos</p>
                     <a href="/pacientes" style={{ fontSize: 11, color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>Ver todos →</a>
                   </div>
@@ -243,7 +243,7 @@ export default function Dashboard() {
 
                 {/* CIDs mais frequentes */}
                 <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
-                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ padding: '16px 20px', borderBottom: 'none' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>CIDs mais frequentes</p>
                     <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>Diagnósticos registrados no período</p>
                   </div>
@@ -279,7 +279,7 @@ export default function Dashboard() {
 
                 {/* Últimas consultas */}
                 <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
-                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ padding: '16px 20px', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Últimas consultas</p>
                     <a href="/historico" style={{ fontSize: 11, color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>Ver histórico →</a>
                   </div>
