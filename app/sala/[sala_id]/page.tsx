@@ -590,18 +590,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 
-      <div style={{ width: 64, height: 64, borderRadius: 16, background: '#14532d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <p style={{ fontSize: 20, color: 'white', fontWeight: 700, margin: 0 }}>Consulta encerrada</p>
-      {timer > 0 && <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>Duracao: {fmtTimer(timer)}</p>}
-      {isMedico
-        ? <a href="/teleconsulta" style={{ marginTop: 8, padding: '10px 24px', background: '#16a34a', color: 'white', borderRadius: 10, textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>Voltar para teleconsultas</a>
-        : <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>Esta pagina sera fechada em instantes...</p>
-      }
-      <style>{`*{box-sizing:border-box}html,body{margin:0;padding:0}`}</style>
-    </div>
-  )
 
   //  SALA DE ESPERA 
   if (tela === 'espera') return (
