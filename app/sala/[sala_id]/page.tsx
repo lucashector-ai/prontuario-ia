@@ -39,6 +39,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   // Fase 4: Transcrio
   const [gravando, setGravando] = useState(false)
   const [gravandoPausado, setGravandoPausado] = useState(false)
+  const [transcricaoFinal, setTranscricaoFinal] = useState('')
+  const [prontuarioFinal, setProntuarioFinal] = useState<any>(null)
   const [transcricao, setTranscricao] = useState('')
   const [processando, setProcessando] = useState(false)
   const [prontuarioModal, setProntuarioModal] = useState(false)
