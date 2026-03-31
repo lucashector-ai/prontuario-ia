@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
 const TIPOS = {
-  consulta:  { label: 'Consulta',  bg: '#dbeafe', text: '#1d4ed8', border: '#93c5fd', dot: '#2563eb' },
+  consulta:  { label: 'Consulta',  bg: '#ede9fb', text: '#4e35a3', border: '#d4c9f7', dot: '#6043C1' },
   retorno:   { label: 'Retorno',   bg: '#ede9fb', text: '#4e35a3', border: '#a78bfa', dot: '#6043C1' },
   exame:     { label: 'Exame',     bg: '#ede9fe', text: '#5b21b6', border: '#c4b5fd', dot: '#7c3aed' },
   urgencia:  { label: 'Urgência',  bg: '#fee2e2', text: '#991b1b', border: '#fca5a5', dot: '#dc2626' },
@@ -172,7 +172,7 @@ export default function Agenda() {
   const totalSemana = diasSemana.reduce((acc, d) => acc + getAgsDia(d).length, 0)
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'white', overflow: 'hidden' }}>
       <Sidebar activeHref="/agenda" />
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' , padding: 16 }}>
@@ -247,7 +247,7 @@ export default function Agenda() {
           </div>
 
           {/* Grade de horas */}
-          <div style={{ flex: 1, overflow: 'auto' }}>
+          <div style={{ flex: 1, overflow: 'auto', background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(7, 1fr)', minHeight: `${HORAS.length * 64}px` }}>
               {/* Coluna de horas */}
               <div style={{ borderRight: '1px solid #e5e7eb', background: 'white', position: 'sticky', left: 0, zIndex: 10 }}>
@@ -387,7 +387,7 @@ export default function Agenda() {
 
               {/* Status (só ao editar) */}
               {modal.ag && (
-                <div style={{ background: '#F9FAFC', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>Status atual: <strong style={{ color: '#111827' }}>{modal.ag.status}</strong></span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     {modal.ag.status !== 'confirmado' && (
@@ -420,8 +420,8 @@ export default function Agenda() {
               {salaLink && (
                 <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                  <span style={{ fontSize: 11, color: '#1d4ed8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{salaLink}</span>
-                  <button type="button" onClick={() => { navigator.clipboard.writeText(salaLink); window.open('/sala/' + salaId, '_blank') }} style={{ fontSize: 11, color: '#2563eb', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>Copiar e abrir</button>
+                  <span style={{ fontSize: 11, color: '#4e35a3', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{salaLink}</span>
+                  <button type="button" onClick={() => { navigator.clipboard.writeText(salaLink); window.open('/sala/' + salaId, '_blank') }} style={{ fontSize: 11, color: '#6043C1', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>Copiar e abrir</button>
                 </div>
               )}
               {/* Botões */}

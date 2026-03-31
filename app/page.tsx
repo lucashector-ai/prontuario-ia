@@ -271,7 +271,7 @@ export default function Home() {
             {estado === 'pronto' && prontuario && (
               <div className="fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white', borderLeft: '1px solid #e5e7eb' }}>
                 {/* Tab bar */}
-                <div style={{ display: 'flex', borderBottom: 'none', padding: '0 20px', background: 'white', flexShrink: 0 }}>
+                <div style={{ display: 'flex', borderBottom: 'none', padding: '0 20px', background: 'white', flexShrink: 0 }}>, borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }
                   {(['prontuario', 'receita'] as Aba[]).map(tab => (
                     <button key={tab} onClick={() => setAba(tab)} style={{
                       padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
@@ -324,7 +324,7 @@ export default function Home() {
             )}
 
             {(estado === 'idle' || estado === 'gravando') && !prontuario && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 48, background: 'white' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 48, background: 'white' }}>, borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: '#F9FAFC', border: '1.5px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
                     <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
