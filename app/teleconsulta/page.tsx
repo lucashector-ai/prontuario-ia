@@ -32,7 +32,7 @@ export default function Teleconsulta() {
     const codigo = Math.random().toString(36).slice(-4).toUpperCase()
     const r = await fetch('/api/teleconsulta', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ medico_id: medico.id, titulo: 'Consulta - ' + codigo + codigo) + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) })
+      body: JSON.stringify({ medico_id: medico.id, titulo: 'Consulta - ' + codigo })
     })
     const d = await r.json()
     if (d.teleconsulta) {
