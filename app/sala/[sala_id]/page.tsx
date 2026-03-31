@@ -238,7 +238,9 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .on('broadcast', { event: 'pronto' }, ({ payload }) => {
         if (payload.de === papel) return
+        if (payload.de === papel) return
         if (papel === 'medico') fazerOffer(pc)
+        if (papel === 'paciente') entrarNaChamada()
       })
       .on('broadcast', { event: 'anexo' }, ({ payload }) => {
         if (payload.de === papelRef.current) return
