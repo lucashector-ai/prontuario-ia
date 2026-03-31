@@ -13,7 +13,7 @@ const ICE = { iceServers: [
   { urls: 'stun:stun2.l.google.com:19302' },
 ]}
 
-type Tela = 'carregando' | 'espera' | 'chamada' | 'encerrado' | 'encerrada_paciente' | 'erro'
+type Tela = 'carregando' | 'espera' | 'chamada' | 'encerrado' | 'erro' | 'encerrada_paciente'
 
 export default function Sala({ params }: { params: { sala_id: string } }) {
   const { sala_id } = params
@@ -634,7 +634,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 
-  if (tela === 'encerrado') return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', flexDirection: 'column', gap: 20 }}>
       <div style={{ width: 64, height: 64, borderRadius: 16, background: '#14532d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
