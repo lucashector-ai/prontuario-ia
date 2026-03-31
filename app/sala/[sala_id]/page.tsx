@@ -671,7 +671,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               </span>
             </div>
             {/* Botao entrar */}
-            onClick={() => { pararEspera(); entrarNaChamada() }}
+            <button onClick={() => { pararEspera(); entrarNaChamada() }}
               style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: '#16a34a', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer', width: '100%' }}>
               Entrar na consulta
             </button>
