@@ -821,7 +821,9 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   {camOn ? (<path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/>) : (<><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>)}
                 </svg>
               </button>
-              <button onClick={() => { if (papelRef.current === 'paciente') { streamRef.current?.getTracks().forEach(t => t.stop()); pcRef.current?.close(); channelRef.current?.unsubscribe(); try { window.close() } catch(e) {} window.location.href = '/login' } else { encerrar() } }} style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button
+                onClick={() => { if (papelRef.current === 'paciente') { streamRef.current?.getTracks().forEach(t => t.stop()); pcRef.current?.close(); channelRef.current?.unsubscribe(); try { window.close() } catch(e) {} window.location.href = '/login' } else { encerrar() } }}
+                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>
               </button>
             </div>
