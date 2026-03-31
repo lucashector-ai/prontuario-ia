@@ -8,8 +8,8 @@ export function ReceitaCard({ receita, nomeMedico, crm, especialidade, onImprimi
   const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ background: 'white', border: '1px solid #e8eeed', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ background: '#f0fdf4', borderBottom: '1px solid #bbf7d0', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ background: '#f3f0fd', borderBottom: '1px solid #d4c9f7', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>{nomeMedico || 'Médico responsável'}</p>
             <p style={{ fontSize: 11, color: '#3d5452', margin: '2px 0 0' }}>{[especialidade, crm].filter(Boolean).join(' · ')}</p>
@@ -24,9 +24,9 @@ export function ReceitaCard({ receita, nomeMedico, crm, especialidade, onImprimi
           {receita.medicamentos?.map((med, i) => (
             <div key={i} style={{ display: 'flex', gap: 12, paddingBottom: 12, borderBottom: i < receita.medicamentos.length - 1 ? '1px solid #f0f4f0' : 'none' }}>
               <div style={{
-                width: 28, height: 28, borderRadius: '50%', background: '#f0fdf4',
-                border: '1.5px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 700, color: '#16a34a', flexShrink: 0
+                width: 28, height: 28, borderRadius: '50%', background: '#f3f0fd',
+                border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 700, color: '#6043C1', flexShrink: 0
               }}>{i + 1}</div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 14, fontWeight: 700, color: '#0d1f1c', margin: '0 0 6px' }}>{med.nome} {med.dose}</p>
@@ -66,7 +66,7 @@ export function ReceitaCard({ receita, nomeMedico, crm, especialidade, onImprimi
       </div>
 
       <button onClick={onImprimir} style={{
-        padding: '10px', borderRadius: 8, border: '1px solid #e8eeed',
+        padding: '10px', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
         background: 'white', color: '#3d5452', fontSize: 12, cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontWeight: 500,
       }}>

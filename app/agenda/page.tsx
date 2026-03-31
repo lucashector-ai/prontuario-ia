@@ -177,7 +177,7 @@ export default function Agenda() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Header */}
-        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
+        <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button onClick={() => setSemana(new Date())} style={{ fontSize: 12, fontWeight: 600, color: '#374151', background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', padding: '5px 12px', borderRadius: 7, cursor: 'pointer' }}>
               Hoje
@@ -195,7 +195,7 @@ export default function Agenda() {
               {diasSemana[0].getMonth() !== diasSemana[6].getMonth() && ` — ${fmtMes(diasSemana[6])}`}
             </h1>
             {totalSemana > 0 && (
-              <span style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', border: '1px solid #d4c9f7', padding: '2px 8px', borderRadius: 20, fontWeight: 600 }}>
+              <span style={{ fontSize: 11, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '2px 8px', borderRadius: 20, fontWeight: 600 }}>
                 {totalSemana} agendamento{totalSemana !== 1 ? 's' : ''}
               </span>
             )}
@@ -220,13 +220,13 @@ export default function Agenda() {
         {/* Calendário */}
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {/* Cabeçalho dos dias */}
-          <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(7, 1fr)', background: 'white', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(7, 1fr)', background: 'transparent', borderBottom: 'none', flexShrink: 0 }}>
             <div style={{ borderRight: '1px solid #f3f4f6' }}/>
             {diasSemana.map((dia, i) => {
               const ags = getAgsDia(dia)
               return (
                 <div key={i} onClick={() => abrirModal(new Date(dia.setHours(9, 0, 0, 0)))}
-                  style={{ padding: '10px 8px', textAlign: 'center', borderRight: i < 6 ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', background: isHoje(dia) ? '#f0fdf4' : 'white', transition: 'background 0.1s' }}>
+                  style={{ padding: '10px 8px', textAlign: 'center', borderRight: i < 6 ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', background: isHoje(dia) ? '#f3f0fd' : 'white', transition: 'background 0.1s' }}>
                   <p style={{ fontSize: 11, color: isHoje(dia) ? '#6043C1' : '#9ca3af', fontWeight: 600, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {dia.toLocaleDateString('pt-BR', { weekday: 'short' })}
                   </p>
@@ -314,7 +314,7 @@ export default function Agenda() {
             {/* Header modal */}
             <div style={{ padding: '18px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f0fdf4', border: '1px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f3f0fd', border: '1px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 </div>
                 <div>
@@ -392,7 +392,7 @@ export default function Agenda() {
                   <div style={{ display: 'flex', gap: 6 }}>
                     {modal.ag.status !== 'confirmado' && (
                       <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'confirmado'); setModal(m => ({...m, ag: {...m.ag, status: 'confirmado'}})) }}
-                        style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', border: '1px solid #d4c9f7', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Confirmar</button>
+                        style={{ fontSize: 11, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Confirmar</button>
                     )}
                     {modal.ag.status !== 'cancelado' && (
                       <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'cancelado'); setModal({ open: false }) }}
@@ -404,7 +404,7 @@ export default function Agenda() {
 
               {/* Toggle video */}
               {!modal.ag && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: comVideo ? '#f0fdf4' : '#f9fafb', borderRadius: 10, border: '1px solid ' + (comVideo ? '#d4c9f7' : '#e5e7eb') }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: comVideo ? '#f3f0fd' : '#f9fafb', borderRadius: 10, border: '1px solid ' + (comVideo ? '#d4c9f7' : '#e5e7eb') }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={comVideo ? '#6043C1' : '#9ca3af'} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                     <div>

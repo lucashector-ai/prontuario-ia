@@ -102,7 +102,7 @@ export default function Dashboard() {
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Dashboard</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Visão geral da clínica</p>
@@ -138,13 +138,13 @@ export default function Dashboard() {
                   },
                   {
                     label: 'Pacientes cadastrados', valor: dados.totalPacientes || 0, icon: '👥',
-                    sub: 'total na clínica', cor: '#6043C1', bg: '#f0fdf4', border: '#d4c9f7'
+                    sub: 'total na clínica', cor: '#6043C1', bg: '#f3f0fd', border: '#d4c9f7'
                   },
                   {
                     label: 'Consultas no período', valor: dados.consultasPeriodo, icon: '📅',
                     sub: variacao >= 0 ? `+${variacao}% vs anterior` : `${variacao}% vs anterior`,
                     cor: variacao >= 0 ? '#6043C1' : '#dc2626',
-                    bg: variacao >= 0 ? '#f0fdf4' : '#fef2f2',
+                    bg: variacao >= 0 ? '#f3f0fd' : '#fef2f2',
                     border: variacao >= 0 ? '#d4c9f7' : '#fecaca'
                   },
                   {
@@ -172,7 +172,7 @@ export default function Dashboard() {
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Consultas por dia</p>
                       <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>Últimos 14 dias</p>
                     </div>
-                    <span style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', border: '1px solid #d4c9f7', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
+                    <span style={{ fontSize: 11, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
                       {dados.porDia.reduce((a: number, d: any) => a + d.total, 0)} total
                     </span>
                   </div>
@@ -225,7 +225,7 @@ export default function Dashboard() {
                     </div>
                   ) : dados.proximosAgendamentos.map((ag: any, i: number) => (
                     <div key={ag.id} style={{ padding: '12px 20px', borderBottom: i < dados.proximosAgendamentos.length - 1 ? '1px solid #f9fafb' : 'none', display: 'flex', gap: 12, alignItems: 'center' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f0fdf4', border: '1px solid #d4c9f7', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f0fd', border: '1px solid #d4c9f7', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <p style={{ fontSize: 14, fontWeight: 800, color: '#6043C1', margin: 0, lineHeight: 1 }}>{new Date(ag.data_hora).getDate()}</p>
                         <p style={{ fontSize: 9, color: '#6043C1', margin: 0, textTransform: 'uppercase' }}>{new Date(ag.data_hora).toLocaleDateString('pt-BR', { month: 'short' })}</p>
                       </div>
@@ -233,7 +233,7 @@ export default function Dashboard() {
                         <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ag.motivo || 'Consulta'}</p>
                         <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{new Date(ag.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
-                      <span style={{ fontSize: 10, color: ag.status === 'confirmado' ? '#6043C1' : '#2563eb', background: ag.status === 'confirmado' ? '#f0fdf4' : '#eff6ff', padding: '2px 8px', borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>{ag.status}</span>
+                      <span style={{ fontSize: 10, color: ag.status === 'confirmado' ? '#6043C1' : '#2563eb', background: ag.status === 'confirmado' ? '#f3f0fd' : '#eff6ff', padding: '2px 8px', borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>{ag.status}</span>
                     </div>
                   ))}
                 </div>
@@ -299,7 +299,7 @@ export default function Dashboard() {
                         </div>
                         <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
                           {(c.cids || []).slice(0, 2).map((cid: any) => (
-                            <span key={cid.codigo} style={{ fontSize: 9, color: '#6043C1', background: '#f0fdf4', padding: '1px 5px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700, border: '1px solid #d4c9f7' }}>{cid.codigo}</span>
+                            <span key={cid.codigo} style={{ fontSize: 9, color: '#6043C1', background: '#f3f0fd', padding: '1px 5px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700, border: '1px solid #d4c9f7' }}>{cid.codigo}</span>
                           ))}
                         </div>
                       </div>
