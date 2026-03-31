@@ -66,10 +66,10 @@ export default function Historico() {
   ]
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f8fafb', overflow: 'hidden', borderRadius: 12, borderRadius: 12 }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#f8fafb', overflow: 'hidden', borderRadius: 12 }}>
       <Sidebar activeHref="/historico" />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: 12, borderRadius: 12 }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: 12 }}>
         {/* Header */}
         <div style={{ padding: '16px 28px', borderBottom: '1px solid #e8eeed', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
@@ -82,7 +82,7 @@ export default function Historico() {
           </a>
         </div>
 
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden', borderRadius: 12, borderRadius: 12 }}>
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden', borderRadius: 12 }}>
           {/* Lista */}
           <div style={{ borderRight: 'none', overflow: 'auto', background: 'white', padding: '12px 10px' }}>
             {carregando ? (
@@ -97,7 +97,7 @@ export default function Historico() {
                 transition: 'all 0.15s', position: 'relative',
               }}>
                 <p style={{ fontSize: 11, color: '#8aa8a5', margin: '0 0 4px', fontWeight: 500 }}>{fmt(c.criado_em)}</p>
-                <p style={{ fontSize: 12, color: '#3d5452', margin: 0, overflow: 'hidden', borderRadius: 12, borderRadius: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 12, color: '#3d5452', margin: 0, overflow: 'hidden', borderRadius: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, lineHeight: 1.5 }}>
                   {c.subjetivo?.substring(0, 90) || 'Consulta sem detalhes'}
                 </p>
                 {c.cids?.length > 0 && (
