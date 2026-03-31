@@ -134,7 +134,7 @@ export default function Home() {
         <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
 
           {/* Left  -  Gravacao + Transcricao */}
-          <div style={{ borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }>, borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }>
+          <div style={{ borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white'>
 
             {/* Gravacao section */}
             <div style={{ padding: '28px 32px', borderBottom: 'none' }}>
