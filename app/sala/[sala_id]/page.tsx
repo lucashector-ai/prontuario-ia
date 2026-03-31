@@ -420,7 +420,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       if (d.texto) {
         const nova = transcricao ? transcricao + ' ' + d.texto : d.texto
         setTranscricao(nova)
-      setTranscricaoFinal(t)
+      setTranscricaoFinal(nova)
         return nova
       }
     } catch {}
