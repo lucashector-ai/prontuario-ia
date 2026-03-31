@@ -270,7 +270,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .subscribe(async (s) => {
         if (s === 'SUBSCRIBED') {
-          if (papelRef.current === 'medico') setTela('chamada')
+          setTela('chamada')
           if (localRef.current && streamRef.current) localRef.current.srcObject = streamRef.current
           setEntrando(false)
           send('pronto', { papel })
