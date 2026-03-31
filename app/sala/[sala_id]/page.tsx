@@ -263,7 +263,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         if (papelRef.current === 'paciente') {
         clearInterval(timerRef.current as any)
         setTimer(0)
-        setTimeout(() => { try { window.close() } catch {} window.location.href = '/login' }, 2000)
+        setTimeout(() => { try { window.close() } catch {} window.location.href = '/login' }, 0)
       }
       })
       .subscribe(async (s) => {
