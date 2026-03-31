@@ -115,7 +115,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   //  SALA DE ESPERA 
   const iniciarEspera = async () => {
     if (papelRef.current === 'medico') {
-      setTela('chamada')
+      setTela('precall')
     } else {
       setTela('espera')
     }
@@ -503,6 +503,14 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   //  TELAS 
 
+  useEffect(() => {
+    if (tela === 'chamada' || tela === 'precall') {
+      if (localRef.current && streamRef.current) {
+        localRef.current.srcObject = streamRef.current
+      }
+    }
+  }, [tela])
+
   if (tela === 'carregando') return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
       <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid #16a34a', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
@@ -566,6 +574,32 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           </button>
         </div>
       </div>
+    </div>
+  )
+
+  if (tela === 'precall') return (
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', gap: 20, padding: 24 }}>
+      <h1 style={{ color: 'white', fontSize: 20, fontWeight: 700, margin: 0 }}>Testar camera e microfone</h1>
+      <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>Verifique se sua camera e microfone estao funcionando antes de entrar.</p>
+      <div style={{ width: 'min(400px,90vw)', aspectRatio: '16/9', borderRadius: 12, overflow: 'hidden', background: '#111', border: '2px solid #1e293b', position: 'relative' }}>
+        <video ref={localRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
+        <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
+          <button onClick={toggleMic} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.2)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
+              {micOn ? <><path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/><path d='M19 10v2a7 7 0 01-14 0v-2'/><line x1='12' y1='19' x2='12' y2='23'/></> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6'/></>}
+            </svg>
+          </button>
+          <button onClick={toggleCam} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.2)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
+              {camOn ? <path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>}
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button onClick={() => { setTela('chamada') }}
+        style={{ padding: '12px 32px', borderRadius: 10, border: 'none', background: '#16a34a', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+        Entrar na consulta
+      </button>
     </div>
   )
 
@@ -686,14 +720,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
           {/* Controles */}
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(transparent, rgba(5,10,25,0.95))', zIndex: 20 }}>
-            {/* Chat - esquerdo */}
-            <div style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)' }}>
-              <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
-                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? '#16a34a' : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>
-                {naoLidas > 0 && <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }}/>}
-              </button>
-            </div>
             {/* Centro: Mic | Cam | Config | Encerrar */}
             <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', display: 'flex', gap: 12 }}>
               <button onClick={toggleMic}
@@ -705,7 +731,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               <button onClick={toggleCam}
                 style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.18)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-                  {camOn ? <path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></> }
+                  {camOn ? (<path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/>) : (<><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>)}
                 </svg>
               </button>
               <button onClick={() => { setConfigAberto(o => !o); carregarDispositivos() }}
@@ -715,6 +741,14 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               <button onClick={encerrar}
                 style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>
+              </button>
+            </div>
+            {/* Chat - direito */}
+            <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)' }}>
+              <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
+                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? '#16a34a' : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>
+                {naoLidas > 0 && <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }}/>}
               </button>
             </div>
             {/* Painel config */}
