@@ -13,7 +13,7 @@ const ICE = { iceServers: [
   { urls: 'stun:stun2.l.google.com:19302' },
 ]}
 
-type Tela = 'carregando' | 'espera' | 'chamada' | 'encerrado' | 'encerrada_paciente' | 'erro'
+type Tela = 'carregando' | 'espera' | 'chamada' | 'encerrado' | 'erro'
 
 export default function Sala({ params }: { params: { sala_id: string } }) {
   const { sala_id } = params
@@ -39,11 +39,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   // Fase 4: Transcrio
   const [gravando, setGravando] = useState(false)
   const [gravandoPausado, setGravandoPausado] = useState(false)
-  const [configAberto, setConfigAberto] = useState(false)
-  const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([])
-  const [videoInputs, setVideoInputs] = useState<MediaDeviceInfo[]>([])
-  const [transcricaoFinal, setTranscricaoFinal] = useState('')
-  const [prontuarioFinal, setProntuarioFinal] = useState<any>(null)
   const [transcricao, setTranscricao] = useState('')
   const [processando, setProcessando] = useState(false)
   const [prontuarioModal, setProntuarioModal] = useState(false)
@@ -108,7 +103,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       await sb.from('teleconsultas').update({ status: 'aguardando', encerrada_em: null }).eq('sala_id', sala_id)
       data.status = 'aguardando'
     }
-    document.title = 'Consulta - ' + String(sala_id).slice(-4).toUpperCase() + ' | MedIA'
     setSala(data)
     iniciarEspera()
   }
@@ -251,15 +245,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .on('broadcast', { event: 'encerrar' }, () => {
         tocarSom('saida')
-        if (papelRef.current === 'medico') {
-          encerrarLocal()
-        } else {
-          clearInterval(timerRef.current as any)
-          setTimer(0)
-          setTela('encerrada_paciente')
-          setTimeout(() => { try { window.close() } catch {} window.location.href = '/login' }, 4000)
-        }
-        if (false) {
+        encerrarLocal()
+        if (papelRef.current === 'paciente') {
+        clearInterval(timerRef.current as any)
+        setTimer(0)
         setTimeout(() => { try { window.close() } catch {} window.location.href = '/login' }, 2000)
       }
       })
@@ -438,14 +427,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     setSalvando(false)
   }
 
-
-  const carregarDispositivos = async () => {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices()
-      setAudioInputs(devices.filter(d => d.kind === 'audioinput'))
-      setVideoInputs(devices.filter(d => d.kind === 'videoinput'))
-    } catch(e) {}
-  }
   const tocarSom = (tipo: 'entrada' | 'saida' | 'mensagem') => {
     try {
       const ctx = new AudioContext()
@@ -512,16 +493,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 
-  if (tela === 'encerrada_paciente') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', gap: 16, padding: 24 }}>
-      <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#1e293b', border: '2px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#64748b' strokeWidth='2'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>
-      </div>
-      <p style={{ color: 'white', fontSize: 20, fontWeight: 700, margin: 0 }}>Consulta encerrada</p>
-      <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>O medico encerrou a consulta.</p>
-    </div>
-  )
-
   if (tela === 'erro') return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', flexDirection: 'column', gap: 16, padding: 24 }}>
       <div style={{ width: 56, height: 56, borderRadius: 14, background: '#7f1d1d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -534,8 +505,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   if (tela === 'encerrado') return (
     <div style={{ minHeight: '100dvh', background: '#0f172a', overflowY: 'auto' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 16px' }}>
-
-        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
             <svg width='26' height='26' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><polyline points='20 6 9 17 4 12'/></svg>
@@ -544,8 +513,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           <p style={{ color: '#64748b', fontSize: 13, margin: 0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}</p>
           {timer > 0 && <p style={{ color: '#475569', fontSize: 12, margin: '4px 0 0' }}>Duracao: {fmtTimer(timer)}</p>}
         </div>
-
-        {/* Transcricao */}
         {transcricaoFinal ? (
           <div style={{ background: '#1e293b', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid #334155' }}>
             <h2 style={{ color: '#60a5fa', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Transcricao da consulta</h2>
@@ -556,8 +523,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             <p style={{ color: '#64748b', fontSize: 13, margin: 0 }}>Processando transcricao...</p>
           </div>
         )}
-
-        {/* Prontuario */}
         {prontuarioFinal && (
           <div style={{ background: '#1e293b', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid #334155' }}>
             <h2 style={{ color: '#34d399', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Prontuario gerado</h2>
@@ -569,8 +534,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             ))}
           </div>
         )}
-
-        {/* Acoes */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 }}>
           <button onClick={() => window.location.href = '/agenda'}
             style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
@@ -585,26 +548,23 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             Nova consulta
           </button>
         </div>
-
       </div>
     </div>
   )
 
-
-  //  SALA DE ESPERA 
   if (tela === 'espera') return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', gap: 20, padding: 24 }}>
       {papelRef.current === 'paciente' ? (
         <>
-          <div style={{ width: 96, height: 96, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+          <div style={{ width: 96, height: 96, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width='44' height='44' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='1.5'><path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>
           </div>
           <div style={{ textAlign: 'center' }}>
             <p style={{ color: 'white', fontSize: 20, fontWeight: 700, margin: '0 0 8px' }}>Aguardando o medico</p>
             <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>O medico entrara em breve. Por favor, aguarde.</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }}/>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }}/>
             <span style={{ color: '#22c55e', fontSize: 13, fontWeight: 600 }}>Conectado</span>
           </div>
         </>
@@ -619,88 +579,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           </div>
         </>
       )}
-    </div>
-  )
-
-      <div style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 7, background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>MedIA Teleconsulta</span>
-          </div>
-          <p style={{ fontSize: 18, fontWeight: 700, color: 'white', margin: '0 0 4px' }}>{sala?.titulo || 'Teleconsulta'}</p>
-          <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Verifique camera e microfone antes de entrar</p>
-        </div>
-
-        {/* Preview camera */}
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#111827', borderRadius: 14, overflow: 'hidden', border: '1px solid #1e293b' }}>
-          <video ref={esperaRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
-          {!camOkEspera && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-              <p style={{ fontSize: 12, color: '#475569', margin: 0 }}>Carregando camera...</p>
-            </div>
-          )}
-          {/* Badge status */}
-          <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: camOkEspera ? 'rgba(22,163,74,0.85)' : 'rgba(220,38,38,0.85)', color: 'white' }}>
-              {camOkEspera ? ' Camera OK' : ' Sem camera'}
-            </span>
-          </div>
-        </div>
-
-        {/* Microfone */}
-        <div style={{ background: '#1e293b', borderRadius: 12, padding: '14px 16px', border: '1px solid #334155' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={micOkEspera ? '#22c55e' : '#ef4444'} strokeWidth="2">
-                <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-                <path d="M19 10v2a7 7 0 01-14 0v-2"/>
-                <line x1="12" y1="19" x2="12" y2="23"/>
-                <line x1="8" y1="23" x2="16" y2="23"/>
-              </svg>
-              <span style={{ fontSize: 13, color: 'white', fontWeight: 500 }}>Microfone</span>
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: micOkEspera ? '#22c55e' : '#ef4444' }}>
-              {micOkEspera ? 'Funcionando' : 'Sem acesso'}
-            </span>
-          </div>
-          {/* Barra de volume */}
-          <div style={{ height: 6, background: '#0f172a', borderRadius: 3, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: micVol + '%', background: micVol > 60 ? '#22c55e' : micVol > 20 ? '#84cc16' : '#334155', borderRadius: 3, transition: 'width 0.05s, background 0.2s' }}/>
-          </div>
-          <p style={{ fontSize: 11, color: '#475569', margin: '6px 0 0' }}>
-            {micVol > 5 ? 'Microfone captando audio' : 'Fale algo para testar o microfone'}
-          </p>
-        </div>
-
-        {/* Botao entrar */}
-        <button onClick={entrarNaChamada} disabled={entrando || !camOkEspera} style={{ width: '100%', padding: '15px', background: (!camOkEspera || entrando) ? '#1e3a2f' : '#16a34a', color: (!camOkEspera || entrando) ? '#475569' : 'white', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: (!camOkEspera || entrando) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          {entrando ? (
-            <>
-              <div style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', animation: 'spin 0.8s linear infinite' }}/>
-              Conectando...
-            </>
-          ) : (
-            <>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-              Estou pronto  entrar na sala
-            </>
-          )}
-        </button>
-
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#334155', margin: 0 }}>
-          {isMedico ? 'O paciente entrara quando clicar no link enviado' : 'O medico ja esta aguardando na sala'}
-        </p>
-      </div>
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; background: #0f172a; }
-      `}</style>
     </div>
   )
 
@@ -766,7 +644,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
           {/* Video local PiP  canto inferior direito */}
           {(tela === 'chamada' || entrando) && (
-            <div style={{ position: 'absolute', bottom: 72, right: 12, width: 'clamp(140px,24vw,200px)', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', border: '2px solid #1e293b', background: '#111', zIndex: 10 }}>
+            <div style={{ position: 'absolute', bottom: 72, right: 12, width: 'clamp(100px, 22vw, 160px)', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', border: '2px solid #1e293b', background: '#111', zIndex: 10 }}>
               <video ref={localRef} autoPlay playsInline muted
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
               {!camOn && (
@@ -790,63 +668,21 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           )}
 
           {/* Controles */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(transparent, rgba(5,10,25,0.95))', zIndex: 20 }}>
-            {/* Chat - canto esquerdo */}
-            <div style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)' }}>
-              <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }} title='Chat'
-                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? '#16a34a' : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>
-                {naoLidas > 0 && <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }}/>}
-              </button>
-            </div>
-            {/* Botoes centrais: Mic | Cam | Config | Encerrar */}
-            <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', display: 'flex', gap: 12 }}>
-              <button onClick={toggleMic} title={micOn ? 'Silenciar' : 'Ativar mic'}
-                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.18)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-                  {micOn ? <><path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/><path d='M19 10v2a7 7 0 01-14 0v-2'/><line x1='12' y1='19' x2='12' y2='23'/><line x1='8' y1='23' x2='16' y2='23'/></> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6'/><path d='M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23'/><line x1='12' y1='19' x2='12' y2='23'/><line x1='8' y1='23' x2='16' y2='23'/></>}
-                </svg>
-              </button>
-              <button onClick={toggleCam} title={camOn ? 'Desligar cam' : 'Ligar cam'}
-                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.18)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-                  {camOn ? <path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>}
-                </svg>
-              </button>
-              <button onClick={() => { setConfigAberto(o => !o); carregarDispositivos() }} title='Configuracoes'
-                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: configAberto ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z'/></svg>
-              </button>
-              <button onClick={encerrar} title='Encerrar'
-                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>
-              </button>
-            </div>
-            {/* Painel config */}
-            {configAberto && (
-              <div style={{ position: 'absolute', bottom: 88, left: '50%', transform: 'translateX(-50%)', background: '#1e293b', borderRadius: 12, border: '1px solid #334155', padding: 16, minWidth: 260, zIndex: 30 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <p style={{ color: 'white', fontWeight: 700, fontSize: 13, margin: 0 }}>Configuracoes</p>
-                  <button onClick={() => setConfigAberto(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}>x</button>
-                </div>
-                {audioInputs.length > 0 && (
-                  <div style={{ marginBottom: 10 }}>
-                    <p style={{ fontSize: 11, color: '#64748b', margin: '0 0 4px', textTransform: 'uppercase', fontWeight: 600 }}>Microfone</p>
-                    <select style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
-                      {audioInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Microfone'}</option>)}
-                    </select>
-                  </div>
-                )}
-                {videoInputs.length > 0 && (
-                  <div>
-                    <p style={{ fontSize: 11, color: '#64748b', margin: '0 0 4px', textTransform: 'uppercase', fontWeight: 600 }}>Camera</p>
-                    <select style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
-                      {videoInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Camera'}</option>)}
-                    </select>
-                  </div>
-                )}
-              </div>
-            )}
+          <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 12, zIndex: 20 }}>
+            <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? '#16a34a' : 'rgba(30,41,59,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>{naoLidas > 0 && <span style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }}/>}</button>
+            <button onClick={toggleMic} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(30,41,59,0.9)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                {micOn ? <><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></> : <><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></>}
+              </svg>
+            </button>
+            <button onClick={toggleCam} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(30,41,59,0.9)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                {camOn ? <path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/> : <><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8a2 2 0 012-2h3m3-3h6l2 3h4a2 2 0 012 2v9.34"/></>}
+              </svg>
+            </button>
+            <button onClick={encerrar} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1-.23 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.99c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.23 1L6.6 10.8z"/></svg>
+            </button>
           </div>
         </div>
 
