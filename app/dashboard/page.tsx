@@ -97,7 +97,7 @@ export default function Dashboard() {
   const maxDia = dados ? Math.max(...dados.porDia.map((d: any) => d.total), 1) : 1
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
       <Sidebar activeHref="/dashboard" />
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
@@ -152,7 +152,7 @@ export default function Dashboard() {
                     sub: 'diagnósticos únicos', cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe'
                   },
                 ].map(m => (
-                  <div key={m.label} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px' }}>
+                  <div key={m.label} style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, padding: '18px 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                       <p style={{ fontSize: 12, color: '#6b7280', margin: 0, fontWeight: 500 }}>{m.label}</p>
                       <div style={{ width: 32, height: 32, borderRadius: 8, background: m.bg, border: `1px solid ${m.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{m.icon}</div>
@@ -166,7 +166,7 @@ export default function Dashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 16 }}>
 
                 {/* Gráfico de barras — consultas por dia */}
-                <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '20px 24px' }}>
+                <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, padding: '20px 24px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Consultas por dia</p>
@@ -213,7 +213,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Próximos agendamentos */}
-                <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
                   <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Próximos agendamentos</p>
                     <a href="/pacientes" style={{ fontSize: 11, color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>Ver todos →</a>
@@ -242,7 +242,7 @@ export default function Dashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
                 {/* CIDs mais frequentes */}
-                <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
                   <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>CIDs mais frequentes</p>
                     <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>Diagnósticos registrados no período</p>
@@ -278,7 +278,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Últimas consultas */}
-                <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
                   <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Últimas consultas</p>
                     <a href="/historico" style={{ fontSize: 11, color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>Ver histórico →</a>

@@ -172,21 +172,21 @@ export default function Agenda() {
   const totalSemana = diasSemana.reduce((acc, d) => acc + getAgsDia(d).length, 0)
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
       <Sidebar activeHref="/agenda" />
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Header */}
         <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={() => setSemana(new Date())} style={{ fontSize: 12, fontWeight: 600, color: '#374151', background: 'white', border: '1px solid #e5e7eb', padding: '5px 12px', borderRadius: 7, cursor: 'pointer' }}>
+            <button onClick={() => setSemana(new Date())} style={{ fontSize: 12, fontWeight: 600, color: '#374151', background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', padding: '5px 12px', borderRadius: 7, cursor: 'pointer' }}>
               Hoje
             </button>
             <div style={{ display: 'flex', gap: 1 }}>
-              <button onClick={() => navegarSemana(-1)} style={{ width: 28, height: 28, border: '1px solid #e5e7eb', background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => navegarSemana(-1)} style={{ width: 28, height: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
               </button>
-              <button onClick={() => navegarSemana(1)} style={{ width: 28, height: 28, border: '1px solid #e5e7eb', borderLeft: 'none', background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => navegarSemana(1)} style={{ width: 28, height: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderLeft: 'none', background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
               </button>
             </div>
@@ -387,7 +387,7 @@ export default function Agenda() {
 
               {/* Status (só ao editar) */}
               {modal.ag && (
-                <div style={{ background: '#f9fafb', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: '#F9FAFC', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>Status atual: <strong style={{ color: '#111827' }}>{modal.ag.status}</strong></span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     {modal.ag.status !== 'confirmado' && (

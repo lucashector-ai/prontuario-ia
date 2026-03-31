@@ -82,7 +82,7 @@ export default function Teleconsulta() {
   const fmtData = (iso: string) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
       <Sidebar activeHref="/teleconsulta" />
       <main style={{ flex: 1, overflow: 'auto' }}>
 
@@ -125,7 +125,7 @@ export default function Teleconsulta() {
         {/* Salas ativas */}
         <div style={{ padding: '24px 32px' }}>
           {consultas.length === 0 ? (
-            <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '40px 24px', textAlign: 'center' }}>
+            <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, padding: '40px 24px', textAlign: 'center' }}>
               <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>Nenhuma sala ativa. Crie uma consulta acima.</p>
             </div>
           ) : (
@@ -135,7 +135,7 @@ export default function Teleconsulta() {
                 {consultas.map(c => {
                   const st = statusInfo(c.status)
                   return (
-                    <div key={c.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div key={c.id} style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
                       <div style={{ width: 40, height: 40, borderRadius: 10, background: c.status === 'em_andamento' ? '#ede9fb' : '#f9fafb', border: '1px solid ' + (c.status === 'em_andamento' ? '#d4c9f7' : '#e5e7eb'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.status === 'em_andamento' ? '#6043C1' : '#9ca3af'} strokeWidth="1.5"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                       </div>
@@ -147,7 +147,7 @@ export default function Teleconsulta() {
                         <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{c.pacientes?.nome ? c.pacientes.nome + '  ' : ''}{fmtData(c.criado_em)}</p>
                       </div>
                       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                        <button onClick={() => copiar(c.sala_id)} style={{ padding: '6px 11px', background: 'white', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 11, color: '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <button onClick={() => copiar(c.sala_id)} style={{ padding: '6px 11px', background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 7, fontSize: 11, color: '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                           Copiar link
                         </button>
