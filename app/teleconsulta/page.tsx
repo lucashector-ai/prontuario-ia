@@ -31,7 +31,7 @@ export default function Teleconsulta() {
     setCriandoAgora(true)
     const r = await fetch('/api/teleconsulta', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ medico_id: medico.id, titulo: 'Consulta agora · ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) })
+      body: JSON.stringify({ medico_id: medico.id, titulo: 'Consulta - ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) })
     })
     const d = await r.json()
     if (d.teleconsulta) {
@@ -57,7 +57,7 @@ export default function Teleconsulta() {
 
   const enviarWpp = async (consulta: any) => {
     const link = window.location.origin + '/sala/' + consulta.sala_id
-    const msg = 'Ola! Dr(a). ' + medico.nome + ' te convidou para uma teleconsulta.\n\nAcesse pelo link — nao precisa instalar nada:\n' + link
+    const msg = 'Ola! Dr(a). ' + medico.nome + ' te convidou para uma teleconsulta.\n\nAcesse pelo link  nao precisa instalar nada:\n' + link
     if (consulta.pacientes?.telefone) {
       await fetch('/api/whatsapp/enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telefone: consulta.pacientes.telefone, texto: msg, medico_id: medico.id }) })
       alert('Enviado por WhatsApp!')
@@ -88,7 +88,7 @@ export default function Teleconsulta() {
         {/* Hero */}
         <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '32px 32px 28px' }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#111827', margin: '0 0 6px', letterSpacing: '-0.4px' }}>Teleconsulta</h1>
-          <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 28px' }}>Video em tempo real — o paciente entra pelo link, sem instalar nada</p>
+          <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 28px' }}>Video em tempo real  o paciente entra pelo link, sem instalar nada</p>
 
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <button onClick={criarAgora} disabled={criandoAgora} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 24px', background: '#16a34a', color: 'white', border: 'none', borderRadius: 14, cursor: criandoAgora ? 'not-allowed' : 'pointer', opacity: criandoAgora ? 0.7 : 1, minWidth: 240 }}>
@@ -143,7 +143,7 @@ export default function Teleconsulta() {
                           <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.titulo}</p>
                           <span style={{ fontSize: 10, fontWeight: 700, color: st.cor, background: st.bg, padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}>{st.txt}</span>
                         </div>
-                        <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{c.pacientes?.nome ? c.pacientes.nome + ' · ' : ''}{fmtData(c.criado_em)}</p>
+                        <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{c.pacientes?.nome ? c.pacientes.nome + '  ' : ''}{fmtData(c.criado_em)}</p>
                       </div>
                       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                         <button onClick={() => copiar(c.sala_id)} style={{ padding: '6px 11px', background: 'white', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 11, color: '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>

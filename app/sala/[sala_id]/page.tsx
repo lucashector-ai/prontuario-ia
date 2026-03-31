@@ -521,6 +521,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     }
   }, [tela])
 
+  useEffect(() => {
+    if (tela === 'precall') carregarDispositivos()
+  }, [tela])
+
   if (tela === 'carregando') return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
       <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid #16a34a', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
