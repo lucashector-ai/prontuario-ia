@@ -420,7 +420,7 @@ export default function Agenda() {
               {salaLink && (
                 <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                  <span style={{ fontSize: 11, color: '#4e35a3', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{salaLink}</span>
+                  <span style={{ fontSize: 11, color: '#4e35a3', flex: 1, overflow: 'hidden', background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{salaLink}</span>
                   <button type="button" onClick={() => { navigator.clipboard.writeText(salaLink); window.open('/sala/' + salaId, '_blank') }} style={{ fontSize: 11, color: '#6043C1', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>Copiar e abrir</button>
                 </div>
               )}

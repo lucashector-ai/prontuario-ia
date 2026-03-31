@@ -259,9 +259,9 @@ REGRAS:
   })
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
       <Sidebar activeHref="/whatsapp" />
-      <main style={{ flex: 1, display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
+      <main style={{ flex: 1, display: 'flex', overflow: 'hidden', flexDirection: 'column', padding: '16px 16px 16px 0' }}>
 
         {/* Header */}
         <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 24px', flexShrink: 0 }}>
@@ -290,9 +290,9 @@ REGRAS:
 
         {/* ABA CONVERSAS */}
         {aba === 'conversas' && (
-          <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden', gap: 16 }}>
             {/* Lista conversas */}
-            <div style={{ width: 300, background: 'white', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+            <div style={{ width: 300, background: 'white', borderRight: 'none', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
               <div style={{ padding: '10px 12px', borderBottom: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, padding: '7px 10px', fontSize: 12, borderRadius: 7, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', background: '#f9fafb', outline: 'none' }} placeholder="Buscar..."/>
