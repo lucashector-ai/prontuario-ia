@@ -590,8 +590,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 
-  if (tela === 'encerrado') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', flexDirection: 'column', gap: 20 }}>
       <div style={{ width: 64, height: 64, borderRadius: 16, background: '#14532d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
@@ -636,8 +634,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     </div>
   )
 
-  if (tela === 'encerrado') return (
-    <div style={{ minHeight: '100dvh', background: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
       <div style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Header */}
         <div style={{ textAlign: 'center' }}>
