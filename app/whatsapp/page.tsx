@@ -103,7 +103,7 @@ REGRAS:
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [medico]), background: '#F9FAFC' }>
+  }, [medico])
 
   useEffect(() => { if (ativa) carregarMsgs(ativa.id) }, [ativa])
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [mensagens])
