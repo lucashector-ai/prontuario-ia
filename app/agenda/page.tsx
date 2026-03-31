@@ -172,10 +172,10 @@ export default function Agenda() {
   const totalSemana = diasSemana.reduce((acc, d) => acc + getAgsDia(d).length, 0)
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'white', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
       <Sidebar activeHref="/agenda" />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' , padding: 16 }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' , padding: 16 }>, background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }>
         {/* Header */}
         <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

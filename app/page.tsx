@@ -104,10 +104,10 @@ export default function Home() {
   if (!medico) return null
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f9fafb' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F9FAFC' }}>
       <Sidebar activeHref="/" />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '16px 16px 16px 0' }}>
         {/* Top header */}
         <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -134,7 +134,7 @@ export default function Home() {
         <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
 
           {/* Left  -  Gravacao + Transcricao */}
-          <div style={{ borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>
+          <div style={{ borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }>, borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }>
 
             {/* Gravacao section */}
             <div style={{ padding: '28px 32px', borderBottom: 'none' }}>
