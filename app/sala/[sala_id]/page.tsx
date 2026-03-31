@@ -13,7 +13,7 @@ const ICE = { iceServers: [
   { urls: 'stun:stun2.l.google.com:19302' },
 ]}
 
-type Tela = 'carregando' | 'espera' | 'chamada' | 'encerrado' | 'erro'
+type Tela = 'carregando' | 'precall' | 'espera' | 'chamada' | 'encerrado' | 'encerrada_paciente' | 'erro'
 
 export default function Sala({ params }: { params: { sala_id: string } }) {
   const { sala_id } = params
