@@ -186,7 +186,7 @@ export default function Dashboard() {
                           {d.total > 0 && (
                             <span style={{ fontSize: 9, color: '#6b7280', fontWeight: 600 }}>{d.total}</span>
                           )}
-                          <div style={{ width: '100%', height: `${altura}px`, borderRadius: '4px 4px 0 0', background: isToday ? '#6043C1' : d.total > 0 ? '#86efac' : '#f3f4f6', transition: 'height 0.3s' }}/>
+                          <div style={{ width: '100%', height: `${altura}px`, borderRadius: '4px 4px 0 0', background: isToday ? '#6043C1' : d.total > 0 ? '#b9a9ef' : '#f3f4f6', transition: 'height 0.3s' }}/>
                           {i % 3 === 0 && (
                             <span style={{ fontSize: 9, color: '#9ca3af', whiteSpace: 'nowrap', transform: 'rotate(-30deg)', transformOrigin: 'center' }}>
                               {fmt(d.dia)}
@@ -202,7 +202,7 @@ export default function Dashboard() {
                       <span style={{ fontSize: 11, color: '#6b7280' }}>Hoje</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: 2, background: '#86efac' }}/>
+                      <div style={{ width: 10, height: 10, borderRadius: 2, background: '#b9a9ef' }}/>
                       <span style={{ fontSize: 11, color: '#6b7280' }}>Com consultas</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

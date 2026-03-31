@@ -118,7 +118,7 @@ export default function Home() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {consultaSalva && (
-              <span style={{ fontSize: 12, color: '#6043C1', background: '#f0fdf4', border: '1px solid #ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
+              <span style={{ fontSize: 12, color: '#6043C1', background: '#F9FAFC', border: '1px solid #ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
                  Salvo
               </span>
             )}
@@ -309,7 +309,7 @@ export default function Home() {
                   )}
                   {aba === 'receita' && !receita && (
                     <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-                      <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', border: '1px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, background: '#F9FAFC', border: '1px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                       </div>
                       <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Gerar receita medica</p>
@@ -325,7 +325,7 @@ export default function Home() {
 
             {(estado === 'idle' || estado === 'gravando') && !prontuario && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 48, background: 'white' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', border: '1.5px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#F9FAFC', border: '1.5px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
                     <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
@@ -338,7 +338,7 @@ export default function Home() {
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {['Prontuario SOAP', 'CID-10 automatico', 'Receita medica', 'Salvo no banco'].map(f => (
-                    <span key={f} style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', border: '1px solid #ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{f}</span>
+                    <span key={f} style={{ fontSize: 11, color: '#6043C1', background: '#F9FAFC', border: '1px solid #ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{f}</span>
                   ))}
                 </div>
               </div>

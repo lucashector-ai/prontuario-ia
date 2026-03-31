@@ -302,7 +302,7 @@ REGRAS:
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {(['todas','ia','humano'] as const).map(f => (
-                    <button key={f} onClick={() => setFiltroModo(f)} style={{ flex: 1, padding: '4px 0', fontSize: 10, fontWeight: filtroModo === f ? 700 : 400, borderRadius: 5, border: '1px solid ' + (filtroModo === f ? '#6043C1' : '#e5e7eb'), background: filtroModo === f ? '#f0fdf4' : 'white', color: filtroModo === f ? '#6043C1' : '#9ca3af', cursor: 'pointer' }}>
+                    <button key={f} onClick={() => setFiltroModo(f)} style={{ flex: 1, padding: '4px 0', fontSize: 10, fontWeight: filtroModo === f ? 700 : 400, borderRadius: 5, border: '1px solid ' + (filtroModo === f ? '#6043C1' : '#e5e7eb'), background: filtroModo === f ? '#F9FAFC' : 'white', color: filtroModo === f ? '#6043C1' : '#9ca3af', cursor: 'pointer' }}>
                       {f === 'todas' ? 'Todas' : f === 'ia' ? '🤖 IA' : '👤 Humano'}
                     </button>
                   ))}
@@ -311,7 +311,7 @@ REGRAS:
 
               {/* Modal nova conversa */}
               {novaConversa && (
-                <div style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', background: '#f0fdf4' }}>
+                <div style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', background: '#F9FAFC' }}>
                   <p style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', margin: '0 0 8px' }}>Nova conversa</p>
                   <input value={novoTel} onChange={e => setNovoTel(e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 12, borderRadius: 7, border: '1px solid #d4c9f7', marginBottom: 6, outline: 'none' }} placeholder="Numero (ex: 5511999887766)"/>
                   <input value={novaMsgTexto} onChange={e => setNovaMsgTexto(e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 12, borderRadius: 7, border: '1px solid #d4c9f7', marginBottom: 8, outline: 'none' }} placeholder="Primeira mensagem..."/>
@@ -329,7 +329,7 @@ REGRAS:
                     <p style={{ fontSize: 11, color: '#d1d5db', margin: 0 }}>Use + para iniciar uma nova</p>
                   </div>
                 ) : conversasFiltradas.map(c => (
-                  <div key={c.id} onClick={() => setAtiva(c)} style={{ padding: '9px 12px', borderBottom: '1px solid #f9fafb', cursor: 'pointer', background: ativa?.id === c.id ? '#f0fdf4' : 'white', borderLeft: ativa?.id === c.id ? '3px solid #6043C1' : '3px solid transparent' }}>
+                  <div key={c.id} onClick={() => setAtiva(c)} style={{ padding: '9px 12px', borderBottom: '1px solid #f9fafb', cursor: 'pointer', background: ativa?.id === c.id ? '#F9FAFC' : 'white', borderLeft: ativa?.id === c.id ? '3px solid #6043C1' : '3px solid transparent' }}>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <div style={{ position: 'relative', flexShrink: 0 }}>
                         <div style={{ width: 34, height: 34, borderRadius: '50%', background: ativa?.id === c.id ? '#ede9fb' : '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: ativa?.id === c.id ? '#6043C1' : '#6b7280' }}>{ini(nomeCv(c))}</div>
@@ -370,13 +370,13 @@ REGRAS:
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    {ativa.paciente_id && <a href={'/pacientes/' + ativa.paciente_id} style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', border: '1px solid #d4c9f7', padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 600 }}>Ver ficha</a>}
+                    {ativa.paciente_id && <a href={'/pacientes/' + ativa.paciente_id} style={{ fontSize: 11, color: '#6043C1', background: '#F9FAFC', border: '1px solid #d4c9f7', padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 600 }}>Ver ficha</a>}
                     {ativa.modo === 'ia' ? (
                       <button onClick={assumirAtendimento} disabled={assumindo} style={{ fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', padding: '4px 12px', borderRadius: 6, cursor: 'pointer' }}>
                         {assumindo ? 'Assumindo...' : '👤 Assumir atendimento'}
                       </button>
                     ) : (
-                      <button onClick={devolverParaIA} style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', background: '#f0fdf4', border: '1px solid #d4c9f7', padding: '4px 12px', borderRadius: 6, cursor: 'pointer' }}>
+                      <button onClick={devolverParaIA} style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', background: '#F9FAFC', border: '1px solid #d4c9f7', padding: '4px 12px', borderRadius: 6, cursor: 'pointer' }}>
                         🤖 Devolver para IA
                       </button>
                     )}
@@ -430,7 +430,7 @@ REGRAS:
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="#6043C1"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 </div>
                 <p style={{ fontSize: 14, fontWeight: 600, color: '#374151', margin: 0 }}>Selecione uma conversa</p>
-                <button onClick={() => setNovaConversa(true)} style={{ fontSize: 12, color: '#6043C1', background: '#f0fdf4', border: '1px solid #d4c9f7', padding: '7px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>+ Nova conversa</button>
+                <button onClick={() => setNovaConversa(true)} style={{ fontSize: 12, color: '#6043C1', background: '#F9FAFC', border: '1px solid #d4c9f7', padding: '7px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>+ Nova conversa</button>
               </div>
             )}
           </div>
@@ -457,7 +457,7 @@ REGRAS:
                   <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Instrucoes da Sofia</label>
                   <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 10px' }}>Define personalidade, fluxo e regras. Quanto mais detalhado, melhor.</p>
                   <textarea value={sofiaPrompt || PROMPT_DEFAULT} onChange={e => setSofiaPrompt(e.target.value)} style={{ width: '100%', minHeight: 360, padding: '12px', fontSize: 12, borderRadius: 9, border: '1.5px solid #e5e7eb', resize: 'vertical', lineHeight: 1.7, fontFamily: 'monospace' }}/>
-                  <div style={{ background: '#f0fdf4', border: '1px solid #d4c9f7', borderRadius: 9, padding: '10px 14px', margin: '14px 0' }}>
+                  <div style={{ background: '#F9FAFC', border: '1px solid #d4c9f7', borderRadius: 9, padding: '10px 14px', margin: '14px 0' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                       {['Responde 24h automaticamente','Agenda consultas no sistema','Envia horarios disponiveis','Reconhece pacientes cadastrados','Escalona para humano quando pedido','Segue fluxo de menu configurado'].map(c => (
                         <div key={c} style={{ display: 'flex', gap: 6 }}><span style={{ color: '#6043C1' }}>✓</span><span style={{ fontSize: 11, color: '#374151' }}>{c}</span></div>
@@ -522,7 +522,7 @@ REGRAS:
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Senha *</label>
                     <input required type="password" value={novoAtendente.senha} onChange={e => setNovoAtendente(a => ({ ...a, senha: e.target.value }))} style={{ width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 7, border: '1.5px solid #e5e7eb' }} placeholder="Senha de acesso"/>
                   </div>
-                  {atMsg && <div style={{ background: atMsg.tipo === 'ok' ? '#f0fdf4' : '#fef2f2', border: '1px solid ' + (atMsg.tipo === 'ok' ? '#d4c9f7' : '#fecaca'), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: atMsg.tipo === 'ok' ? '#6043C1' : '#dc2626', margin: 0 }}>{atMsg.texto}</p></div>}
+                  {atMsg && <div style={{ background: atMsg.tipo === 'ok' ? '#F9FAFC' : '#fef2f2', border: '1px solid ' + (atMsg.tipo === 'ok' ? '#d4c9f7' : '#fecaca'), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: atMsg.tipo === 'ok' ? '#6043C1' : '#dc2626', margin: 0 }}>{atMsg.texto}</p></div>}
                   <button type="submit" disabled={salvandoAt} style={{ padding: '10px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvandoAt ? 'Adicionando...' : 'Adicionar atendente'}</button>
                 </form>
               </div>
@@ -535,7 +535,7 @@ REGRAS:
           <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
             <div style={{ maxWidth: 680 }}>
               {config && (
-                <div style={{ background: '#f0fdf4', border: '1px solid #d4c9f7', borderRadius: 12, padding: '12px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: '#F9FAFC', border: '1px solid #d4c9f7', borderRadius: 12, padding: '12px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 30, height: 30, borderRadius: 7, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -567,7 +567,7 @@ REGRAS:
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Nome da clinica</label>
                     <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }} placeholder="Clinica Dr. Silva"/>
                   </div>
-                  {cfgMsg && <div style={{ background: cfgMsg.tipo === 'ok' ? '#f0fdf4' : '#fef2f2', border: '1px solid ' + (cfgMsg.tipo === 'ok' ? '#d4c9f7' : '#fecaca'), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: cfgMsg.tipo === 'ok' ? '#6043C1' : '#dc2626', margin: 0 }}>{cfgMsg.texto}</p></div>}
+                  {cfgMsg && <div style={{ background: cfgMsg.tipo === 'ok' ? '#F9FAFC' : '#fef2f2', border: '1px solid ' + (cfgMsg.tipo === 'ok' ? '#d4c9f7' : '#fecaca'), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: cfgMsg.tipo === 'ok' ? '#6043C1' : '#dc2626', margin: 0 }}>{cfgMsg.texto}</p></div>}
                   <button type="submit" disabled={salvando} style={{ padding: '10px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvando ? 'Validando...' : config ? 'Atualizar' : 'Conectar WhatsApp'}</button>
                 </form>
               </div>

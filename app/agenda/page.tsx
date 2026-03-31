@@ -252,7 +252,7 @@ export default function Agenda() {
               {/* Coluna de horas */}
               <div style={{ borderRight: '1px solid #e5e7eb', background: 'white', position: 'sticky', left: 0, zIndex: 10 }}>
                 {HORAS.map(h => (
-                  <div key={h} style={{ height: 64, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', paddingRight: 8, paddingTop: 4, borderBottom: '1px solid #f3f4f6' }}>
+                  <div key={h} style={{ height: 64, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', paddingRight: 8, paddingTop: 4, borderBottom: 'none' }}>
                     <span style={{ fontSize: 10, color: '#9ca3af', fontWeight: 600 }}>{h}:00</span>
                   </div>
                 ))}
@@ -270,7 +270,7 @@ export default function Agenda() {
                     return (
                       <div key={h}
                         onClick={() => { const d = new Date(dia); d.setHours(h, 0, 0, 0); abrirModal(d) }}
-                        style={{ height: 64, borderBottom: '1px solid #f3f4f6', position: 'relative', cursor: 'pointer', transition: 'background 0.1s' }}
+                        style={{ height: 64, borderBottom: 'none', position: 'relative', cursor: 'pointer', transition: 'background 0.1s' }}
                         onMouseOver={e => { if (agendamentosSlot.length === 0) e.currentTarget.style.background = '#f9fafb' }}
                         onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}>
                         {agendamentosSlot.map((ag, ai) => {
@@ -312,7 +312,7 @@ export default function Agenda() {
           onClick={e => { if (e.target === e.currentTarget) setModal({ open: false }) }}>
           <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
             {/* Header modal */}
-            <div style={{ padding: '18px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ padding: '18px 24px', borderBottom: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f3f0fd', border: '1px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
