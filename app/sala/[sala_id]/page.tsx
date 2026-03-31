@@ -25,6 +25,9 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [chatAberto, setChatAberto] = useState(false)
   const [arquivoAberto, setArquivoAberto] = useState<{url:string,nome:string,tipo:string}|null>(null)
   const [configAberto, setConfigAberto] = useState(false)
+  const [transcricaoFinal, setTranscricaoFinal] = useState('')
+  const [prontuarioFinal, setProntuarioFinal] = useState<any>(null)
+  const [historicoMsgs, setHistoricoMsgs] = useState<any[]>([])
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([])
   const [videoInputs, setVideoInputs] = useState<MediaDeviceInfo[]>([])
   const [audioOutputs, setAudioOutputs] = useState<MediaDeviceInfo[]>([])
@@ -112,16 +115,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     }
   }, [tela])
 
-  // PiP: conecta stream local ao video da camera
-  useEffect(() => {
-    const v = localVideoRef.current
-    const stream = streamRef.current
-    if (tela === 'chamada' && v && stream && !v.srcObject) {
-      v.srcObject = stream
-    }
-  }, [tela])
-
   const carregarSala = async () => {
+    document.title = 'Consulta - ' + sala_id.slice(-4).toUpperCase() + ' | MedIA'
     const { data } = await sb.from('teleconsultas').select('*').eq('sala_id', sala_id).single()
     if (!data) { setErro('Sala nao encontrada ou link expirado.'); setTela('erro'); return }
     if (data.status === 'encerrada') {
@@ -271,10 +266,15 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       .on('broadcast', { event: 'encerrar' }, () => {
         tocarSom('saida')
-        encerrarLocal()
         if (papelRef.current === 'paciente') {
-        clearInterval(timerRef.current as any)
-        setTimer(0)
+          clearInterval(timerRef.current as any)
+          setTimer(0)
+          setTela('encerrada_paciente')
+          setTimeout(() => { try { window.close() } catch {} window.location.href = '/login' }, 4000)
+        } else {
+          encerrarLocal()
+        }
+        if (false) {
         setTela('encerrada_paciente')
         setTimeout(() => { try { window.close() } catch {} window.location.href = '/login' }, 4000)
       }
@@ -420,6 +420,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       if (d.texto) {
         const nova = transcricao ? transcricao + ' ' + d.texto : d.texto
         setTranscricao(nova)
+      setTranscricaoFinal(t)
         return nova
       }
     } catch {}
@@ -570,6 +571,68 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   )
 
   if (tela === 'encerrado') return (
+    <div style={{ minHeight: '100dvh', background: '#0f172a', overflowY: 'auto' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+            <svg width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><polyline points='20 6 9 17 4 12'/></svg>
+          </div>
+          <h1 style={{ color: 'white', fontSize: 22, fontWeight: 700, margin: '0 0 4px' }}>Consulta encerrada</h1>
+          <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>Consulta - {sala_id.slice(-4).toUpperCase()}</p>
+        </div>
+
+        {/* Transcricao */}
+        {transcricaoFinal && (
+          <div style={{ background: '#1e293b', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid #334155' }}>
+            <h2 style={{ color: '#94a3b8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Transcricao da consulta</h2>
+            <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{transcricaoFinal}</p>
+          </div>
+        )}
+
+        {/* Prontuario gerado pela IA */}
+        {prontuarioFinal && (
+          <div style={{ background: '#1e293b', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid #334155' }}>
+            <h2 style={{ color: '#94a3b8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Prontuario gerado</h2>
+            {['subjetivo','objetivo','avaliacao','plano'].map(k => prontuarioFinal[k] && (
+              <div key={k} style={{ marginBottom: 12 }}>
+                <p style={{ color: '#60a5fa', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', margin: '0 0 4px' }}>{k}</p>
+                <p style={{ color: '#e2e8f0', fontSize: 14, margin: 0 }}>{prontuarioFinal[k]}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Historico de mensagens */}
+        {historicoMsgs.length > 0 && (
+          <div style={{ background: '#1e293b', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid #334155' }}>
+            <h2 style={{ color: '#94a3b8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Historico do chat ({historicoMsgs.length} mensagens)</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {historicoMsgs.map((m: any, i: number) => (
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: m.de === 'medico' ? '#60a5fa' : '#34d399', minWidth: 60 }}>{m.de}</span>
+                  <span style={{ fontSize: 13, color: '#cbd5e1' }}>{m.msg}</span>
+                  <span style={{ fontSize: 10, color: '#475569', marginLeft: 'auto' }}>{m.hora}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Acoes */}
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button onClick={() => window.location.href = '/historico'}
+            style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            Ver historico completo
+          </button>
+          <button onClick={() => window.location.href = '/teleconsulta'}
+            style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #334155', background: 'transparent', color: '#94a3b8', fontSize: 14, cursor: 'pointer' }}>
+            Nova consulta
+          </button>
+        </div>
+      </div>
+    </div>
+  ) return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', flexDirection: 'column', gap: 20 }}>
       <div style={{ width: 64, height: 64, borderRadius: 16, background: '#14532d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -736,7 +799,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             </div>
           )}
           {/* Camera local PiP */}
-          <div style={{ position: 'absolute', bottom: 84, right: 12, width: 'clamp(80px,20vw,140px)', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.2)', zIndex: 15, background: '#000' }}>
+          <div style={{ position: 'absolute', bottom: 84, right: 12, width: 'clamp(120px,25vw,200px)', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.2)', zIndex: 15, background: '#000' }}>
             <video ref={localVideoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
           </div>
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 'clamp(64px,10vh,80px)', background: 'linear-gradient(transparent, rgba(5,10,25,0.97))', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, padding: '0 16px' }}>
