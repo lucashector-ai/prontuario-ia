@@ -52,8 +52,13 @@ async function enviarWpp(para: string, texto: string, token: string, phoneId: st
   } catch (e) { console.error('Erro WPP:', e); throw e }
 }
 
+async function normalizarTelefone(tel: string): string {
+  return tel.replace(/[^0-9]/g, '')
+}
+
 async function getOuCriarConversa(telefone: string, nome: string, medicoId: string | null) {
-  let query = supabase.from('whatsapp_conversas').select('*').eq('telefone', telefone)
+  const tel = normalizarTelefone(telefone)
+  let query = supabase.from('whatsapp_conversas').select('*').eq('telefone', tel)
   if (medicoId) query = query.eq('medico_id', medicoId)
   const { data: existente } = await query.maybeSingle()
 
@@ -68,7 +73,7 @@ async function getOuCriarConversa(telefone: string, nome: string, medicoId: stri
 
   const precisaOnboarding = !paciente
   const { data: nova } = await supabase.from('whatsapp_conversas').insert({
-    telefone, nome_contato: nome || telefone,
+    telefone: tel, nome_contato: nome || tel,
     paciente_id: paciente?.id, medico_id: medicoId,
     status: 'ativa', modo: 'ia',
     onboarding_completo: !precisaOnboarding,
