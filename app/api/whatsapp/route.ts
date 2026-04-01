@@ -193,7 +193,7 @@ async function processarOnboarding(conversa: any, resposta: string, medicoId: st
   }).eq('id', conversa.id)
 
   const nome = dados.nome?.split(' ')[0] || 'paciente'
-  return `Perfeito, ${nome}! Seus dados foram cadastrados com sucesso ✅\n\nAgora posso te ajudar muito melhor! O que voce precisa?\n\n*1* - Agendar consulta\n*2* - Tirar uma duvida\n*3* - Falar com atendente`
+  return `Perfeito, ${nome}! Seus dados foram cadastrados com sucesso \n\nAgora posso te ajudar muito melhor! O que voce precisa?\n\n*1* - Agendar consulta\n*2* - Tirar uma duvida\n*3* - Falar com atendente`
 }
 
 async function processarIA(mensagem: string, historico: any[], contexto: any, config: any) {
@@ -336,6 +336,17 @@ export async function POST(req: NextRequest) {
 
       if (temRisco && conversa.paciente_id) {
         try { await supabase.from('whatsapp_alertas').insert({ conversa_id: conversa.id, paciente_id: conversa.paciente_id, medico_id: medicoId, mensagem: textoMensagem, nivel: 'atencao', lido: false }) } catch (_e) {}
+      }
+
+      // Captura resposta de NPS (numero de 0 a 10)
+      const notaNps = textoMensagem.trim().match(/^([0-9]|10)$/)
+      if (notaNps && conversa.paciente_id) {
+        try {
+          await supabase.from('whatsapp_nps').insert({
+            conversa_id: conversa.id, paciente_id: conversa.paciente_id,
+            medico_id: medicoId, nota: parseInt(notaNps[1])
+          })
+        } catch (_e) {}
       }
 
       await salvarEEnviar(conversa.id, resposta, telefone, token, phoneId, { ia: true, agendou: !!agendarData })
