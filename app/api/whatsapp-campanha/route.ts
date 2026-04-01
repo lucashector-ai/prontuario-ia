@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       medico_id, mensagem, filtro: filtro || {},
       total_enviado: enviados, total_destino: conversas.length,
       status: 'concluida'
-    }).then(() => {}).catch(() => {})
+    })
 
     return NextResponse.json({ enviados, total: conversas.length, erros })
   } catch (e: any) {
