@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-console.log('SUPABASE_KEY_TYPE:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON')
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   supabaseKey
@@ -68,14 +66,14 @@ async function getOuCriarConversa(telefone: string, nome: string, medicoId: stri
     ? await supabase.from('pacientes').select('id').eq('telefone', telefone).eq('medico_id', medicoId).maybeSingle()
     : { data: null }
 
-  const isNovo = !paciente
+  const precisaOnboarding = !paciente
   const { data: nova } = await supabase.from('whatsapp_conversas').insert({
     telefone, nome_contato: nome || telefone,
     paciente_id: paciente?.id, medico_id: medicoId,
     status: 'ativa', modo: 'ia',
-    onboarding_completo: !isNovo,
-    onboarding_step: isNovo ? 'nome' : null,
-    onboarding_dados: isNovo ? {} : null,
+    onboarding_completo: !precisaOnboarding,
+    onboarding_step: precisaOnboarding ? 'nome' : null,
+    onboarding_dados: precisaOnboarding ? {} : null,
   }).select().single()
   return nova
 }
@@ -260,11 +258,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    console.log('WPP_PAYLOAD:', JSON.stringify(body).substring(0, 500))
     const value = body.entry?.[0]?.changes?.[0]?.value
-    if (value?.statuses) { console.log('WPP_STATUS descartado'); return NextResponse.json({ ok: true }) }
     const messages = value?.messages
-    if (!messages?.length) { console.log('WPP_SEM_MESSAGES value:', JSON.stringify(value).substring(0,300)); return NextResponse.json({ ok: true }) }
 
     const phoneNumberId = value?.metadata?.phone_number_id
     const config = await getConfig(phoneNumberId)
@@ -272,7 +267,6 @@ export async function POST(req: NextRequest) {
     const phoneId = config?.phone_number_id || phoneNumberId || process.env.WHATSAPP_PHONE_ID || ''
     const medicoId = config?.medico_id || null
 
-    console.log('WPP_MESSAGES count:', messages.length, 'tipos:', messages.map((m:any)=>m.type))
     for (const msg of messages) {
       const telefone = msg.from
       const nomeContato = value.contacts?.[0]?.profile?.name || telefone
