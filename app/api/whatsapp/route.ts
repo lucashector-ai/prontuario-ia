@@ -335,10 +335,7 @@ export async function POST(req: NextRequest) {
       if (humano) await supabase.from('whatsapp_conversas').update({ modo: 'humano' }).eq('id', conversa.id)
 
       if (temRisco && conversa.paciente_id) {
-        await supabase.from('whatsapp_alertas').insert({
-          conversa_id: conversa.id, paciente_id: conversa.paciente_id,
-          medico_id: medicoId, mensagem: textoMensagem, nivel: 'atencao', lido: false,
-        }).then(() => {}).catch((_e: unknown) => {})
+        try { await supabase.from('whatsapp_alertas').insert({ conversa_id: conversa.id, paciente_id: conversa.paciente_id, medico_id: medicoId, mensagem: textoMensagem, nivel: 'atencao', lido: false }) } catch (_e) {}
       }
 
       await salvarEEnviar(conversa.id, resposta, telefone, token, phoneId, { ia: true, agendou: !!agendarData })
