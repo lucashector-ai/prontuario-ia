@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
-type Aba = 'conversas' | 'sofia' | 'equipe' | 'alertas' | 'campanha' | 'relatorio' | 'configuracao'
+type Aba = 'conversas' | 'sofia' | 'equipe' | 'alertas' | 'campanha' | 'relatorio' | 'aderencia' | 'agenda' | 'configuracao'
 
 export default function WhatsApp() {
   const router = useRouter()
@@ -18,6 +18,10 @@ export default function WhatsApp() {
   const [campanhaEnviando, setCampanhaEnviando] = useState(false)
   const [relatorio, setRelatorio] = useState<any>(null)
   const [relatorioCarregando, setRelatorioCarregando] = useState(false)
+  const [aderencias, setAderencias] = useState<any[]>([])
+  const [aderenciaCarregando, setAderenciaCarregando] = useState(false)
+  const [agenda24h, setAgenda24h] = useState<any[]>([])
+  const [confirmacaoEnviando, setConfirmacaoEnviando] = useState(false)
   const [usuario, setUsuario] = useState<any>(null) // medico ou atendente logado
   const [aba, setAba] = useState<Aba>('conversas')
 
@@ -768,6 +772,119 @@ REGRAS:
                   <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Relatorio semanal com IA</p>
                   <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Clique em "Gerar relatorio" para ver o resumo da semana</p>
                 </div>
+              )}
+            </div>
+          )}
+
+
+          {aba === 'aderencia' && (
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F9FAFC' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Score de Aderencia</h2>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Acompanhamento do protocolo por paciente</p>
+                </div>
+                <button onClick={async () => {
+                  setAderenciaCarregando(true)
+                  const r = await fetch('/api/whatsapp-aderencia?medico_id=' + medico?.id)
+                  const d = await r.json()
+                  setAderencias(d.aderencia || [])
+                  setAderenciaCarregando(false)
+                }} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                  {aderenciaCarregando ? 'Carregando...' : 'Carregar scores'}
+                </button>
+              </div>
+
+              {aderencias.length === 0 ? (
+                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                  <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Score de aderencia</p>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Clique em "Carregar scores" para ver o ranking de aderencia dos pacientes</p>
+                </div>
+              ) : (
+                aderencias.map((a: any) => {
+                  const cor = a.nivel === 'alto' ? '#16a34a' : a.nivel === 'medio' ? '#d97706' : '#dc2626'
+                  const bgCor = a.nivel === 'alto' ? '#f0fdf4' : a.nivel === 'medio' ? '#fffbeb' : '#fef2f2'
+                  return (
+                    <div key={a.paciente_id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16, marginBottom: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>{a.pacientes?.nome || a.paciente}</p>
+                          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Presenca: {a.taxa_presenca}% | Ultimo contato: {a.dias_ultimo_contato}d atras</p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <p style={{ fontSize: 24, fontWeight: 800, color: cor, margin: '0 0 2px' }}>{a.score}</p>
+                          <span style={{ fontSize: 11, fontWeight: 600, background: bgCor, color: cor, padding: '2px 8px', borderRadius: 20 }}>{a.nivel}</span>
+                        </div>
+                      </div>
+                      <div style={{ background: '#f3f4f6', borderRadius: 4, height: 6, marginBottom: 10 }}>
+                        <div style={{ background: cor, borderRadius: 4, height: 6, width: a.score + '%', transition: 'width 0.5s' }} />
+                      </div>
+                      {a.recomendacao && (
+                        <p style={{ fontSize: 12, color: '#374151', background: '#f9fafb', padding: '8px 12px', borderRadius: 8, margin: 0 }}>{a.recomendacao}</p>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          )}
+
+          {aba === 'agenda' && (
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F9FAFC' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Confirmacoes pendentes</h2>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Consultas nas proximas 48h aguardando confirmacao</p>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={async () => {
+                    const r = await fetch('/api/whatsapp-confirmacao?medico_id=' + medico?.id)
+                    const d = await r.json()
+                    setAgenda24h(d.agendamentos || [])
+                  }} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                    Ver pendentes
+                  </button>
+                  <button
+                    disabled={confirmacaoEnviando}
+                    onClick={async () => {
+                      setConfirmacaoEnviando(true)
+                      const r = await fetch('/api/whatsapp-confirmacao', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ medico_id: medico?.id }) })
+                      const d = await r.json()
+                      alert('Confirmacoes enviadas para ' + d.enviados + ' pacientes!')
+                      setConfirmacaoEnviando(false)
+                    }}
+                    style={{ fontSize: 12, fontWeight: 600, color: 'white', background: confirmacaoEnviando ? '#9ca3af' : '#6043C1', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: confirmacaoEnviando ? 'not-allowed' : 'pointer' }}>
+                    {confirmacaoEnviando ? 'Enviando...' : 'Enviar confirmacoes'}
+                  </button>
+                </div>
+              </div>
+
+              {agenda24h.length === 0 ? (
+                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                  <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Nenhuma consulta pendente</p>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Clique em "Ver pendentes" para carregar os agendamentos</p>
+                </div>
+              ) : (
+                agenda24h.map((a: any) => {
+                  const statusCor = a.status === 'confirmacao_enviada' ? '#d97706' : '#6043C1'
+                  const statusBg = a.status === 'confirmacao_enviada' ? '#fffbeb' : '#ede9fb'
+                  return (
+                    <div key={a.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16, marginBottom: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>{(a.pacientes as any)?.nome || 'Paciente'}</p>
+                          <p style={{ fontSize: 13, color: '#374151', margin: '0 0 2px' }}>{a.motivo}</p>
+                          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{new Date(a.data_hora).toLocaleString('pt-BR')}</p>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 600, background: statusBg, color: statusCor, padding: '4px 12px', borderRadius: 20 }}>
+                          {a.status === 'confirmacao_enviada' ? 'Aguardando' : 'Nao enviado'}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })
               )}
             </div>
           )}
