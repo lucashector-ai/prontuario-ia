@@ -69,8 +69,7 @@ async function gerarRelatorioIndividual(medicoId: string, pacienteId: string, de
     supabase.from('consultas').select('data_hora, prontuario').eq('paciente_id', pacienteId).order('data_hora', { ascending: false }).limit(3),
   ])
 
-  const resumoConsultas = consultas?.map((c: any) => new Date(c.data_hora).toLocaleDateString('pt-BR') + ': ' + (c.prontuario?.avaliacao || '')).join('
-') || 'Sem consultas recentes'
+  const resumoConsultas = consultas?.map((c: any) => new Date(c.data_hora).toLocaleDateString('pt-BR') + ': ' + (c.prontuario?.avaliacao || '')).join('') || 'Sem consultas recentes'
 
   const prompt = `Analise o historico deste paciente e gere um relatorio de evolucao semanal para o medico. Seja clinico e objetivo.
 
