@@ -52,7 +52,7 @@ async function enviarWpp(para: string, texto: string, token: string, phoneId: st
   } catch (e) { console.error('Erro WPP:', e); throw e }
 }
 
-async function normalizarTelefone(tel: string): string {
+function normalizarTelefone(tel: string): string {
   return tel.replace(/[^0-9]/g, '')
 }
 
