@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
-type Aba = 'conversas' | 'sofia' | 'equipe' | 'alertas' | 'configuracao'
+type Aba = 'conversas' | 'sofia' | 'equipe' | 'alertas' | 'campanha' | 'relatorio' | 'configuracao'
 
 export default function WhatsApp() {
   const router = useRouter()
@@ -13,6 +13,11 @@ export default function WhatsApp() {
   const [inativos, setInativos] = useState<any[]>([])
   const [alertasNaoLidos, setAlertasNaoLidos] = useState(0)
   const [checkinEnviando, setCheckinEnviando] = useState(false)
+  const [campanhas, setCampanhas] = useState<any[]>([])
+  const [campanhaMsg, setCampanhaMsg] = useState('')
+  const [campanhaEnviando, setCampanhaEnviando] = useState(false)
+  const [relatorio, setRelatorio] = useState<any>(null)
+  const [relatorioCarregando, setRelatorioCarregando] = useState(false)
   const [usuario, setUsuario] = useState<any>(null) // medico ou atendente logado
   const [aba, setAba] = useState<Aba>('conversas')
 
@@ -108,6 +113,13 @@ REGRAS:
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [medico])
+
+  const carregarCampanhas = async () => {
+    if (!medico) return
+    const r = await fetch('/api/whatsapp-campanha?medico_id=' + medico.id)
+    const d = await r.json()
+    setCampanhas(d.campanhas || [])
+  }
 
   const carregarAlertas = async () => {
     if (!medico) return
@@ -639,6 +651,124 @@ REGRAS:
                   })
                 )}
               </div>
+            </div>
+          )}
+
+
+          {aba === 'campanha' && (
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F9FAFC' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Campanhas</h2>
+              <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px' }}>Envie mensagens personalizadas para seus pacientes</p>
+
+              <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20, marginBottom: 24 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', margin: '0 0 12px' }}>Nova campanha</p>
+                <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px' }}>Use {"{{nome}}"} para personalizar com o nome do paciente</p>
+                <textarea
+                  value={campanhaMsg}
+                  onChange={e => setCampanhaMsg(e.target.value)}
+                  placeholder={"Oi {{nome}}! Temos uma novidade especial para voce..."}
+                  rows={4}
+                  style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                  <span style={{ fontSize: 12, color: '#9ca3af' }}>{campanhaMsg.length} caracteres</span>
+                  <button
+                    disabled={!campanhaMsg.trim() || campanhaEnviando}
+                    onClick={async () => {
+                      if (!campanhaMsg.trim()) return
+                      setCampanhaEnviando(true)
+                      const r = await fetch('/api/whatsapp-campanha', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ medico_id: medico?.id, mensagem: campanhaMsg }) })
+                      const d = await r.json()
+                      alert('Campanha enviada para ' + d.enviados + ' pacientes!')
+                      setCampanhaMsg('')
+                      setCampanhaEnviando(false)
+                      fetch('/api/whatsapp-campanha?medico_id=' + medico?.id).then(r => r.json()).then(d => setCampanhas(d.campanhas || []))
+                    }}
+                    style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: !campanhaMsg.trim() || campanhaEnviando ? '#9ca3af' : '#6043C1', color: 'white', fontWeight: 600, fontSize: 13, cursor: !campanhaMsg.trim() || campanhaEnviando ? 'not-allowed' : 'pointer' }}>
+                    {campanhaEnviando ? 'Enviando...' : 'Enviar campanha'}
+                  </button>
+                </div>
+              </div>
+
+              {campanhas.length > 0 && (
+                <div>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Campanhas anteriores</p>
+                  {campanhas.map((c: any) => (
+                    <div key={c.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 14, marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 12, color: '#6b7280' }}>{new Date(c.criado_em).toLocaleDateString('pt-BR')}</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#6043C1' }}>{c.total_enviado}/{c.total_destino} enviados</span>
+                      </div>
+                      <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>{c.mensagem.substring(0, 100)}{c.mensagem.length > 100 ? '...' : ''}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {aba === 'relatorio' && (
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F9FAFC' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Relatorio semanal</h2>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Resumo da semana gerado por IA</p>
+                </div>
+                <button
+                  disabled={relatorioCarregando}
+                  onClick={async () => {
+                    setRelatorioCarregando(true)
+                    const r = await fetch('/api/whatsapp-relatorio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ medico_id: medico?.id }) })
+                    const d = await r.json()
+                    setRelatorio(d.relatorio)
+                    setRelatorioCarregando(false)
+                  }}
+                  style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: relatorioCarregando ? '#9ca3af' : '#6043C1', color: 'white', fontWeight: 600, fontSize: 13, cursor: relatorioCarregando ? 'not-allowed' : 'pointer' }}>
+                  {relatorioCarregando ? 'Gerando...' : 'Gerar relatorio'}
+                </button>
+              </div>
+
+              {relatorio && (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+                    {[
+                      { label: 'Consultas na semana', valor: relatorio.consultas_semana, cor: '#6043C1' },
+                      { label: 'Novos pacientes WPP', valor: relatorio.novos_pacientes_wpp, cor: '#0891b2' },
+                      { label: 'Alertas pendentes', valor: relatorio.alertas_pendentes?.length || 0, cor: '#dc2626' },
+                    ].map((item: any) => (
+                      <div key={item.label} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16, textAlign: 'center' }}>
+                        <p style={{ fontSize: 28, fontWeight: 800, color: item.cor, margin: '0 0 4px' }}>{item.valor}</p>
+                        <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{item.label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20, marginBottom: 16 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Resumo IA</p>
+                    <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-line' }}>{relatorio.resumo_ia}</p>
+                  </div>
+
+                  {relatorio.proximos_agendamentos?.length > 0 && (
+                    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Proximos agendamentos</p>
+                      {relatorio.proximos_agendamentos.slice(0, 5).map((a: any, i: number) => (
+                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < 4 ? '1px solid #f3f4f6' : 'none' }}>
+                          <span style={{ fontSize: 13, color: '#111827' }}>{a.pacientes?.nome || 'Paciente'}</span>
+                          <span style={{ fontSize: 12, color: '#6b7280' }}>{new Date(a.data_hora).toLocaleString('pt-BR')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!relatorio && !relatorioCarregando && (
+                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                  <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Relatorio semanal com IA</p>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Clique em "Gerar relatorio" para ver o resumo da semana</p>
+                </div>
+              )}
             </div>
           )}
 
