@@ -82,7 +82,7 @@ Responda APENAS com JSON no formato:
 
     // Salva o score
     await supabase.from('whatsapp_aderencia').upsert({
-      paciente_id, medico_id, ...resultado
+      medico_id, ...resultado
     }, { onConflict: 'paciente_id' })
 
     return NextResponse.json({ aderencia: resultado })
