@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
-type Aba = 'conversas' | 'sofia' | 'equipe' | 'alertas' | 'campanha' | 'relatorio' | 'aderencia' | 'agenda' | 'configuracao'
+type Aba = 'conversas' | 'sofia' | 'equipe' | 'dashboard' | 'alertas' | 'campanha' | 'relatorio' | 'aderencia' | 'agenda' | 'nps' | 'configuracao'
 
 export default function WhatsApp() {
   const router = useRouter()
@@ -22,6 +22,9 @@ export default function WhatsApp() {
   const [aderenciaCarregando, setAderenciaCarregando] = useState(false)
   const [agenda24h, setAgenda24h] = useState<any[]>([])
   const [confirmacaoEnviando, setConfirmacaoEnviando] = useState(false)
+  const [metricas, setMetricas] = useState<any>(null)
+  const [npsData, setNpsData] = useState<any>(null)
+  const [npsEnviando, setNpsEnviando] = useState(false)
   const [usuario, setUsuario] = useState<any>(null) // medico ou atendente logado
   const [aba, setAba] = useState<Aba>('conversas')
 
@@ -118,6 +121,20 @@ REGRAS:
     return () => { supabase.removeChannel(channel) }
   }, [medico])
 
+  const carregarMetricas = async () => {
+    if (!medico) return
+    const r = await fetch('/api/whatsapp-metricas?medico_id=' + medico.id)
+    const d = await r.json()
+    setMetricas(d)
+  }
+
+  const carregarNps = async () => {
+    if (!medico) return
+    const r = await fetch('/api/whatsapp-nps?medico_id=' + medico.id)
+    const d = await r.json()
+    setNpsData(d)
+  }
+
   const carregarCampanhas = async () => {
     if (!medico) return
     const r = await fetch('/api/whatsapp-campanha?medico_id=' + medico.id)
@@ -136,7 +153,7 @@ REGRAS:
     setInativos(ri.inativos || [])
   }
 
-  useEffect(() => { if (medico) carregarAlertas() }, [medico])
+  useEffect(() => { if (medico) { carregarAlertas(); carregarMetricas() } }, [medico])
 
   useEffect(() => { if (ativa) carregarMsgs(ativa.id) }, [ativa])
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [mensagens])
@@ -885,6 +902,153 @@ REGRAS:
                     </div>
                   )
                 })
+              )}
+            </div>
+          )}
+
+
+          {aba === 'dashboard' && (
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F9FAFC' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dashboard WhatsApp</h2>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Visao geral do atendimento via WhatsApp</p>
+                </div>
+                <button onClick={carregarMetricas} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                  Atualizar
+                </button>
+              </div>
+
+              {metricas && (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+                    {[
+                      { label: 'Total de conversas', valor: metricas.total_conversas, cor: '#6043C1', sub: metricas.novas_semana + ' novas esta semana' },
+                      { label: 'Conversas ativas', valor: metricas.conversas_ativas, cor: '#0891b2', sub: 'Pacientes respondendo' },
+                      { label: 'Alertas pendentes', valor: metricas.alertas_pendentes, cor: '#dc2626', sub: 'Precisam de atencao' },
+                      { label: 'Pacientes inativos', valor: metricas.pacientes_inativos, cor: '#d97706', sub: 'Sem contato +7 dias' },
+                      { label: 'Msgs enviadas/semana', valor: metricas.mensagens_semana?.enviadas || 0, cor: '#059669', sub: metricas.mensagens_semana?.recebidas + ' recebidas' },
+                      { label: 'Taxa de resposta', valor: metricas.taxa_resposta + '%', cor: '#7c3aed', sub: 'Ultimos 7 dias' },
+                    ].map((item: any) => (
+                      <div key={item.label} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16 }}>
+                        <p style={{ fontSize: 26, fontWeight: 800, color: item.cor, margin: '0 0 4px' }}>{item.valor}</p>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 2px' }}>{item.label}</p>
+                        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{item.sub}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 16px' }}>Acoes rapidas</p>
+                      {[
+                        { label: 'Ver alertas de risco', aba: 'alertas', cor: '#dc2626' },
+                        { label: 'Enviar check-in', aba: 'alertas', cor: '#d97706' },
+                        { label: 'Nova campanha', aba: 'campanha', cor: '#6043C1' },
+                        { label: 'Gerar relatorio', aba: 'relatorio', cor: '#0891b2' },
+                      ].map((item: any) => (
+                        <button key={item.label} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 8, border: 'none', background: '#f9fafb', cursor: 'pointer', fontSize: 13, color: item.cor, fontWeight: 600, marginBottom: 8 }}>
+                          {item.label} 
+                        </button>
+                      ))}
+                    </div>
+
+                    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 16px' }}>Status do sistema</p>
+                      {[
+                        { label: 'Sofia IA', status: 'Ativa', cor: '#059669' },
+                        { label: 'Onboarding', status: 'Ativo', cor: '#059669' },
+                        { label: 'Audio (Whisper)', status: 'Ativo', cor: '#059669' },
+                        { label: 'Alertas de risco', status: 'Monitorando', cor: '#6043C1' },
+                      ].map((item: any) => (
+                        <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                          <span style={{ fontSize: 13, color: '#374151' }}>{item.label}</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: item.cor, background: item.cor + '20', padding: '2px 8px', borderRadius: 20 }}>{item.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {!metricas && (
+                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                  <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
+                  <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Clique em "Atualizar" para carregar as metricas</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {aba === 'nps' && (
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F9FAFC' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>NPS - Satisfacao</h2>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Pesquisa de satisfacao automatica pos-consulta</p>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={carregarNps} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                    Ver resultados
+                  </button>
+                  <button
+                    disabled={npsEnviando}
+                    onClick={async () => {
+                      setNpsEnviando(true)
+                      const r = await fetch('/api/whatsapp-nps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ medico_id: medico?.id }) })
+                      const d = await r.json()
+                      alert('NPS enviado para ' + d.enviados + ' pacientes!')
+                      setNpsEnviando(false)
+                      carregarNps()
+                    }}
+                    style={{ fontSize: 12, fontWeight: 600, color: 'white', background: npsEnviando ? '#9ca3af' : '#6043C1', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: npsEnviando ? 'not-allowed' : 'pointer' }}>
+                    {npsEnviando ? 'Enviando...' : 'Enviar NPS hoje'}
+                  </button>
+                </div>
+              </div>
+
+              {npsData && (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+                    {[
+                      { label: 'NPS Score', valor: npsData.nps, cor: npsData.nps >= 50 ? '#059669' : npsData.nps >= 0 ? '#d97706' : '#dc2626' },
+                      { label: 'Nota media', valor: npsData.media, cor: '#6043C1' },
+                      { label: 'Promotores', valor: npsData.promotores, cor: '#059669' },
+                      { label: 'Detratores', valor: npsData.detratores, cor: '#dc2626' },
+                    ].map((item: any) => (
+                      <div key={item.label} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16, textAlign: 'center' }}>
+                        <p style={{ fontSize: 28, fontWeight: 800, color: item.cor, margin: '0 0 4px' }}>{item.valor}</p>
+                        <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{item.label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {npsData.respostas?.length > 0 && (
+                    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Ultimas respostas</p>
+                      {npsData.respostas.map((r: any, i: number) => {
+                        const cor = r.nota >= 9 ? '#059669' : r.nota >= 7 ? '#d97706' : '#dc2626'
+                        return (
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < npsData.respostas.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+                            <span style={{ fontSize: 13, color: '#374151' }}>{r.pacientes?.nome || 'Paciente'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: 12, color: '#9ca3af' }}>{new Date(r.criado_em).toLocaleDateString('pt-BR')}</span>
+                              <span style={{ fontSize: 18, fontWeight: 800, color: cor }}>{r.nota}</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {!npsData && (
+                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                  <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Pesquisa de satisfacao</p>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Envie NPS automaticamente apos cada consulta</p>
+                </div>
               )}
             </div>
           )}
