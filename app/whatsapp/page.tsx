@@ -4,11 +4,15 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
-type Aba = 'conversas' | 'sofia' | 'configuracao' | 'equipe'
+type Aba = 'conversas' | 'sofia' | 'equipe' | 'alertas' | 'configuracao'
 
 export default function WhatsApp() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
+  const [alertas, setAlertas] = useState<any[]>([])
+  const [inativos, setInativos] = useState<any[]>([])
+  const [alertasNaoLidos, setAlertasNaoLidos] = useState(0)
+  const [checkinEnviando, setCheckinEnviando] = useState(false)
   const [usuario, setUsuario] = useState<any>(null) // medico ou atendente logado
   const [aba, setAba] = useState<Aba>('conversas')
 
@@ -60,7 +64,7 @@ FLUXO DE ATENDIMENTO:
 3. Nunca fique sem responder - sempre ofeca uma proxima acao
 
 MENU PRINCIPAL (envie quando paciente iniciar ou digitar "menu"):
-Ola! Sou a Sofia, assistente virtual da clinica. Como posso ajudar? 😊
+Ola! Sou a Sofia, assistente virtual da clinica. Como posso ajudar? 
 
 *1* - Agendar consulta
 *2* - Ver meus agendamentos
@@ -104,6 +108,19 @@ REGRAS:
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [medico])
+
+  const carregarAlertas = async () => {
+    if (!medico) return
+    const [ra, ri] = await Promise.all([
+      fetch('/api/whatsapp-alertas?medico_id=' + medico.id + '&lido=false').then(r => r.json()),
+      fetch('/api/whatsapp-checkin?medico_id=' + medico.id + '&dias=7').then(r => r.json()),
+    ])
+    setAlertas(ra.alertas || [])
+    setAlertasNaoLidos((ra.alertas || []).length)
+    setInativos(ri.inativos || [])
+  }
+
+  useEffect(() => { if (medico) carregarAlertas() }, [medico])
 
   useEffect(() => { if (ativa) carregarMsgs(ativa.id) }, [ativa])
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [mensagens])
@@ -155,7 +172,7 @@ REGRAS:
     }).eq('id', ativa.id)
     setAtiva({ ...ativa, modo: 'humano', atendente_nome: nomeAtendente })
     // Avisa o paciente
-    const aviso = 'Voce esta sendo transferido para atendimento humano com ' + nomeAtendente + '. Em breve entraremos em contato. 😊'
+    const aviso = 'Voce esta sendo transferido para atendimento humano com ' + nomeAtendente + '. Em breve entraremos em contato. '
     await fetch('/api/whatsapp/enviar', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telefone: ativa.telefone, texto: aviso, medico_id: medico.id })
@@ -272,19 +289,19 @@ REGRAS:
               </div>
               <div>
                 <h1 style={{ fontSize: 14, fontWeight: 800, color: '#111827', margin: 0 }}>WhatsApp IA</h1>
-                <p style={{ fontSize: 10, color: config ? '#6043C1' : '#9ca3af', margin: 0 }}>● {config ? config.phone_number || config.phone_number_id : 'Desconectado'}</p>
+                <p style={{ fontSize: 10, color: config ? '#6043C1' : '#9ca3af', margin: 0 }}> {config ? config.phone_number || config.phone_number_id : 'Desconectado'}</p>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {totalNaoLidas > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: '#6043C1', padding: '2px 8px', borderRadius: 20 }}>{totalNaoLidas} novas</span>}
-              {usuario && <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '3px 10px', borderRadius: 20 }}>👤 {usuario.nome}</span>}
+              {usuario && <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '3px 10px', borderRadius: 20 }}> {usuario.nome}</span>}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 0, marginTop: 8 }}>
-            <button style={tabStyle('conversas')} onClick={() => setAba('conversas')}>💬 Conversas {totalNaoLidas > 0 && <span style={{ background: '#6043C1', color: 'white', borderRadius: 10, padding: '1px 5px', fontSize: 10, marginLeft: 3 }}>{totalNaoLidas}</span>}</button>
-            <button style={tabStyle('sofia')} onClick={() => setAba('sofia')}>🤖 Sofia IA</button>
-            <button style={tabStyle('equipe')} onClick={() => setAba('equipe')}>👥 Equipe</button>
-            <button style={tabStyle('configuracao')} onClick={() => setAba('configuracao')}>⚙️ Configuracao</button>
+            <button style={tabStyle('conversas')} onClick={() => setAba('conversas')}> Conversas {totalNaoLidas > 0 && <span style={{ background: '#6043C1', color: 'white', borderRadius: 10, padding: '1px 5px', fontSize: 10, marginLeft: 3 }}>{totalNaoLidas}</span>}</button>
+            <button style={tabStyle('sofia')} onClick={() => setAba('sofia')}> Sofia IA</button>
+            <button style={tabStyle('equipe')} onClick={() => setAba('equipe')}> Equipe</button>
+            <button style={tabStyle('configuracao')} onClick={() => setAba('configuracao')}> Configuracao</button>
           </div>
         </div>
 
@@ -303,7 +320,7 @@ REGRAS:
                 <div style={{ display: 'flex', gap: 4 }}>
                   {(['todas','ia','humano'] as const).map(f => (
                     <button key={f} onClick={() => setFiltroModo(f)} style={{ flex: 1, padding: '4px 0', fontSize: 10, fontWeight: filtroModo === f ? 700 : 400, borderRadius: 5, border: '1px solid ' + (filtroModo === f ? '#6043C1' : '#e5e7eb'), background: filtroModo === f ? '#F9FAFC' : 'white', color: filtroModo === f ? '#6043C1' : '#9ca3af', cursor: 'pointer' }}>
-                      {f === 'todas' ? 'Todas' : f === 'ia' ? '🤖 IA' : '👤 Humano'}
+                      {f === 'todas' ? 'Todas' : f === 'ia' ? ' IA' : ' Humano'}
                     </button>
                   ))}
                 </div>
@@ -341,10 +358,10 @@ REGRAS:
                           <span style={{ fontSize: 9, color: '#9ca3af', flexShrink: 0, marginLeft: 4 }}>{c.ultima ? fmt(c.ultima.criado_em) : ''}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <p style={{ fontSize: 11, color: '#9ca3af', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{c.ultima?.tipo === 'enviada' && '✓ '}{c.ultima?.conteudo?.substring(0, 32) || ''}</p>
+                          <p style={{ fontSize: 11, color: '#9ca3af', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{c.ultima?.tipo === 'enviada' && ' '}{c.ultima?.conteudo?.substring(0, 32) || ''}</p>
                           <div style={{ display: 'flex', gap: 3, marginLeft: 4, flexShrink: 0 }}>
                             {c.naoLidas > 0 && <span style={{ fontSize: 9, fontWeight: 700, color: 'white', background: '#6043C1', width: 15, height: 15, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c.naoLidas}</span>}
-                            {c.modo === 'humano' && <span style={{ fontSize: 8, color: '#92400e', background: '#fef3c7', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}>👤</span>}
+                            {c.modo === 'humano' && <span style={{ fontSize: 8, color: '#92400e', background: '#fef3c7', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}></span>}
                           </div>
                         </div>
                       </div>
@@ -366,18 +383,18 @@ REGRAS:
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>{nomeCv(ativa)}</p>
                     <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>
-                      {ativa.telefone} · {ativa.modo === 'humano' ? '👤 Humano' + (ativa.atendente_nome ? ' — ' + ativa.atendente_nome : '') : '🤖 Sofia IA'}
+                      {ativa.telefone}  {ativa.modo === 'humano' ? ' Humano' + (ativa.atendente_nome ? '  ' + ativa.atendente_nome : '') : ' Sofia IA'}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
                     {ativa.paciente_id && <a href={'/pacientes/' + ativa.paciente_id} style={{ fontSize: 11, color: '#6043C1', background: '#F9FAFC', border: '1px solid #d4c9f7', padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 600 }}>Ver ficha</a>}
                     {ativa.modo === 'ia' ? (
                       <button onClick={assumirAtendimento} disabled={assumindo} style={{ fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', padding: '4px 12px', borderRadius: 6, cursor: 'pointer' }}>
-                        {assumindo ? 'Assumindo...' : '👤 Assumir atendimento'}
+                        {assumindo ? 'Assumindo...' : ' Assumir atendimento'}
                       </button>
                     ) : (
                       <button onClick={devolverParaIA} style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', background: '#F9FAFC', border: '1px solid #d4c9f7', padding: '4px 12px', borderRadius: 6, cursor: 'pointer' }}>
-                        🤖 Devolver para IA
+                         Devolver para IA
                       </button>
                     )}
                   </div>
@@ -386,8 +403,8 @@ REGRAS:
                 {/* Banner modo humano */}
                 {ativa.modo === 'humano' && (
                   <div style={{ background: '#fffbeb', borderBottom: '1px solid #fde68a', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>👤</span>
-                    <p style={{ fontSize: 12, color: '#92400e', margin: 0 }}>Atendimento humano ativo{ativa.atendente_nome ? ' — ' + ativa.atendente_nome : ''}. A Sofia IA esta pausada nesta conversa.</p>
+                    <span style={{ fontSize: 14 }}></span>
+                    <p style={{ fontSize: 12, color: '#92400e', margin: 0 }}>Atendimento humano ativo{ativa.atendente_nome ? '  ' + ativa.atendente_nome : ''}. A Sofia IA esta pausada nesta conversa.</p>
                   </div>
                 )}
 
@@ -443,7 +460,7 @@ REGRAS:
               <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Sofia IA — Assistente Virtual</h2>
+                    <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Sofia IA  Assistente Virtual</h2>
                     <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Configure como a IA se comporta em todas as conversas</p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -460,7 +477,7 @@ REGRAS:
                   <div style={{ background: '#F9FAFC', border: '1px solid #d4c9f7', borderRadius: 9, padding: '10px 14px', margin: '14px 0' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                       {['Responde 24h automaticamente','Agenda consultas no sistema','Envia horarios disponiveis','Reconhece pacientes cadastrados','Escalona para humano quando pedido','Segue fluxo de menu configurado'].map(c => (
-                        <div key={c} style={{ display: 'flex', gap: 6 }}><span style={{ color: '#6043C1' }}>✓</span><span style={{ fontSize: 11, color: '#374151' }}>{c}</span></div>
+                        <div key={c} style={{ display: 'flex', gap: 6 }}><span style={{ color: '#6043C1' }}></span><span style={{ fontSize: 11, color: '#374151' }}>{c}</span></div>
                       ))}
                     </div>
                   </div>
@@ -492,7 +509,7 @@ REGRAS:
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#2563eb' }}>{ini(a.nome)}</div>
                       <div style={{ flex: 1 }}>
                         <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{a.nome}</p>
-                        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{a.email} · {a.cargo}</p>
+                        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{a.email}  {a.cargo}</p>
                       </div>
                       <button onClick={() => removerAtendente(a.id)} style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: 6, cursor: 'pointer' }}>Remover</button>
                     </div>
@@ -531,6 +548,100 @@ REGRAS:
         )}
 
         {/* ABA CONFIGURACAO */}
+
+          {aba === 'alertas' && (
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F9FAFC' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Alertas e riscos</h2>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Pacientes que precisam de atencao</p>
+                </div>
+                <button onClick={() => carregarAlertas()} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                  Atualizar
+                </button>
+              </div>
+
+              {/* Alertas de risco */}
+              {alertas.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
+                    Mensagens de risco ({alertas.length})
+                  </p>
+                  {alertas.map((a: any) => (
+                    <div key={a.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16, marginBottom: 10, borderLeft: '4px solid #dc2626' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>
+                            {a.pacientes?.nome || a.whatsapp_conversas?.nome_contato || 'Paciente'}
+                          </p>
+                          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                            {new Date(a.criado_em).toLocaleString('pt-BR')}
+                          </p>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 600, background: '#fef2f2', color: '#dc2626', padding: '3px 10px', borderRadius: 20 }}>
+                          {a.nivel}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 13, color: '#374151', margin: '0 0 10px', background: '#fef2f2', padding: '8px 12px', borderRadius: 8 }}>
+                        "{a.mensagem}"
+                      </p>
+                      <button onClick={async () => {
+                        await fetch('/api/whatsapp-alertas', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: a.id, lido: true }) })
+                        carregarAlertas()
+                      }} style={{ fontSize: 12, color: '#6043C1', background: 'transparent', border: '1px solid #d4c9f7', padding: '4px 12px', borderRadius: 6, cursor: 'pointer' }}>
+                        Marcar como lido
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Pacientes inativos */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                    Sem contato ha +7 dias ({inativos.length})
+                  </p>
+                  {inativos.length > 0 && (
+                    <button
+                      disabled={checkinEnviando}
+                      onClick={async () => {
+                        setCheckinEnviando(true)
+                        const r = await fetch('/api/whatsapp-checkin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ medico_id: medico?.id }) })
+                        const d = await r.json()
+                        alert(`Check-in enviado para ${d.enviados} pacientes!`)
+                        setCheckinEnviando(false)
+                        carregarAlertas()
+                      }}
+                      style={{ fontSize: 12, fontWeight: 600, color: 'white', background: checkinEnviando ? '#9ca3af' : '#6043C1', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: checkinEnviando ? 'not-allowed' : 'pointer' }}>
+                      {checkinEnviando ? 'Enviando...' : 'Enviar check-in para todos'}
+                    </button>
+                  )}
+                </div>
+                {inativos.length === 0 ? (
+                  <div style={{ background: 'white', borderRadius: 12, padding: 24, textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+                    <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>Nenhum paciente inativo nos ultimos 7 dias</p>
+                  </div>
+                ) : (
+                  inativos.map((p: any) => {
+                    const dias = Math.floor((Date.now() - new Date(p.ultimo_contato).getTime()) / (1000 * 60 * 60 * 24))
+                    return (
+                      <div key={p.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 14, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>{p.nome_contato}</p>
+                          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{p.telefone} - Ultimo contato: {dias} dias atras</p>
+                        </div>
+                        <span style={{ fontSize: 11, background: '#fffbeb', color: '#d97706', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
+                          {dias}d sem contato
+                        </span>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
         {aba === 'configuracao' && (
           <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
             <div style={{ maxWidth: 680 }}>
@@ -542,7 +653,7 @@ REGRAS:
                     </div>
                     <div>
                       <p style={{ fontSize: 12, fontWeight: 700, color: '#6043C1', margin: 0 }}>WhatsApp conectado</p>
-                      <p style={{ fontSize: 11, color: '#6043C1', margin: 0 }}>{config.phone_number} · {config.nome_exibicao}</p>
+                      <p style={{ fontSize: 11, color: '#6043C1', margin: 0 }}>{config.phone_number}  {config.nome_exibicao}</p>
                     </div>
                   </div>
                   <button onClick={async () => { await fetch('/api/whatsapp-config?medico_id=' + medico.id, { method: 'DELETE' }); setConfig(null) }} style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Desconectar</button>
@@ -557,7 +668,7 @@ REGRAS:
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Phone Number ID *</label>
                     <input required value={form.phone_number_id} onChange={e => setForm(f => ({ ...f, phone_number_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace' }} placeholder="1030374870164992"/>
-                    <p style={{ fontSize: 10, color: '#9ca3af', margin: '3px 0 0' }}>Meta → WhatsApp → Configuracao da API → Identificacao do numero de telefone</p>
+                    <p style={{ fontSize: 10, color: '#9ca3af', margin: '3px 0 0' }}>Meta  WhatsApp  Configuracao da API  Identificacao do numero de telefone</p>
                   </div>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Token de acesso permanente *</label>
