@@ -338,7 +338,7 @@ export async function POST(req: NextRequest) {
         await supabase.from('whatsapp_alertas').insert({
           conversa_id: conversa.id, paciente_id: conversa.paciente_id,
           medico_id: medicoId, mensagem: textoMensagem, nivel: 'atencao', lido: false,
-        }).then(() => {}).catch(() => {})
+        }).then(() => {}).catch((_e: unknown) => {})
       }
 
       await salvarEEnviar(conversa.id, resposta, telefone, token, phoneId, { ia: true, agendou: !!agendarData })
