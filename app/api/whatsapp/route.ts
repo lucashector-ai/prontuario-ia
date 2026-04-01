@@ -258,10 +258,11 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+    console.log('WPP_PAYLOAD:', JSON.stringify(body).substring(0, 500))
     const value = body.entry?.[0]?.changes?.[0]?.value
-    if (value?.statuses) return NextResponse.json({ ok: true })
+    if (value?.statuses) { console.log('WPP_STATUS descartado'); return NextResponse.json({ ok: true }) }
     const messages = value?.messages
-    if (!messages?.length) return NextResponse.json({ ok: true })
+    if (!messages?.length) { console.log('WPP_SEM_MESSAGES value:', JSON.stringify(value).substring(0,300)); return NextResponse.json({ ok: true }) }
 
     const phoneNumberId = value?.metadata?.phone_number_id
     const config = await getConfig(phoneNumberId)
@@ -269,6 +270,7 @@ export async function POST(req: NextRequest) {
     const phoneId = config?.phone_number_id || phoneNumberId || process.env.WHATSAPP_PHONE_ID || ''
     const medicoId = config?.medico_id || null
 
+    console.log('WPP_MESSAGES count:', messages.length, 'tipos:', messages.map((m:any)=>m.type))
     for (const msg of messages) {
       const telefone = msg.from
       const nomeContato = value.contacts?.[0]?.profile?.name || telefone
