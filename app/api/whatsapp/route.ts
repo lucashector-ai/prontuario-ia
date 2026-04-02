@@ -62,6 +62,7 @@ async function getOuCriarConversa(telefone: string, nome: string, medicoId: stri
   if (medicoId) query = query.eq('medico_id', medicoId)
   const { data: existente } = await query.maybeSingle()
 
+  console.log('BUSCA tel:', tel, 'medicoId:', medicoId, 'existente:', existente?.id || 'NULL')
   if (existente) {
     await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString(), nome_contato: nome || existente.nome_contato }).eq('id', existente.id)
     return existente
@@ -274,6 +275,7 @@ export async function POST(req: NextRequest) {
 
     for (const msg of messages) {
       const telefone = msg.from
+      console.log('MSG from:', msg.from, 'type:', msg.type)
       const nomeContato = value.contacts?.[0]?.profile?.name || telefone
       let textoMensagem = ''
       const tipoOriginal = msg.type
