@@ -37,9 +37,9 @@ REGRAS:
 - Use contexto do historico do paciente para personalizar respostas`
 
 async function getConfig(phoneNumberId: string) {
-  const { data } = await supabase.from('whatsapp_config').select('*').eq('phone_number_id', phoneNumberId).eq('ativo', true).single()
+  const { data, error } = await supabase.from('whatsapp_config').select('*').eq('phone_number_id', phoneNumberId).eq('ativo', true).maybeSingle()
+  console.log('CONFIG_QUERY phone:', phoneNumberId, 'result:', data?.medico_id || 'NULL', 'error:', error?.message || 'none')
   return data
-}
 
 async function enviarWpp(para: string, texto: string, token: string, phoneId: string) {
   try {
