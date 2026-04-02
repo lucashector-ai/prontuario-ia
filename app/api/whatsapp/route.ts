@@ -37,13 +37,14 @@ REGRAS:
 - Use contexto do historico do paciente para personalizar respostas`
 
 async function getConfig(phoneNumberId: string) {
-  // Tenta pelo phone_number_id primeiro
-  const { data } = await supabase.from('whatsapp_config').select('*').eq('phone_number_id', phoneNumberId).eq('ativo', true).maybeSingle()
-  if (data) return data
-  // Fallback: pega primeira config ativa
-  const { data: fallback } = await supabase.from('whatsapp_config').select('*').eq('ativo', true).maybeSingle()
-  console.log('CONFIG fallback:', fallback?.medico_id || 'NULL', 'phone buscado:', phoneNumberId, 'phone no banco:', fallback?.phone_number_id)
-  return fallback
+  // Busca por phone_number_id
+  const { data: byPhone } = await supabase.from('whatsapp_config').select('*').eq('phone_number_id', phoneNumberId).limit(1)
+  if (byPhone && byPhone.length > 0) return byPhone[0]
+  // Fallback: primeira config ativa
+  const { data: qualquer } = await supabase.from('whatsapp_config').select('*').eq('ativo', true).limit(1)
+  const cfg = qualquer?.[0] || null
+  console.log('CONFIG_FINAL:', cfg?.medico_id, 'phone_banco:', cfg?.phone_number_id, 'phone_meta:', phoneNumberId)
+  return cfg
 }
 
 async function enviarWpp(para: string, texto: string, token: string, phoneId: string) {
