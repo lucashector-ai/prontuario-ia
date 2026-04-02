@@ -279,18 +279,12 @@ export async function POST(req: NextRequest) {
     if (!messages?.length) return NextResponse.json({ ok: true })
 
     const phoneNumberId = value?.metadata?.phone_number_id
-    console.log('PHONE_NUMBER_ID:', phoneNumberId)
     const config = await getConfig(phoneNumberId)
-    console.log('CONFIG_CHECK:', JSON.stringify({medico_id: config?.medico_id, phone: config?.phone_number_id, ativo: config?.ativo}))
+    // Usa variaveis de ambiente como fallback garantido
     const token = config?.access_token || process.env.WHATSAPP_TOKEN || ''
     const phoneId = config?.phone_number_id || phoneNumberId || process.env.WHATSAPP_PHONE_ID || ''
-    // Se config nao tem medico_id, busca direto ignorando filtros
-    let medicoId = config?.medico_id || null
-    if (!medicoId) {
-      const { data: cfgFull } = await supabase.from('whatsapp_config').select('medico_id').limit(1)
-      medicoId = cfgFull?.[0]?.medico_id || null
-      console.log('MEDICO_FALLBACK:', medicoId)
-    }
+    const medicoId = config?.medico_id || process.env.WHATSAPP_MEDICO_ID || null
+    console.log('WEBHOOK_INFO:', { phoneNumberId, temConfig: !!config, temToken: !!token, medicoId })
 
     for (const msg of messages) {
       const telefone = msg.from
