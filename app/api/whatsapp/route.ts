@@ -68,7 +68,13 @@ async function getOuCriarConversa(telefone: string, nome: string) {
     onboarding_completo: true, onboarding_step: null,
   }).select().single()
 
-  console.log('CONVERSA_NOVA:', nova?.id, 'erro:', error?.message)
+  console.log('CONVERSA_NOVA:', nova?.id, 'erro:', error?.message, 'code:', error?.code)
+  if (error) {
+    // Tenta buscar novamente caso seja conflito de unique
+    const { data: retry } = await supabase.from('whatsapp_conversas').select('*').eq('telefone', tel).eq('medico_id', MEDICO_ID).maybeSingle()
+    console.log('RETRY_BUSCA:', retry?.id || 'null')
+    return retry
+  }
   return nova
 }
 
