@@ -271,7 +271,12 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const value = body.entry?.[0]?.changes?.[0]?.value
+
+    // Descarta notificacoes de status (lido, entregue)
+    if (!value || value?.statuses) return NextResponse.json({ ok: true })
+
     const messages = value?.messages
+    if (!messages?.length) return NextResponse.json({ ok: true })
 
     const phoneNumberId = value?.metadata?.phone_number_id
     console.log('PHONE_NUMBER_ID:', phoneNumberId)
