@@ -268,7 +268,9 @@ export async function POST(req: NextRequest) {
     const messages = value?.messages
 
     const phoneNumberId = value?.metadata?.phone_number_id
+    console.log('PHONE_NUMBER_ID:', phoneNumberId)
     const config = await getConfig(phoneNumberId)
+    console.log('CONFIG:', config ? 'encontrada medico_id='+config.medico_id : 'NAO ENCONTRADA')
     const token = config?.access_token || process.env.WHATSAPP_TOKEN || ''
     const phoneId = config?.phone_number_id || phoneNumberId || process.env.WHATSAPP_PHONE_ID || ''
     const medicoId = config?.medico_id || null
