@@ -41,14 +41,14 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   // Fase 4: Transcrio
   const [gravando, setGravando] = useState(false)
   const [gravandoPausado, setGravandoPausado] = useState(false)
-  const [transcricaoFinal, setTranscricaoFinal] = useState('')
+  const [transcricaoFinal, setTranscriçãoFinal] = useState('')
   const [prontuarioFinal, setProntuarioFinal] = useState<any>(null)
   const [configAberto, setConfigAberto] = useState(false)
   const [audioInputId, setAudioInputId] = useState('')
   const [videoInputId, setVideoInputId] = useState('')
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([])
   const [videoInputs, setVideoInputs] = useState<MediaDeviceInfo[]>([])
-  const [transcricao, setTranscricao] = useState('')
+  const [transcricao, setTranscrição] = useState('')
   const [processando, setProcessando] = useState(false)
   const [prontuarioModal, setProntuarioModal] = useState(false)
   const [prontuarioData, setProntuarioData] = useState<any>(null)
@@ -284,7 +284,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             }
           }, 200)
           // Medico: inicia gravacao automaticamente
-          if (papel === 'medico') setTimeout(() => iniciarGravacao(), 500)
+          if (papel === 'medico') setTimeout(() => iniciarGravação(), 500)
         }
       })
 
@@ -341,7 +341,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const toggleMic = () => { streamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; setMicOn(t.enabled) }) }
   const toggleCam = () => { streamRef.current?.getVideoTracks().forEach(t => { t.enabled = !t.enabled; setCamOn(t.enabled) }) }
   // Inicia gravao  captura o udio local do mdico
-  const iniciarGravacao = () => {
+  const iniciarGravação = () => {
     if (!streamRef.current) return
     // Pega s as faixas de udio do stream local
     const audioStream = new MediaStream(streamRef.current.getAudioTracks())
@@ -356,18 +356,18 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     setGravando(true)
   }
 
-  const pararGravacao = () => {
+  const pararGravação = () => {
     recorderRef.current?.stop()
     setGravando(false)
   }
 
-  const toggleGravacao = () => {
-    if (gravando) pararGravacao()
-    else iniciarGravacao()
+  const toggleGravação = () => {
+    if (gravando) pararGravação()
+    else iniciarGravação()
   }
 
   // Transcreve os chunks acumulados via Whisper
-  const pausarGravacao = () => {
+  const pausarGravação = () => {
     if (!recorderRef.current) return
     if (recorderRef.current.state === 'recording') {
       recorderRef.current.pause()
@@ -389,7 +389,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       const d = await r.json()
       if (d.texto) {
         const nova = transcricao ? transcricao + ' ' + d.texto : d.texto
-        setTranscricao(nova)
+        setTranscrição(nova)
         return nova
       }
     } catch {}
@@ -397,13 +397,13 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   }
 
   // Gera pronturio a partir da transcrio via Claude
-  const gerarProntuario = async (textoTranscricao: string) => {
-    if (!textoTranscricao.trim()) return
+  const gerarProntuario = async (textoTranscrição: string) => {
+    if (!textoTranscrição.trim()) return
     setProcessando(true)
     try {
       const r = await fetch('/api/estruturar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcricao: textoTranscricao })
+        body: JSON.stringify({ transcricao: textoTranscrição })
       })
       const d = await r.json()
       if (d.estruturado || d.prontuario || d) {
@@ -441,7 +441,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       const d = await r.json()
       if (d.id) {
         setSalvado(true)
-        setTimeout(() => { window.location.href = '/historico' }, 1500)
+        setTimeout(() => { window.location.href = '/histórico' }, 1500)
       }
     } catch (err) { console.error('Erro salvar:', err) }
     setSalvando(false)
@@ -562,7 +562,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         </div>
         {transcricaoFinal ? (
           <div style={{ background: '#1e293b', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid #334155' }}>
-            <h2 style={{ color: '#60a5fa', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Transcricao da consulta</h2>
+            <h2 style={{ color: '#60a5fa', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Transcrição da consulta</h2>
             <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{transcricaoFinal}</p>
           </div>
         ) : (
@@ -572,7 +572,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         )}
         {prontuarioFinal && (
           <div style={{ background: '#1e293b', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid #334155' }}>
-            <h2 style={{ color: '#34d399', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Prontuario gerado</h2>
+            <h2 style={{ color: '#34d399', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Prontuário gerado</h2>
             {['subjetivo','objetivo','avaliacao','plano'].map((k: string) => (prontuarioFinal as any)[k] && (
               <div key={k} style={{ marginBottom: 14 }}>
                 <p style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', margin: '0 0 4px' }}>{k}</p>
@@ -586,9 +586,9 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             Agendar retorno
           </button>
-          <button onClick={() => window.location.href = '/historico'}
+          <button onClick={() => window.location.href = '/histórico'}
             style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-            Ver historico
+            Ver histórico
           </button>
           <button onClick={() => window.location.href = '/teleconsulta'}
             style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #334155', background: 'transparent', color: '#94a3b8', fontSize: 14, cursor: 'pointer' }}>
@@ -741,7 +741,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             </div>
           )}
           {isMedico && tela === 'chamada' && (
-            <button onClick={toggleGravacao}
+            <button onClick={toggleGravação}
               style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer',
                 background: gravando ? 'rgba(220,38,38,0.15)' : 'rgba(22,163,74,0.15)',
                 color: gravando ? '#f87171' : '#86efac' }}>
@@ -936,7 +936,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 </div>
                 <div>
-                  <p style={{ fontSize:14, fontWeight:700, color:'white', margin:0 }}>Prontuario gerado pela IA</p>
+                  <p style={{ fontSize:14, fontWeight:700, color:'white', margin:0 }}>Prontuário gerado pela IA</p>
                   <p style={{ fontSize:11, color:'#64748b', margin:0 }}>Baseado na transcricao da consulta  revise antes de salvar</p>
                 </div>
               </div>
@@ -948,7 +948,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               {/* Transcrio */}
               {transcricao && (
                 <div>
-                  <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>Transcricao</p>
+                  <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>Transcrição</p>
                   <div style={{ background:'#0f172a', borderRadius:8, padding:'10px 12px', fontSize:12, color:'#94a3b8', lineHeight:1.6, maxHeight:80, overflow:'auto' }}>
                     {transcricao}
                   </div>
@@ -984,10 +984,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               <button onClick={salvarProntuario} disabled={salvando || salvado}
                 style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background: salvado ? '#14532d' : '#6043C1', color:'white', fontSize:13, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
                 {salvado
-                  ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Salvo! Abrindo historico...</>
+                  ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Salvo! Abrindo histórico...</>
                   : salvando
                   ? <><div style={{ width:14, height:14, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'white', animation:'spin 0.8s linear infinite' }}/>Salvando...</>
-                  : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Salvar no historico</>
+                  : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Salvar no histórico</>
                 }
               </button>
               <button onClick={() => setProntuarioModal(false)} style={{ padding:'10px 18px', borderRadius:9, border:'1px solid #334155', background:'transparent', color:'#64748b', fontSize:13, cursor:'pointer' }}>

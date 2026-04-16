@@ -34,8 +34,8 @@ const passos = [
   {
     num: 3,
     titulo: "Cadastre seu primeiro paciente",
-    subtitulo: "Organize seu historico de atendimentos",
-    desc: "Cadastre pacientes para vincular consultas, gerar historico clinico e acompanhar a evolucao ao longo do tempo.",
+    subtitulo: "Organize seu histórico de atendimentos",
+    desc: "Cadastre pacientes para vincular consultas, gerar histórico clinico e acompanhar a evolucao ao longo do tempo.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
@@ -48,7 +48,7 @@ const passos = [
   {
     num: 4,
     titulo: "Faca sua primeira consulta",
-    subtitulo: "Transcricao + prontuario em segundos",
+    subtitulo: "Transcrição + prontuario em segundos",
     desc: "Clique em Nova consulta, pressione gravar e fale normalmente com o paciente. A IA transcreve e gera o prontuario SOAP automaticamente.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">

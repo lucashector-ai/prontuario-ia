@@ -104,7 +104,7 @@ export default function Configuracoes() {
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Nome de exibicao da clinica</label>
                 <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))}
                   style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }}
-                  placeholder="Clinica Dr. Silva"/>
+                  placeholder="Clínica Dr. Silva"/>
               </div>
               {msg && (
                 <div style={{ background: msg.tipo === 'ok' ? '#F9FAFC' : '#fef2f2', border: '1px solid ' + (msg.tipo === 'ok' ? '#d4c9f7' : '#fecaca'), borderRadius: 9, padding: '10px 14px' }}>

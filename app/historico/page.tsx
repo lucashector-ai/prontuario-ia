@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
-export default function Historico() {
+export default function Histórico() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
   const [consultas, setConsultas] = useState<any[]>([])

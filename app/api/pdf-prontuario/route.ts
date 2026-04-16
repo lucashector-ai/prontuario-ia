@@ -68,7 +68,7 @@ table{width:100%;border-collapse:collapse}
   </div>
 </div>
 
-<div class="section-title">Prontuario SOAP</div>
+<div class="section-title">Prontuário SOAP</div>
 ${secao('Subjetivo (queixa e historico)', c.subjetivo || '')}
 ${secao('Objetivo (exame fisico)', c.objetivo || '')}
 ${secao('Avaliacao (hipoteses diagnosticas)', c.avaliacao || '')}

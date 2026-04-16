@@ -45,7 +45,7 @@ Dados da semana:
 - Consultas realizadas: ${relatorio.consultas_semana}
 - Novos pacientes via WhatsApp: ${relatorio.novos_pacientes_wpp}
 - Alertas de risco pendentes: ${relatorio.alertas_pendentes.length}
-- Proximos agendamentos: ${relatorio.proximos_agendamentos.length}
+- Próximos agendamentos: ${relatorio.proximos_agendamentos.length}
 ${relatorio.alertas_pendentes.length > 0 ? '- Alertas: ' + relatorio.alertas_pendentes.map((a: any) => a.pacientes?.nome + ' (' + a.nivel + ')').join(', ') : ''}`
 
     const res = await anthropic.messages.create({
@@ -75,7 +75,7 @@ async function gerarRelatorioIndividual(medicoId: string, pacienteId: string, de
 
 Paciente: ${paciente?.nome}
 Comorbidades: ${paciente?.comorbidades || 'nenhuma'}
-Ultimas consultas: ${resumoConsultas}
+Últimas consultas: ${resumoConsultas}
 Mensagens recentes: ${mensagens?.filter((m: any) => m.tipo === 'recebida').slice(-10).map((m: any) => m.conteudo).join(' | ') || 'Sem mensagens'}
 
 Gere: 1) Resumo do estado atual 2) Sinais de alerta (se houver) 3) Recomendacao de acompanhamento. Maximo 150 palavras.`

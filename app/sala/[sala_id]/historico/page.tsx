@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
-export default function HistoricoSala() {
+export default function HistóricoSala() {
   const { sala_id } = useParams()
   const router = useRouter()
   const [sala, setSala] = useState<any>(null)
@@ -30,7 +30,7 @@ export default function HistoricoSala() {
         {loading ? <p>Carregando...</p> : (
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
             <button onClick={() => router.back()} style={{ fontSize: 12, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', marginBottom: 16 }}>Voltar</button>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111827', marginBottom: 4 }}>Historico da Consulta</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111827', marginBottom: 4 }}>Histórico da Consulta</h1>
             {sala && (
               <div style={{ background: 'white', borderRadius: 10, border: '1px solid #e5e7eb', padding: 16, marginBottom: 20 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>

@@ -138,7 +138,7 @@ export default function PacienteDetalhe() {
             </div>
           </div>
           <div style={{background: 'transparent',borderBottom: 'none',padding:'0 28px',display:'flex',flexShrink:0}}>
-            {([{id:'overview',label:'Visao geral'},{id:'consultas',label:'Consultas ('+consultas.length+')'},{id:'agendamentos',label:'Agenda ('+agendamentos.filter(a=>a.status!=='cancelado').length+')'},{id:'prontuario',label:'Prontuario'},{id:'timeline',label:'Linha do tempo'}] as {id:Aba;label:string}[]).map(tab=>(
+            {([{id:'overview',label:'Visão geral'},{id:'consultas',label:'Consultas ('+consultas.length+')'},{id:'agendamentos',label:'Agenda ('+agendamentos.filter(a=>a.status!=='cancelado').length+')'},{id:'prontuario',label:'Prontuário'},{id:'timeline',label:'Linha do tempo'}] as {id:Aba;label:string}[]).map(tab=>(
               <button key={tab.id} onClick={()=>setAba(tab.id)} style={{padding:'14px 16px',background:'transparent',border:'none',cursor:'pointer',fontSize:13,fontWeight:aba===tab.id?600:400,color:aba===tab.id?'#111827':'#6b7280',borderBottom:aba===tab.id?'2px solid #6043C1':'2px solid transparent',marginBottom:-1}}>{tab.label}</button>
             ))}
           </div>
@@ -205,7 +205,7 @@ export default function PacienteDetalhe() {
                   </div>
                   <div style={{background:'white',boxShadow: '0 1px 4px rgba(0,0,0,0.07)',borderRadius:14,overflow:'hidden'}}>
                     <div style={{padding:'14px 20px',borderBottom: 'none',display:'flex',justifyContent:'space-between'}}>
-                      <p style={{fontSize:13,fontWeight:700,color:'#111827',margin:0}}>Ultimas consultas</p>
+                      <p style={{fontSize:13,fontWeight:700,color:'#111827',margin:0}}>Últimas consultas</p>
                       <button onClick={()=>setAba('consultas')} style={{fontSize:12,color:'#6043C1',background:'none',border:'none',cursor:'pointer',fontWeight:600}}>Ver todas</button>
                     </div>
                     {consultas.length===0?<div style={{padding:24,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta</p></div>
@@ -339,7 +339,7 @@ export default function PacienteDetalhe() {
                           <p style={{fontSize:11,color:'#6b7280',margin:0,lineHeight:1.6,whiteSpace:'pre-wrap' as const}}>{c.receita}</p>
                         </div>
                       )}
-                      {/* Transcricao colapsavel */}
+                      {/* Transcrição colapsavel */}
                       {c.transcricao && (
                         <div style={{padding:'8px 18px',borderTop:'1px solid #f3f4f6'}}>
                           <button onClick={() => {
@@ -347,7 +347,7 @@ export default function PacienteDetalhe() {
                             s.has(c.id) ? s.delete(c.id) : s.add(c.id)
                             setTranscricoesAbertas(s)
                           }} style={{display:'flex',alignItems:'center',gap:5,background:'none',border:'none',cursor:'pointer',padding:0}}>
-                            <span style={{fontSize:11,fontWeight:600,color:'#374151'}}>📝 Transcricao</span>
+                            <span style={{fontSize:11,fontWeight:600,color:'#374151'}}>📝 Transcrição</span>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" style={{transform:transcricoesAbertas.has(c.id)?'rotate(180deg)':'none',transition:'transform 0.2s'}}><polyline points="6 9 12 15 18 9"/></svg>
                           </button>
                           {transcricoesAbertas.has(c.id) && (

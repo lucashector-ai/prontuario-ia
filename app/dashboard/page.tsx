@@ -287,7 +287,7 @@ export default function Dashboard() {
                 <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
                   <div style={{ padding: '16px 20px', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Últimas consultas</p>
-                    <a href="/historico" style={{ fontSize: 11, color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>Ver histórico →</a>
+                    <a href="/histórico" style={{ fontSize: 11, color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>Ver histórico →</a>
                   </div>
                   {dados.consultasRecentes.length === 0 ? (
                     <div style={{ padding: '32px 20px', textAlign: 'center' }}>

@@ -771,7 +771,7 @@ REGRAS:
 
                   {relatorio.proximos_agendamentos?.length > 0 && (
                     <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Proximos agendamentos</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Próximos agendamentos</p>
                       {relatorio.proximos_agendamentos.slice(0, 5).map((a: any, i: number) => (
                         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < 4 ? '1px solid #f3f4f6' : 'none' }}>
                           <span style={{ fontSize: 13, color: '#111827' }}>{a.pacientes?.nome || 'Paciente'}</span>
@@ -912,7 +912,7 @@ REGRAS:
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dashboard WhatsApp</h2>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Visao geral do atendimento via WhatsApp</p>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Visão geral do atendimento via WhatsApp</p>
                 </div>
                 <button onClick={carregarMetricas} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
                   Atualizar
@@ -1087,7 +1087,7 @@ REGRAS:
                   </div>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Nome da clinica</label>
-                    <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }} placeholder="Clinica Dr. Silva"/>
+                    <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }} placeholder="Clínica Dr. Silva"/>
                   </div>
                   {cfgMsg && <div style={{ background: cfgMsg.tipo === 'ok' ? '#F9FAFC' : '#fef2f2', border: '1px solid ' + (cfgMsg.tipo === 'ok' ? '#d4c9f7' : '#fecaca'), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: cfgMsg.tipo === 'ok' ? '#6043C1' : '#dc2626', margin: 0 }}>{cfgMsg.texto}</p></div>}
                   <button type="submit" disabled={salvando} style={{ padding: '10px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvando ? 'Validando...' : config ? 'Atualizar' : 'Conectar WhatsApp'}</button>
