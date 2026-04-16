@@ -51,9 +51,8 @@ Analise e retorne APENAS este JSON sem texto antes ou depois:
     })
 
     const txt = message.content[0].type === "text" ? message.content[0].text : "{}"
-    const json = JSON.parse(txt.replace(/\`\`\`json
-?/g, "").replace(/\`\`\`
-?/g, "").trim())
+    const clean = txt.split("```json").join("").split("```").join("").trim()
+    const json = JSON.parse(clean)
     return NextResponse.json({ ...json, total_consultas: consultas.length })
   } catch (e: any) {
     return NextResponse.json({ insights: [], error: e.message })
