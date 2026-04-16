@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [medico, setMedico] = useState<any>(null)
   const [dados, setDados] = useState<any>(null)
   const [carregando, setCarregando] = useState(true)
+  const [gerandoRelatorio, setGerandoRelatorio] = useState(false)
   const [periodo, setPeriodo] = useState<'semana' | 'mes' | 'ano'>('mes')
 
   useEffect(() => {
@@ -23,6 +24,21 @@ export default function Dashboard() {
   useEffect(() => {
     if (medico) carregarDados()
   }, [medico, periodo])
+
+  const gerarRelatorio = async () => {
+    if (!medico) return
+    setGerandoRelatorio(true)
+    try {
+      const res = await fetch('/api/pdf-relatorio-mensal', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ medico_id: medico.id }),
+      })
+      const html = await res.text()
+      const win = window.open('', '_blank')
+      if (win) { win.document.write(html); win.document.close() }
+    } catch (e) { console.error(e) }
+    finally { setGerandoRelatorio(false) }
+  }
 
   const carregarDados = async () => {
     setCarregando(true)
@@ -124,6 +140,10 @@ export default function Dashboard() {
               </button>
             ))}
             </div>
+            <button onClick={gerarRelatorio} disabled={gerandoRelatorio} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 7, border: '1px solid #e5e7eb', background: 'white', color: '#374151', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              {gerandoRelatorio ? 'Gerando...' : 'Relatório mensal'}
+            </button>
           </div>
         </div>
 

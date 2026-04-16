@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
-export default function Histórico() {
+export default function Historico() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
   const [consultas, setConsultas] = useState<any[]>([])
@@ -15,6 +15,7 @@ export default function Histórico() {
   const [editForm, setEditForm] = useState<any>({})
   const [salvando, setSalvando] = useState(false)
   const [deletando, setDeletando] = useState<string | null>(null)
+  const [busca, setBusca] = useState('')
 
   useEffect(() => {
     const m = localStorage.getItem('medico')
@@ -57,6 +58,16 @@ export default function Histórico() {
   }
 
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const consultasFiltradas = consultas.filter(c => {
+    if (!busca.trim()) return true
+    const b = busca.toLowerCase()
+    return (
+      c.subjetivo?.toLowerCase().includes(b) ||
+      c.avaliacao?.toLowerCase().includes(b) ||
+      c.plano?.toLowerCase().includes(b) ||
+      (c.cids || []).some((cid: any) => cid.codigo?.toLowerCase().includes(b) || cid.descricao?.toLowerCase().includes(b))
+    )
+  })
 
   const secoes = [
     { key: 'subjetivo', titulo: 'S — Subjetivo', cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
@@ -74,7 +85,7 @@ export default function Histórico() {
         <div style={{ padding: '16px 24px 12px', borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Histórico de consultas</h1>
-            <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{consultas.length} consultas registradas</p>
+            <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{consultasFiltradas.length}{busca ? ` de ${consultas.length}` : ''} consultas registradas</p>
           </div>
           <a href="/consulta" style={{ fontSize: 12, fontWeight: 600, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '7px 16px', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -85,11 +96,23 @@ export default function Histórico() {
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden', borderRadius: 12 }}>
           {/* Lista */}
           <div style={{ borderRight: 'none', overflow: 'auto', background: 'white', padding: '12px 10px', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', height: '100%' }}>
-            {carregando ? (
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px 12px' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+              placeholder="Buscar por CID, sintoma, conduta..."
+              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 12, outline: 'none', color: '#374151' }}
+            />
+            {busca && <span onClick={() => setBusca('')} style={{ cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1 }}>×</span>}
+          </div>
+        </div>
+        {carregando ? (
               <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Carregando...</p>
             ) : consultas.length === 0 ? (
               <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Nenhuma consulta registrada</p>
-            ) : consultas.map(c => (
+            ) : consultasFiltradas.map(c => (
               <div key={c.id} onClick={() => handleSelecionar(c)} style={{
                 padding: '12px', borderRadius: 10, marginBottom: 6, cursor: 'pointer',
                 background: selecionada?.id === c.id ? '#f3f0fd' : 'white',
