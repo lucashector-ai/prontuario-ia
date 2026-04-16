@@ -53,7 +53,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
   const temVoz = (samples: Float32Array): boolean => {
     let sum = 0
     for (let i = 0; i < samples.length; i++) sum += samples[i] * samples[i]
-    return Math.sqrt(sum / samples.length) > 0.001
+    return Math.sqrt(sum / samples.length) > 0.0001
   }
 
   const enviarParaDeepgram = useCallback(async () => {
@@ -70,6 +70,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
 
     const sampleRate = audioCtxRef.current?.sampleRate || 16000
     const wav = float32ToWav(merged, sampleRate)
+    console.log('Enviando audio:', wav.size, 'bytes, samples:', total, 'sampleRate:', sampleRate)
 
     setTranscrevendo(true)
     try {
@@ -78,6 +79,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
       const res = await fetch('/api/transcrever', { method: 'POST', body: form })
       const data = await res.json()
 
+      console.log('Resposta Deepgram:', JSON.stringify(data))
       if (data.texto?.trim()) {
         const texto = data.texto.trim()
         const alucinacoes = ['www.', 'acesse o site', 'inscreva-se', 'obrigado por assistir', 'subtitle', 'legenda', '[música]', '[music]']
