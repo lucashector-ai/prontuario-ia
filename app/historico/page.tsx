@@ -76,7 +76,7 @@ export default function Historico() {
             <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Histórico de consultas</h1>
             <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{consultas.length} consultas registradas</p>
           </div>
-          <a href="/" style={{ fontSize: 12, fontWeight: 600, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '7px 16px', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <a href="/consulta" style={{ fontSize: 12, fontWeight: 600, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '7px 16px', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Nova consulta
           </a>

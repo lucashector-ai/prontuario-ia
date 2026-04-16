@@ -5,8 +5,12 @@ import { useRouter } from 'next/navigation'
 export default function HomePage() {
   const router = useRouter()
   useEffect(() => {
-    const medico = localStorage.getItem('medico')
-    router.replace(medico ? '/dashboard' : '/login')
+    try {
+      const medico = localStorage.getItem('medico')
+      router.replace(medico ? '/dashboard' : '/login')
+    } catch {
+      router.replace('/login')
+    }
   }, [router])
   return (
     <div style={{ minHeight: '100vh', background: '#F9FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

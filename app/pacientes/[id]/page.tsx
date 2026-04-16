@@ -134,7 +134,7 @@ export default function PacienteDetalhe() {
             </div>
             <div style={{display:'flex',gap:8}}>
               <button onClick={()=>setModalAg(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'1px solid #d4c9f7',background:'#F9FAFC',color:'#6043C1',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar</button>
-              <a href="/" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
+              <a href="/consulta" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
             </div>
           </div>
           <div style={{background: 'transparent',borderBottom: 'none',padding:'0 28px',display:'flex',flexShrink:0}}>
