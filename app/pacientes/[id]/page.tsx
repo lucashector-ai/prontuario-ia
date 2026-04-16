@@ -375,7 +375,7 @@ export default function PacienteDetalhe() {
                 </div>
               </div>
             )
-
+}
               {aba==='timeline'&&(
                 <div style={{maxWidth:800}}>
                   <div style={{marginBottom:20}}>
@@ -461,7 +461,7 @@ export default function PacienteDetalhe() {
                     </div>
                   )}
                 </div>
-              )}}
+              )}
           </div>
         </>)}
       </main>
