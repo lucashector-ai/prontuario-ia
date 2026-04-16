@@ -41,6 +41,8 @@ export default function Agenda() {
   const [comVideo, setComVideo] = useState(false)
   const [salaLink, setSalaLink] = useState('')
   const [salaId, setSalaId] = useState('')
+  const [enviandoPreConsulta, setEnviandoPreConsulta] = useState(false)
+  const [preConsultaEnviada, setPreConsultaEnviada] = useState(false)
 
   const diasSemana = getWeekDays(semana)
   const hoje = new Date().toDateString()
@@ -159,6 +161,26 @@ export default function Agenda() {
     await supabase.from('agendamentos').delete().eq('id', id)
     setAgendamentos(prev => prev.filter(a => a.id !== id))
     setModal({ open: false })
+  }
+
+  const enviarPreConsulta = async (agendamentoId: string) => {
+    if (!medico) return
+    setEnviandoPreConsulta(true)
+    try {
+      const res = await fetch('/api/pre-consulta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agendamento_id: agendamentoId, medico_id: medico.id })
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setPreConsultaEnviada(true)
+        setAgendamentos(prev => prev.map(a => a.id === agendamentoId ? { ...a, pre_consulta_enviada: true } : a))
+      } else {
+        alert(data.error || 'Erro ao enviar pre-consulta')
+      }
+    } catch (e) { alert('Erro de conexao') }
+    finally { setEnviandoPreConsulta(false) }
   }
 
   const atualizarStatus = async (id: string, status: string) => {
@@ -424,6 +446,25 @@ export default function Agenda() {
                   <button type="button" onClick={() => { navigator.clipboard.writeText(salaLink); window.open('/sala/' + salaId, '_blank') }} style={{ fontSize: 11, color: '#6043C1', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>Copiar e abrir</button>
                 </div>
               )}
+              {/* Pre-consulta WhatsApp */}
+              {modal.ag && modal.ag.paciente_id && (
+                <div style={{ background: preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#f0fdf4' : '#f0ebff', border: '1px solid ' + (preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#bbf7d0' : '#d4c9f7'), borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#16a34a' : '#6043C1'} strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#16a34a' : '#6043C1', margin: 0 }}>Pré-consulta WhatsApp</p>
+                      <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{preConsultaEnviada || modal.ag.pre_consulta_enviada ? 'Perguntas enviadas ao paciente' : 'Enviar perguntas antes da consulta'}</p>
+                    </div>
+                  </div>
+                  {!(preConsultaEnviada || modal.ag.pre_consulta_enviada) && (
+                    <button type="button" onClick={() => enviarPreConsulta(modal.ag.id)} disabled={enviandoPreConsulta}
+                      style={{ fontSize: 12, color: '#6043C1', background: 'white', border: '1px solid #d4c9f7', padding: '5px 12px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
+                      {enviandoPreConsulta ? 'Enviando...' : 'Enviar'}
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Botões */}
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
                 <button type="submit" disabled={salvando} style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
