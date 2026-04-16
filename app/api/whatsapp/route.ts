@@ -12,7 +12,7 @@ const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'media_whatsapp_2026'
 // Valores fixos das env vars - nao depende do banco
 const WPP_TOKEN = process.env.WHATSAPP_TOKEN || ''
 const WPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID || '1030374870164992'
-const MEDICO_ID = process.env.WHATSAPP_MEDICO_ID || '85fea69e-5c43-4dfe-bb24-71c93b339217'
+const MEDICO_ID_FALLBACK = process.env.WHATSAPP_MEDICO_ID || ''
 
 const PROMPT_SOFIA = `Voce e Sofia, assistente virtual da clinica. Seja calorosa e profissional. Responda SEMPRE em portugues.
 
@@ -118,6 +118,16 @@ async function processarIA(mensagem: string, historico: any[]) {
     humano,
     agendarData: agendarMatch ? JSON.parse(agendarMatch[1]) : null,
   }
+}
+
+async function getMedicoId(phoneNumberId: string): Promise<string> {
+  if (!phoneNumberId) return MEDICO_ID_FALLBACK
+  const { data } = await supabase
+    .from('whatsapp_config')
+    .select('medico_id')
+    .eq('phone_number_id', phoneNumberId)
+    .maybeSingle()
+  return (data as any)?.medico_id || MEDICO_ID_FALLBACK
 }
 
 export async function GET(req: NextRequest) {
