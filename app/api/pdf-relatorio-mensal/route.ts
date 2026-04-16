@@ -158,7 +158,7 @@ table{width:100%;border-collapse:collapse}
 
 <div class="section">
   <div class="section-title">Análise do mês — IA</div>
-  <div class="ia-box">${resumoIA.replace(/
+  <div class="ia-box">${resumoIA.split(String.fromCharCode(10)).join("<br/>")}</div>
 /g, "<br/>")}</div>
 </div>
 
