@@ -340,7 +340,7 @@ export default function Home() {
         </div>
 
         {/* Content */}
-          <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '0 0 16px 0' }}>
+          <div className="grid-consulta">
 
           {/* Left  -  Gravação + Transcrição */}
           <div style={{ borderRight: 'none', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>

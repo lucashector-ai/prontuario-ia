@@ -156,7 +156,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1200 }}>
 
               {/* Métricas principais */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+              <div className="grid-dash-metrics">
                 {[
                   {
                     label: 'Total de consultas', valor: dados.totalConsultas || 0, icon: '📋',
@@ -189,7 +189,7 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 16 }}>
+              <div className="grid-dash-main">
 
                 {/* Gráfico de barras — consultas por dia */}
                 <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, padding: '20px 24px' }}>
@@ -265,7 +265,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="grid-dash-bottom">
 
                 {/* CIDs mais frequentes */}
                 <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
