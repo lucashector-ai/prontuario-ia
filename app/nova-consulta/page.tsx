@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useGravador } from '@/lib/useGravador'
+import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
 import { ProntuarioCard } from '@/components/ProntuarioCard'
 import { ReceitaCard } from '@/components/ReceitaCard'
@@ -30,7 +31,6 @@ export default function Home() {
   const [erroMsg, setErroMsg] = useState('')
   const [aba, setAba] = useState<Aba>('prontuario')
   const [consultaSalva, setConsultaSalva] = useState(false)
-  const [copiado, setCopiado] = useState(false)
   const [copiloto, setCopiloto] = useState<any>(null)
   const [resumoPaciente, setResumoPaciente] = useState('')
   const [gerandoResumo, setGerandoResumo] = useState(false)
@@ -102,6 +102,7 @@ export default function Home() {
         body: JSON.stringify({ medico_id: medico.id, transcricao, paciente_id: pacienteSelecionado?.id || null, ...p }),
       })
       setConsultaSalva(true)
+      toast('Consulta salva com sucesso!')
     if (p.paciente_id) {
       fetch('/api/copiloto', {
         method: 'POST',
@@ -125,7 +126,7 @@ export default function Home() {
       if (data.receita) { setReceita(data.receita); setAba('receita') }
       else throw new Error(data.error || 'Erro ao gerar receita')
     } catch (e: any) {
-      setErroMsg(e.message)
+      toast(e.message || 'Erro ao gerar receita', 'error')
     }
     finally { setGerandoReceita(false) }
   }
@@ -142,7 +143,7 @@ export default function Home() {
       'CID-10', ...(prontuario.cids||[]).map((c:any) => `${c.codigo}  -  ${c.descricao}`),
     ].join('\n')
     navigator.clipboard.writeText(t)
-    setCopiado(true); setTimeout(() => setCopiado(false), 2000)
+    toast('Prontuário copiado!')
   }
 
   const handleGerarResumo = async () => {
@@ -541,8 +542,7 @@ export default function Home() {
                           <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>Gerar receita médica</>
                         )}
                       </button>
-                      {copiado && <p style={{ textAlign: 'center', fontSize: 12, color: '#6043C1', marginTop: 8, fontWeight: 500 }}> Copiado!</p>}
-                    </>
+                                    </>
                   )}
                   {aba === 'receita' && receita && (
                     <ReceitaCard receita={receita} nomeMedico={medico?.nome} crm={medico?.crm} especialidade={medico?.especialidade} onImprimir={() => window.print()} />
