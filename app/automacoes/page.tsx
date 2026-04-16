@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/Sidebar"
 
-type Tab = "followup" | "confirmacao" | "nps" | "relatorio"
+type Tab = "followup" | "confirmacao" | "nps" | "relatorio" | "pdf"
 
 export default function AutomacoesPage() {
   const router = useRouter()
@@ -47,7 +47,8 @@ export default function AutomacoesPage() {
     { id: "followup", label: "Follow-up", icon: "↻" },
     { id: "confirmacao", label: "Confirmação", icon: "✓" },
     { id: "nps", label: "Avaliação NPS", icon: "★" },
-    { id: "relatorio", label: "Relatório", icon: "📋" },
+    { id: "relatorio", label: "Relatório semanal", icon: "📋" },
+    { id: "pdf", label: "Relatório PDF", icon: "⬇" },
   ]
 
   const card = (titulo: string, desc: string, cor: string, bg: string, border: string, acao: string, body: any, extra?: React.ReactNode) => (
@@ -157,6 +158,44 @@ export default function AutomacoesPage() {
                 </div>
               )}
             </>)}
+
+            {/* PDF MENSAL */}
+            {aba === "pdf" && (
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
+                <div style={{ background: "white", borderRadius: 14, boxShadow: "0 1px 3px rgba(0,0,0,0.07)", padding: "20px 24px" }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: "0 0 8px" }}>Relatório mensal completo em PDF</h3>
+                  <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 16px", lineHeight: 1.6 }}>Gera um PDF completo do mês atual com consultas, crescimento, diagnósticos mais frequentes, próximos agendamentos e análise por IA. Ideal para arquivar ou compartilhar com a gestão da clínica.</p>
+                  <button onClick={async () => {
+                    if (!medico) return
+                    setCarregando(true)
+                    setMsg(null)
+                    try {
+                      const res = await fetch("/api/pdf-relatorio-mensal", {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ medico_id: medico.id })
+                      })
+                      if (res.ok) {
+                        const html = await res.text()
+                        const win = window.open("", "_blank")
+                        if (win) { win.document.write(html); win.document.close(); setTimeout(() => win.print(), 800) }
+                        setMsg({ tipo: "ok", texto: "Relatório gerado com sucesso — use Ctrl+P para salvar como PDF" })
+                      } else {
+                        const d = await res.json()
+                        setMsg({ tipo: "erro", texto: d.error })
+                      }
+                    } catch { setMsg({ tipo: "erro", texto: "Erro de conexão" }) }
+                    finally { setCarregando(false) }
+                  }} disabled={carregando}
+                    style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: carregando ? "#b9a9ef" : "#6043C1", color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    {carregando ? "Gerando..." : "Gerar relatório do mês"}
+                  </button>
+                </div>
+                <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 12, padding: "14px 18px" }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#92400e", margin: "0 0 4px" }}>Dica: relatório mensal automático</p>
+                  <p style={{ fontSize: 12, color: "#92400e", margin: 0, lineHeight: 1.6 }}>Configure um cron job para gerar e enviar o relatório automaticamente no primeiro dia de cada mês. Endpoint: <code style={{ background: "#fef3c7", padding: "1px 6px", borderRadius: 4, fontSize: 11 }}>POST /api/pdf-relatorio-mensal</code></p>
+                </div>
+              </div>
+            )}
 
             {/* RELATÓRIO */}
             {aba === "relatorio" && (<>
