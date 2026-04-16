@@ -122,12 +122,23 @@ async function processarIA(mensagem: string, historico: any[]) {
 
 async function getMedicoId(phoneNumberId: string): Promise<string> {
   if (!phoneNumberId) return MEDICO_ID_FALLBACK
-  const { data } = await supabase
-    .from('whatsapp_config')
-    .select('medico_id')
-    .eq('phone_number_id', phoneNumberId)
-    .maybeSingle()
-  return (data as any)?.medico_id || MEDICO_ID_FALLBACK
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    const admin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data } = await admin
+      .from('whatsapp_config')
+      .select('medico_id')
+      .eq('phone_number_id', phoneNumberId)
+      .maybeSingle()
+    console.log('getMedicoId:', phoneNumberId, '->', (data as any)?.medico_id)
+    return (data as any)?.medico_id || MEDICO_ID_FALLBACK
+  } catch (e) {
+    console.error('getMedicoId error:', e)
+    return MEDICO_ID_FALLBACK
+  }
 }
 
 export async function GET(req: NextRequest) {
