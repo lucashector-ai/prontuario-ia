@@ -35,13 +35,7 @@ export default function Cadastro() {
     { label: 'Senhas coincidem', ok: form.senha.length > 0 && form.senha === form.confirmar_senha },
   ]
 
-  const requisitos = [
-    { label: 'Mínimo 8 caracteres', ok: form.senha.length >= 8 },
-    { label: 'Letra maiúscula', ok: /[A-Z]/.test(form.senha) },
-    { label: 'Número', ok: /[0-9]/.test(form.senha) },
-    { label: 'Caractere especial', ok: /[^A-Za-z0-9]/.test(form.senha) },
-    { label: 'Senhas coincidem', ok: form.senha.length > 0 && form.senha === form.confirmar_senha },
-  ]
+
 
   const avancar = () => {
     setErro('')
