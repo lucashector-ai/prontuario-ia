@@ -57,7 +57,7 @@ async function enviarWpp(para: string, texto: string, token?: string, phoneId?: 
       body: JSON.stringify({ messaging_product: 'whatsapp', to: para, type: 'text', text: { body: texto } })
     })
     const d = await r.json()
-    console.log('WPP_SEND:', JSON.stringify(d).substring(0, 100))
+    console.log('WPP_SEND:', JSON.stringify(d).substring(0, 300))
     return d
   } catch (e) { console.error('WPP_ERR:', e) }
 }
