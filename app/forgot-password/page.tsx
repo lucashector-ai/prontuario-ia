@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -12,12 +11,17 @@ export default function ForgotPasswordPage() {
   async function enviar() {
     if (!email) return setErro('Digite seu email')
     setLoading(true); setErro('')
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/reset-password',
-    })
-    setLoading(false)
-    if (error) setErro(error.message)
-    else setEnviado(true)
+    try {
+      const res = await fetch('/api/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      if (data.ok) setEnviado(true)
+      else setErro(data.error || 'Email nao encontrado')
+    } catch { setErro('Erro de conexao') }
+    finally { setLoading(false) }
   }
 
   return (
@@ -35,9 +39,7 @@ export default function ForgotPasswordPage() {
         {enviado ? (
           <div style={{ textAlign: 'center' }}>
             <div style={{ width: 64, height: 64, background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <svg width="32" height="32" fill="none" stroke="#16a34a" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
+              <svg width="32" height="32" fill="none" stroke="#16a34a" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
             </div>
             <p style={{ fontSize: 16, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>Email enviado!</p>
             <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 20px' }}>Verifique sua caixa de entrada e spam.</p>
@@ -52,7 +54,7 @@ export default function ForgotPasswordPage() {
             {erro && <p style={{ fontSize: 13, color: '#dc2626', margin: '0 0 12px' }}>{erro}</p>}
             <button onClick={enviar} disabled={loading}
               style={{ width: '100%', padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', background: loading ? '#b9a9ef' : '#6043C1', color: 'white', fontSize: 15, fontWeight: 700, marginBottom: 12 }}>
-              {loading ? 'Enviando...' : 'Enviar link de recuperação'}
+              {loading ? 'Enviando...' : 'Enviar link de recuperacao'}
             </button>
             <div style={{ textAlign: 'center' }}>
               <Link href="/login" style={{ color: '#6b7280', fontSize: 14, textDecoration: 'none' }}>← Voltar ao login</Link>
