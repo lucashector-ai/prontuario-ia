@@ -64,9 +64,10 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
       keyterm: TERMOS_MEDICOS.slice(0, 50).join('&keyterm='),
     })
 
+    // Deepgram aceita a key como query param no WebSocket
+    params.set('access_token', token)
     const ws = new WebSocket(
-      `wss://api.deepgram.com/v1/listen?${params.toString()}`,
-      ['token', token]
+      `wss://api.deepgram.com/v1/listen?${params.toString()}`
     )
 
     return new Promise((resolve, reject) => {
