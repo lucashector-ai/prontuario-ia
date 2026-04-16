@@ -8,7 +8,7 @@ import { ReceitaCard } from '@/components/ReceitaCard'
 import { Sidebar } from '@/components/Sidebar'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
-type Aba = 'prontuario' | 'receita'
+type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
 
 export default function Home() {
   const router = useRouter()
@@ -23,6 +23,12 @@ export default function Home() {
   const [consultaSalva, setConsultaSalva] = useState(false)
   const [copiado, setCopiado] = useState(false)
   const [copiloto, setCopiloto] = useState<any>(null)
+  const [resumoPaciente, setResumoPaciente] = useState('')
+  const [gerandoResumo, setGerandoResumo] = useState(false)
+  const [exames, setExames] = useState<any>(null)
+  const [atestado, setAtestado] = useState<any>(null)
+  const [gerandoDoc, setGerandoDoc] = useState(false)
+  const [diasAtestado, setDiasAtestado] = useState(1)
 
   useEffect(() => {
     const m = localStorage.getItem('medico')
@@ -102,6 +108,59 @@ export default function Home() {
     ].join('\n')
     navigator.clipboard.writeText(t)
     setCopiado(true); setTimeout(() => setCopiado(false), 2000)
+  }
+
+  const handleGerarResumo = async () => {
+    if (!prontuario) return
+    setGerandoResumo(true)
+    try {
+      const res = await fetch('/api/resumo-paciente', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prontuario, medico })
+      })
+      const data = await res.json()
+      if (data.resumo) { setResumoPaciente(data.resumo); setAba('resumo') }
+    } catch (e) { console.error(e) }
+    finally { setGerandoResumo(false) }
+  }
+
+  const handleGerarExames = async () => {
+    if (!prontuario) return
+    setGerandoDoc(true)
+    try {
+      const res = await fetch('/api/documentos', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'exames', prontuario, medico })
+      })
+      const data = await res.json()
+      if (data.exames) { setExames(data); setAba('documentos') }
+    } catch (e) { console.error(e) }
+    finally { setGerandoDoc(false) }
+  }
+
+  const handleGerarAtestado = async () => {
+    if (!prontuario) return
+    setGerandoDoc(true)
+    try {
+      const res = await fetch('/api/documentos', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'atestado', prontuario, medico, paciente: null })
+      })
+      const data = await res.json()
+      if (data.dias !== undefined) { setAtestado({ ...data, dias: diasAtestado }); setAba('documentos') }
+    } catch (e) { console.error(e) }
+    finally { setGerandoDoc(false) }
+  }
+
+  const imprimirAtestado = async () => {
+    if (!atestado || !medico) return
+    const res = await fetch('/api/pdf-atestado', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ medico, paciente: null, atestado })
+    })
+    const html = await res.text()
+    const win = window.open('', '_blank')
+    if (win) { win.document.write(html); win.document.close(); setTimeout(() => win.print(), 500) }
   }
 
   const handleNovo = () => {
@@ -280,7 +339,7 @@ export default function Home() {
               <div className="fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white', borderLeft: '1px solid #e5e7eb' }}>
                 {/* Tab bar */}
                 <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', padding: '0 20px', background: 'white', flexShrink: 0 }}>
-                  {(['prontuario', 'receita'] as Aba[]).map(tab => (
+                  {(['prontuario', 'receita', 'resumo', 'documentos'] as Aba[]).map(tab => (
                     <button key={tab} onClick={() => setAba(tab)} style={{
                       padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
                       fontSize: 13, fontWeight: aba === tab ? 600 : 400,
@@ -288,7 +347,7 @@ export default function Home() {
                       borderBottom: aba === tab ? '2px solid #6043C1' : '2px solid transparent',
                       marginBottom: -1,
                     }}>
-                      {tab === 'prontuario' ? 'Prontuario' : `Receita${receita ? ' ' : ''}`}
+                      {tab === 'prontuario' ? 'Prontuario' : tab === 'receita' ? 'Receita' : tab === 'resumo' ? 'Resumo' : 'Documentos'}
                     </button>
                   ))}
                 </div>
@@ -326,7 +385,88 @@ export default function Home() {
                         Gerar receita
                       </button>
                     </div>
+                  )
+                  {aba === 'resumo' && (
+                    <div>
+                      {!resumoPaciente ? (
+                        <div style={{ textAlign: 'center', padding: '60px 24px' }}>
+                          <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.5"><path d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+                          </div>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Resumo para o paciente</p>
+                          <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px' }}>Explica a consulta em linguagem simples e acolhedora.</p>
+                          <button onClick={handleGerarResumo} disabled={gerandoResumo} style={{ padding: '9px 22px', borderRadius: 8, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                            {gerandoResumo ? 'Gerando...' : 'Gerar resumo'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Resumo para o paciente</p>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <button onClick={() => { navigator.clipboard.writeText(resumoPaciente) }} style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Copiar</button>
+                              <button onClick={() => setResumoPaciente('')} style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Regenerar</button>
+                            </div>
+                          </div>
+                          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '16px 18px' }}>
+                            <p style={{ fontSize: 13, color: '#166534', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{resumoPaciente}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
+                  {aba === 'documentos' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px' }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Pedido de exames</p>
+                        {!exames ? (
+                          <button onClick={handleGerarExames} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#f9fafb', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            {gerandoDoc ? 'Gerando...' : 'Gerar pedido de exames'}
+                          </button>
+                        ) : (
+                          <div>
+                            {exames.exames?.map((e: any, i: number) => (
+                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid #f9fafb' }}>
+                                <div>
+                                  <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{e.nome}</p>
+                                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{e.indicacao}</p>
+                                </div>
+                                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: e.urgencia === 'urgente' ? '#fef2f2' : '#f0fdf4', color: e.urgencia === 'urgente' ? '#dc2626' : '#16a34a', border: `1px solid ${e.urgencia === 'urgente' ? '#fecaca' : '#bbf7d0'}` }}>{e.urgencia}</span>
+                              </div>
+                            ))}
+                            {exames.observacoes && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 10, fontStyle: 'italic' }}>{exames.observacoes}</p>}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px' }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Atestado médico</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                          <label style={{ fontSize: 12, color: '#6b7280' }}>Dias de afastamento:</label>
+                          <input type="number" min={1} max={30} value={diasAtestado} onChange={e => setDiasAtestado(Number(e.target.value))}
+                            style={{ width: 60, padding: '5px 8px', borderRadius: 6, border: '1px solid #e5e7eb', fontSize: 13, textAlign: 'center' }} />
+                        </div>
+                        {!atestado ? (
+                          <button onClick={handleGerarAtestado} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#f9fafb', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            {gerandoDoc ? 'Gerando...' : 'Gerar atestado'}
+                          </button>
+                        ) : (
+                          <div>
+                            <div style={{ background: '#f9fafb', borderRadius: 8, padding: '12px', marginBottom: 12, fontSize: 13, color: '#374151', lineHeight: 1.7 }}>
+                              <p><strong>Paciente:</strong> {atestado.cid ? `CID ${atestado.cid}` : 'conforme avaliação médica'}</p>
+                              <p><strong>Afastamento:</strong> {atestado.dias} dia{atestado.dias > 1 ? 's' : ''}</p>
+                              {atestado.motivo && <p><strong>Motivo:</strong> {atestado.motivo}</p>}
+                            </div>
+                            <button onClick={imprimirAtestado} style={{ width: '100%', padding: '9px', borderRadius: 8, background: '#6043C1', color: 'white', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/></svg>
+                              Imprimir atestado
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}}
                 </div>
               </div>
             )}
