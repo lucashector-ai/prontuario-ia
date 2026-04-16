@@ -1,13 +1,15 @@
 'use client'
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { useToast } from '@/components/Toast'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
-type Aba = 'conversas' | 'sofia' | 'equipe' | 'dashboard' | 'alertas' | 'campanha' | 'relatorio' | 'aderencia' | 'agenda' | 'nps' | 'configuracao'
+type Aba = 'conversas' | 'sofia' | 'equipe' | 'dashboard' | 'alertas' | 'campanha' | 'relatorio' | 'aderencia' | 'agenda' | 'nps' | 'configuracao' | 'transmissao'
 
 export default function WhatsApp() {
   const router = useRouter()
+  const { toast } = useToast()
   const [medico, setMedico] = useState<any>(null)
   const [alertas, setAlertas] = useState<any[]>([])
   const [inativos, setInativos] = useState<any[]>([])
@@ -26,7 +28,7 @@ export default function WhatsApp() {
   const [npsData, setNpsData] = useState<any>(null)
   const [npsEnviando, setNpsEnviando] = useState(false)
   const [usuario, setUsuario] = useState<any>(null) // medico ou atendente logado
-  const [aba, setAba] = useState<Aba>('conversas')
+  const [aba, setAba] = useState<Aba>('dashboard')
 
   // conversas
   const [conversas, setConversas] = useState<any[]>([])
@@ -47,7 +49,15 @@ export default function WhatsApp() {
   // assumir atendimento
   const [assumindo, setAssumindo] = useState(false)
 
+  // listas de transmissao
+  const [listas, setListas] = useState<any[]>([])
+  const [novaLista, setNovaLista] = useState({ nome: '', descricao: '' })
+  const [listaSelecionada, setListaSelecionada] = useState<any>(null)
+  const [msgTransmissao, setMsgTransmissao] = useState('')
+  const [enviandoTransmissao, setEnviandoTransmissao] = useState(false)
+
   // configuracao
+  const [wizardPasso, setWizardPasso] = useState(1)
   const [config, setConfig] = useState<any>(null)
   const [form, setForm] = useState({ phone_number_id: '', access_token: '', nome_exibicao: '' })
   const [salvando, setSalvando] = useState(false)
@@ -330,11 +340,33 @@ REGRAS:
               {usuario && <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '3px 10px', borderRadius: 20 }}> {usuario.nome}</span>}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 0, marginTop: 8 }}>
-            <button style={tabStyle('conversas')} onClick={() => setAba('conversas')}> Conversas {totalNaoLidas > 0 && <span style={{ background: '#6043C1', color: 'white', borderRadius: 10, padding: '1px 5px', fontSize: 10, marginLeft: 3 }}>{totalNaoLidas}</span>}</button>
-            <button style={tabStyle('sofia')} onClick={() => setAba('sofia')}> Sofia IA</button>
-            <button style={tabStyle('equipe')} onClick={() => setAba('equipe')}> Equipe</button>
-            <button style={tabStyle('configuracao')} onClick={() => setAba('configuracao')}> Configuracao</button>
+          <div style={{ display: 'flex', gap: 0, marginTop: 8, overflowX: 'auto', borderBottom: '1px solid #f3f4f6', paddingBottom: 0 }}>
+            {([
+              { id: 'dashboard', label: 'Dashboard' },
+              { id: 'conversas', label: `Conversas${totalNaoLidas > 0 ? ` (${totalNaoLidas})` : ''}` },
+              { id: 'transmissao', label: 'Transmissão' },
+              { id: 'campanha', label: 'Campanhas' },
+              { id: 'alertas', label: `Alertas${alertasNaoLidos > 0 ? ` (${alertasNaoLidos})` : ''}` },
+              { id: 'agenda', label: 'Confirmações' },
+              { id: 'aderencia', label: 'Aderência' },
+              { id: 'nps', label: 'NPS' },
+              { id: 'relatorio', label: 'Relatório' },
+              { id: 'sofia', label: 'Sofia IA' },
+              { id: 'equipe', label: 'Equipe' },
+              { id: 'configuracao', label: !config ? '⚠ Conectar' : 'Configuração' },
+            ] as {id: Aba, label: string}[]).map(t => (
+              <button key={t.id} style={{
+                padding: '10px 14px', fontSize: 12,
+                fontWeight: aba === t.id ? 700 : 500,
+                color: t.id === 'configuracao' && !config ? '#d97706' : aba === t.id ? '#16a34a' : '#6b7280',
+                background: 'none', border: 'none',
+                borderBottom: aba === t.id ? '2px solid #16a34a' : '2px solid transparent',
+                cursor: 'pointer', whiteSpace: 'nowrap' as const,
+                flexShrink: 0,
+              }} onClick={() => setAba(t.id)}>
+                {t.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -642,7 +674,7 @@ REGRAS:
                         setCheckinEnviando(true)
                         const r = await fetch('/api/whatsapp-checkin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ medico_id: medico?.id }) })
                         const d = await r.json()
-                        alert(`Check-in enviado para ${d.enviados} pacientes!`)
+                        toast(`Check-in enviado para ${d.enviados} pacientes!`)
                         setCheckinEnviando(false)
                         carregarAlertas()
                       }}
@@ -700,7 +732,7 @@ REGRAS:
                       setCampanhaEnviando(true)
                       const r = await fetch('/api/whatsapp-campanha', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ medico_id: medico?.id, mensagem: campanhaMsg }) })
                       const d = await r.json()
-                      alert('Campanha enviada para ' + d.enviados + ' pacientes!')
+                      toast('Campanha enviada para ' + d.enviados + ' pacientes!')
                       setCampanhaMsg('')
                       setCampanhaEnviando(false)
                       fetch('/api/whatsapp-campanha?medico_id=' + medico?.id).then(r => r.json()).then(d => setCampanhas(d.campanhas || []))
@@ -868,7 +900,7 @@ REGRAS:
                       setConfirmacaoEnviando(true)
                       const r = await fetch('/api/whatsapp-confirmacao', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ medico_id: medico?.id }) })
                       const d = await r.json()
-                      alert('Confirmacoes enviadas para ' + d.enviados + ' pacientes!')
+                      toast('Confirmações enviadas para ' + d.enviados + ' pacientes!')
                       setConfirmacaoEnviando(false)
                     }}
                     style={{ fontSize: 12, fontWeight: 600, color: 'white', background: confirmacaoEnviando ? '#9ca3af' : '#6043C1', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: confirmacaoEnviando ? 'not-allowed' : 'pointer' }}>
@@ -1053,6 +1085,97 @@ REGRAS:
             </div>
           )}
 
+        {aba === 'transmissao' && (
+          <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F9FAFC' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20, height: '100%', alignContent: 'start' }}>
+
+              {/* Lista de grupos */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Nova lista</p>
+                  <input value={novaLista.nome} onChange={e => setNovaLista(l => ({ ...l, nome: e.target.value }))}
+                    placeholder="Nome da lista (ex: Pós-cirúrgico)" style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, marginBottom: 8, boxSizing: 'border-box' as const, outline: 'none' }} />
+                  <input value={novaLista.descricao} onChange={e => setNovaLista(l => ({ ...l, descricao: e.target.value }))}
+                    placeholder="Descrição opcional" style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, marginBottom: 8, boxSizing: 'border-box' as const, outline: 'none' }} />
+                  <button onClick={async () => {
+                    if (!novaLista.nome.trim() || !medico) return
+                    const { data } = await (await import('@/lib/supabase')).supabase
+                      .from('listas_transmissao').insert({ medico_id: medico.id, nome: novaLista.nome, descricao: novaLista.descricao }).select().single()
+                    if (data) { setListas(l => [...l, { ...data, total: 0 }]); setNovaLista({ nome: '', descricao: '' }); toast('Lista criada!') }
+                  }} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    + Criar lista
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {listas.length === 0 ? (
+                    <div style={{ background: 'white', borderRadius: 12, padding: '24px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+                      <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Nenhuma lista criada</p>
+                    </div>
+                  ) : listas.map((l: any) => (
+                    <div key={l.id} onClick={() => setListaSelecionada(l)}
+                      style={{ background: listaSelecionada?.id === l.id ? '#f0fdf4' : 'white', border: `1px solid ${listaSelecionada?.id === l.id ? '#86efac' : '#e5e7eb'}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{l.nome}</p>
+                        <span style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>{l.total || 0} contatos</span>
+                      </div>
+                      {l.descricao && <p style={{ fontSize: 12, color: '#6b7280', margin: '3px 0 0' }}>{l.descricao}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Painel envio */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {!listaSelecionada ? (
+                  <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                    <p style={{ fontSize: 32, margin: '0 0 12px' }}>📢</p>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Listas de transmissão</p>
+                    <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Crie listas para enviar mensagens em massa para grupos de pacientes específicos — pós-cirúrgico, diabéticos, retorno, etc.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                        <div>
+                          <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>{listaSelecionada.nome}</p>
+                          <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 0' }}>{listaSelecionada.total || 0} contatos</p>
+                        </div>
+                        <button onClick={async () => {
+                          if (!confirm('Excluir esta lista?')) return
+                          await (await import('@/lib/supabase')).supabase.from('listas_transmissao').delete().eq('id', listaSelecionada.id)
+                          setListas(l => l.filter(x => x.id !== listaSelecionada.id))
+                          setListaSelecionada(null)
+                          toast('Lista removida', 'info')
+                        }} style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: 6, cursor: 'pointer' }}>
+                          Excluir lista
+                        </button>
+                      </div>
+                      <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px' }}>Use {'{{nome}}'} para personalizar</p>
+                      <textarea value={msgTransmissao} onChange={e => setMsgTransmissao(e.target.value)}
+                        placeholder="Olá {{nome}}, sua consulta de retorno está disponível..."
+                        rows={4} style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' as const }} />
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+                        <button disabled={!msgTransmissao.trim() || enviandoTransmissao} onClick={async () => {
+                          if (!msgTransmissao.trim() || !listaSelecionada) return
+                          setEnviandoTransmissao(true)
+                          const r = await fetch('/api/whatsapp-campanha', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ medico_id: medico?.id, mensagem: msgTransmissao, lista_id: listaSelecionada.id }) })
+                          const d = await r.json()
+                          toast(`Transmissão enviada para ${d.enviados} contatos!`)
+                          setMsgTransmissao('')
+                          setEnviandoTransmissao(false)
+                        }} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: !msgTransmissao.trim() || enviandoTransmissao ? '#9ca3af' : '#16a34a', color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                          {enviandoTransmissao ? 'Enviando...' : '📢 Enviar transmissão'}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {aba === 'configuracao' && (
           <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
             <div style={{ maxWidth: 680 }}>
@@ -1070,29 +1193,136 @@ REGRAS:
                   <button onClick={async () => { await fetch('/api/whatsapp-config?medico_id=' + medico.id, { method: 'DELETE' }); setConfig(null) }} style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Desconectar</button>
                 </div>
               )}
-              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
-                <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
-                  <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>{config ? 'Atualizar' : 'Conectar'} numero WhatsApp</h2>
-                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Cada clinica usa seu proprio numero oficial</p>
+              {!config && (
+                <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
+                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                    <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Conectar WhatsApp Business</h2>
+                    <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Siga os passos abaixo para conectar o número da clínica</p>
+                  </div>
+
+                  {/* Steps indicator */}
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f3f4f6', gap: 0 }}>
+                    {[1,2,3].map((s, i) => (
+                      <div key={s} style={{ display: 'flex', alignItems: 'center', flex: i < 2 ? 1 : 0 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0,
+                          background: wizardPasso > s ? '#16a34a' : wizardPasso === s ? '#16a34a' : '#f3f4f6',
+                          color: wizardPasso >= s ? 'white' : '#9ca3af' }}>
+                          {wizardPasso > s ? '✓' : s}
+                        </div>
+                        {i < 2 && <div style={{ flex: 1, height: 2, background: wizardPasso > s ? '#16a34a' : '#f3f4f6', margin: '0 6px' }} />}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ padding: '20px' }}>
+                    {wizardPasso === 1 && (
+                      <div>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Passo 1 — Acesse o painel da Meta</p>
+                        <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px', lineHeight: 1.6 }}>
+                          Acesse <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" style={{ color: '#16a34a', fontWeight: 600 }}>developers.facebook.com</a> e faça login com a conta que gerencia o número do WhatsApp Business.
+                        </p>
+                        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: '#166534', margin: '0 0 6px' }}>📌 Onde encontrar</p>
+                          <p style={{ fontSize: 12, color: '#166534', margin: 0, lineHeight: 1.6 }}>
+                            Meu Aplicativo → WhatsApp → Configuração da API → <strong>Identificação do número de telefone</strong>
+                          </p>
+                        </div>
+                        <div style={{ background: '#f9fafb', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontFamily: 'monospace', fontSize: 12, color: '#374151' }}>
+                          Ex: <strong>1030374870164992</strong>
+                        </div>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Phone Number ID *</label>
+                        <input required value={form.phone_number_id} onChange={e => setForm(f => ({ ...f, phone_number_id: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace', boxSizing: 'border-box' as const, outline: 'none' }}
+                          placeholder="Cole o Phone Number ID aqui" />
+                        <button onClick={() => { if (form.phone_number_id.trim()) setWizardPasso(2) }}
+                          disabled={!form.phone_number_id.trim()}
+                          style={{ width: '100%', marginTop: 16, padding: '10px', borderRadius: 9, border: 'none', background: form.phone_number_id.trim() ? '#16a34a' : '#e5e7eb', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                          Próximo →
+                        </button>
+                      </div>
+                    )}
+
+                    {wizardPasso === 2 && (
+                      <div>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Passo 2 — Token de acesso permanente</p>
+                        <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px', lineHeight: 1.6 }}>
+                          Gere um token de acesso <strong>permanente</strong> (não o temporário de 24h).
+                        </p>
+                        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: '#92400e', margin: '0 0 6px' }}>⚠ Atenção</p>
+                          <p style={{ fontSize: 12, color: '#92400e', margin: 0, lineHeight: 1.6 }}>
+                            Use <strong>Sistema de Usuário</strong> no Business Manager para gerar um token que não expira. Tokens de usuário expiram e quebram a integração.
+                          </p>
+                        </div>
+                        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: '#166534', margin: '0 0 6px' }}>📌 Onde encontrar</p>
+                          <p style={{ fontSize: 12, color: '#166534', margin: 0, lineHeight: 1.6 }}>
+                            Business Manager → Configurações → Usuários do sistema → Gerar token → Selecione seu app → <strong>whatsapp_business_messaging</strong>
+                          </p>
+                        </div>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Token permanente *</label>
+                        <input required type="password" value={form.access_token} onChange={e => setForm(f => ({ ...f, access_token: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace', boxSizing: 'border-box' as const, outline: 'none' }}
+                          placeholder="EAANoj..." />
+                        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                          <button onClick={() => setWizardPasso(1)} style={{ flex: 1, padding: '10px', borderRadius: 9, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>← Voltar</button>
+                          <button onClick={() => { if (form.access_token.trim()) setWizardPasso(3) }} disabled={!form.access_token.trim()}
+                            style={{ flex: 2, padding: '10px', borderRadius: 9, border: 'none', background: form.access_token.trim() ? '#16a34a' : '#e5e7eb', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                            Próximo →
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {wizardPasso === 3 && (
+                      <div>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Passo 3 — Finalizar conexão</p>
+                        <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px', lineHeight: 1.6 }}>
+                          Dê um nome para identificar este número na plataforma e clique em conectar.
+                        </p>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Nome da clínica</label>
+                        <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', boxSizing: 'border-box' as const, outline: 'none', marginBottom: 16 }}
+                          placeholder="Clínica Dr. Silva" />
+                        {cfgMsg && <div style={{ background: cfgMsg.tipo === 'ok' ? '#f0fdf4' : '#fef2f2', border: '1px solid ' + (cfgMsg.tipo === 'ok' ? '#bbf7d0' : '#fecaca'), borderRadius: 8, padding: '8px 12px', marginBottom: 12 }}>
+                          <p style={{ fontSize: 12, color: cfgMsg.tipo === 'ok' ? '#16a34a' : '#dc2626', margin: 0 }}>{cfgMsg.texto}</p>
+                        </div>}
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          <button onClick={() => setWizardPasso(2)} style={{ flex: 1, padding: '10px', borderRadius: 9, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>← Voltar</button>
+                          <button onClick={(e: any) => { e.preventDefault(); salvarConfig(e) }} disabled={salvando}
+                            style={{ flex: 2, padding: '10px', borderRadius: 9, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                            {salvando ? 'Conectando...' : '✓ Conectar WhatsApp'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <form onSubmit={salvarConfig} style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Phone Number ID *</label>
-                    <input required value={form.phone_number_id} onChange={e => setForm(f => ({ ...f, phone_number_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace' }} placeholder="1030374870164992"/>
-                    <p style={{ fontSize: 10, color: '#9ca3af', margin: '3px 0 0' }}>Meta  WhatsApp  Configuracao da API  Identificacao do numero de telefone</p>
+              )}
+
+              {config && (
+                <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
+                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                    <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Atualizar credenciais</h2>
                   </div>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Token de acesso permanente *</label>
-                    <input required type="password" value={form.access_token} onChange={e => setForm(f => ({ ...f, access_token: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace' }} placeholder="EAANoj..."/>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Nome da clinica</label>
-                    <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }} placeholder="Clínica Dr. Silva"/>
-                  </div>
-                  {cfgMsg && <div style={{ background: cfgMsg.tipo === 'ok' ? '#F9FAFC' : '#fef2f2', border: '1px solid ' + (cfgMsg.tipo === 'ok' ? '#d4c9f7' : '#fecaca'), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: cfgMsg.tipo === 'ok' ? '#6043C1' : '#dc2626', margin: 0 }}>{cfgMsg.texto}</p></div>}
-                  <button type="submit" disabled={salvando} style={{ padding: '10px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvando ? 'Validando...' : config ? 'Atualizar' : 'Conectar WhatsApp'}</button>
-                </form>
-              </div>
+                  <form onSubmit={salvarConfig} style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Phone Number ID</label>
+                      <input required value={form.phone_number_id} onChange={e => setForm(f => ({ ...f, phone_number_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace', boxSizing: 'border-box' as const }} placeholder="1030374870164992"/>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Token permanente</label>
+                      <input required type="password" value={form.access_token} onChange={e => setForm(f => ({ ...f, access_token: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace', boxSizing: 'border-box' as const }} placeholder="EAANoj..."/>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Nome da clínica</label>
+                      <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', boxSizing: 'border-box' as const }} placeholder="Clínica Dr. Silva"/>
+                    </div>
+                    {cfgMsg && <div style={{ background: cfgMsg.tipo === 'ok' ? '#f0fdf4' : '#fef2f2', border: '1px solid ' + (cfgMsg.tipo === 'ok' ? '#bbf7d0' : '#fecaca'), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: cfgMsg.tipo === 'ok' ? '#16a34a' : '#dc2626', margin: 0 }}>{cfgMsg.texto}</p></div>}
+                    <button type="submit" disabled={salvando} style={{ padding: '10px', borderRadius: 9, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvando ? 'Salvando...' : 'Salvar alterações'}</button>
+                  </form>
+                </div>
+              )}
               <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Webhook Meta</h2>
