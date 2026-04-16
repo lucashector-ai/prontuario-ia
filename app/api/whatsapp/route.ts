@@ -32,11 +32,28 @@ function normalizarTel(tel: string): string {
   return tel.replace(/[^0-9]/g, '')
 }
 
-async function enviarWpp(para: string, texto: string) {
+async function getWppCredentials(medicoId: string): Promise<{token: string, phoneId: string}> {
   try {
-    const r = await fetch('https://graph.facebook.com/v20.0/' + WPP_PHONE_ID + '/messages', {
+    const { createClient } = await import('@supabase/supabase-js')
+    const admin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data } = await admin.from('whatsapp_config').select('access_token, phone_number_id').eq('medico_id', medicoId).single()
+    return {
+      token: (data as any)?.access_token || WPP_TOKEN,
+      phoneId: (data as any)?.phone_number_id || WPP_PHONE_ID
+    }
+  } catch { return { token: WPP_TOKEN, phoneId: WPP_PHONE_ID } }
+}
+
+async function enviarWpp(para: string, texto: string, token?: string, phoneId?: string) {
+  const t = token || WPP_TOKEN
+  const pid = phoneId || WPP_PHONE_ID
+  try {
+    const r = await fetch('https://graph.facebook.com/v20.0/' + pid + '/messages', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + WPP_TOKEN, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' },
       body: JSON.stringify({ messaging_product: 'whatsapp', to: para, type: 'text', text: { body: texto } })
     })
     const d = await r.json()
@@ -221,6 +238,7 @@ export async function POST(req: NextRequest) {
 
       const historico = await getHistorico(conversa.id)
       const { texto: resposta, humano, agendarData } = await processarIA(texto, historico)
+      const creds = await getWppCredentials(MEDICO_ID)
 
       if (agendarData) {
         await supabase.from('agendamentos').insert({
