@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ texto: '' })
     }
 
-    const params = `model=nova-3-medical&language=pt-BR&smart_format=true&punctuate=true&${KEYTERMS}`
+    const params = `model=nova-3&language=pt-br&smart_format=true&punctuate=true&${KEYTERMS}`
 
     const res = await fetch(`https://api.deepgram.com/v1/listen?${params}`, {
       method: 'POST',
