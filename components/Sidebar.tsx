@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
-interface Props { activeHref: string }
-
-export function Sidebar({ activeHref }: Props) {
+export function Sidebar() {
   const router = useRouter()
+  const pathname = usePathname()
   const [medico, setMedico] = useState<any>(null)
 
   useEffect(() => {
@@ -61,12 +60,12 @@ export function Sidebar({ activeHref }: Props) {
           <div key={grupo.label} style={{ marginBottom: 16 }}>
             <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 8px 6px' }}>{grupo.label}</p>
             {grupo.items.map(item => {
-              const active = activeHref === item.href
+              const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
               return (
-                <a key={item.href} href={item.href} style={{
+                <button key={item.href} onClick={() => router.push(item.href)} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '7px 10px', borderRadius: 7, marginBottom: 1,
-                  textDecoration: 'none',
+                  textDecoration: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
                   background: active ? '#ede9fb' : 'transparent',
                   color: active ? '#6043C1' : '#374151',
                   fontSize: 13, fontWeight: active ? 600 : 400,
@@ -74,7 +73,7 @@ export function Sidebar({ activeHref }: Props) {
                 }}>
                   <span style={{ flexShrink: 0, opacity: active ? 1 : 0.5 }}>{item.icon}</span>
                   {item.label}
-                </a>
+                </button>
               )
             })}
           </div>

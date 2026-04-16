@@ -310,7 +310,7 @@ REGRAS:
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
-      <Sidebar activeHref="/whatsapp" />
+      <Sidebar />
       <main style={{ flex: 1, display: 'flex', overflow: 'hidden', flexDirection: 'column', padding: '16px 16px 16px 0' }}>
 
         {/* Header */}

@@ -112,7 +112,7 @@ export default function PacienteDetalhe() {
 
   return (
     <div style={{display:'flex',height:'100vh',background:'#f9fafb',overflow:'hidden'}}>
-      <Sidebar activeHref="/pacientes" />
+      <Sidebar />
       <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
         {carregando ? (
           <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center'}}>

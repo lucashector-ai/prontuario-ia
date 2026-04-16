@@ -83,7 +83,7 @@ export default function Teleconsulta() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
-      <Sidebar activeHref="/teleconsulta" />
+      <Sidebar />
       <main style={{ flex: 1, overflow: 'auto', padding: '0 24px 24px' }}>
 
         {/* Hero */}
