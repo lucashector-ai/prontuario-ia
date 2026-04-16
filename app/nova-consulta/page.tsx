@@ -185,15 +185,12 @@ export default function Home() {
     finally { setCarregandoSugestoes(false) }
   }
 
-  // Polling de sugestoes a cada 20s quando modo perfeita ativo e gravando
+  // Dispara sugestoes quando transcricao muda (com debounce)
   useEffect(() => {
-    if (!modoPerfeita || !gravando || !transcricao) return
-    buscarSugestoes(transcricao)
-    const interval = setInterval(() => {
-      if (transcricao.trim().length > 50) buscarSugestoes(transcricao)
-    }, 20000)
-    return () => clearInterval(interval)
-  }, [modoPerfeita, gravando, transcricao])
+    if (!modoPerfeita || !transcricao || transcricao.trim().length < 50) return
+    const timer = setTimeout(() => buscarSugestoes(transcricao), 3000)
+    return () => clearTimeout(timer)
+  }, [transcricao, modoPerfeita])
 
   const handleNovo = () => {
     limpar(); setTranscricao(''); setProntuario(null); setReceita(null)
@@ -351,7 +348,7 @@ export default function Home() {
                   )}
                 </div>
               </div>
-              {modoPerfeita && gravando && (
+              {modoPerfeita && estado === 'gravando' && (
                 <div style={{ marginBottom: 16, background: '#f0ebff', border: '1px solid #d4c9f7', borderRadius: 10, padding: '12px 14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
