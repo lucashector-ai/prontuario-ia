@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
-type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario'
+type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario' | 'timeline'
 
 const TIPO_CORES: Record<string, {bg:string;text:string;border:string}> = {
   consulta: {bg:'#F9FAFC',text:'#6043C1',border:'#d4c9f7'},
@@ -138,7 +138,7 @@ export default function PacienteDetalhe() {
             </div>
           </div>
           <div style={{background: 'transparent',borderBottom: 'none',padding:'0 28px',display:'flex',flexShrink:0}}>
-            {([{id:'overview',label:'Visao geral'},{id:'consultas',label:'Consultas ('+consultas.length+')'},{id:'agendamentos',label:'Agenda ('+agendamentos.filter(a=>a.status!=='cancelado').length+')'},{id:'prontuario',label:'Prontuario'}] as {id:Aba;label:string}[]).map(tab=>(
+            {([{id:'overview',label:'Visao geral'},{id:'consultas',label:'Consultas ('+consultas.length+')'},{id:'agendamentos',label:'Agenda ('+agendamentos.filter(a=>a.status!=='cancelado').length+')'},{id:'prontuario',label:'Prontuario'},{id:'timeline',label:'Linha do tempo'}] as {id:Aba;label:string}[]).map(tab=>(
               <button key={tab.id} onClick={()=>setAba(tab.id)} style={{padding:'14px 16px',background:'transparent',border:'none',cursor:'pointer',fontSize:13,fontWeight:aba===tab.id?600:400,color:aba===tab.id?'#111827':'#6b7280',borderBottom:aba===tab.id?'2px solid #6043C1':'2px solid transparent',marginBottom:-1}}>{tab.label}</button>
             ))}
           </div>
@@ -374,7 +374,94 @@ export default function PacienteDetalhe() {
                   ))}
                 </div>
               </div>
-            )}
+            )
+
+              {aba==='timeline'&&(
+                <div style={{maxWidth:800}}>
+                  <div style={{marginBottom:20}}>
+                    <h2 style={{fontSize:15,fontWeight:700,color:'#111827',margin:'0 0 4px'}}>Linha do tempo clínica</h2>
+                    <p style={{fontSize:12,color:'#9ca3af',margin:0}}>{consultas.length} consulta{consultas.length!==1?'s':''} registrada{consultas.length!==1?'s':''}</p>
+                  </div>
+                  {consultas.length===0?(
+                    <div style={{textAlign:'center',padding:'40px 20px',background:'white',borderRadius:14,border:'1px solid #f0f0f0'}}>
+                      <p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta registrada ainda</p>
+                    </div>
+                  ):(
+                    <div style={{position:'relative'}}>
+                      <div style={{position:'absolute',left:19,top:0,bottom:0,width:2,background:'#e5e7eb'}}/>
+                      <div style={{display:'flex',flexDirection:'column',gap:0}}>
+                        {consultas.map((c:any,i:number)=>{
+                          const cids = c.cids||[]
+                          const alertas = c.alertas||[]
+                          const data = new Date(c.criado_em)
+                          const dataFmt = data.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})
+                          const hora = data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+                          const isUltima = i===0
+                          return (
+                            <div key={c.id} style={{display:'flex',gap:16,paddingBottom:24,position:'relative'}}>
+                              <div style={{flexShrink:0,zIndex:1}}>
+                                <div style={{width:40,height:40,borderRadius:'50%',background:isUltima?'#6043C1':'white',border:isUltima?'none':'2px solid #d4c9f7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:isUltima?'white':'#6043C1'}}>
+                                  {consultas.length-i}
+                                </div>
+                              </div>
+                              <div style={{flex:1,background:'white',borderRadius:12,border:'1px solid #f0f0f0',padding:'14px 16px',boxShadow:'0 1px 3px rgba(0,0,0,0.06)'}}>
+                                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                                  <div style={{display:'flex',alignItems:'center',gap:8}}>
+                                    <span style={{fontSize:13,fontWeight:700,color:'#111827'}}>{dataFmt}</span>
+                                    <span style={{fontSize:11,color:'#9ca3af'}}>{hora}</span>
+                                    {isUltima&&<span style={{fontSize:10,fontWeight:700,color:'#6043C1',background:'#f0ebff',padding:'2px 8px',borderRadius:10,border:'1px solid #d4c9f7'}}>mais recente</span>}
+                                  </div>
+                                  <div style={{display:'flex',gap:6}}>
+                                    <a href={'/api/pdf-prontuario?consulta_id='+c.id+'&medico_id='+medico?.id} target="_blank" rel="noreferrer" style={{fontSize:11,color:'#6043C1',background:'#f0ebff',padding:'4px 10px',borderRadius:6,textDecoration:'none',fontWeight:600}}>PDF</a>
+                                  </div>
+                                </div>
+                                {alertas.length>0&&(
+                                  <div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:'6px 10px',marginBottom:10,display:'flex',alignItems:'flex-start',gap:6}}>
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" style={{flexShrink:0,marginTop:1}}><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                                    <p style={{fontSize:11,color:'#b91c1c',margin:0,lineHeight:1.4}}>{alertas.join(' · ')}</p>
+                                  </div>
+                                )}
+                                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:cids.length>0?10:0}}>
+                                  {c.subjetivo&&(
+                                    <div>
+                                      <p style={{fontSize:10,fontWeight:700,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.06em',margin:'0 0 3px'}}>Subjetivo</p>
+                                      <p style={{fontSize:12,color:'#374151',margin:0,lineHeight:1.5}}>{(c.subjetivo||'').substring(0,120)}{c.subjetivo?.length>120?'...':''}</p>
+                                    </div>
+                                  )}
+                                  {c.avaliacao&&(
+                                    <div>
+                                      <p style={{fontSize:10,fontWeight:700,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.06em',margin:'0 0 3px'}}>Avaliação</p>
+                                      <p style={{fontSize:12,color:'#374151',margin:0,lineHeight:1.5}}>{(c.avaliacao||'').substring(0,120)}{c.avaliacao?.length>120?'...':''}</p>
+                                    </div>
+                                  )}
+                                </div>
+                                {cids.length>0&&(
+                                  <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:8}}>
+                                    {cids.map((cid:any,j:number)=>(
+                                      <span key={j} style={{fontSize:10,fontWeight:700,color:'#6043C1',background:'#f0ebff',padding:'2px 8px',borderRadius:10,border:'1px solid #d4c9f7',fontFamily:'monospace'}}>{cid.codigo}</span>
+                                    ))}
+                                  </div>
+                                )}
+                                {i>0&&consultas[i-1]&&(
+                                  <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid #f9fafb'}}>
+                                    <p style={{fontSize:10,color:'#9ca3af',margin:'0 0 3px',fontStyle:'italic'}}>vs consulta anterior ({new Date(consultas[i-1].criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})})</p>
+                                    {c.subjetivo&&consultas[i-1].subjetivo&&c.subjetivo.substring(0,50)===consultas[i-1].subjetivo.substring(0,50)&&(
+                                      <p style={{fontSize:11,color:'#d97706',margin:0}}>↻ Queixa similar à consulta anterior</p>
+                                    )}
+                                    {cids.length>0&&consultas[i-1].cids?.some((prev:any)=>cids.find((cur:any)=>cur.codigo===prev.codigo))&&(
+                                      <p style={{fontSize:11,color:'#dc2626',margin:0}}>⚠ CID recorrente detectado</p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}}
           </div>
         </>)}
       </main>
