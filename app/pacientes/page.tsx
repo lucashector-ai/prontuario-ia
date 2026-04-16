@@ -54,9 +54,6 @@ export default function Pacientes() {
     return idade
   }
 
-  const filtrados = pacientes.filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()))
-
-
   const pacientesFiltrados = pacientes
     .filter(p => {
       if (busca && !(p.nome || '').toLowerCase().includes(busca.toLowerCase()) && !(p.telefone || '').includes(busca)) return false
@@ -178,7 +175,7 @@ export default function Pacientes() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {filtrados.map(p => {
+                {pacientesFiltrados.map(p => {
                   const idade = calcularIdade(p.data_nascimento)
                   const ini = p.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
                   return (
