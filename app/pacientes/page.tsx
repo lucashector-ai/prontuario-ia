@@ -164,7 +164,7 @@ export default function Pacientes() {
 
             {carregando ? (
               <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: 40 }}>Carregando...</p>
-            ) : filtrados.length === 0 ? (
+            ) : pacientesFiltrados.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60 }}>
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f3f0fd', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
