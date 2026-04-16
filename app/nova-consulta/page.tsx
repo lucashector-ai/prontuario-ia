@@ -14,6 +14,7 @@ type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
 
 function SearchParamsReader({ onParams }: { onParams: (pid: string | null, pnome: string | null, ptel: string | null) => void }) {
   const searchParams = useSearchParams()
+  const { toast } = useToast()
   useEffect(() => {
     onParams(searchParams.get('paciente_id'), searchParams.get('paciente_nome'), searchParams.get('paciente_tel'))
   }, [searchParams, onParams])
