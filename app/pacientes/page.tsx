@@ -66,8 +66,12 @@ export default function Pacientes() {
     return idade
   }
 
-  const filtrados = pacientes// filter substituido
-    .filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()))
+  const pacientesFiltrados = pacientes.filter(p => {
+    const matchBusca = !busca || (p.nome || '').toLowerCase().includes(busca.toLowerCase()) || (p.telefone || '').includes(busca) || (p.email || '').toLowerCase().includes(busca.toLowerCase())
+    const matchSexo = !filtroSexo || p.sexo === filtroSexo
+    const matchConvenio = !filtroConvenio || (filtroConvenio === 'particular' ? (!p.convenio || p.convenio === 'Particular') : p.convenio && p.convenio !== 'Particular')
+    return matchBusca && matchSexo && matchConvenio
+  }).sort((a, b) => ordenar === 'nome' ? (a.nome || '').localeCompare(b.nome || '') : new Date(b.criado_em || 0).getTime() - new Date(a.criado_em || 0).getTime())
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
@@ -173,7 +177,7 @@ export default function Pacientes() {
 
             {carregando ? (
               <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: 40 }}>Carregando...</p>
-            ) : filtrados.length === 0 ? (
+            ) : pacientesFiltrados.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60 }}>
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f3f0fd', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
@@ -183,7 +187,7 @@ export default function Pacientes() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {filtrados.map(p => {
+                {pacientesFiltrados.map(p => {
                   const idade = calcularIdade(p.data_nascimento)
                   const ini = p.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
                   return (
