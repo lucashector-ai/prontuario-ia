@@ -18,7 +18,7 @@ export default function Login() {
         body: JSON.stringify(form),
       })
       const data = await res.json()
-      if (data.medico) { localStorage.setItem('medico', JSON.stringify(data.medico)); router.push('/') }
+      if (data.medico) { localStorage.setItem('medico', JSON.stringify(data.medico)); if (!data.medico.onboarding_concluido) { router.push('/onboarding') } else { router.push('/') } }
       else setErro(data.error || 'E-mail ou senha incorretos')
     } catch { setErro('Erro de conexão') }
     finally { setCarregando(false) }

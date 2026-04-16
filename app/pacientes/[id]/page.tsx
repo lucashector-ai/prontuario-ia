@@ -359,6 +359,11 @@ export default function PacienteDetalhe() {
                       )}
                       {/* Botoes */}
                       <div style={{padding:'8px 18px 12px',borderTop:'1px solid #f3f4f6',display:'flex',gap:8}}>
+                        <a href={'/api/pdf-prontuario?consulta_id='+c.id+'&medico_id='+medico?.id} target="_blank" rel="noreferrer"
+                          style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:6,border:'1px solid #d4c9f7',background:'#f0ebff',color:'#6043C1',fontSize:12,fontWeight:600,textDecoration:'none'}}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                          PDF Prontuário
+                        </a>
                         <a href={'/api/pdf-receita?consulta_id='+c.id+'&medico_id='+medico?.id} target="_blank" rel="noreferrer"
                           style={{fontSize:11,color:'#1d4ed8',background:'#eff6ff',border:'1px solid #bfdbfe',padding:'5px 10px',borderRadius:6,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:4}}>
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
