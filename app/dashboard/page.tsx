@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
+import { BuscaGlobal } from '@/components/BuscaGlobal'
+import { Notificacoes } from '@/components/Notificacoes'
 
 export default function Dashboard() {
   const router = useRouter()

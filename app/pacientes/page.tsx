@@ -13,6 +13,9 @@ export default function Pacientes() {
   const [form, setForm] = useState({ nome: '', data_nascimento: '', sexo: '', telefone: '', email: '', cpf: '' })
   const [salvando, setSalvando] = useState(false)
   const [busca, setBusca] = useState('')
+  const [filtroSexo, setFiltroSexo] = useState('')
+  const [filtroConvenio, setFiltroConvenio] = useState('')
+  const [ordenar, setOrdenar] = useState('nome')
 
   useEffect(() => {
     const m = localStorage.getItem('medico')
@@ -21,6 +24,18 @@ export default function Pacientes() {
     setMedico(med)
     carregarPacientes(med.id)
   }, [router])
+
+  const pacientesFiltrados = pacientes// filter substituido
+    .filter(p => {
+    const matchBusca = !busca || p.nome?.toLowerCase().includes(busca.toLowerCase()) || p.telefone?.includes(busca) || p.email?.toLowerCase().includes(busca.toLowerCase())
+    const matchSexo = !filtroSexo || p.sexo === filtroSexo
+    const matchConvenio = !filtroConvenio || (filtroConvenio === 'particular' ? (!p.convenio || p.convenio === 'Particular') : p.convenio && p.convenio !== 'Particular')
+    return matchBusca && matchSexo && matchConvenio
+  }).sort((a, b) => {
+    if (ordenar === 'nome') return (a.nome || '').localeCompare(b.nome || '')
+    if (ordenar === 'recente') return new Date(b.criado_em || 0).getTime() - new Date(a.criado_em || 0).getTime()
+    return 0
+  })
 
   const carregarPacientes = async (id: string) => {
     const res = await fetch(`/api/pacientes?medico_id=${id}`)
@@ -51,7 +66,8 @@ export default function Pacientes() {
     return idade
   }
 
-  const filtrados = pacientes.filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()))
+  const filtrados = pacientes// filter substituido
+    .filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()))
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
@@ -120,7 +136,39 @@ export default function Pacientes() {
               <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
               <input value={busca} onChange={e => setBusca(e.target.value)}
                 style={{ width: '100%', padding: '10px 12px 10px 36px', fontSize: 13, borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', background: 'white' }}
-                placeholder="Buscar paciente por nome..."/>
+                placeholder="Buscar paciente por nome, telefone ou email..." />
+          </div>
+
+          {/* Filtros */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <select value={filtroSexo} onChange={e => setFiltroSexo(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, color: '#374151', background: 'white', cursor: 'pointer' }}>
+              <option value="">Todos os sexos</option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+            </select>
+            <select value={filtroConvenio} onChange={e => setFiltroConvenio(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, color: '#374151', background: 'white', cursor: 'pointer' }}>
+              <option value="">Todos os convênios</option>
+              <option value="particular">Particular</option>
+              <option value="convenio">Com convênio</option>
+            </select>
+            <select value={ordenar} onChange={e => setOrdenar(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, color: '#374151', background: 'white', cursor: 'pointer' }}>
+              <option value="nome">Ordenar por nome</option>
+              <option value="recente">Mais recentes</option>
+            </select>
+            {(filtroSexo || filtroConvenio || busca) && (
+              <button onClick={() => { setFiltroSexo(''); setFiltroConvenio(''); setBusca('') }}
+                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #fecaca', fontSize: 13, color: '#dc2626', background: '#fef2f2', cursor: 'pointer' }}>
+                Limpar filtros
+              </button>
+            )}
+          </div>
+          <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>
+            {pacientesFiltrados.length} paciente{pacientesFiltrados.length !== 1 ? 's' : ''} encontrado{pacientesFiltrados.length !== 1 ? 's' : ''}
+          </p>
+          <div style={{ display: 'none' }}/>
             </div>
 
             {carregando ? (
