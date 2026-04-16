@@ -13,7 +13,7 @@ type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
 export default function Home() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
-  const [transcricao, setTranscrição] = useState('')
+  const [transcricao, setTranscricao] = useState('')
   const [prontuario, setProntuario] = useState<any>(null)
   const [receita, setReceita] = useState<any>(null)
   const [estado, setEstado] = useState<Estado>('idle')
@@ -41,16 +41,16 @@ export default function Home() {
     setMedico(JSON.parse(m))
   }, [router])
 
-  const handleNovoTexto = useCallback((t: string) => setTranscrição(t), [])
-  const { gravando, transcrevendo, iniciarGravação, pararGravação, pausarGravação, gravandoPausado, limpar, erro } = useGravador(handleNovoTexto)
+  const handleNovoTexto = useCallback((t: string) => setTranscricao(t), [])
+  const { gravando, transcrevendo, iniciarGravacao, pararGravacao, pausarGravacao, gravandoPausado, limpar, erro } = useGravador(handleNovoTexto)
 
   const handleIniciar = async () => {
     limpar(); setProntuario(null); setReceita(null)
     setConsultaSalva(false); setEstado('gravando')
-    await iniciarGravação()
+    await iniciarGravacao()
   }
 
-  const handleParar = () => { pararGravação(); setEstado('idle') }
+  const handleParar = () => { pararGravacao(); setEstado('idle') }
 
   const handleEstruturar = async () => {
     if (!transcricao.trim()) return
@@ -193,7 +193,7 @@ export default function Home() {
   }, [transcricao, modoPerfeita])
 
   const handleNovo = () => {
-    limpar(); setTranscrição(''); setProntuario(null); setReceita(null)
+    limpar(); setTranscricao(''); setProntuario(null); setReceita(null)
     setEstado('idle'); setErroMsg(''); setConsultaSalva(false)
   }
 
@@ -274,7 +274,7 @@ export default function Home() {
                   </button>
                 ) : (
                   <>
-                  <button onClick={pausarGravação} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 8, border: '1.5px solid ' + (gravandoPausado ? '#d97706' : '#475569'), background: gravandoPausado ? '#451a03' : '#1e293b', color: gravandoPausado ? '#fbbf24' : '#94a3b8', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{gravandoPausado ? 'RETOMAR' : 'PAUSAR'}</button>
+                  <button onClick={pausarGravacao} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 8, border: '1.5px solid ' + (gravandoPausado ? '#d97706' : '#475569'), background: gravandoPausado ? '#451a03' : '#1e293b', color: gravandoPausado ? '#fbbf24' : '#94a3b8', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{gravandoPausado ? 'RETOMAR' : 'PAUSAR'}</button>
                   <button onClick={handleParar} style={{
                     display: 'flex', alignItems: 'center', gap: 8,
                     padding: '9px 20px', borderRadius: 8,
