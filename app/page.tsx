@@ -1,29 +1,24 @@
-'use client'
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+"use client"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@supabase/supabase-js"
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
 export default function HomePage() {
   const router = useRouter()
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.replace('/dashboard')
-      } else {
-        router.replace('/login')
-      }
+      router.replace(session ? "/dashboard" : "/login")
     })
   }, [router])
-
   return (
-    <div className="min-h-screen bg-[#F9FAFC] flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-[#6043C1] border-t-transparent rounded-full animate-spin" />
+    <div style={{ minHeight: "100vh", background: "#F9FAFC", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: 32, height: 32, border: "2px solid #6043C1", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <style>{"@keyframes spin { to { transform: rotate(360deg) } }"}</style>
     </div>
   )
 }

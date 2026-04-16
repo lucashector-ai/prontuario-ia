@@ -221,7 +221,7 @@ export default function Dashboard() {
                   {dados.proximosAgendamentos.length === 0 ? (
                     <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                       <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 12px' }}>Nenhum agendamento</p>
-                      <a href="/pacientes" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Agendar consulta</a>
+                      <a href="/agenda" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Agendar consulta</a>
                     </div>
                   ) : dados.proximosAgendamentos.map((ag: any, i: number) => (
                     <div key={ag.id} style={{ padding: '12px 20px', borderBottom: i < dados.proximosAgendamentos.length - 1 ? '1px solid #f9fafb' : 'none', display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -286,7 +286,7 @@ export default function Dashboard() {
                   {dados.consultasRecentes.length === 0 ? (
                     <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                       <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 12px' }}>Nenhuma consulta no período</p>
-                      <a href="/" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Nova consulta</a>
+                      <a href="/consulta" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Nova consulta</a>
                     </div>
                   ) : dados.consultasRecentes.map((c: any, i: number) => (
                     <div key={c.id} style={{ padding: '12px 20px', borderBottom: i < dados.consultasRecentes.length - 1 ? '1px solid #f9fafb' : 'none' }}>

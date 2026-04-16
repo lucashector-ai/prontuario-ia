@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -108,6 +109,10 @@ export default function Login() {
                 style={{ width: '100%', padding: '12px 16px', fontSize: 14, borderRadius: 10, border: '1.5px solid #e5e7eb', background: 'white', color: '#111827' }}
                 placeholder="••••••••"
               />
+            </div>
+
+            <div style={{ textAlign: 'right', marginTop: -8 }}>
+              <Link href="/forgot-password" style={{ fontSize: 13, color: '#6043C1', textDecoration: 'none' }}>Esqueceu sua senha?</Link>
             </div>
 
             {erro && (
