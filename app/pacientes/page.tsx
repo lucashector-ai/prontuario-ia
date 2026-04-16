@@ -106,7 +106,6 @@ export default function Pacientes() {
             </button>
           )}
           <span style={{ fontSize: 12, color: '#9ca3af', marginLeft: 4 }}>{pacientesFiltrados.length} resultado{pacientesFiltrados.length !== 1 ? 's' : ''}</span>
-        </div
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
