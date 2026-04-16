@@ -108,14 +108,15 @@ async function getHistorico(conversaId: string) {
   return (data || []).reverse()
 }
 
-async function salvarEEnviar(conversaId: string, texto: string, telefone: string) {
+async function salvarEEnviar(conversaId: string, texto: string, telefone: string, medicoId?: string) {
   await supabase.from('whatsapp_mensagens').insert({
     conversa_id: conversaId, tipo: 'enviada', conteudo: texto, metadata: { ia: true }
   })
   await supabase.from('whatsapp_conversas')
     .update({ ultimo_contato: new Date().toISOString() })
     .eq('id', conversaId)
-  await enviarWpp(telefone, texto)
+  const creds = medicoId ? await getWppCredentials(medicoId) : { token: WPP_TOKEN, phoneId: WPP_PHONE_ID }
+  await enviarWpp(telefone, texto, creds.token, creds.phoneId)
 }
 
 async function processarIA(mensagem: string, historico: any[]) {
@@ -254,7 +255,7 @@ export async function POST(req: NextRequest) {
         await supabase.from('whatsapp_conversas').update({ modo: 'humano' }).eq('id', conversa.id)
       }
 
-      await salvarEEnviar(conversa.id, resposta, telefone)
+      await salvarEEnviar(conversa.id, resposta, telefone, MEDICO_ID)
     }
 
     return NextResponse.json({ ok: true })
