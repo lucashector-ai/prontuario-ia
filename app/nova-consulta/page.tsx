@@ -298,7 +298,7 @@ export default function Home() {
                   </span>
                 )}
 
-                {transcricao && estado === 'idle' && (
+                {transcricao && (estado === 'idle' || estado === 'processando') && (
                   <button onClick={handleEstruturar} style={{
                     marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7,
                     padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
