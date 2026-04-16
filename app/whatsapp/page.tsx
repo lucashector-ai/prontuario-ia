@@ -28,7 +28,7 @@ export default function WhatsApp() {
   const [npsData, setNpsData] = useState<any>(null)
   const [npsEnviando, setNpsEnviando] = useState(false)
   const [usuario, setUsuario] = useState<any>(null) // medico ou atendente logado
-  const [aba, setAba] = useState<Aba>('dashboard')
+  const [aba, setAba] = useState<Aba>('conversas')
 
   // conversas
   const [conversas, setConversas] = useState<any[]>([])
@@ -342,8 +342,8 @@ REGRAS:
           </div>
           <div style={{ display: 'flex', gap: 0, marginTop: 8, overflowX: 'auto', borderBottom: '1px solid #f3f4f6', paddingBottom: 0 }}>
             {([
-              { id: 'dashboard', label: 'Dashboard' },
               { id: 'conversas', label: `Conversas${totalNaoLidas > 0 ? ` (${totalNaoLidas})` : ''}` },
+              { id: 'dashboard', label: 'Dashboard' },
               { id: 'transmissao', label: 'Transmissão' },
               { id: 'campanha', label: 'Campanhas' },
               { id: 'alertas', label: `Alertas${alertasNaoLidos > 0 ? ` (${alertasNaoLidos})` : ''}` },
@@ -410,24 +410,28 @@ REGRAS:
                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>Nenhuma conversa</p>
                     <p style={{ fontSize: 11, color: '#d1d5db', margin: 0 }}>Use + para iniciar uma nova</p>
                   </div>
-                ) : conversasFiltradas.map(c => (
-                  <div key={c.id} onClick={() => setAtiva(c)} style={{ padding: '9px 12px', borderBottom: '1px solid #f9fafb', cursor: 'pointer', background: ativa?.id === c.id ? '#F9FAFC' : 'white', borderLeft: ativa?.id === c.id ? '3px solid #6043C1' : '3px solid transparent' }}>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                ) : conversasFiltradas.map(cv => (
+                  <div key={cv.id} onClick={() => setAtiva(cv)}
+                    style={{ padding: '10px 14px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', background: ativa?.id === cv.id ? '#f0fdf4' : 'white', transition: 'background 0.1s' }}
+                    onMouseEnter={e => { if (ativa?.id !== cv.id) e.currentTarget.style.background = '#f9fafb' }}
+                    onMouseLeave={e => { if (ativa?.id !== cv.id) e.currentTarget.style.background = 'white' }}>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                       <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: ativa?.id === c.id ? '#ede9fb' : '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: ativa?.id === c.id ? '#6043C1' : '#6b7280' }}>{ini(nomeCv(c))}</div>
-                        <span style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: c.modo === 'humano' ? '#f59e0b' : '#6043C1', border: '1.5px solid white' }}/>
+                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: cv.modo === 'humano' ? '#fef3c7' : '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: cv.modo === 'humano' ? '#92400e' : '#16a34a', border: ativa?.id === cv.id ? '2px solid #16a34a' : '2px solid transparent' }}>{ini(nomeCv(cv))}</div>
+                        <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: cv.modo === 'humano' ? '#f59e0b' : '#22c55e', border: '2px solid white' }}/>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 1 }}>
-                          <p style={{ fontSize: 12, fontWeight: c.naoLidas > 0 ? 700 : 500, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nomeCv(c)}</p>
-                          <span style={{ fontSize: 9, color: '#9ca3af', flexShrink: 0, marginLeft: 4 }}>{c.ultima ? fmt(c.ultima.criado_em) : ''}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                          <p style={{ fontSize: 13, fontWeight: cv.naoLidas > 0 ? 700 : 500, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>{nomeCv(cv)}</p>
+                          <span style={{ fontSize: 10, color: cv.naoLidas > 0 ? '#16a34a' : '#9ca3af', flexShrink: 0, fontWeight: cv.naoLidas > 0 ? 600 : 400 }}>{cv.ultima ? fmt(cv.ultima.criado_em) : ''}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <p style={{ fontSize: 11, color: '#9ca3af', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{c.ultima?.tipo === 'enviada' && ' '}{c.ultima?.conteudo?.substring(0, 32) || ''}</p>
-                          <div style={{ display: 'flex', gap: 3, marginLeft: 4, flexShrink: 0 }}>
-                            {c.naoLidas > 0 && <span style={{ fontSize: 9, fontWeight: 700, color: 'white', background: '#6043C1', width: 15, height: 15, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c.naoLidas}</span>}
-                            {c.modo === 'humano' && <span style={{ fontSize: 8, color: '#92400e', background: '#fef3c7', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}></span>}
-                          </div>
+                          <p style={{ fontSize: 12, color: cv.naoLidas > 0 ? '#374151' : '#9ca3af', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontWeight: cv.naoLidas > 0 ? 500 : 400 }}>
+                            {cv.ultima?.tipo === 'enviada' ? <span style={{ color: '#22c55e', fontSize: 11 }}>✓✓ </span> : null}{cv.ultima?.conteudo?.substring(0, 35) || 'Iniciar conversa...'}
+                          </p>
+                          {cv.naoLidas > 0 && (
+                            <span style={{ fontSize: 10, fontWeight: 700, color: 'white', background: '#22c55e', minWidth: 18, height: 18, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', marginLeft: 6, flexShrink: 0 }}>{cv.naoLidas}</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -439,29 +443,39 @@ REGRAS:
             {/* Area de chat */}
             {ativa ? (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#f0f2f5' }}>
-                {/* Header conversa */}
-                <div style={{ background: 'transparent', borderBottom: 'none', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                {/* Header conversa — estilo WhatsApp */}
+                <div style={{ background: '#075e54', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                   <div style={{ position: 'relative' }}>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#6043C1' }}>{ini(nomeCv(ativa))}</div>
-                    <span style={{ position: 'absolute', bottom: 0, right: 0, width: 11, height: 11, borderRadius: '50%', background: ativa.modo === 'humano' ? '#f59e0b' : '#6043C1', border: '2px solid white' }}/>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: ativa.modo === 'humano' ? '#fef3c7' : '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: ativa.modo === 'humano' ? '#92400e' : '#16a34a' }}>{ini(nomeCv(ativa))}</div>
+                    <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #075e54' }}/>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>{nomeCv(ativa)}</p>
-                    <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>
-                      {ativa.telefone}  {ativa.modo === 'humano' ? ' Humano' + (ativa.atendente_nome ? '  ' + ativa.atendente_nome : '') : ' Sofia IA'}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nomeCv(ativa)}</p>
+                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', margin: 0 }}>
+                      {ativa.telefone} · {ativa.modo === 'humano' ? '👤 Humano' + (ativa.atendente_nome ? ' — ' + ativa.atendente_nome : '') : '🤖 Sofia IA'}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {ativa.paciente_id && <a href={'/pacientes/' + ativa.paciente_id} style={{ fontSize: 11, color: '#6043C1', background: '#F9FAFC', border: '1px solid #d4c9f7', padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 600 }}>Ver ficha</a>}
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {ativa.paciente_id && (
+                      <a href={'/pacientes/' + ativa.paciente_id} style={{ fontSize: 11, color: 'white', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', padding: '5px 12px', borderRadius: 20, textDecoration: 'none', fontWeight: 600 }}>Ver ficha</a>
+                    )}
                     {ativa.modo === 'ia' ? (
-                      <button onClick={assumirAtendimento} disabled={assumindo} style={{ fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', padding: '4px 12px', borderRadius: 6, cursor: 'pointer' }}>
-                        {assumindo ? 'Assumindo...' : ' Assumir atendimento'}
+                      <button onClick={assumirAtendimento} disabled={assumindo} style={{ fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fef3c7', border: 'none', padding: '5px 14px', borderRadius: 20, cursor: 'pointer' }}>
+                        {assumindo ? 'Assumindo...' : '👤 Assumir'}
                       </button>
                     ) : (
-                      <button onClick={devolverParaIA} style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', background: '#F9FAFC', border: '1px solid #d4c9f7', padding: '4px 12px', borderRadius: 6, cursor: 'pointer' }}>
-                         Devolver para IA
+                      <button onClick={devolverParaIA} style={{ fontSize: 11, fontWeight: 700, color: 'white', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', padding: '5px 14px', borderRadius: 20, cursor: 'pointer' }}>
+                        🤖 Devolver à IA
                       </button>
                     )}
+                    {/* Busca */}
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.8)', padding: 4, display: 'flex' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    </button>
+                    {/* Menu */}
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.8)', padding: 4, display: 'flex' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                    </button>
                   </div>
                 </div>
 
@@ -474,7 +488,7 @@ REGRAS:
                 )}
 
                 {/* Mensagens */}
-                <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4, background: '#e5ddd5', backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}>
                   {mensagens.map(m => {
                     const rec = m.tipo === 'recebida'
                     const remetente = m.metadata?.remetente
@@ -486,8 +500,8 @@ REGRAS:
                       </div>
                     )
                     return (
-                      <div key={m.id} style={{ display: 'flex', justifyContent: rec ? 'flex-start' : 'flex-end' }}>
-                        <div style={{ maxWidth: '68%', padding: '7px 11px', borderRadius: rec ? '4px 10px 10px 10px' : '10px 4px 10px 10px', background: rec ? 'white' : (isIA ? '#ede9fb' : '#dbeafe'), border: rec ? '1px solid #e5e7eb' : (isIA ? '1px solid #d4c9f7' : '1px solid #bfdbfe') }}>
+                      <div key={m.id} style={{ display: 'flex', justifyContent: rec ? 'flex-start' : 'flex-end', marginBottom: 2 }}>
+                        <div style={{ maxWidth: '65%', padding: '7px 10px 6px 10px', borderRadius: rec ? '0px 10px 10px 10px' : '10px 10px 0px 10px', background: rec ? 'white' : (isIA ? '#d9fdd3' : '#d1e7ff'), boxShadow: '0 1px 2px rgba(0,0,0,0.15)', position: 'relative' as const }}>
                           {(isIA || remetente) && <p style={{ fontSize: 9, color: isIA ? '#6043C1' : '#2563eb', fontWeight: 700, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{isIA ? 'Sofia IA' : remetente}</p>}
                           <p style={{ fontSize: 12, color: '#111827', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-line' }}>{m.conteudo}</p>
                           <p style={{ fontSize: 9, color: '#9ca3af', margin: '3px 0 0', textAlign: rec ? 'left' : 'right' }}>{fmtH(m.criado_em)}</p>
@@ -498,21 +512,55 @@ REGRAS:
                   <div ref={endRef}/>
                 </div>
 
-                {/* Input */}
-                <div style={{ background: 'white', borderTop: '1px solid #e5e7eb', padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-end', flexShrink: 0 }}>
-                  <textarea value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }} style={{ flex: 1, padding: '9px 12px', fontSize: 12, borderRadius: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', resize: 'none', minHeight: 40, maxHeight: 100, lineHeight: 1.5, outline: 'none' }} placeholder="Mensagem... (Enter para enviar)"/>
-                  <button onClick={enviar} disabled={!msg.trim() || enviando} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: msg.trim() ? '#6043C1' : '#e5e7eb', cursor: msg.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                {/* Input — estilo WhatsApp */}
+                <div style={{ background: '#f0f2f5', borderTop: 'none', padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'flex-end', flexShrink: 0 }}>
+                  {/* Emoji */}
+                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#54656f', padding: '8px 4px', display: 'flex', flexShrink: 0 }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-5H6.5C6.78 9.5 9.13 8 12 8s5.22 1.5 5.5 3.5z"/></svg>
+                  </button>
+                  {/* Anexo */}
+                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#54656f', padding: '8px 4px', display: 'flex', flexShrink: 0 }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+                  </button>
+                  {/* Campo de texto */}
+                  <div style={{ flex: 1, background: 'white', borderRadius: 24, padding: '8px 16px', display: 'flex', alignItems: 'flex-end', minHeight: 42, boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                    <textarea
+                      value={msg}
+                      onChange={e => setMsg(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }}
+                      style={{ flex: 1, border: 'none', outline: 'none', resize: 'none', fontSize: 14, lineHeight: 1.5, maxHeight: 100, background: 'transparent', fontFamily: 'inherit', color: '#111' }}
+                      placeholder="Digite uma mensagem"
+                      rows={1}
+                    />
+                  </div>
+                  {/* Enviar ou mic */}
+                  <button onClick={enviar} disabled={enviando}
+                    style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: msg.trim() ? '#25d366' : '#54656f', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.2s' }}>
+                    {msg.trim() ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+                    )}
                   </button>
                 </div>
               </div>
             ) : (
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', flexDirection: 'column', gap: 12 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="#6043C1"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', flexDirection: 'column', gap: 16 }}>
+                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 175.216 175.552">
+                    <path fill="#25D366" d="M87.184 25.227c-33.733 0-61.166 27.423-61.178 61.13a60.98 60.98 0 0 0 9.349 32.535l1.455 2.313-6.179 22.558 23.146-6.069 2.235 1.324c9.387 5.571 20.15 8.517 31.126 8.523h.023c33.707 0 61.14-27.426 61.153-61.135a60.75 60.75 0 0 0-17.895-43.251 60.75 60.75 0 0 0-43.235-17.928z"/>
+                    <path fill="#fff" fillRule="evenodd" d="M68.772 55.603c-1.378-3.061-2.828-3.123-4.137-3.176l-3.524-.043c-1.226 0-3.218.46-4.902 2.3s-6.435 6.287-6.435 15.332 6.588 17.785 7.506 19.013 12.718 20.381 31.405 27.75c15.529 6.124 18.689 4.906 22.061 4.6s10.877-4.447 12.408-8.74 1.532-7.971 1.073-8.74-1.685-1.226-3.525-2.146-10.877-5.367-12.562-5.981-2.91-.919-4.137.921-4.746 5.979-5.819 7.206-2.144 1.381-3.984.462-7.76-2.861-14.784-9.124c-5.465-4.873-9.154-10.891-10.228-12.73s-.114-2.835.808-3.751c.825-.824 1.838-2.147 2.759-3.22s1.224-1.84 1.836-3.065.307-2.301-.153-3.22-4.032-10.011-5.666-13.647"/>
+                  </svg>
                 </div>
-                <p style={{ fontSize: 14, fontWeight: 600, color: '#374151', margin: 0 }}>Selecione uma conversa</p>
-                <button onClick={() => setNovaConversa(true)} style={{ fontSize: 12, color: '#6043C1', background: '#F9FAFC', border: '1px solid #d4c9f7', padding: '7px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>+ Nova conversa</button>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 20, fontWeight: 300, color: '#41525d', margin: '0 0 8px', letterSpacing: '-0.3px' }}>WhatsApp da Clínica</p>
+                  <p style={{ fontSize: 13, color: '#667781', margin: '0 0 20px', maxWidth: 320, lineHeight: 1.5 }}>Selecione uma conversa para ler as mensagens ou inicie uma nova</p>
+                  <button onClick={() => setNovaConversa(true)} style={{ fontSize: 13, color: '#075e54', background: 'rgba(255,255,255,0.8)', border: '1px solid #25d366', padding: '8px 20px', borderRadius: 20, cursor: 'pointer', fontWeight: 600 }}>+ Nova conversa</button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aebac1" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <p style={{ fontSize: 11, color: '#aebac1', margin: 0 }}>Suas mensagens são criptografadas</p>
+                </div>
               </div>
             )}
           </div>
