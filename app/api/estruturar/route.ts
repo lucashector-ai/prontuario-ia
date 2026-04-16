@@ -104,7 +104,7 @@ TRANSCRIÇÃO DA CONSULTA:
     const conteudo = message.content[0].type === 'text' ? message.content[0].text : ''
 
     // Remove possíveis marcações de código antes de parsear
-    const jsonLimpo = conteudo.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    const jsonLimpo = conteudo.split('```json').join('').split('```').join('').trim()
     const prontuario = JSON.parse(jsonLimpo)
 
     return NextResponse.json({ prontuario })
