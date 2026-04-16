@@ -29,6 +29,11 @@ export default function Home() {
   const [atestado, setAtestado] = useState<any>(null)
   const [gerandoDoc, setGerandoDoc] = useState(false)
   const [diasAtestado, setDiasAtestado] = useState(1)
+  const [modoPerfeita, setModoPerfeita] = useState(false)
+  const [sugestoes, setSugestoes] = useState<string[]>([])
+  const [alertasRT, setAlertasRT] = useState<string[]>([])
+  const [focoConsulta, setFocoConsulta] = useState('')
+  const [carregandoSugestoes, setCarregandoSugestoes] = useState(false)
 
   useEffect(() => {
     const m = localStorage.getItem('medico')
@@ -163,6 +168,33 @@ export default function Home() {
     if (win) { win.document.write(html); win.document.close(); setTimeout(() => win.print(), 500) }
   }
 
+  const buscarSugestoes = async (texto: string) => {
+    if (!texto || texto.trim().length < 50 || carregandoSugestoes) return
+    setCarregandoSugestoes(true)
+    try {
+      const res = await fetch('/api/sugestoes-consulta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcricao: texto, especialidade: medico?.especialidade || '' })
+      })
+      const data = await res.json()
+      if (data.sugestoes) setSugestoes(data.sugestoes)
+      if (data.alertas) setAlertasRT(data.alertas)
+      if (data.foco) setFocoConsulta(data.foco)
+    } catch (e) { console.error(e) }
+    finally { setCarregandoSugestoes(false) }
+  }
+
+  // Polling de sugestoes a cada 20s quando modo perfeita ativo e gravando
+  useEffect(() => {
+    if (!modoPerfeita || !gravando || !transcricao) return
+    buscarSugestoes(transcricao)
+    const interval = setInterval(() => {
+      if (transcricao.trim().length > 50) buscarSugestoes(transcricao)
+    }, 20000)
+    return () => clearInterval(interval)
+  }, [modoPerfeita, gravando, transcricao])
+
   const handleNovo = () => {
     limpar(); setTranscricao(''); setProntuario(null); setReceita(null)
     setEstado('idle'); setErroMsg(''); setConsultaSalva(false)
@@ -189,6 +221,19 @@ export default function Home() {
                  Salvo
               </span>
             )}
+            <button onClick={() => setModoPerfeita(m => !m)} style={{
+              fontSize: 12, fontWeight: 600,
+              color: modoPerfeita ? '#6043C1' : '#6b7280',
+              background: modoPerfeita ? '#f0ebff' : 'white',
+              border: modoPerfeita ? '1px solid #d4c9f7' : '1px solid #e5e7eb',
+              padding: '6px 12px', borderRadius: 7, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 5
+            }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+              {modoPerfeita ? 'Modo perfeita ativo' : 'Modo perfeita'}
+            </button>
             {estado === 'pronto' && (
               <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', border: '1px solid #e5e7eb', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
                 + Nova consulta
@@ -306,6 +351,39 @@ export default function Home() {
                   )}
                 </div>
               </div>
+              {modoPerfeita && gravando && (
+                <div style={{ marginBottom: 16, background: '#f0ebff', border: '1px solid #d4c9f7', borderRadius: 10, padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
+                      Copiloto em tempo real {carregandoSugestoes ? '...' : ''}
+                    </span>
+                  </div>
+                  {focoConsulta && (
+                    <p style={{ fontSize: 12, color: '#4c1d95', margin: '0 0 10px', fontStyle: 'italic', lineHeight: 1.5 }}>
+                      Foco: {focoConsulta}
+                    </p>
+                  )}
+                  {alertasRT.length > 0 && alertasRT.map((a, i) => (
+                    <div key={i} style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, padding: '6px 10px', marginBottom: 6, fontSize: 12, color: '#b91c1c', display: 'flex', gap: 6 }}>
+                      <span>⚠</span>{a}
+                    </div>
+                  ))}
+                  {sugestoes.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
+                      {sugestoes.map((s, i) => (
+                        <div key={i} style={{ background: 'white', border: '1px solid #d4c9f7', borderRadius: 6, padding: '7px 10px', fontSize: 12, color: '#3C3489', display: 'flex', alignItems: 'center', gap: 7, cursor: 'default' }}>
+                          <span style={{ width: 16, height: 16, borderRadius: '50%', background: '#6043C1', color: 'white', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                          {s}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {sugestoes.length === 0 && !carregandoSugestoes && (
+                    <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Aguardando transcrição para gerar sugestões...</p>
+                  )}
+                </div>
+              )}
               {transcricao ? (
                 <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.8, margin: 0 }}>{transcricao}</p>
               ) : (
