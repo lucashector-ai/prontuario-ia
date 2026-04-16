@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+const DEEPGRAM_KEY = process.env.DEEPGRAM_API_KEY || ''
+
+const KEYTERMS = [
+  'losartana', 'metformina', 'omeprazol', 'atenolol', 'sinvastatina',
+  'amoxicilina', 'dipirona', 'ibuprofeno', 'paracetamol', 'enalapril',
+  'anlodipino', 'hidroclorotiazida', 'levotiroxina', 'prednisona',
+  'hemograma', 'creatinina', 'HbA1c', 'hipertensão', 'diabetes',
+].map(t => `keyterm=${encodeURIComponent(t)}`).join('&')
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,39 +18,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ texto: '' })
     }
 
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
-      model: 'whisper-1',
-      language: 'pt',
-      response_format: 'verbose_json',
-      temperature: 0,
-      prompt:
-        'Consulta médica em português brasileiro. Médico falando com paciente. ' +
-        'Medicamentos: losartana, metformina, omeprazol, atenolol, sinvastatina, ' +
-        'amoxicilina, azitromicina, dipirona, ibuprofeno, paracetamol, enalapril, ' +
-        'anlodipino, hidroclorotiazida, levotiroxina, AAS, prednisona, captopril. ' +
-        'Exames: hemograma, glicemia, HbA1c, TSH, T4 livre, creatinina, ureia, ' +
-        'TGO, TGP, colesterol, triglicerídeos, PSA, EAS, ecocardiograma, ECG. ' +
-        'Termos: pressão arterial, frequência cardíaca, saturação de oxigênio, ' +
-        'dor epigástrica, dispneia, cefaleia, tontura, edema, palpitação, ' +
-        'hipertensão arterial, diabetes mellitus, hipotireoidismo, dislipidemia, ' +
-        'insuficiência cardíaca, DPOC, asma, retorno, encaminhamento.',
+    const params = `model=nova-3-medical&language=pt-BR&smart_format=true&punctuate=true&${KEYTERMS}`
+
+    const res = await fetch(`https://api.deepgram.com/v1/listen?${params}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${DEEPGRAM_KEY}`,
+        'Content-Type': 'audio/wav',
+      },
+      body: await audioFile.arrayBuffer(),
     })
 
-    const texto = (transcription as any).text || ''
+    if (!res.ok) {
+      const err = await res.text()
+      console.error('Deepgram error:', err)
+      return NextResponse.json({ texto: '', error: err }, { status: 500 })
+    }
 
-    // Filtra alucinações conhecidas do Whisper
-    const alucinacoes = [
-      'www.', 'acesse o site', 'visite o nosso site', 'para mais informações, visite',
-      'inscreva-se', 'obrigado por assistir', 'marcoparet', 'opusdei',
-      '♪', 'subtitle', 'legenda', 'transcrição automática',
-    ]
-    const ehAlucinacao = alucinacoes.some(p => texto.toLowerCase().includes(p))
-    if (ehAlucinacao) return NextResponse.json({ texto: '' })
+    const data = await res.json()
+    const texto = data.results?.channels?.[0]?.alternatives?.[0]?.transcript || ''
 
     return NextResponse.json({ texto })
-  } catch (error: any) {
-    console.error('Erro Whisper:', error?.error?.message || error.message)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (e: any) {
+    console.error('Transcrever error:', e)
+    return NextResponse.json({ texto: '', error: e.message }, { status: 500 })
   }
 }
