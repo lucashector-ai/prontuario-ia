@@ -34,17 +34,15 @@ function normalizarTel(tel: string): string {
 
 async function getWppCredentials(medicoId: string): Promise<{token: string, phoneId: string}> {
   try {
-    const { createClient } = await import('@supabase/supabase-js')
-    const admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    const { data } = await admin.from('whatsapp_config').select('access_token, phone_number_id').eq('medico_id', medicoId).single()
-    return {
-      token: (data as any)?.access_token || WPP_TOKEN,
-      phoneId: (data as any)?.phone_number_id || WPP_PHONE_ID
-    }
-  } catch { return { token: WPP_TOKEN, phoneId: WPP_PHONE_ID } }
+    const { data } = await supabase.from('whatsapp_config').select('access_token, phone_number_id').eq('medico_id', medicoId).single()
+    const token = (data as any)?.access_token || WPP_TOKEN
+    const phoneId = (data as any)?.phone_number_id || WPP_PHONE_ID
+    console.log('CREDS_DB:', phoneId, 'token_start:', token?.substring(0, 20), 'len:', token?.length)
+    return { token, phoneId }
+  } catch (e) {
+    console.error('getWppCredentials error:', e)
+    return { token: WPP_TOKEN, phoneId: WPP_PHONE_ID }
+  }
 }
 
 async function enviarWpp(para: string, texto: string, token?: string, phoneId?: string) {
