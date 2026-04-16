@@ -95,6 +95,37 @@ export default function Dashboard() {
     periodoAnterior.setTime(periodoAnterior.getTime() - duracao)
     const { count: consultasAnterior } = await supabase.from('consultas').select('*', { count: 'exact', head: true }).eq('medico_id', medico.id).gte('criado_em', periodoAnterior.toISOString()).lt('criado_em', desde.toISOString())
 
+    // Insights de negócio
+    const inicio90 = new Date(); inicio90.setDate(inicio90.getDate() - 90)
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+
+    const consultasPorPaciente: Record<string, number> = {}
+    todasConsultas?.forEach((c: any) => {
+      if (c.paciente_id) consultasPorPaciente[c.paciente_id] = (consultasPorPaciente[c.paciente_id] || 0) + 1
+    })
+    const pacientesRetorno = Object.values(consultasPorPaciente).filter(n => n > 1).length
+    const taxaRetorno = (todasConsultas?.length || 0) > 0 ? Math.round((pacientesRetorno / Math.max(totalPacientes || 1, 1)) * 100) : 0
+
+    const consultasRecentes90 = new Set(
+      todasConsultas?.filter((c: any) => new Date(c.criado_em) >= inicio90).map((c: any) => c.paciente_id).filter(Boolean)
+    )
+    const { data: todosPacientes } = await supabase.from('pacientes').select('id, criado_em').eq('medico_id', medico.id)
+    const pacientesInativos = (todosPacientes || []).filter((p: any) => !consultasRecentes90.has(p.id)).length
+    const novosPacientesMes = (todosPacientes || []).filter((p: any) => new Date(p.criado_em) >= inicioMes).length
+
+    // Consultas por mês (6 meses)
+    const mesesMap: Record<string, number> = {}
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
+      const key = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+      mesesMap[key] = 0
+    }
+    todasConsultas?.forEach((c: any) => {
+      const key = new Date(c.criado_em).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+      if (mesesMap[key] !== undefined) mesesMap[key]++
+    })
+    const porMes = Object.entries(mesesMap).map(([mes, total]) => ({ mes, total }))
+
     setDados({
       totalConsultas,
       totalPacientes,
@@ -104,6 +135,11 @@ export default function Dashboard() {
       porDia,
       consultasRecentes: consultasRecentes?.slice(0, 5) || [],
       proximosAgendamentos: agendamentos || [],
+      taxaRetorno,
+      pacientesRetorno,
+      pacientesInativos,
+      novosPacientesMes,
+      porMes,
     })
     setCarregando(false)
   }
