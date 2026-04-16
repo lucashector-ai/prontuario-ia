@@ -47,9 +47,10 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
     const mimeType = getMimeType()
     const blob = new Blob(chunks, { type: mimeType || 'audio/webm' })
 
-    if (blob.size < 3000) return
+    if (blob.size < 1000) return
 
     setTranscrevendo(true)
+    console.log('Enviando chunk:', blob.size, 'bytes,', blob.type)
     try {
       const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm'
       const form = new FormData()
@@ -98,11 +99,11 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
         }
       }
 
-      mr.start(2000) // coleta chunks a cada 2s
+      mr.start(1000) // coleta chunks a cada 2s
       setGravando(true)
 
       // Envia para transcricao a cada 5s
-      intervaloRef.current = setInterval(enviarChunk, 5000)
+      intervaloRef.current = setInterval(enviarChunk, 6000)
     } catch (e: any) {
       setErro('Nao foi possivel acessar o microfone. Verifique as permissoes.')
     }
@@ -138,7 +139,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
         mediaRecorderRef.current.resume()
       }
       pausadoRef.current = false
-      intervaloRef.current = setInterval(enviarChunk, 5000)
+      intervaloRef.current = setInterval(enviarChunk, 6000)
       setGravandoPausado(false)
     }
   }, [gravandoPausado, enviarChunk])
