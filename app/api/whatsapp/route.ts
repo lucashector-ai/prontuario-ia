@@ -122,7 +122,7 @@ async function processarIA(mensagem: string, historico: any[]) {
   msgs.push({ role: 'user', content: mensagem })
 
   const res = await anthropic.messages.create({
-    model: 'claude-opus-4-5', max_tokens: 400,
+    model: 'claude-sonnet-4-20250514', max_tokens: 400,
     system: PROMPT_SOFIA, messages: msgs
   })
 
