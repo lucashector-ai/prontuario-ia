@@ -41,7 +41,7 @@ async function getWppCredentials(medicoId: string): Promise<{token: string, phon
     const { data } = await supabaseAdmin.from('whatsapp_config').select('access_token, phone_number_id').eq('medico_id', medicoId).single()
     const token = (data as any)?.access_token || WPP_TOKEN
     const phoneId = (data as any)?.phone_number_id || WPP_PHONE_ID
-    console.log('CREDS_DB:', phoneId, 'token_start:', token?.substring(0, 20), 'len:', token?.length)
+    console.log('CREDS_DB:', phoneId, 'token_start:', token?.substring(0, 20), 'len:', token?.length, 'token_full_check:', token?.substring(0, 50).replace(/[^A-Za-z0-9]/g, 'X'))
     return { token, phoneId }
   } catch (e) {
     console.error('getWppCredentials error:', e)
