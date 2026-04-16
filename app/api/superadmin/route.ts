@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       supabaseAdmin.from('clinicas').select('*', { count: 'exact', head: true }),
       supabaseAdmin.from('consultas').select('*', { count: 'exact', head: true }),
       supabaseAdmin.from('pacientes').select('*', { count: 'exact', head: true }),
-      supabaseAdmin.from('clinicas').select('plano').order('plano'),
+      supabaseAdmin.from('medicos').select('id').limit(1).then(() => ({ data: [] })) as any,
       supabaseAdmin.from('medicos').select('id, nome, email, criado_em, cargo').order('criado_em', { ascending: false }).limit(10),
     ])
     const planoMap: Record<string, number> = {}
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   if (action === 'list_medicos') {
     const { data } = await supabaseAdmin
       .from('medicos')
-      .select('id, nome, email, crm, especialidade, cargo, ativo, criado_em, clinica_id, clinicas(nome, plano)')
+      .select('id, nome, email, crm, especialidade, cargo, ativo, criado_em, clinica_id')
       .order('criado_em', { ascending: false })
     return NextResponse.json({ medicos: data || [] })
   }

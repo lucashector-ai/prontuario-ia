@@ -242,7 +242,7 @@ export default function SuperAdmin() {
                     {m.cargo === 'admin' && <span style={{ fontSize: 10, color: '#6043C1', background: '#1e1344', padding: '1px 7px', borderRadius: 10, fontWeight: 700 }}>admin</span>}
                     {!m.ativo && <span style={{ fontSize: 10, color: '#dc2626', background: '#1f0000', padding: '1px 7px', borderRadius: 10 }}>inativo</span>}
                   </div>
-                  <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>{m.email} · {m.especialidade || 'Sem especialidade'} {m.crm ? '· ' + m.crm : ''} · {m.clinicas?.nome || 'Sem clínica'} · cadastrado {fmt(m.criado_em)}</p>
+                  <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>{m.email} · {m.especialidade || 'Sem especialidade'} {m.crm ? '· ' + m.crm : ''} · cadastrado {fmt(m.criado_em)}</p>
                 </div>
                 <div style={{ flexShrink: 0 }}>
                   {confirmDelete === m.id ? (
