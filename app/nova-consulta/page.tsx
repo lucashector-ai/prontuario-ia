@@ -35,6 +35,7 @@ export default function Home() {
   const [alertasRT, setAlertasRT] = useState<string[]>([])
   const [focoConsulta, setFocoConsulta] = useState('')
   const [carregandoSugestoes, setCarregandoSugestoes] = useState(false)
+  const [modalPaciente, setModalPaciente] = useState(true)
   const [pacientes, setPacientes] = useState<any[]>([])
   const [pacienteSelecionado, setPacienteSelecionado] = useState<any>(null)
   const [buscaPaciente, setBuscaPaciente] = useState('')
@@ -206,7 +207,7 @@ export default function Home() {
   const handleNovo = () => {
     limpar(); setTranscricao(''); setProntuario(null); setReceita(null)
     setEstado('idle'); setErroMsg(''); setConsultaSalva(false)
-    setPacienteSelecionado(null); setBuscaPaciente('')
+    setPacienteSelecionado(null); setBuscaPaciente(''); setModalPaciente(true)
   }
 
   if (!medico) return null
@@ -214,6 +215,62 @@ export default function Home() {
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F9FAFC' }}>
       <Sidebar />
+
+      {/* Modal seleção de paciente */}
+      {modalPaciente && !prontuario && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: '32px', width: 440, boxShadow: '0 24px 60px rgba(0,0,0,0.15)' }}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Nova consulta</h2>
+              <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Vincule a um paciente ou inicie uma consulta avulsa.</p>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Selecionar paciente</p>
+              <input
+                value={buscaPaciente}
+                onChange={e => setBuscaPaciente(e.target.value)}
+                placeholder="Buscar por nome..."
+                style={{ width: '100%', padding: '9px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, outline: 'none', boxSizing: 'border-box' }}
+              />
+              {buscaPaciente && (
+                <div style={{ marginTop: 4, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden', maxHeight: 200, overflowY: 'auto' }}>
+                  {pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase())).length === 0 ? (
+                    <p style={{ fontSize: 12, color: '#9ca3af', padding: '12px 14px', margin: 0 }}>Nenhum paciente encontrado</p>
+                  ) : pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase())).map(p => (
+                    <div key={p.id}
+                      onClick={() => { setPacienteSelecionado(p); setBuscaPaciente(''); setModalPaciente(false) }}
+                      style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #f9fafb', background: 'white' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'white')}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: '#111827' }}>{p.nome}</p>
+                      {p.telefone && <p style={{ margin: 0, fontSize: 11, color: '#9ca3af' }}>{p.telefone}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+              <a href="/pacientes" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Novo paciente</a>
+            </div>
+
+            <div style={{ borderTop: '1px solid #f3f4f6', marginTop: 20, paddingTop: 20, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setModalPaciente(false)}
+                style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+                Consulta avulsa
+              </button>
+              <button
+                onClick={() => { if (pacienteSelecionado) setModalPaciente(false) }}
+                disabled={!pacienteSelecionado}
+                style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: pacienteSelecionado ? '#6043C1' : '#e5e7eb', color: pacienteSelecionado ? 'white' : '#9ca3af', fontSize: 13, cursor: pacienteSelecionado ? 'pointer' : 'default', fontWeight: 600 }}>
+                Iniciar consulta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '20px 20px 20px 0' }}>
         {/* Top header */}
@@ -230,44 +287,13 @@ export default function Home() {
                  Salvo
               </span>
             )}
-            <div style={{ position: 'relative' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: pacienteSelecionado ? '#f3f0fd' : 'white', border: pacienteSelecionado ? '1px solid #d4c9f7' : '1px solid #e5e7eb', borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}
-                onClick={() => setShowDropdown(d => !d)}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={pacienteSelecionado ? '#6043C1' : '#9ca3af'} strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
-                <span style={{ fontSize: 12, color: pacienteSelecionado ? '#6043C1' : '#9ca3af', fontWeight: pacienteSelecionado ? 600 : 400, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {pacienteSelecionado ? pacienteSelecionado.nome : 'Selecionar paciente'}
-                </span>
-                {pacienteSelecionado && (
-                  <span onClick={e => { e.stopPropagation(); setPacienteSelecionado(null); setBuscaPaciente('') }}
-                    style={{ fontSize: 14, color: '#9ca3af', lineHeight: 1, cursor: 'pointer', marginLeft: 2 }}>×</span>
-                )}
+            {pacienteSelecionado && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f3f0fd', border: '1px solid #d4c9f7', borderRadius: 8, padding: '5px 12px' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                <span style={{ fontSize: 12, color: '#6043C1', fontWeight: 600 }}>{pacienteSelecionado.nome}</span>
+                <span onClick={() => { setPacienteSelecionado(null); setModalPaciente(true) }} style={{ fontSize: 16, color: '#9ca3af', cursor: 'pointer', lineHeight: 1, marginLeft: 2 }}>×</span>
               </div>
-              {showDropdown && (
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', zIndex: 50, width: 260 }}
-                  onMouseLeave={() => setShowDropdown(false)}>
-                  <div style={{ padding: 8, borderBottom: '1px solid #f3f4f6' }}>
-                    <input autoFocus value={buscaPaciente} onChange={e => setBuscaPaciente(e.target.value)}
-                      placeholder="Buscar paciente..." style={{ width: '100%', padding: '6px 10px', fontSize: 12, border: '1px solid #e5e7eb', borderRadius: 6, outline: 'none' }} />
-                  </div>
-                  <div style={{ maxHeight: 200, overflowY: 'auto' }}>
-                    {pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase())).length === 0 ? (
-                      <p style={{ fontSize: 12, color: '#9ca3af', padding: '12px 14px', margin: 0 }}>Nenhum paciente encontrado</p>
-                    ) : pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase())).map(p => (
-                      <div key={p.id} onClick={() => { setPacienteSelecionado(p); setShowDropdown(false); setBuscaPaciente('') }}
-                        style={{ padding: '9px 14px', cursor: 'pointer', fontSize: 12, color: '#111827', borderBottom: '1px solid #f9fafb' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'white')}>
-                        <p style={{ margin: 0, fontWeight: 500 }}>{p.nome}</p>
-                        {p.telefone && <p style={{ margin: 0, color: '#9ca3af', fontSize: 11 }}>{p.telefone}</p>}
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ padding: '8px 14px', borderTop: '1px solid #f3f4f6' }}>
-                    <a href="/pacientes" style={{ fontSize: 11, color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>+ Cadastrar novo paciente</a>
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
             <button onClick={() => setModoPerfeita(m => !m)} style={{
               fontSize: 12, fontWeight: 600,
               color: modoPerfeita ? '#6043C1' : '#6b7280',
