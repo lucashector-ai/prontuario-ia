@@ -29,6 +29,8 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
   const samplesRef = useRef<Float32Array[]>([])
   const textoRef = useRef('')
   const pausadoRef = useRef(false)
+  const onNovoTextoRef = useRef(onNovoTexto)
+  onNovoTextoRef.current = onNovoTexto
 
   const float32ToWav = (samples: Float32Array, sampleRate: number): Blob => {
     const buffer = new ArrayBuffer(44 + samples.length * 2)
@@ -86,11 +88,11 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
         if (alucinacoes.some(p => texto.toLowerCase().includes(p))) return
         textoRef.current = (textoRef.current + ' ' + texto).trim()
         setTranscricaoAcumulada(textoRef.current)
-        onNovoTexto(textoRef.current)
+        onNovoTextoRef.current(textoRef.current)
       }
     } catch (e) { console.error('Erro transcrever:', e) }
     finally { setTranscrevendo(false) }
-  }, [onNovoTexto])
+  }, [])
 
   const iniciarGravacao = useCallback(async () => {
     setErro(null)
