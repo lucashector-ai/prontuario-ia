@@ -133,11 +133,8 @@ export default function Login() {
           </form>
 
           <div style={{ marginTop: 32, paddingTop: 28, borderTop: '1px solid #f3f4f6', textAlign: 'center' }}>
-            <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>
-              Não tem conta?{' '}
-              <a href="/cadastro" style={{ color: '#6043C1', textDecoration: 'none', fontWeight: 700 }}>
-                Criar conta gratuita →
-              </a>
+            <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
+              Acesso exclusivo para clínicas cadastradas.
             </p>
           </div>
         </div>
