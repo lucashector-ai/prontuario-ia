@@ -25,17 +25,6 @@ export default function Pacientes() {
     carregarPacientes(med.id)
   }, [router])
 
-  const pacientesFiltrados = pacientes// filter substituido
-    .filter(p => {
-    const matchBusca = !busca || p.nome?.toLowerCase().includes(busca.toLowerCase()) || p.telefone?.includes(busca) || p.email?.toLowerCase().includes(busca.toLowerCase())
-    const matchSexo = !filtroSexo || p.sexo === filtroSexo
-    const matchConvenio = !filtroConvenio || (filtroConvenio === 'particular' ? (!p.convenio || p.convenio === 'Particular') : p.convenio && p.convenio !== 'Particular')
-    return matchBusca && matchSexo && matchConvenio
-  }).sort((a, b) => {
-    if (ordenar === 'nome') return (a.nome || '').localeCompare(b.nome || '')
-    if (ordenar === 'recente') return new Date(b.criado_em || 0).getTime() - new Date(a.criado_em || 0).getTime()
-    return 0
-  })
 
   const carregarPacientes = async (id: string) => {
     const res = await fetch(`/api/pacientes?medico_id=${id}`)
