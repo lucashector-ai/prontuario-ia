@@ -385,7 +385,7 @@ export default function Home() {
                         Gerar receita
                       </button>
                     </div>
-                  )
+                  )}
                   {aba === 'resumo' && (
                     <div>
                       {!resumoPaciente ? (
