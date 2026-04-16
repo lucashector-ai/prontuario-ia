@@ -89,6 +89,7 @@ export default function Home() {
   const handleGerarReceita = async () => {
     if (!prontuario) return
     setGerandoReceita(true)
+    setErroMsg('')
     try {
       const res = await fetch('/api/receita', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -96,7 +97,10 @@ export default function Home() {
       })
       const data = await res.json()
       if (data.receita) { setReceita(data.receita); setAba('receita') }
-    } catch (e) { console.error(e) }
+      else throw new Error(data.error || 'Erro ao gerar receita')
+    } catch (e: any) {
+      setErroMsg(e.message)
+    }
     finally { setGerandoReceita(false) }
   }
 
