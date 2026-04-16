@@ -45,7 +45,7 @@ async function enviarWpp(para: string, texto: string) {
   } catch (e) { console.error('WPP_ERR:', e) }
 }
 
-async function getOuCriarConversa(telefone: string, nome: string) {
+async function getOuCriarConversa(telefone: string, nome: string, MEDICO_ID: string) {
   const tel = normalizarTel(telefone)
   const { data: existente } = await supabase
     .from('whatsapp_conversas')
@@ -146,6 +146,10 @@ export async function POST(req: NextRequest) {
     const messages = value?.messages
     if (!messages?.length) return NextResponse.json({ ok: true })
 
+    const phoneNumberId = value.metadata?.phone_number_id
+    const MEDICO_ID = await getMedicoId(phoneNumberId)
+    if (!MEDICO_ID) { console.log('Nenhum medico para phone_number_id:', phoneNumberId); return NextResponse.json({ ok: true }) }
+
     console.log('WEBHOOK_OK medico:', MEDICO_ID, 'msgs:', messages.length)
 
     for (const msg of messages) {
@@ -156,7 +160,7 @@ export async function POST(req: NextRequest) {
 
       console.log('MSG:', telefone, texto.substring(0, 50))
 
-      const conversa = await getOuCriarConversa(telefone, nome)
+      const conversa = await getOuCriarConversa(telefone, nome, MEDICO_ID)
       if (!conversa) { console.log('ERRO: sem conversa'); continue }
 
       // Salva mensagem recebida
