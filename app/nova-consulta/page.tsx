@@ -121,11 +121,16 @@ export default function Home() {
     try {
       const res = await fetch('/api/receita', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prontuario }),
+        body: JSON.stringify({ prontuario, paciente_id: pacienteSelecionado?.id || null, medico_id: medico?.id || null }),
       })
       const data = await res.json()
-      if (data.receita) { setReceita(data.receita); setAba('receita') }
-      else throw new Error(data.error || 'Erro ao gerar receita')
+      if (data.receita) {
+        setReceita(data.receita)
+        setAba('receita')
+        if (data.receita.alertas_interacao?.length > 0) {
+          data.receita.alertas_interacao.forEach((alerta: string) => toast(alerta, 'error'))
+        }
+      } else throw new Error(data.error || 'Erro ao gerar receita')
     } catch (e: any) {
       toast(e.message || 'Erro ao gerar receita', 'error')
     }
