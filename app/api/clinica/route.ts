@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 // POST - adiciona médico à clínica
 export async function POST(req: NextRequest) {
   try {
-    const { clinica_id, nome, email, especialidade, crm, senha } = await req.json()
+    const { clinica_id, nome, email, especialidade, crm, senha, cargo } = await req.json()
     
     // Verifica limite do plano
     const { data: clinica } = await supabase.from("clinicas").select("*, planos(max_medicos)").eq("id", clinica_id).single()
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const hash = await bcrypt.hash(senha || "medIA@2026", 10)
     const { data: medico, error } = await supabase
       .from("medicos")
-      .insert({ nome, email, especialidade, crm, senha_hash: hash, ativo: true, clinica_id, cargo: "medico" })
+      .insert({ nome, email, especialidade, crm, senha_hash: hash, ativo: true, clinica_id, cargo: cargo || "medico" })
       .select().single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

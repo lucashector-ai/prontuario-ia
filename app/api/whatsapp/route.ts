@@ -155,6 +155,43 @@ export async function POST(req: NextRequest) {
         metadata: { wamid: msg.id }
       })
 
+      // Acumula respostas de pre-consulta no proximo agendamento do paciente
+      const { data: agPre } = await supabase
+        .from('agendamentos')
+        .select('id, pre_consulta_contexto')
+        .eq('medico_id', MEDICO_ID)
+        .eq('pre_consulta_enviada', true)
+        .gte('data_hora', new Date().toISOString())
+        .order('data_hora')
+        .limit(1)
+        .maybeSingle()
+
+      if (agPre) {
+        const atual = (agPre as any).pre_consulta_contexto || ''
+        await supabase.from('agendamentos')
+          .update({ pre_consulta_contexto: atual ? atual + '\n' + texto : texto })
+          .eq('id', (agPre as any).id)
+      }
+
+      // Verifica se tem agendamento com pré-consulta enviada para este paciente
+      const { data: agendPreConsulta } = await supabase
+        .from('agendamentos')
+        .select('id, pre_consulta_contexto')
+        .eq('medico_id', MEDICO_ID)
+        .eq('pre_consulta_enviada', true)
+        .gte('data_hora', new Date().toISOString())
+        .order('data_hora')
+        .limit(1)
+        .maybeSingle()
+
+      if (agendPreConsulta) {
+        const contextoAtual = agendPreConsulta.pre_consulta_contexto || ''
+        const novoContexto = contextoAtual + (contextoAtual ? '\n' : '') + texto
+        await supabase.from('agendamentos')
+          .update({ pre_consulta_contexto: novoContexto })
+          .eq('id', agendPreConsulta.id)
+      }
+
       if (conversa.modo === 'humano') continue
 
       const historico = await getHistorico(conversa.id)
