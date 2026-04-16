@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useGravador } from '@/lib/useGravador'
 import { supabase } from '@/lib/supabase'
 import { ProntuarioCard } from '@/components/ProntuarioCard'
@@ -13,6 +13,7 @@ type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
 
 export default function Home() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [medico, setMedico] = useState<any>(null)
   const [transcricao, setTranscricao] = useState('')
   const [prontuario, setProntuario] = useState<any>(null)
@@ -46,8 +47,17 @@ export default function Home() {
     if (!m) { router.push('/login'); return }
     const med = JSON.parse(m)
     setMedico(med)
-    supabase.from('pacientes').select('id, nome, telefone').eq('medico_id', med.id).order('nome').then(({ data }) => setPacientes(data || []))
-  }, [router])
+    supabase.from('pacientes').select('id, nome, telefone').eq('medico_id', med.id).order('nome').then(({ data }) => {
+      setPacientes(data || [])
+      const pid = searchParams.get('paciente_id')
+      const pnome = searchParams.get('paciente_nome')
+      const ptel = searchParams.get('paciente_tel')
+      if (pid && pnome) {
+        setPacienteSelecionado({ id: pid, nome: pnome, telefone: ptel || '' })
+        setModalPaciente(false)
+      }
+    })
+  }, [router, searchParams])
 
   const handleNovoTexto = useCallback((t: string) => setTranscricao(t), [])
   const { gravando, transcrevendo, iniciarGravacao, pararGravacao, pausarGravacao, gravandoPausado, limpar, erro } = useGravador(handleNovoTexto)
