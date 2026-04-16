@@ -65,7 +65,7 @@ export function Sidebar() {
                 <button key={item.href} onClick={() => router.push(item.href)} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '7px 10px', borderRadius: 7, marginBottom: 1,
-                  textDecoration: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
+                  textDecoration: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' as const,
                   background: active ? '#ede9fb' : 'transparent',
                   color: active ? '#6043C1' : '#374151',
                   fontSize: 13, fontWeight: active ? 600 : 400,
