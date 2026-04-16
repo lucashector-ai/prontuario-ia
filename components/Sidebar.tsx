@@ -76,14 +76,14 @@ export function Sidebar() {
         {grupos.map((grupo, gi) => (
           <div key={gi}>
             {grupo.divider && grupo.items.length > 0 && (
-              <div style={{ height: 1, background: '#f0f0f0', margin: '10px 4px 12px' }} />
+              <div style={{ height: 1, background: '#f0f0f0', margin: '14px 4px 16px' }} />
             )}
             {grupo.items.map(item => {
               const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
               return (
                 <button key={item.href} onClick={() => router.push(item.href)} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '7px 10px', borderRadius: 7, marginBottom: 1,
+                  padding: '8px 10px', borderRadius: 7, marginBottom: 3,
                   cursor: 'pointer', width: '100%', textAlign: 'left' as const,
                   background: active ? '#ede9fb' : 'transparent',
                   color: active ? '#6043C1' : '#374151',
@@ -101,7 +101,7 @@ export function Sidebar() {
         {/* WhatsApp IA — destaque no final */}
         {isAdmin && (
           <>
-            <div style={{ height: 1, background: '#f0f0f0', margin: '10px 4px 12px' }} />
+            <div style={{ height: 1, background: '#f0f0f0', margin: '14px 4px 16px' }} />
             <button
               onClick={() => router.push('/whatsapp')}
               style={{
