@@ -1,12 +1,7 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { supabase } from '@/lib/supabase'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -18,7 +13,7 @@ export default function ForgotPasswordPage() {
     if (!email) return setErro('Digite seu email')
     setLoading(true); setErro('')
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: window.location.origin + '/reset-password',
     })
     setLoading(false)
     if (error) setErro(error.message)
@@ -26,40 +21,42 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFC] flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm">
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-[#6043C1]/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <svg className="w-6 h-6 text-[#6043C1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+    <div style={{ minHeight: '100vh', background: '#F9FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
+      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #f0f0f0', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: '40px 36px', width: '100%', maxWidth: 380 }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{ width: 48, height: 48, background: '#f0ebff', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+            <svg width="22" height="22" fill="none" stroke="#6043C1" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
-          <h1 className="text-xl font-semibold text-gray-900">Recuperar senha</h1>
-          <p className="text-gray-500 text-sm mt-1">Enviaremos um link para seu email</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Recuperar senha</h1>
+          <p style={{ fontSize: 14, color: '#6b7280', margin: '6px 0 0' }}>Enviaremos um link para seu email</p>
         </div>
         {enviado ? (
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: 64, height: 64, background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <svg width="32" height="32" fill="none" stroke="#16a34a" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-gray-700 font-medium">Email enviado!</p>
-            <p className="text-gray-500 text-sm mt-1">Verifique sua caixa de entrada e spam.</p>
-            <Link href="/login" className="mt-4 inline-block text-[#6043C1] text-sm hover:underline">← Voltar ao login</Link>
+            <p style={{ fontSize: 16, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>Email enviado!</p>
+            <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 20px' }}>Verifique sua caixa de entrada e spam.</p>
+            <Link href="/login" style={{ color: '#6043C1', fontSize: 14, textDecoration: 'none' }}>← Voltar ao login</Link>
           </div>
         ) : (
           <>
             <input type="email" placeholder="seu@email.com" value={email}
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && enviar()}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6043C1] mb-3" />
-            {erro && <p className="text-red-500 text-sm mb-3">{erro}</p>}
+              style={{ width: '100%', padding: '12px 16px', fontSize: 14, borderRadius: 10, border: '1.5px solid #e5e7eb', background: 'white', color: '#111827', boxSizing: 'border-box', marginBottom: 12 }} />
+            {erro && <p style={{ fontSize: 13, color: '#dc2626', margin: '0 0 12px' }}>{erro}</p>}
             <button onClick={enviar} disabled={loading}
-              className="w-full bg-[#6043C1] hover:bg-[#5035a8] text-white py-3 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+              style={{ width: '100%', padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', background: loading ? '#b9a9ef' : '#6043C1', color: 'white', fontSize: 15, fontWeight: 700, marginBottom: 12 }}>
               {loading ? 'Enviando...' : 'Enviar link de recuperação'}
             </button>
-            <Link href="/login" className="mt-3 block text-center text-gray-500 text-sm hover:text-gray-700">← Voltar ao login</Link>
+            <div style={{ textAlign: 'center' }}>
+              <Link href="/login" style={{ color: '#6b7280', fontSize: 14, textDecoration: 'none' }}>← Voltar ao login</Link>
+            </div>
           </>
         )}
       </div>
