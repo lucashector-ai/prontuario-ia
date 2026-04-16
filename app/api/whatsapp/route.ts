@@ -41,7 +41,6 @@ async function getWppCredentials(medicoId: string): Promise<{token: string, phon
     const { data } = await supabaseAdmin.from('whatsapp_config').select('access_token, phone_number_id').eq('medico_id', medicoId).single()
     const token = (data as any)?.access_token || WPP_TOKEN
     const phoneId = (data as any)?.phone_number_id || WPP_PHONE_ID
-    console.log('CREDS_DB:', phoneId, 'token_start:', token?.substring(0, 20), 'len:', token?.length, 'token_full_check:', token?.substring(0, 50).replace(/[^A-Za-z0-9]/g, 'X'))
     return { token, phoneId }
   } catch (e) {
     console.error('getWppCredentials error:', e)
@@ -52,7 +51,6 @@ async function getWppCredentials(medicoId: string): Promise<{token: string, phon
 async function enviarWpp(para: string, texto: string, token?: string, phoneId?: string) {
   const t = token || WPP_TOKEN
   const pid = phoneId || WPP_PHONE_ID
-  console.log('ENVIAR_WPP:', para, 'token_start:', t?.substring(0, 20), 'pid:', pid)
   try {
     const r = await fetch('https://graph.facebook.com/v20.0/' + pid + '/messages', {
       method: 'POST',
@@ -60,8 +58,7 @@ async function enviarWpp(para: string, texto: string, token?: string, phoneId?: 
       body: JSON.stringify({ messaging_product: 'whatsapp', to: para, type: 'text', text: { body: texto } })
     })
     const d = await r.json()
-    console.log('WPP_SEND_STATUS:', r.status, JSON.stringify(d).substring(0, 300))
-    console.log('WPP_TOKEN_USED:', texto?.substring(0, 30))
+    console.log('WPP_SEND:', JSON.stringify(d).substring(0, 100))
     return d
   } catch (e) { console.error('WPP_ERR:', e) }
 }
@@ -234,14 +231,11 @@ export async function POST(req: NextRequest) {
           .eq('id', agendPreConsulta.id)
       }
 
-      console.log('MODO:', conversa.modo)
       if (conversa.modo === 'humano') continue
 
       const historico = await getHistorico(conversa.id)
       const { texto: resposta, humano, agendarData } = await processarIA(texto, historico)
-      console.log('RESPOSTA_IA:', resposta?.substring(0, 80), 'humano:', humano)
       const creds = await getWppCredentials(MEDICO_ID)
-      console.log('CREDS:', creds.phoneId, 'token_len:', creds.token?.length || 0)
 
       if (agendarData) {
         await supabase.from('agendamentos').insert({
