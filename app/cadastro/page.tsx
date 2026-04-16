@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 export default function Cadastro() {
   const router = useRouter()
-  const [form, setForm] = useState({ nome: '', crm: '', especialidade: '', email: '', senha: '' })
+  const [form, setForm] = useState({ nome: '', crm: '', especialidade: '', email: '', senha: '', nome_clinica: '' })
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState(false)
   const [carregando, setCarregando] = useState(false)

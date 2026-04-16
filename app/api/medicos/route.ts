@@ -1,46 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
-import bcrypt from 'bcryptjs'
+
+import { NextRequest, NextResponse } from "next/server"
+import { supabase } from "@/lib/supabase"
+import bcrypt from "bcryptjs"
 
 export async function POST(req: NextRequest) {
   try {
-    const { nome, crm, especialidade, email, senha } = await req.json()
+    const { nome, crm, especialidade, email, senha, nome_clinica } = await req.json()
+    if (!nome || !email || !senha) return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 })
 
-    if (!nome || !crm || !email || !senha) {
-      return NextResponse.json({ error: 'Preencha todos os campos obrigatórios' }, { status: 400 })
-    }
+    const { data: existe } = await supabase.from("medicos").select("id").eq("email", email).single()
+    if (existe) return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 400 })
 
-    const senhaHash = await bcrypt.hash(senha, 10)
+    const hash = await bcrypt.hash(senha, 10)
 
-    const { data, error } = await supabase
-      .from('medicos')
-      .insert([{ nome, crm, especialidade, email, senha_hash: senhaHash }])
-      .select('id, nome, crm, especialidade, email, criado_em')
-      .single()
+    // Cria a clínica primeiro
+    const { data: clinica, error: errClinica } = await supabase
+      .from("clinicas")
+      .insert({ nome: nome_clinica || `Clínica ${nome}`, plano_id: "starter" })
+      .select().single()
 
-    if (error) {
-      if (error.code === '23505') {
-        return NextResponse.json({ error: 'CRM ou e-mail já cadastrado' }, { status: 409 })
-      }
-      throw error
-    }
+    if (errClinica || !clinica) return NextResponse.json({ error: "Erro ao criar clínica" }, { status: 500 })
 
-    return NextResponse.json({ medico: data })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-}
+    // Cria o médico como admin da clínica
+    const { data: medico, error } = await supabase
+      .from("medicos")
+      .insert({ nome, crm, especialidade, email, senha_hash: hash, ativo: true, clinica_id: clinica.id, cargo: "admin" })
+      .select().single()
 
-export async function GET() {
-  try {
-    const { data, error } = await supabase
-      .from('medicos')
-      .select('id, nome, crm, especialidade, email, ativo, criado_em')
-      .order('criado_em', { ascending: false })
+    if (error || !medico) return NextResponse.json({ error: error?.message || "Erro ao criar médico" }, { status: 500 })
 
-    if (error) throw error
-    return NextResponse.json({ medicos: data })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const { senha_hash, ...medicoSemSenha } = medico as any
+    return NextResponse.json({ medico: medicoSemSenha })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
