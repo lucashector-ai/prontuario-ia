@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import DeepgramDebug from '@/components/DeepgramDebug'
 
 export const metadata: Metadata = {
   title: 'MedIA — Prontuário Inteligente',
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        {children}
+        <DeepgramDebug />
+      </body>
     </html>
   )
 }
