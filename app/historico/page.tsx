@@ -193,8 +193,11 @@ export default function Histórico() {
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#0d1f1c', margin: '0 0 4px' }}>Selecione uma consulta</p>
-                  <p style={{ fontSize: 13, color: '#8aa8a5', margin: 0 }}>Clique em qualquer consulta na lista para ver os detalhes</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: '#0d1f1c', margin: '0 0 4px' }}>{consultas.length === 0 ? 'Nenhuma consulta ainda' : 'Selecione uma consulta'}</p>
+                  {consultas.length === 0 && (
+                    <a href="/nova-consulta" style={{ display: 'inline-block', marginTop: 16, padding: '9px 20px', borderRadius: 8, background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>+ Nova consulta</a>
+                  )}
+                  <p style={{ fontSize: 13, color: '#8aa8a5', margin: 0 }}>{consultas.length === 0 ? 'Comece gravando sua primeira consulta' : 'Clique em qualquer consulta na lista para ver os detalhes'}</p>
                 </div>
               </div>
             )}
