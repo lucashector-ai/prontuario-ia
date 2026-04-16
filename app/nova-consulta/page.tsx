@@ -22,6 +22,7 @@ export default function Home() {
   const [aba, setAba] = useState<Aba>('prontuario')
   const [consultaSalva, setConsultaSalva] = useState(false)
   const [copiado, setCopiado] = useState(false)
+  const [copiloto, setCopiloto] = useState<any>(null)
 
   useEffect(() => {
     const m = localStorage.getItem('medico')
@@ -64,6 +65,13 @@ export default function Home() {
         body: JSON.stringify({ medico_id: medico.id, transcricao, ...p }),
       })
       setConsultaSalva(true)
+    if (p.paciente_id) {
+      fetch('/api/copiloto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paciente_id: p.paciente_id, medico_id: medico.id, prontuario_atual: p })
+      }).then(r => r.json()).then(d => setCopiloto(d)).catch(() => {})
+    }
     } catch (e) { console.error(e) }
   }
 
@@ -288,7 +296,7 @@ export default function Home() {
                 <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
                   {aba === 'prontuario' && (
                     <>
-                      <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} />
+                      <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} insights={copiloto?.insights} padroes={copiloto?.padroes} totalConsultas={copiloto?.total_consultas} />
                       <button onClick={handleGerarReceita} disabled={gerandoReceita} style={{
                         width: '100%', marginTop: 12, padding: '10px', borderRadius: 8,
                         border: '1px dashed #d1d5db', background: '#f9fafb',

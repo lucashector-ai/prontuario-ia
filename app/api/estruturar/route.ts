@@ -37,7 +37,11 @@ FORMATO DE RESPOSTA — retorne EXATAMENTE este JSON, sem texto antes ou depois:
   "cids": [
     { "codigo": "X00", "descricao": "Nome da condição", "justificativa": "Por que este CID" }
   ],
-  "alertas": ["Lista de alertas importantes, se houver — ex: alergia mencionada, medicamento de alto risco"]
+  "alertas": ["Lista de alertas importantes, se houver — ex: alergia mencionada, medicamento de alto risco"],
+  "hipoteses": [
+    { "nome": "Nome da hipótese diagnóstica", "probabilidade": "alta|media|baixa", "justificativa": "Breve justificativa baseada nos achados" }
+  ],
+  "resumo_copiloto": "Uma frase curta descrevendo o caso clínico principal para orientar o médico"
 }
 
 TRANSCRIÇÃO DA CONSULTA:

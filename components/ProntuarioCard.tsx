@@ -1,8 +1,10 @@
 'use client'
 
 interface CID { codigo: string; descricao: string; justificativa: string }
-interface Prontuario { subjetivo: string; objetivo: string; avaliacao: string; plano: string; cids: CID[]; alertas: string[] }
-interface Props { prontuario: Prontuario; onCopiar: () => void; nomeMedico?: string; crm?: string; medico?: any }
+interface Hipotese { nome: string; probabilidade: string; justificativa: string }
+interface Prontuario { subjetivo: string; objetivo: string; avaliacao: string; plano: string; cids: CID[]; alertas: string[]; hipoteses?: Hipotese[]; resumo_copiloto?: string }
+interface Insight { tipo: string; texto: string }
+interface Props { prontuario: Prontuario; onCopiar: () => void; nomeMedico?: string; crm?: string; medico?: any; pacienteId?: string; insights?: Insight[]; padroes?: string; totalConsultas?: number }
 
 const secoes = [
   { key: 'subjetivo', letra: 'S', titulo: 'Subjetivo', sub: 'Queixas e história', cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
@@ -11,7 +13,7 @@ const secoes = [
   { key: 'plano',     letra: 'P', titulo: 'Plano',      sub: 'Conduta e prescrição', cor: '#6043C1', bg: '#f3f0fd', border: '#d4c9f7' },
 ]
 
-export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico }: Props) {
+export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, pacienteId, insights, padroes, totalConsultas }: Props) {
   const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
 
   const handleExportarPDF = async () => {
@@ -32,6 +34,9 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico }
     } catch (e) { console.error(e) }
   }
 
+  const corHipotese = (p: string) => p === 'alta' ? { bg: '#fef2f2', cor: '#dc2626', border: '#fecaca' } : p === 'media' ? { bg: '#fffbeb', cor: '#d97706', border: '#fde68a' } : { bg: '#f0fdf4', cor: '#16a34a', border: '#bbf7d0' }
+  const iconeInsight = (tipo: string) => tipo === 'recorrencia' ? '↻' : tipo === 'melhora' ? '↑' : tipo === 'piora' ? '↓' : tipo === 'alerta' ? '!' : '+'
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {prontuario.alertas?.length > 0 && (
@@ -45,6 +50,51 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico }
           {prontuario.alertas.map((a, i) => (
             <p key={i} style={{ fontSize: 12, color: '#b91c1c', margin: '3px 0', display: 'flex', gap: 6 }}><span>·</span>{a}</p>
           ))}
+        </div>
+      )}
+
+      {prontuario.resumo_copiloto && (
+        <div style={{ background: '#f0ebff', border: '1px solid #d4c9f7', borderLeft: '4px solid #6043C1', borderRadius: '0 10px 10px 0', padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2" style={{flexShrink:0,marginTop:1}}><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 5v6m0 3h.01"/></svg>
+          <p style={{ fontSize: 12, color: '#4c1d95', margin: 0, lineHeight: 1.5 }}><strong>Copiloto:</strong> {prontuario.resumo_copiloto}</p>
+        </div>
+      )}
+
+      {prontuario.hipoteses && prontuario.hipoteses.length > 0 && (
+        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 10px' }}>Hipóteses diagnósticas</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {prontuario.hipoteses.map((h, i) => {
+              const c = corHipotese(h.probabilidade)
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 10px', background: c.bg, border: `1px solid ${c.border}`, borderRadius: 8 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: c.cor, background: 'white', padding: '2px 7px', borderRadius: 10, border: `1px solid ${c.border}`, flexShrink: 0, textTransform: 'uppercase' }}>{h.probabilidade}</span>
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0 }}>{h.nome}</p>
+                    <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>{h.justificativa}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {(insights && insights.length > 0) && (
+        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>Histórico comparativo</p>
+            {totalConsultas && <span style={{ fontSize: 11, color: '#9ca3af' }}>{totalConsultas} consulta{totalConsultas !== 1 ? 's' : ''} anteriores</span>}
+          </div>
+          {padroes && <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 10px', lineHeight: 1.5, fontStyle: 'italic' }}>{padroes}</p>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {insights.map((ins, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: ins.tipo === 'alerta' ? '#dc2626' : ins.tipo === 'melhora' ? '#16a34a' : ins.tipo === 'piora' ? '#d97706' : '#6043C1', flexShrink: 0, width: 16 }}>{iconeInsight(ins.tipo)}</span>
+                <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>{ins.texto}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
