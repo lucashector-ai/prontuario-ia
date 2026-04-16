@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
@@ -28,6 +29,7 @@ function getWeekDays(date: Date) {
 
 export default function Agenda() {
   const router = useRouter()
+  const { toast } = useToast()
   const [medico, setMedico] = useState<any>(null)
   const [pacientes, setPacientes] = useState<any[]>([])
   const [agendamentos, setAgendamentos] = useState<any[]>([])
@@ -176,8 +178,9 @@ export default function Agenda() {
       if (data.ok) {
         setPreConsultaEnviada(true)
         setAgendamentos(prev => prev.map(a => a.id === agendamentoId ? { ...a, pre_consulta_enviada: true } : a))
+        toast('Pré-consulta enviada por WhatsApp!')
       } else {
-        alert(data.error || 'Erro ao enviar pre-consulta')
+        toast(data.error || 'Erro ao enviar pré-consulta', 'error')
       }
     } catch (e) { alert('Erro de conexao') }
     finally { setEnviandoPreConsulta(false) }
