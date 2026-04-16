@@ -234,11 +234,14 @@ export async function POST(req: NextRequest) {
           .eq('id', agendPreConsulta.id)
       }
 
+      console.log('MODO:', conversa.modo)
       if (conversa.modo === 'humano') continue
 
       const historico = await getHistorico(conversa.id)
       const { texto: resposta, humano, agendarData } = await processarIA(texto, historico)
+      console.log('RESPOSTA_IA:', resposta?.substring(0, 80), 'humano:', humano)
       const creds = await getWppCredentials(MEDICO_ID)
+      console.log('CREDS:', creds.phoneId, 'token_len:', creds.token?.length || 0)
 
       if (agendarData) {
         await supabase.from('agendamentos').insert({
