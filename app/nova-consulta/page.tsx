@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useGravador } from '@/lib/useGravador'
 import { supabase } from '@/lib/supabase'
@@ -11,9 +11,16 @@ import { Sidebar } from '@/components/Sidebar'
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
 type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
 
+function SearchParamsReader({ onParams }: { onParams: (pid: string | null, pnome: string | null, ptel: string | null) => void }) {
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    onParams(searchParams.get('paciente_id'), searchParams.get('paciente_nome'), searchParams.get('paciente_tel'))
+  }, [searchParams, onParams])
+  return null
+}
+
 export default function Home() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [medico, setMedico] = useState<any>(null)
   const [transcricao, setTranscricao] = useState('')
   const [prontuario, setProntuario] = useState<any>(null)
@@ -49,15 +56,16 @@ export default function Home() {
     setMedico(med)
     supabase.from('pacientes').select('id, nome, telefone').eq('medico_id', med.id).order('nome').then(({ data }) => {
       setPacientes(data || [])
-      const pid = searchParams.get('paciente_id')
-      const pnome = searchParams.get('paciente_nome')
-      const ptel = searchParams.get('paciente_tel')
-      if (pid && pnome) {
-        setPacienteSelecionado({ id: pid, nome: pnome, telefone: ptel || '' })
-        setModalPaciente(false)
-      }
+      // params lidos pelo SearchParamsReader abaixo
     })
-  }, [router, searchParams])
+  }, [router])
+
+  const handleSearchParams = useCallback((pid: string | null, pnome: string | null, ptel: string | null) => {
+    if (pid && pnome) {
+      setPacienteSelecionado({ id: pid, nome: pnome, telefone: ptel || '' })
+      setModalPaciente(false)
+    }
+  }, [])
 
   const handleNovoTexto = useCallback((t: string) => setTranscricao(t), [])
   const { gravando, transcrevendo, iniciarGravacao, pararGravacao, pausarGravacao, gravandoPausado, limpar, erro } = useGravador(handleNovoTexto)
@@ -225,6 +233,10 @@ export default function Home() {
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F9FAFC' }}>
       <Sidebar />
+
+      <Suspense fallback={null}>
+        <SearchParamsReader onParams={handleSearchParams} />
+      </Suspense>
 
       {/* Modal seleção de paciente */}
       {modalPaciente && !prontuario && (
