@@ -109,6 +109,10 @@ export default function Dashboard() {
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Dashboard</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Visão geral da clínica</p>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {medico && <BuscaGlobal medicoId={medico.id} />}
+            {medico && <Notificacoes medicoId={medico.id} />}
+          </div>
           <div style={{ display: 'flex', gap: 4, background: '#f3f4f6', borderRadius: 8, padding: 3 }}>
             {(['semana', 'mes', 'ano'] as const).map(p => (
               <button key={p} onClick={() => setPeriodo(p)} style={{
