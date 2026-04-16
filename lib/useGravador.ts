@@ -21,79 +21,56 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
   const [erro, setErro] = useState<string | null>(null)
   const [gravandoPausado, setGravandoPausado] = useState(false)
 
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const processorRef = useRef<ScriptProcessorNode | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const chunksRef = useRef<Blob[]>([])
   const intervaloRef = useRef<NodeJS.Timeout | null>(null)
-  const samplesRef = useRef<Float32Array[]>([])
   const textoRef = useRef('')
+  const pausadoRef = useRef(false)
 
-  // Detecta voz com limiar bem baixo (0.001) para no bloquear fala real
-  const temVoz = (samples: Float32Array): boolean => {
-    let sum = 0
-    for (let i = 0; i < samples.length; i++) sum += samples[i] * samples[i]
-    const rms = Math.sqrt(sum / samples.length)
-    return rms > 0.001
+  const getMimeType = (): string => {
+    const tipos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
+    for (const tipo of tipos) {
+      if (MediaRecorder.isTypeSupported(tipo)) return tipo
+    }
+    return ''
   }
 
-  const float32ToWav = (samples: Float32Array, sampleRate: number): Blob => {
-    const buffer = new ArrayBuffer(44 + samples.length * 2)
-    const view = new DataView(buffer)
-    const write = (off: number, str: string) => {
-      for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i))
-    }
-    write(0, 'RIFF'); view.setUint32(4, 36 + samples.length * 2, true)
-    write(8, 'WAVE'); write(12, 'fmt '); view.setUint32(16, 16, true)
-    view.setUint16(20, 1, true); view.setUint16(22, 1, true)
-    view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true)
-    view.setUint16(32, 2, true); view.setUint16(34, 16, true)
-    write(36, 'data'); view.setUint32(40, samples.length * 2, true)
-    let off = 44
-    for (let i = 0; i < samples.length; i++, off += 2) {
-      const s = Math.max(-1, Math.min(1, samples[i]))
-      view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7fff, true)
-    }
-    return new Blob([buffer], { type: 'audio/wav' })
-  }
+  const enviarChunk = useCallback(async () => {
+    if (chunksRef.current.length === 0 || pausadoRef.current) return
 
-  const enviarAudio = useCallback(async () => {
-    if (samplesRef.current.length === 0) return
-    const total = samplesRef.current.reduce((acc, a) => acc + a.length, 0)
-    if (total < 8000) { samplesRef.current = []; return }
+    const chunks = [...chunksRef.current]
+    chunksRef.current = []
 
-    const merged = new Float32Array(total)
-    let offset = 0
-    for (const chunk of samplesRef.current) { merged.set(chunk, offset); offset += chunk.length }
-    samplesRef.current = []
+    if (chunks.length === 0) return
 
-    // S descarta se for silncio absoluto
-    if (!temVoz(merged)) return
+    const mimeType = getMimeType()
+    const blob = new Blob(chunks, { type: mimeType || 'audio/webm' })
 
-    const sampleRate = audioContextRef.current?.sampleRate || 16000
-    const wav = float32ToWav(merged, sampleRate)
+    if (blob.size < 3000) return
 
     setTranscrevendo(true)
     try {
+      const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm'
       const form = new FormData()
-      form.append('audio', wav, 'audio.wav')
+      form.append('audio', blob, 'audio.' + ext)
       const res = await fetch('/api/transcrever', { method: 'POST', body: form })
       const data = await res.json()
 
       if (data.texto?.trim()) {
         const texto = data.texto.trim()
-        // Filtra apenas alucinaes bvias
-        const alucinacoes = ['www.', 'acesse o site', 'visite o nosso site',
-          'para mais informaes, visite', 'inscreva-se', 'obrigado por assistir',
-          '', 'subtitle', 'legenda']
-        const ehAlucinacao = alucinacoes.some(p => texto.toLowerCase().includes(p))
-        if (ehAlucinacao) return
+        const alucinacoes = ['www.', 'acesse o site', 'visite o nosso site', 'inscreva-se', 'obrigado por assistir', 'subtitle', 'legenda', '[música]', '[music]']
+        if (alucinacoes.some(p => texto.toLowerCase().includes(p))) return
 
         textoRef.current = (textoRef.current + ' ' + texto).trim()
         setTranscricaoAcumulada(textoRef.current)
         onNovoTexto(textoRef.current)
       }
-    } catch (e) { console.error('Erro:', e) }
-    finally { setTranscrevendo(false) }
+    } catch (e) {
+      console.error('Erro transcricao:', e)
+    } finally {
+      setTranscrevendo(false)
+    }
   }, [onNovoTexto])
 
   const iniciarGravacao = useCallback(async () => {
@@ -101,7 +78,6 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: 16000,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
@@ -109,59 +85,71 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
         }
       })
       streamRef.current = stream
-      const ctx = new AudioContext({ sampleRate: 16000 })
-      audioContextRef.current = ctx
-      const source = ctx.createMediaStreamSource(stream)
-      const processor = ctx.createScriptProcessor(4096, 1, 1)
-      processorRef.current = processor
-      processor.onaudioprocess = (e) => {
-        samplesRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)))
+      chunksRef.current = []
+      pausadoRef.current = false
+
+      const mimeType = getMimeType()
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+      mediaRecorderRef.current = mr
+
+      mr.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0 && !pausadoRef.current) {
+          chunksRef.current.push(e.data)
+        }
       }
-      source.connect(processor)
-      processor.connect(ctx.destination)
+
+      mr.start(2000) // coleta chunks a cada 2s
       setGravando(true)
-      intervaloRef.current = setInterval(enviarAudio, 3000)
+
+      // Envia para transcricao a cada 5s
+      intervaloRef.current = setInterval(enviarChunk, 5000)
     } catch (e: any) {
-      setErro('No foi possvel acessar o microfone. Verifique as permisses.')
+      setErro('Nao foi possivel acessar o microfone. Verifique as permissoes.')
     }
-  }, [enviarAudio])
+  }, [enviarChunk])
 
   const pararGravacao = useCallback(() => {
     if (intervaloRef.current) clearInterval(intervaloRef.current)
-    processorRef.current?.disconnect()
-    audioContextRef.current?.close()
+    pausadoRef.current = false
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+
     streamRef.current?.getTracks().forEach(t => t.stop())
-    setTimeout(enviarAudio, 300)
     setGravando(false)
-  }, [enviarAudio])
+    setGravandoPausado(false)
+
+    // Envia ultimo chunk apos 500ms
+    setTimeout(enviarChunk, 500)
+  }, [enviarChunk])
+
+  const pausarGravacao = useCallback(() => {
+    if (!mediaRecorderRef.current) return
+    if (!gravandoPausado) {
+      if (mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.pause()
+      }
+      if (intervaloRef.current) clearInterval(intervaloRef.current)
+      pausadoRef.current = true
+      setGravandoPausado(true)
+    } else {
+      if (mediaRecorderRef.current.state === 'paused') {
+        mediaRecorderRef.current.resume()
+      }
+      pausadoRef.current = false
+      intervaloRef.current = setInterval(enviarChunk, 5000)
+      setGravandoPausado(false)
+    }
+  }, [gravandoPausado, enviarChunk])
 
   const limpar = useCallback(() => {
     textoRef.current = ''
+    chunksRef.current = []
     setTranscricaoAcumulada('')
-    samplesRef.current = []
     setErro(null)
     setTranscrevendo(false)
   }, [])
-
-  const pausarGravacao = () => {
-    if (!gravando) return
-    if (!gravandoPausado) {
-      // Pausa: para de coletar samples e limpa o intervalo
-      if (intervaloRef.current) clearInterval(intervaloRef.current)
-      intervaloRef.current = null
-      processorRef.current?.disconnect()
-      setGravandoPausado(true)
-    } else {
-      // Retoma: reconecta o processor e reinicia o intervalo
-      if (processorRef.current && audioContextRef.current && streamRef.current) {
-        const source = audioContextRef.current.createMediaStreamSource(streamRef.current)
-        source.connect(processorRef.current)
-        processorRef.current.connect(audioContextRef.current.destination)
-      }
-      intervaloRef.current = setInterval(enviarAudio, 3000)
-      setGravandoPausado(false)
-    }
-  }
 
   return { gravando, transcrevendo, transcricaoAcumulada, iniciarGravacao, pararGravacao, pausarGravacao, gravandoPausado, limpar, erro }
 }
