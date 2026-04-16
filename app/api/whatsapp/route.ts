@@ -7,6 +7,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'media_whatsapp_2026'
 
 // Valores fixos das env vars - nao depende do banco
@@ -34,7 +38,7 @@ function normalizarTel(tel: string): string {
 
 async function getWppCredentials(medicoId: string): Promise<{token: string, phoneId: string}> {
   try {
-    const { data } = await supabase.from('whatsapp_config').select('access_token, phone_number_id').eq('medico_id', medicoId).single()
+    const { data } = await supabaseAdmin.from('whatsapp_config').select('access_token, phone_number_id').eq('medico_id', medicoId).single()
     const token = (data as any)?.access_token || WPP_TOKEN
     const phoneId = (data as any)?.phone_number_id || WPP_PHONE_ID
     console.log('CREDS_DB:', phoneId, 'token_start:', token?.substring(0, 20), 'len:', token?.length)
@@ -138,12 +142,7 @@ async function processarIA(mensagem: string, historico: any[]) {
 async function getMedicoId(phoneNumberId: string): Promise<string> {
   if (!phoneNumberId) return MEDICO_ID_FALLBACK
   try {
-    const { createClient } = await import('@supabase/supabase-js')
-    const admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    const { data } = await admin
+    const { data } = await supabaseAdmin
       .from('whatsapp_config')
       .select('medico_id')
       .eq('phone_number_id', phoneNumberId)
