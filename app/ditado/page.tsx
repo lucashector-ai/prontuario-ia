@@ -110,7 +110,7 @@ export default function Ditado() {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: 24, display: 'grid', gridTemplateColumns: prontuario ? '1fr 1fr' : '1fr', gap: 20, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: '24px', paddingTop: 28, display: 'grid', gridTemplateColumns: prontuario ? '1fr 1fr' : '1fr', gap: 20, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
 
           {/* Coluna esquerda — entrada */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

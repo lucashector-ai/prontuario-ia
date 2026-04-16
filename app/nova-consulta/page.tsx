@@ -293,10 +293,15 @@ export default function Home() {
               <button
                 onClick={() => { if (pacienteSelecionado) setModalPaciente(false) }}
                 disabled={!pacienteSelecionado}
-                style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: pacienteSelecionado ? '#6043C1' : '#e5e7eb', color: pacienteSelecionado ? 'white' : '#9ca3af', fontSize: 13, cursor: pacienteSelecionado ? 'pointer' : 'default', fontWeight: 600 }}>
+                style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: pacienteSelecionado ? '#6043C1' : '#e5e7eb', color: pacienteSelecionado ? 'white' : '#9ca3af', fontSize: 13, cursor: pacienteSelecionado ? 'pointer' : 'default', fontWeight: 600 }} title={!pacienteSelecionado ? 'Busque e selecione um paciente acima' : ''}>
                 Iniciar consulta
               </button>
             </div>
+            {!pacienteSelecionado && (
+              <p style={{ fontSize: 11, color: '#9ca3af', margin: '8px 0 0', textAlign: 'right' }}>
+                Busque um paciente acima ou clique em <strong>Consulta avulsa</strong>
+              </p>
+            )}
           </div>
         </div>
       )}

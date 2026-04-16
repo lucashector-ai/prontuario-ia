@@ -21,9 +21,27 @@ export default function Cadastro() {
   })
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
+  const [showSenha, setShowSenha] = useState(false)
+  const [showConfirmar, setShowConfirmar] = useState(false)
   const [sucesso, setSucesso] = useState(false)
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
+
+  const requisitos = [
+    { label: 'Mínimo 8 caracteres', ok: form.senha.length >= 8 },
+    { label: 'Letra maiúscula', ok: /[A-Z]/.test(form.senha) },
+    { label: 'Número', ok: /[0-9]/.test(form.senha) },
+    { label: 'Caractere especial', ok: /[^A-Za-z0-9]/.test(form.senha) },
+    { label: 'Senhas coincidem', ok: form.senha.length > 0 && form.senha === form.confirmar_senha },
+  ]
+
+  const requisitos = [
+    { label: 'Mínimo 8 caracteres', ok: form.senha.length >= 8 },
+    { label: 'Letra maiúscula', ok: /[A-Z]/.test(form.senha) },
+    { label: 'Número', ok: /[0-9]/.test(form.senha) },
+    { label: 'Caractere especial', ok: /[^A-Za-z0-9]/.test(form.senha) },
+    { label: 'Senhas coincidem', ok: form.senha.length > 0 && form.senha === form.confirmar_senha },
+  ]
 
   const avancar = () => {
     setErro('')
@@ -160,7 +178,32 @@ export default function Cadastro() {
                   ].map(f => (
                     <div key={f.key}>
                       <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{f.label}{f.req && <span style={{ color: '#6043C1', marginLeft: 3 }}>*</span>}</label>
-                      <input type={f.type} value={(form as any)[f.key]} onChange={e => set(f.key, e.target.value)} placeholder={f.placeholder} style={{ width: '100%', padding: '11px 15px', fontSize: 14, borderRadius: 10, border: '1.5px solid #e5e7eb', boxSizing: 'border-box' as const }}/>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={f.type === 'password' ? (f.key === 'confirmar_senha' ? (showConfirmar ? 'text' : 'password') : (showSenha ? 'text' : 'password')) : f.type}
+                          value={(form as any)[f.key]}
+                          onChange={e => set(f.key, e.target.value)}
+                          placeholder={f.placeholder}
+                          style={{ width: '100%', padding: '11px 15px', paddingRight: f.type === 'password' ? 42 : 15, fontSize: 14, borderRadius: 10, border: '1.5px solid #e5e7eb', boxSizing: 'border-box' as const }}
+                        />
+                        {f.type === 'password' && (
+                          <button type="button" onClick={() => f.key === 'confirmar_senha' ? setShowConfirmar(s => !s) : setShowSenha(s => !s)}
+                            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex' }}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              {(f.key === 'confirmar_senha' ? showConfirmar : showSenha) ? <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></> : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      {f.key === 'senha' && form.senha.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
+                          {requisitos.map(r => (
+                            <span key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: r.ok ? '#16a34a' : '#9ca3af', background: r.ok ? '#f0fdf4' : '#f9fafb', border: `1px solid ${r.ok ? '#bbf7d0' : '#e5e7eb'}`, padding: '3px 8px', borderRadius: 20, transition: 'all 0.2s' }}>
+                              {r.ok ? '✓' : '○'} {r.label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

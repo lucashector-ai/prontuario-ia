@@ -192,7 +192,7 @@ export default function Agenda() {
   }
 
   const fmtDia = (d: Date) => d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
-  const fmtMes = (d: Date) => d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  const fmtMes = (d: Date) => d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/ De /, ' de ')
   const isHoje = (d: Date) => d.toDateString() === hoje
   const totalSemana = diasSemana.reduce((acc, d) => acc + getAgsDia(d).length, 0)
 
