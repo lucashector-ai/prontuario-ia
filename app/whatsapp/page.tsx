@@ -55,6 +55,9 @@ export default function WhatsApp() {
   const [listaSelecionada, setListaSelecionada] = useState<any>(null)
   const [msgTransmissao, setMsgTransmissao] = useState('')
   const [enviandoTransmissao, setEnviandoTransmissao] = useState(false)
+  const [gravandoAudio, setGravandoAudio] = useState(false)
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
 
   // configuracao
   const [wizardPasso, setWizardPasso] = useState(1)
@@ -130,6 +133,35 @@ REGRAS:
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [medico])
+
+  const iniciarAudio = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mr = new MediaRecorder(stream)
+      audioChunksRef.current = []
+      mr.ondataavailable = e => audioChunksRef.current.push(e.data)
+      mr.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop())
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        if (blob.size < 1000) return
+        const form = new FormData()
+        form.append('audio', blob, 'audio.webm')
+        const res = await fetch('/api/transcrever', { method: 'POST', body: form })
+        const data = await res.json()
+        if (data.texto?.trim()) setMsg(prev => prev ? prev + ' ' + data.texto : data.texto)
+        toast('Áudio transcrito! Revise e envie.')
+      }
+      mr.start()
+      setMediaRecorder(mr)
+      setGravandoAudio(true)
+    } catch { toast('Erro ao acessar microfone', 'error') }
+  }
+
+  const pararAudio = () => {
+    mediaRecorder?.stop()
+    setMediaRecorder(null)
+    setGravandoAudio(false)
+  }
 
   const carregarMetricas = async () => {
     if (!medico) return
@@ -297,6 +329,17 @@ REGRAS:
   const removerAtendente = async (id: string) => {
     await fetch('/api/atendentes?id=' + id, { method: 'DELETE' })
     carregarAtendentes(medico.id)
+  }
+
+  const renderMarkdown = (texto: string) => {
+    if (!texto) return ''
+    return texto
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/_(.*?)_/g, '<em>$1</em>')
+      .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid rgba(0,0,0,0.1);margin:6px 0"/>')
+      .replace(/
+/g, '<br/>')
   }
 
   const fmt = (iso: string) => { const d = new Date(iso); return d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) }
@@ -502,8 +545,16 @@ REGRAS:
                     return (
                       <div key={m.id} style={{ display: 'flex', justifyContent: rec ? 'flex-start' : 'flex-end', marginBottom: 2 }}>
                         <div style={{ maxWidth: '65%', padding: '7px 10px 6px 10px', borderRadius: rec ? '0px 10px 10px 10px' : '10px 10px 0px 10px', background: rec ? 'white' : (isIA ? '#d9fdd3' : '#d1e7ff'), boxShadow: '0 1px 2px rgba(0,0,0,0.15)', position: 'relative' as const }}>
+                          {!rec && isIA && <p style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sofia IA</p>}
+                          {!rec && !isIA && remetente && <p style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', margin: '0 0 3px' }}>{remetente}</p>}
                           {(isIA || remetente) && <p style={{ fontSize: 9, color: isIA ? '#6043C1' : '#2563eb', fontWeight: 700, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{isIA ? 'Sofia IA' : remetente}</p>}
-                          <p style={{ fontSize: 12, color: '#111827', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-line' }}>{m.conteudo}</p>
+                          <p style={{ fontSize: 13, color: '#111827', margin: 0, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: m.conteudo
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid rgba(0,0,0,0.15);margin:4px 0"/>')
+                            .replace(/
+/g, '<br/>')
+                          }} />
                           <p style={{ fontSize: 9, color: '#9ca3af', margin: '3px 0 0', textAlign: rec ? 'left' : 'right' }}>{fmtH(m.criado_em)}</p>
                         </div>
                       </div>
@@ -524,24 +575,39 @@ REGRAS:
                   </button>
                   {/* Campo de texto */}
                   <div style={{ flex: 1, background: 'white', borderRadius: 24, padding: '8px 16px', display: 'flex', alignItems: 'flex-end', minHeight: 42, boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-                    <textarea
-                      value={msg}
-                      onChange={e => setMsg(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }}
-                      style={{ flex: 1, border: 'none', outline: 'none', resize: 'none', fontSize: 14, lineHeight: 1.5, maxHeight: 100, background: 'transparent', fontFamily: 'inherit', color: '#111' }}
-                      placeholder="Digite uma mensagem"
-                      rows={1}
-                    />
+                    {gravandoAudio ? (
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', animation: 'pulse 1s infinite' }}/>
+                        <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 500 }}>Gravando... clique no botão para parar</span>
+                      </div>
+                    ) : (
+                      <textarea
+                        value={msg}
+                        onChange={e => setMsg(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }}
+                        style={{ flex: 1, border: 'none', outline: 'none', resize: 'none', fontSize: 14, lineHeight: 1.5, maxHeight: 100, background: 'transparent', fontFamily: 'inherit', color: '#111' }}
+                        placeholder="Digite uma mensagem"
+                        rows={1}
+                      />
+                    )}
                   </div>
                   {/* Enviar ou mic */}
-                  <button onClick={enviar} disabled={enviando}
-                    style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: msg.trim() ? '#25d366' : '#54656f', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.2s' }}>
-                    {msg.trim() ? (
+                  {msg.trim() ? (
+                    <button onClick={enviar} disabled={enviando}
+                      style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#25d366', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                    ) : (
+                    </button>
+                  ) : gravandoAudio ? (
+                    <button onClick={pararAudio}
+                      style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, animation: 'pulse 1s infinite' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                    </button>
+                  ) : (
+                    <button onClick={iniciarAudio}
+                      style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#54656f', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
-                    )}
-                  </button>
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
