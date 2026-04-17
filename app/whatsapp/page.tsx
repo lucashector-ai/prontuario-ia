@@ -530,8 +530,19 @@ REGRAS:
 
                 {/* Mensagens */}
                 <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4, background: '#e5ddd5', backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}>
-                  {mensagens.map(m => {
+                  {mensagens.map((m, idx) => {
                     const rec = m.tipo === 'recebida'
+                    const dataAtual = new Date(m.criado_em).toDateString()
+                    const dataAnterior = idx > 0 ? new Date(mensagens[idx-1].criado_em).toDateString() : null
+                    const mostraData = idx === 0 || dataAtual !== dataAnterior
+                    const fmtData = (iso: string) => {
+                      const d = new Date(iso)
+                      const hoje = new Date()
+                      const ontem = new Date(hoje); ontem.setDate(hoje.getDate() - 1)
+                      if (d.toDateString() === hoje.toDateString()) return 'Hoje'
+                      if (d.toDateString() === ontem.toDateString()) return 'Ontem'
+                      return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+                    }
                     const remetente = m.metadata?.remetente
                     const isIA = m.metadata?.ia
                     const isSistema = m.metadata?.sistema
@@ -541,9 +552,15 @@ REGRAS:
                       </div>
                     )
                     return (
+                      <div key={m.id + '_wrapper'}>
+                        {mostraData && (
+                          <div style={{ textAlign: 'center', margin: '12px 0 8px' }}>
+                            <span style={{ fontSize: 11, color: '#667781', background: 'rgba(255,255,255,0.85)', padding: '4px 12px', borderRadius: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>{fmtData(m.criado_em)}</span>
+                          </div>
+                        )}
                       <div key={m.id}
                         style={{ display: 'flex', justifyContent: rec ? 'flex-start' : 'flex-end', marginBottom: 2, position: 'relative' as const }}
-                        onMouseEnter={() => setMsgHover(m.id)}
+                        onMouseEnter={() => setMsgHover(String(m.id))}
                         onMouseLeave={() => { setMsgHover(null); setMsgMenu(null) }}>
                         <div style={{ maxWidth: '65%', padding: '7px 10px 6px 10px', borderRadius: rec ? '0px 10px 10px 10px' : '10px 10px 0px 10px', background: rec ? 'white' : (isIA ? '#d9fdd3' : '#d1e7ff'), boxShadow: '0 1px 2px rgba(0,0,0,0.15)', position: 'relative' as const }}>
                           {!rec && isIA && <p style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sofia IA</p>}
@@ -557,7 +574,7 @@ REGRAS:
                           <p style={{ fontSize: 9, color: '#9ca3af', margin: '3px 0 0', textAlign: rec ? 'left' : 'right' }}>{fmtH(m.criado_em)}</p>
                         </div>
                         {/* Ações hover */}
-                        {msgHover === m.id && (
+                        {msgHover === String(m.id) && (
                           <div style={{ position: 'absolute' as const, top: 4, right: rec ? 'auto' : 4, left: rec ? 4 : 'auto', display: 'flex', gap: 2, zIndex: 10 }}>
                             <button onClick={() => setRespondendoMsg(m)} style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.1)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Responder">↩</button>
                             <button onClick={() => navigator.clipboard.writeText(m.conteudo)} style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.1)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Copiar">📋</button>
@@ -565,7 +582,7 @@ REGRAS:
                           </div>
                         )}
                         {/* Menu contexto */}
-                        {msgMenu === m.id && (
+                        {msgMenu === String(m.id) && (
                           <div style={{ position: 'absolute' as const, top: 30, right: rec ? 'auto' : 4, left: rec ? 4 : 'auto', background: 'white', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', zIndex: 20, minWidth: 160, overflow: 'hidden' }}>
                             {[
                               { label: '↩ Responder', fn: () => { setRespondendoMsg(m); setMsgMenu(null) } },
@@ -580,6 +597,7 @@ REGRAS:
                             ))}
                           </div>
                         )}
+                      </div>
                       </div>
                     )
                   })}
