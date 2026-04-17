@@ -58,6 +58,10 @@ export default function WhatsApp() {
   const [gravandoAudio, setGravandoAudio] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
+  const [msgHover, setMsgHover] = useState<string | null>(null)
+  const [msgMenu, setMsgMenu] = useState<string | null>(null)
+  const [respondendoMsg, setRespondendoMsg] = useState<any>(null)
+  const [menuAnexo, setMenuAnexo] = useState(false)
 
   // configuracao
   const [wizardPasso, setWizardPasso] = useState(1)
@@ -337,10 +341,12 @@ REGRAS:
   const ini = (n: string) => n?.split(' ').map((x: string) => x[0]).slice(0, 2).join('').toUpperCase() || '?'
   const totalNaoLidas = conversas.reduce((a, c) => a + c.naoLidas, 0)
 
+  const [filtroNaoLidas, setFiltroNaoLidas] = useState(false)
   const conversasFiltradas = conversas.filter(c => {
     const buscaOk = nomeCv(c).toLowerCase().includes(busca.toLowerCase()) || c.telefone.includes(busca)
     const modoOk = filtroModo === 'todas' || c.modo === filtroModo
-    return buscaOk && modoOk
+    const naoLidasOk = !filtroNaoLidas || c.naoLidas > 0
+    return buscaOk && modoOk && naoLidasOk
   })
 
   const tabStyle = (t: Aba) => ({
@@ -414,10 +420,13 @@ REGRAS:
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                   </button>
                 </div>
-                <div style={{ display: 'flex', gap: 4 }}>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' as const }}>
+                  <button onClick={() => setFiltroNaoLidas(!filtroNaoLidas)} style={{ padding: '3px 10px', fontSize: 10, fontWeight: filtroNaoLidas ? 700 : 400, borderRadius: 20, border: '1px solid ' + (filtroNaoLidas ? '#22c55e' : '#e5e7eb'), background: filtroNaoLidas ? '#f0fdf4' : 'white', color: filtroNaoLidas ? '#16a34a' : '#9ca3af', cursor: 'pointer' }}>
+                    Não lidas
+                  </button>
                   {(['todas','ia','humano'] as const).map(f => (
-                    <button key={f} onClick={() => setFiltroModo(f)} style={{ flex: 1, padding: '4px 0', fontSize: 10, fontWeight: filtroModo === f ? 700 : 400, borderRadius: 5, border: '1px solid ' + (filtroModo === f ? '#6043C1' : '#e5e7eb'), background: filtroModo === f ? '#F9FAFC' : 'white', color: filtroModo === f ? '#6043C1' : '#9ca3af', cursor: 'pointer' }}>
-                      {f === 'todas' ? 'Todas' : f === 'ia' ? ' IA' : ' Humano'}
+                    <button key={f} onClick={() => setFiltroModo(f)} style={{ padding: '3px 10px', fontSize: 10, fontWeight: filtroModo === f ? 700 : 400, borderRadius: 20, border: '1px solid ' + (filtroModo === f ? '#22c55e' : '#e5e7eb'), background: filtroModo === f ? '#f0fdf4' : 'white', color: filtroModo === f ? '#16a34a' : '#9ca3af', cursor: 'pointer' }}>
+                      {f === 'todas' ? 'Tudo' : f === 'ia' ? 'IA' : 'Humano'}
                     </button>
                   ))}
                 </div>
@@ -532,7 +541,10 @@ REGRAS:
                       </div>
                     )
                     return (
-                      <div key={m.id} style={{ display: 'flex', justifyContent: rec ? 'flex-start' : 'flex-end', marginBottom: 2 }}>
+                      <div key={m.id}
+                        style={{ display: 'flex', justifyContent: rec ? 'flex-start' : 'flex-end', marginBottom: 2, position: 'relative' as const }}
+                        onMouseEnter={() => setMsgHover(m.id)}
+                        onMouseLeave={() => { setMsgHover(null); setMsgMenu(null) }}>
                         <div style={{ maxWidth: '65%', padding: '7px 10px 6px 10px', borderRadius: rec ? '0px 10px 10px 10px' : '10px 10px 0px 10px', background: rec ? 'white' : (isIA ? '#d9fdd3' : '#d1e7ff'), boxShadow: '0 1px 2px rgba(0,0,0,0.15)', position: 'relative' as const }}>
                           {!rec && isIA && <p style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sofia IA</p>}
                           {!rec && !isIA && remetente && <p style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', margin: '0 0 3px' }}>{remetente}</p>}
@@ -544,21 +556,77 @@ REGRAS:
                           }} />
                           <p style={{ fontSize: 9, color: '#9ca3af', margin: '3px 0 0', textAlign: rec ? 'left' : 'right' }}>{fmtH(m.criado_em)}</p>
                         </div>
+                        {/* Ações hover */}
+                        {msgHover === m.id && (
+                          <div style={{ position: 'absolute' as const, top: 4, right: rec ? 'auto' : 4, left: rec ? 4 : 'auto', display: 'flex', gap: 2, zIndex: 10 }}>
+                            <button onClick={() => setRespondendoMsg(m)} style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.1)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Responder">↩</button>
+                            <button onClick={() => navigator.clipboard.writeText(m.conteudo)} style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.1)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Copiar">📋</button>
+                            <button onClick={() => setMsgMenu(msgMenu === m.id ? null : m.id)} style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.1)', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Mais">⌄</button>
+                          </div>
+                        )}
+                        {/* Menu contexto */}
+                        {msgMenu === m.id && (
+                          <div style={{ position: 'absolute' as const, top: 30, right: rec ? 'auto' : 4, left: rec ? 4 : 'auto', background: 'white', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', zIndex: 20, minWidth: 160, overflow: 'hidden' }}>
+                            {[
+                              { label: '↩ Responder', fn: () => { setRespondendoMsg(m); setMsgMenu(null) } },
+                              { label: '📋 Copiar', fn: () => { navigator.clipboard.writeText(m.conteudo); setMsgMenu(null) } },
+                              { label: '⭐ Favoritar', fn: () => setMsgMenu(null) },
+                            ].map(item => (
+                              <button key={item.label} onClick={item.fn} style={{ display: 'block', width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left' as const, fontSize: 13, color: '#111827', cursor: 'pointer' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                {item.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )
                   })}
                   <div ref={endRef}/>
                 </div>
 
+                {/* Banner respondendo */}
+                {respondendoMsg && (
+                  <div style={{ background: '#f0f2f5', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 3, height: 36, background: '#25d366', borderRadius: 2, flexShrink: 0 }}/>
+                      <div>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', margin: 0 }}>Respondendo</p>
+                        <p style={{ fontSize: 12, color: '#667781', margin: 0, maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{respondendoMsg.conteudo?.substring(0, 60)}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setRespondendoMsg(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#667781', fontSize: 18, padding: 4 }}>✕</button>
+                  </div>
+                )}
+
+                {/* Menu anexos */}
+                {menuAnexo && (
+                  <div style={{ background: '#f0f2f5', padding: '8px 16px 4px', display: 'flex', gap: 8 }}>
+                    {[
+                      { icon: '📄', label: 'Documento', color: '#7c3aed' },
+                      { icon: '🖼️', label: 'Fotos', color: '#16a34a' },
+                      { icon: '📷', label: 'Câmera', color: '#dc2626' },
+                      { icon: '🎵', label: 'Áudio', color: '#d97706' },
+                      { icon: '📊', label: 'Enquete', color: '#0891b2' },
+                    ].map(item => (
+                      <div key={item.label} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4 }}>
+                        <button style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: item.color, cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</button>
+                        <span style={{ fontSize: 10, color: '#667781' }}>{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Input — estilo WhatsApp */}
                 <div style={{ background: '#f0f2f5', borderTop: 'none', padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'flex-end', flexShrink: 0 }}>
+                  {/* Anexo */}
+                  <button onClick={() => setMenuAnexo(!menuAnexo)} style={{ background: menuAnexo ? '#e9fbe9' : 'none', border: 'none', cursor: 'pointer', color: menuAnexo ? '#25d366' : '#54656f', padding: '8px 4px', display: 'flex', flexShrink: 0, borderRadius: '50%', transition: 'all 0.2s' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
                   {/* Emoji */}
                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#54656f', padding: '8px 4px', display: 'flex', flexShrink: 0 }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-5H6.5C6.78 9.5 9.13 8 12 8s5.22 1.5 5.5 3.5z"/></svg>
-                  </button>
-                  {/* Anexo */}
-                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#54656f', padding: '8px 4px', display: 'flex', flexShrink: 0 }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
                   </button>
                   {/* Campo de texto */}
                   <div style={{ flex: 1, background: 'white', borderRadius: 24, padding: '8px 16px', display: 'flex', alignItems: 'flex-end', minHeight: 42, boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
