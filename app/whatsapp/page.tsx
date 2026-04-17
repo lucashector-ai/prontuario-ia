@@ -38,7 +38,6 @@ export default function WhatsApp() {
   const [enviando, setEnviando] = useState(false)
   const [busca, setBusca] = useState('')
   const [filtroModo, setFiltroModo] = useState<'todas'|'ia'|'humano'>('todas')
-  const [filtroNaoLidas, setFiltroNaoLidas] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
 
   // nova conversa
@@ -342,6 +341,7 @@ REGRAS:
   const ini = (n: string) => n?.split(' ').map((x: string) => x[0]).slice(0, 2).join('').toUpperCase() || '?'
   const totalNaoLidas = conversas.reduce((a, c) => a + c.naoLidas, 0)
 
+  const [filtroNaoLidas, setFiltroNaoLidas] = useState(false)
   const conversasFiltradas = conversas.filter(c => {
     const buscaOk = nomeCv(c).toLowerCase().includes(busca.toLowerCase()) || c.telefone.includes(busca)
     const modoOk = filtroModo === 'todas' || c.modo === filtroModo
@@ -378,7 +378,7 @@ REGRAS:
               {usuario && <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '3px 10px', borderRadius: 20 }}> {usuario.nome}</span>}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 0, marginTop: 8, overflowX: 'auto', borderBottom: '1px solid #f3f4f6', paddingBottom: 0 }}>
+          <div style={{ display: 'flex', gap: 0, marginTop: 8, overflowX: 'auto', borderBottom: '1px solid #e9edef', paddingBottom: 0 }}>
             {([
               { id: 'conversas', label: `Conversas${totalNaoLidas > 0 ? ` (${totalNaoLidas})` : ''}` },
               { id: 'dashboard', label: 'Dashboard' },
@@ -415,7 +415,7 @@ REGRAS:
             <div style={{ width: 300, background: 'white', borderRight: 'none', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
               <div style={{ padding: '10px 12px', borderBottom: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, padding: '6px 0', fontSize: 14, border: 'none', outline: 'none', background: 'transparent', color: '#111' }} placeholder="Pesquisar ou iniciar conversa"/>
+                  <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, padding: '7px 10px', fontSize: 12, borderRadius: 7, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', background: '#f9fafb', outline: 'none' }} placeholder="Pesquisar"/>
                   <button onClick={() => setNovaConversa(true)} title="Nova conversa" style={{ width: 34, height: 34, borderRadius: 7, border: 'none', background: '#6043C1', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                   </button>
@@ -453,20 +453,12 @@ REGRAS:
                   </div>
                 ) : conversasFiltradas.map(cv => (
                   <div key={cv.id} onClick={() => setAtiva(cv)}
-                    style={{ padding: '10px 14px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', background: ativa?.id === cv.id ? '#f0fdf4' : 'white', transition: 'background 0.1s' }}
+                    style={{ padding: '10px 14px', borderBottom: '1px solid #e9edef', cursor: 'pointer', background: ativa?.id === cv.id ? '#f0f2f5' : 'white', transition: 'background 0.1s' }}
                     onMouseEnter={e => { if (ativa?.id !== cv.id) e.currentTarget.style.background = '#f9fafb' }}
                     onMouseLeave={e => { if (ativa?.id !== cv.id) e.currentTarget.style.background = 'white' }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                       <div style={{ position: 'relative', flexShrink: 0 }}>
-                        {cv.foto_url ? (
-                        <img src={cv.foto_url} alt={nomeCv(cv)} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' as const }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                      ) : (
-                        {cv.foto_url ? (
-                          <img src={cv.foto_url} alt={nomeCv(cv)} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' as const }} />
-                        ) : (
-                          <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 400, color: 'white' }}>{ini(nomeCv(cv))}</div>
-                        )}
-                      )}
+                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 400, color: 'white' }}>{ini(nomeCv(cv))}</div>
                         <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: cv.modo === 'humano' ? '#f59e0b' : '#22c55e', border: '2px solid white' }}/>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -495,17 +487,13 @@ REGRAS:
                 {/* Header conversa — estilo WhatsApp */}
                 <div style={{ background: 'white', borderBottom: '1px solid #e9edef', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                   <div style={{ position: 'relative' }}>
-                    {ativa.foto_url ? (
-                      <img src={ativa.foto_url} alt={nomeCv(ativa)} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' as const, flexShrink: 0 }} />
-                    ) : (
-                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 400, color: 'white', flexShrink: 0 }}>{ini(nomeCv(ativa))}</div>
-                    )}
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 400, color: 'white' }}>{ini(nomeCv(ativa))}</div>
                     <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #075e54' }}/>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 15, fontWeight: 500, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{nomeCv(ativa)}</p>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{nomeCv(ativa)}</p>
                     <p style={{ fontSize: 12, color: '#667781', margin: 0 }}>
-                      {ativa.telefone} · {ativa.modo === 'humano' ? 'Atendimento humano' + (ativa.atendente_nome ? ' · ' + ativa.atendente_nome : '') : 'Sofia IA · online'}
+                      {ativa.telefone} · {ativa.modo === 'humano' ? 'Atendimento humano' + (ativa.atendente_nome ? ' · ' + ativa.atendente_nome : '') : 'Sofia IA'}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -513,11 +501,11 @@ REGRAS:
                       <a href={'/pacientes/' + ativa.paciente_id} style={{ fontSize: 11, color: 'white', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', padding: '5px 12px', borderRadius: 20, textDecoration: 'none', fontWeight: 600 }}>Ver ficha</a>
                     )}
                     {ativa.modo === 'ia' ? (
-                      <button onClick={assumirAtendimento} disabled={assumindo} style={{ fontSize: 12, fontWeight: 500, color: '#111827', background: '#f0f2f5', border: 'none', padding: '6px 14px', borderRadius: 20, cursor: 'pointer' }}>
+                      <button onClick={assumirAtendimento} disabled={assumindo} style={{ fontSize: 11, fontWeight: 700, color: '#54656f', background: '#f0f2f5', border: 'none', padding: '6px 14px', borderRadius: 20, cursor: 'pointer' }}>
                         {assumindo ? 'Assumindo...' : 'Assumir'}
                       </button>
                     ) : (
-                      <button onClick={devolverParaIA} style={{ fontSize: 12, fontWeight: 500, color: '#111827', background: '#f0f2f5', border: 'none', padding: '6px 14px', borderRadius: 20, cursor: 'pointer' }}>
+                      <button onClick={devolverParaIA} style={{ fontSize: 11, fontWeight: 700, color: '#54656f', background: '#f0f2f5', border: 'none', padding: '6px 14px', borderRadius: 20, cursor: 'pointer' }}>
                         🤖 Devolver à IA
                       </button>
                     )}
@@ -1192,7 +1180,7 @@ REGRAS:
                         { label: 'Audio (Whisper)', status: 'Ativo', cor: '#059669' },
                         { label: 'Alertas de risco', status: 'Monitorando', cor: '#6043C1' },
                       ].map((item: any) => (
-                        <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                        <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e9edef' }}>
                           <span style={{ fontSize: 13, color: '#374151' }}>{item.label}</span>
                           <span style={{ fontSize: 11, fontWeight: 600, color: item.cor, background: item.cor + '20', padding: '2px 8px', borderRadius: 20 }}>{item.status}</span>
                         </div>
@@ -1394,13 +1382,13 @@ REGRAS:
               )}
               {!config && (
                 <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
-                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #e9edef' }}>
                     <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Conectar WhatsApp Business</h2>
                     <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Siga os passos abaixo para conectar o número da clínica</p>
                   </div>
 
                   {/* Steps indicator */}
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f3f4f6', gap: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #e9edef', gap: 0 }}>
                     {[1,2,3].map((s, i) => (
                       <div key={s} style={{ display: 'flex', alignItems: 'center', flex: i < 2 ? 1 : 0 }}>
                         <div style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0,
@@ -1501,7 +1489,7 @@ REGRAS:
 
               {config && (
                 <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
-                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #e9edef' }}>
                     <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Atualizar credenciais</h2>
                   </div>
                   <form onSubmit={salvarConfig} style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
