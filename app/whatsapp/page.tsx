@@ -413,20 +413,27 @@ REGRAS:
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden', gap: 16 }}>
             {/* Lista conversas */}
             <div style={{ width: 300, background: 'white', borderRight: 'none', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-              <div style={{ padding: '10px 12px', borderBottom: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, padding: '7px 10px', fontSize: 12, borderRadius: 7, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', background: '#f9fafb', outline: 'none' }} placeholder="Buscar..."/>
-                  <button onClick={() => setNovaConversa(true)} title="Nova conversa" style={{ width: 34, height: 34, borderRadius: 7, border: 'none', background: '#6043C1', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: '#f0f2f5', borderRadius: 8, padding: '6px 12px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667781" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, background: 'transparent', color: '#111', fontFamily: 'inherit' }} placeholder="Pesquisar ou começar uma nova conversa"/>
+                  </div>
+                  <button onClick={() => setNovaConversa(true)} title="Nova conversa" style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'none', color: '#54656f', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f0f2f5')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
                   </button>
                 </div>
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' as const }}>
-                  <button onClick={() => setFiltroNaoLidas(!filtroNaoLidas)} style={{ padding: '3px 10px', fontSize: 10, fontWeight: filtroNaoLidas ? 700 : 400, borderRadius: 20, border: '1px solid ' + (filtroNaoLidas ? '#22c55e' : '#e5e7eb'), background: filtroNaoLidas ? '#f0fdf4' : 'white', color: filtroNaoLidas ? '#16a34a' : '#9ca3af', cursor: 'pointer' }}>
-                    Não lidas
-                  </button>
-                  {(['todas','ia','humano'] as const).map(f => (
-                    <button key={f} onClick={() => setFiltroModo(f)} style={{ padding: '3px 10px', fontSize: 10, fontWeight: filtroModo === f ? 700 : 400, borderRadius: 20, border: '1px solid ' + (filtroModo === f ? '#22c55e' : '#e5e7eb'), background: filtroModo === f ? '#f0fdf4' : 'white', color: filtroModo === f ? '#16a34a' : '#9ca3af', cursor: 'pointer' }}>
-                      {f === 'todas' ? 'Tudo' : f === 'ia' ? 'IA' : 'Humano'}
+                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
+                  {[
+                    { label: 'Tudo', active: filtroModo === 'todas' && !filtroNaoLidas, fn: () => { setFiltroModo('todas'); setFiltroNaoLidas(false) } },
+                    { label: 'Não lidas', active: filtroNaoLidas, fn: () => setFiltroNaoLidas(!filtroNaoLidas) },
+                    { label: 'Sofia IA', active: filtroModo === 'ia', fn: () => { setFiltroModo(filtroModo === 'ia' ? 'todas' : 'ia'); setFiltroNaoLidas(false) } },
+                    { label: 'Humano', active: filtroModo === 'humano', fn: () => { setFiltroModo(filtroModo === 'humano' ? 'todas' : 'humano'); setFiltroNaoLidas(false) } },
+                  ].map(f => (
+                    <button key={f.label} onClick={f.fn} style={{ padding: '4px 12px', fontSize: 12, fontWeight: f.active ? 600 : 400, borderRadius: 20, border: 'none', background: f.active ? '#d1f4cc' : '#f0f2f5', color: f.active ? '#166534' : '#111827', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0 }}>
+                      {f.label}
                     </button>
                   ))}
                 </div>
@@ -453,78 +460,74 @@ REGRAS:
                   </div>
                 ) : conversasFiltradas.map(cv => (
                   <div key={cv.id} onClick={() => setAtiva(cv)}
-                    style={{ padding: '10px 14px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', background: ativa?.id === cv.id ? '#f0fdf4' : 'white', transition: 'background 0.1s' }}
-                    onMouseEnter={e => { if (ativa?.id !== cv.id) e.currentTarget.style.background = '#f9fafb' }}
-                    onMouseLeave={e => { if (ativa?.id !== cv.id) e.currentTarget.style.background = 'white' }}>
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                      <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: cv.modo === 'humano' ? '#fef3c7' : '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: cv.modo === 'humano' ? '#92400e' : '#16a34a', border: ativa?.id === cv.id ? '2px solid #16a34a' : '2px solid transparent' }}>{ini(nomeCv(cv))}</div>
-                        <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: cv.modo === 'humano' ? '#f59e0b' : '#22c55e', border: '2px solid white' }}/>
+                    style={{ padding: '10px 16px', cursor: 'pointer', background: ativa?.id === cv.id ? '#f0f2f5' : 'white', borderBottom: '1px solid #e9edef' }}
+                    onMouseEnter={e => { if (ativa?.id !== cv.id) (e.currentTarget as HTMLElement).style.background = '#f5f6f6' }}
+                    onMouseLeave={e => { if (ativa?.id !== cv.id) (e.currentTarget as HTMLElement).style.background = 'white' }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <div style={{ width: 49, height: 49, borderRadius: '50%', background: cv.modo === 'humano' ? '#cfd8dc' : '#b2dfdb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 400, color: 'white', flexShrink: 0 }}>
+                        {ini(nomeCv(cv))}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                          <p style={{ fontSize: 13, fontWeight: cv.naoLidas > 0 ? 700 : 500, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>{nomeCv(cv)}</p>
-                          <span style={{ fontSize: 10, color: cv.naoLidas > 0 ? '#16a34a' : '#9ca3af', flexShrink: 0, fontWeight: cv.naoLidas > 0 ? 600 : 400 }}>{cv.ultima ? fmt(cv.ultima.criado_em) : ''}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
+                          <p style={{ fontSize: 15, fontWeight: 400, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{nomeCv(cv)}</p>
+                          <span style={{ fontSize: 11, color: cv.naoLidas > 0 ? '#25d366' : '#667781', flexShrink: 0, marginLeft: 8 }}>{cv.ultima ? fmt(cv.ultima.criado_em) : ''}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <p style={{ fontSize: 12, color: cv.naoLidas > 0 ? '#374151' : '#9ca3af', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontWeight: cv.naoLidas > 0 ? 500 : 400 }}>
-                            {cv.ultima?.tipo === 'enviada' ? <span style={{ color: '#22c55e', fontSize: 11 }}>✓✓ </span> : null}{cv.ultima?.conteudo?.substring(0, 35) || 'Iniciar conversa...'}
+                          <p style={{ fontSize: 13, color: '#667781', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, flex: 1 }}>
+                            {cv.ultima?.tipo === 'enviada' && <svg style={{ display: 'inline', marginRight: 2, verticalAlign: 'middle' }} width="14" height="10" viewBox="0 0 16 11" fill="none"><path d="M1 5.5L5 9.5L15 1" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M5 5.5L9 9.5L15 1" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}{cv.ultima?.conteudo?.substring(0, 38) || ''}
                           </p>
                           {cv.naoLidas > 0 && (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: 'white', background: '#22c55e', minWidth: 18, height: 18, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', marginLeft: 6, flexShrink: 0 }}>{cv.naoLidas}</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: 'white', background: '#25d366', minWidth: 20, height: 20, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', marginLeft: 8, flexShrink: 0 }}>{cv.naoLidas}</span>
                           )}
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Area de chat */}
             {ativa ? (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#f0f2f5' }}>
-                {/* Header conversa — estilo WhatsApp */}
-                <div style={{ background: '#075e54', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: ativa.modo === 'humano' ? '#fef3c7' : '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: ativa.modo === 'humano' ? '#92400e' : '#16a34a' }}>{ini(nomeCv(ativa))}</div>
-                    <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #075e54' }}/>
-                  </div>
+                {/* Header conversa — estilo WhatsApp Web real */}
+                <div style={{ background: 'white', borderBottom: '1px solid #e9edef', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: ativa.modo === 'humano' ? '#f0f2f5' : '#d1f4cc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, color: '#111827', flexShrink: 0 }}>{ini(nomeCv(ativa))}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nomeCv(ativa)}</p>
-                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', margin: 0 }}>
-                      {ativa.telefone} · {ativa.modo === 'humano' ? '👤 Humano' + (ativa.atendente_nome ? ' — ' + ativa.atendente_nome : '') : '🤖 Sofia IA'}
+                    <p style={{ fontSize: 15, fontWeight: 500, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{nomeCv(ativa)}</p>
+                    <p style={{ fontSize: 12, color: '#667781', margin: 0 }}>
+                      {ativa.modo === 'humano' ? 'Atendimento humano' + (ativa.atendente_nome ? ' · ' + ativa.atendente_nome : '') : 'Sofia IA · online'}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                     {ativa.paciente_id && (
-                      <a href={'/pacientes/' + ativa.paciente_id} style={{ fontSize: 11, color: 'white', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', padding: '5px 12px', borderRadius: 20, textDecoration: 'none', fontWeight: 600 }}>Ver ficha</a>
+                      <a href={'/pacientes/' + ativa.paciente_id} style={{ fontSize: 12, color: '#54656f', background: '#f0f2f5', border: 'none', padding: '5px 12px', borderRadius: 20, textDecoration: 'none', fontWeight: 500 }}>Ver ficha</a>
                     )}
                     {ativa.modo === 'ia' ? (
-                      <button onClick={assumirAtendimento} disabled={assumindo} style={{ fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fef3c7', border: 'none', padding: '5px 14px', borderRadius: 20, cursor: 'pointer' }}>
-                        {assumindo ? 'Assumindo...' : '👤 Assumir'}
+                      <button onClick={assumirAtendimento} disabled={assumindo} style={{ fontSize: 12, fontWeight: 500, color: '#111827', background: '#f0f2f5', border: 'none', padding: '5px 14px', borderRadius: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        {assumindo ? 'Assumindo...' : 'Assumir'}
                       </button>
                     ) : (
-                      <button onClick={devolverParaIA} style={{ fontSize: 11, fontWeight: 700, color: 'white', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', padding: '5px 14px', borderRadius: 20, cursor: 'pointer' }}>
-                        🤖 Devolver à IA
+                      <button onClick={devolverParaIA} style={{ fontSize: 12, fontWeight: 500, color: '#111827', background: '#f0f2f5', border: 'none', padding: '5px 14px', borderRadius: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                        Devolver à IA
                       </button>
                     )}
-                    {/* Busca */}
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.8)', padding: 4, display: 'flex' }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#54656f', padding: 8, display: 'flex', borderRadius: '50%' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#f0f2f5')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                     </button>
-                    {/* Menu */}
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.8)', padding: 4, display: 'flex' }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#54656f', padding: 8, display: 'flex', borderRadius: '50%' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#f0f2f5')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                     </button>
                   </div>
                 </div>
 
                 {/* Banner modo humano */}
                 {ativa.modo === 'humano' && (
-                  <div style={{ background: '#fffbeb', borderBottom: '1px solid #fde68a', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 14 }}></span>
-                    <p style={{ fontSize: 12, color: '#92400e', margin: 0 }}>Atendimento humano ativo{ativa.atendente_nome ? '  ' + ativa.atendente_nome : ''}. A Sofia IA esta pausada nesta conversa.</p>
+                  <div style={{ background: '#fff8e6', borderBottom: '1px solid #f0e0a0', padding: '7px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <p style={{ fontSize: 12, color: '#92400e', margin: 0 }}>Atendimento manual ativo — Sofia IA pausada nesta conversa</p>
                   </div>
                 )}
 
