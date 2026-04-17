@@ -547,13 +547,12 @@ REGRAS:
                         <div style={{ maxWidth: '65%', padding: '7px 10px 6px 10px', borderRadius: rec ? '0px 10px 10px 10px' : '10px 10px 0px 10px', background: rec ? 'white' : (isIA ? '#d9fdd3' : '#d1e7ff'), boxShadow: '0 1px 2px rgba(0,0,0,0.15)', position: 'relative' as const }}>
                           {!rec && isIA && <p style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sofia IA</p>}
                           {!rec && !isIA && remetente && <p style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', margin: '0 0 3px' }}>{remetente}</p>}
-                          {(isIA || remetente) && <p style={{ fontSize: 9, color: isIA ? '#6043C1' : '#2563eb', fontWeight: 700, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{isIA ? 'Sofia IA' : remetente}</p>}
                           <p style={{ fontSize: 13, color: '#111827', margin: 0, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: m.conteudo
                             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                             .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                            .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid rgba(0,0,0,0.15);margin:4px 0"/>')
-                            .replace(/
-/g, '<br/>')
+                            .replace(/---+/g, '<hr style="border:none;border-top:1px solid rgba(0,0,0,0.15);margin:4px 0"/>')
+                            .split('\n').join('<br/>')
+                          }} />
                           }} />
                           <p style={{ fontSize: 9, color: '#9ca3af', margin: '3px 0 0', textAlign: rec ? 'left' : 'right' }}>{fmtH(m.criado_em)}</p>
                         </div>
