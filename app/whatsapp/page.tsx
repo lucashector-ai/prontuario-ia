@@ -458,7 +458,11 @@ REGRAS:
                     onMouseLeave={e => { if (ativa?.id !== cv.id) e.currentTarget.style.background = 'white' }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                       <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: cv.modo === 'humano' ? '#fef3c7' : '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: cv.modo === 'humano' ? '#92400e' : '#16a34a', border: ativa?.id === cv.id ? '2px solid #16a34a' : '2px solid transparent' }}>{ini(nomeCv(cv))}</div>
+                        {cv.foto_url ? (
+                        <img src={cv.foto_url} alt={nomeCv(cv)} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' as const }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      ) : (
+                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 400, color: 'white' }}>{ini(nomeCv(cv))}</div>
+                      )}
                         <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: cv.modo === 'humano' ? '#f59e0b' : '#22c55e', border: '2px solid white' }}/>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
