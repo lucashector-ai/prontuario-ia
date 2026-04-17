@@ -461,7 +461,11 @@ REGRAS:
                         {cv.foto_url ? (
                         <img src={cv.foto_url} alt={nomeCv(cv)} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' as const }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                       ) : (
-                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 400, color: 'white' }}>{ini(nomeCv(cv))}</div>
+                        {cv.foto_url ? (
+                          <img src={cv.foto_url} alt={nomeCv(cv)} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' as const }} />
+                        ) : (
+                          <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 400, color: 'white' }}>{ini(nomeCv(cv))}</div>
+                        )}
                       )}
                         <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: cv.modo === 'humano' ? '#f59e0b' : '#22c55e', border: '2px solid white' }}/>
                       </div>
@@ -491,7 +495,11 @@ REGRAS:
                 {/* Header conversa — estilo WhatsApp */}
                 <div style={{ background: 'white', borderBottom: '1px solid #e9edef', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                   <div style={{ position: 'relative' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 400, color: 'white' }}>{ini(nomeCv(ativa))}</div>
+                    {ativa.foto_url ? (
+                      <img src={ativa.foto_url} alt={nomeCv(ativa)} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' as const, flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 400, color: 'white', flexShrink: 0 }}>{ini(nomeCv(ativa))}</div>
+                    )}
                     <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #075e54' }}/>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
