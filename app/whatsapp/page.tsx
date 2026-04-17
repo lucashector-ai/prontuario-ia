@@ -331,17 +331,6 @@ REGRAS:
     carregarAtendentes(medico.id)
   }
 
-  const renderMarkdown = (texto: string) => {
-    if (!texto) return ''
-    return texto
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/_(.*?)_/g, '<em>$1</em>')
-      .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid rgba(0,0,0,0.1);margin:6px 0"/>')
-      .replace(/
-/g, '<br/>')
-  }
-
   const fmt = (iso: string) => { const d = new Date(iso); return d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) }
   const fmtH = (iso: string) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
   const nomeCv = (c: any) => c.nome_contato || c.telefone
