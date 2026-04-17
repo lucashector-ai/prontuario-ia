@@ -542,7 +542,6 @@ REGRAS:
                             .replace(/---+/g, '<hr style="border:none;border-top:1px solid rgba(0,0,0,0.15);margin:4px 0"/>')
                             .split('\n').join('<br/>')
                           }} />
-                          }} />
                           <p style={{ fontSize: 9, color: '#9ca3af', margin: '3px 0 0', textAlign: rec ? 'left' : 'right' }}>{fmtH(m.criado_em)}</p>
                         </div>
                       </div>
