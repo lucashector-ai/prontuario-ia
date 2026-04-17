@@ -342,7 +342,6 @@ REGRAS:
   const ini = (n: string) => n?.split(' ').map((x: string) => x[0]).slice(0, 2).join('').toUpperCase() || '?'
   const totalNaoLidas = conversas.reduce((a, c) => a + c.naoLidas, 0)
 
-  const [filtroNaoLidas, setFiltroNaoLidas] = useState(false)
   const conversasFiltradas = conversas.filter(c => {
     const buscaOk = nomeCv(c).toLowerCase().includes(busca.toLowerCase()) || c.telefone.includes(busca)
     const modoOk = filtroModo === 'todas' || c.modo === filtroModo
