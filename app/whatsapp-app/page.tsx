@@ -31,6 +31,7 @@ export default function WhatsAppApp() {
   const [buscaChatAtiva, setBuscaChatAtiva] = useState(false)
   const [menuHeader, setMenuHeader] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const endRef = useRef<HTMLDivElement>(null)
 
@@ -184,10 +185,10 @@ export default function WhatsAppApp() {
         <div title="Equipe" onClick={()=>setAba('equipe')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:aba==='equipe'?'#00a884':'#54656f',marginBottom:4}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         </div>
-        <div title="Status" className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
+        <div title="Info da conexão" onClick={()=>setShowInfo(v=>!v)} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:showInfo?'#00a884':'#54656f',marginBottom:4}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <div title="Canais" className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
+        <div title="Ir para configurações" onClick={()=>router.push('/whatsapp?tab=configuracao')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
         </div>
         <div style={{flex:1}}/>
@@ -359,6 +360,33 @@ export default function WhatsAppApp() {
           </div>
         )}
       </div>
+
+      {/* Info conexão */}
+      {showInfo&&(
+        <>
+          <div style={{position:'fixed' as const,inset:0,zIndex:100}} onClick={()=>setShowInfo(false)}/>
+          <div style={{position:'fixed' as const,left:60,top:200,background:'white',borderRadius:12,boxShadow:'0 8px 32px rgba(0,0,0,0.15)',zIndex:101,width:280,padding:20}}>
+            <p style={{fontSize:13,fontWeight:600,color:'#00a884',margin:'0 0 14px',letterSpacing:'0.05em'}}>CONEXÃO WHATSAPP</p>
+            <div style={{display:'flex',flexDirection:'column' as const,gap:10}}>
+              <div style={{padding:'10px 12px',background:'#f0f2f5',borderRadius:8}}>
+                <p style={{fontSize:11,color:'#667781',margin:'0 0 2px'}}>Número conectado</p>
+                <p style={{fontSize:14,fontWeight:500,color:'#111827',margin:0}}>{config?.phone_number||config?.phone_number_id||'Não configurado'}</p>
+              </div>
+              <div style={{padding:'10px 12px',background:'#f0fdf4',borderRadius:8}}>
+                <p style={{fontSize:11,color:'#667781',margin:'0 0 2px'}}>Status</p>
+                <p style={{fontSize:14,fontWeight:500,color:'#00a884',margin:0}}>● Conectado</p>
+              </div>
+              <div style={{padding:'10px 12px',background:'#f0f2f5',borderRadius:8}}>
+                <p style={{fontSize:11,color:'#667781',margin:'0 0 2px'}}>Nome de exibição</p>
+                <p style={{fontSize:14,fontWeight:500,color:'#111827',margin:0}}>{config?.nome_exibicao||medico?.nome||'—'}</p>
+              </div>
+            </div>
+            <button onClick={()=>{setShowInfo(false);router.push('/whatsapp')}} style={{width:'100%',marginTop:14,padding:'9px',borderRadius:8,border:'none',background:'#f0f2f5',color:'#54656f',fontSize:13,cursor:'pointer',fontWeight:500}}>
+              Configurações avançadas →
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Menu contexto */}
       {menuConversa&&(
