@@ -101,7 +101,6 @@ export default function PacienteDetalhe() {
   const uploadFoto = async (file: File) => {
     if (!file || !paciente) return
     setUploadandoFoto(true)
-<<<<<<< Updated upstream
     const reader = new FileReader()
     reader.onload = async (e) => {
       const base64 = e.target?.result as string
@@ -113,49 +112,6 @@ export default function PacienteDetalhe() {
       setUploadandoFoto(false)
     }
     reader.readAsDataURL(file)
-=======
-    try {
-      const reader = new FileReader()
-      reader.onload = async (e) => {
-        const base64 = e.target?.result as string
-        // Salva como data URL no campo foto_url do paciente
-        const res = await fetch('/api/pacientes/' + id, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ foto_url: base64 })
-        })
-        const data = await res.json()
-        if (data.paciente) {
-          setPaciente((p: any) => ({ ...p, foto_url: base64 }))
-          // Sincroniza com whatsapp_conversas se o paciente tem telefone
-          if (paciente.telefone) {
-            await supabase.from('whatsapp_conversas')
-              .update({ foto_url: base64 })
-              .eq('telefone', paciente.telefone.replace(/\D/g, ''))
-          }
-        }
-      }
-      reader.readAsDataURL(file)
-    } finally {
-      setUploadandoFoto(false)
-    }
-  }
-
-        }
-      }
-      reader.readAsDataURL(file)
-    } finally {
-      setUploadandoFoto(false)
-    }
-  }
-
-        }
-      }
-      reader.readAsDataURL(file)
-    } finally {
-      setUploadandoFoto(false)
-    }
->>>>>>> Stashed changes
   }
 
   const fmtF = (s: string) => new Date(s).toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
@@ -187,20 +143,10 @@ export default function PacienteDetalhe() {
             </button>
             <span style={{color:'#d1d5db'}}>/</span>
             <div style={{display:'flex',alignItems:'center',gap:10,flex:1}}>
-<<<<<<< Updated upstream
               <div style={{position:'relative',cursor:'pointer'}} onClick={()=>(document.getElementById('foto-hdr') as HTMLInputElement)?.click()} title="Trocar foto">
                 {paciente?.foto_url?<img src={paciente.foto_url} style={{width:36,height:36,borderRadius:'50%',objectFit:'cover',border:'2px solid #d4c9f7'}}/>:<div style={{width:36,height:36,borderRadius:'50%',background:'#F9FAFC',border:'2px solid #d4c9f7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#6043C1'}}>{ini}</div>}
               </div>
               <input id="foto-hdr" type="file" accept="image/*" style={{display:'none'}} onChange={e=>e.target.files?.[0]&&uploadFoto(e.target.files[0])}/>
-=======
-              <div style={{position:'relative',cursor:'pointer'}} onClick={()=>document.getElementById('foto-input-header')?.click()} title="Clique para trocar foto">
-                {paciente?.foto_url
-                  ? <img src={paciente.foto_url} alt={paciente.nome} style={{width:36,height:36,borderRadius:'50%',objectFit:'cover',border:'2px solid #d4c9f7'}}/>
-                  : <div style={{width:36,height:36,borderRadius:'50%',background:'#F9FAFC',border:'2px solid #d4c9f7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#6043C1'}}>{ini}</div>}
-                {uploadandoFoto&&<div style={{position:'absolute',inset:0,background:'rgba(255,255,255,0.7)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}><div style={{width:14,height:14,border:'2px solid #6043C1',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/></div>}
-              </div>
-              <input id="foto-input-header" type="file" accept="image/*" style={{display:'none'}} onChange={e=>e.target.files?.[0]&&uploadFoto(e.target.files[0])}/>
->>>>>>> Stashed changes
               <div>
                 <p style={{fontSize:15,fontWeight:700,color:'#111827',margin:0}}>{paciente?.nome}</p>
                 <p style={{fontSize:11,color:'#9ca3af',margin:0}}>{[paciente?.sexo,idadePac?idadePac+' anos':null].filter(Boolean).join(' · ')}</p>
@@ -222,25 +168,14 @@ export default function PacienteDetalhe() {
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div style={{background:'white',boxShadow: '0 1px 4px rgba(0,0,0,0.07)',borderRadius:14,overflow:'hidden'}}>
                     <div style={{background:'linear-gradient(135deg,#ede9fb,#ede9fb)',padding:'24px 20px',textAlign:'center',borderBottom: 'none'}}>
-<<<<<<< Updated upstream
                       <div style={{position:'relative',cursor:'pointer',width:64,height:64,margin:'0 auto 12px'}} onClick={()=>(document.getElementById('foto-card') as HTMLInputElement)?.click()} title="Trocar foto">
                         {paciente?.foto_url?<img src={paciente.foto_url} style={{width:64,height:64,borderRadius:'50%',objectFit:'cover',border:'3px solid #d4c9f7'}}/>:<div style={{width:64,height:64,borderRadius:'50%',background:'white',border:'3px solid #d4c9f7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,color:'#6043C1'}}>{ini}</div>}
-=======
-                      <div style={{position:'relative',cursor:'pointer',width:64,height:64,margin:'0 auto 12px'}} onClick={()=>document.getElementById('foto-input-card')?.click()} title="Clique para trocar foto">
-                        {paciente?.foto_url
-                          ? <img src={paciente.foto_url} alt={paciente.nome} style={{width:64,height:64,borderRadius:'50%',objectFit:'cover',border:'3px solid #d4c9f7'}}/>
-                          : <div style={{width:64,height:64,borderRadius:'50%',background:'white',border:'3px solid #d4c9f7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,color:'#6043C1'}}>{ini}</div>}
->>>>>>> Stashed changes
                         <div style={{position:'absolute',bottom:0,right:0,width:20,height:20,background:'#6043C1',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid white'}}>
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
                         </div>
                         {uploadandoFoto&&<div style={{position:'absolute',inset:0,background:'rgba(255,255,255,0.7)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}><div style={{width:18,height:18,border:'2px solid #6043C1',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/></div>}
                       </div>
-<<<<<<< Updated upstream
                       <input id="foto-card" type="file" accept="image/*" style={{display:'none'}} onChange={e=>e.target.files?.[0]&&uploadFoto(e.target.files[0])}/>
-=======
-                      <input id="foto-input-card" type="file" accept="image/*" style={{display:'none'}} onChange={e=>e.target.files?.[0]&&uploadFoto(e.target.files[0])}/>
->>>>>>> Stashed changes
                       <h2 style={{fontSize:16,fontWeight:700,color:'#111827',margin:'0 0 4px'}}>{paciente?.nome}</h2>
                       <p style={{fontSize:12,color:'#6b7280',margin:0}}>{[paciente?.sexo,idadePac?idadePac+' anos':null].filter(Boolean).join(' · ')}</p>
                       {prox&&<div style={{marginTop:12,background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:8,padding:'6px 12px'}}><p style={{fontSize:11,color:'#2563eb',margin:0}}>Prox: {fmt(prox.data_hora)} {fmtH(prox.data_hora)}</p></div>}
