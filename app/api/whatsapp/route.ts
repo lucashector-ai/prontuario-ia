@@ -18,7 +18,12 @@ const WPP_TOKEN = process.env.WHATSAPP_TOKEN || ''
 const WPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID || '1030374870164992'
 const MEDICO_ID_FALLBACK = process.env.WHATSAPP_MEDICO_ID || ''
 
-const PROMPT_SOFIA = `Voce e Sofia, assistente virtual da clinica. Seja calorosa e profissional. Responda SEMPRE em portugues.
+const PROMPT_SOFIA = `Voce e Sofia, assistente virtual da clinica. Seja calorosa, empatica e profissional. Responda SEMPRE em portugues.
+
+IDENTIFICACAO DO PACIENTE:
+- Se nao souber quem e o paciente (primeira mensagem ou sem historico de identificacao), pergunte o nome completo e CPF ou email cadastrado
+- Quando o paciente informar CPF ou email, o sistema identifica automaticamente. Se identificado, chame-o pelo nome
+- Se nao encontrar no cadastro, pergunte se quer se cadastrar como novo paciente
 
 Como posso te ajudar hoje?
 *1* - Agendar consulta
@@ -61,6 +66,42 @@ async function enviarWpp(para: string, texto: string, token?: string, phoneId?: 
     console.log('WPP_SEND:', JSON.stringify(d).substring(0, 100))
     return d
   } catch (e) { console.error('WPP_ERR:', e) }
+}
+
+async function reconhecerPaciente(telefone: string, medicoId: string): Promise<any | null> {
+  try {
+    const tel = normalizarTel(telefone)
+    const { data } = await supabaseAdmin
+      .from('pacientes')
+      .select('id, nome, email, cpf, data_nascimento, telefone, foto_url')
+      .eq('medico_id', medicoId)
+      .or(`telefone.eq.${tel},telefone.eq.+${tel},telefone.eq.55${tel}`)
+      .maybeSingle()
+    return data || null
+  } catch { return null }
+}
+
+async function buscarPacientePorCpfOuEmail(busca: string, medicoId: string): Promise<any | null> {
+  try {
+    const termo = busca.trim().replace(/[.\-\/]/g, '')
+    const { data } = await supabaseAdmin
+      .from('pacientes')
+      .select('id, nome, email, cpf, telefone, foto_url')
+      .eq('medico_id', medicoId)
+      .or(`email.ilike.${busca.trim()},cpf.eq.${termo}`)
+      .maybeSingle()
+    return data || null
+  } catch { return null }
+}
+
+async function criarPacienteWhatsApp(nome: string, telefone: string, medicoId: string): Promise<any> {
+  const tel = normalizarTel(telefone)
+  const { data } = await supabaseAdmin
+    .from('pacientes')
+    .insert({ nome, telefone: tel, medico_id: medicoId })
+    .select()
+    .single()
+  return data
 }
 
 async function buscarFotoPaciente(telefone: string, medicoId: string): Promise<string | null> {
@@ -207,6 +248,44 @@ export async function POST(req: NextRequest) {
 
       const conversa = await getOuCriarConversa(telefone, nome, MEDICO_ID)
       if (!conversa) { console.log('ERRO: sem conversa'); continue }
+
+      // Reconhecimento de paciente pelo telefone
+      if (!conversa.paciente_id) {
+        const pacienteExistente = await reconhecerPaciente(telefone, MEDICO_ID)
+        if (pacienteExistente) {
+          // Vincula paciente à conversa automaticamente
+          await supabaseAdmin.from('whatsapp_conversas').update({
+            paciente_id: pacienteExistente.id,
+            nome_contato: pacienteExistente.nome,
+            foto_url: pacienteExistente.foto_url || conversa.foto_url
+          }).eq('id', conversa.id)
+          conversa.paciente_id = pacienteExistente.id
+          conversa.nome_contato = pacienteExistente.nome
+          console.log('PACIENTE_RECONHECIDO:', pacienteExistente.nome)
+        } else {
+          // Verifica se a mensagem contém CPF ou email para identificar
+          const cpfRegex = /\d{3}[\.\-]?\d{3}[\.\-]?\d{3}[\.\-]?\d{2}/
+          const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+          const cpfMatch = texto.match(cpfRegex)
+          const emailMatch = texto.match(emailRegex)
+          if (cpfMatch || emailMatch) {
+            const busca = emailMatch ? emailMatch[0] : cpfMatch![0]
+            const pacienteBuscado = await buscarPacientePorCpfOuEmail(busca, MEDICO_ID)
+            if (pacienteBuscado) {
+              // Atualiza telefone e vincula
+              await supabaseAdmin.from('pacientes').update({ telefone: normalizarTel(telefone) }).eq('id', pacienteBuscado.id)
+              await supabaseAdmin.from('whatsapp_conversas').update({
+                paciente_id: pacienteBuscado.id,
+                nome_contato: pacienteBuscado.nome,
+                foto_url: pacienteBuscado.foto_url || null
+              }).eq('id', conversa.id)
+              conversa.paciente_id = pacienteBuscado.id
+              conversa.nome_contato = pacienteBuscado.nome
+              console.log('PACIENTE_IDENTIFICADO_POR_CPF_EMAIL:', pacienteBuscado.nome)
+            }
+          }
+        }
+      }
 
       // Salva mensagem recebida
       await supabase.from('whatsapp_mensagens').insert({
