@@ -103,7 +103,7 @@ export function Sidebar() {
           <>
             <div style={{ height: 1, background: '#f0f0f0', margin: '14px 4px 16px' }} />
             <button
-              onClick={() => router.push('/whatsapp')}
+              onClick={() => window.open('/whatsapp-app', '_blank')}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '8px 10px', borderRadius: 8, marginBottom: 1,
