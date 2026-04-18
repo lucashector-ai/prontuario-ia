@@ -30,6 +30,8 @@ export default function WhatsAppApp() {
   const [buscaChat, setBuscaChat] = useState('')
   const [buscaChatAtiva, setBuscaChatAtiva] = useState(false)
   const [menuHeader, setMenuHeader] = useState(false)
+  const [showEmoji, setShowEmoji] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const endRef = useRef<HTMLDivElement>(null)
 
   const fmt = (iso: string) => {
@@ -497,12 +499,31 @@ export default function WhatsAppApp() {
 
           {/* Input */}
           <div style={{background:'#f0f2f5',padding:'8px 12px',display:'flex',gap:6,alignItems:'flex-end',flexShrink:0}}>
-            <button className="ibtn" style={{width:42,height:42,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1" fill="#54656f" stroke="none"/><circle cx="15" cy="9" r="1" fill="#54656f" stroke="none"/></svg>
-            </button>
-            <button className="ibtn" style={{width:42,height:42,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <div style={{position:'relative' as const}}>
+              <button onClick={()=>setShowEmoji(v=>!v)} className="ibtn" style={{width:42,height:42,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1" fill="#54656f" stroke="none"/><circle cx="15" cy="9" r="1" fill="#54656f" stroke="none"/></svg>
+              </button>
+              {showEmoji&&(
+                <>
+                  <div style={{position:'fixed' as const,inset:0,zIndex:50}} onClick={()=>setShowEmoji(false)}/>
+                  <div style={{position:'absolute' as const,bottom:50,left:0,background:'white',borderRadius:12,boxShadow:'0 4px 20px rgba(0,0,0,0.15)',zIndex:51,padding:12,display:'flex',flexWrap:'wrap' as const,gap:4,width:280}}>
+                    {['😊','😂','❤️','👍','🙏','😭','😍','🎉','🔥','✅','⚠️','📅','💊','🏥','👨‍⚕️','🩺','💉','🩹','📋','📞','⏰','🔔','✉️','📲','👋','😷','🤒','💪','🌟','👏'].map(e=>(
+                      <button key={e} onClick={()=>{setMsg(p=>p+e);setShowEmoji(false)}} style={{fontSize:22,background:'none',border:'none',cursor:'pointer',padding:'4px',borderRadius:6,lineHeight:1}} onMouseEnter={el=>(el.currentTarget.style.background='#f0f2f5')} onMouseLeave={el=>(el.currentTarget.style.background='none')}>{e}</button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <button onClick={()=>fileInputRef.current?.click()} className="ibtn" style={{width:42,height:42,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
             </button>
+            <input ref={fileInputRef} type="file" accept="image/*,application/pdf" style={{display:'none'}} onChange={async e=>{
+              const file=e.target.files?.[0]; if(!file||!ativa) return
+              const texto=`📎 ${file.name} (${(file.size/1024).toFixed(0)}KB)`
+              const {data:nova}=await supabase.from('whatsapp_mensagens').insert({conversa_id:ativa.id,tipo:'enviada',conteudo:texto,metadata:{manual:true,remetente:usuario?.nome||medico?.nome,arquivo:true}}).select().single()
+              if(nova) setMensagens(p=>[...p,nova])
+              e.target.value=''
+            }}/>
             <div style={{flex:1,background:'white',borderRadius:24,padding:'9px 16px',display:'flex',alignItems:'flex-end',boxShadow:'0 1px 2px rgba(0,0,0,0.1)'}}>
               {gravando?(
                 <div style={{flex:1,display:'flex',alignItems:'center',gap:8}}>
