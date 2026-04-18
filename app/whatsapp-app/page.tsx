@@ -162,7 +162,7 @@ export default function WhatsAppApp() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <div title="Canais" className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.95 9.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012.88 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6z"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.95 9.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012.88 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
         </div>
         <div title="Comunidades" className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
@@ -178,8 +178,8 @@ export default function WhatsAppApp() {
 
       {/* Lista */}
       <div style={{width:390,background:'#ffffff',borderRight:'1px solid #d1d7db',display:'flex',flexDirection:'column',flexShrink:0}}>
-        <div style={{padding:'13px 16px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#f0f2f5'}}>
-          <h1 style={{fontSize:20,fontWeight:600,color:'#111827',margin:0}}>WhatsApp</h1>
+        <div style={{padding:'13px 16px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#ffffff',borderBottom:'1px solid #f0f2f5'}}>
+          <h1 style={{fontSize:20,fontWeight:600,color:'#00a884',margin:0}}>WhatsApp</h1>
           <div style={{display:'flex',gap:2}}>
             <button onClick={()=>setNovaConversa(v=>!v)} className="ibtn" style={{width:36,height:36,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -230,14 +230,14 @@ export default function WhatsAppApp() {
             <div key={cv.id} className={`cv${ativa?.id===cv.id?' sel':''}`}
               onClick={()=>setAtiva(cv)}
               onContextMenu={e=>{e.preventDefault();setMenuConversa({id:cv.id,x:e.clientX,y:e.clientY})}}
-              style={{padding:'10px 16px',cursor:'pointer',background:ativa?.id===cv.id?'#f0f2f5':'white',borderBottom:'1px solid #f0f2f5'}}>
+              style={{padding:'8px 16px',cursor:'pointer',background:ativa?.id===cv.id?'#f0f2f5':'white',borderBottom:'1px solid #f0f2f5'}}>
               <div style={{display:'flex',gap:12,alignItems:'center'}}>
                 {cv.foto_url?(<img src={cv.foto_url} alt={nomeCv(cv)} style={{width:49,height:49,borderRadius:'50%',objectFit:'cover' as const,flexShrink:0}}/>):(
                   <div style={{width:49,height:49,borderRadius:'50%',background:'#dfe5e7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#54656f',flexShrink:0}}>{ini(nomeCv(cv))}</div>
                 )}
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}}>
-                    <p style={{fontSize:15,color:'#111827',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{nomeCv(cv)}</p>
+                    <p style={{fontSize:15,fontWeight:cv.naoLidas>0?600:400,color:'#111827',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{nomeCv(cv)}</p>
                     <span style={{fontSize:11,color:cv.naoLidas>0?'#25d366':'#667781',flexShrink:0,marginLeft:8}}>{cv.ultima?fmt(cv.ultima.criado_em):''}</span>
                   </div>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -281,7 +281,7 @@ export default function WhatsAppApp() {
       {/* Chat */}
       {ativa?(
         <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
-          <div style={{background:'#f0f2f5',borderBottom:'1px solid #d1d7db',padding:'10px 16px',display:'flex',alignItems:'center',gap:12,flexShrink:0}}>
+          <div style={{background:'#ffffff',borderBottom:'1px solid #f0f2f5',padding:'10px 16px',display:'flex',alignItems:'center',gap:12,flexShrink:0}}>
             {ativa.foto_url?(<img src={ativa.foto_url} alt={nomeCv(ativa)} style={{width:40,height:40,borderRadius:'50%',objectFit:'cover' as const}}/>):(
               <div style={{width:40,height:40,borderRadius:'50%',background:'#dfe5e7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,color:'#54656f'}}>{ini(nomeCv(ativa))}</div>
             )}
@@ -346,7 +346,7 @@ export default function WhatsAppApp() {
             })}
             <div ref={endRef}/>
           </div>
-          <div style={{background:'#f0f2f5',padding:'8px 16px',display:'flex',gap:8,alignItems:'flex-end',flexShrink:0}}>
+          <div style={{background:'#f0f2f5',padding:'8px 12px',display:'flex',gap:6,alignItems:'flex-end',flexShrink:0}}>
             <button className="ibtn" style={{width:42,height:42,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
             </button>
