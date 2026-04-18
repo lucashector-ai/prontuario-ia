@@ -131,7 +131,7 @@ export default function WhatsAppApp() {
 
   const conversasFiltradas = conversas.filter(c => {
     const buscaOk = nomeCv(c).toLowerCase().includes(busca.toLowerCase()) || c.telefone.includes(busca)
-    const filtroOk = filtro === 'todas' || (filtro === 'nao_lidas' && c.naoLidas > 0)
+    const filtroOk = filtro === 'todas' || (filtro === 'nao_lidas' && c.naoLidas > 0) || (filtro === 'ia' && c.modo === 'ia') || (filtro === 'humano' && c.modo === 'humano')
     return buscaOk && filtroOk
   })
 
@@ -165,7 +165,7 @@ export default function WhatsAppApp() {
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #374045; border-radius: 3px; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        .conv-item:hover { background: #202c33 !important; }
+        .conv-item:hover { background: #202c33 !important; cursor: pointer; }
         .conv-item.active { background: #2a3942 !important; }
         .icon-btn:hover { background: rgba(255,255,255,0.1) !important; }
       `}</style>
@@ -229,8 +229,10 @@ export default function WhatsAppApp() {
           {[
             { id: 'todas', label: 'Tudo' },
             { id: 'nao_lidas', label: `Não lidas${totalNaoLidas > 0 ? ` ${totalNaoLidas}` : ''}` },
+            { id: 'ia', label: 'Sofia IA' },
+            { id: 'humano', label: 'Humano' },
           ].map(f => (
-            <button key={f.id} onClick={() => setFiltro(f.id as any)} style={{ padding: '5px 14px', fontSize: 13, fontWeight: 500, borderRadius: 20, border: 'none', background: filtro === f.id ? '#00a884' : '#202c33', color: filtro === f.id ? 'white' : '#aebac1', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0 }}>
+            <button key={f.id} onClick={() => setFiltro(f.id as any)} style={{ padding: '5px 14px', fontSize: 13, fontWeight: 500, borderRadius: 20, border: 'none', background: filtro === f.id ? '#00a884' : '#202c33', color: filtro === f.id ? 'white' : '#aebac1', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0, transition: 'all 0.15s' }}>
               {f.label}
             </button>
           ))}
@@ -270,7 +272,7 @@ export default function WhatsAppApp() {
               className={`conv-item${ativa?.id === cv.id ? ' active' : ''}`}
               onClick={() => setAtiva(cv)}
               onContextMenu={e => { e.preventDefault(); setMenuConversa({ id: cv.id, x: e.clientX, y: e.clientY }) }}
-              style={{ padding: '10px 16px', cursor: 'pointer', background: ativa?.id === cv.id ? '#2a3942' : 'transparent', borderBottom: '1px solid #222e35', position: 'relative' as const }}>
+              style={{ padding: '10px 16px', cursor: 'pointer', background: ativa?.id === cv.id ? '#2a3942' : 'transparent', borderBottom: '1px solid #1f2c33', position: 'relative' as const }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 {cv.foto_url ? (
                   <img src={cv.foto_url} alt={nomeCv(cv)} style={{ width: 49, height: 49, borderRadius: '50%', objectFit: 'cover' as const, flexShrink: 0 }} />
@@ -281,16 +283,16 @@ export default function WhatsAppApp() {
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
-                    <p style={{ fontSize: 15, fontWeight: 400, color: '#e9edef', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{nomeCv(cv)}</p>
+                    <p style={{ fontSize: 15, fontWeight: 400, color: '#e9edef', letterSpacing: '0.01em', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{nomeCv(cv)}</p>
                     <span style={{ fontSize: 11, color: cv.naoLidas > 0 ? '#00a884' : '#667781', flexShrink: 0, marginLeft: 8 }}>{cv.ultima ? fmt(cv.ultima.criado_em) : ''}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <p style={{ fontSize: 13, color: '#667781', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, flex: 1 }}>
+                    <p style={{ fontSize: 13, color: '#8696a0', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, flex: 1 }}>
                       {cv.ultima?.tipo === 'enviada' && <svg style={{ display: 'inline', marginRight: 2, verticalAlign: 'middle' }} width="14" height="10" viewBox="0 0 16 11" fill="none"><path d="M1 5.5L5 9.5L15 1" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M5 5.5L9 9.5L15 1" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       {cv.ultima?.conteudo?.substring(0, 40) || ''}
                     </p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 6, flexShrink: 0 }}>
-                      {cv.modo === 'humano' && <span style={{ fontSize: 9, color: '#f0a500', background: 'rgba(240,165,0,0.15)', padding: '1px 5px', borderRadius: 10, fontWeight: 600 }}>HUMANO</span>}
+                      {cv.modo === 'humano' && <span style={{ fontSize: 10, color: '#8696a0', background: 'rgba(134,150,160,0.15)', padding: '1px 6px', borderRadius: 10 }}>humano</span>}
                       {cv.naoLidas > 0 && <span style={{ fontSize: 11, fontWeight: 600, color: 'white', background: '#00a884', minWidth: 20, height: 20, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{cv.naoLidas}</span>}
                     </div>
                   </div>
@@ -363,7 +365,7 @@ export default function WhatsAppApp() {
           </div>
 
           {/* Mensagens */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px 8%', backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='300' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E\")" }}>
+          <div style={{ flex: 1, overflowY: 'auto' as const, padding: '12px 6%', background: '#0b141a' }}>
             {mensagens.map((m, idx) => {
               const rec = m.tipo === 'recebida'
               const isIA = m.metadata?.ia
@@ -385,7 +387,7 @@ export default function WhatsAppApp() {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', justifyContent: rec ? 'flex-start' : 'flex-end', marginBottom: 2 }}>
-                      <div style={{ maxWidth: '65%', padding: '6px 9px 8px', borderRadius: rec ? '0 7.5px 7.5px 7.5px' : '7.5px 7.5px 0 7.5px', background: rec ? '#202c33' : '#005c4b', boxShadow: '0 1px 2px rgba(0,0,0,0.3)', position: 'relative' as const }}>
+                      <div style={{ maxWidth: '65%', padding: '6px 10px 8px', borderRadius: rec ? '0 7.5px 7.5px 7.5px' : '7.5px 7.5px 0 7.5px', background: rec ? '#202c33' : '#005c4b', boxShadow: '0 1px 0.5px rgba(0,0,0,0.4)', position: 'relative' as const }}>
                         {!rec && isIA && <p style={{ fontSize: 11, fontWeight: 700, color: '#00a884', margin: '0 0 2px', textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Sofia IA</p>}
                         {!rec && !isIA && m.metadata?.remetente && <p style={{ fontSize: 11, fontWeight: 700, color: '#53bdeb', margin: '0 0 2px' }}>{m.metadata.remetente}</p>}
                         <p style={{ fontSize: 14, color: '#e9edef', margin: 0, lineHeight: 1.5, wordBreak: 'break-word' as const }}
