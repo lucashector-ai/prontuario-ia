@@ -63,6 +63,20 @@ async function enviarWpp(para: string, texto: string, token?: string, phoneId?: 
   } catch (e) { console.error('WPP_ERR:', e) }
 }
 
+async function buscarFotoPaciente(telefone: string, medicoId: string): Promise<string | null> {
+  try {
+    const tel = normalizarTel(telefone)
+    // Busca paciente com esse telefone cadastrado na plataforma
+    const { data } = await supabaseAdmin
+      .from('pacientes')
+      .select('foto_url, telefone')
+      .eq('medico_id', medicoId)
+      .or(`telefone.eq.${tel},telefone.eq.+${tel},telefone.eq.55${tel}`)
+      .maybeSingle()
+    return (data as any)?.foto_url || null
+  } catch { return null }
+}
+
 async function getOuCriarConversa(telefone: string, nome: string, MEDICO_ID: string) {
   const tel = normalizarTel(telefone)
   const { data: existente } = await supabase
@@ -73,17 +87,23 @@ async function getOuCriarConversa(telefone: string, nome: string, MEDICO_ID: str
     .maybeSingle()
 
   if (existente) {
-    await supabase.from('whatsapp_conversas')
-      .update({ ultimo_contato: new Date().toISOString(), nome_contato: nome || existente.nome_contato })
-      .eq('id', existente.id)
+    // Atualiza foto se ainda não tem
+    const updates: any = { ultimo_contato: new Date().toISOString(), nome_contato: nome || existente.nome_contato }
+    if (!existente.foto_url) {
+      const foto = await buscarFotoPaciente(telefone, MEDICO_ID)
+      if (foto) updates.foto_url = foto
+    }
+    await supabase.from('whatsapp_conversas').update(updates).eq('id', existente.id)
     console.log('CONVERSA_EXISTENTE:', existente.id)
-    return existente
+    return { ...existente, ...updates }
   }
 
+  const foto = await buscarFotoPaciente(telefone, MEDICO_ID)
   const { data: nova, error } = await supabase.from('whatsapp_conversas').insert({
     telefone: tel, nome_contato: nome || tel,
     medico_id: MEDICO_ID, status: 'ativa', modo: 'ia',
     onboarding_completo: true, onboarding_step: null,
+    foto_url: foto || null,
   }).select().single()
 
   console.log('CONVERSA_NOVA:', nova?.id, 'erro:', error?.message, 'code:', error?.code)
