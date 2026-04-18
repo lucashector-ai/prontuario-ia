@@ -13,7 +13,7 @@ export default function WhatsAppApp() {
   const [msg, setMsg] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [busca, setBusca] = useState('')
-  const [filtro, setFiltro] = useState<'todas'|'nao_lidas'>('todas')
+  const [filtro, setFiltro] = useState<'todas'|'nao_lidas'|'ia'|'humano'>('todas')
   const [novaConversa, setNovaConversa] = useState(false)
   const [novoTel, setNovoTel] = useState('')
   const [novaMsgTexto, setNovaMsgTexto] = useState('')
