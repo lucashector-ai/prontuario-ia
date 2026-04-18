@@ -19,6 +19,7 @@ export default function WhatsAppApp() {
   const [novaMsgTexto, setNovaMsgTexto] = useState('')
   const [menuConversa, setMenuConversa] = useState<{id: string, x: number, y: number} | null>(null)
   const [gravando, setGravando] = useState(false)
+  const [enviandoBotao, setEnviandoBotao] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const audioChunks = useRef<Blob[]>([])
   const endRef = useRef<HTMLDivElement>(null)
@@ -105,6 +106,21 @@ export default function WhatsAppApp() {
       body: JSON.stringify({ telefone: ativa.telefone, texto, medico_id: medico.id })
     })
     setEnviando(false)
+  }
+
+  const enviarResposta = async (texto: string) => {
+    if (!ativa || enviandoBotao) return
+    setEnviandoBotao(true)
+    const { data: nova } = await supabase.from('whatsapp_mensagens').insert({
+      conversa_id: ativa.id, tipo: 'enviada', conteudo: texto,
+      metadata: { manual: true, remetente: medico?.nome }
+    }).select().single()
+    if (nova) setMensagens(p => [...p, nova])
+    await fetch('/api/whatsapp/enviar', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telefone: ativa.telefone, texto, medico_id: medico.id })
+    })
+    setEnviandoBotao(false)
   }
 
   const iniciarGravacao = async () => {
@@ -397,6 +413,20 @@ export default function WhatsAppApp() {
                           {!rec && <svg width="14" height="9" viewBox="0 0 16 11" fill="none"><path d="M1 5.5L5 9.5L15 1" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M5 5.5L9 9.5L15 1" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                         </div>
                       </div>
+                      {/* Botões interativos */}
+                      {m.metadata?.botoes && m.metadata.botoes.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 4, marginTop: 4, maxWidth: '65%', alignSelf: rec ? 'flex-start' : 'flex-end' }}>
+                          {m.metadata.botoes.map((b: string, i: number) => (
+                            <button key={i} onClick={() => enviarResposta(b)} disabled={enviandoBotao}
+                              style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid #00a884', background: 'transparent', color: '#00a884', fontSize: 14, cursor: 'pointer', textAlign: 'center' as const, fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.15s' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,168,132,0.1)' }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 9H4a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1v-5"/><path d="M20 3H9l-5 6"/></svg>
+                              {b}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

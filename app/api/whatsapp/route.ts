@@ -25,6 +25,12 @@ IDENTIFICACAO DO PACIENTE:
 - Quando o paciente informar CPF ou email, o sistema identifica automaticamente. Se identificado, chame-o pelo nome
 - Se nao encontrar no cadastro, pergunte se quer se cadastrar como novo paciente
 
+BOTOES INTERATIVOS:
+- Quando apresentar opcoes numeradas, use tambem [BOTOES: opcao1|opcao2|opcao3] ao final da mensagem
+- Exemplo: "Como posso ajudar? [BOTOES: Agendar consulta|Ver agendamentos|Falar com atendente]"
+- Use botoes sempre que o paciente precisar escolher entre opcoes claras (maximo 3 opcoes)
+- Nao use botoes para perguntas abertas
+
 Como posso te ajudar hoje?
 *1* - Agendar consulta
 *2* - Ver meus agendamentos
@@ -193,10 +199,15 @@ async function processarIA(mensagem: string, historico: any[]) {
   const humano = texto.includes('[HUMANO]')
   const agendarMatch = texto.match(/\[AGENDAR:({[^}]+})\]/)
 
+  // Extrai botões [BOTOES: Sim|Não|Talvez]
+  const botoesMatch = texto.match(/\[BOTOES:([^\]]+)\]/)
+  const botoes = botoesMatch ? botoesMatch[1].split('|').map((b: string) => b.trim()) : []
+
   return {
-    texto: texto.replace(/\[AGENDAR:[^\]]+\]/g, '').replace('[HUMANO]', '').trim(),
+    texto: texto.replace(/\[AGENDAR:[^\]]+\]/g, '').replace('[HUMANO]', '').replace(/\[BOTOES:[^\]]+\]/g, '').trim(),
     humano,
     agendarData: agendarMatch ? JSON.parse(agendarMatch[1]) : null,
+    botoes,
   }
 }
 
@@ -333,7 +344,7 @@ export async function POST(req: NextRequest) {
       if (conversa.modo === 'humano') continue
 
       const historico = await getHistorico(conversa.id)
-      const { texto: resposta, humano, agendarData } = await processarIA(texto, historico)
+      const { texto: resposta, humano, agendarData, botoes } = await processarIA(texto, historico)
       const creds = await getWppCredentials(MEDICO_ID)
 
       if (agendarData) {
@@ -348,7 +359,17 @@ export async function POST(req: NextRequest) {
         await supabase.from('whatsapp_conversas').update({ modo: 'humano' }).eq('id', conversa.id)
       }
 
-      await salvarEEnviar(conversa.id, resposta, telefone, MEDICO_ID)
+      // Salva resposta com botões se existirem
+      const metadataMsg: any = { ia: true }
+      if (botoes && botoes.length > 0) metadataMsg.botoes = botoes
+
+      await supabase.from('whatsapp_mensagens').insert({
+        conversa_id: conversa.id, tipo: 'enviada', conteudo: resposta,
+        metadata: metadataMsg
+      })
+      await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString() }).eq('id', conversa.id)
+      const creds2 = await getWppCredentials(MEDICO_ID)
+      await enviarWpp(telefone, resposta, creds2.token, creds2.phoneId)
     }
 
     return NextResponse.json({ ok: true })
