@@ -27,6 +27,9 @@ export default function WhatsAppApp() {
   const [salvandoAt, setSalvandoAt] = useState(false)
   const [atMsg, setAtMsg] = useState('')
   const audioChunks = useRef<Blob[]>([])
+  const [buscaChat, setBuscaChat] = useState('')
+  const [buscaChatAtiva, setBuscaChatAtiva] = useState(false)
+  const [menuHeader, setMenuHeader] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
 
   const fmt = (iso: string) => {
@@ -189,8 +192,11 @@ export default function WhatsAppApp() {
         <div title="Configurações" className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </div>
-        <div title="Voltar" onClick={()=>router.push('/dashboard')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f'}}>
+        <div title="Voltar à plataforma" onClick={()=>router.push('/dashboard')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </div>
+        <div title="Sair" onClick={()=>{localStorage.removeItem('medico');localStorage.removeItem('atendente');router.push('/login')}} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#ef4444'}}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </div>
       </div>
 
@@ -400,18 +406,48 @@ export default function WhatsAppApp() {
               {ativa.paciente_id&&(
                 <a href={'/pacientes/'+ativa.paciente_id} target="_blank" rel="noreferrer" style={{fontSize:12,color:'#54656f',background:'#e9edef',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer',textDecoration:'none'}}>Ver ficha</a>
               )}
-              <button className="ibtn" style={{width:36,height:36,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <button onClick={()=>{setBuscaChatAtiva(v=>!v);setBuscaChat('')}} className="ibtn" style={{width:36,height:36,border:'none',background:buscaChatAtiva?'#f0f2f5':'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%'}}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </button>
-              <button className="ibtn" style={{width:36,height:36,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><circle cx="12" cy="4" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="20" r="1.8"/></svg>
-              </button>
+              <div style={{position:'relative' as const}}>
+                <button onClick={()=>setMenuHeader(v=>!v)} className="ibtn" style={{width:36,height:36,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%'}}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><circle cx="12" cy="4" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="20" r="1.8"/></svg>
+                </button>
+                {menuHeader&&(
+                  <>
+                    <div style={{position:'fixed' as const,inset:0,zIndex:50}} onClick={()=>setMenuHeader(false)}/>
+                    <div style={{position:'absolute' as const,right:0,top:40,background:'white',borderRadius:8,boxShadow:'0 4px 20px rgba(0,0,0,0.15)',zIndex:51,minWidth:200,overflow:'hidden',padding:'4px 0'}}>
+                      {[
+                        {label:'Dados do contato'},
+                        {label:'Mensagens favoritas'},
+                        {label:'Limpar mensagens',fn:async()=>{if(confirm('Limpar todas as mensagens?')){await supabase.from('whatsapp_mensagens').delete().eq('conversa_id',ativa.id);setMensagens([]);setMenuHeader(false)}}},
+                        {label:ativa?.modo==='ia'?'Assumir atendimento':'Devolver à Sofia',fn:()=>{ativa?.modo==='ia'?assumir():devolverIA();setMenuHeader(false)}},
+                      ].map(item=>(
+                        <button key={item.label} onClick={item.fn||(()=>setMenuHeader(false))} style={{display:'block',width:'100%',padding:'11px 16px',border:'none',background:'none',color:'#111827',fontSize:14,cursor:'pointer',textAlign:'left' as const}}
+                          onMouseEnter={e=>(e.currentTarget.style.background='#f5f6f6')}
+                          onMouseLeave={e=>(e.currentTarget.style.background='none')}>
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
+          {/* Barra busca chat */}
+          {buscaChatAtiva&&(
+            <div style={{background:'#f0f2f5',padding:'8px 16px',display:'flex',alignItems:'center',gap:8,borderBottom:'1px solid #d1d7db',flexShrink:0}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input autoFocus value={buscaChat} onChange={e=>setBuscaChat(e.target.value)} placeholder="Buscar mensagem..." style={{flex:1,border:'none',outline:'none',background:'transparent',fontSize:14,color:'#111827',fontFamily:'inherit'}}/>
+              {buscaChat&&<span style={{fontSize:12,color:'#667781'}}>{mensagens.filter(m=>m.conteudo?.toLowerCase().includes(buscaChat.toLowerCase())).length} resultado(s)</span>}
+              <button onClick={()=>{setBuscaChatAtiva(false);setBuscaChat('')}} style={{border:'none',background:'none',cursor:'pointer',color:'#54656f',fontSize:20,lineHeight:1}}>×</button>
+            </div>
+          )}
           {/* Mensagens */}
           <div style={{flex:1,overflowY:'auto',padding:'12px 8%',background:'#efeae2'}}>
-            {mensagens.map((m,idx)=>{
+            {(buscaChat?mensagens.filter(m=>m.conteudo?.toLowerCase().includes(buscaChat.toLowerCase())):mensagens).map((m,idx)=>{
               const rec=m.tipo==='recebida'
               const isIA=m.metadata?.ia
               const isSistema=m.metadata?.sistema
