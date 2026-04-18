@@ -76,6 +76,39 @@ async function enviarWpp(para: string, texto: string, token?: string, phoneId?: 
   } catch (e) { console.error('WPP_ERR:', e) }
 }
 
+async function enviarWppComBotoes(para: string, texto: string, botoes: string[], token?: string, phoneId?: string) {
+  const t = token || WPP_TOKEN
+  const pid = phoneId || WPP_PHONE_ID
+  // Limita a 3 botoes, max 20 chars cada (limite da API do WhatsApp)
+  const botoesValidos = botoes.slice(0, 3).map((b, i) => ({
+    type: 'reply',
+    reply: { id: `btn_${i}`, title: b.substring(0, 20) }
+  }))
+  try {
+    const r = await fetch('https://graph.facebook.com/v20.0/' + pid + '/messages', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: para,
+        type: 'interactive',
+        interactive: {
+          type: 'button',
+          body: { text: texto },
+          action: { buttons: botoesValidos }
+        }
+      })
+    })
+    const d = await r.json()
+    console.log('WPP_BOTOES_SEND:', JSON.stringify(d).substring(0, 150))
+    return d
+  } catch (e) {
+    console.error('WPP_BOTOES_ERR:', e)
+    // Fallback para mensagem de texto simples
+    return enviarWpp(para, texto, token, phoneId)
+  }
+}
+
 async function reconhecerPaciente(telefone: string, medicoId: string): Promise<any | null> {
   try {
     const tel = normalizarTel(telefone)
@@ -371,7 +404,12 @@ export async function POST(req: NextRequest) {
       })
       await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString() }).eq('id', conversa.id)
       const creds2 = await getWppCredentials(MEDICO_ID)
-      await enviarWpp(telefone, resposta, creds2.token, creds2.phoneId)
+      // Se tem botões, envia como mensagem interativa no WhatsApp
+      if (botoes && botoes.length > 0) {
+        await enviarWppComBotoes(telefone, resposta, botoes, creds2.token, creds2.phoneId)
+      } else {
+        await enviarWpp(telefone, resposta, creds2.token, creds2.phoneId)
+      }
     }
 
     return NextResponse.json({ ok: true })

@@ -368,6 +368,7 @@ export default function WhatsAppApp() {
             {[
               {label:'Marcar como não lida',fn:async()=>{await supabase.from('whatsapp_mensagens').update({lida:false}).eq('conversa_id',menuConversa.id).eq('tipo','recebida');carregarConversas();setMenuConversa(null)}},
               {label:'Limpar mensagens',fn:async()=>{if(confirm('Limpar mensagens?')){await supabase.from('whatsapp_mensagens').delete().eq('conversa_id',menuConversa.id);if(ativa?.id===menuConversa.id) setMensagens([]);setMenuConversa(null)}}},
+              {label:'Deletar conversa',fn:async()=>{if(confirm('Deletar conversa permanentemente?')){await supabase.from('whatsapp_mensagens').delete().eq('conversa_id',menuConversa.id);await supabase.from('whatsapp_conversas').delete().eq('id',menuConversa.id);if(ativa?.id===menuConversa.id){setAtiva(null);setMensagens([]);}carregarConversas();setMenuConversa(null)}}},
               {label:'Arquivar'},
               {label:'Dados do contato'},
             ].map(item=>(
