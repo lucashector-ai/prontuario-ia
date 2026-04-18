@@ -168,6 +168,7 @@ export default function WhatsAppApp() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         </div>
         <div style={{flex:1}}/>
+        <div style={{width:24,height:1,background:'#d1d7db',marginBottom:8}}/>
         <div title="Configurações" className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </div>
@@ -182,7 +183,7 @@ export default function WhatsAppApp() {
           <h1 style={{fontSize:20,fontWeight:600,color:'#00a884',margin:0}}>WhatsApp</h1>
           <div style={{display:'flex',gap:2}}>
             <button onClick={()=>setNovaConversa(v=>!v)} className="ibtn" style={{width:36,height:36,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
             </button>
             <button className="ibtn" style={{width:36,height:36,border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><circle cx="12" cy="4" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="20" r="1.8"/></svg>
@@ -190,14 +191,14 @@ export default function WhatsAppApp() {
           </div>
         </div>
         <div style={{padding:'8px 12px',background:'#ffffff'}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,background:'#f0f2f5',borderRadius:8,padding:'7px 12px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,background:'#f0f2f5',borderRadius:20,padding:'8px 14px',border:'none'}}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="Pesquisar ou começar nova conversa" style={{flex:1,border:'none',outline:'none',background:'transparent',fontSize:14,color:'#111827',fontFamily:'inherit'}}/>
           </div>
         </div>
         <div style={{display:'flex',gap:6,padding:'4px 12px 10px',overflowX:'auto'}}>
           {([{id:'todas',label:'Tudo'},{id:'nao_lidas',label:`Não lidas${total>0?` ${total}`:''}`},{id:'ia',label:'Sofia IA'},{id:'humano',label:'Humano'}] as {id:typeof filtro,label:string}[]).map(f=>(
-            <button key={f.id} onClick={()=>setFiltro(f.id)} style={{padding:'5px 14px',fontSize:13,fontWeight:500,borderRadius:20,border:'none',background:filtro===f.id?'#d1f4cc':'#f0f2f5',color:filtro===f.id?'#166534':'#54656f',cursor:'pointer',whiteSpace:'nowrap' as const,flexShrink:0}}>
+            <button key={f.id} onClick={()=>setFiltro(f.id)} style={{padding:'5px 14px',fontSize:13,fontWeight:filtro===f.id?600:400,borderRadius:20,border:filtro===f.id?'none':'1px solid #d1d7db',background:filtro===f.id?'#d9fdd3':'white',color:filtro===f.id?'#166534':'#111827',cursor:'pointer',whiteSpace:'nowrap' as const,flexShrink:0}}>
               {f.label}
             </button>
           ))}
@@ -230,8 +231,8 @@ export default function WhatsAppApp() {
             <div key={cv.id} className={`cv${ativa?.id===cv.id?' sel':''}`}
               onClick={()=>setAtiva(cv)}
               onContextMenu={e=>{e.preventDefault();setMenuConversa({id:cv.id,x:e.clientX,y:e.clientY})}}
-              style={{padding:'8px 16px',cursor:'pointer',background:ativa?.id===cv.id?'#f0f2f5':'white',borderBottom:'1px solid #f0f2f5'}}>
-              <div style={{display:'flex',gap:12,alignItems:'center'}}>
+              style={{padding:'0 16px',cursor:'pointer',background:ativa?.id===cv.id?'#f0f2f5':'white'}}>
+              <div style={{display:'flex',gap:12,alignItems:'center',borderBottom:'1px solid #f0f2f5',padding:'10px 0'}}>
                 {cv.foto_url?(<img src={cv.foto_url} alt={nomeCv(cv)} style={{width:49,height:49,borderRadius:'50%',objectFit:'cover' as const,flexShrink:0}}/>):(
                   <div style={{width:49,height:49,borderRadius:'50%',background:'#dfe5e7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#54656f',flexShrink:0}}>{ini(nomeCv(cv))}</div>
                 )}
