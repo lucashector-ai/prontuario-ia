@@ -145,6 +145,26 @@ export default function WhatsAppApp() {
   },[medico])
 
   useEffect(()=>{if(ativa) carregarMsgs(ativa.id)},[ativa])
+  
+  // Polling fallback — atualiza mensagens a cada 3s quando conversa está aberta
+  useEffect(()=>{
+    if(!ativa) return
+    const interval = setInterval(()=>{
+      supabase.from('whatsapp_mensagens')
+        .select('*')
+        .eq('conversa_id', ativa.id)
+        .order('criado_em', {ascending: true})
+        .then(({data})=>{
+          if(data && data.length > 0) {
+            setMensagens(prev=>{
+              if(prev.length === data.length) return prev
+              return data
+            })
+          }
+        })
+    }, 3000)
+    return ()=>clearInterval(interval)
+  },[ativa?.id])
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:'instant' as ScrollBehavior})},[mensagens])
 
   const carregarConversas = useCallback(async()=>{
@@ -201,12 +221,16 @@ export default function WhatsAppApp() {
     }).select().single()
     if(nova) setMensagens(p=>[...p,nova])
     // Envia para o webhook para a Sofia processar e responder
-    await fetch('/api/whatsapp/simular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    const simRes = await fetch('/api/whatsapp/simular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       conversa_id:ativa.id,
       telefone:ativa.telefone,
       texto,
       medico_id:medico?.id
     })})
+    // Após Sofia responder, recarrega as mensagens
+    if(simRes.ok){
+      setTimeout(()=>carregarMsgs(ativa.id), 1500)
+    }
   }
 
   const iniciarGravacao = async()=>{
