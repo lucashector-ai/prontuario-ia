@@ -65,6 +65,9 @@ export default function WhatsAppApp() {
   const [showInfo, setShowInfo] = useState(false)
   const [menuLista, setMenuLista] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
+  const [showPaciente, setShowPaciente] = useState(false)
+  const [dadosPaciente, setDadosPaciente] = useState<any>(null)
+  const [consultasPaciente, setConsultasPaciente] = useState<any[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const endRef = useRef<HTMLDivElement>(null)
 
@@ -89,6 +92,16 @@ export default function WhatsAppApp() {
     .replace(/\*(.*?)\*/g,'<em>$1</em>')
     .replace(/---+/g,'<hr style="border:none;border-top:1px solid rgba(0,0,0,0.1);margin:4px 0"/>')
     .split('\n').join('<br/>')
+
+  const carregarDadosPaciente = async (pacienteId: string) => {
+    const [pRes, cRes] = await Promise.all([
+      fetch('/api/pacientes/' + pacienteId).then(r => r.json()),
+      supabase.from('consultas').select('data,tipo,diagnostico_principal,resumo_ia').eq('paciente_id', pacienteId).order('data', {ascending: false}).limit(5)
+    ])
+    if (pRes.paciente) setDadosPaciente(pRes.paciente)
+    if (cRes.data) setConsultasPaciente(cRes.data)
+    setShowPaciente(true)
+  }
 
   const carregarAtendentes = (mid:string) =>
     fetch('/api/atendentes?medico_id='+mid).then(r=>r.json()).then(d=>setAtendentes(d.atendentes||[]))
@@ -159,6 +172,8 @@ export default function WhatsAppApp() {
 
   const carregarMsgs = async(id:string)=>{
     piscarTitulo(0)
+    setShowPaciente(false)
+    setDadosPaciente(null)
     const {data}=await supabase.from('whatsapp_mensagens').select('*').eq('conversa_id',id).order('criado_em',{ascending:true})
     setMensagens(data||[])
     await supabase.from('whatsapp_mensagens').update({lida:true}).eq('conversa_id',id).eq('tipo','recebida')
@@ -505,6 +520,57 @@ export default function WhatsAppApp() {
 
       {showConfig&&medico&&<ConfigPanel medico={medico} onClose={()=>setShowConfig(false)}/>}
 
+      {/* Painel paciente */}
+      {showPaciente&&dadosPaciente&&(
+        <div style={{width:300,background:'white',borderLeft:'1px solid #f0f2f5',display:'flex',flexDirection:'column' as const,flexShrink:0,overflow:'hidden'}}>
+          <div style={{padding:'14px 16px',borderBottom:'1px solid #f0f2f5',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <p style={{fontSize:14,fontWeight:700,color:'#111827',margin:0}}>Ficha do paciente</p>
+            <button onClick={()=>setShowPaciente(false)} style={{background:'none',border:'none',cursor:'pointer',fontSize:18,color:'#6b7280',lineHeight:1}}>×</button>
+          </div>
+          <div style={{flex:1,overflowY:'auto',padding:16}}>
+            {/* Avatar e nome */}
+            <div style={{textAlign:'center' as const,marginBottom:16}}>
+              {dadosPaciente.foto_url
+                ? <img src={dadosPaciente.foto_url} style={{width:64,height:64,borderRadius:'50%',objectFit:'cover' as const,border:'2px solid #f0f2f5'}}/>
+                : <div style={{width:64,height:64,borderRadius:'50%',background:'#d9fdd3',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:700,color:'#00a884',margin:'0 auto'}}>{dadosPaciente.nome?.split(' ').map((x:string)=>x[0]).slice(0,2).join('')}</div>
+              }
+              <p style={{fontSize:15,fontWeight:700,color:'#111827',margin:'8px 0 2px'}}>{dadosPaciente.nome}</p>
+              <p style={{fontSize:12,color:'#667781',margin:0}}>{dadosPaciente.sexo}{dadosPaciente.data_nascimento?` · ${new Date().getFullYear()-new Date(dadosPaciente.data_nascimento).getFullYear()} anos`:''}</p>
+            </div>
+            {/* Dados */}
+            <div style={{background:'#f9fafb',borderRadius:10,padding:'12px 14px',marginBottom:14}}>
+              {[
+                {label:'Telefone',val:dadosPaciente.telefone},
+                {label:'Email',val:dadosPaciente.email},
+                {label:'CPF',val:dadosPaciente.cpf},
+                {label:'Convênio',val:dadosPaciente.convenio},
+              ].filter(d=>d.val).map(d=>(
+                <div key={d.label} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:'1px solid #f0f2f5'}}>
+                  <span style={{fontSize:11,color:'#667781'}}>{d.label}</span>
+                  <span style={{fontSize:11,color:'#111827',fontWeight:500,maxWidth:160,textAlign:'right' as const,wordBreak:'break-all' as const}}>{d.val}</span>
+                </div>
+              ))}
+            </div>
+            {/* Últimas consultas */}
+            <p style={{fontSize:11,fontWeight:700,color:'#667781',margin:'0 0 8px',textTransform:'uppercase' as const,letterSpacing:'0.05em'}}>Últimas consultas</p>
+            {consultasPaciente.length===0
+              ? <p style={{fontSize:12,color:'#aebac1',textAlign:'center' as const,padding:'12px 0'}}>Nenhuma consulta registrada</p>
+              : consultasPaciente.map((c:any,i:number)=>(
+                <div key={i} style={{background:'#f9fafb',borderRadius:8,padding:'10px 12px',marginBottom:8,border:'1px solid #f0f2f5'}}>
+                  <p style={{fontSize:11,color:'#667781',margin:'0 0 4px'}}>{new Date(c.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})}</p>
+                  {c.diagnostico_principal&&<p style={{fontSize:12,fontWeight:600,color:'#111827',margin:'0 0 3px'}}>{c.diagnostico_principal}</p>}
+                  {c.resumo_ia&&<p style={{fontSize:11,color:'#374151',margin:0,lineHeight:1.5}}>{c.resumo_ia.substring(0,120)}{c.resumo_ia.length>120?'...':''}</p>}
+                </div>
+              ))
+            }
+            {/* Link para ficha completa */}
+            <a href={'/pacientes/'+dadosPaciente.id} target="_blank" rel="noreferrer" style={{display:'block',textAlign:'center' as const,marginTop:12,fontSize:12,color:'#00a884',textDecoration:'none',fontWeight:500,padding:'8px',background:'#f0fdf4',borderRadius:8,border:'1px solid #d9fdd3'}}>
+              Abrir ficha completa →
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Chat */}
       {ativa?(
         <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
@@ -530,7 +596,9 @@ export default function WhatsAppApp() {
                 <button onClick={devolverIA} style={{fontSize:12,color:'#54656f',background:'#e9edef',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer'}}>Devolver à IA</button>
               )}
               {ativa.paciente_id&&(
-                <a href={'/pacientes/'+ativa.paciente_id} target="_blank" rel="noreferrer" style={{fontSize:12,color:'#54656f',background:'#e9edef',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer',textDecoration:'none'}}>Ver ficha</a>
+                <button onClick={()=>showPaciente?setShowPaciente(false):carregarDadosPaciente(ativa.paciente_id)} style={{fontSize:12,color:showPaciente?'#00a884':'#54656f',background:showPaciente?'#d9fdd3':'#e9edef',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer',fontWeight:500}}>
+                  {showPaciente?'✕ Fechar ficha':'👤 Ver ficha'}
+                </button>
               )}
               <button onClick={()=>{setBuscaChatAtiva(v=>!v);setBuscaChat('')}} className="ibtn" style={{width:36,height:36,border:'none',background:buscaChatAtiva?'#f0f2f5':'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%'}}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
