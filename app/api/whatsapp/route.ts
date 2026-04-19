@@ -350,7 +350,16 @@ export async function POST(req: NextRequest) {
     const MEDICO_ID = await getMedicoId(phoneNumberId)
     if (!MEDICO_ID) { console.log('Nenhum medico para phone_number_id:', phoneNumberId); return NextResponse.json({ ok: true }) }
 
-    console.log('WEBHOOK_OK medico:', MEDICO_ID, 'msgs:', messages.length)
+    console.log('WEBHOOK_OK medico:', MEDICO_ID, 'msgs:', messages.length, 'phoneId:', phoneNumberId)
+    if (!MEDICO_ID) {
+      console.error('MEDICO_ID VAZIO — phoneNumberId:', phoneNumberId)
+      // Tenta fallback direto pela env
+      const fallback = process.env.WHATSAPP_MEDICO_ID || ''
+      if (!fallback) {
+        console.error('WHATSAPP_MEDICO_ID nao configurado no Vercel')
+        return NextResponse.json({ ok: true, aviso: 'medico_id nao encontrado' })
+      }
+    }
 
     for (const msg of messages) {
       // Processa texto normal E cliques em botões interativos
