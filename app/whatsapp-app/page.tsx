@@ -314,6 +314,9 @@ export default function WhatsAppApp() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
         </div>
         <div style={{flex:1}}/>
+        <div title="Configurar Sofia IA" onClick={()=>router.push('/configurar-chat')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
+          <span style={{fontSize:18}}>🤖</span>
+        </div>
         <div title="Central WhatsApp" onClick={()=>setShowConfig(v=>!v)} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:showConfig?'#00a884':'#54656f',marginBottom:4}}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </div>
