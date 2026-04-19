@@ -152,6 +152,7 @@ export default function WhatsAppApp() {
     if(!ativa?.id) return
     ativaIdRef.current = ativa.id
     const interval = setInterval(async()=>{
+      if(pausarPolling.current) return
       const id = ativaIdRef.current
       if(!id) return
       const {data} = await supabase.from('whatsapp_mensagens')
@@ -171,7 +172,7 @@ export default function WhatsAppApp() {
   // Polling da lista de conversas a cada 5s
   useEffect(()=>{
     if(!medico) return
-    const interval = setInterval(()=>carregarConversas(), 5000)
+    const interval = setInterval(()=>{ if(!pausarPolling.current) carregarConversas() }, 5000)
     return ()=>clearInterval(interval)
   },[medico?.id])
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:'instant' as ScrollBehavior})},[mensagens])
@@ -281,10 +282,14 @@ export default function WhatsAppApp() {
     return bOk&&fOk
   })
 
+  const pausarPolling = useRef(false)
   const assumir = async()=>{
     const nm=usuario?.nome||medico?.nome
+    pausarPolling.current = true
     await supabase.from('whatsapp_conversas').update({modo:'humano',atendente_nome:nm}).eq('id',ativa.id)
-    setAtiva({...ativa,modo:'humano',atendente_nome:nm})
+    setAtiva(prev=>({...prev,modo:'humano',atendente_nome:nm}))
+    await carregarConversas()
+    setTimeout(()=>{ pausarPolling.current = false }, 3000)
   }
   const devolverIA = async()=>{
     await supabase.from('whatsapp_conversas').update({modo:'ia',atendente_nome:null}).eq('id',ativa.id)

@@ -15,7 +15,7 @@ export async function GET() {
   // Busca últimas conversas
   const { data: conversas } = await supabase
     .from('whatsapp_conversas')
-    .select('id, telefone, nome_contato, modo, ultimo_contato, medico_id, status')
+    .select('id, telefone, nome_contato, modo, ultimo_contato, medico_id, status, atendente_nome')
     .order('ultimo_contato', { ascending: false })
     .limit(5)
 
