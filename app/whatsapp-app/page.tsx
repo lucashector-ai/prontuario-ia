@@ -419,40 +419,65 @@ export default function WhatsAppApp() {
               </div>
             )}
 
-            {/* Lista */}
+            {/* Lista agrupada */}
             <div style={{flex:1,overflowY:'auto'}} onClick={()=>setMenuConversa(null)}>
               {filtradas.length===0?(
                 <div style={{padding:'32px 16px',textAlign:'center'}}><p style={{fontSize:13,color:'#667781',margin:0}}>Nenhuma conversa</p></div>
-              ):filtradas.map(cv=>(
-                <div key={cv.id} className={`cv${ativa?.id===cv.id?' sel':''}`}
-                  onClick={()=>setAtiva(cv)}
-                  onContextMenu={e=>{e.preventDefault();setMenuConversa({id:cv.id,x:e.clientX,y:e.clientY})}}
-                  style={{padding:'0 16px',cursor:'pointer',background:ativa?.id===cv.id?'#f0f2f5':'white'}}>
-                  <div style={{display:'flex',gap:12,alignItems:'center',borderBottom:'1px solid #f0f2f5',padding:'10px 0'}}>
-                    {cv.foto_url?(
-                      <img src={cv.foto_url} alt={nomeCv(cv)} style={{width:49,height:49,borderRadius:'50%',objectFit:'cover' as const,flexShrink:0}}/>
-                    ):(
-                      <div style={{width:49,height:49,borderRadius:'50%',background:'#dfe5e7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#54656f',flexShrink:0}}>{ini(nomeCv(cv))}</div>
-                    )}
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}}>
-                        <p style={{fontSize:15,fontWeight:cv.naoLidas>0?600:400,color:'#111827',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{nomeCv(cv)}</p>
-                        <span style={{fontSize:11,color:cv.naoLidas>0?'#25d366':'#667781',flexShrink:0,marginLeft:8}}>{cv.ultima?fmt(cv.ultima.criado_em):''}</span>
-                      </div>
-                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                        <p style={{fontSize:13,color:'#667781',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,flex:1}}>
-                          {cv.ultima?.tipo==='enviada'&&<svg style={{display:'inline',marginRight:2,verticalAlign:'middle'}} width="14" height="10" viewBox="0 0 16 11" fill="none"><path d="M1 5.5L5 9.5L15 1" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M5 5.5L9 9.5L15 1" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                          {cv.ultima?.conteudo?.substring(0,40)||''}
-                        </p>
-                        <div style={{display:'flex',alignItems:'center',gap:4,marginLeft:6,flexShrink:0}}>
-                          {cv.modo==='humano'&&<span style={{fontSize:10,color:'#667781',background:'#f0f2f5',padding:'1px 6px',borderRadius:10}}>{cv.atendente_nome?.split(' ')[0]||'humano'}</span>}
-                          {cv.naoLidas>0&&<span style={{fontSize:11,fontWeight:600,color:'white',background:'#25d366',minWidth:20,height:20,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 5px'}}>{cv.naoLidas}</span>}
+              ):(()=>{
+                const emAtendimento = filtradas.filter(cv=>cv.modo==='humano'&&!!cv.atendente_nome)
+                const aguardando = filtradas.filter(cv=>cv.modo==='humano'&&!cv.atendente_nome)
+                const sofiaIA = filtradas.filter(cv=>cv.modo==='ia')
+
+                const renderCV = (cv:any) => (
+                  <div key={cv.id} className={`cv${ativa?.id===cv.id?' sel':''}`}
+                    onClick={()=>setAtiva(cv)}
+                    onContextMenu={e=>{e.preventDefault();setMenuConversa({id:cv.id,x:e.clientX,y:e.clientY})}}
+                    style={{padding:'0 16px',cursor:'pointer',background:ativa?.id===cv.id?'#f0f2f5':'white'}}>
+                    <div style={{display:'flex',gap:12,alignItems:'center',borderBottom:'1px solid #f0f2f5',padding:'10px 0'}}>
+                      {cv.foto_url?(
+                        <img src={cv.foto_url} alt={nomeCv(cv)} style={{width:49,height:49,borderRadius:'50%',objectFit:'cover' as const,flexShrink:0}}/>
+                      ):(
+                        <div style={{width:49,height:49,borderRadius:'50%',background:'#dfe5e7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#54656f',flexShrink:0}}>{ini(nomeCv(cv))}</div>
+                      )}
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}}>
+                          <p style={{fontSize:15,fontWeight:cv.naoLidas>0?600:400,color:'#111827',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{nomeCv(cv)}</p>
+                          <span style={{fontSize:11,color:cv.naoLidas>0?'#25d366':'#667781',flexShrink:0,marginLeft:8}}>{cv.ultima?fmt(cv.ultima.criado_em):''}</span>
+                        </div>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                          <p style={{fontSize:13,color:'#667781',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,flex:1}}>
+                            {cv.ultima?.tipo==='enviada'&&<svg style={{display:'inline',marginRight:2,verticalAlign:'middle'}} width="14" height="10" viewBox="0 0 16 11" fill="none"><path d="M1 5.5L5 9.5L15 1" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M5 5.5L9 9.5L15 1" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                            {cv.ultima?.conteudo?.substring(0,40)||''}
+                          </p>
+                          <div style={{display:'flex',alignItems:'center',gap:4,marginLeft:6,flexShrink:0}}>
+                            {cv.modo==='humano'&&cv.atendente_nome&&<span style={{fontSize:10,color:'#0066cc',background:'#e8f0fe',padding:'1px 6px',borderRadius:10,fontWeight:500}}>{cv.atendente_nome?.split(' ')[0]}</span>}
+                            {cv.naoLidas>0&&<span style={{fontSize:11,fontWeight:600,color:'white',background:'#25d366',minWidth:20,height:20,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 5px'}}>{cv.naoLidas}</span>}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+
+                const renderSecao = (titulo:string, cor:string, bg:string, lista:any[]) => lista.length===0?null:(
+                  <div key={titulo}>
+                    <div style={{padding:'10px 16px 6px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                      <span style={{fontSize:11,fontWeight:700,color:cor,textTransform:'uppercase' as const,letterSpacing:'0.06em'}}>{titulo}</span>
+                      <span style={{fontSize:11,fontWeight:600,color:'white',background:cor,minWidth:18,height:18,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 5px'}}>{lista.length}</span>
+                    </div>
+                    <div style={{margin:'0 12px 8px',height:1,background:bg}}/>
+                    {lista.map(renderCV)}
+                  </div>
+                )
+
+                return (
+                  <>
+                    {renderSecao('Em atendimento','#0066cc','#dbeafe',emAtendimento)}
+                    {renderSecao('Aguardando atendimento','#f59e0b','#fef3c7',aguardando)}
+                    {renderSecao('Sofia IA','#00a884','#d1fae5',sofiaIA)}
+                  </>
+                )
+              })()}
             </div>
           </>
         )}
