@@ -192,7 +192,15 @@ export default function WhatsAppApp() {
     }
     prevConvCount.current = novasNaoLidas
     piscarTitulo(novasNaoLidas)
-    setConversas(data.map((c:any)=>({
+    // Deduplica por telefone — mantém a mais recente por número
+    const dedup = new Map<string,any>()
+    data.forEach((cv:any)=>{
+      const existing = dedup.get(cv.telefone)
+      if (!existing || new Date(cv.ultimo_contato) > new Date(existing.ultimo_contato)) {
+        dedup.set(cv.telefone, cv)
+      }
+    })
+    setConversas(Array.from(dedup.values()).map((c:any)=>({
       ...c,
       ultima:c.whatsapp_mensagens?.sort((a:any,b:any)=>new Date(b.criado_em).getTime()-new Date(a.criado_em).getTime())[0],
       naoLidas:c.whatsapp_mensagens?.filter((m:any)=>!m.lida&&m.tipo==='recebida').length||0
