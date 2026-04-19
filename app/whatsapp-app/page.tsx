@@ -78,12 +78,6 @@ export default function WhatsAppApp() {
 
   const carregarAtendentes = (mid:string) =>
     fetch('/api/atendentes?medico_id='+mid).then(r=>r.json()).then(d=>setAtendentes(d.atendentes||[]))
-    // Registra último acesso se for atendente
-    const atStr = localStorage.getItem('atendente')
-    if (atStr) {
-      const at = JSON.parse(atStr)
-      fetch('/api/atendentes', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:at.id, ultimo_acesso: new Date().toISOString()})})
-    }
 
   useEffect(()=>{
     const m=localStorage.getItem('medico')
@@ -91,6 +85,11 @@ export default function WhatsAppApp() {
     const med=JSON.parse(m); setMedico(med)
     const at=localStorage.getItem('atendente')
     setUsuario(at?JSON.parse(at):med)
+    // Registra último acesso se for atendente
+    if (at) {
+      const atObj = JSON.parse(at)
+      fetch('/api/atendentes', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:atObj.id, ultimo_acesso: new Date().toISOString()})})
+    }
     supabase.from('whatsapp_config').select('*').eq('medico_id',med.id).single().then(({data})=>setConfig(data))
     carregarAtendentes(med.id)
   },[router])
