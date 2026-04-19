@@ -481,7 +481,7 @@ export async function POST(req: NextRequest) {
       }
       
       const textoComContexto = contextoExtra ? `${texto}\n\n[CONTEXTO DO SISTEMA: ${contextoExtra}]` : texto
-      const { texto: resposta, humano, agendarData, botoes } = await processarIA(textoComContexto, historico)
+      const { texto: resposta, humano, agendarData, botoes, encerrar } = await processarIA(textoComContexto, historico)
       const creds = await getWppCredentials(MEDICO_ID)
 
       if (agendarData) {
@@ -537,7 +537,7 @@ export async function POST(req: NextRequest) {
         await supabase.from('whatsapp_conversas').update({ modo: 'humano' }).eq('id', conversa.id)
       }
 
-      if ((result as any).encerrar) {
+      if (encerrar) {
         await supabase.from('whatsapp_conversas').update({ status: 'encerrada' }).eq('id', conversa.id)
         console.log('CONVERSA_ENCERRADA:', conversa.id)
       }
