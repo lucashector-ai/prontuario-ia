@@ -304,12 +304,27 @@ export async function POST(req: NextRequest) {
     console.log('WEBHOOK_OK medico:', MEDICO_ID, 'msgs:', messages.length)
 
     for (const msg of messages) {
-      if (msg.type !== 'text') continue
+      // Processa texto normal E cliques em botões interativos
+      if (msg.type !== 'text' && msg.type !== 'interactive') continue
+      
       const telefone = msg.from
-      const texto = msg.text?.body || ''
       const nome = value.contacts?.[0]?.profile?.name || telefone
-
-      console.log('MSG:', telefone, texto.substring(0, 50))
+      
+      // Extrai o texto — de mensagem normal ou de botão clicado
+      let texto = ''
+      if (msg.type === 'text') {
+        texto = msg.text?.body || ''
+      } else if (msg.type === 'interactive') {
+        // Botão clicado pelo paciente
+        if (msg.interactive?.type === 'button_reply') {
+          texto = msg.interactive.button_reply?.title || ''
+        } else if (msg.interactive?.type === 'list_reply') {
+          texto = msg.interactive.list_reply?.title || ''
+        }
+      }
+      
+      if (!texto.trim()) continue
+      console.log('MSG:', telefone, msg.type, texto.substring(0, 50))
 
       const conversa = await getOuCriarConversa(telefone, nome, MEDICO_ID)
       if (!conversa) { console.log('ERRO: sem conversa'); continue }
