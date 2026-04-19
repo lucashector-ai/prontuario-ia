@@ -31,8 +31,9 @@ export default function WhatsAppApp() {
   const prevConvCount = useRef<number>(0)
 
   const tocarSom = () => {
+    if (typeof window === 'undefined') return
     try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const ctx = new ((window as any).AudioContext || (window as any).webkitAudioContext)()
       const o = ctx.createOscillator()
       const g = ctx.createGain()
       o.connect(g); g.connect(ctx.destination)
