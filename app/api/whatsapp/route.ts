@@ -383,11 +383,52 @@ export async function POST(req: NextRequest) {
       const creds = await getWppCredentials(MEDICO_ID)
 
       if (agendarData) {
-        await supabase.from('agendamentos').insert({
-          medico_id: MEDICO_ID, paciente_id: conversa.paciente_id,
-          data_hora: agendarData.data, tipo: 'consulta',
-          motivo: agendarData.motivo, status: 'agendado'
-        })
+        let pacienteId = conversa.paciente_id
+
+        // Se não tem paciente vinculado, cria um pelo telefone
+        if (!pacienteId) {
+          const tel = normalizarTel(telefone)
+          const { data: pacExistente } = await supabaseAdmin
+            .from('pacientes')
+            .select('id')
+            .eq('medico_id', MEDICO_ID)
+            .or(`telefone.eq.${tel},telefone.eq.+${tel},telefone.eq.55${tel}`)
+            .maybeSingle()
+
+          if (pacExistente) {
+            pacienteId = pacExistente.id
+          } else {
+            const { data: novoPac } = await supabaseAdmin
+              .from('pacientes')
+              .insert({ medico_id: MEDICO_ID, nome: conversa.nome_contato || tel, telefone: tel })
+              .select()
+              .single()
+            if (novoPac) pacienteId = novoPac.id
+          }
+
+          // Vincula paciente à conversa
+          if (pacienteId) {
+            await supabaseAdmin.from('whatsapp_conversas')
+              .update({ paciente_id: pacienteId })
+              .eq('id', conversa.id)
+          }
+        }
+
+        const { data: agCreated, error: agError } = await supabase.from('agendamentos').insert({
+          medico_id: MEDICO_ID,
+          paciente_id: pacienteId,
+          data_hora: agendarData.data,
+          tipo: agendarData.tipo || 'consulta',
+          motivo: agendarData.motivo || 'Consulta via WhatsApp',
+          status: 'agendado',
+          observacoes: `Agendado pela Sofia IA via WhatsApp — ${conversa.nome_contato || telefone}`
+        }).select().single()
+
+        if (agError) {
+          console.error('AGENDAR_ERRO:', agError.message)
+        } else {
+          console.log('AGENDADO:', agCreated?.id, agendarData.data)
+        }
       }
 
       if (humano) {
