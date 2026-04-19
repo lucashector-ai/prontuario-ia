@@ -30,6 +30,18 @@ export default function WhatsAppApp() {
   const audioChunks = useRef<Blob[]>([])
   const prevMsgsCount = useRef<number>(0)
   const prevConvCount = useRef<number>(0)
+  const titleInterval = useRef<any>(null)
+
+  const piscarTitulo = (naoLidas: number) => {
+    if (typeof document === 'undefined') return
+    if (titleInterval.current) clearInterval(titleInterval.current)
+    if (naoLidas === 0) { document.title = 'MedIA — WhatsApp'; return }
+    let toggle = false
+    titleInterval.current = setInterval(() => {
+      document.title = toggle ? `(${naoLidas}) MedIA — WhatsApp` : '🔔 Nova mensagem!'
+      toggle = !toggle
+    }, 1200)
+  }
 
   const tocarSom = () => {
     if (typeof window === 'undefined') return
@@ -122,6 +134,7 @@ export default function WhatsAppApp() {
       }
     }
     prevConvCount.current = novasNaoLidas
+    piscarTitulo(novasNaoLidas)
     setConversas(data.map((c:any)=>({
       ...c,
       ultima:c.whatsapp_mensagens?.sort((a:any,b:any)=>new Date(b.criado_em).getTime()-new Date(a.criado_em).getTime())[0],
@@ -130,6 +143,7 @@ export default function WhatsAppApp() {
   },[medico])
 
   const carregarMsgs = async(id:string)=>{
+    piscarTitulo(0)
     const {data}=await supabase.from('whatsapp_mensagens').select('*').eq('conversa_id',id).order('criado_em',{ascending:true})
     setMensagens(data||[])
     await supabase.from('whatsapp_mensagens').update({lida:true}).eq('conversa_id',id).eq('tipo','recebida')
