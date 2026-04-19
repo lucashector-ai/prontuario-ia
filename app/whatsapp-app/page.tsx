@@ -146,14 +146,16 @@ export default function WhatsAppApp() {
 
   useEffect(()=>{if(ativa) carregarMsgs(ativa.id)},[ativa])
   
-  // Polling — atualiza mensagens a cada 2s (garante tempo real mesmo sem realtime)
+  // Polling — atualiza mensagens a cada 2s
+  const ativaIdRef = useRef<string|null>(null)
   useEffect(()=>{
-    if(!ativa) return
+    if(!ativa?.id) return
+    ativaIdRef.current = ativa.id
     const interval = setInterval(async()=>{
+      const id = ativaIdRef.current
+      if(!id) return
       const {data} = await supabase.from('whatsapp_mensagens')
-        .select('*')
-        .eq('conversa_id', ativa.id)
-        .order('criado_em', {ascending: true})
+        .select('*').eq('conversa_id', id).order('criado_em', {ascending: true})
       if(data) {
         setMensagens(prev=>{
           const prevIds = prev.map((m:any)=>m.id).join(',')
@@ -163,7 +165,7 @@ export default function WhatsAppApp() {
         })
       }
     }, 2000)
-    return ()=>clearInterval(interval)
+    return ()=>{clearInterval(interval); ativaIdRef.current=null}
   },[ativa?.id])
 
   // Polling da lista de conversas a cada 5s
@@ -236,7 +238,8 @@ export default function WhatsAppApp() {
     })})
     // Após Sofia responder, recarrega as mensagens
     if(simRes.ok){
-      setTimeout(()=>carregarMsgs(ativa.id), 1500)
+      setTimeout(()=>carregarMsgs(ativa.id), 2000)
+      setTimeout(()=>carregarMsgs(ativa.id), 5000)
     }
   }
 
