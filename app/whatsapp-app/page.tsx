@@ -665,8 +665,10 @@ export default function WhatsAppApp() {
               {ativa.modo==='ia'?(
                 <button onClick={assumir} style={{fontSize:12,color:'white',background:'#00a884',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer',fontWeight:500}}>Assumir</button>
               ):(
-                <button onClick={devolverIA} style={{fontSize:12,color:'#54656f',background:'#e9edef',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer'}}>Devolver à IA</button>
+                <div style={{display:'flex',gap:6}}>
+                  <button onClick={devolverIA} style={{fontSize:12,color:'#54656f',background:'#e9edef',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer'}}>Devolver à IA</button>
                   <button onClick={async()=>{if(confirm('Encerrar este atendimento?')){await supabase.from('whatsapp_conversas').update({status:'encerrada'}).eq('id',ativa.id);setAtiva({...ativa,status:'encerrada'});carregarConversas()}}} style={{fontSize:12,color:'#ef4444',background:'#fee2e2',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer'}}>Encerrar</button>
+                </div>
               )}
               {ativa.paciente_id&&(
                 <button onClick={()=>showPaciente?setShowPaciente(false):carregarDadosPaciente(ativa.paciente_id)} style={{fontSize:12,color:showPaciente?'#00a884':'#54656f',background:showPaciente?'#d9fdd3':'#e9edef',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer',fontWeight:500}}>
