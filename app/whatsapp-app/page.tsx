@@ -16,7 +16,7 @@ export default function WhatsAppApp() {
   const [msg, setMsg] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [busca, setBusca] = useState('')
-  const [filtro, setFiltro] = useState<'todas'|'nao_lidas'|'ia'|'humano'>('todas')
+  const [filtro, setFiltro] = useState<'todas'|'nao_lidas'|'ia'|'humano'|'aguardando'|'em_atendimento'>('todas')
   const [novaConversa, setNovaConversa] = useState(false)
   const [novoTel, setNovoTel] = useState('')
   const [novaMsgTexto, setNovaMsgTexto] = useState('')
@@ -266,7 +266,12 @@ export default function WhatsAppApp() {
   const total = conversas.reduce((a,c)=>a+c.naoLidas,0)
   const filtradas = conversas.filter(c=>{
     const bOk=nomeCv(c).toLowerCase().includes(busca.toLowerCase())||c.telefone.includes(busca)
-    const fOk=filtro==='todas'||(filtro==='nao_lidas'&&c.naoLidas>0)||(filtro==='ia'&&c.modo==='ia')||(filtro==='humano'&&c.modo==='humano')
+    const fOk=filtro==='todas'||
+      (filtro==='nao_lidas'&&c.naoLidas>0)||
+      (filtro==='ia'&&c.modo==='ia')||
+      (filtro==='humano'&&c.modo==='humano')||
+      (filtro==='aguardando'&&c.modo==='humano'&&!c.atendente_nome)||
+      (filtro==='em_atendimento'&&c.modo==='humano'&&!!c.atendente_nome)
     return bOk&&fOk
   })
 
@@ -377,7 +382,11 @@ export default function WhatsAppApp() {
 
             {/* Filtros */}
             <div style={{display:'flex',gap:6,padding:'4px 12px 10px',overflowX:'auto'}}>
-              {([{id:'todas',label:'Tudo'},{id:'nao_lidas',label:`Não lidas${total>0?` ${total}`:''}`},{id:'ia',label:'Sofia IA'},{id:'humano',label:'Humano'}] as {id:typeof filtro,label:string}[]).map(f=>(
+              {(()=>{
+                const aguardando = conversas.filter(c=>c.modo==='humano'&&!c.atendente_nome).length
+                const emAtendimento = conversas.filter(c=>c.modo==='humano'&&!!c.atendente_nome).length
+                return [{id:'todas' as typeof filtro,label:'Tudo'},{id:'nao_lidas' as typeof filtro,label:`Não lidas${total>0?' '+total:''}`},{id:'ia' as typeof filtro,label:'Sofia IA'},{id:'aguardando' as typeof filtro,label:`Aguardando${aguardando>0?' '+aguardando:''}`},{id:'em_atendimento' as typeof filtro,label:`Em atendimento${emAtendimento>0?' '+emAtendimento:''}`}]
+              })().map(f=>(
                 <button key={f.id} onClick={()=>setFiltro(f.id)} style={{padding:'5px 14px',fontSize:13,fontWeight:500,borderRadius:20,border:filtro===f.id?'none':'1px solid #d1d7db',background:filtro===f.id?'#d9fdd3':'white',color:filtro===f.id?'#166534':'#54656f',cursor:'pointer',whiteSpace:'nowrap' as const,flexShrink:0}}>
                   {f.label}
                 </button>

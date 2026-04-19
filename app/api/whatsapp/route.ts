@@ -18,32 +18,35 @@ const WPP_TOKEN = process.env.WHATSAPP_TOKEN || ''
 const WPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID || '1030374870164992'
 const MEDICO_ID_FALLBACK = process.env.WHATSAPP_MEDICO_ID || ''
 
-const PROMPT_SOFIA = `Voce e Sofia, assistente da clinica. Seja calorosa e objetiva. Responda SEMPRE em portugues.
+const PROMPT_SOFIA = `Voce e Sofia, assistente virtual da clinica. Seja calorosa, simpatica e objetiva. Responda SEMPRE em portugues brasileiro.
+
+IDENTIFICACAO DO PACIENTE:
+- O paciente JA esta identificado pelo numero de telefone — voce ja sabe o nome dele se estiver no contexto
+- Se nao souber o nome: pergunte APENAS o nome completo (NUNCA peca CPF, email ou outros dados na primeira mensagem)
+- Se o nome estiver disponivel no contexto: chame-o pelo primeiro nome
 
 REGRA CRITICA - BOTOES OBRIGATORIOS:
-Sempre que houver opcoes para o paciente escolher, voce OBRIGATORIAMENTE deve incluir ao final:
+Sempre que houver opcoes para escolher, inclua OBRIGATORIAMENTE:
 [BOTOES: opcao1|opcao2|opcao3]
-Maximo 3 botoes. Cada botao com no maximo 20 caracteres. Sem acentos nos botoes.
+Maximo 3 botoes. Maximo 20 caracteres cada. Sem acentos nos botoes.
 
-MENU INICIAL (primeira mensagem ou quando paciente digitar menu/oi/ola):
-Ola! Sou a Sofia da clinica. Como posso te ajudar hoje?
-[BOTOES: Agendar consulta|Ver agendamentos|Falar com atendente]
+MENU INICIAL (primeira mensagem ou quando digitar menu/oi/ola):
+Ola! Sou a Sofia da clinica. Como posso te ajudar?
+[BOTOES: Agendar consulta|Meus agendamentos|Falar com alguem]
 
 FLUXO DE AGENDAMENTO:
-1. Perguntar nome completo
-2. Perguntar data e horario preferido
-3. Confirmar: "Confirma agendamento para [data] as [hora]? [BOTOES: Sim confirmar|Nao cancelar]"
-4. Se confirmar: usar [AGENDAR:{"data":"YYYY-MM-DDTHH:mm:00","motivo":"consulta"}]
+1. Se nao souber o nome: pergunte o nome
+2. Mostre os HORARIOS DISPONIVEIS que estao no contexto (nao invente horarios)
+3. Pergunte qual horario prefere entre os disponiveis
+4. Confirme: "Confirma [data] as [hora]? [BOTOES: Sim confirmar|Escolher outro]"
+5. Se confirmar: [AGENDAR:{"data":"YYYY-MM-DDTHH:mm:00","motivo":"consulta"}]
+IMPORTANTE: NUNCA agende em horario que o paciente simplesmente mencionar. Sempre ofereca opcoes dos horarios disponiveis.
 
-IDENTIFICACAO:
-- Se nao sabe quem e o paciente: perguntar nome e CPF ou email
-- Se identificado: chamar pelo nome
-
-OUTRAS REGRAS:
-- Para transferir para atendente humano: usar [HUMANO]
-- NUNCA dar diagnosticos ou prescrever remedios
-- Emergencias: orientar ligar 192 (SAMU)
-- Sempre terminar com acao clara para o paciente`
+REGRAS:
+- Para transferir: [HUMANO]
+- NUNCA dar diagnosticos ou receitas
+- Emergencias: ligue 192 (SAMU)
+- Sempre oferecer proxima acao clara`
 
 function normalizarTel(tel: string): string {
   return tel.replace(/[^0-9]/g, '')
@@ -216,6 +219,51 @@ async function salvarEEnviar(conversaId: string, texto: string, telefone: string
     .eq('id', conversaId)
   const creds = medicoId ? await getWppCredentials(medicoId) : { token: WPP_TOKEN, phoneId: WPP_PHONE_ID }
   await enviarWpp(telefone, texto, creds.token, creds.phoneId)
+}
+
+async function buscarHorariosDisponiveis(medicoId: string): Promise<string> {
+  try {
+    const agora = new Date()
+    const proxDias = new Date(agora.getTime() + 14 * 24 * 60 * 60 * 1000)
+    
+    // Busca agendamentos existentes nos próximos 14 dias
+    const { data: agendados } = await supabase
+      .from('agendamentos')
+      .select('data_hora')
+      .eq('medico_id', medicoId)
+      .gte('data_hora', agora.toISOString())
+      .lte('data_hora', proxDias.toISOString())
+      .in('status', ['agendado', 'confirmado'])
+    
+    const ocupados = new Set((agendados || []).map((a: any) => a.data_hora.substring(0, 16)))
+    
+    // Gera slots disponíveis (seg-sex, 8h-17h, de hora em hora)
+    const slots: string[] = []
+    const cursor = new Date(agora)
+    cursor.setMinutes(0, 0, 0)
+    cursor.setHours(cursor.getHours() + 1) // começa na próxima hora cheia
+    
+    while (slots.length < 8 && cursor <= proxDias) {
+      const diaSemana = cursor.getDay()
+      const hora = cursor.getHours()
+      
+      if (diaSemana >= 1 && diaSemana <= 5 && hora >= 8 && hora <= 17) {
+        const isoStr = cursor.toISOString().substring(0, 16)
+        if (!ocupados.has(isoStr)) {
+          const dataFmt = cursor.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })
+          const horaFmt = cursor.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          slots.push(`${dataFmt} as ${horaFmt} (${isoStr})`)
+        }
+      }
+      cursor.setHours(cursor.getHours() + 1)
+    }
+    
+    return slots.length > 0
+      ? `HORARIOS DISPONIVEIS NOS PROXIMOS DIAS:\n${slots.map((s, i) => `${i + 1}. ${s}`).join('\n')}`
+      : 'Sem horarios disponiveis nos proximos 14 dias. Solicite contato com a recepção.'
+  } catch (e) {
+    return 'Consulte a recepcao para verificar horarios disponiveis.'
+  }
 }
 
 async function processarIA(mensagem: string, historico: any[]) {
@@ -413,7 +461,26 @@ export async function POST(req: NextRequest) {
       if (conversa.modo === 'humano') continue
 
       const historico = await getHistorico(conversa.id)
-      const { texto: resposta, humano, agendarData, botoes } = await processarIA(texto, historico)
+      // Enriquece contexto para a Sofia
+      let contextoExtra = ''
+      
+      // Adiciona nome do paciente se identificado
+      if (conversa.nome_contato && conversa.nome_contato !== telefone) {
+        contextoExtra += `\nNOME DO PACIENTE: ${conversa.nome_contato}`
+      }
+      
+      // Se mensagem é sobre agendamento, busca horários disponíveis
+      const palavrasAgendamento = ['agendar', 'consulta', 'horario', 'horários', 'marcar', 'disponivel', 'data', 'agenda']
+      const mencionaAgendamento = palavrasAgendamento.some(p => texto.toLowerCase().includes(p)) ||
+        historico.slice(-4).some((h: any) => palavrasAgendamento.some(p => h.conteudo?.toLowerCase().includes(p)))
+      
+      if (mencionaAgendamento) {
+        const horarios = await buscarHorariosDisponiveis(MEDICO_ID)
+        contextoExtra += `\n\n${horarios}`
+      }
+      
+      const textoComContexto = contextoExtra ? `${texto}\n\n[CONTEXTO DO SISTEMA: ${contextoExtra}]` : texto
+      const { texto: resposta, humano, agendarData, botoes } = await processarIA(textoComContexto, historico)
       const creds = await getWppCredentials(MEDICO_ID)
 
       if (agendarData) {
