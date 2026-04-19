@@ -297,7 +297,7 @@ async function processarIA(mensagem: string, historico: any[]) {
 
 async function getMedicoId(phoneNumberId: string): Promise<string> {
   try {
-    // Tenta achar pelo phone_number_id exato
+    // Tenta achar pelo phone_number_id exato no banco
     if (phoneNumberId) {
       const { data } = await supabaseAdmin
         .from('whatsapp_config')
@@ -310,20 +310,36 @@ async function getMedicoId(phoneNumberId: string): Promise<string> {
       }
     }
 
-    // Fallback: pega o primeiro médico com config ativa
-    if (MEDICO_ID_FALLBACK) return MEDICO_ID_FALLBACK
+    // Fallback 1: env var WHATSAPP_MEDICO_ID
+    if (MEDICO_ID_FALLBACK) {
+      console.log('getMedicoId fallback env:', MEDICO_ID_FALLBACK)
+      return MEDICO_ID_FALLBACK
+    }
 
-    // Último recurso: pega qualquer config existente
-    const { data: anyConfig } = await supabaseAdmin
-      .from('whatsapp_config')
-      .select('medico_id')
-      .not('token', 'is', null)
+    // Fallback 2: busca médico pelo WPP_PHONE_ID nas env vars
+    if (WPP_PHONE_ID) {
+      const { data } = await supabaseAdmin
+        .from('whatsapp_config')
+        .select('medico_id')
+        .eq('phone_number_id', WPP_PHONE_ID)
+        .maybeSingle()
+      if ((data as any)?.medico_id) return (data as any).medico_id
+    }
+
+    // Fallback 3: busca médicos diretamente — pega o primeiro ativo
+    const { data: medicos } = await supabaseAdmin
+      .from('medicos')
+      .select('id')
+      .eq('ativo', true)
       .limit(1)
       .maybeSingle()
-    
-    const id = (anyConfig as any)?.medico_id || ''
-    console.log('getMedicoId fallback:', id)
-    return id
+    if ((medicos as any)?.id) {
+      console.log('getMedicoId by medicos table:', (medicos as any).id)
+      return (medicos as any).id
+    }
+
+    console.error('getMedicoId: nenhum medico encontrado')
+    return ''
   } catch (e) {
     console.error('getMedicoId error:', e)
     return MEDICO_ID_FALLBACK
@@ -386,6 +402,16 @@ export async function POST(req: NextRequest) {
 
       const conversa = await getOuCriarConversa(telefone, nome, MEDICO_ID)
       if (!conversa) { console.log('ERRO: sem conversa'); continue }
+      
+      // Se conversa estava encerrada, reativa com Sofia IA
+      if (conversa.status === 'encerrada') {
+        await supabaseAdmin.from('whatsapp_conversas')
+          .update({ status: 'ativa', modo: 'ia' })
+          .eq('id', conversa.id)
+        conversa.status = 'ativa'
+        conversa.modo = 'ia'
+        console.log('CONVERSA_REATIVADA:', conversa.id)
+      }
 
       // Reconhecimento de paciente pelo telefone
       if (!conversa.paciente_id) {

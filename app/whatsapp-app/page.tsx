@@ -436,7 +436,10 @@ export default function WhatsAppApp() {
                 const emAtendimento = ativas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='humano'&&!!cv.atendente_nome)
                 const aguardando = ativas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='humano'&&!cv.atendente_nome)
                 const sofiaIA = ativas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='ia')
-                const encerradas = conversas.filter(cv=>cv.status==='encerrada'&&cv.naoLidas===0)
+                // Encerradas com msgs novas voltam para lista ativa
+                const encerradasReativadas = ativas.filter(cv=>cv.status==='encerrada'&&cv.naoLidas>0)
+                sofiaIA.push(...encerradasReativadas)
+                const encerradas = conversas.filter(cv=>cv.status==='encerrada')
 
                 const renderCV = (cv:any) => (
                   <div key={cv.id} className={`cv${ativa?.id===cv.id?' sel':''}`}
