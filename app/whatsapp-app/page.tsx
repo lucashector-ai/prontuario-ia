@@ -269,10 +269,7 @@ export default function WhatsAppApp() {
   const total = conversas.reduce((a,c)=>a+c.naoLidas,0)
   const filtradas = conversas.filter(c=>{
     const bOk=nomeCv(c).toLowerCase().includes(busca.toLowerCase())||c.telefone.includes(busca)
-    const fOk=(filtro==='todas'?c.status!=='encerrada':
-      (filtro==='nao_lidas'&&c.naoLidas>0&&c.status!=='encerrada')||
-      (filtro==='ia'&&c.modo==='ia'&&c.status!=='encerrada')||
-      (filtro==='humano'&&c.modo==='humano'&&c.status!=='encerrada'))
+    const fOk=filtro==='todas'||(filtro==='nao_lidas'&&c.naoLidas>0)||(filtro==='ia'&&c.modo==='ia'&&c.status!=='encerrada')||(filtro==='humano'&&c.modo==='humano'&&c.status!=='encerrada')
     return bOk&&fOk
   })
 
@@ -426,10 +423,12 @@ export default function WhatsAppApp() {
               {filtradas.length===0?(
                 <div style={{padding:'32px 16px',textAlign:'center'}}><p style={{fontSize:13,color:'#667781',margin:0}}>Nenhuma conversa</p></div>
               ):(()=>{
-                const emAtendimento = filtradas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='humano'&&!!cv.atendente_nome)
-                const aguardando = filtradas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='humano'&&!cv.atendente_nome)
-                const sofiaIA = filtradas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='ia')
-                const encerradas = conversas.filter(cv=>cv.status==='encerrada')
+                // Conversa encerrada que recebe nova msg é reativada automaticamente
+                const ativas = filtradas.filter(cv=>cv.status!=='encerrada'||(cv.naoLidas>0))
+                const emAtendimento = ativas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='humano'&&!!cv.atendente_nome)
+                const aguardando = ativas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='humano'&&!cv.atendente_nome)
+                const sofiaIA = ativas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='ia')
+                const encerradas = conversas.filter(cv=>cv.status==='encerrada'&&cv.naoLidas===0)
 
                 const renderCV = (cv:any) => (
                   <div key={cv.id} className={`cv${ativa?.id===cv.id?' sel':''}`}
