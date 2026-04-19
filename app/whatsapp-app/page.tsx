@@ -112,8 +112,21 @@ export default function WhatsAppApp() {
     if(!medico) return
     carregarConversas()
     const ch=supabase.channel('wapp-light')
-      .on('postgres_changes',{event:'*',schema:'public',table:'whatsapp_mensagens'},()=>carregarConversas())
-      .on('postgres_changes',{event:'*',schema:'public',table:'whatsapp_conversas'},()=>carregarConversas())
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'whatsapp_mensagens'},(payload:any)=>{
+        carregarConversas()
+        // Se a mensagem é da conversa ativa, adiciona em tempo real sem recarregar tudo
+        setAtiva((ativaAtual:any)=>{
+          if(ativaAtual && payload.new?.conversa_id===ativaAtual.id){
+            setMensagens(p=>{
+              if(p.find((m:any)=>m.id===payload.new.id)) return p
+              return [...p, payload.new]
+            })
+          }
+          return ativaAtual
+        })
+      })
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'whatsapp_conversas'},()=>carregarConversas())
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'whatsapp_conversas'},()=>carregarConversas())
       .subscribe()
     return ()=>{supabase.removeChannel(ch)}
   },[medico])
@@ -166,12 +179,19 @@ export default function WhatsAppApp() {
 
   const enviarResposta = async(texto:string)=>{
     if(!ativa) return
+    // Salva localmente
     const {data:nova}=await supabase.from('whatsapp_mensagens').insert({
-      conversa_id:ativa.id,tipo:'enviada',conteudo:texto,
-      metadata:{manual:true,remetente:usuario?.nome||medico?.nome}
+      conversa_id:ativa.id,tipo:'recebida',conteudo:texto,
+      metadata:{botao:true}
     }).select().single()
     if(nova) setMensagens(p=>[...p,nova])
-    await fetch('/api/whatsapp/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:ativa.telefone,texto,medico_id:medico.id})})
+    // Envia para o webhook para a Sofia processar e responder
+    await fetch('/api/whatsapp/simular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      conversa_id:ativa.id,
+      telefone:ativa.telefone,
+      texto,
+      medico_id:medico?.id
+    })})
   }
 
   const iniciarGravacao = async()=>{
