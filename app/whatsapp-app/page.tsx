@@ -212,12 +212,15 @@ export default function WhatsAppApp() {
     if(!msg.trim()||!ativa||enviando) return
     setEnviando(true)
     const texto=msg.trim(); setMsg('')
+    const nomeRemetente = usuario?.nome||medico?.nome
+    // Adiciona nome do atendente em negrito no início da mensagem para o WhatsApp real
+    const textoWpp = ativa.modo==='humano' && nomeRemetente ? `*${nomeRemetente}:* ${texto}` : texto
     const {data:nova}=await supabase.from('whatsapp_mensagens').insert({
       conversa_id:ativa.id,tipo:'enviada',conteudo:texto,
-      metadata:{manual:true,remetente:usuario?.nome||medico?.nome}
+      metadata:{manual:true,remetente:nomeRemetente}
     }).select().single()
     if(nova) setMensagens(p=>[...p,nova])
-    await fetch('/api/whatsapp/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:ativa.telefone,texto,medico_id:medico.id})})
+    await fetch('/api/whatsapp/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:ativa.telefone,texto:textoWpp,medico_id:medico.id})})
     setEnviando(false)
   }
 
