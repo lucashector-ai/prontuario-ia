@@ -403,8 +403,46 @@ export async function POST(req: NextRequest) {
       const conversa = await getOuCriarConversa(telefone, nome, MEDICO_ID)
       if (!conversa) { console.log('ERRO: sem conversa'); continue }
       
-      // Se conversa estava encerrada, reativa com Sofia IA
+      // Se conversa estava encerrada — verifica se é resposta de NPS
       if (conversa.status === 'encerrada') {
+        const isAvaliacao = texto.includes('⭐') || texto === '⭐ Avaliar' || /^[1-5]$/.test(texto.trim())
+        const isRecusa = texto === 'Não obrigado' || texto.toLowerCase().includes('não obrigado')
+        
+        if (isAvaliacao || texto === '⭐ Avaliar') {
+          // Pede a nota
+          const msgNota = 'De 1 a 5, como você avalia nosso atendimento? (1 = ruim, 5 = excelente)'
+          const botoesNota = ['⭐ 1', '⭐⭐ 2', '⭐⭐⭐ 3', '⭐⭐⭐⭐ 4', '⭐⭐⭐⭐⭐ 5']
+          await supabase.from('whatsapp_mensagens').insert({
+            conversa_id: conversa.id, tipo: 'enviada', conteudo: msgNota,
+            metadata: { ia: true, botoes: botoesNota.slice(0,3) }
+          })
+          const creds4 = await getWppCredentials(MEDICO_ID)
+          await enviarWppComBotoes(telefone, msgNota, ['1 - Ruim', '3 - Regular', '5 - Excelente'], creds4.token, creds4.phoneId)
+          continue
+        } else if (/^[1-5⭐]/.test(texto.trim())) {
+          // Salva a nota
+          const nota = texto.match(/[1-5]/)?.[0]
+          if (nota) {
+            await supabase.from('whatsapp_conversas').update({ nps_nota: parseInt(nota) }).eq('id', conversa.id)
+            const msgFim = `Obrigado pela avaliação ${'⭐'.repeat(parseInt(nota))}! Até a próxima. 😊`
+            await supabase.from('whatsapp_mensagens').insert({
+              conversa_id: conversa.id, tipo: 'enviada', conteudo: msgFim, metadata: { ia: true }
+            })
+            const creds5 = await getWppCredentials(MEDICO_ID)
+            await enviarWpp(telefone, msgFim, creds5.token, creds5.phoneId)
+          }
+          continue
+        } else if (isRecusa) {
+          const msgFim = 'Tudo bem! Até a próxima. 😊'
+          await supabase.from('whatsapp_mensagens').insert({
+            conversa_id: conversa.id, tipo: 'enviada', conteudo: msgFim, metadata: { ia: true }
+          })
+          const creds6 = await getWppCredentials(MEDICO_ID)
+          await enviarWpp(telefone, msgFim, creds6.token, creds6.phoneId)
+          continue
+        }
+        
+        // Outra mensagem em conversa encerrada — reativa
         await supabaseAdmin.from('whatsapp_conversas')
           .update({ status: 'ativa', modo: 'ia' })
           .eq('id', conversa.id)
@@ -575,6 +613,16 @@ export async function POST(req: NextRequest) {
       if (encerrar) {
         await supabase.from('whatsapp_conversas').update({ status: 'encerrada' }).eq('id', conversa.id)
         console.log('CONVERSA_ENCERRADA:', conversa.id)
+        
+        // Envia pesquisa de satisfação
+        const msgNps = 'Fico feliz em ter ajudado! 😊 Antes de encerrar, posso pedir um feedback rápido sobre o atendimento?'
+        const botoesNps = ['⭐ Avaliar', 'Não obrigado']
+        await supabase.from('whatsapp_mensagens').insert({
+          conversa_id: conversa.id, tipo: 'enviada', conteudo: msgNps,
+          metadata: { ia: true, botoes: botoesNps }
+        })
+        const creds3 = await getWppCredentials(MEDICO_ID)
+        await enviarWppComBotoes(telefone, msgNps, botoesNps, creds3.token, creds3.phoneId)
       }
 
       // Salva resposta com botões se existirem
