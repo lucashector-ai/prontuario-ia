@@ -146,25 +146,32 @@ export default function WhatsAppApp() {
 
   useEffect(()=>{if(ativa) carregarMsgs(ativa.id)},[ativa])
   
-  // Polling fallback — atualiza mensagens a cada 3s quando conversa está aberta
+  // Polling — atualiza mensagens a cada 2s (garante tempo real mesmo sem realtime)
   useEffect(()=>{
     if(!ativa) return
-    const interval = setInterval(()=>{
-      supabase.from('whatsapp_mensagens')
+    const interval = setInterval(async()=>{
+      const {data} = await supabase.from('whatsapp_mensagens')
         .select('*')
         .eq('conversa_id', ativa.id)
         .order('criado_em', {ascending: true})
-        .then(({data})=>{
-          if(data && data.length > 0) {
-            setMensagens(prev=>{
-              if(prev.length === data.length) return prev
-              return data
-            })
-          }
+      if(data) {
+        setMensagens(prev=>{
+          const prevIds = prev.map((m:any)=>m.id).join(',')
+          const newIds = data.map((m:any)=>m.id).join(',')
+          if(prevIds === newIds) return prev
+          return data
         })
-    }, 3000)
+      }
+    }, 2000)
     return ()=>clearInterval(interval)
   },[ativa?.id])
+
+  // Polling da lista de conversas a cada 5s
+  useEffect(()=>{
+    if(!medico) return
+    const interval = setInterval(()=>carregarConversas(), 5000)
+    return ()=>clearInterval(interval)
+  },[medico?.id])
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:'instant' as ScrollBehavior})},[mensagens])
 
   const carregarConversas = useCallback(async()=>{
