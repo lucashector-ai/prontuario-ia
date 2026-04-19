@@ -266,12 +266,10 @@ export default function WhatsAppApp() {
   const total = conversas.reduce((a,c)=>a+c.naoLidas,0)
   const filtradas = conversas.filter(c=>{
     const bOk=nomeCv(c).toLowerCase().includes(busca.toLowerCase())||c.telefone.includes(busca)
-    const fOk=filtro==='todas'||
-      (filtro==='nao_lidas'&&c.naoLidas>0)||
-      (filtro==='ia'&&c.modo==='ia')||
-      (filtro==='humano'&&c.modo==='humano')||
-      (filtro==='aguardando'&&c.modo==='humano'&&!c.atendente_nome)||
-      (filtro==='em_atendimento'&&c.modo==='humano'&&!!c.atendente_nome)
+    const fOk=(filtro==='todas'?c.status!=='encerrada':
+      (filtro==='nao_lidas'&&c.naoLidas>0&&c.status!=='encerrada')||
+      (filtro==='ia'&&c.modo==='ia'&&c.status!=='encerrada')||
+      (filtro==='humano'&&c.modo==='humano'&&c.status!=='encerrada'))
     return bOk&&fOk
   })
 
@@ -385,11 +383,12 @@ export default function WhatsAppApp() {
 
             {/* Filtros */}
             <div style={{display:'flex',gap:6,padding:'4px 12px 10px',overflowX:'auto'}}>
-              {(()=>{
-                const aguardando = conversas.filter(c=>c.modo==='humano'&&!c.atendente_nome).length
-                const emAtendimento = conversas.filter(c=>c.modo==='humano'&&!!c.atendente_nome).length
-                return [{id:'todas' as typeof filtro,label:'Tudo'},{id:'nao_lidas' as typeof filtro,label:`Não lidas${total>0?' '+total:''}`},{id:'ia' as typeof filtro,label:'Sofia IA'},{id:'aguardando' as typeof filtro,label:`Aguardando${aguardando>0?' '+aguardando:''}`},{id:'em_atendimento' as typeof filtro,label:`Em atendimento${emAtendimento>0?' '+emAtendimento:''}`}]
-              })().map(f=>(
+              {([
+                {id:'todas' as typeof filtro,label:'Tudo'},
+                {id:'nao_lidas' as typeof filtro,label:`Não lidas${total>0?' '+total:''}`},
+                {id:'ia' as typeof filtro,label:'Sofia IA'},
+                {id:'humano' as typeof filtro,label:'Humano'},
+              ]).map(f=>(
                 <button key={f.id} onClick={()=>setFiltro(f.id)} style={{padding:'5px 14px',fontSize:13,fontWeight:500,borderRadius:20,border:filtro===f.id?'none':'1px solid #d1d7db',background:filtro===f.id?'#d9fdd3':'white',color:filtro===f.id?'#166534':'#54656f',cursor:'pointer',whiteSpace:'nowrap' as const,flexShrink:0}}>
                   {f.label}
                 </button>
@@ -424,9 +423,10 @@ export default function WhatsAppApp() {
               {filtradas.length===0?(
                 <div style={{padding:'32px 16px',textAlign:'center'}}><p style={{fontSize:13,color:'#667781',margin:0}}>Nenhuma conversa</p></div>
               ):(()=>{
-                const emAtendimento = filtradas.filter(cv=>cv.modo==='humano'&&!!cv.atendente_nome)
-                const aguardando = filtradas.filter(cv=>cv.modo==='humano'&&!cv.atendente_nome)
-                const sofiaIA = filtradas.filter(cv=>cv.modo==='ia')
+                const emAtendimento = filtradas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='humano'&&!!cv.atendente_nome)
+                const aguardando = filtradas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='humano'&&!cv.atendente_nome)
+                const sofiaIA = filtradas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='ia')
+                const encerradas = filtradas.filter(cv=>cv.status==='encerrada')
 
                 const renderCV = (cv:any) => (
                   <div key={cv.id} className={`cv${ativa?.id===cv.id?' sel':''}`}
@@ -472,9 +472,10 @@ export default function WhatsAppApp() {
 
                 return (
                   <>
-                    {renderSecao('Em atendimento','#0066cc','#dbeafe',emAtendimento)}
+                    {renderSecao('Em andamento','#0066cc','#dbeafe',emAtendimento)}
                     {renderSecao('Aguardando atendimento','#f59e0b','#fef3c7',aguardando)}
                     {renderSecao('Sofia IA','#00a884','#d1fae5',sofiaIA)}
+                    {renderSecao('Atendimentos encerrados','#9ca3af','#f3f4f6',encerradas)}
                   </>
                 )
               })()}
@@ -665,6 +666,7 @@ export default function WhatsAppApp() {
                 <button onClick={assumir} style={{fontSize:12,color:'white',background:'#00a884',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer',fontWeight:500}}>Assumir</button>
               ):(
                 <button onClick={devolverIA} style={{fontSize:12,color:'#54656f',background:'#e9edef',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer'}}>Devolver à IA</button>
+                  <button onClick={async()=>{if(confirm('Encerrar este atendimento?')){await supabase.from('whatsapp_conversas').update({status:'encerrada'}).eq('id',ativa.id);setAtiva({...ativa,status:'encerrada'});carregarConversas()}}} style={{fontSize:12,color:'#ef4444',background:'#fee2e2',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer'}}>Encerrar</button>
               )}
               {ativa.paciente_id&&(
                 <button onClick={()=>showPaciente?setShowPaciente(false):carregarDadosPaciente(ativa.paciente_id)} style={{fontSize:12,color:showPaciente?'#00a884':'#54656f',background:showPaciente?'#d9fdd3':'#e9edef',border:'none',padding:'6px 16px',borderRadius:20,cursor:'pointer',fontWeight:500}}>

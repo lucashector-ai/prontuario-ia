@@ -287,10 +287,11 @@ async function processarIA(mensagem: string, historico: any[]) {
   const botoes = botoesMatch ? botoesMatch[1].split('|').map((b: string) => b.trim()) : []
 
   return {
-    texto: texto.replace(/\[AGENDAR:[^\]]+\]/g, '').replace('[HUMANO]', '').replace(/\[BOTOES:[^\]]+\]/g, '').trim(),
+    texto: texto.replace(/\[AGENDAR:[^\]]+\]/g, '').replace('[HUMANO]', '').replace('[ENCERRAR]', '').replace(/\[BOTOES:[^\]]+\]/g, '').trim(),
     humano,
     agendarData: agendarMatch ? JSON.parse(agendarMatch[1]) : null,
     botoes,
+    encerrar: texto.includes('[ENCERRAR]'),
   }
 }
 
@@ -534,6 +535,11 @@ export async function POST(req: NextRequest) {
 
       if (humano) {
         await supabase.from('whatsapp_conversas').update({ modo: 'humano' }).eq('id', conversa.id)
+      }
+
+      if ((result as any).encerrar) {
+        await supabase.from('whatsapp_conversas').update({ status: 'encerrada' }).eq('id', conversa.id)
+        console.log('CONVERSA_ENCERRADA:', conversa.id)
       }
 
       // Salva resposta com botões se existirem
