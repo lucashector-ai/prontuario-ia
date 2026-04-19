@@ -20,13 +20,15 @@ export default function LoginAtendente() {
       const data = await res.json()
       if (data.atendente) {
         localStorage.setItem('atendente', JSON.stringify(data.atendente))
-        // medico_id é o id da clinica/médico que o atendente pertence
         localStorage.setItem('medico', JSON.stringify({ 
           id: data.atendente.medico_id, 
           nome: data.atendente.nome,
           cargo: data.atendente.cargo,
           is_atendente: true
         }))
+        // Seta cookie para middleware proteger rotas
+        document.cookie = 'is_atendente=true; path=/; max-age=86400'
+        document.cookie = 'medico_id=' + data.atendente.medico_id + '; path=/; max-age=86400'
         router.push('/whatsapp-app')
       } else {
         setErro(data.error || 'Email ou senha incorretos')

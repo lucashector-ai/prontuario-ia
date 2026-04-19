@@ -27,6 +27,22 @@ export default function WhatsAppApp() {
   const [salvandoAt, setSalvandoAt] = useState(false)
   const [atMsg, setAtMsg] = useState('')
   const audioChunks = useRef<Blob[]>([])
+  const prevMsgsCount = useRef<number>(0)
+  const prevConvCount = useRef<number>(0)
+
+  const tocarSom = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const o = ctx.createOscillator()
+      const g = ctx.createGain()
+      o.connect(g); g.connect(ctx.destination)
+      o.frequency.setValueAtTime(880, ctx.currentTime)
+      o.frequency.setValueAtTime(1100, ctx.currentTime + 0.1)
+      g.gain.setValueAtTime(0.3, ctx.currentTime)
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
+      o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.3)
+    } catch {}
+  }
   const [buscaChat, setBuscaChat] = useState('')
   const [buscaChatAtiva, setBuscaChatAtiva] = useState(false)
   const [menuHeader, setMenuHeader] = useState(false)
@@ -60,6 +76,12 @@ export default function WhatsAppApp() {
 
   const carregarAtendentes = (mid:string) =>
     fetch('/api/atendentes?medico_id='+mid).then(r=>r.json()).then(d=>setAtendentes(d.atendentes||[]))
+    // Registra último acesso se for atendente
+    const atStr = localStorage.getItem('atendente')
+    if (atStr) {
+      const at = JSON.parse(atStr)
+      fetch('/api/atendentes', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:at.id, ultimo_acesso: new Date().toISOString()})})
+    }
 
   useEffect(()=>{
     const m=localStorage.getItem('medico')
@@ -91,6 +113,14 @@ export default function WhatsAppApp() {
       .eq('medico_id',medico.id)
       .order('ultimo_contato',{ascending:false})
     if(!data) return
+    const novasNaoLidas = (data||[]).reduce((a:number,cv:any)=>a+(cv.whatsapp_mensagens?.filter((m:any)=>!m.lida&&m.tipo==='recebida').length||0),0)
+    if (prevConvCount.current > 0 && novasNaoLidas > prevConvCount.current) {
+      tocarSom()
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification('Nova mensagem — MedIA WhatsApp', { body: 'Você tem novas mensagens', icon: '/favicon.ico' })
+      }
+    }
+    prevConvCount.current = novasNaoLidas
     setConversas(data.map((c:any)=>({
       ...c,
       ultima:c.whatsapp_mensagens?.sort((a:any,b:any)=>new Date(b.criado_em).getTime()-new Date(a.criado_em).getTime())[0],
@@ -199,7 +229,7 @@ export default function WhatsAppApp() {
         <div title="Voltar à plataforma" onClick={()=>router.push('/dashboard')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </div>
-        <div title="Sair" onClick={()=>{localStorage.removeItem('medico');localStorage.removeItem('atendente');router.push('/login')}} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#ef4444'}}>
+        <div title="Sair" onClick={()=>{localStorage.removeItem('medico');localStorage.removeItem('atendente');document.cookie='is_atendente=; path=/; max-age=0';document.cookie='medico_id=; path=/; max-age=0';router.push('/login')}} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#ef4444'}}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </div>
       </div>
@@ -338,6 +368,7 @@ export default function WhatsAppApp() {
                 <div style={{flex:1,minWidth:0}}>
                   <p style={{fontSize:14,fontWeight:500,color:'#111827',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{at.nome}</p>
                   <p style={{fontSize:12,color:'#667781',margin:0}}>{at.cargo} · {at.email}</p>
+                  {at.ultimo_acesso&&(()=>{const diff=Date.now()-new Date(at.ultimo_acesso).getTime();const online=diff<300000;return <span style={{fontSize:10,color:online?'#00a884':'#aebac1',fontWeight:500}}>{online?'● Online agora':'● Visto '+Math.round(diff/60000)+'min atrás'}</span>})()}
                 </div>
                 <button onClick={async()=>{
                   if(confirm('Remover '+at.nome+'?')){
