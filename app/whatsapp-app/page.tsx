@@ -429,7 +429,7 @@ export default function WhatsAppApp() {
                 const emAtendimento = filtradas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='humano'&&!!cv.atendente_nome)
                 const aguardando = filtradas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='humano'&&!cv.atendente_nome)
                 const sofiaIA = filtradas.filter(cv=>cv.status!=='encerrada'&&cv.modo==='ia')
-                const encerradas = filtradas.filter(cv=>cv.status==='encerrada')
+                const encerradas = conversas.filter(cv=>cv.status==='encerrada')
 
                 const renderCV = (cv:any) => (
                   <div key={cv.id} className={`cv${ativa?.id===cv.id?' sel':''}`}
