@@ -247,15 +247,34 @@ async function processarIA(mensagem: string, historico: any[]) {
 }
 
 async function getMedicoId(phoneNumberId: string): Promise<string> {
-  if (!phoneNumberId) return MEDICO_ID_FALLBACK
   try {
-    const { data } = await supabaseAdmin
+    // Tenta achar pelo phone_number_id exato
+    if (phoneNumberId) {
+      const { data } = await supabaseAdmin
+        .from('whatsapp_config')
+        .select('medico_id')
+        .eq('phone_number_id', phoneNumberId)
+        .maybeSingle()
+      if ((data as any)?.medico_id) {
+        console.log('getMedicoId by phoneId:', phoneNumberId, '->', (data as any).medico_id)
+        return (data as any).medico_id
+      }
+    }
+
+    // Fallback: pega o primeiro médico com config ativa
+    if (MEDICO_ID_FALLBACK) return MEDICO_ID_FALLBACK
+
+    // Último recurso: pega qualquer config existente
+    const { data: anyConfig } = await supabaseAdmin
       .from('whatsapp_config')
       .select('medico_id')
-      .eq('phone_number_id', phoneNumberId)
+      .not('token', 'is', null)
+      .limit(1)
       .maybeSingle()
-    console.log('getMedicoId:', phoneNumberId, '->', (data as any)?.medico_id)
-    return (data as any)?.medico_id || MEDICO_ID_FALLBACK
+    
+    const id = (anyConfig as any)?.medico_id || ''
+    console.log('getMedicoId fallback:', id)
+    return id
   } catch (e) {
     console.error('getMedicoId error:', e)
     return MEDICO_ID_FALLBACK
