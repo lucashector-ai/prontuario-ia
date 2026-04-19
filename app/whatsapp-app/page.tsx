@@ -287,7 +287,7 @@ export default function WhatsAppApp() {
     const nm=usuario?.nome||medico?.nome
     pausarPolling.current = true
     await supabase.from('whatsapp_conversas').update({modo:'humano',atendente_nome:nm}).eq('id',ativa.id)
-    setAtiva(prev=>({...prev,modo:'humano',atendente_nome:nm}))
+    setAtiva((prev:any)=>({...prev,modo:'humano',atendente_nome:nm}))
     await carregarConversas()
     setTimeout(()=>{ pausarPolling.current = false }, 3000)
   }
