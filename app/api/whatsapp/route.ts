@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { iniciarPreAtendimento, registrarRespostaEAvancar, getPreConsultaAtiva, marcarPermissaoConcedida, marcarPermissaoNegada } from '@/lib/sofia/preatendimento'
 import { getSofiaConfig } from '@/lib/sofia/config'
+import { transcreverAudioWhatsApp } from '@/lib/sofia/transcribe'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -43,10 +44,19 @@ COMO VOCÊ SE COMPORTA:
 USO DE BOTÕES — REGRA IMPORTANTE:
 Bótões são uma ferramenta cara. Só use [BOTOES:] em DUAS situações específicas:
 
-1. CONFIRMAÇÃO FINAL DE AGENDAMENTO: quando for 100% confirmar a marca, tipo "Confirma [dia] às [hora]? [BOTOES: Sim pode marcar|Escolher outro horario]"
+1. CONFIRMAÇÃO FINAL DE AGENDAMENTO: quando for 100% confirmar a marca, tipo "Confirma [dia] às [hora]? [BOTOES: Sim pode marcar|Outro horario]"
 2. PERMISSÃO DE PRÉ-ATENDIMENTO: quando pedir autorização pra fazer perguntas antes da consulta [BOTOES: Pode sim|Agora nao]
 
 Em TODOS os outros casos, escreve naturalmente como uma humana. Sem menu inicial, sem "escolha uma opção". A primeira mensagem sua deve ser uma pergunta aberta, tipo "Oi! Tudo bem? Em que posso te ajudar hoje?"
+
+TIPO DE CONSULTA (quando contexto mencionar):
+- Se oferece MAIS de um tipo (presencial, online, híbrido), pergunta naturalmente: "Você prefere ir na clínica ou fazer online?"
+- Se for online: avisa que vai receber o link alguns minutos antes da consulta
+- Se for presencial: confirma o endereço (vai no contextoExtra se configurado)
+
+MÚLTIPLOS MÉDICOS (quando contexto mencionar):
+- Se há outros médicos na clínica, pergunta naturalmente: "Você tem preferência por algum médico? Tenho a Dra. X especialista em Y e o Dr. Z..."
+- Se paciente não sabe, deixa ele escolher o horário e a clínica aloca
 
 FLUXO DE AGENDAMENTO:
 - Descobre o motivo conversando ("O que tá acontecendo?" ou "Em que você precisa de ajuda?")
@@ -54,8 +64,8 @@ FLUXO DE AGENDAMENTO:
 - Mostra 2-3 horários disponíveis em texto corrido, não lista ("Tenho vaga amanhã às 14h, depois de amanhã às 9h ou na sexta às 16h. Qual prefere?")
 - Interpreta a resposta livre do paciente ("amanhã à tarde", "sexta de manhã", "prefiro de noite")
 - Se a resposta combina com um horário oferecido, usa aquele; se não, oferece alternativas
-- Na confirmação final: "[BOTOES: Sim pode marcar|Escolher outro horario]"
-- Quando confirmar: [AGENDAR:{"data":"YYYY-MM-DDTHH:mm:00","motivo":"resumo do motivo"}]
+- Na confirmação final: "[BOTOES: Sim pode marcar|Outro horario]"
+- Quando confirmar: [AGENDAR:{"data":"YYYY-MM-DDTHH:mm:00","motivo":"resumo do motivo","modalidade":"presencial ou online"}]
 
 NUNCA agenda em horário que o paciente só menciona sem você ter oferecido. Sempre ofereça os horários do CONTEXTO DO SISTEMA.
 
@@ -312,6 +322,53 @@ async function buscarHorariosDisponiveis(medicoId: string): Promise<string> {
   }
 }
 
+/**
+ * Dispara lembretes de teleconsulta sob demanda (alternativa ao cron no Free plan).
+ * Chamado sempre que uma mensagem chega — verifica se há consultas online
+ * começando em 5-15 min que ainda não receberam lembrete.
+ */
+async function verificarLembretesTeleconsulta(MEDICO_ID: string) {
+  try {
+    const agora = new Date()
+    const daqui5min = new Date(agora.getTime() + 5 * 60 * 1000)
+    const daqui15min = new Date(agora.getTime() + 15 * 60 * 1000)
+
+    const { data: agendamentos } = await supabaseAdmin
+      .from('agendamentos')
+      .select('*, pacientes(nome, telefone)')
+      .eq('medico_id', MEDICO_ID)
+      .not('meet_link', 'is', null)
+      .eq('lembrete_teleconsulta_enviado', false)
+      .gte('data_hora', daqui5min.toISOString())
+      .lte('data_hora', daqui15min.toISOString())
+      .in('status', ['agendado', 'confirmado'])
+
+    if (!agendamentos || agendamentos.length === 0) return
+
+    for (const ag of agendamentos) {
+      if (!ag.pacientes?.telefone || !ag.meet_link) continue
+
+      const minutos = Math.round((new Date(ag.data_hora).getTime() - agora.getTime()) / 60000)
+      const telefone = ag.pacientes.telefone.replace(/[^0-9]/g, '')
+      const primeiroNome = ag.pacientes.nome.split(' ')[0]
+
+      const mensagem = 'Oi ' + primeiroNome + '! Tua consulta online começa em ' + minutos + ' minutos.\n\n🔗 Link da sala: ' + ag.meet_link + '\n\nQualquer coisa me chama 💜'
+
+      const creds = await getWppCredentials(MEDICO_ID)
+      await enviarWpp(telefone, mensagem, creds.token, creds.phoneId)
+
+      await supabaseAdmin
+        .from('agendamentos')
+        .update({ lembrete_teleconsulta_enviado: true })
+        .eq('id', ag.id)
+
+      console.log('LEMBRETE_TELECONSULTA enviado:', ag.id, primeiroNome)
+    }
+  } catch (e) {
+    console.error('verificarLembretes erro:', e)
+  }
+}
+
 async function processarIA(mensagem: string, historico: any[]) {
   const msgs = historico.slice(-10).map((h: any) => ({
     role: h.tipo === 'recebida' ? 'user' as const : 'assistant' as const,
@@ -419,6 +476,9 @@ export async function POST(req: NextRequest) {
     const MEDICO_ID = await getMedicoId(phoneNumberId)
     if (!MEDICO_ID) { console.log('Nenhum medico para phone_number_id:', phoneNumberId); return NextResponse.json({ ok: true }) }
 
+    // Dispara lembretes de teleconsulta pendentes em background (non-blocking)
+    verificarLembretesTeleconsulta(MEDICO_ID).catch(e => console.error('lembrete bg erro:', e))
+
     console.log('WEBHOOK_OK medico:', MEDICO_ID, 'msgs:', messages.length, 'phoneId:', phoneNumberId)
     if (!MEDICO_ID) {
       console.error('MEDICO_ID VAZIO — phoneNumberId:', phoneNumberId)
@@ -432,7 +492,7 @@ export async function POST(req: NextRequest) {
 
     for (const msg of messages) {
       // Processa texto normal E cliques em botões interativos
-      if (msg.type !== 'text' && msg.type !== 'interactive') continue
+      if (msg.type !== 'text' && msg.type !== 'interactive' && msg.type !== 'audio' && msg.type !== 'voice') continue
       
       const telefone = msg.from
       const nome = value.contacts?.[0]?.profile?.name || telefone
@@ -447,6 +507,20 @@ export async function POST(req: NextRequest) {
           texto = msg.interactive.button_reply?.title || ''
         } else if (msg.interactive?.type === 'list_reply') {
           texto = msg.interactive.list_reply?.title || ''
+        }
+      } else if (msg.type === 'audio' || msg.type === 'voice') {
+        // Áudio enviado pelo paciente — transcreve via Whisper
+        const mediaId = msg.audio?.id || msg.voice?.id
+        if (mediaId) {
+          console.log('AUDIO_RECEBIDO:', mediaId)
+          const transcrito = await transcreverAudioWhatsApp(mediaId)
+          if (transcrito) {
+            texto = transcrito
+            console.log('AUDIO_TRANSCRITO:', transcrito.substring(0, 100))
+          } else {
+            // Falha na transcrição — avisa paciente
+            texto = '__audio_falha__'
+          }
         }
       }
       
@@ -641,6 +715,32 @@ export async function POST(req: NextRequest) {
       }
       
       // Se mensagem é sobre agendamento, busca horários disponíveis
+      // Contexto extra: tipos de consulta aceitos pela clínica
+      try {
+        const cfgPara = await getSofiaConfig(MEDICO_ID)
+        const tiposAceitos = (cfgPara as any).tipos_consulta_aceitos || ['presencial']
+        if (tiposAceitos.length > 1) {
+          contextoExtra += `\n\nTIPOS DE CONSULTA OFERECIDOS: ${tiposAceitos.join(', ')}. Pergunte ao paciente qual ele prefere quando for agendar.`
+        } else if (tiposAceitos[0] === 'online') {
+          contextoExtra += `\n\nATENDIMENTO: apenas online (teleconsulta). Link da sala será enviado antes da consulta.`
+        } else if (tiposAceitos[0] === 'hibrido') {
+          contextoExtra += `\n\nATENDIMENTO: híbrido (pode ser presencial ou online, paciente escolhe).`
+        }
+      } catch {}
+
+      // Contexto: lista de médicos ativos da clínica (multi-médico)
+      try {
+        const { data: medicosDaClinica } = await supabase
+          .from('medicos')
+          .select('id, nome, especialidade')
+          .eq('ativo', true)
+        const outros = (medicosDaClinica || []).filter((m: any) => m.id !== MEDICO_ID)
+        if (outros.length > 0) {
+          const listaMedicos = outros.map((m: any) => `${m.nome}${m.especialidade ? ' (' + m.especialidade + ')' : ''}`).join(', ')
+          contextoExtra += `\n\nOUTROS MÉDICOS DA CLÍNICA: ${listaMedicos}. Se o paciente tiver preferência por algum médico específico, mencione os disponíveis.`
+        }
+      } catch {}
+
       // Palavras que disparam contexto de preços
       const palavrasPreco = ['preço', 'preco', 'valor', 'custa', 'quanto', 'quanto custa', 'valores', 'cobra', 'cobram']
       const mencionaPreco = palavrasPreco.some(p => texto.toLowerCase().includes(p))
@@ -736,7 +836,9 @@ export async function POST(req: NextRequest) {
               tipo: agendarData.tipo || 'consulta',
               motivo: agendarData.motivo || 'Consulta via WhatsApp',
               status: 'agendado',
-              observacoes: `Agendado pela Sofia IA via WhatsApp — ${conversa.nome_contato || telefone}`
+              observacoes: `Agendado pela Sofia IA via WhatsApp — ${conversa.nome_contato || telefone}${agendarData.modalidade ? ' · ' + agendarData.modalidade : ''}`,
+              meet_link: agendarData.modalidade === 'online' ? `https://prontuario-ia-five.vercel.app/sala/${Math.random().toString(36).substring(2, 10)}` : null,
+              meet_code: agendarData.modalidade === 'online' ? Math.random().toString(36).substring(2, 10) : null,
             }).select().single()
 
         if (agError) {
@@ -746,15 +848,7 @@ export async function POST(req: NextRequest) {
           // Envia mensagem de confirmação com instruções de pré-consulta
           const dataFmt = new Date(agendarData.data).toLocaleDateString('pt-BR', {weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'})
           // Envia pré-consulta integrada junto com a confirmação (mesma mensagem)
-          const msgPreConsulta = `Para agilizar seu atendimento, responda antes da consulta:\n\n1️⃣ Qual o motivo principal da consulta?\n2️⃣ Tem algum sintoma há quanto tempo?\n3️⃣ Usa algum medicamento regularmente?`
-          await supabase.from('whatsapp_mensagens').insert({
-            conversa_id: conversa.id, tipo: 'enviada', conteudo: msgPreConsulta,
-            metadata: { ia: true, pre_consulta: true }
-          })
-          const creds2 = await getWppCredentials(MEDICO_ID)
-          if (creds2.token && creds2.phoneId) {
-            await enviarWpp(telefone, msgPreConsulta, creds2.token, creds2.phoneId)
-          }
+          // === 3 perguntas fixas removidas — Sofia agora usa pré-atendimento adaptativo ===
           await supabase.from('whatsapp_conversas').update({
             ultimo_contato: new Date().toISOString()
           }).eq('id', conversa.id)
@@ -770,7 +864,7 @@ export async function POST(req: NextRequest) {
         console.log('CONVERSA_ENCERRADA:', conversa.id)
         
         // Envia pesquisa de satisfação
-        const msgNps = 'Fico feliz em ter ajudado! 😊 Antes de encerrar, posso pedir um feedback rápido sobre o atendimento?'
+        const msgNps = 'Fico feliz em ter ajudado! Posso pedir um feedback rapidinho?'
         const botoesNps = ['⭐ Avaliar', 'Não obrigado']
         await supabase.from('whatsapp_mensagens').insert({
           conversa_id: conversa.id, tipo: 'enviada', conteudo: msgNps,

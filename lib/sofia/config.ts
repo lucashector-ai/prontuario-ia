@@ -23,6 +23,8 @@ export type SofiaConfig = {
   relatorio_diario_horario?: string
   relatorio_whatsapp?: string | null
   relatorio_email?: string | null
+  tipos_consulta_aceitos?: ('presencial' | 'online' | 'hibrido')[]
+  lembrete_teleconsulta_min?: number
 }
 
 const DEFAULT: Omit<SofiaConfig, 'medico_id'> = {
@@ -44,6 +46,8 @@ const DEFAULT: Omit<SofiaConfig, 'medico_id'> = {
   relatorio_diario_horario: '07:00',
   relatorio_whatsapp: null,
   relatorio_email: null,
+  tipos_consulta_aceitos: ['presencial'],
+  lembrete_teleconsulta_min: 10,
 }
 
 export async function getSofiaConfig(medico_id: string): Promise<SofiaConfig> {

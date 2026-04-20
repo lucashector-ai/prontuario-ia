@@ -141,6 +141,52 @@ export default function SofiaConfig() {
             </div>
           </Card>
 
+                    {/* Tipo de consulta */}
+          <Card title="Tipos de consulta oferecidos">
+            <p style={{ margin: '0 0 12px', fontSize: 12, color: '#6b7280' }}>
+              A Sofia pergunta ao paciente qual ele prefere. Marque quais você aceita.
+            </p>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {(['presencial', 'online', 'hibrido'] as const).map(tipo => {
+                const tipos: string[] = config.tipos_consulta_aceitos || ['presencial']
+                const ativo = tipos.includes(tipo)
+                const labels: Record<string, string> = {
+                  presencial: '🏥 Presencial',
+                  online: '💻 Online',
+                  hibrido: '🔄 Híbrido',
+                }
+                return (
+                  <button key={tipo}
+                    onClick={() => {
+                      const novos = ativo ? tipos.filter(t => t !== tipo) : [...tipos, tipo]
+                      if (novos.length === 0) return
+                      setConfig({ ...config, tipos_consulta_aceitos: novos })
+                    }}
+                    style={{
+                      padding: '8px 16px', borderRadius: 8,
+                      border: `1.5px solid ${ativo ? '#6043C1' : '#e5e7eb'}`,
+                      background: ativo ? '#f3f0fd' : 'white',
+                      color: ativo ? '#6043C1' : '#6b7280',
+                      fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    }}>
+                    {labels[tipo]}
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <Label>Lembrete da teleconsulta (minutos antes)</Label>
+              <p style={{ margin: '0 0 6px', fontSize: 11, color: '#9ca3af' }}>
+                Sofia envia link da sala esse tanto de minutos antes da consulta online
+              </p>
+              <input type="number" min={5} max={60}
+                value={config.lembrete_teleconsulta_min || 10}
+                onChange={e => setConfig({ ...config, lembrete_teleconsulta_min: Number(e.target.value) })}
+                style={{ width: 100, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+              <span style={{ marginLeft: 6, fontSize: 12, color: '#9ca3af' }}>min</span>
+            </div>
+          </Card>
+
           {/* Horários */}
           <Card title="Horários de funcionamento">
             <p style={{ margin: '0 0 12px', fontSize: 12, color: '#6b7280' }}>
