@@ -36,8 +36,53 @@ export function Topbar() {
       } else {
         setClinica({ nome: med.clinica_nome || null, logo_url: med.clinica_logo || med.foto_url || null })
       }
+      // Carrega notificações da Sofia
+      carregarNotificacoes(med.id)
+      // Poll a cada 60s
+      const intervalId = setInterval(() => carregarNotificacoes(med.id), 60000)
+      return () => clearInterval(intervalId)
     }
   }, [])
+
+  const carregarNotificacoes = async (medicoId: string) => {
+    try {
+      const r = await fetch(`/api/notificacoes-sofia?medico_id=${medicoId}&nao_lidas=true`)
+      const d = await r.json()
+      if (d.notificacoes) {
+        const formatadas = d.notificacoes.map((n: any) => ({
+          id: n.id,
+          titulo: n.titulo,
+          descricao: n.descricao,
+          tempo: formatarTempo(n.criada_em),
+          lida: n.lida,
+          agendamento_id: n.agendamento_id,
+          tipo: n.tipo,
+        }))
+        setNotifs(formatadas)
+      }
+    } catch (e) {
+      console.error('erro ao carregar notificacoes:', e)
+    }
+  }
+
+  const formatarTempo = (iso: string) => {
+    const diff = (Date.now() - new Date(iso).getTime()) / 60000
+    if (diff < 1) return 'agora'
+    if (diff < 60) return `${Math.round(diff)} min atrás`
+    if (diff < 1440) return `${Math.round(diff / 60)}h atrás`
+    return `${Math.round(diff / 1440)}d atrás`
+  }
+
+  const marcarNotifLida = async (id: string) => {
+    try {
+      await fetch('/api/notificacoes-sofia', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, lida: true }),
+      })
+      setNotifs(prev => prev.filter((n: any) => n.id !== id))
+    } catch {}
+  }
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -149,7 +194,14 @@ export function Topbar() {
               <div style={{ padding: '14px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>Notificações</p>
                 {notifs.length > 0 && (
-                  <button onClick={() => setNotifs(notifs.map(n => ({ ...n, lida: true })))}
+                  <button onClick={async () => {
+                    await Promise.all(notifs.map((n: any) => fetch('/api/notificacoes-sofia', {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ id: n.id, lida: true }),
+                    })))
+                    setNotifs([])
+                  }}
                     style={{ fontSize: 11, color: '#6043C1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
                     Marcar como lidas
                   </button>
@@ -163,10 +215,17 @@ export function Topbar() {
                   <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>Nenhuma notificação por aqui</p>
                 </div>
               ) : (
-                notifs.map((n, i) => (
-                  <div key={i} style={{ padding: '12px 16px', borderBottom: '1px solid #f9fafb', background: n.lida ? 'white' : '#faf8ff' }}>
+                notifs.map((n: any) => (
+                  <div key={n.id} 
+                    onClick={() => {
+                      marcarNotifLida(n.id)
+                      if (n.agendamento_id) router.push('/agenda')
+                      setNotifOpen(false)
+                    }}
+                    style={{ padding: '12px 16px', borderBottom: '1px solid #f9fafb', background: n.lida ? 'white' : '#faf8ff', cursor: 'pointer' }}>
                     <p style={{ margin: 0, fontSize: 13, color: '#111827', fontWeight: n.lida ? 400 : 600 }}>{n.titulo}</p>
-                    <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9ca3af' }}>{n.tempo}</p>
+                    {n.descricao && <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6b7280' }}>{n.descricao}</p>}
+                    <p style={{ margin: '4px 0 0', fontSize: 11, color: '#9ca3af' }}>{n.tempo}</p>
                   </div>
                 ))
               )}
