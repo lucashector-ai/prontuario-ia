@@ -1,19 +1,34 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
 const TIPOS = {
-  consulta:  { label: 'Consulta',  bg: '#ede9fb', text: '#4e35a3', border: '#d4c9f7', dot: '#6043C1' },
-  retorno:   { label: 'Retorno',   bg: '#ede9fb', text: '#4e35a3', border: '#a78bfa', dot: '#6043C1' },
-  exame:     { label: 'Exame',     bg: '#ede9fe', text: '#5b21b6', border: '#c4b5fd', dot: '#7c3aed' },
-  urgencia:  { label: 'Urgência',  bg: '#fee2e2', text: '#991b1b', border: '#fca5a5', dot: '#dc2626' },
+  consulta: { label: 'Consulta', bg: '#ede9fb', text: '#4e35a3', border: '#d4c9f7', dot: '#6043C1' },
+  retorno:  { label: 'Retorno',  bg: '#f3effd', text: '#5b42b0', border: '#dfd3f5', dot: '#7c3aed' },
+  exame:    { label: 'Exame',    bg: '#e8f5ee', text: '#1f6b3d', border: '#c4e4d2', dot: '#16a34a' },
+  urgencia: { label: 'Urgência', bg: '#fee2e2', text: '#991b1b', border: '#fca5a5', dot: '#dc2626' },
 }
 
-const HORAS = Array.from({ length: 14 }, (_, i) => i + 7) // 7h às 20h
+const STATUS_OPTS = [
+  { value: 'agendado',   label: 'Agendado' },
+  { value: 'confirmado', label: 'Confirmado' },
+  { value: 'cancelado',  label: 'Cancelado' },
+  { value: 'realizado',  label: 'Realizado' },
+]
+
+const SLOT_MIN = 15
+const SLOT_PX = 20
+const HORA_INI = 7
+const HORA_FIM = 20
+const TOTAL_SLOTS = ((HORA_FIM - HORA_INI) * 60) / SLOT_MIN
+
+const toSlotIdx = (d: Date) => Math.floor(((d.getHours() - HORA_INI) * 60 + d.getMinutes()) / SLOT_MIN)
+const slotToPx = (idx: number) => idx * SLOT_PX
+const durToPx  = (dur: number) => (dur / SLOT_MIN) * SLOT_PX
 
 function getWeekDays(date: Date) {
   const d = new Date(date)
@@ -27,27 +42,76 @@ function getWeekDays(date: Date) {
   })
 }
 
+function getMonthGrid(date: Date) {
+  const first = new Date(date.getFullYear(), date.getMonth(), 1)
+  const startDay = first.getDay()
+  const offset = startDay === 0 ? -6 : 1 - startDay
+  const start = new Date(first)
+  start.setDate(first.getDate() + offset)
+  return Array.from({ length: 42 }, (_, i) => {
+    const nd = new Date(start)
+    nd.setDate(start.getDate() + i)
+    return nd
+  })
+}
+
+const isMesmoDia = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+
+const fmtMesAno = (d: Date) =>
+  d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/ De /, ' de ')
+
+const fmtDia = (d: Date) =>
+  d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
+
+const ehAniversario = (nascStr: string | null | undefined, alvo: Date) => {
+  if (!nascStr) return false
+  const n = new Date(nascStr)
+  if (isNaN(n.getTime())) return false
+  return n.getMonth() === alvo.getMonth() && n.getDate() === alvo.getDate()
+}
+
 export default function Agenda() {
   const router = useRouter()
   const { toast } = useToast()
+
   const [medico, setMedico] = useState<any>(null)
   const [pacientes, setPacientes] = useState<any[]>([])
   const [agendamentos, setAgendamentos] = useState<any[]>([])
+
   const [semana, setSemana] = useState(new Date())
+  const [diaSelecionado, setDiaSelecionado] = useState(new Date())
+  const [viewMode, setViewMode] = useState<'semana' | 'dia' | 'mes'>('semana')
+  const [mesVisualizado, setMesVisualizado] = useState(new Date())
+
+  const [filtroStatus, setFiltroStatus] = useState<string>('todos')
+  const [filtroTipo, setFiltroTipo] = useState<string>('todos')
+  const [filtroPaciente, setFiltroPaciente] = useState<string>('')
+  const [filtroProfissional, setFiltroProfissional] = useState<string>('todos')
+
+  const [listaEsperaOpen, setListaEsperaOpen] = useState(false)
+  const [listaEspera] = useState<any[]>([])
+
   const [modal, setModal] = useState<{ open: boolean; date?: Date; ag?: any }>({ open: false })
   const [form, setForm] = useState({ paciente_id: '', data_hora: '', tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
   const [salvando, setSalvando] = useState(false)
-  const [viewMode, setViewMode] = useState<'semana' | 'dia'>('semana')
-  const [diaSelecionado, setDiaSelecionado] = useState(new Date())
-  const [dragging, setDragging] = useState<string | null>(null)
+
   const [comVideo, setComVideo] = useState(false)
   const [salaLink, setSalaLink] = useState('')
   const [salaId, setSalaId] = useState('')
+
   const [enviandoPreConsulta, setEnviandoPreConsulta] = useState(false)
   const [preConsultaEnviada, setPreConsultaEnviada] = useState(false)
 
+  const [agora, setAgora] = useState(new Date())
+  useEffect(() => {
+    const t = setInterval(() => setAgora(new Date()), 60000)
+    return () => clearInterval(t)
+  }, [])
+
   const diasSemana = getWeekDays(semana)
-  const hoje = new Date().toDateString()
+  const hojeStr = new Date().toDateString()
+  const isHoje = (d: Date) => d.toDateString() === hojeStr
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -70,34 +134,48 @@ export default function Agenda() {
 
   const carregarDados = async (medicoId: string) => {
     const [{ data: pacs }, { data: ags }] = await Promise.all([
-      supabase.from('pacientes').select('id, nome').eq('medico_id', medicoId).order('nome'),
-      supabase.from('agendamentos').select(`*, pacientes(nome)`).eq('medico_id', medicoId).order('data_hora'),
+      supabase.from('pacientes').select('id, nome, data_nascimento, telefone').eq('medico_id', medicoId).order('nome'),
+      supabase.from('agendamentos').select(`*, pacientes(nome, data_nascimento, telefone)`).eq('medico_id', medicoId).order('data_hora'),
     ])
     setPacientes(pacs || [])
     setAgendamentos(ags || [])
   }
 
-  const navegarSemana = (dir: number) => {
-    const nd = new Date(semana)
-    nd.setDate(nd.getDate() + dir * 7)
-    setSemana(nd)
-  }
-
-  const getAgsDia = (dia: Date) => {
-    const dStr = dia.toDateString()
-    return agendamentos.filter(a => new Date(a.data_hora).toDateString() === dStr)
-  }
-
-  const getAgHora = (dia: Date, hora: number) => {
+  const agendamentosFiltrados = useMemo(() => {
     return agendamentos.filter(a => {
-      const d = new Date(a.data_hora)
-      // Usa hora local do navegador para exibir corretamente
-      const dLocal = new Date(d.getTime())
-      return dLocal.toDateString() === dia.toDateString() && dLocal.getHours() === hora
+      if (filtroStatus !== 'todos' && a.status !== filtroStatus) return false
+      if (filtroTipo !== 'todos' && a.tipo !== filtroTipo) return false
+      if (filtroPaciente) {
+        const nome = (a.pacientes?.nome || a.paciente_nome || '').toLowerCase()
+        if (!nome.includes(filtroPaciente.toLowerCase())) return false
+      }
+      if (filtroProfissional !== 'todos' && a.profissional_id && a.profissional_id !== filtroProfissional) return false
+      return true
     })
+  }, [agendamentos, filtroStatus, filtroTipo, filtroPaciente, filtroProfissional])
+
+  const getAgsDia = (dia: Date) =>
+    agendamentosFiltrados.filter(a => new Date(a.data_hora).toDateString() === dia.toDateString())
+
+  const navegarSemana = (dir: number) => {
+    const nd = new Date(semana); nd.setDate(nd.getDate() + dir * 7); setSemana(nd)
   }
+  const navegarMes = (dir: number) => {
+    const nd = new Date(mesVisualizado); nd.setMonth(nd.getMonth() + dir); setMesVisualizado(nd)
+  }
+
+  const limparFiltros = () => {
+    setFiltroStatus('todos'); setFiltroTipo('todos'); setFiltroPaciente(''); setFiltroProfissional('todos')
+  }
+
+  const filtrosAtivos =
+    (filtroStatus !== 'todos' ? 1 : 0) +
+    (filtroTipo !== 'todos' ? 1 : 0) +
+    (filtroPaciente ? 1 : 0) +
+    (filtroProfissional !== 'todos' ? 1 : 0)
 
   const abrirModal = (date?: Date, ag?: any) => {
+    setPreConsultaEnviada(false); setComVideo(false); setSalaLink(''); setSalaId('')
     if (ag) {
       const d = new Date(ag.data_hora)
       const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
@@ -112,7 +190,7 @@ export default function Agenda() {
       setModal({ open: true, ag })
     } else {
       const d = date || new Date()
-      if (d.getHours() < 7) d.setHours(8, 0, 0, 0)
+      if (d.getHours() < HORA_INI) d.setHours(8, 0, 0, 0)
       const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
       setForm({ paciente_id: '', data_hora: local, tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
       setModal({ open: true, date: d })
@@ -125,9 +203,12 @@ export default function Agenda() {
       if (modal.ag) {
         const { data } = await supabase.from('agendamentos').update({
           paciente_id: form.paciente_id || null,
-          data_hora: new Date(form.data_hora).toISOString(),  // Converte para UTC corretamente
-          tipo: form.tipo, motivo: form.motivo, observacoes: form.observacoes,
-        }).eq('id', modal.ag.id).select(`*, pacientes(nome)`).single()
+          data_hora: new Date(form.data_hora).toISOString(),
+          tipo: form.tipo,
+          motivo: form.motivo,
+          observacoes: form.observacoes,
+          duracao: form.duracao,
+        }).eq('id', modal.ag.id).select(`*, pacientes(nome, data_nascimento, telefone)`).single()
         if (data) setAgendamentos(prev => prev.map(a => a.id === data.id ? data : a))
       } else {
         let meetLinkFinal = ''
@@ -141,19 +222,21 @@ export default function Agenda() {
           if (tcData.teleconsulta) {
             meetCodeFinal = tcData.teleconsulta.sala_id
             meetLinkFinal = window.location.origin + '/sala/' + meetCodeFinal
-            setSalaLink(meetLinkFinal)
-            setSalaId(meetCodeFinal)
+            setSalaLink(meetLinkFinal); setSalaId(meetCodeFinal)
           }
         }
         const { data } = await supabase.from('agendamentos').insert({
           medico_id: medico.id,
           paciente_id: form.paciente_id || null,
-          data_hora: new Date(form.data_hora).toISOString(),  // Converte para UTC corretamente
-          tipo: form.tipo, motivo: form.motivo, observacoes: form.observacoes,
+          data_hora: new Date(form.data_hora).toISOString(),
+          tipo: form.tipo,
+          motivo: form.motivo,
+          observacoes: form.observacoes,
+          duracao: form.duracao,
           status: 'agendado',
           meet_link: meetLinkFinal || null,
           meet_code: meetCodeFinal || null,
-        }).select(`*, pacientes(nome)`).single()
+        }).select(`*, pacientes(nome, data_nascimento, telefone)`).single()
         if (data) setAgendamentos(prev => [...prev, data])
       }
       setModal({ open: false })
@@ -172,8 +255,7 @@ export default function Agenda() {
     setEnviandoPreConsulta(true)
     try {
       const res = await fetch('/api/pre-consulta', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agendamento_id: agendamentoId, medico_id: medico.id })
       })
       const data = await res.json()
@@ -189,156 +271,382 @@ export default function Agenda() {
   }
 
   const atualizarStatus = async (id: string, status: string) => {
-    const { data } = await supabase.from('agendamentos').update({ status }).eq('id', id).select(`*, pacientes(nome)`).single()
+    const { data } = await supabase.from('agendamentos').update({ status }).eq('id', id).select(`*, pacientes(nome, data_nascimento, telefone)`).single()
     if (data) setAgendamentos(prev => prev.map(a => a.id === id ? data : a))
   }
 
-  const fmtDia = (d: Date) => d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
-  const fmtMes = (d: Date) => d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/ De /, ' de ')
-  const isHoje = (d: Date) => d.toDateString() === hoje
-  const totalSemana = diasSemana.reduce((acc, d) => acc + getAgsDia(d).length, 0)
+  const labelStyle: React.CSSProperties = {
+    fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6,
+    textTransform: 'uppercase', letterSpacing: '0.06em',
+  }
+  const selectStyle: React.CSSProperties = {
+    width: '100%', padding: '8px 10px', fontSize: 12, borderRadius: 7,
+    border: '1.5px solid #e5e7eb', background: 'white', color: '#111827', cursor: 'pointer',
+  }
+
+  const renderHeader = () => {
+    const labelData = viewMode === 'mes'
+      ? fmtMesAno(mesVisualizado)
+      : viewMode === 'dia'
+        ? diaSelecionado.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
+        : `${diasSemana[0].getDate()} – ${diasSemana[6].getDate()} ${fmtMesAno(diasSemana[6])}`
+
+    return (
+      <div style={{ padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => { setSemana(new Date()); setDiaSelecionado(new Date()); setMesVisualizado(new Date()) }}
+            style={{ fontSize: 12, fontWeight: 600, color: '#374151', background: 'white', padding: '5px 14px', borderRadius: 7, cursor: 'pointer', border: '1px solid #e5e7eb' }}>
+            Hoje
+          </button>
+          <div style={{ display: 'flex', gap: 1 }}>
+            <button onClick={() => viewMode === 'mes' ? navegarMes(-1) : navegarSemana(-1)}
+              style={{ width: 28, height: 28, background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e5e7eb' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button onClick={() => viewMode === 'mes' ? navegarMes(1) : navegarSemana(1)}
+              style={{ width: 28, height: 28, background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e5e7eb', borderLeft: 'none' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+          <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0, textTransform: 'capitalize' }}>{labelData}</h1>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={() => setListaEsperaOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, border: '1px solid #e5e7eb', background: 'white', fontSize: 12, color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Lista de espera
+            {listaEspera.length > 0 && <span style={{ background: '#6043C1', color: 'white', borderRadius: 10, padding: '0 6px', fontSize: 10 }}>{listaEspera.length}</span>}
+          </button>
+          <div style={{ display: 'flex', border: '1px solid #e5e7eb', borderRadius: 7, overflow: 'hidden', background: 'white' }}>
+            {(['dia', 'semana', 'mes'] as const).map((v, i) => (
+              <button key={v} onClick={() => setViewMode(v)}
+                style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: viewMode === v ? '#6043C1' : 'white', color: viewMode === v ? 'white' : '#6b7280', border: 'none', borderLeft: i > 0 ? '1px solid #e5e7eb' : 'none' }}>
+                {v === 'dia' ? 'Dia' : v === 'semana' ? 'Semana' : 'Mês'}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => abrirModal()}
+            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Novo
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const renderPainel = () => {
+    const monthGrid = getMonthGrid(mesVisualizado)
+    const mesAtual = mesVisualizado.getMonth()
+    return (
+      <aside style={{ width: 260, background: 'white', borderRight: '1px solid #f3f4f6', padding: 16, overflow: 'auto', flexShrink: 0 }}>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0, textTransform: 'capitalize' }}>{fmtMesAno(mesVisualizado)}</h3>
+            <div style={{ display: 'flex', gap: 2 }}>
+              <button onClick={() => navegarMes(-1)} style={{ width: 22, height: 22, border: 'none', background: 'transparent', cursor: 'pointer', color: '#6b7280', borderRadius: 4 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <button onClick={() => navegarMes(1)} style={{ width: 22, height: 22, border: 'none', background: 'transparent', cursor: 'pointer', color: '#6b7280', borderRadius: 4 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
+            {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((l, i) => (
+              <div key={i} style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', fontWeight: 700, padding: '4px 0' }}>{l}</div>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+            {monthGrid.map((d, i) => {
+              const noMes = d.getMonth() === mesAtual
+              const hoje = isHoje(d)
+              const selecionado = isMesmoDia(d, diaSelecionado)
+              const temAgs = agendamentosFiltrados.some(a => new Date(a.data_hora).toDateString() === d.toDateString())
+              return (
+                <button key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
+                  style={{ aspectRatio: '1', border: 'none', background: selecionado ? '#6043C1' : (hoje ? '#ede9fb' : 'transparent'), color: selecionado ? 'white' : (!noMes ? '#d1d5db' : (hoje ? '#6043C1' : '#374151')), fontSize: 11, fontWeight: hoje || selecionado ? 700 : 500, borderRadius: 6, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {d.getDate()}
+                  {temAgs && !selecionado && <span style={{ position: 'absolute', bottom: 2, width: 3, height: 3, borderRadius: '50%', background: hoje ? '#6043C1' : '#9ca3af' }}/>}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Filtros</h3>
+            {filtrosAtivos > 0 && <button onClick={limparFiltros} style={{ fontSize: 11, color: '#6043C1', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Limpar ({filtrosAtivos})</button>}
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Status</label>
+            <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={selectStyle}>
+              <option value="todos">Todos</option>
+              {STATUS_OPTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Tipo</label>
+            <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} style={selectStyle}>
+              <option value="todos">Todos</option>
+              {Object.entries(TIPOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Paciente</label>
+            <input type="text" value={filtroPaciente} onChange={e => setFiltroPaciente(e.target.value)} placeholder="Buscar por nome..." style={{ ...selectStyle, padding: '8px 10px' }}/>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Profissional</label>
+            <select value={filtroProfissional} onChange={e => setFiltroProfissional(e.target.value)} style={selectStyle}>
+              <option value="todos">Todos</option>
+              {medico && <option value={medico.id}>{medico.nome || 'Eu'}</option>}
+            </select>
+          </div>
+        </div>
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #f3f4f6' }}>
+          <h3 style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Legenda</h3>
+          {Object.entries(TIPOS).map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: v.bg, border: `1.5px solid ${v.border}`, borderLeft: `3px solid ${v.dot}` }}/>
+              <span style={{ fontSize: 12, color: '#6b7280' }}>{v.label}</span>
+            </div>
+          ))}
+        </div>
+      </aside>
+    )
+  }
+
+  const renderGridSemana = () => {
+    const agoraIdx = toSlotIdx(agora)
+    const mostrarLinhaAgora = agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
+    return (
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px', border: '1px solid #f3f4f6' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
+          <div/>
+          {diasSemana.map((dia, i) => {
+            const ags = getAgsDia(dia)
+            const aniversariantes = pacientes.filter(p => ehAniversario(p.data_nascimento, dia)).length
+            return (
+              <div key={i} onClick={() => { setDiaSelecionado(dia); setViewMode('dia') }}
+                style={{ padding: '10px 8px', textAlign: 'center', borderLeft: '1px solid #f3f4f6', cursor: 'pointer', background: isHoje(dia) ? '#faf8ff' : 'white' }}>
+                <p style={{ fontSize: 10, color: isHoje(dia) ? '#6043C1' : '#9ca3af', fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  {dia.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: isHoje(dia) ? '#6043C1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: isHoje(dia) ? 'white' : '#111827', margin: 0 }}>{dia.getDate()}</p>
+                  </div>
+                  {aniversariantes > 0 && <span title={`${aniversariantes} aniversariante(s)`} style={{ fontSize: 12 }}>🎁</span>}
+                </div>
+                {ags.length > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 3 }}>
+                    {ags.slice(0, 4).map((ag, ai) => (
+                      <div key={ai} style={{ width: 4, height: 4, borderRadius: '50%', background: TIPOS[ag.tipo as keyof typeof TIPOS]?.dot || '#6043C1' }}/>
+                    ))}
+                    {ags.length > 4 && <span style={{ fontSize: 9, color: '#6b7280' }}>+{ags.length - 4}</span>}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', minHeight: `${TOTAL_SLOTS * SLOT_PX}px`, position: 'relative' }}>
+            <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5 }}>
+              {Array.from({ length: HORA_FIM - HORA_INI }, (_, i) => (
+                <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: '1px solid #f3f4f6' }}>
+                  <span style={{ position: 'absolute', top: -7, right: 8, fontSize: 10, color: '#9ca3af', fontWeight: 600, background: 'white', padding: '0 2px' }}>
+                    {(HORA_INI + i).toString().padStart(2, '0')}:00
+                  </span>
+                </div>
+              ))}
+            </div>
+            {diasSemana.map((dia, di) => (
+              <div key={di} style={{ borderLeft: '1px solid #f3f4f6', background: isHoje(dia) ? '#faf8ff' : 'white', position: 'relative' }}>
+                {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
+                  const isHoraCheia = i % 4 === 0
+                  const isMeia = i % 4 === 2
+                  return (
+                    <div key={i}
+                      onClick={() => { const d = new Date(dia); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
+                      style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : (isMeia ? '1px dashed #f9fafb' : 'none'), cursor: 'pointer', transition: 'background 0.1s' }}
+                      onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
+                      onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
+                  )
+                })}
+                {getAgsDia(dia).map(ag => {
+                  const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
+                  const d = new Date(ag.data_hora)
+                  const idx = toSlotIdx(d)
+                  const dur = Number(ag.duracao) || 30
+                  const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Paciente'
+                  const cancelado = ag.status === 'cancelado'
+                  return (
+                    <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
+                      style={{ position: 'absolute', left: 3, right: 3, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: cancelado ? '#f3f4f6' : tipo.bg, border: `1px solid ${cancelado ? '#d1d5db' : tipo.border}`, borderLeft: `3px solid ${cancelado ? '#9ca3af' : tipo.dot}`, borderRadius: 6, padding: '3px 6px', cursor: 'pointer', zIndex: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', opacity: cancelado ? 0.6 : 1, textDecoration: cancelado ? 'line-through' : 'none' }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: tipo.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pacNome}</p>
+                      {durToPx(dur) > 28 && (
+                        <p style={{ fontSize: 10, color: tipo.text, margin: '1px 0 0', opacity: 0.75, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ag.motivo || tipo.label}</p>
+                      )}
+                      {durToPx(dur) > 44 && (
+                        <p style={{ fontSize: 9, color: tipo.text, margin: 'auto 0 0', opacity: 0.65, fontWeight: 600 }}>
+                          {d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} – {new Date(d.getTime() + dur * 60000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      )}
+                    </div>
+                  )
+                })}
+                {isHoje(dia) && mostrarLinhaAgora && (
+                  <div style={{ position: 'absolute', top: slotToPx(agoraIdx) + (agora.getMinutes() % SLOT_MIN) * (SLOT_PX / SLOT_MIN), left: 0, right: 0, height: 2, background: '#dc2626', zIndex: 20, pointerEvents: 'none' }}>
+                    <div style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: '50%', background: '#dc2626' }}/>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const renderGridMes = () => {
+    const grid = getMonthGrid(mesVisualizado)
+    const mesAtual = mesVisualizado.getMonth()
+    return (
+      <div style={{ flex: 1, background: 'white', borderRadius: 12, margin: '0 16px 16px', border: '1px solid #f3f4f6', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #f3f4f6' }}>
+          {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((l, i) => (
+            <div key={i} style={{ padding: 8, fontSize: 11, fontWeight: 700, color: '#9ca3af', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{l}</div>
+          ))}
+        </div>
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: '1fr' }}>
+          {grid.map((d, i) => {
+            const ags = getAgsDia(d)
+            const noMes = d.getMonth() === mesAtual
+            const hoje = isHoje(d)
+            return (
+              <div key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
+                style={{ borderTop: '1px solid #f3f4f6', borderLeft: i % 7 !== 0 ? '1px solid #f3f4f6' : 'none', padding: 6, cursor: 'pointer', background: noMes ? '#fafafa' : (hoje ? '#faf8ff' : 'white'), overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 11, fontWeight: hoje ? 700 : 600, color: !noMes ? '#d1d5db' : hoje ? 'white' : '#374151', background: hoje ? '#6043C1' : 'transparent', width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d.getDate()}</span>
+                  {ags.length > 2 && <span style={{ fontSize: 9, color: '#9ca3af', fontWeight: 600 }}>+{ags.length - 2}</span>}
+                </div>
+                {ags.slice(0, 2).map(ag => {
+                  const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
+                  return (
+                    <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
+                      style={{ fontSize: 10, padding: '2px 5px', borderRadius: 4, background: tipo.bg, color: tipo.text, borderLeft: `2px solid ${tipo.dot}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                      {new Date(ag.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} {ag.pacientes?.nome || 'Paciente'}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  const renderGridDia = () => {
+    const agoraIdx = toSlotIdx(agora)
+    const mostrarLinhaAgora = isHoje(diaSelecionado) && agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
+    const ags = getAgsDia(diaSelecionado)
+    return (
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px', border: '1px solid #f3f4f6' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 44, height: 44, borderRadius: '50%', background: isHoje(diaSelecionado) ? '#6043C1' : '#ede9fb', color: isHoje(diaSelecionado) ? 'white' : '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700 }}>
+            {diaSelecionado.getDate()}
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827', textTransform: 'capitalize' }}>{diaSelecionado.toLocaleDateString('pt-BR', { weekday: 'long' })}</p>
+            <p style={{ margin: 0, fontSize: 12, color: '#6b7280', textTransform: 'capitalize' }}>{fmtMesAno(diaSelecionado)} · {ags.length} agendamento{ags.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+        <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '72px 1fr', minHeight: `${TOTAL_SLOTS * SLOT_PX}px`, position: 'relative' }}>
+            <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5 }}>
+              {Array.from({ length: HORA_FIM - HORA_INI }, (_, i) => (
+                <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: '1px solid #f3f4f6' }}>
+                  <span style={{ position: 'absolute', top: -7, right: 10, fontSize: 11, color: '#9ca3af', fontWeight: 600, background: 'white', padding: '0 4px' }}>{(HORA_INI + i).toString().padStart(2, '0')}:00</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ borderLeft: '1px solid #f3f4f6', position: 'relative' }}>
+              {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
+                const isHoraCheia = i % 4 === 0
+                const isMeia = i % 4 === 2
+                return (
+                  <div key={i}
+                    onClick={() => { const d = new Date(diaSelecionado); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
+                    style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : (isMeia ? '1px dashed #f9fafb' : 'none'), cursor: 'pointer' }}
+                    onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
+                    onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
+                )
+              })}
+              {ags.map(ag => {
+                const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
+                const d = new Date(ag.data_hora)
+                const idx = toSlotIdx(d)
+                const dur = Number(ag.duracao) || 30
+                const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Paciente'
+                return (
+                  <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
+                    style={{ position: 'absolute', left: 8, right: 8, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: tipo.bg, border: `1px solid ${tipo.border}`, borderLeft: `3px solid ${tipo.dot}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', zIndex: 10, overflow: 'hidden' }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: tipo.text, margin: 0 }}>{pacNome}</p>
+                    <p style={{ fontSize: 11, color: tipo.text, margin: '2px 0 0', opacity: 0.75 }}>
+                      {d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {ag.motivo || tipo.label}
+                    </p>
+                  </div>
+                )
+              })}
+              {mostrarLinhaAgora && (
+                <div style={{ position: 'absolute', top: slotToPx(agoraIdx) + (agora.getMinutes() % SLOT_MIN) * (SLOT_PX / SLOT_MIN), left: 0, right: 0, height: 2, background: '#dc2626', zIndex: 20, pointerEvents: 'none' }}>
+                  <div style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: '50%', background: '#dc2626' }}/>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
       <Sidebar />
-
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 16 }}>
-        {/* Header */}
-        <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={() => setSemana(new Date())} style={{ fontSize: 12, fontWeight: 600, color: '#374151', background: 'white', padding: '5px 12px', borderRadius: 7, cursor: 'pointer' }}>
-              Hoje
-            </button>
-            <div style={{ display: 'flex', gap: 1 }}>
-              <button onClick={() => navegarSemana(-1)} style={{ width: 28, height: 28, background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-              </button>
-              <button onClick={() => navegarSemana(1)} style={{ width: 28, height: 28, borderLeft: 'none', background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
-              </button>
-            </div>
-            <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0, textTransform: 'capitalize' }}>
-              {fmtMes(diasSemana[0])}
-              {diasSemana[0].getMonth() !== diasSemana[6].getMonth() && ` — ${fmtMes(diasSemana[6])}`}
-            </h1>
-            {totalSemana > 0 && (
-              <span style={{ fontSize: 11, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '2px 8px', borderRadius: 20, fontWeight: 600 }}>
-                {totalSemana} agendamento{totalSemana !== 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {/* Legenda tipos */}
-            <div style={{ display: 'flex', gap: 10, marginRight: 8 }}>
-              {Object.entries(TIPOS).map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: v.dot }}/>
-                  <span style={{ fontSize: 11, color: '#6b7280' }}>{v.label}</span>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => abrirModal()} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-              Novo agendamento
-            </button>
-          </div>
-        </div>
-
-        {/* Calendário */}
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {/* Cabeçalho dos dias */}
-          <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(7, 1fr)', background: 'transparent', borderBottom: 'none', flexShrink: 0 }}>
-            <div style={{ borderRight: '1px solid #f3f4f6' }}/>
-            {diasSemana.map((dia, i) => {
-              const ags = getAgsDia(dia)
-              return (
-                <div key={i} onClick={() => abrirModal(new Date(dia.setHours(9, 0, 0, 0)))}
-                  style={{ padding: '10px 8px', textAlign: 'center', borderRight: i < 6 ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', background: isHoje(dia) ? '#f0ebff' : 'white', transition: 'background 0.1s' }}>
-                  <p style={{ fontSize: 11, color: isHoje(dia) ? '#6043C1' : '#9ca3af', fontWeight: 600, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    {dia.toLocaleDateString('pt-BR', { weekday: 'short' })}
-                  </p>
-                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: isHoje(dia) ? '#6043C1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                    <p style={{ fontSize: 15, fontWeight: 700, color: isHoje(dia) ? 'white' : '#111827', margin: 0 }}>{dia.getDate()}</p>
-                  </div>
-                  {ags.length > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 4 }}>
-                      {ags.slice(0, 4).map((ag, ai) => (
-                        <div key={ai} style={{ width: 5, height: 5, borderRadius: '50%', background: TIPOS[ag.tipo as keyof typeof TIPOS]?.dot || '#6043C1' }}/>
-                      ))}
-                      {ags.length > 4 && <span style={{ fontSize: 9, color: '#6b7280' }}>+{ags.length - 4}</span>}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Grade de horas */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'white', borderRadius: 12 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(7, 1fr)', minHeight: `${HORAS.length * 64}px` }}>
-              {/* Coluna de horas */}
-              <div style={{ borderRight: '1px solid #e5e7eb', background: 'white', position: 'sticky', left: 0, zIndex: 10 }}>
-                {HORAS.map(h => (
-                  <div key={h} style={{ height: 64, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', paddingRight: 8, paddingTop: 4, borderBottom: 'none' }}>
-                    <span style={{ fontSize: 10, color: '#9ca3af', fontWeight: 600 }}>{h}:00</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Colunas dos dias */}
-              {diasSemana.map((dia, di) => (
-                <div key={di} style={{ borderRight: di < 6 ? '1px solid #e5e7eb' : 'none', background: isHoje(dia) ? '#f8f7ff' : 'white', position: 'relative' }}>
-                  {HORAS.map(h => {
-                    const ags = getAgHora(dia, h)
-                    const agendamentosSlot = agendamentos.filter(a => {
-                      const d = new Date(a.data_hora)
-                      return d.toDateString() === dia.toDateString() && d.getHours() === h
-                    })
-                    return (
-                      <div key={h}
-                        onClick={() => { const d = new Date(dia); d.setHours(h, 0, 0, 0); abrirModal(d) }}
-                        style={{ height: 64, borderBottom: 'none', position: 'relative', cursor: 'pointer', transition: 'background 0.1s' }}
-                        onMouseOver={e => { if (agendamentosSlot.length === 0) e.currentTarget.style.background = '#f9fafb' }}
-                        onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}>
-                        {agendamentosSlot.map((ag, ai) => {
-                          const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
-                          const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Paciente'
-                          return (
-                            <div key={ag.id}
-                              onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
-                              style={{
-                                position: 'absolute', left: `${ai * 6 + 3}px`, right: '3px', top: '2px', bottom: '2px',
-                                background: tipo.bg, border: `1.5px solid ${tipo.border}`,
-                                borderLeft: `3px solid ${tipo.dot}`,
-                                borderRadius: 6, padding: '3px 6px', cursor: 'pointer', zIndex: 10,
-                                overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                              }}>
-                              <p style={{ fontSize: 11, fontWeight: 700, color: tipo.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {new Date(ag.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} {ag.motivo || tipo.label}
-                              </p>
-                              <p style={{ fontSize: 10, color: tipo.text, margin: 0, opacity: 0.75, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {pacNome}
-                              </p>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {renderPainel()}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderHeader()}
+        {viewMode === 'semana' && renderGridSemana()}
+        {viewMode === 'dia'    && renderGridDia()}
+        {viewMode === 'mes'    && renderGridMes()}
       </main>
 
-      {/* Modal */}
+      {listaEsperaOpen && (
+        <div onClick={() => setListaEsperaOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)', zIndex: 90 }}>
+          <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 360, background: 'white', boxShadow: '-8px 0 24px rgba(0,0,0,0.08)', padding: 20, overflow: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Lista de espera</h3>
+              <button onClick={() => setListaEsperaOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, color: '#9ca3af' }}>✕</button>
+            </div>
+            <div style={{ padding: '40px 0', textAlign: 'center', color: '#9ca3af' }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 12px', display: 'block' }}>
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <p style={{ margin: 0, fontSize: 13 }}>Nenhum paciente na lista de espera.</p>
+              <p style={{ margin: '6px 0 0', fontSize: 11 }}>Pacientes aguardando encaixe aparecem aqui.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modal.open && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 24 }}
           onClick={e => { if (e.target === e.currentTarget) setModal({ open: false }) }}>
           <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, overflow: 'hidden' }}>
-            {/* Header modal */}
-            <div style={{ padding: '18px 24px', borderBottom: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f3f0fd', border: '1px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -350,40 +658,34 @@ export default function Agenda() {
               </div>
               <button onClick={() => setModal({ open: false })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
             </div>
-
             <form onSubmit={salvar} style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* Tipos */}
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tipo</label>
+                <label style={labelStyle}>Tipo</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
                   {Object.entries(TIPOS).map(([k, v]) => (
                     <button key={k} type="button" onClick={() => setForm(f => ({...f, tipo: k}))}
-                      style={{ padding: '7px 4px', borderRadius: 8, border: `1.5px solid ${form.tipo === k ? v.dot : '#e5e7eb'}`, background: form.tipo === k ? v.bg : 'white', color: form.tipo === k ? v.text : '#6b7280', fontSize: 12, fontWeight: form.tipo === k ? 700 : 400, cursor: 'pointer', transition: 'all 0.15s' }}>
+                      style={{ padding: '7px 4px', borderRadius: 8, border: `1.5px solid ${form.tipo === k ? v.dot : '#e5e7eb'}`, background: form.tipo === k ? v.bg : 'white', color: form.tipo === k ? v.text : '#6b7280', fontSize: 12, fontWeight: form.tipo === k ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}>
                       {v.label}
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Paciente */}
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Paciente</label>
+                <label style={labelStyle}>Paciente</label>
                 <select value={form.paciente_id} onChange={e => setForm(f => ({...f, paciente_id: e.target.value}))}
                   style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', background: 'white', color: '#111827' }}>
                   <option value="">Selecionar paciente</option>
                   {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
               </div>
-
-              {/* Data/hora + duração */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Data e hora *</label>
+                  <label style={labelStyle}>Data e hora *</label>
                   <input type="datetime-local" required value={form.data_hora} onChange={e => setForm(f => ({...f, data_hora: e.target.value}))}
                     style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }}/>
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Duração</label>
+                  <label style={labelStyle}>Duração</label>
                   <select value={form.duracao} onChange={e => setForm(f => ({...f, duracao: e.target.value}))}
                     style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', background: 'white' }}>
                     <option value="15">15 min</option>
@@ -394,31 +696,25 @@ export default function Agenda() {
                   </select>
                 </div>
               </div>
-
-              {/* Motivo */}
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Motivo</label>
+                <label style={labelStyle}>Motivo</label>
                 <input value={form.motivo} onChange={e => setForm(f => ({...f, motivo: e.target.value}))}
                   style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }}
                   placeholder="Ex: Consulta de rotina, dor abdominal..."/>
               </div>
-
-              {/* Observações */}
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Observações</label>
+                <label style={labelStyle}>Observações</label>
                 <textarea value={form.observacoes} onChange={e => setForm(f => ({...f, observacoes: e.target.value}))}
                   style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', minHeight: 56, resize: 'none' }}
                   placeholder="Observações adicionais..."/>
               </div>
-
-              {/* Status (só ao editar) */}
               {modal.ag && (
-                <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #e5e7eb' }}>
                   <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>Status atual: <strong style={{ color: '#111827' }}>{modal.ag.status}</strong></span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     {modal.ag.status !== 'confirmado' && (
                       <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'confirmado'); setModal(m => ({...m, ag: {...m.ag, status: 'confirmado'}})) }}
-                        style={{ fontSize: 11, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Confirmar</button>
+                        style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Confirmar</button>
                     )}
                     {modal.ag.status !== 'cancelado' && (
                       <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'cancelado'); setModal({ open: false }) }}
@@ -427,30 +723,29 @@ export default function Agenda() {
                   </div>
                 </div>
               )}
-
-              {/* Toggle video */}
               {!modal.ag && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: comVideo ? '#f3f0fd' : '#f9fafb', borderRadius: 10, border: '1px solid ' + (comVideo ? '#d4c9f7' : '#e5e7eb') }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={comVideo ? '#6043C1' : '#9ca3af'} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: comVideo ? '#6043C1' : '#374151', margin: 0 }}>Incluir sala de video</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: comVideo ? '#6043C1' : '#374151', margin: 0 }}>Incluir sala de vídeo</p>
                       <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Link gerado automaticamente</p>
                     </div>
                   </div>
-                  <button type="button" onClick={() => { setComVideo(!comVideo); setSalaLink(''); setSalaId('') }} style={{ width: 42, height: 24, borderRadius: 12, border: 'none', background: comVideo ? '#6043C1' : '#d1d5db', cursor: 'pointer', position: 'relative' as const, flexShrink: 0 }}>
-                    <span style={{ position: 'absolute' as const, top: 2, left: comVideo ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left .2s' }}/>
+                  <button type="button" onClick={() => { setComVideo(!comVideo); setSalaLink(''); setSalaId('') }}
+                    style={{ width: 42, height: 24, borderRadius: 12, border: 'none', background: comVideo ? '#6043C1' : '#d1d5db', cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
+                    <span style={{ position: 'absolute', top: 2, left: comVideo ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left .2s' }}/>
                   </button>
                 </div>
               )}
               {salaLink && (
                 <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                  <span style={{ fontSize: 11, color: '#4e35a3', flex: 1, overflow: 'hidden', background: 'white', borderRadius: 12, textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{salaLink}</span>
-                  <button type="button" onClick={() => { navigator.clipboard.writeText(salaLink); window.open('/sala/' + salaId, '_blank') }} style={{ fontSize: 11, color: '#6043C1', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>Copiar e abrir</button>
+                  <span style={{ fontSize: 11, color: '#4e35a3', flex: 1, overflow: 'hidden', background: 'white', padding: '4px 8px', borderRadius: 6, textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salaLink}</span>
+                  <button type="button" onClick={() => { navigator.clipboard.writeText(salaLink); window.open('/sala/' + salaId, '_blank') }}
+                    style={{ fontSize: 11, color: '#6043C1', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' }}>Copiar e abrir</button>
                 </div>
               )}
-              {/* Pre-consulta WhatsApp */}
               {modal.ag && modal.ag.paciente_id && (
                 <div style={{ background: preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#f0fdf4' : '#f0ebff', border: '1px solid ' + (preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#bbf7d0' : '#d4c9f7'), borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
@@ -468,37 +763,31 @@ export default function Agenda() {
                   )}
                 </div>
               )}
-
-              {/* Botões */}
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-                <button type="submit" disabled={salvando} style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                <button type="submit" disabled={salvando}
+                  style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   {salvando ? 'Salvando...' : modal.ag ? 'Salvar alterações' : 'Criar agendamento'}
                 </button>
-                {(() => {
-                  const ag = modal.ag
-                  if (!ag) return null
-                  return (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const params = new URLSearchParams()
-                          if (ag.paciente_id) params.set('paciente_id', ag.paciente_id)
-                          if (ag.pacientes?.nome) params.set('paciente_nome', ag.pacientes.nome)
-                          if (ag.pacientes?.telefone) params.set('paciente_tel', ag.pacientes.telefone || '')
-                          router.push('/nova-consulta?' + params.toString())
-                        }}
-                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#059669', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
-                        Iniciar consulta
-                      </button>
-                      <button type="button" onClick={() => deletar(ag.id)}
-                        style={{ padding: '11px 16px', borderRadius: 9, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                      </button>
-                    </>
-                  )
-                })()}
+                {modal.ag && (
+                  <>
+                    <button type="button" onClick={() => {
+                      const ag = modal.ag
+                      const params = new URLSearchParams()
+                      if (ag.paciente_id) params.set('paciente_id', ag.paciente_id)
+                      if (ag.pacientes?.nome) params.set('paciente_nome', ag.pacientes.nome)
+                      if (ag.pacientes?.telefone) params.set('paciente_tel', ag.pacientes.telefone || '')
+                      router.push('/nova-consulta?' + params.toString())
+                    }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#059669', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+                      Iniciar consulta
+                    </button>
+                    <button type="button" onClick={() => deletar(modal.ag.id)}
+                      style={{ padding: '11px 16px', borderRadius: 9, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                    </button>
+                  </>
+                )}
               </div>
             </form>
           </div>
