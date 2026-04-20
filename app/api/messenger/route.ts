@@ -52,6 +52,9 @@ export async function POST(req: NextRequest) {
         const texto = event.message.text || ''
         if (!texto.trim()) continue
 
+        const MEDICO_ID = await getMedicoIdFallback()
+        if (!MEDICO_ID) continue
+
         let nomeMsg = senderId
         try {
           const profileRes = await fetch(
