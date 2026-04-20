@@ -450,7 +450,12 @@ export default function WhatsAppApp() {
                       )}
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}}>
-                          <p style={{fontSize:15,fontWeight:cv.naoLidas>0?600:400,color:'#111827',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{nomeCv(cv)}</p>
+                          <p style={{fontSize:15,fontWeight:cv.naoLidas>0?600:400,color:'#111827',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>
+                          {cv.canal==='instagram'&&<span style={{marginRight:4}} title="Instagram">📸</span>}
+                          {cv.canal==='messenger'&&<span style={{marginRight:4}} title="Messenger">💬</span>}
+                          {(!cv.canal||cv.canal==='whatsapp')&&<span style={{marginRight:4}} title="WhatsApp">📱</span>}
+                          {nomeCv(cv)}
+                        </p>
                           <span style={{fontSize:11,color:cv.naoLidas>0?'#25d366':'#667781',flexShrink:0,marginLeft:8}}>{cv.ultima?fmt(cv.ultima.criado_em):''}</span>
                         </div>
                         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>

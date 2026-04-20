@@ -303,16 +303,22 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
                 <button onClick={salvarConfig} disabled={salvandoConfig} style={btn('#00a884')}>{salvandoConfig?'Salvando...':'Salvar configurações'}</button>
               </div>
               <div style={{marginTop:24,padding:'14px 18px',background:'#f9fafb',borderRadius:10,border:'1px solid #e5e7eb'}}>
-                <p style={{fontSize:12,fontWeight:700,color:'#374151',margin:'0 0 10px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Webhook Meta</p>
-                <div style={{marginBottom:8}}>
-                  <p style={{fontSize:11,color:'#6b7280',margin:'0 0 4px'}}>URL do Callback</p>
-                  <div style={{display:'flex',alignItems:'center',gap:8}}>
-                    <code style={{fontSize:12,background:'#f3f4f6',padding:'6px 10px',borderRadius:6,flex:1,wordBreak:'break-all'}}>https://prontuario-ia-five.vercel.app/api/whatsapp</code>
-                    <button onClick={()=>navigator.clipboard.writeText('https://prontuario-ia-five.vercel.app/api/whatsapp')} style={{...btn('#6b7280'),padding:'6px 10px',fontSize:11}}>Copiar</button>
+                <p style={{fontSize:12,fontWeight:700,color:'#374151',margin:'0 0 12px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Webhooks Meta</p>
+                {[
+                  {nome:'WhatsApp 📱', url:'https://prontuario-ia-five.vercel.app/api/whatsapp'},
+                  {nome:'Instagram 📸', url:'https://prontuario-ia-five.vercel.app/api/instagram'},
+                  {nome:'Messenger 💬', url:'https://prontuario-ia-five.vercel.app/api/messenger'},
+                ].map(w=>(
+                  <div key={w.nome} style={{marginBottom:12}}>
+                    <p style={{fontSize:11,color:'#6b7280',margin:'0 0 4px',fontWeight:600}}>{w.nome}</p>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <code style={{fontSize:11,background:'#f3f4f6',padding:'6px 10px',borderRadius:6,flex:1,wordBreak:'break-all'}}>{w.url}</code>
+                      <button onClick={()=>navigator.clipboard.writeText(w.url)} style={{...btn('#6b7280'),padding:'6px 10px',fontSize:11,flexShrink:0}}>Copiar</button>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p style={{fontSize:11,color:'#6b7280',margin:'0 0 4px'}}>Token de verificação</p>
+                ))}
+                <div style={{marginTop:8}}>
+                  <p style={{fontSize:11,color:'#6b7280',margin:'0 0 4px',fontWeight:600}}>Token de verificação (todos os canais)</p>
                   <div style={{display:'flex',alignItems:'center',gap:8}}>
                     <code style={{fontSize:12,background:'#f3f4f6',padding:'6px 10px',borderRadius:6,flex:1}}>media_whatsapp_2026</code>
                     <button onClick={()=>navigator.clipboard.writeText('media_whatsapp_2026')} style={{...btn('#6b7280'),padding:'6px 10px',fontSize:11}}>Copiar</button>
