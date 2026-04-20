@@ -85,7 +85,7 @@ export default function SuperAdmin() {
 
   if (!autenticado) return (
     <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 40, width: 360 }}>
+      <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, width: 360 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
           <div style={{ width: 36, height: 36, borderRadius: 9, background: '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
@@ -136,7 +136,7 @@ export default function SuperAdmin() {
         </div>
       </div>
 
-      <div style={{ padding: 32, maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
 
         {/* STATS */}
         {aba === 'stats' && stats && (

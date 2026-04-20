@@ -109,7 +109,7 @@ export default function Ditado() {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: '24px', paddingTop: 28, display: 'grid', gridTemplateColumns: prontuario ? '1fr 1fr' : '1fr', gap: 20, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
+        <div style={{ flex: 1, overflow: 'auto', paddingTop: 28, display: 'grid', gridTemplateColumns: prontuario ? '1fr 1fr' : '1fr', gap: 20, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
 
           {/* Coluna esquerda — entrada */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -171,7 +171,7 @@ export default function Ditado() {
                   value={textoDireto}
                   onChange={e => setTextoDireto(e.target.value)}
                   placeholder="Digite o relato da consulta livremente... A IA vai estruturar em formato SOAP."
-                  style={{ width: '100%', minHeight: 240, padding: 24, fontSize: 13, color: '#374151', lineHeight: 1.8, border: 'none', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
+                  style={{ width: '100%', minHeight: 240, fontSize: 13, color: '#374151', lineHeight: 1.8, border: 'none', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
                 />
               )}
             </div>

@@ -52,7 +52,7 @@ export default function Configuracoes() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
-      <main style={{ flex: 1, overflow: 'auto', padding: 32 }}>
+      <main style={{ flex: 1, overflow: 'auto' }}>
         <div style={{ maxWidth: 680 }}>
           <h1 style={{ fontSize: 20, fontWeight: 800, color: '#111827', margin: '0 0 6px', letterSpacing: '-0.3px' }}>Configuracoes</h1>
           <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 32px' }}>Gerencie as integracoes da sua clinica</p>

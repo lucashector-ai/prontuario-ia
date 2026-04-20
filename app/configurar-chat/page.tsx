@@ -155,7 +155,7 @@ REGRAS:
     <div style={{ ...s, minHeight: '100vh', background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       
       {passo === 'intro' && (
-        <div style={{ background: 'white', borderRadius: 20, padding: 40, maxWidth: 480, width: '100%', textAlign: 'center' }}>
+        <div style={{ background: 'white', borderRadius: 20, maxWidth: 480, width: '100%', textAlign: 'center' }}>
           <div style={{ width: 72, height: 72, background: '#d9fdd3', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <span style={{ fontSize: 32 }}>🤖</span>
           </div>
@@ -259,7 +259,7 @@ REGRAS:
       )}
 
       {passo === 'pronto' && (
-        <div style={{ background: 'white', borderRadius: 20, padding: 40, maxWidth: 440, width: '100%', textAlign: 'center' }}>
+        <div style={{ background: 'white', borderRadius: 20, maxWidth: 440, width: '100%', textAlign: 'center' }}>
           <div style={{ fontSize: 64, marginBottom: 16 }}>🎉</div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Sofia configurada!</h1>
           <p style={{ fontSize: 15, color: '#6b7280', margin: '0 0 32px', lineHeight: 1.6 }}>

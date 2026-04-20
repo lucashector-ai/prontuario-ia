@@ -92,7 +92,7 @@ export default function Admin() {
           </button>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>
           {carregando ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
               <div style={{ width: 32, height: 32, border: '3px solid #E8F7EF', borderTopColor: '#1F9D5C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -140,7 +140,7 @@ export default function Admin() {
 
       {modalNovoMedico && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalNovoMedico(false) }}>
-          <div style={{ background: 'white', borderRadius: 16, padding: 32, width: 420 }}>
+          <div style={{ background: 'white', borderRadius: 16, width: 420 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 20px' }}>Novo médico</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[

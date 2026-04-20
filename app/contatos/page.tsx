@@ -57,7 +57,7 @@ export default function Contatos() {
         </div>
 
         {/* Lista */}
-        <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>
           {carregando ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
               <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid #e5e7eb', borderTopColor: '#00a884', animation: 'spin 0.8s linear infinite' }} />

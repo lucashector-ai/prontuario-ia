@@ -259,7 +259,7 @@ export default function Home() {
       {/* Modal seleção de paciente */}
       {modalPaciente && !prontuario && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: 'white', borderRadius: 16, padding: '32px', width: 440 }}>
+          <div style={{ background: 'white', borderRadius: 16, width: 440 }}>
             <div style={{ marginBottom: 24 }}>
               <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Nova consulta</h2>
               <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Vincule a um paciente ou inicie uma consulta avulsa.</p>
@@ -447,7 +447,7 @@ export default function Home() {
             </div>
 
             {/* Transcrição section */}
-            <div style={{ flex: 1, padding: '24px 32px', overflow: 'auto' }}>
+            <div style={{ flex: 1, overflow: 'auto' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                 <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>Transcrição</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -542,7 +542,7 @@ export default function Home() {
                   ))}
                 </div>
 
-                <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
+                <div style={{ flex: 1, overflow: 'auto' }}>
                   {aba === 'prontuario' && (
                     <>
                       <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} insights={copiloto?.insights} padroes={copiloto?.padroes} totalConsultas={copiloto?.total_consultas} />

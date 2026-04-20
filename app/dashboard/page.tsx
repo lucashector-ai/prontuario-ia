@@ -190,7 +190,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>
           {carregando ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
               <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid #E8F7EF', borderTopColor: '#1F9D5C', animation: 'spin 0.8s linear infinite' }}/>

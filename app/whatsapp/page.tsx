@@ -706,7 +706,7 @@ REGRAS:
 
         {/* ABA SOFIA */}
         {aba === 'sofia' && (
-          <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+          <div style={{ flex: 1, overflow: 'auto' }}>
             <div style={{ maxWidth: 720 }}>
               <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -745,7 +745,7 @@ REGRAS:
 
         {/* ABA EQUIPE */}
         {aba === 'equipe' && (
-          <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+          <div style={{ flex: 1, overflow: 'auto' }}>
             <div style={{ maxWidth: 680 }}>
               <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
@@ -801,7 +801,7 @@ REGRAS:
         {/* ABA CONFIGURACAO */}
 
           {aba === 'alertas' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', background: '#F5F5F5' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Alertas e riscos</h2>
@@ -870,7 +870,7 @@ REGRAS:
                   )}
                 </div>
                 {inativos.length === 0 ? (
-                  <div style={{ background: 'white', borderRadius: 12, padding: 24, textAlign: 'center' }}>
+                  <div style={{ background: 'white', borderRadius: 12, textAlign: 'center' }}>
                     <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>Nenhum paciente inativo nos ultimos 7 dias</p>
                   </div>
                 ) : (
@@ -895,7 +895,7 @@ REGRAS:
 
 
           {aba === 'campanha' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', background: '#F5F5F5' }}>
               <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Campanhas</h2>
               <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px' }}>Envie mensagens personalizadas para seus pacientes</p>
 
@@ -947,7 +947,7 @@ REGRAS:
           )}
 
           {aba === 'relatorio' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', background: '#F5F5F5' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Relatorio semanal</h2>
@@ -1013,7 +1013,7 @@ REGRAS:
 
 
           {aba === 'aderencia' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', background: '#F5F5F5' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Score de Aderencia</h2>
@@ -1066,7 +1066,7 @@ REGRAS:
           )}
 
           {aba === 'agenda' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', background: '#F5F5F5' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Confirmacoes pendentes</h2>
@@ -1126,7 +1126,7 @@ REGRAS:
 
 
           {aba === 'dashboard' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', background: '#F5F5F5' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dashboard WhatsApp</h2>
@@ -1199,7 +1199,7 @@ REGRAS:
           )}
 
           {aba === 'nps' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', background: '#F5F5F5' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>NPS - Satisfacao</h2>
@@ -1272,7 +1272,7 @@ REGRAS:
           )}
 
         {aba === 'transmissao' && (
-          <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+          <div style={{ flex: 1, overflow: 'auto', background: '#F5F5F5' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20, height: '100%', alignContent: 'start' }}>
 
               {/* Lista de grupos */}
@@ -1295,7 +1295,7 @@ REGRAS:
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {listas.length === 0 ? (
-                    <div style={{ background: 'white', borderRadius: 12, padding: '24px', textAlign: 'center' }}>
+                    <div style={{ background: 'white', borderRadius: 12, textAlign: 'center' }}>
                       <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Nenhuma lista criada</p>
                     </div>
                   ) : listas.map((l: any) => (
@@ -1363,7 +1363,7 @@ REGRAS:
         )}
 
         {aba === 'configuracao' && (
-          <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+          <div style={{ flex: 1, overflow: 'auto' }}>
             <div style={{ maxWidth: 680 }}>
               {config && (
                 <div style={{ background: '#F5F5F5', border: '1px solid #A7E0BF', borderRadius: 12, padding: '12px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

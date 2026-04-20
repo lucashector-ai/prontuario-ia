@@ -64,12 +64,12 @@ export default function MinhaClinica() {
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       <main style={{ flex: 1, overflow: 'auto' }}>
-        <div style={{ maxWidth: 720, margin: '0 auto', padding: 32 }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Minha Clínica</h1>
           <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 32px' }}>Configure as informações da sua clínica</p>
 
           {/* Card logo */}
-          <div style={{ background: 'white', borderRadius: 14, padding: 24, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ background: 'white', borderRadius: 14, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }}
               onClick={() => (document.getElementById('logo-input') as HTMLInputElement)?.click()}>
               {clinica?.logo_url
@@ -92,7 +92,7 @@ export default function MinhaClinica() {
           </div>
 
           {/* Formulário */}
-          <div style={{ background: 'white', borderRadius: 14, padding: 24 }}>
+          <div style={{ background: 'white', borderRadius: 14 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 20px' }}>Informações da clínica</h2>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
@@ -136,7 +136,7 @@ export default function MinhaClinica() {
           </div>
 
           {/* Médicos da clínica */}
-          <div style={{ background: 'white', borderRadius: 14, padding: 24, marginTop: 20 }}>
+          <div style={{ background: 'white', borderRadius: 14, marginTop: 20 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Equipe médica</h2>
             <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Médicos cadastrados na sua clínica</p>
             <div style={{ padding: 20, background: '#F5F5F5', borderRadius: 10, textAlign: 'center', color: '#6b7280', fontSize: 13 }}>

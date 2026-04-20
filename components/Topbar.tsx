@@ -146,7 +146,7 @@ export function Topbar() {
     }}>
       {/* ESQUERDA — Busca */}
       <div ref={buscaRef}
-        style={{ width: 320, position: 'relative' }}>
+        style={{ flex: 1, maxWidth: 440, position: 'relative' }}>
         <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke={TEXT_MUTED} strokeWidth='2'
           style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
           <circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/>
@@ -160,8 +160,8 @@ export function Topbar() {
           onFocus={() => { setBuscaFocus(true); if (busca.length >= 2) setResultadosOpen(true) }}
           onBlur={() => setBuscaFocus(false)}
           style={{
-            width: '100%', height: 40,
-            padding: '0 14px 0 38px',
+            width: '100%', height: 36,
+            padding: '0 14px 0 36px',
             background: BUSCA_BG,
             border: 'none', borderRadius: 10,
             outline: 'none', fontSize: 13, color: TEXT_DEFAULT,

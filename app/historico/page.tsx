@@ -107,9 +107,9 @@ export default function Historico() {
           </div>
         </div>
         {carregando ? (
-              <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Carregando...</p>
+              <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center' }}>Carregando...</p>
             ) : consultas.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 32 }}>Nenhuma consulta registrada</p>
+              <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center' }}>Nenhuma consulta registrada</p>
             ) : consultasFiltradas.map(c => (
               <div key={c.id} onClick={() => handleSelecionar(c)} style={{
                 padding: '12px', borderRadius: 10, marginBottom: 6, cursor: 'pointer',

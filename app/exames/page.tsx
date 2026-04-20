@@ -90,7 +90,7 @@ export default function Exames() {
                   </button>
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: 40 }}>
+                <div style={{ textAlign: 'center' }}>
                   <div style={{ width: 56, height: 56, borderRadius: 14, background: '#F5F5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1F9D5C" strokeWidth="1.5">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>

@@ -70,7 +70,7 @@ export default function SofiaConfig() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
-      <main style={{ flex: 1, overflow: 'auto', padding: '24px 32px' }}>
+      <main style={{ flex: 1, overflow: 'auto' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 42, height: 42, borderRadius: 10, background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

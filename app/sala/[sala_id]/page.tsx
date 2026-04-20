@@ -541,7 +541,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   )
 
   if (tela === 'erro') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', flexDirection: 'column', gap: 16, padding: 24 }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', flexDirection: 'column', gap: 16 }}>
       <div style={{ width: 56, height: 56, borderRadius: 14, background: '#7f1d1d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
       </div>
@@ -692,7 +692,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
 
   if (tela === 'espera') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', gap: 20, padding: 24 }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', gap: 20 }}>
       {papelRef.current === 'paciente' ? (
         <>
           <div style={{ width: 96, height: 96, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

@@ -25,7 +25,7 @@ export default function HistóricoSala() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f8fafb' }}>
-      <div style={{ flex: 1, overflow: 'auto', padding: 32 }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
         {loading ? <p>Carregando...</p> : (
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
             <button onClick={() => router.back()} style={{ fontSize: 12, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', marginBottom: 16 }}>Voltar</button>

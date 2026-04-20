@@ -88,7 +88,7 @@ export default function Dicionario() {
           <span style={{ fontSize: 12, color: '#1F9D5C', background: '#E8F7EF', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{termos.length} termos</span>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: 24, display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20, alignContent: 'start' }}>
+        <div style={{ flex: 1, overflow: 'auto', display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20, alignContent: 'start' }}>
 
           {/* Formulário adicionar */}
           <div style={{ background: 'white', borderRadius: 12, padding: 20, height: 'fit-content' }}>
@@ -133,7 +133,7 @@ export default function Dicionario() {
             </div>
 
             {carregando ? (
-              <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <div style={{ width: 28, height: 28, border: '3px solid #E8F7EF', borderTopColor: '#1F9D5C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
               </div>
             ) : termosFiltrados.length === 0 ? (

@@ -106,11 +106,11 @@ export default function Pacientes() {
           <span style={{ fontSize: 12, color: '#9ca3af', marginLeft: 4 }}>{pacientesFiltrados.length} resultado{pacientesFiltrados.length !== 1 ? 's' : ''}</span>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>
           <div style={{ maxWidth: 760, margin: '0 auto' }}>
 
             {mostrarForm && (
-              <div style={{ background: 'white', borderRadius: 14, padding: 24, marginBottom: 20 }}>
+              <div style={{ background: 'white', borderRadius: 14, marginBottom: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                   <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Cadastrar novo paciente</h2>
                   <button onClick={() => setMostrarForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 18 }}>✕</button>
@@ -161,7 +161,7 @@ export default function Pacientes() {
             </div>
 
             {carregando ? (
-              <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: 40 }}>Carregando...</p>
+              <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Carregando...</p>
             ) : pacientesFiltrados.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60 }}>
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: '#E8F7EF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>

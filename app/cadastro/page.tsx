@@ -238,7 +238,7 @@ export default function Cadastro() {
   // SUCESSO
   return (
     <div style={{ ...s, minHeight: '100vh', background: 'linear-gradient(135deg, #f8f7ff 0%, #f0fdf4 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ maxWidth: 440, width: '100%', background: 'white', borderRadius: 20, padding: 40, textAlign: 'center' }}>
+      <div style={{ maxWidth: 440, width: '100%', background: 'white', borderRadius: 20, textAlign: 'center' }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
         <h2 style={{ fontSize: 24, fontWeight: 800, color: '#111827', margin: '0 0 8px' }}>
           {tipo === 'clinica' ? 'Clínica criada!' : 'Bem-vindo ao MedIA!'}
