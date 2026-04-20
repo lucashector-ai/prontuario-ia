@@ -23,7 +23,7 @@ export default function WhatsAppApp() {
   const [menuConversa, setMenuConversa] = useState<{id:string,x:number,y:number}|null>(null)
   const [gravando, setGravando] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder|null>(null)
-  const [aba, setAba] = useState<'chats'|'equipe'>('chats')
+  const [aba, setAba] = useState<'chats'|'equipe'|'contatos'>('chats')
   const [atendentes, setAtendentes] = useState<any[]>([])
   const [novoAt, setNovoAt] = useState({nome:'',email:'',senha:'',cargo:'Atendente'})
   const [salvandoAt, setSalvandoAt] = useState(false)
@@ -315,27 +315,15 @@ export default function WhatsAppApp() {
         <div title="Chats" onClick={()=>setAba('chats')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:aba==='chats'?'#00a884':'#54656f',marginBottom:4}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         </div>
-        <div title="Equipe" onClick={()=>setAba('equipe')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:aba==='equipe'?'#00a884':'#54656f',marginBottom:4}}>
+        <div title="Contatos" onClick={()=>setAba('contatos')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:aba==='contatos'?'#00a884':'#54656f',marginBottom:4}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         </div>
-        <div title="Info da conexão" onClick={()=>setShowInfo(v=>!v)} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:showInfo?'#00a884':'#54656f',marginBottom:4}}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <div title="Ir para configurações" onClick={()=>router.push('/whatsapp?tab=configuracao')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+        <div title="Equipe" onClick={()=>setAba('equipe')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:aba==='equipe'?'#00a884':'#54656f',marginBottom:4}}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
         </div>
         <div style={{flex:1}}/>
-        <div title="Configurar Sofia IA" onClick={()=>router.push('/configurar-chat')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
-          <span style={{fontSize:18}}>🤖</span>
-        </div>
-        <div title="Central WhatsApp" onClick={()=>setShowConfig(v=>!v)} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:showConfig?'#00a884':'#54656f',marginBottom:4}}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </div>
-        <div title="Configurações WhatsApp" onClick={()=>router.push('/whatsapp')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        </div>
-        <div title="Contatos" onClick={()=>router.push('/contatos')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <div title="Configurações" onClick={()=>setShowConfig(v=>!v)} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:showConfig?'#00a884':'#54656f',marginBottom:4}}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </div>
         <div title="Voltar à plataforma" onClick={()=>router.push('/dashboard')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#54656f',marginBottom:4}}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -502,6 +490,39 @@ export default function WhatsAppApp() {
               })()}
             </div>
           </>
+        )}
+
+        {/* ABA CONTATOS */}
+        {aba==='contatos'&&(
+          <div style={{display:'flex',flexDirection:'column' as const,height:'100%'}}>
+            <div style={{padding:'16px',borderBottom:'1px solid #f0f2f5',flexShrink:0}}>
+              <h3 style={{fontSize:16,fontWeight:700,color:'#111827',margin:'0 0 10px'}}>Contatos</h3>
+              <input placeholder="Buscar..." style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #d1d7db',outline:'none',fontSize:13}} onChange={e=>{const v=e.target.value.toLowerCase();const els=document.querySelectorAll('.contato-item');els.forEach((el:any)=>{el.style.display=el.dataset.nome?.toLowerCase().includes(v)?'flex':'none'})}}/>
+            </div>
+            <div style={{flex:1,overflowY:'auto' as const}}>
+              {conversas.length===0?(
+                <div style={{padding:32,textAlign:'center' as const,color:'#667781',fontSize:13}}>Nenhum contato ainda</div>
+              ):conversas.map(cv=>(
+                <div key={cv.id} className="contato-item" data-nome={cv.nome_contato||cv.telefone}
+                  onClick={()=>{setAtiva(cv);setAba('chats')}}
+                  style={{display:'flex',alignItems:'center',gap:12,padding:'10px 16px',cursor:'pointer',borderBottom:'1px solid #f0f2f5'}}
+                  onMouseEnter={e=>(e.currentTarget.style.background='#f5f6f6')}
+                  onMouseLeave={e=>(e.currentTarget.style.background='white')}>
+                  {cv.foto_url
+                    ?<img src={cv.foto_url} style={{width:42,height:42,borderRadius:'50%',objectFit:'cover' as const,flexShrink:0}}/>
+                    :<div style={{width:42,height:42,borderRadius:'50%',background:'#dfe5e7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,color:'#54656f',flexShrink:0}}>{ini(cv.nome_contato||cv.telefone)}</div>
+                  }
+                  <div style={{flex:1,minWidth:0}}>
+                    <p style={{fontSize:14,fontWeight:500,color:'#111827',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{cv.nome_contato||cv.telefone}</p>
+                    <p style={{fontSize:12,color:'#667781',margin:0}}>{cv.telefone}</p>
+                  </div>
+                  <span style={{fontSize:10,padding:'2px 6px',borderRadius:10,background:cv.status==='encerrada'?'#f3f4f6':cv.modo==='ia'?'#d9fdd3':'#dbeafe',color:cv.status==='encerrada'?'#6b7280':cv.modo==='ia'?'#166534':'#1e40af',fontWeight:500,flexShrink:0}}>
+                    {cv.status==='encerrada'?'Encerrado':cv.modo==='ia'?'Sofia':'Humano'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* ABA EQUIPE */}
