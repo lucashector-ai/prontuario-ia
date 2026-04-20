@@ -146,38 +146,32 @@ export function Topbar() {
       gap: 8, padding: '0 20px', flexShrink: 0,
     }}>
       {/* ESQUERDA — Busca */}
-      <div ref={buscaRef} style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
-        <div
-          onClick={() => inputRef.current?.focus()}
-          onMouseEnter={() => setBuscaHover(true)}
-          onMouseLeave={() => setBuscaHover(false)}
+      <div ref={buscaRef}
+        onMouseEnter={() => setBuscaHover(true)}
+        onMouseLeave={() => setBuscaHover(false)}
+        style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
+        <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke={TEXT_MUTED} strokeWidth='2'
+          style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+          <circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/>
+        </svg>
+        <input
+          ref={inputRef}
+          type='text'
+          placeholder='Buscar pacientes, agendamentos...'
+          value={busca}
+          onChange={e => setBusca(e.target.value)}
+          onFocus={() => { setBuscaFocus(true); if (busca.length >= 2) setResultadosOpen(true) }}
+          onBlur={() => setBuscaFocus(false)}
           style={{
-            display: 'flex', alignItems: 'center', gap: 12,
+            width: '100%', height: 44,
+            padding: '0 16px 0 42px',
             background: buscaBg,
-            borderRadius: 12,
-            padding: '0 16px', height: 44,
-            cursor: 'text',
+            border: 'none', borderRadius: 12,
+            outline: 'none', fontSize: 14, color: TEXT_DEFAULT,
             transition: 'background 0.15s',
+            boxSizing: 'border-box',
           }}
-        >
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke={TEXT_MUTED} strokeWidth='2' style={{ flexShrink: 0 }}>
-            <circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/>
-          </svg>
-          <input
-            ref={inputRef}
-            type='text'
-            placeholder='Buscar pacientes, agendamentos...'
-            value={busca}
-            onChange={e => setBusca(e.target.value)}
-            onFocus={() => { setBuscaFocus(true); if (busca.length >= 2) setResultadosOpen(true) }}
-            onBlur={() => setBuscaFocus(false)}
-            style={{
-              flex: 1, border: 'none', background: 'transparent',
-              outline: 'none', fontSize: 14, color: TEXT_DEFAULT,
-              padding: 0, height: '100%',
-            }}
-          />
-        </div>
+        />
 
         {resultadosOpen && busca.length >= 2 && (
           <div style={{
