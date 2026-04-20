@@ -78,8 +78,6 @@ export default function Historico() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
-      <Sidebar />
-
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '16px 16px 16px 0', gap: 0, background: '#F9FAFC' }}>
         {/* Header */}
         <div style={{ padding: '16px 24px 12px', borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>

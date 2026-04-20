@@ -81,7 +81,6 @@ export default function ClinicaPage() {
 
   if (carregando) return (
     <div style={{ display: "flex", height: "100vh", background: "#F9FAFC" }}>
-      <Sidebar />
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid #ede9fb", borderTopColor: "#6043C1", animation: "spin 0.8s linear infinite" }}/>
       </div>
@@ -91,7 +90,6 @@ export default function ClinicaPage() {
 
   if (!medico?.clinica_id) return (
     <div style={{ display: "flex", height: "100vh", background: "#F9FAFC" }}>
-      <Sidebar />
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
         <p style={{ fontSize: 15, color: "#6b7280" }}>Sua conta não está associada a nenhuma clínica.</p>
         <p style={{ fontSize: 13, color: "#9ca3af" }}>Crie uma nova conta para configurar sua clínica.</p>
@@ -101,7 +99,6 @@ export default function ClinicaPage() {
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#F9FAFC", overflow: "hidden" }}>
-      <Sidebar />
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 28px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <div>

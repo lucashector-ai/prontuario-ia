@@ -252,8 +252,6 @@ export default function Home() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F9FAFC' }}>
-      <Sidebar />
-
       <Suspense fallback={null}>
         <SearchParamsReader onParams={handleSearchParams} />
       </Suspense>

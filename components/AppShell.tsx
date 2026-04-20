@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { Topbar } from './Topbar'
+import { Sidebar } from './Sidebar'
 
 const ROTAS_PUBLICAS = ['/login', '/cadastro', '/forgot-password', '/reset-password']
 const PREFIXOS_PUBLICOS = ['/sala/', '/pre-consulta/', '/paciente-publico/']
@@ -17,13 +18,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (ehPublica) return <>{children}</>
 
   return (
-    <>
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 80 }}>
-        <Topbar />
+    <div style={{
+      minHeight: '100vh',
+      background: '#EAECEF',
+      padding: 12,
+      display: 'flex',
+    }}>
+      <div style={{
+        flex: 1,
+        background: 'white',
+        borderRadius: 20,
+        display: 'flex',
+        overflow: 'hidden',
+        minHeight: 'calc(100vh - 24px)',
+      }}>
+        {/* Sidebar dentro do card */}
+        <Sidebar />
+        
+        {/* Área de conteúdo com topbar + children */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}>
+          <Topbar />
+          <div style={{
+            flex: 1,
+            overflow: 'auto',
+          }}>
+            {children}
+          </div>
+        </div>
       </div>
-      <div style={{ paddingTop: 56 }}>
-        {children}
-      </div>
-    </>
+    </div>
   )
 }

@@ -70,7 +70,6 @@ export default function SofiaConfig() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
-      <Sidebar />
       <main style={{ flex: 1, overflow: 'auto', padding: '24px 32px' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>

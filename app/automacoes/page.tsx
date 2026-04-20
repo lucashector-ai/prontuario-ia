@@ -67,7 +67,6 @@ export default function AutomacoesPage() {
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#F9FAFC", overflow: "hidden" }}>
-      <Sidebar />
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         <div style={{ padding: "0 28px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>

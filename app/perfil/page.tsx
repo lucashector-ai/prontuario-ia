@@ -98,7 +98,6 @@ export default function PerfilPage() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC' }}>
-      <Sidebar />
       <main style={{ flex: 1, overflow: 'auto', padding: '32px 40px' }}>
         <div style={{ maxWidth: 640 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Meu perfil</h1>

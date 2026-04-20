@@ -25,7 +25,6 @@ export default function HistóricoSala() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f8fafb' }}>
-      <Sidebar />
       <div style={{ flex: 1, overflow: 'auto', padding: 32 }}>
         {loading ? <p>Carregando...</p> : (
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
