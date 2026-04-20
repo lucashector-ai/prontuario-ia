@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase'
 const ACCENT = '#1F9D5C'
 const TEXT_DEFAULT = '#111827'
 const TEXT_MUTED = '#6B7280'
+const BUSCA_BG = '#F3F4F6'
+const BUSCA_BG_HOVER = '#E9EBEF'
 
 export function Topbar() {
   const router = useRouter()
@@ -20,6 +22,7 @@ export function Topbar() {
 
   const [busca, setBusca] = useState('')
   const [buscaFocus, setBuscaFocus] = useState(false)
+  const [buscaHover, setBuscaHover] = useState(false)
   const [resultadosOpen, setResultadosOpen] = useState(false)
   const [resultados, setResultados] = useState<{ pacientes: any[]; agendamentos: any[] }>({ pacientes: [], agendamentos: [] })
   const [buscando, setBuscando] = useState(false)
@@ -133,12 +136,99 @@ export function Topbar() {
     transition: 'background 0.12s',
   })
 
+  // Fundo da busca: normal, hover, ou focus
+  const buscaBg = buscaFocus ? BUSCA_BG : (buscaHover ? BUSCA_BG_HOVER : BUSCA_BG)
+
   return (
     <header style={{
       height: 64, background: 'white',
       display: 'flex', alignItems: 'center',
       gap: 8, padding: '0 20px', flexShrink: 0,
     }}>
+      {/* ESQUERDA — Busca */}
+      <div ref={buscaRef} style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
+        <div
+          onClick={() => inputRef.current?.focus()}
+          onMouseEnter={() => setBuscaHover(true)}
+          onMouseLeave={() => setBuscaHover(false)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            background: buscaBg,
+            borderRadius: 12,
+            padding: '0 16px', height: 44,
+            cursor: 'text',
+            transition: 'background 0.15s',
+          }}
+        >
+          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke={TEXT_MUTED} strokeWidth='2' style={{ flexShrink: 0 }}>
+            <circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/>
+          </svg>
+          <input
+            ref={inputRef}
+            type='text'
+            placeholder='Buscar pacientes, agendamentos...'
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+            onFocus={() => { setBuscaFocus(true); if (busca.length >= 2) setResultadosOpen(true) }}
+            onBlur={() => setBuscaFocus(false)}
+            style={{
+              flex: 1, border: 'none', background: 'transparent',
+              outline: 'none', fontSize: 14, color: TEXT_DEFAULT,
+              padding: 0, height: '100%',
+            }}
+          />
+        </div>
+
+        {resultadosOpen && busca.length >= 2 && (
+          <div style={{
+            position: 'absolute', top: 52, left: 0, right: 0,
+            background: 'white', borderRadius: 12,
+            maxHeight: 380, overflow: 'auto', zIndex: 100,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          }}>
+            {buscando && <div style={{ padding: 16, fontSize: 12, color: TEXT_MUTED }}>Buscando...</div>}
+            {!buscando && resultados.pacientes.length === 0 && resultados.agendamentos.length === 0 && (
+              <div style={{ padding: 16, fontSize: 12, color: TEXT_MUTED }}>Nenhum resultado</div>
+            )}
+            {resultados.pacientes.length > 0 && (
+              <div>
+                <p style={{ margin: 0, padding: '10px 16px 6px', fontSize: 10, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Pacientes</p>
+                {resultados.pacientes.map((p: any) => (
+                  <button key={p.id}
+                    onClick={() => { router.push(`/pacientes/${p.id}`); setBusca(''); setResultadosOpen(false) }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    {p.nome}
+                    {p.telefone && <span style={{ color: TEXT_MUTED, marginLeft: 8, fontSize: 11 }}>{p.telefone}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+            {resultados.agendamentos.length > 0 && (
+              <div>
+                <p style={{ margin: 0, padding: '10px 16px 6px', fontSize: 10, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Agendamentos</p>
+                {resultados.agendamentos.map((a: any) => (
+                  <button key={a.id}
+                    onClick={() => { router.push('/agenda'); setBusca(''); setResultadosOpen(false) }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    {a.motivo || 'Consulta'}
+                    <span style={{ color: TEXT_MUTED, marginLeft: 8, fontSize: 11 }}>{new Date(a.data_hora).toLocaleDateString('pt-BR')}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* DIREITA — empurra todo o resto pra direita */}
+      <div style={{ flex: 1 }}/>
+
       {/* 1. Chat */}
       <button
         onClick={() => router.push('/whatsapp-app')}
@@ -174,7 +264,7 @@ export function Topbar() {
 
         {notifOpen && (
           <div style={{
-            position: 'absolute', top: 48, left: 0, width: 340,
+            position: 'absolute', top: 48, right: 0, width: 340,
             background: 'white', borderRadius: 12, zIndex: 100,
             maxHeight: 440, overflow: 'auto',
             boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
@@ -268,7 +358,7 @@ export function Topbar() {
 
         {menuOpen && (
           <div style={{
-            position: 'absolute', top: 52, left: 0, width: 220,
+            position: 'absolute', top: 52, right: 0, width: 220,
             background: 'white', borderRadius: 12, zIndex: 100,
             padding: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           }}>
@@ -284,88 +374,6 @@ export function Topbar() {
               onMouseEnter={e => e.currentTarget.style.background = '#FEF2F2'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >Sair</button>
-          </div>
-        )}
-      </div>
-
-      {/* 5. Busca — à direita, ocupa espaço restante */}
-      <div ref={buscaRef} style={{ flex: 1, maxWidth: 600, marginLeft: 24, position: 'relative' }}>
-        <label
-          htmlFor='topbar-busca'
-          style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            background: 'transparent',
-            border: `1.5px solid ${buscaFocus ? ACCENT : 'transparent'}`,
-            borderBottom: `1.5px solid ${buscaFocus ? ACCENT : '#E5E7EB'}`,
-            borderRadius: buscaFocus ? 12 : 0,
-            padding: '10px 14px', height: 46,
-            cursor: 'text',
-            transition: 'all 0.15s',
-          }}
-        >
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke={buscaFocus ? ACCENT : TEXT_MUTED} strokeWidth='2'>
-            <circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/>
-          </svg>
-          <input
-            id='topbar-busca'
-            ref={inputRef}
-            type='text'
-            placeholder='Buscar pacientes, agendamentos...'
-            value={busca}
-            onChange={e => setBusca(e.target.value)}
-            onFocus={() => { setBuscaFocus(true); if (busca.length >= 2) setResultadosOpen(true) }}
-            onBlur={() => setBuscaFocus(false)}
-            style={{
-              flex: 1, border: 'none', background: 'transparent',
-              outline: 'none', fontSize: 14, color: TEXT_DEFAULT,
-              padding: 0,
-            }}
-          />
-        </label>
-
-        {resultadosOpen && busca.length >= 2 && (
-          <div style={{
-            position: 'absolute', top: 54, left: 0, right: 0,
-            background: 'white', borderRadius: 12,
-            maxHeight: 380, overflow: 'auto', zIndex: 100,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          }}>
-            {buscando && <div style={{ padding: 16, fontSize: 12, color: TEXT_MUTED }}>Buscando...</div>}
-            {!buscando && resultados.pacientes.length === 0 && resultados.agendamentos.length === 0 && (
-              <div style={{ padding: 16, fontSize: 12, color: TEXT_MUTED }}>Nenhum resultado</div>
-            )}
-            {resultados.pacientes.length > 0 && (
-              <div>
-                <p style={{ margin: 0, padding: '10px 16px 6px', fontSize: 10, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Pacientes</p>
-                {resultados.pacientes.map((p: any) => (
-                  <button key={p.id}
-                    onClick={() => { router.push(`/pacientes/${p.id}`); setBusca(''); setResultadosOpen(false) }}
-                    style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    {p.nome}
-                    {p.telefone && <span style={{ color: TEXT_MUTED, marginLeft: 8, fontSize: 11 }}>{p.telefone}</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-            {resultados.agendamentos.length > 0 && (
-              <div>
-                <p style={{ margin: 0, padding: '10px 16px 6px', fontSize: 10, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Agendamentos</p>
-                {resultados.agendamentos.map((a: any) => (
-                  <button key={a.id}
-                    onClick={() => { router.push('/agenda'); setBusca(''); setResultadosOpen(false) }}
-                    style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    {a.motivo || 'Consulta'}
-                    <span style={{ color: TEXT_MUTED, marginLeft: 8, fontSize: 11 }}>{new Date(a.data_hora).toLocaleDateString('pt-BR')}</span>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>
