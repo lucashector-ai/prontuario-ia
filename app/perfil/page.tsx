@@ -12,7 +12,9 @@ export default function PerfilPage() {
   const [msg, setMsg] = useState<{tipo: 'ok'|'erro', texto: string} | null>(null)
   const [senhaForm, setSenhaForm] = useState({ atual: '', nova: '', confirma: '' })
   const [salvandoSenha, setSalvandoSenha] = useState(false)
-  const [tab, setTab] = useState<'perfil'|'senha'>('perfil')
+  const [tab, setTab] = useState<'perfil'|'senha'|'api'>('perfil')
+  const [apiKey, setApiKey] = useState<string>('')
+  const [gerandoKey, setGerandoKey] = useState(false)
   const [uploadandoFoto, setUploadandoFoto] = useState(false)
 
   useEffect(() => {
@@ -28,6 +30,7 @@ export default function PerfilPage() {
       clinica: med.clinica || '',
       bio: med.bio || '',
     })
+    if (med.api_key) setApiKey(med.api_key)
   }, [router])
 
   const uploadFoto = async (file: File) => {
@@ -172,7 +175,57 @@ export default function PerfilPage() {
             </div>
           )}
 
-          {tab === 'senha' && (
+          {tab === 'api' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: 20 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#166534', margin: '0 0 8px' }}>🔌 API Pública MedIA</h3>
+            <p style={{ fontSize: 13, color: '#166534', margin: '0 0 16px', lineHeight: 1.6 }}>
+              Use sua API key para integrar o MedIA com outros sistemas. Acesse pacientes, agendamentos e consultas via HTTP.
+            </p>
+            <div style={{ background: 'white', borderRadius: 8, padding: '12px 14px', border: '1px solid #bbf7d0', fontFamily: 'monospace', fontSize: 12, color: '#374151', marginBottom: 12, wordBreak: 'break-all' as const }}>
+              {apiKey || 'Nenhuma API key gerada'}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={async () => {
+                setGerandoKey(true)
+                const res = await fetch('/api/public', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ medico_id: medico.id }) })
+                const d = await res.json()
+                if (d.api_key) {
+                  setApiKey(d.api_key)
+                  const novoMedico = { ...medico, api_key: d.api_key }
+                  localStorage.setItem('medico', JSON.stringify(novoMedico))
+                  setMedico(novoMedico)
+                }
+                setGerandoKey(false)
+              }} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                {gerandoKey ? 'Gerando...' : apiKey ? '🔄 Regenerar key' : '✨ Gerar API key'}
+              </button>
+              {apiKey && <button onClick={() => navigator.clipboard.writeText(apiKey)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #bbf7d0', background: 'white', color: '#166534', fontSize: 13, cursor: 'pointer' }}>Copiar</button>}
+            </div>
+          </div>
+
+          {apiKey && (
+            <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Exemplos de uso</h3>
+              {[
+                { label: 'Listar pacientes', url: `https://prontuario-ia-five.vercel.app/api/public?key=${apiKey}&recurso=pacientes` },
+                { label: 'Próximos agendamentos', url: `https://prontuario-ia-five.vercel.app/api/public?key=${apiKey}&recurso=agendamentos` },
+                { label: 'Últimas consultas', url: `https://prontuario-ia-five.vercel.app/api/public?key=${apiKey}&recurso=consultas` },
+              ].map(ex => (
+                <div key={ex.label} style={{ marginBottom: 12 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 4px' }}>{ex.label}</p>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <code style={{ fontSize: 11, background: 'white', border: '1px solid #e5e7eb', borderRadius: 6, padding: '4px 8px', flex: 1, wordBreak: 'break-all' as const, color: '#6043C1' }}>GET {ex.url}</code>
+                    <button onClick={() => navigator.clipboard.writeText(ex.url)} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, border: '1px solid #e5e7eb', background: 'white', cursor: 'pointer', flexShrink: 0 }}>Copiar</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'senha' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[
                 { key: 'atual', label: 'Senha atual', placeholder: '••••••••' },
