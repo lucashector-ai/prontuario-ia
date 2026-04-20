@@ -118,7 +118,7 @@ export default function Login() {
             </div>
 
             <div style={{ textAlign: 'right', marginTop: -8 }}>
-              <Link href="/forgot-password" style={{ fontSize: 13, color: '#6043C1', textDecoration: 'none' }}>Esqueceu sua senha?</Link>
+              <Link href="/forgot-password" style={{ fontSize: 13, color: '#1F9D5C', textDecoration: 'none' }}>Esqueceu sua senha?</Link>
             </div>
 
             {erro && (
@@ -129,7 +129,7 @@ export default function Login() {
 
             <button type="submit" disabled={carregando} style={{
               padding: '14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-              background: carregando ? '#b9a9ef' : '#6043C1',
+              background: carregando ? '#b9a9ef' : '#1F9D5C',
               color: 'white', fontSize: 15, fontWeight: 700,
               letterSpacing: '0.01em', marginTop: 4,
               transition: 'background 0.15s',

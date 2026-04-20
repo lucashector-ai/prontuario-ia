@@ -74,7 +74,7 @@ export default function Teleconsulta() {
   const statusInfo = (s: string): { txt: string; bg: string; cor: string } => {
     const map: Record<string, { txt: string; bg: string; cor: string }> = {
       aguardando: { txt: 'Aguardando', bg: '#fef3c7', cor: '#92400e' },
-      em_andamento: { txt: 'Em andamento', bg: '#ede9fb', cor: '#6043C1' },
+      em_andamento: { txt: 'Em andamento', bg: '#E8F7EF', cor: '#1F9D5C' },
     }
     return map[s] || { txt: s, bg: '#f3f4f6', cor: '#6b7280' }
   }
@@ -91,7 +91,7 @@ export default function Teleconsulta() {
           <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 28px' }}>Video em tempo real  o paciente entra pelo link, sem instalar nada</p>
 
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <button onClick={criarAgora} disabled={criandoAgora} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 24px', background: '#6043C1', color: 'white', border: 'none', borderRadius: 14, cursor: criandoAgora ? 'not-allowed' : 'pointer', opacity: criandoAgora ? 0.7 : 1, minWidth: 240 }}>
+            <button onClick={criarAgora} disabled={criandoAgora} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 24px', background: '#1F9D5C', color: 'white', border: 'none', borderRadius: 14, cursor: criandoAgora ? 'not-allowed' : 'pointer', opacity: criandoAgora ? 0.7 : 1, minWidth: 240 }}>
               <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
               </div>
@@ -102,8 +102,8 @@ export default function Teleconsulta() {
             </button>
 
             <button onClick={abrirAgendamento} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 24px', background: 'white', color: '#111827', borderRadius: 14, cursor: 'pointer', minWidth: 240 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: '#f3f0fd', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: '#E8F7EF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F9D5C" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               </div>
               <div style={{ textAlign: 'left' }}>
                 <p style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Agendar teleconsulta</p>
@@ -113,10 +113,10 @@ export default function Teleconsulta() {
           </div>
 
           {linkCopiado && (
-            <div style={{ marginTop: 16, background: '#f3f0fd', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span style={{ fontSize: 13, color: '#6043C1', fontWeight: 600 }}>Sala criada! Link copiado e sala aberta em nova aba.</span>
-              <code style={{ fontSize: 11, color: '#6043C1', background: 'rgba(0,0,0,0.06)', padding: '2px 8px', borderRadius: 5, marginLeft: 4, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{linkCopiado}</code>
+            <div style={{ marginTop: 16, background: '#E8F7EF', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F9D5C" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span style={{ fontSize: 13, color: '#1F9D5C', fontWeight: 600 }}>Sala criada! Link copiado e sala aberta em nova aba.</span>
+              <code style={{ fontSize: 11, color: '#1F9D5C', background: 'rgba(0,0,0,0.06)', padding: '2px 8px', borderRadius: 5, marginLeft: 4, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{linkCopiado}</code>
             </div>
           )}
         </div>
@@ -135,8 +135,8 @@ export default function Teleconsulta() {
                   const st = statusInfo(c.status)
                   return (
                     <div key={c.id} style={{ background: 'white', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: c.status === 'em_andamento' ? '#ede9fb' : '#F5F5F5', border: '1px solid ' + (c.status === 'em_andamento' ? '#d4c9f7' : '#e5e7eb'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.status === 'em_andamento' ? '#6043C1' : '#9ca3af'} strokeWidth="1.5"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: c.status === 'em_andamento' ? '#E8F7EF' : '#F5F5F5', border: '1px solid ' + (c.status === 'em_andamento' ? '#A7E0BF' : '#e5e7eb'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.status === 'em_andamento' ? '#1F9D5C' : '#9ca3af'} strokeWidth="1.5"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
@@ -150,8 +150,8 @@ export default function Teleconsulta() {
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                           Copiar link
                         </button>
-                        <button onClick={() => enviarWpp(c)} style={{ padding: '6px 11px', background: '#f3f0fd', borderRadius: 7, fontSize: 11, color: '#6043C1', cursor: 'pointer', fontWeight: 600 }}>WhatsApp</button>
-                        <button onClick={() => entrar(c.sala_id)} style={{ padding: '6px 14px', background: '#6043C1', color: 'white', border: 'none', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Entrar</button>
+                        <button onClick={() => enviarWpp(c)} style={{ padding: '6px 11px', background: '#E8F7EF', borderRadius: 7, fontSize: 11, color: '#1F9D5C', cursor: 'pointer', fontWeight: 600 }}>WhatsApp</button>
+                        <button onClick={() => entrar(c.sala_id)} style={{ padding: '6px 14px', background: '#1F9D5C', color: 'white', border: 'none', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Entrar</button>
                         <button onClick={() => encerrar(c.id)} style={{ padding: '6px 10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 7, fontSize: 11, color: '#dc2626', cursor: 'pointer' }}>Encerrar</button>
                       </div>
                     </div>

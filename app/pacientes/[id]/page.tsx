@@ -8,14 +8,14 @@ import { Sidebar } from '@/components/Sidebar'
 type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario' | 'timeline'
 
 const TIPO_CORES: Record<string, {bg:string;text:string;border:string}> = {
-  consulta: {bg:'#F5F5F5',text:'#6043C1',border:'#d4c9f7'},
+  consulta: {bg:'#F5F5F5',text:'#1F9D5C',border:'#A7E0BF'},
   retorno:  {bg:'#eff6ff',text:'#2563eb',border:'#bfdbfe'},
   exame:    {bg:'#f5f3ff',text:'#7c3aed',border:'#ddd6fe'},
   urgencia: {bg:'#fef2f2',text:'#dc2626',border:'#fecaca'},
 }
 const STATUS_CORES: Record<string, {bg:string;text:string}> = {
   agendado:   {bg:'#eff6ff',text:'#2563eb'},
-  confirmado: {bg:'#F5F5F5',text:'#6043C1'},
+  confirmado: {bg:'#F5F5F5',text:'#1F9D5C'},
   cancelado:  {bg:'#fef2f2',text:'#dc2626'},
   realizado:  {bg:'#f3f4f6',text:'#6b7280'},
 }
@@ -124,7 +124,7 @@ export default function PacienteDetalhe() {
     {key:'subjetivo',letra:'S',titulo:'Subjetivo',cor:'#2563eb',bg:'#eff6ff',border:'#bfdbfe'},
     {key:'objetivo', letra:'O',titulo:'Objetivo', cor:'#0d9488',bg:'#f0fdfa',border:'#99f6e4'},
     {key:'avaliacao',letra:'A',titulo:'Avaliacao',cor:'#7c3aed',bg:'#f5f3ff',border:'#ddd6fe'},
-    {key:'plano',    letra:'P',titulo:'Plano',    cor:'#6043C1',bg:'#F5F5F5',border:'#d4c9f7'},
+    {key:'plano',    letra:'P',titulo:'Plano',    cor:'#1F9D5C',bg:'#F5F5F5',border:'#A7E0BF'},
   ]
 
   return (
@@ -132,7 +132,7 @@ export default function PacienteDetalhe() {
       <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
         {carregando ? (
           <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <div style={{width:40,height:40,borderRadius:'50%',border:'3px solid #ede9fb',borderTopColor:'#6043C1',animation:'spin 0.8s linear infinite'}}/>
+            <div style={{width:40,height:40,borderRadius:'50%',border:'3px solid #E8F7EF',borderTopColor:'#1F9D5C',animation:'spin 0.8s linear infinite'}}/>
           </div>
         ) : (<>
           <div style={{background: 'transparent',borderBottom: 'none',padding:'0 28px',height:64,display:'flex',alignItems:'center',gap:16,flexShrink:0}}>
@@ -143,7 +143,7 @@ export default function PacienteDetalhe() {
             <span style={{color:'#d1d5db'}}>/</span>
             <div style={{display:'flex',alignItems:'center',gap:10,flex:1}}>
               <div style={{position:'relative',cursor:'pointer'}} onClick={()=>(document.getElementById('foto-hdr') as HTMLInputElement)?.click()} title="Trocar foto">
-                {paciente?.foto_url?<img src={paciente.foto_url} style={{width:36,height:36,borderRadius:'50%',objectFit:'cover',border:'2px solid #d4c9f7'}}/>:<div style={{width:36,height:36,borderRadius:'50%',background:'#F5F5F5',border:'2px solid #d4c9f7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#6043C1'}}>{ini}</div>}
+                {paciente?.foto_url?<img src={paciente.foto_url} style={{width:36,height:36,borderRadius:'50%',objectFit:'cover',border:'2px solid #A7E0BF'}}/>:<div style={{width:36,height:36,borderRadius:'50%',background:'#F5F5F5',border:'2px solid #A7E0BF',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#1F9D5C'}}>{ini}</div>}
               </div>
               <input id="foto-hdr" type="file" accept="image/*" style={{display:'none'}} onChange={e=>e.target.files?.[0]&&uploadFoto(e.target.files[0])}/>
               <div>
@@ -152,13 +152,13 @@ export default function PacienteDetalhe() {
               </div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>setModalAg(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,background:'#F5F5F5',color:'#6043C1',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar</button>
-              <a href="/consulta" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
+              <button onClick={()=>setModalAg(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,background:'#F5F5F5',color:'#1F9D5C',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar</button>
+              <a href="/consulta" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:'#1F9D5C',color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
             </div>
           </div>
           <div style={{background: 'transparent',borderBottom: 'none',padding:'0 28px',display:'flex',flexShrink:0}}>
             {([{id:'overview',label:'Visão geral'},{id:'consultas',label:'Consultas ('+consultas.length+')'},{id:'agendamentos',label:'Agenda ('+agendamentos.filter(a=>a.status!=='cancelado').length+')'},{id:'prontuario',label:'Prontuário'},{id:'timeline',label:'Linha do tempo'}] as {id:Aba;label:string}[]).map(tab=>(
-              <button key={tab.id} onClick={()=>setAba(tab.id)} style={{padding:'14px 16px',background:'transparent',border:'none',cursor:'pointer',fontSize:13,fontWeight:aba===tab.id?600:400,color:aba===tab.id?'#111827':'#6b7280',borderBottom:aba===tab.id?'2px solid #6043C1':'2px solid transparent',marginBottom:-1}}>{tab.label}</button>
+              <button key={tab.id} onClick={()=>setAba(tab.id)} style={{padding:'14px 16px',background:'transparent',border:'none',cursor:'pointer',fontSize:13,fontWeight:aba===tab.id?600:400,color:aba===tab.id?'#111827':'#6b7280',borderBottom:aba===tab.id?'2px solid #1F9D5C':'2px solid transparent',marginBottom:-1}}>{tab.label}</button>
             ))}
           </div>
           <div style={{flex:1,overflow:'auto',padding:28}}>
@@ -166,13 +166,13 @@ export default function PacienteDetalhe() {
               <div style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:20,maxWidth:1100}}>
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div style={{background:'white',borderRadius:14,overflow:'hidden'}}>
-                    <div style={{background:'linear-gradient(135deg,#ede9fb,#ede9fb)',padding:'24px 20px',textAlign:'center',borderBottom: 'none'}}>
+                    <div style={{background:'linear-gradient(135deg,#E8F7EF,#E8F7EF)',padding:'24px 20px',textAlign:'center',borderBottom: 'none'}}>
                       <div style={{position:'relative',cursor:'pointer',width:64,height:64,margin:'0 auto 12px'}} onClick={()=>(document.getElementById('foto-card') as HTMLInputElement)?.click()} title="Trocar foto">
-                        {paciente?.foto_url?<img src={paciente.foto_url} style={{width:64,height:64,borderRadius:'50%',objectFit:'cover',border:'3px solid #d4c9f7'}}/>:<div style={{width:64,height:64,borderRadius:'50%',background:'white',border:'3px solid #d4c9f7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,color:'#6043C1'}}>{ini}</div>}
-                        <div style={{position:'absolute',bottom:0,right:0,width:20,height:20,background:'#6043C1',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid white'}}>
+                        {paciente?.foto_url?<img src={paciente.foto_url} style={{width:64,height:64,borderRadius:'50%',objectFit:'cover',border:'3px solid #A7E0BF'}}/>:<div style={{width:64,height:64,borderRadius:'50%',background:'white',border:'3px solid #A7E0BF',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,color:'#1F9D5C'}}>{ini}</div>}
+                        <div style={{position:'absolute',bottom:0,right:0,width:20,height:20,background:'#1F9D5C',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid white'}}>
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
                         </div>
-                        {uploadandoFoto&&<div style={{position:'absolute',inset:0,background:'rgba(255,255,255,0.7)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}><div style={{width:18,height:18,border:'2px solid #6043C1',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/></div>}
+                        {uploadandoFoto&&<div style={{position:'absolute',inset:0,background:'rgba(255,255,255,0.7)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}><div style={{width:18,height:18,border:'2px solid #1F9D5C',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/></div>}
                       </div>
                       <input id="foto-card" type="file" accept="image/*" style={{display:'none'}} onChange={e=>e.target.files?.[0]&&uploadFoto(e.target.files[0])}/>
                       <h2 style={{fontSize:16,fontWeight:700,color:'#111827',margin:'0 0 4px'}}>{paciente?.nome}</h2>
@@ -182,7 +182,7 @@ export default function PacienteDetalhe() {
                     <div style={{padding:'16px 20px'}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
                         <p style={{fontSize:11,fontWeight:700,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.06em',margin:0}}>Dados pessoais</p>
-                        <button onClick={()=>setEditando(!editando)} style={{fontSize:11,color:'#6043C1',background:'none',border:'none',cursor:'pointer',fontWeight:600}}>{editando?'Cancelar':'Editar'}</button>
+                        <button onClick={()=>setEditando(!editando)} style={{fontSize:11,color:'#1F9D5C',background:'none',border:'none',cursor:'pointer',fontWeight:600}}>{editando?'Cancelar':'Editar'}</button>
                       </div>
                       {editando?(
                         <div style={{display:'flex',flexDirection:'column',gap:9}}>
@@ -198,7 +198,7 @@ export default function PacienteDetalhe() {
                               <textarea value={editForm[k]||''} onChange={e=>setEditForm((p:any)=>({...p,[k]:e.target.value}))} style={{width:'100%',padding:'7px 10px',fontSize:12,borderRadius:7,minHeight:52,resize:'vertical'}}/>
                             </div>
                           ))}
-                          <button onClick={salvarPaciente} disabled={salvando} style={{padding:'9px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>{salvando?'Salvando...':'Salvar'}</button>
+                          <button onClick={salvarPaciente} disabled={salvando} style={{padding:'9px',borderRadius:8,border:'none',background:'#1F9D5C',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>{salvando?'Salvando...':'Salvar'}</button>
                         </div>
                       ):(
                         <div style={{display:'flex',flexDirection:'column',gap:9}}>
@@ -216,13 +216,13 @@ export default function PacienteDetalhe() {
                     <div style={{background: '#F5F5F5',borderRadius:14,padding:'16px 20px',display:'flex',flexDirection:'column',gap:10}}>
                       {paciente.alergias&&<div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#dc2626',margin:'0 0 3px',textTransform:'uppercase'}}>Alergias</p><p style={{fontSize:12,color:'#b91c1c',margin:0}}>{paciente.alergias}</p></div>}
                       {paciente.comorbidades&&<div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#d97706',margin:'0 0 3px',textTransform:'uppercase'}}>Comorbidades</p><p style={{fontSize:12,color:'#92400e',margin:0}}>{paciente.comorbidades}</p></div>}
-                      {paciente.medicamentos_uso&&<div style={{background:'#F5F5F5',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#6043C1',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:12,color:'#6043C1',margin:0}}>{paciente.medicamentos_uso}</p></div>}
+                      {paciente.medicamentos_uso&&<div style={{background:'#F5F5F5',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#1F9D5C',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:12,color:'#1F9D5C',margin:0}}>{paciente.medicamentos_uso}</p></div>}
                     </div>
                   )}
                 </div>
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-                    {[{l:'Consultas',v:String(consultas.length),c:'#2563eb'},{l:'Agendamentos',v:String(agendamentos.filter(a=>a.status!=='cancelado').length),c:'#6043C1'},{l:'Proximo',v:prox?fmt(prox.data_hora):'Nao agendado',c:'#7c3aed'}].map(m=>(
+                    {[{l:'Consultas',v:String(consultas.length),c:'#2563eb'},{l:'Agendamentos',v:String(agendamentos.filter(a=>a.status!=='cancelado').length),c:'#1F9D5C'},{l:'Proximo',v:prox?fmt(prox.data_hora):'Nao agendado',c:'#7c3aed'}].map(m=>(
                       <div key={m.l} style={{background: '#F5F5F5',borderRadius:12,padding:'16px 18px'}}>
                         <p style={{fontSize:22,fontWeight:800,color:m.c,margin:'0 0 4px'}}>{m.v}</p>
                         <p style={{fontSize:12,color:'#9ca3af',margin:0}}>{m.l}</p>
@@ -232,7 +232,7 @@ export default function PacienteDetalhe() {
                   <div style={{background:'white',borderRadius:14,overflow:'hidden'}}>
                     <div style={{padding:'14px 20px',borderBottom: 'none',display:'flex',justifyContent:'space-between'}}>
                       <p style={{fontSize:13,fontWeight:700,color:'#111827',margin:0}}>Últimas consultas</p>
-                      <button onClick={()=>setAba('consultas')} style={{fontSize:12,color:'#6043C1',background:'none',border:'none',cursor:'pointer',fontWeight:600}}>Ver todas</button>
+                      <button onClick={()=>setAba('consultas')} style={{fontSize:12,color:'#1F9D5C',background:'none',border:'none',cursor:'pointer',fontWeight:600}}>Ver todas</button>
                     </div>
                     {consultas.length===0?<div style={{padding:24,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta</p></div>
                     :consultas.slice(0,4).map(c=>(
@@ -250,10 +250,10 @@ export default function PacienteDetalhe() {
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
                   {consultas.length===0?<div style={{background:'white',borderRadius:12,padding:24,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta</p></div>
                   :consultas.map(c=>(
-                    <div key={c.id} onClick={()=>setConsultaAberta(consultaAberta?.id===c.id?null:c)} style={{background: '#F5F5F5',border:'1px solid '+(consultaAberta?.id===c.id?'#d4c9f7':'#e5e7eb'),borderRadius:12,padding:'12px 16px',cursor:'pointer'}}>
+                    <div key={c.id} onClick={()=>setConsultaAberta(consultaAberta?.id===c.id?null:c)} style={{background: '#F5F5F5',border:'1px solid '+(consultaAberta?.id===c.id?'#A7E0BF':'#e5e7eb'),borderRadius:12,padding:'12px 16px',cursor:'pointer'}}>
                       <p style={{fontSize:11,color:'#9ca3af',margin:'0 0 4px'}}>{fmt(c.criado_em)}</p>
                       <p style={{fontSize:12,color:'#374151',margin:'0 0 7px'}}>{(c.subjetivo||'').substring(0,90)}</p>
-                      <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#6043C1',background:'#F5F5F5',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700}}>{cid.codigo}</span>)}</div>
+                      <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#1F9D5C',background:'#F5F5F5',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700}}>{cid.codigo}</span>)}</div>
                     </div>
                   ))}
                 </div>
@@ -280,12 +280,12 @@ export default function PacienteDetalhe() {
             {aba==='agendamentos'&&(
               <div style={{maxWidth:800}}>
                 <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-                  <button onClick={()=>setModalAg(true)} style={{padding:'8px 16px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>+ Novo agendamento</button>
+                  <button onClick={()=>setModalAg(true)} style={{padding:'8px 16px',borderRadius:8,border:'none',background:'#1F9D5C',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>+ Novo agendamento</button>
                 </div>
                 {agendamentos.length===0?(
                   <div style={{background:'white',border:'1px dashed #e5e7eb',borderRadius:14,padding:40,textAlign:'center'}}>
                     <p style={{fontSize:14,fontWeight:600,color:'#374151',margin:'0 0 12px'}}>Nenhum agendamento</p>
-                    <button onClick={()=>setModalAg(true)} style={{padding:'8px 20px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar agora</button>
+                    <button onClick={()=>setModalAg(true)} style={{padding:'8px 20px',borderRadius:8,border:'none',background:'#1F9D5C',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar agora</button>
                   </div>
                 ):(
                   <div style={{display:'flex',flexDirection:'column',gap:10}}>
@@ -309,7 +309,7 @@ export default function PacienteDetalhe() {
                             {ag.observacoes&&<p style={{fontSize:12,color:'#6b7280',margin:'0 0 8px'}}>{ag.observacoes}</p>}
                             <div style={{display:'flex',gap:8}}>
                               {!passado&&ag.status==='agendado'&&<>
-                                <button onClick={()=>atualizarAg(ag.id,'confirmado')} style={{fontSize:11,color:'#6043C1',background:'#F5F5F5',padding:'3px 10px',borderRadius:6,cursor:'pointer',fontWeight:600}}>Confirmar</button>
+                                <button onClick={()=>atualizarAg(ag.id,'confirmado')} style={{fontSize:11,color:'#1F9D5C',background:'#F5F5F5',padding:'3px 10px',borderRadius:6,cursor:'pointer',fontWeight:600}}>Confirmar</button>
                                 <button onClick={()=>atualizarAg(ag.id,'cancelado')} style={{fontSize:11,color:'#dc2626',background:'#fef2f2',border:'1px solid #fecaca',padding:'3px 10px',borderRadius:6,cursor:'pointer',fontWeight:600}}>Cancelar</button>
                               </>}
                               {passado&&ag.status!=='realizado'&&ag.status!=='cancelado'&&(
@@ -335,7 +335,7 @@ export default function PacienteDetalhe() {
                     <div style={{display:'flex',flexDirection:'column',gap:10}}>
                       {paciente.alergias&&<div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#dc2626',margin:'0 0 3px',textTransform:'uppercase'}}>Alergias</p><p style={{fontSize:13,color:'#b91c1c',margin:0}}>{paciente.alergias}</p></div>}
                       {paciente.comorbidades&&<div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#d97706',margin:'0 0 3px',textTransform:'uppercase'}}>Comorbidades</p><p style={{fontSize:13,color:'#92400e',margin:0}}>{paciente.comorbidades}</p></div>}
-                      {paciente.medicamentos_uso&&<div style={{background:'#F5F5F5',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#6043C1',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:13,color:'#6043C1',margin:0}}>{paciente.medicamentos_uso}</p></div>}
+                      {paciente.medicamentos_uso&&<div style={{background:'#F5F5F5',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#1F9D5C',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:13,color:'#1F9D5C',margin:0}}>{paciente.medicamentos_uso}</p></div>}
                     </div>
                   ):<p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhum dado clinico preenchido.</p>}
                 </div>
@@ -345,7 +345,7 @@ export default function PacienteDetalhe() {
                       <div style={{padding:'10px 18px',background: 'transparent',borderBottom: 'none',display:'flex',justifyContent:'space-between'}}>
                         <p style={{fontSize:13,fontWeight:600,color:'#374151',margin:0}}>#{consultas.length-idx} {fmtF(c.criado_em)}</p>
                             {c.transcricao && <span style={{fontSize:9,fontWeight:700,color:'#1d4ed8',background:'#eff6ff',border:'1px solid #bfdbfe',padding:'2px 7px',borderRadius:10}}>📹 Teleconsulta</span>}
-                        <div style={{display:'flex',gap:4}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#6043C1',background:'#F5F5F5',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700}}>{cid.codigo}</span>)}</div>
+                        <div style={{display:'flex',gap:4}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#1F9D5C',background:'#F5F5F5',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700}}>{cid.codigo}</span>)}</div>
                       </div>
                       <div style={{padding:'14px 18px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                         {secoes.map(s=>(
@@ -386,7 +386,7 @@ export default function PacienteDetalhe() {
                       {/* Botoes */}
                       <div style={{padding:'8px 18px 12px',borderTop:'1px solid #f3f4f6',display:'flex',gap:8}}>
                         <a href={'/api/pdf-prontuario?consulta_id='+c.id+'&medico_id='+medico?.id} target="_blank" rel="noreferrer"
-                          style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:6,background:'#f0ebff',color:'#6043C1',fontSize:12,fontWeight:600,textDecoration:'none'}}>
+                          style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:6,background:'#f0ebff',color:'#1F9D5C',fontSize:12,fontWeight:600,textDecoration:'none'}}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
                           PDF Prontuário
                         </a>
@@ -426,7 +426,7 @@ export default function PacienteDetalhe() {
                           return (
                             <div key={c.id} style={{display:'flex',gap:16,paddingBottom:24,position:'relative'}}>
                               <div style={{flexShrink:0,zIndex:1}}>
-                                <div style={{width:40,height:40,borderRadius:'50%',background:isUltima?'#6043C1':'white',border:isUltima?'none':'2px solid #d4c9f7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:isUltima?'white':'#6043C1'}}>
+                                <div style={{width:40,height:40,borderRadius:'50%',background:isUltima?'#1F9D5C':'white',border:isUltima?'none':'2px solid #A7E0BF',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:isUltima?'white':'#1F9D5C'}}>
                                   {consultas.length-i}
                                 </div>
                               </div>
@@ -435,10 +435,10 @@ export default function PacienteDetalhe() {
                                   <div style={{display:'flex',alignItems:'center',gap:8}}>
                                     <span style={{fontSize:13,fontWeight:700,color:'#111827'}}>{dataFmt}</span>
                                     <span style={{fontSize:11,color:'#9ca3af'}}>{hora}</span>
-                                    {isUltima&&<span style={{fontSize:10,fontWeight:700,color:'#6043C1',background:'#f0ebff',padding:'2px 8px',borderRadius:10}}>mais recente</span>}
+                                    {isUltima&&<span style={{fontSize:10,fontWeight:700,color:'#1F9D5C',background:'#f0ebff',padding:'2px 8px',borderRadius:10}}>mais recente</span>}
                                   </div>
                                   <div style={{display:'flex',gap:6}}>
-                                    <a href={'/api/pdf-prontuario?consulta_id='+c.id+'&medico_id='+medico?.id} target="_blank" rel="noreferrer" style={{fontSize:11,color:'#6043C1',background:'#f0ebff',padding:'4px 10px',borderRadius:6,textDecoration:'none',fontWeight:600}}>PDF</a>
+                                    <a href={'/api/pdf-prontuario?consulta_id='+c.id+'&medico_id='+medico?.id} target="_blank" rel="noreferrer" style={{fontSize:11,color:'#1F9D5C',background:'#f0ebff',padding:'4px 10px',borderRadius:6,textDecoration:'none',fontWeight:600}}>PDF</a>
                                   </div>
                                 </div>
                                 {alertas.length>0&&(
@@ -464,7 +464,7 @@ export default function PacienteDetalhe() {
                                 {cids.length>0&&(
                                   <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:8}}>
                                     {cids.map((cid:any,j:number)=>(
-                                      <span key={j} style={{fontSize:10,fontWeight:700,color:'#6043C1',background:'#f0ebff',padding:'2px 8px',borderRadius:10,fontFamily:'monospace'}}>{cid.codigo}</span>
+                                      <span key={j} style={{fontSize:10,fontWeight:700,color:'#1F9D5C',background:'#f0ebff',padding:'2px 8px',borderRadius:10,fontFamily:'monospace'}}>{cid.codigo}</span>
                                     ))}
                                   </div>
                                 )}
@@ -499,7 +499,7 @@ export default function PacienteDetalhe() {
               <button onClick={()=>setModalAg(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af',fontSize:18,lineHeight:1}}>x</button>
             </div>
             <div style={{background:'#F5F5F5',borderRadius:10,padding:'10px 14px',marginBottom:18}}>
-              <p style={{fontSize:13,fontWeight:600,color:'#6043C1',margin:'0 0 2px'}}>{paciente?.nome}</p>
+              <p style={{fontSize:13,fontWeight:600,color:'#1F9D5C',margin:'0 0 2px'}}>{paciente?.nome}</p>
               <p style={{fontSize:11,color:'#6b7280',margin:0}}>{[paciente?.sexo,idadePac?idadePac+' anos':null].filter(Boolean).join(' · ')}</p>
             </div>
             <form onSubmit={salvarAg} style={{display:'flex',flexDirection:'column',gap:14}}>
@@ -524,7 +524,7 @@ export default function PacienteDetalhe() {
                 <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Observacoes</label>
                 <textarea value={agForm.observacoes} onChange={e=>setAgForm(f=>({...f,observacoes:e.target.value}))} style={{width:'100%',padding:'10px 12px',fontSize:13,borderRadius:8,minHeight:64,resize:'vertical'}}/>
               </div>
-              <button type="submit" disabled={salvandoAg} style={{padding:'12px',borderRadius:9,border:'none',background:'#6043C1',color:'white',fontSize:14,fontWeight:700,cursor:'pointer'}}>{salvandoAg?'Salvando...':'Confirmar agendamento'}</button>
+              <button type="submit" disabled={salvandoAg} style={{padding:'12px',borderRadius:9,border:'none',background:'#1F9D5C',color:'white',fontSize:14,fontWeight:700,cursor:'pointer'}}>{salvandoAg?'Salvando...':'Confirmar agendamento'}</button>
             </form>
           </div>
         </div>

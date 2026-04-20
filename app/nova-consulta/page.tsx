@@ -292,7 +292,7 @@ export default function Home() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
-              <a href="/pacientes" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Novo paciente</a>
+              <a href="/pacientes" style={{ fontSize: 12, color: '#1F9D5C', fontWeight: 600, textDecoration: 'none' }}>+ Novo paciente</a>
             </div>
 
             <div style={{ borderTop: '1px solid #f3f4f6', marginTop: 20, paddingTop: 20, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -304,7 +304,7 @@ export default function Home() {
               <button
                 onClick={() => { if (pacienteSelecionado) setModalPaciente(false) }}
                 disabled={!pacienteSelecionado}
-                style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: pacienteSelecionado ? '#6043C1' : '#e5e7eb', color: pacienteSelecionado ? 'white' : '#9ca3af', fontSize: 13, cursor: pacienteSelecionado ? 'pointer' : 'default', fontWeight: 600 }} title={!pacienteSelecionado ? 'Busque e selecione um paciente acima' : ''}>
+                style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: pacienteSelecionado ? '#1F9D5C' : '#e5e7eb', color: pacienteSelecionado ? 'white' : '#9ca3af', fontSize: 13, cursor: pacienteSelecionado ? 'pointer' : 'default', fontWeight: 600 }} title={!pacienteSelecionado ? 'Busque e selecione um paciente acima' : ''}>
                 Iniciar consulta
               </button>
             </div>
@@ -328,16 +328,16 @@ export default function Home() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {consultaSalva && (
-              <span style={{ fontSize: 12, color: '#6043C1', background: '#f0fdf4', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
+              <span style={{ fontSize: 12, color: '#1F9D5C', background: '#f0fdf4', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
                  Salvo
               </span>
             )}
             
             <button onClick={() => setModoPerfeita(m => !m)} style={{
               fontSize: 12, fontWeight: 600,
-              color: modoPerfeita ? '#6043C1' : '#6b7280',
+              color: modoPerfeita ? '#1F9D5C' : '#6b7280',
               background: modoPerfeita ? '#f0ebff' : 'white',
-              border: modoPerfeita ? '1px solid #d4c9f7' : '1px solid #e5e7eb',
+              border: modoPerfeita ? '1px solid #A7E0BF' : '1px solid #e5e7eb',
               padding: '6px 12px', borderRadius: 7, cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 5
             }}>
@@ -406,7 +406,7 @@ export default function Home() {
 
                 {transcrevendo && (
                   <span style={{ fontSize: 12, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg className="spinner" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5">
+                    <svg className="spinner" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1F9D5C" strokeWidth="2.5">
                       <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M2 12h4M18 12h4"/>
                     </svg>
                     Transcrevendo...
@@ -417,7 +417,7 @@ export default function Home() {
                   <button onClick={handleEstruturar} style={{
                     marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7,
                     padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600,
+                    background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600,
                   }}>
                     {estado === 'processando' ? (
                       <>
@@ -466,8 +466,8 @@ export default function Home() {
               {modoPerfeita && estado === 'gravando' && (
                 <div style={{ marginBottom: 16, background: '#f0ebff', borderRadius: 10, padding: '12px 14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1F9D5C" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#1F9D5C', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
                       Copiloto em tempo real {carregandoSugestoes ? '...' : ''}
                     </span>
                   </div>
@@ -485,7 +485,7 @@ export default function Home() {
                     <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
                       {sugestoes.map((s, i) => (
                         <div key={i} style={{ background: 'white', borderRadius: 6, padding: '7px 10px', fontSize: 12, color: '#3C3489', display: 'flex', alignItems: 'center', gap: 7, cursor: 'default' }}>
-                          <span style={{ width: 16, height: 16, borderRadius: '50%', background: '#6043C1', color: 'white', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                          <span style={{ width: 16, height: 16, borderRadius: '50%', background: '#1F9D5C', color: 'white', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                           {s}
                         </div>
                       ))}
@@ -517,7 +517,7 @@ export default function Home() {
 
             {estado === 'processando' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: 'white' }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #ede9fb', borderTopColor: '#6043C1', animation: 'spin 0.8s linear infinite' }}/>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #E8F7EF', borderTopColor: '#1F9D5C', animation: 'spin 0.8s linear infinite' }}/>
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>Analisando consulta</p>
                   <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Estruturando prontuário SOAP com IA...</p>
@@ -534,7 +534,7 @@ export default function Home() {
                       padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
                       fontSize: 13, fontWeight: aba === tab ? 600 : 400,
                       color: aba === tab ? '#111827' : '#6b7280',
-                      borderBottom: aba === tab ? '2px solid #6043C1' : '2px solid transparent',
+                      borderBottom: aba === tab ? '2px solid #1F9D5C' : '2px solid transparent',
                       marginBottom: -1,
                     }}>
                       {tab === 'prontuario' ? 'Prontuário' : tab === 'receita' ? 'Receita' : tab === 'resumo' ? 'Resumo' : 'Documentos'}
@@ -566,11 +566,11 @@ export default function Home() {
                   {aba === 'receita' && !receita && (
                     <div style={{ textAlign: 'center', padding: '60px 24px' }}>
                       <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F9D5C" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                       </div>
                       <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Gerar receita médica</p>
                       <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px' }}>Extraida automaticamente do prontuario gerado.</p>
-                      <button onClick={handleGerarReceita} style={{ padding: '9px 22px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      <button onClick={handleGerarReceita} style={{ padding: '9px 22px', borderRadius: 8, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                         Gerar receita
                       </button>
                     </div>
@@ -658,7 +658,7 @@ export default function Home() {
                               <p><strong>Afastamento:</strong> {atestado.dias} dia{atestado.dias > 1 ? 's' : ''}</p>
                               {atestado.motivo && <p><strong>Motivo:</strong> {atestado.motivo}</p>}
                             </div>
-                            <button onClick={imprimirAtestado} style={{ width: '100%', padding: '9px', borderRadius: 8, background: '#6043C1', color: 'white', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                            <button onClick={imprimirAtestado} style={{ width: '100%', padding: '9px', borderRadius: 8, background: '#1F9D5C', color: 'white', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/></svg>
                               Imprimir atestado
                             </button>
@@ -674,7 +674,7 @@ export default function Home() {
             {(estado === 'idle' || estado === 'gravando') && !prontuario && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 48, background: 'white' }}>
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1F9D5C" strokeWidth="1.5">
                     <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
                 </div>
@@ -686,7 +686,7 @@ export default function Home() {
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {['Prontuário SOAP', 'CID-10 automático', 'Receita médica', 'Salvo no banco'].map(f => (
-                    <span key={f} style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{f}</span>
+                    <span key={f} style={{ fontSize: 11, color: '#1F9D5C', background: '#f0fdf4', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{f}</span>
                   ))}
                 </div>
               </div>

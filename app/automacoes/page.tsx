@@ -107,7 +107,7 @@ export default function AutomacoesPage() {
               {card(
                 "Check-in de pacientes inativos",
                 "Envia uma mensagem calorosa para pacientes que não tiveram contato há mais de 7 dias. A Sofia pergunta como estão se sentindo e oferece ajuda.",
-                "#6043C1", "#f0ebff", "#d4c9f7",
+                "#1F9D5C", "#f0ebff", "#A7E0BF",
                 "/api/whatsapp-checkin",
                 { dias_sem_contato: 7 }
               )}
@@ -121,7 +121,7 @@ export default function AutomacoesPage() {
               {resultado?.enviados !== undefined && (
                 <div style={{ background: "white", borderRadius: 12, padding: "16px 20px" }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 8px" }}>Resultado</p>
-                  <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>Pacientes contatados: <strong style={{ color: "#6043C1" }}>{resultado.enviados}</strong> de {resultado.total || resultado.enviados}</p>
+                  <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>Pacientes contatados: <strong style={{ color: "#1F9D5C" }}>{resultado.enviados}</strong> de {resultado.total || resultado.enviados}</p>
                 </div>
               )}
             </>)}
@@ -185,7 +185,7 @@ export default function AutomacoesPage() {
                     } catch { setMsg({ tipo: "erro", texto: "Erro de conexão" }) }
                     finally { setCarregando(false) }
                   }} disabled={carregando}
-                    style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: carregando ? "#b9a9ef" : "#6043C1", color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: carregando ? "#b9a9ef" : "#1F9D5C", color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                     {carregando ? "Gerando..." : "Gerar relatório do mês"}
                   </button>
                 </div>
@@ -210,7 +210,7 @@ export default function AutomacoesPage() {
                   <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: 0 }}>Relatório {resultado.periodo.inicio} – {resultado.periodo.fim}</p>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
                     {[
-                      { label: "Consultas", valor: resultado.consultas_semana ?? 0, cor: "#6043C1" },
+                      { label: "Consultas", valor: resultado.consultas_semana ?? 0, cor: "#1F9D5C" },
                       { label: "Alertas pendentes", valor: resultado.alertas_pendentes?.length ?? 0, cor: "#dc2626" },
                       { label: "Novos no WhatsApp", valor: resultado.novos_pacientes_wpp ?? 0, cor: "#16a34a" },
                     ].map(m => (

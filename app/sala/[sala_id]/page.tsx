@@ -535,7 +535,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   if (tela === 'carregando') return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
-      <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid #6043C1', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
+      <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid #1F9D5C', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
@@ -553,7 +553,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     <div style={{ minHeight: '100dvh', background: '#0f172a', overflowY: 'auto' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 16px' }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
             <svg width='26' height='26' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><polyline points='20 6 9 17 4 12'/></svg>
           </div>
           <h1 style={{ color: 'white', fontSize: 22, fontWeight: 700, margin: '0 0 4px' }}>Consulta encerrada</h1>
@@ -603,7 +603,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     <div style={{ minHeight: '100dvh', background: '#F5F5F5', display: 'flex', flexDirection: 'column' }}>
       {/* Header MedIA */}
       <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 8, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 34, height: 34, borderRadius: 8, background: '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>
         </div>
         <div>
@@ -669,18 +669,18 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             )}
             {/* Status */}
             <div style={{ display: 'flex', gap: 8 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: micOn ? '#6043C1' : '#dc2626', background: micOn ? '#ede9fb' : '#fef2f2', padding: '4px 10px', borderRadius: 20, border: '1px solid', borderColor: micOn ? '#d4c9f7' : '#fecaca' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: micOn ? '#1F9D5C' : '#dc2626', background: micOn ? '#E8F7EF' : '#fef2f2', padding: '4px 10px', borderRadius: 20, border: '1px solid', borderColor: micOn ? '#A7E0BF' : '#fecaca' }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }}/>
                 {micOn ? 'Mic ativo' : 'Mic desligado'}
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: camOn ? '#6043C1' : '#dc2626', background: camOn ? '#ede9fb' : '#fef2f2', padding: '4px 10px', borderRadius: 20, border: '1px solid', borderColor: camOn ? '#d4c9f7' : '#fecaca' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: camOn ? '#1F9D5C' : '#dc2626', background: camOn ? '#E8F7EF' : '#fef2f2', padding: '4px 10px', borderRadius: 20, border: '1px solid', borderColor: camOn ? '#A7E0BF' : '#fecaca' }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }}/>
                 {camOn ? 'Camera ativa' : 'Camera desligada'}
               </span>
             </div>
             {/* Botao entrar */}
             <button onClick={() => { pararEspera(); entrarNaChamada() }}
-              style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer', width: '100%' }}>
+              style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer', width: '100%' }}>
               Entrar na consulta
             </button>
           </div>
@@ -728,7 +728,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       {/* Header */}
       <div style={{ background: '#1e293b', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: '1px solid #334155', minHeight: 48 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 26, height: 26, borderRadius: 6, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 26, height: 26, borderRadius: 6, background: '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
           <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0 }}>{sala?.titulo || 'Teleconsulta'}</p>
@@ -774,7 +774,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           {/* Overlay aguardando */}
           {!remoteConectado && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', flexDirection: 'column', gap: 16 }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', border: '3px solid #6043C1', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', border: '3px solid #1F9D5C', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
               <p style={{ fontSize: 15, color: 'white', fontWeight: 600, margin: 0 }}>
                 {isMedico ? 'Aguardando paciente entrar...' : 'Conectando...'}
               </p>
@@ -798,7 +798,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           {/* Botao flutuante do chat */}
           {tela === 'chamada' && remoteConectado && (
             <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
-              style={{ position: 'absolute', bottom: 72, left: 12, width: 44, height: 44, borderRadius: '50%', border: 'none', background: chatAberto ? '#6043C1' : 'rgba(30,41,59,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+              style={{ position: 'absolute', bottom: 72, left: 12, width: 44, height: 44, borderRadius: '50%', border: 'none', background: chatAberto ? '#1F9D5C' : 'rgba(30,41,59,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
               {naoLidas > 0 && !chatAberto && (
                 <span style={{ position: 'absolute', top: -2, right: -2, width: 18, height: 18, borderRadius: '50%', background: '#ef4444', fontSize: 10, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{naoLidas}</span>
@@ -829,7 +829,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             {/* Chat - direito */}
             <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)' }}>
               <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
-                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? '#6043C1' : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? '#1F9D5C' : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                 <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>
                 {naoLidas > 0 && <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }}/>}
               </button>
@@ -881,7 +881,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               {[...chat.map(m => ({...m, _tipo:'msg'})), ...anexos.map(a => ({...a, _tipo:'anexo'}))].map((item, i) => (
                 item._tipo === 'anexo' ? (
                   <div key={'a'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
-                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#6043C1' : '#60a5fa', fontWeight: 700, margin: '0 0 5px' }}>{item.de}  {item.hora}</p>
+                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#1F9D5C' : '#60a5fa', fontWeight: 700, margin: '0 0 5px' }}>{item.de}  {item.hora}</p>
                     {(item as any).tipo?.startsWith('image/') ? (
                       <a href={(item as any).url} download={(item as any).nome || "imagem"} onClick={e => { e.preventDefault(); const link = document.createElement("a"); link.href = (item as any).url; link.download = (item as any).nome || "imagem"; document.body.appendChild(link); link.click(); document.body.removeChild(link) }}>
                         <img src={(item as any).url} alt={(item as any).nome} style={{ width: '100%', borderRadius: 6, cursor: 'pointer', maxHeight: 160, objectFit: 'cover' }}/>
@@ -899,7 +899,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   </div>
                 ) : (
                   <div key={'m'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
-                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#6043C1' : '#60a5fa', fontWeight: 700, margin: '0 0 3px' }}>{item.de}  {item.hora}</p>
+                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#1F9D5C' : '#60a5fa', fontWeight: 700, margin: '0 0 3px' }}>{item.de}  {item.hora}</p>
                     <p style={{ fontSize: 12, color: '#cbd5e1', margin: 0, lineHeight: 1.5 }}>{(item as any).msg}</p>
                   </div>
                 )
@@ -912,13 +912,13 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                 style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #334155', background: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                 title="Enviar arquivo">
                 {enviandoAnexo
-                  ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid #475569', borderTopColor: '#6043C1', animation: 'spin 0.8s linear infinite' }}/>
+                  ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid #475569', borderTopColor: '#1F9D5C', animation: 'spin 0.8s linear infinite' }}/>
                   : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
                 }
               </button>
               <input value={msgInput} onChange={e => setMsgInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarChat()}
                 style={{ flex: 1, padding: '8px 10px', fontSize: 12, borderRadius: 8, border: '1px solid #334155', background: '#0f172a', color: 'white', outline: 'none' }} placeholder="Mensagem..."/>
-              <button onClick={enviarChat} style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: '#6043C1', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <button onClick={enviarChat} style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: '#1F9D5C', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
               </button>
             </div>
@@ -982,7 +982,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             </div>
             <div style={{ padding:'14px 20px', borderTop:'1px solid #334155', display:'flex', gap:10, flexShrink:0 }}>
               <button onClick={salvarProntuario} disabled={salvando || salvado}
-                style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background: salvado ? '#14532d' : '#6043C1', color:'white', fontSize:13, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background: salvado ? '#14532d' : '#1F9D5C', color:'white', fontSize:13, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
                 {salvado
                   ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Salvo! Abrindo histórico...</>
                   : salvando

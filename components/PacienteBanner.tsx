@@ -36,7 +36,7 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar }: Props) {
       <div style={{ padding: '14px 24px', background: '#fffbeb', borderBottom: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: 10 }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <p style={{ margin: 0, fontSize: 12, color: '#92400e', fontWeight: 500 }}>
-          Consulta avulsa — não vinculada a um paciente. {onTrocar && <button onClick={onTrocar} style={{ background: 'none', border: 'none', color: '#6043C1', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', fontSize: 12, padding: 0 }}>Vincular paciente</button>}
+          Consulta avulsa — não vinculada a um paciente. {onTrocar && <button onClick={onTrocar} style={{ background: 'none', border: 'none', color: '#1F9D5C', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', fontSize: 12, padding: 0 }}>Vincular paciente</button>}
         </p>
       </div>
     )
@@ -76,10 +76,10 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar }: Props) {
       {/* Avatar */}
       <div style={{
         width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
-        background: paciente.foto_url ? `url(${paciente.foto_url}) center/cover` : '#ede9fb',
-        border: '2px solid #d4c9f7',
+        background: paciente.foto_url ? `url(${paciente.foto_url}) center/cover` : '#E8F7EF',
+        border: '2px solid #A7E0BF',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 15, fontWeight: 700, color: '#6043C1',
+        fontSize: 15, fontWeight: 700, color: '#1F9D5C',
       }}>
         {!paciente.foto_url && iniciais}
       </div>
@@ -119,7 +119,7 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar }: Props) {
         <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
           {cidsCronicos.slice(0, 3).map((c: any, i: number) => (
             <span key={i} title={c.descricao || c.codigo || c}
-              style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, background: '#f3f0fd', color: '#6043C1', padding: '3px 7px', borderRadius: 5 }}>
+              style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, background: '#E8F7EF', color: '#1F9D5C', padding: '3px 7px', borderRadius: 5 }}>
               {c.codigo || c}
             </span>
           ))}

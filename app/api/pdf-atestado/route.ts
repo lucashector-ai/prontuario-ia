@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>Atestado Medico</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#111;padding:60px;max-width:700px;margin:0 auto}
 @media print{.no-print{display:none!important}body{padding:40px}}
-.btn{position:fixed;top:20px;right:20px;padding:10px 20px;background:#6043C1;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600}
+.btn{position:fixed;top:20px;right:20px;padding:10px 20px;background:#1F9D5C;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600}
 .header{text-align:center;border-bottom:2px solid #111;padding-bottom:20px;margin-bottom:30px}
 .title{font-size:18px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px}
 .subtitle{font-size:12px;color:#555}

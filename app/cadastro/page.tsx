@@ -6,7 +6,7 @@ type TipoConta = 'medico' | 'clinica' | null
 type Passo = 'escolha' | 'plano' | 'dados' | 'sucesso'
 
 const PLANOS = [
-  { id: 'starter', nome: 'Starter', preco: 'R$ 97/mês', max: '1 médico', features: ['Prontuário SOAP com IA', 'Transcrição ilimitada', 'PDF de prontuário', 'Chat IA (WhatsApp)'], cor: '#6043C1', bg: '#f0ebff', border: '#d4c9f7' },
+  { id: 'starter', nome: 'Starter', preco: 'R$ 97/mês', max: '1 médico', features: ['Prontuário SOAP com IA', 'Transcrição ilimitada', 'PDF de prontuário', 'Chat IA (WhatsApp)'], cor: '#1F9D5C', bg: '#f0ebff', border: '#A7E0BF' },
   { id: 'pro', nome: 'Pro', preco: 'R$ 247/mês', max: 'Até 10 médicos', features: ['Tudo do Starter', 'Chat multicanal (Instagram, Messenger)', 'Copiloto clínico avançado', 'Relatórios e métricas', 'Gestão de equipe'], cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4', destaque: true },
   { id: 'enterprise', nome: 'Enterprise', preco: 'R$ 697/mês', max: 'Médicos ilimitados', features: ['Tudo do Pro', 'API para integrações', 'Suporte dedicado', 'SLA garantido', 'Onboarding personalizado'], cor: '#d97706', bg: '#fffbeb', border: '#fde68a' },
 ]
@@ -71,7 +71,7 @@ export default function Cadastro() {
       <div style={{ maxWidth: 600, width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 36, height: 36, background: '#6043C1', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 36, height: 36, background: '#1F9D5C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             </div>
             <span style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>MedIA</span>
@@ -83,9 +83,9 @@ export default function Cadastro() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
           {/* Médico */}
           <div onClick={() => setTipo('medico')}
-            style={{ background: 'white', borderRadius: 16, padding: 28, cursor: 'pointer', border: `2px solid ${tipo==='medico'?'#6043C1':'#e5e7eb'}`, transition: 'all 0.2s', boxShadow: tipo==='medico'?'0 0 0 4px rgba(96,67,193,0.1)':'none' }}>
-            <div style={{ width: 52, height: 52, background: tipo==='medico'?'#6043C1':'#f0ebff', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={tipo==='medico'?'white':'#6043C1'} strokeWidth="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            style={{ background: 'white', borderRadius: 16, padding: 28, cursor: 'pointer', border: `2px solid ${tipo==='medico'?'#1F9D5C':'#e5e7eb'}`, transition: 'all 0.2s', boxShadow: tipo==='medico'?'0 0 0 4px rgba(96,67,193,0.1)':'none' }}>
+            <div style={{ width: 52, height: 52, background: tipo==='medico'?'#1F9D5C':'#f0ebff', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={tipo==='medico'?'white':'#1F9D5C'} strokeWidth="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
             <h3 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Médico</h3>
             <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 14px', lineHeight: 1.5 }}>Profissional autônomo ou em clínica. Prontuário, transcrição e Chat no seu nome.</p>
@@ -113,12 +113,12 @@ export default function Cadastro() {
         </div>
 
         <button onClick={() => tipo && setPasso('plano')} disabled={!tipo}
-          style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: tipo?'#6043C1':'#e5e7eb', color: tipo?'white':'#9ca3af', fontSize: 15, fontWeight: 600, cursor: tipo?'pointer':'not-allowed', marginBottom: 16 }}>
+          style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: tipo?'#1F9D5C':'#e5e7eb', color: tipo?'white':'#9ca3af', fontSize: 15, fontWeight: 600, cursor: tipo?'pointer':'not-allowed', marginBottom: 16 }}>
           Continuar →
         </button>
 
         <p style={{ textAlign: 'center', fontSize: 13, color: '#6b7280', margin: 0 }}>
-          Já tem conta? <a href="/login" style={{ color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>Entrar</a>
+          Já tem conta? <a href="/login" style={{ color: '#1F9D5C', fontWeight: 600, textDecoration: 'none' }}>Entrar</a>
         </p>
       </div>
     </div>
@@ -148,7 +148,7 @@ export default function Cadastro() {
         </div>
 
         <button onClick={() => setPasso('dados')}
-          style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: '#6043C1', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+          style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
           Continuar com plano {PLANOS.find(p=>p.id===form.plano)?.nome} →
         </button>
       </div>
@@ -224,12 +224,12 @@ export default function Cadastro() {
         {erro && <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 8, background: '#fef2f2', color: '#dc2626', fontSize: 13, border: '1px solid #fecaca' }}>{erro}</div>}
 
         <button onClick={criarConta} disabled={carregando || !form.nome || !form.email || !form.senha || form.senha !== form.confirmar_senha}
-          style={{ width: '100%', marginTop: 20, padding: 14, borderRadius: 12, border: 'none', background: (!form.nome||!form.email||!form.senha||form.senha!==form.confirmar_senha)?'#e5e7eb':'#6043C1', color: (!form.nome||!form.email||!form.senha)?'#9ca3af':'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+          style={{ width: '100%', marginTop: 20, padding: 14, borderRadius: 12, border: 'none', background: (!form.nome||!form.email||!form.senha||form.senha!==form.confirmar_senha)?'#e5e7eb':'#1F9D5C', color: (!form.nome||!form.email||!form.senha)?'#9ca3af':'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
           {carregando ? 'Criando conta...' : `Criar ${tipo === 'clinica' ? 'conta da clínica' : 'minha conta'}`}
         </button>
 
         <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', margin: '16px 0 0' }}>
-          Ao criar sua conta você aceita os <a href="#" style={{ color: '#6043C1' }}>Termos de Uso</a> e <a href="#" style={{ color: '#6043C1' }}>Política de Privacidade</a>
+          Ao criar sua conta você aceita os <a href="#" style={{ color: '#1F9D5C' }}>Termos de Uso</a> e <a href="#" style={{ color: '#1F9D5C' }}>Política de Privacidade</a>
         </p>
       </div>
     </div>
@@ -249,7 +249,7 @@ export default function Cadastro() {
             : 'Sua conta foi criada. Comece fazendo sua primeira consulta ou configurando o Chat.'}
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button onClick={() => router.push('/dashboard')} style={{ padding: 14, borderRadius: 12, border: 'none', background: '#6043C1', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => router.push('/dashboard')} style={{ padding: 14, borderRadius: 12, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
             Ir para o Dashboard
           </button>
           {tipo === 'clinica' && (

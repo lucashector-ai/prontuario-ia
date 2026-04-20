@@ -86,7 +86,7 @@ export default function Admin() {
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Painel administrativo</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{medicos.length} médico{medicos.length !== 1 ? 's' : ''} na clínica</p>
           </div>
-          <button onClick={() => setModalNovoMedico(true)} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => setModalNovoMedico(true)} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Novo médico
           </button>
@@ -95,19 +95,19 @@ export default function Admin() {
         <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
           {carregando ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-              <div style={{ width: 32, height: 32, border: '3px solid #ede9fb', borderTopColor: '#6043C1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              <div style={{ width: 32, height: 32, border: '3px solid #E8F7EF', borderTopColor: '#1F9D5C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 900 }}>
               {medicos.map(m => (
                 <div key={m.id} style={{ background: 'white', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f3f0fd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#6043C1', flexShrink: 0 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#E8F7EF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#1F9D5C', flexShrink: 0 }}>
                     {m.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('')}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                       <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>{m.nome}</p>
-                      {m.cargo === 'admin' && <span style={{ fontSize: 10, fontWeight: 700, color: '#6043C1', background: '#f3f0fd', padding: '1px 7px', borderRadius: 10 }}>admin</span>}
+                      {m.cargo === 'admin' && <span style={{ fontSize: 10, fontWeight: 700, color: '#1F9D5C', background: '#E8F7EF', padding: '1px 7px', borderRadius: 10 }}>admin</span>}
                       {!m.ativo && <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', background: '#fef2f2', padding: '1px 7px', borderRadius: 10, border: '1px solid #fecaca' }}>inativo</span>}
                     </div>
                     <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{m.especialidade || 'Sem especialidade'} {m.crm ? '· CRM ' + m.crm : ''} · {m.email}</p>
@@ -164,7 +164,7 @@ export default function Admin() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => setModalNovoMedico(false)} style={{ padding: '9px 18px', borderRadius: 8, background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={handleCriarMedico} disabled={salvando} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={handleCriarMedico} disabled={salvando} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                 {salvando ? 'Salvando...' : 'Criar médico'}
               </button>
             </div>

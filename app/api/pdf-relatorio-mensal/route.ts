@@ -76,7 +76,7 @@ Destaque pontos positivos, alertas e sugestoes para o proximo mes.`
     const linhasCID = topCids.map(c => `
       <tr>
         <td style="padding:8px 0;border-bottom:1px solid #f3f4f6">
-          <span style="font-family:monospace;font-size:11px;font-weight:700;color:#6043C1;background:#f0ebff;padding:2px 8px;border-radius:4px">${c.codigo}</span>
+          <span style="font-family:monospace;font-size:11px;font-weight:700;color:#1F9D5C;background:#f0ebff;padding:2px 8px;border-radius:4px">${c.codigo}</span>
         </td>
         <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151">${c.descricao}</td>
         <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:700;color:#111827;text-align:right">${c.total}x</td>
@@ -88,7 +88,7 @@ Destaque pontos positivos, alertas e sugestoes para o proximo mes.`
         <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151">${data}</td>
         <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#111827">${(a.pacientes as any)?.nome || "—"}</td>
         <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#6b7280">${a.motivo || "Consulta"}</td>
-        <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:11px;font-weight:600;color:${a.status === "confirmado" ? "#16a34a" : "#6043C1"};text-align:right">${a.status}</td>
+        <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:11px;font-weight:600;color:${a.status === "confirmado" ? "#16a34a" : "#1F9D5C"};text-align:right">${a.status}</td>
       </tr>`}).join("")
 
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
@@ -97,8 +97,8 @@ Destaque pontos positivos, alertas e sugestoes para o proximo mes.`
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;color:#111827;background:#fff;padding:40px;max-width:820px;margin:0 auto}
 @media print{.no-print{display:none!important}}
-.btn{position:fixed;top:20px;right:20px;padding:10px 20px;background:#6043C1;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600}
-.header{background:#6043C1;color:white;padding:28px 32px;border-radius:12px;margin-bottom:28px}
+.btn{position:fixed;top:20px;right:20px;padding:10px 20px;background:#1F9D5C;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600}
+.header{background:#1F9D5C;color:white;padding:28px 32px;border-radius:12px;margin-bottom:28px}
 .header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
 .clinic{font-size:20px;font-weight:700}
 .periodo{font-size:13px;opacity:0.8;margin-top:4px}
@@ -109,8 +109,8 @@ body{font-family:Arial,sans-serif;color:#111827;background:#fff;padding:40px;max
 .metric-value{font-size:26px;font-weight:800;color:#111827}
 .metric-sub{font-size:11px;margin-top:4px;font-weight:600}
 .section{margin-bottom:24px}
-.section-title{font-size:14px;font-weight:700;color:#111827;border-bottom:2px solid #6043C1;padding-bottom:8px;margin-bottom:14px}
-.ia-box{background:#f0ebff;border:1px solid #d4c9f7;border-radius:10px;padding:16px;font-size:13px;color:#3C3489;line-height:1.7}
+.section-title{font-size:14px;font-weight:700;color:#111827;border-bottom:2px solid #1F9D5C;padding-bottom:8px;margin-bottom:14px}
+.ia-box{background:#f0ebff;border:1px solid #A7E0BF;border-radius:10px;padding:16px;font-size:13px;color:#3C3489;line-height:1.7}
 table{width:100%;border-collapse:collapse}
 .footer{margin-top:40px;display:flex;justify-content:space-between;align-items:center;padding-top:16px;border-top:1px solid #e5e7eb}
 .footer-text{font-size:11px;color:#9ca3af}

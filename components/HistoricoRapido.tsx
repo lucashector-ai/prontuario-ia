@@ -58,7 +58,7 @@ export function HistoricoRapido({ pacienteId, medicoId }: Props) {
           Histórico recente ({consultas.length})
         </p>
         <button onClick={() => router.push(`/historico?paciente_id=${pacienteId}`)}
-          style={{ background: 'none', border: 'none', fontSize: 11, color: '#6043C1', fontWeight: 600, cursor: 'pointer' }}>
+          style={{ background: 'none', border: 'none', fontSize: 11, color: '#1F9D5C', fontWeight: 600, cursor: 'pointer' }}>
           Ver histórico completo →
         </button>
       </div>
@@ -73,7 +73,7 @@ export function HistoricoRapido({ pacienteId, medicoId }: Props) {
             <div key={c.id} style={{ background: 'white', borderRadius: 8, overflow: 'hidden' }}>
               <button onClick={() => toggle(c.id)}
                 style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#6043C1', background: '#f3f0fd', padding: '3px 8px', borderRadius: 6, flexShrink: 0 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#1F9D5C', background: '#E8F7EF', padding: '3px 8px', borderRadius: 6, flexShrink: 0 }}>
                   {data}
                 </div>
                 <p style={{ flex: 1, margin: 0, fontSize: 12, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -82,7 +82,7 @@ export function HistoricoRapido({ pacienteId, medicoId }: Props) {
                 {cids.length > 0 && (
                   <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
                     {cids.slice(0, 2).map((cid: any, i: number) => (
-                      <span key={i} style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 700, color: '#6043C1', background: '#f3f0fd', padding: '2px 5px', borderRadius: 4 }}>
+                      <span key={i} style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 700, color: '#1F9D5C', background: '#E8F7EF', padding: '2px 5px', borderRadius: 4 }}>
                         {cid.codigo}
                       </span>
                     ))}

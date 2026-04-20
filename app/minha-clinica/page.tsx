@@ -74,12 +74,12 @@ export default function MinhaClinica() {
               onClick={() => (document.getElementById('logo-input') as HTMLInputElement)?.click()}>
               {clinica?.logo_url
                 ? <img src={clinica.logo_url} style={{ width: 80, height: 80, borderRadius: 14, objectFit: 'cover', border: '2px solid #e5e7eb' }} />
-                : <div style={{ width: 80, height: 80, borderRadius: 14, background: 'linear-gradient(135deg, #6043C1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 700, color: 'white' }}>{iniciais}</div>
+                : <div style={{ width: 80, height: 80, borderRadius: 14, background: 'linear-gradient(135deg, #1F9D5C, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 700, color: 'white' }}>{iniciais}</div>
               }
-              <div style={{ position: 'absolute', bottom: -4, right: -4, width: 22, height: 22, background: '#6043C1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white' }}>
+              <div style={{ position: 'absolute', bottom: -4, right: -4, width: 22, height: 22, background: '#1F9D5C', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white' }}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
               </div>
-              {uploadandoLogo && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 20, height: 20, border: '2px solid #6043C1', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/></div>}
+              {uploadandoLogo && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 20, height: 20, border: '2px solid #1F9D5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/></div>}
             </div>
             <input id="logo-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadLogo(e.target.files[0])}/>
             <div>
@@ -130,7 +130,7 @@ export default function MinhaClinica() {
 
             {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, background: msg.tipo==='ok'?'#f0fdf4':'#fef2f2', color: msg.tipo==='ok'?'#16a34a':'#dc2626', fontSize: 13, border: `1px solid ${msg.tipo==='ok'?'#bbf7d0':'#fecaca'}` }}>{msg.texto}</div>}
 
-            <button onClick={salvar} disabled={salvando} style={{ padding: '12px 24px', borderRadius: 10, border: 'none', background: '#6043C1', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={salvar} disabled={salvando} style={{ padding: '12px 24px', borderRadius: 10, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
               {salvando ? 'Salvando...' : 'Salvar alterações'}
             </button>
           </div>

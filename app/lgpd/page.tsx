@@ -98,13 +98,13 @@ export default function LGPD() {
           <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 32px' }}>Gerencie seus dados conforme a Lei Geral de Proteção de Dados</p>
 
           <Card>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>📋 Seus direitos (LGPD)</h2>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Seus direitos (LGPD)</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
               {[
-                { icon: '👁', titulo: 'Acesso', desc: 'Acesse todos os dados armazenados sobre você' },
-                { icon: '📤', titulo: 'Portabilidade', desc: 'Exporte seus dados em formato legível' },
-                { icon: '✏️', titulo: 'Correção', desc: 'Corrija dados incorretos no perfil' },
-                { icon: '🗑', titulo: 'Eliminação', desc: 'Delete sua conta e todos os dados' },
+                { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', titulo: 'Acesso', desc: 'Acesse todos os dados armazenados sobre você' },
+                { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>', titulo: 'Portabilidade', desc: 'Exporte seus dados em formato legível' },
+                { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', titulo: 'Correção', desc: 'Corrija dados incorretos no perfil' },
+                { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>', titulo: 'Eliminação', desc: 'Delete sua conta e todos os dados' },
               ].map(d => (
                 <div key={d.titulo} style={{ background: '#F5F5F5', borderRadius: 10, padding: 14 }}>
                   <p style={{ fontSize: 18, margin: '0 0 4px' }}>{d.icon}</p>
@@ -116,18 +116,18 @@ export default function LGPD() {
           </Card>
 
           <Card>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>📤 Exportar meus dados</h2>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Exportar meus dados</h2>
             <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px', lineHeight: 1.6 }}>
               Baixe todos os seus dados — pacientes, consultas e agendamentos — em formato JSON.
             </p>
             <button onClick={exportarDados} disabled={exportando}
-              style={{ padding: '10px 20px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-              {exportando ? 'Exportando...' : '⬇️ Exportar todos os dados'}
+              style={{ padding: '10px 20px', borderRadius: 9, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              {exportando ? 'Exportando...' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar todos os dados'}
             </button>
           </Card>
 
           <Card>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>🔒 Consentimento</h2>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Consentimento</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
                 { label: 'Armazenamento de prontuários médicos', desc: 'Essencial para o funcionamento da plataforma', obrig: true },
@@ -136,7 +136,7 @@ export default function LGPD() {
                 { label: 'Análise de métricas e relatórios', desc: 'Dados aggregados para o dashboard', obrig: false },
               ].map(item => (
                 <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 14px', background: '#F5F5F5', borderRadius: 8 }}>
-                  <div style={{ width: 18, height: 18, borderRadius: 4, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 4, background: '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   </div>
                   <div>
@@ -159,7 +159,7 @@ export default function LGPD() {
               style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #fecaca', outline: 'none', fontSize: 14, marginBottom: 12, color: '#111827', background: 'white' }}/>
             <button onClick={deletarConta} disabled={deletando || confirmDelete !== medico?.email}
               style={{ padding: '10px 20px', borderRadius: 9, border: 'none', background: confirmDelete === medico?.email ? '#dc2626' : '#f3f4f6', color: confirmDelete === medico?.email ? 'white' : '#9ca3af', fontSize: 13, fontWeight: 600, cursor: confirmDelete === medico?.email ? 'pointer' : 'not-allowed' }}>
-              {deletando ? 'Deletando...' : '🗑 Deletar minha conta permanentemente'}
+              {deletando ? 'Deletando...' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Deletar minha conta permanentemente'}
             </button>
           </Card>
 

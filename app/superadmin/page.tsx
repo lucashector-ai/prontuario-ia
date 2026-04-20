@@ -87,7 +87,7 @@ export default function SuperAdmin() {
     <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 40, width: 360 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 9, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 36, height: 36, borderRadius: 9, background: '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
           <div>
@@ -104,7 +104,7 @@ export default function SuperAdmin() {
           placeholder="••••••••••••••••"
           style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 9, border: '1px solid #334155', background: '#0f172a', color: 'white', outline: 'none', marginBottom: 16, boxSizing: 'border-box' as const, fontFamily: 'monospace' }}
         />
-        <button onClick={login} style={{ width: '100%', padding: 12, borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={login} style={{ width: '100%', padding: 12, borderRadius: 9, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
           Entrar
         </button>
       </div>
@@ -112,7 +112,7 @@ export default function SuperAdmin() {
   )
 
   const PLANOS = ['starter', 'pro', 'enterprise']
-  const corPlano: Record<string, string> = { starter: '#6043C1', pro: '#0d9488', enterprise: '#d97706' }
+  const corPlano: Record<string, string> = { starter: '#1F9D5C', pro: '#0d9488', enterprise: '#d97706' }
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', fontFamily: 'inherit' }}>
@@ -120,7 +120,7 @@ export default function SuperAdmin() {
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
           <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>MedIA SuperAdmin</span>
@@ -128,7 +128,7 @@ export default function SuperAdmin() {
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
           {(['stats', 'clinicas', 'medicos'] as Aba[]).map(t => (
-            <button key={t} onClick={() => setAba(t)} style={{ padding: '6px 14px', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: 500, cursor: 'pointer', background: aba === t ? '#6043C1' : 'transparent', color: aba === t ? 'white' : '#94a3b8' }}>
+            <button key={t} onClick={() => setAba(t)} style={{ padding: '6px 14px', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: 500, cursor: 'pointer', background: aba === t ? '#1F9D5C' : 'transparent', color: aba === t ? 'white' : '#94a3b8' }}>
               {t === 'stats' ? '📊 Visão geral' : t === 'clinicas' ? '🏥 Clínicas' : '👨‍⚕️ Médicos'}
             </button>
           ))}
@@ -143,7 +143,7 @@ export default function SuperAdmin() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
               {[
-                { label: 'Clínicas', valor: stats.totalClinicas || 0, icon: '🏥', cor: '#6043C1' },
+                { label: 'Clínicas', valor: stats.totalClinicas || 0, icon: '🏥', cor: '#1F9D5C' },
                 { label: 'Médicos', valor: stats.totalMedicos || 0, icon: '👨‍⚕️', cor: '#0d9488' },
                 { label: 'Consultas', valor: stats.totalConsultas || 0, icon: '📋', cor: '#2563eb' },
                 { label: 'Pacientes', valor: stats.totalPacientes || 0, icon: '👥', cor: '#d97706' },
@@ -179,7 +179,7 @@ export default function SuperAdmin() {
                     <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0' }}>{m.email}</p>
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    {m.cargo === 'admin' && <span style={{ fontSize: 10, color: '#6043C1', background: '#1e1344', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>admin</span>}
+                    {m.cargo === 'admin' && <span style={{ fontSize: 10, color: '#1F9D5C', background: '#1e1344', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>admin</span>}
                     <span style={{ fontSize: 11, color: '#64748b' }}>{fmt(m.criado_em)}</span>
                   </div>
                 </div>
@@ -233,13 +233,13 @@ export default function SuperAdmin() {
             </div>
             {carregando ? <p style={{ color: '#64748b' }}>Carregando...</p> : medicos.filter(m => !busca || m.nome?.toLowerCase().includes(busca.toLowerCase()) || m.email?.toLowerCase().includes(busca.toLowerCase())).map(m => (
               <div key={m.id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1e1344', border: '1px solid #6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#6043C1', flexShrink: 0 }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1e1344', border: '1px solid #1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#1F9D5C', flexShrink: 0 }}>
                   {m.nome?.split(' ').map((n: string) => n[0]).slice(0,2).join('') || '?'}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: 'white', margin: 0 }}>{m.nome}</p>
-                    {m.cargo === 'admin' && <span style={{ fontSize: 10, color: '#6043C1', background: '#1e1344', padding: '1px 7px', borderRadius: 10, fontWeight: 700 }}>admin</span>}
+                    {m.cargo === 'admin' && <span style={{ fontSize: 10, color: '#1F9D5C', background: '#1e1344', padding: '1px 7px', borderRadius: 10, fontWeight: 700 }}>admin</span>}
                     {!m.ativo && <span style={{ fontSize: 10, color: '#dc2626', background: '#1f0000', padding: '1px 7px', borderRadius: 10 }}>inativo</span>}
                   </div>
                   <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>{m.email} · {m.especialidade || 'Sem especialidade'} {m.crm ? '· ' + m.crm : ''} · cadastrado {fmt(m.criado_em)}</p>

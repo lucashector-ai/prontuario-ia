@@ -39,7 +39,7 @@ export default function ResetPasswordPage() {
               style={{ width: '100%', padding: '12px 16px', fontSize: 14, borderRadius: 10, border: '1.5px solid #e5e7eb', boxSizing: 'border-box', marginBottom: 12 }} />
             {erro && <p style={{ fontSize: 13, color: '#dc2626', margin: '0 0 12px' }}>{erro}</p>}
             <button onClick={salvar} disabled={loading}
-              style={{ width: '100%', padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', background: loading ? '#b9a9ef' : '#6043C1', color: 'white', fontSize: 15, fontWeight: 700 }}>
+              style={{ width: '100%', padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', background: loading ? '#b9a9ef' : '#1F9D5C', color: 'white', fontSize: 15, fontWeight: 700 }}>
               {loading ? 'Salvando...' : 'Salvar nova senha'}
             </button>
           </>

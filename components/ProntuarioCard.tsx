@@ -10,7 +10,7 @@ const secoes = [
   { key: 'subjetivo', letra: 'S', titulo: 'Subjetivo', sub: 'Queixas e história', cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
   { key: 'objetivo',  letra: 'O', titulo: 'Objetivo',  sub: 'Exame físico',        cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
   { key: 'avaliacao', letra: 'A', titulo: 'Avaliação',  sub: 'Hipótese diagnóstica', cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
-  { key: 'plano',     letra: 'P', titulo: 'Plano',      sub: 'Conduta e prescrição', cor: '#6043C1', bg: '#f3f0fd', border: '#d4c9f7' },
+  { key: 'plano',     letra: 'P', titulo: 'Plano',      sub: 'Conduta e prescrição', cor: '#1F9D5C', bg: '#E8F7EF', border: '#A7E0BF' },
 ]
 
 export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, pacienteId, insights, padroes, totalConsultas }: Props) {
@@ -54,8 +54,8 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
       )}
 
       {prontuario.resumo_copiloto && (
-        <div style={{ background: '#f0ebff', borderLeft: '4px solid #6043C1', borderRadius: '0 10px 10px 0', padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2" style={{flexShrink:0,marginTop:1}}><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 5v6m0 3h.01"/></svg>
+        <div style={{ background: '#f0ebff', borderLeft: '4px solid #1F9D5C', borderRadius: '0 10px 10px 0', padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1F9D5C" strokeWidth="2" style={{flexShrink:0,marginTop:1}}><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 5v6m0 3h.01"/></svg>
           <p style={{ fontSize: 12, color: '#4c1d95', margin: 0, lineHeight: 1.5 }}><strong>Copiloto:</strong> {prontuario.resumo_copiloto}</p>
         </div>
       )}
@@ -90,7 +90,7 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {insights.map((ins, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: ins.tipo === 'alerta' ? '#dc2626' : ins.tipo === 'melhora' ? '#16a34a' : ins.tipo === 'piora' ? '#d97706' : '#6043C1', flexShrink: 0, width: 16 }}>{iconeInsight(ins.tipo)}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: ins.tipo === 'alerta' ? '#dc2626' : ins.tipo === 'melhora' ? '#16a34a' : ins.tipo === 'piora' ? '#d97706' : '#1F9D5C', flexShrink: 0, width: 16 }}>{iconeInsight(ins.tipo)}</span>
                 <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>{ins.texto}</p>
               </div>
             ))}
@@ -119,7 +119,7 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {prontuario.cids.map((cid, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'white', borderRadius: 8, padding: '8px 10px' }}>
-                <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#6043C1', background: '#f3f0fd', padding: '2px 8px', borderRadius: 5, flexShrink: 0 }}>{cid.codigo}</span>
+                <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#1F9D5C', background: '#E8F7EF', padding: '2px 8px', borderRadius: 5, flexShrink: 0 }}>{cid.codigo}</span>
                 <div>
                   <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0 }}>{cid.descricao}</p>
                   <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{cid.justificativa}</p>
@@ -156,8 +156,8 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
           Copiar
         </button>
         <button onClick={handleExportarPDF} style={{
-          padding: '9px', borderRadius: 8, background: '#f3f0fd',
-          color: '#6043C1', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontWeight: 600,
+          padding: '9px', borderRadius: 8, background: '#E8F7EF',
+          color: '#1F9D5C', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontWeight: 600,
         }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>

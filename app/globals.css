@@ -32,7 +32,7 @@ input, textarea, select {
 }
 input::placeholder, textarea::placeholder { color: #9ca3af !important; }
 input:focus, textarea:focus, select:focus {
-  border-color: #6043C1 !important;
+  border-color: #1F9D5C !important;
   outline: none !important;
   box-shadow: 0 0 0 3px rgba(22,163,74,0.1) !important;
 }
@@ -41,17 +41,17 @@ input:focus, textarea:focus, select:focus {
 
 :root {
   --color-bg: #F5F5F5;
-  --color-primary: #6043C1;
-  --color-primary-dark: #4e35a3;
-  --color-primary-light: #ede9fb;
+  --color-primary: #1F9D5C;
+  --color-primary-dark: #176F44;
+  --color-primary-light: #E8F7EF;
   --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
 }
 
 :root {
   --bg: #F5F5F5;
-  --primary: #6043C1;
-  --primary-dark: #4e35a3;
-  --primary-light: #ede9fb;
+  --primary: #1F9D5C;
+  --primary-dark: #176F44;
+  --primary-light: #E8F7EF;
   --primary-text: #ffffff;
   --card-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
 }
@@ -64,14 +64,14 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* Override verde residual */
-.bg-green-50, .bg-green-100, .bg-green-200 { background-color: #ede9fb !important; }
-.text-green-500, .text-green-600, .text-green-700, .text-green-800 { color: #6043C1 !important; }
-.border-green-200, .border-green-300, .border-green-400, .border-green-500 { border-color: #d4c9f7 !important; }
-.hover\:bg-green-50:hover, .hover\:bg-green-100:hover { background-color: #ede9fb !important; }
-.hover\:text-green-600:hover, .hover\:text-green-700:hover { color: #6043C1 !important; }
-.focus\:ring-green-500:focus, .focus\:border-green-500:focus { --tw-ring-color: #6043C1 !important; border-color: #6043C1 !important; }
-.ring-green-500 { --tw-ring-color: #6043C1 !important; }
-.checked\:bg-green-600:checked { background-color: #6043C1 !important; }
+.bg-green-50, .bg-green-100, .bg-green-200 { background-color: #E8F7EF !important; }
+.text-green-500, .text-green-600, .text-green-700, .text-green-800 { color: #1F9D5C !important; }
+.border-green-200, .border-green-300, .border-green-400, .border-green-500 { border-color: #A7E0BF !important; }
+.hover\:bg-green-50:hover, .hover\:bg-green-100:hover { background-color: #E8F7EF !important; }
+.hover\:text-green-600:hover, .hover\:text-green-700:hover { color: #1F9D5C !important; }
+.focus\:ring-green-500:focus, .focus\:border-green-500:focus { --tw-ring-color: #1F9D5C !important; border-color: #1F9D5C !important; }
+.ring-green-500 { --tw-ring-color: #1F9D5C !important; }
+.checked\:bg-green-600:checked { background-color: #1F9D5C !important; }
 
 /* ── Responsividade mobile ─────────────────────────────────────────────── */
 .grid-consulta { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 0 16px 0; flex: 1; overflow: hidden; }

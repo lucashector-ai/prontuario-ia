@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/Sidebar"
 
 const PLANOS: Record<string, { nome: string; max: number; cor: string; bg: string }> = {
-  starter:    { nome: "Starter",    max: 3,    cor: "#6043C1", bg: "#f0ebff" },
+  starter:    { nome: "Starter",    max: 3,    cor: "#1F9D5C", bg: "#f0ebff" },
   pro:        { nome: "Pro",        max: 10,   cor: "#0d9488", bg: "#f0fdfa" },
   enterprise: { nome: "Enterprise", max: 9999, cor: "#d97706", bg: "#fffbeb" },
 }
@@ -82,7 +82,7 @@ export default function ClinicaPage() {
   if (carregando) return (
     <div style={{ display: "flex", height: "100vh", background: "#F5F5F5" }}>
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid #ede9fb", borderTopColor: "#6043C1", animation: "spin 0.8s linear infinite" }}/>
+        <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid #E8F7EF", borderTopColor: "#1F9D5C", animation: "spin 0.8s linear infinite" }}/>
       </div>
       <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
     </div>
@@ -106,7 +106,7 @@ export default function ClinicaPage() {
             <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>Gerencie sua equipe e plano</p>
           </div>
           {medico?.cargo === "admin" && (
-            <button onClick={() => setShowForm(true)} style={{ fontSize: 13, fontWeight: 600, color: "white", background: "#6043C1", border: "none", padding: "8px 16px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            <button onClick={() => setShowForm(true)} style={{ fontSize: 13, fontWeight: 600, color: "white", background: "#1F9D5C", border: "none", padding: "8px 16px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
               Adicionar médico
             </button>
@@ -137,10 +137,10 @@ export default function ClinicaPage() {
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontSize: 12, color: "#6b7280" }}>Capacidade utilizada</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: pctUso >= 90 ? "#dc2626" : "#6043C1" }}>{pctUso}%</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: pctUso >= 90 ? "#dc2626" : "#1F9D5C" }}>{pctUso}%</span>
                 </div>
                 <div style={{ height: 6, background: "#f3f4f6", borderRadius: 4 }}>
-                  <div style={{ height: "100%", width: `${Math.min(pctUso, 100)}%`, background: pctUso >= 90 ? "#dc2626" : "#6043C1", borderRadius: 4, transition: "width 0.4s" }}/>
+                  <div style={{ height: "100%", width: `${Math.min(pctUso, 100)}%`, background: pctUso >= 90 ? "#dc2626" : "#1F9D5C", borderRadius: 4, transition: "width 0.4s" }}/>
                 </div>
                 {pctUso >= 80 && (
                   <p style={{ fontSize: 12, color: "#d97706", marginTop: 8 }}>⚠ Você está próximo do limite. Considere fazer upgrade do plano.</p>
@@ -172,7 +172,7 @@ export default function ClinicaPage() {
                 ))}
               </div>
               <p style={{ fontSize: 11, color: "#9ca3af", margin: "0 0 12px" }}>Senha padrão: <strong>medIA@2026</strong> — o médico poderá alterar no primeiro acesso</p>
-              <button onClick={adicionarMedico} disabled={adicionando} style={{ padding: "10px 20px", background: adicionando ? "#b9a9ef" : "#6043C1", color: "white", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              <button onClick={adicionarMedico} disabled={adicionando} style={{ padding: "10px 20px", background: adicionando ? "#b9a9ef" : "#1F9D5C", color: "white", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 {adicionando ? "Adicionando..." : "Adicionar à clínica"}
               </button>
             </div>
@@ -188,11 +188,11 @@ export default function ClinicaPage() {
               const isMe = m.id === medico?.id
               return (
                 <div key={m.id} style={{ padding: "14px 20px", borderBottom: i < medicos.length - 1 ? "1px solid #F5F5F5" : "none", display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: m.cargo === "admin" ? "#6043C1" : "#f0ebff", color: m.cargo === "admin" ? "white" : "#6043C1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{iniciais}</div>
+                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: m.cargo === "admin" ? "#1F9D5C" : "#f0ebff", color: m.cargo === "admin" ? "white" : "#1F9D5C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{iniciais}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>{m.nome}</p>
-                      {m.cargo === "admin" && <span style={{ fontSize: 10, fontWeight: 700, color: "#6043C1", background: "#f0ebff", padding: "1px 8px", borderRadius: 10, border: "1px solid #d4c9f7" }}>Admin</span>}
+                      {m.cargo === "admin" && <span style={{ fontSize: 10, fontWeight: 700, color: "#1F9D5C", background: "#f0ebff", padding: "1px 8px", borderRadius: 10, border: "1px solid #A7E0BF" }}>Admin</span>}
                       {isMe && <span style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", background: "#f0fdf4", padding: "1px 8px", borderRadius: 10, border: "1px solid #bbf7d0" }}>Você</span>}
                     </div>
                     <p style={{ fontSize: 12, color: "#9ca3af", margin: "2px 0 0" }}>{m.email} {m.especialidade ? `• ${m.especialidade}` : ""} {m.crm ? `• CRM ${m.crm}` : ""}</p>

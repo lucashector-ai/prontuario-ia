@@ -8,7 +8,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { IconGift } from '@/components/Icon'
 
 const TIPOS = {
-  consulta: { label: 'Consulta', bg: '#ede9fb', text: '#4e35a3', border: '#d4c9f7', dot: '#6043C1' },
+  consulta: { label: 'Consulta', bg: '#E8F7EF', text: '#176F44', border: '#A7E0BF', dot: '#1F9D5C' },
   retorno:  { label: 'Retorno',  bg: '#f3effd', text: '#5b42b0', border: '#dfd3f5', dot: '#7c3aed' },
   exame:    { label: 'Exame',    bg: '#e8f5ee', text: '#1f6b3d', border: '#c4e4d2', dot: '#16a34a' },
   urgencia: { label: 'Urgência', bg: '#fee2e2', text: '#991b1b', border: '#fca5a5', dot: '#dc2626' },
@@ -315,18 +315,18 @@ export default function Agenda() {
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: 'white', fontSize: 12, color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Lista de espera
-            {listaEspera.length > 0 && <span style={{ background: '#6043C1', color: 'white', borderRadius: 10, padding: '0 6px', fontSize: 10 }}>{listaEspera.length}</span>}
+            {listaEspera.length > 0 && <span style={{ background: '#1F9D5C', color: 'white', borderRadius: 10, padding: '0 6px', fontSize: 10 }}>{listaEspera.length}</span>}
           </button>
           <div style={{ display: 'flex', borderRadius: 7, overflow: 'hidden', background: 'white' }}>
             {(['dia', 'semana', 'mes'] as const).map((v, i) => (
               <button key={v} onClick={() => setViewMode(v)}
-                style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: viewMode === v ? '#6043C1' : 'white', color: viewMode === v ? 'white' : '#6b7280', border: 'none', borderLeft: i > 0 ? '1px solid #e5e7eb' : 'none' }}>
+                style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: viewMode === v ? '#1F9D5C' : 'white', color: viewMode === v ? 'white' : '#6b7280', border: 'none', borderLeft: i > 0 ? '1px solid #e5e7eb' : 'none' }}>
                 {v === 'dia' ? 'Dia' : v === 'semana' ? 'Semana' : 'Mês'}
               </button>
             ))}
           </div>
           <button onClick={() => abrirModal()}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Novo
           </button>
@@ -365,9 +365,9 @@ export default function Agenda() {
               const temAgs = agendamentosFiltrados.some(a => new Date(a.data_hora).toDateString() === d.toDateString())
               return (
                 <button key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
-                  style={{ aspectRatio: '1', border: 'none', background: selecionado ? '#6043C1' : (hoje ? '#ede9fb' : 'transparent'), color: selecionado ? 'white' : (!noMes ? '#d1d5db' : (hoje ? '#6043C1' : '#374151')), fontSize: 11, fontWeight: hoje || selecionado ? 700 : 500, borderRadius: 6, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  style={{ aspectRatio: '1', border: 'none', background: selecionado ? '#1F9D5C' : (hoje ? '#E8F7EF' : 'transparent'), color: selecionado ? 'white' : (!noMes ? '#d1d5db' : (hoje ? '#1F9D5C' : '#374151')), fontSize: 11, fontWeight: hoje || selecionado ? 700 : 500, borderRadius: 6, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {d.getDate()}
-                  {temAgs && !selecionado && <span style={{ position: 'absolute', bottom: 2, width: 3, height: 3, borderRadius: '50%', background: hoje ? '#6043C1' : '#9ca3af' }}/>}
+                  {temAgs && !selecionado && <span style={{ position: 'absolute', bottom: 2, width: 3, height: 3, borderRadius: '50%', background: hoje ? '#1F9D5C' : '#9ca3af' }}/>}
                 </button>
               )
             })}
@@ -376,7 +376,7 @@ export default function Agenda() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Filtros</h3>
-            {filtrosAtivos > 0 && <button onClick={limparFiltros} style={{ fontSize: 11, color: '#6043C1', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Limpar ({filtrosAtivos})</button>}
+            {filtrosAtivos > 0 && <button onClick={limparFiltros} style={{ fontSize: 11, color: '#1F9D5C', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Limpar ({filtrosAtivos})</button>}
           </div>
           <div style={{ marginBottom: 12 }}>
             <label style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Status</label>
@@ -430,11 +430,11 @@ export default function Agenda() {
             return (
               <div key={i} onClick={() => { setDiaSelecionado(dia); setViewMode('dia') }}
                 style={{ padding: '10px 8px', textAlign: 'center', borderLeft: '1px solid #f3f4f6', cursor: 'pointer', background: isHoje(dia) ? '#faf8ff' : 'white' }}>
-                <p style={{ fontSize: 10, color: isHoje(dia) ? '#6043C1' : '#9ca3af', fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <p style={{ fontSize: 10, color: isHoje(dia) ? '#1F9D5C' : '#9ca3af', fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   {dia.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: isHoje(dia) ? '#6043C1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: isHoje(dia) ? '#1F9D5C' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <p style={{ fontSize: 14, fontWeight: 700, color: isHoje(dia) ? 'white' : '#111827', margin: 0 }}>{dia.getDate()}</p>
                   </div>
                   {aniversariantes > 0 && <span title={`${aniversariantes} aniversariante(s)`} style={{ fontSize: 12 }}><IconGift size={14} /></span>}
@@ -442,7 +442,7 @@ export default function Agenda() {
                 {ags.length > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 3 }}>
                     {ags.slice(0, 4).map((ag, ai) => (
-                      <div key={ai} style={{ width: 4, height: 4, borderRadius: '50%', background: TIPOS[ag.tipo as keyof typeof TIPOS]?.dot || '#6043C1' }}/>
+                      <div key={ai} style={{ width: 4, height: 4, borderRadius: '50%', background: TIPOS[ag.tipo as keyof typeof TIPOS]?.dot || '#1F9D5C' }}/>
                     ))}
                     {ags.length > 4 && <span style={{ fontSize: 9, color: '#6b7280' }}>+{ags.length - 4}</span>}
                   </div>
@@ -529,7 +529,7 @@ export default function Agenda() {
               <div key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
                 style={{ borderTop: '1px solid #f3f4f6', borderLeft: i % 7 !== 0 ? '1px solid #f3f4f6' : 'none', padding: 6, cursor: 'pointer', background: noMes ? '#F5F5F5' : (hoje ? '#faf8ff' : 'white'), overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 11, fontWeight: hoje ? 700 : 600, color: !noMes ? '#d1d5db' : hoje ? 'white' : '#374151', background: hoje ? '#6043C1' : 'transparent', width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d.getDate()}</span>
+                  <span style={{ fontSize: 11, fontWeight: hoje ? 700 : 600, color: !noMes ? '#d1d5db' : hoje ? 'white' : '#374151', background: hoje ? '#1F9D5C' : 'transparent', width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d.getDate()}</span>
                   {ags.length > 2 && <span style={{ fontSize: 9, color: '#9ca3af', fontWeight: 600 }}>+{ags.length - 2}</span>}
                 </div>
                 {ags.slice(0, 2).map(ag => {
@@ -556,7 +556,7 @@ export default function Agenda() {
     return (
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px' }}>
         <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', background: isHoje(diaSelecionado) ? '#6043C1' : '#ede9fb', color: isHoje(diaSelecionado) ? 'white' : '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700 }}>
+          <div style={{ width: 44, height: 44, borderRadius: '50%', background: isHoje(diaSelecionado) ? '#1F9D5C' : '#E8F7EF', color: isHoje(diaSelecionado) ? 'white' : '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700 }}>
             {diaSelecionado.getDate()}
           </div>
           <div>
@@ -647,8 +647,8 @@ export default function Agenda() {
           <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, overflow: 'hidden' }}>
             <div style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f3f0fd', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#E8F7EF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1F9D5C" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 </div>
                 <div>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>{modal.ag ? 'Editar agendamento' : 'Novo agendamento'}</h3>
@@ -723,16 +723,16 @@ export default function Agenda() {
                 </div>
               )}
               {!modal.ag && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: comVideo ? '#f3f0fd' : '#F5F5F5', borderRadius: 10, border: '1px solid ' + (comVideo ? '#d4c9f7' : '#e5e7eb') }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: comVideo ? '#E8F7EF' : '#F5F5F5', borderRadius: 10, border: '1px solid ' + (comVideo ? '#A7E0BF' : '#e5e7eb') }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={comVideo ? '#6043C1' : '#9ca3af'} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={comVideo ? '#1F9D5C' : '#9ca3af'} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: comVideo ? '#6043C1' : '#374151', margin: 0 }}>Incluir sala de vídeo</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: comVideo ? '#1F9D5C' : '#374151', margin: 0 }}>Incluir sala de vídeo</p>
                       <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Link gerado automaticamente</p>
                     </div>
                   </div>
                   <button type="button" onClick={() => { setComVideo(!comVideo); setSalaLink(''); setSalaId('') }}
-                    style={{ width: 42, height: 24, borderRadius: 12, border: 'none', background: comVideo ? '#6043C1' : '#d1d5db', cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
+                    style={{ width: 42, height: 24, borderRadius: 12, border: 'none', background: comVideo ? '#1F9D5C' : '#d1d5db', cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
                     <span style={{ position: 'absolute', top: 2, left: comVideo ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left .2s' }}/>
                   </button>
                 </div>
@@ -740,23 +740,23 @@ export default function Agenda() {
               {salaLink && (
                 <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                  <span style={{ fontSize: 11, color: '#4e35a3', flex: 1, overflow: 'hidden', background: 'white', padding: '4px 8px', borderRadius: 6, textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salaLink}</span>
+                  <span style={{ fontSize: 11, color: '#176F44', flex: 1, overflow: 'hidden', background: 'white', padding: '4px 8px', borderRadius: 6, textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salaLink}</span>
                   <button type="button" onClick={() => { navigator.clipboard.writeText(salaLink); window.open('/sala/' + salaId, '_blank') }}
-                    style={{ fontSize: 11, color: '#6043C1', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' }}>Copiar e abrir</button>
+                    style={{ fontSize: 11, color: '#1F9D5C', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' }}>Copiar e abrir</button>
                 </div>
               )}
               {modal.ag && modal.ag.paciente_id && (
-                <div style={{ background: preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#f0fdf4' : '#f0ebff', border: '1px solid ' + (preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#bbf7d0' : '#d4c9f7'), borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#f0fdf4' : '#f0ebff', border: '1px solid ' + (preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#bbf7d0' : '#A7E0BF'), borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#16a34a' : '#6043C1'} strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#16a34a' : '#1F9D5C'} strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#16a34a' : '#6043C1', margin: 0 }}>Pré-consulta WhatsApp</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#16a34a' : '#1F9D5C', margin: 0 }}>Pré-consulta WhatsApp</p>
                       <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{preConsultaEnviada || modal.ag.pre_consulta_enviada ? 'Perguntas enviadas ao paciente' : 'Enviar perguntas antes da consulta'}</p>
                     </div>
                   </div>
                   {!(preConsultaEnviada || modal.ag.pre_consulta_enviada) && (
                     <button type="button" onClick={() => enviarPreConsulta(modal.ag.id)} disabled={enviandoPreConsulta}
-                      style={{ fontSize: 12, color: '#6043C1', background: 'white', padding: '5px 12px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
+                      style={{ fontSize: 12, color: '#1F9D5C', background: 'white', padding: '5px 12px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
                       {enviandoPreConsulta ? 'Enviando...' : 'Enviar'}
                     </button>
                   )}
@@ -764,7 +764,7 @@ export default function Agenda() {
               )}
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
                 <button type="submit" disabled={salvando}
-                  style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                  style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   {salvando ? 'Salvando...' : modal.ag ? 'Salvar alterações' : 'Criar agendamento'}
                 </button>
                 {modal.ag && (

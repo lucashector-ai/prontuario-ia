@@ -97,11 +97,11 @@ export default function SofiaConfig() {
                   <button key={v} onClick={() => setConfig({ ...config, autonomia: v })}
                     style={{
                       padding: '12px 14px', borderRadius: 10, textAlign: 'left',
-                      border: `1.5px solid ${config.autonomia === v ? '#6043C1' : '#e5e7eb'}`,
-                      background: config.autonomia === v ? '#f3f0fd' : 'white',
+                      border: `1.5px solid ${config.autonomia === v ? '#1F9D5C' : '#e5e7eb'}`,
+                      background: config.autonomia === v ? '#E8F7EF' : 'white',
                       cursor: 'pointer',
                     }}>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: config.autonomia === v ? '#6043C1' : '#111827' }}>{t}</p>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: config.autonomia === v ? '#1F9D5C' : '#111827' }}>{t}</p>
                     <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6b7280' }}>{d}</p>
                   </button>
                 ))}
@@ -163,9 +163,9 @@ export default function SofiaConfig() {
                     }}
                     style={{
                       padding: '8px 16px', borderRadius: 8,
-                      border: `1.5px solid ${ativo ? '#6043C1' : '#e5e7eb'}`,
-                      background: ativo ? '#f3f0fd' : 'white',
-                      color: ativo ? '#6043C1' : '#6b7280',
+                      border: `1.5px solid ${ativo ? '#1F9D5C' : '#e5e7eb'}`,
+                      background: ativo ? '#E8F7EF' : 'white',
+                      color: ativo ? '#1F9D5C' : '#6b7280',
                       fontSize: 13, fontWeight: 600, cursor: 'pointer',
                     }}>
                     {labels[tipo]}
@@ -245,7 +245,7 @@ export default function SofiaConfig() {
                 placeholder="Valor"
                 style={{ width: 100, padding: '7px 10px', borderRadius: 7, fontSize: 13 }}/>
               <button onClick={addPreco}
-                style={{ padding: '7px 14px', borderRadius: 7, border: 'none', background: '#6043C1', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                style={{ padding: '7px 14px', borderRadius: 7, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                 Adicionar
               </button>
             </div>
@@ -297,9 +297,9 @@ export default function SofiaConfig() {
                       }}
                       style={{
                         padding: '8px 16px', borderRadius: 8,
-                        border: `1.5px solid ${ativo ? '#6043C1' : '#e5e7eb'}`,
-                        background: ativo ? '#f3f0fd' : 'white',
-                        color: ativo ? '#6043C1' : '#6b7280',
+                        border: `1.5px solid ${ativo ? '#1F9D5C' : '#e5e7eb'}`,
+                        background: ativo ? '#E8F7EF' : 'white',
+                        color: ativo ? '#1F9D5C' : '#6b7280',
                         fontSize: 13, fontWeight: 600, cursor: 'pointer',
                         textTransform: 'capitalize',
                       }}>
@@ -345,7 +345,7 @@ export default function SofiaConfig() {
               Cancelar
             </button>
             <button onClick={salvar} disabled={salvando}
-              style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
               {salvando ? 'Salvando...' : 'Salvar configurações'}
             </button>
           </div>
@@ -376,7 +376,7 @@ function ToggleRow({ label, desc, value, onChange }: { label: string; desc: stri
         <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9ca3af' }}>{desc}</p>
       </div>
       <button onClick={() => onChange(!value)}
-        style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: value ? '#6043C1' : '#d1d5db', cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
+        style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: value ? '#1F9D5C' : '#d1d5db', cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
         <span style={{ position: 'absolute', top: 2, left: value ? 22 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left .2s' }}/>
       </button>
     </div>

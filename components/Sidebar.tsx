@@ -43,7 +43,7 @@ export function Sidebar() {
             <line x1='3' y1='10' x2='21' y2='10'/>
           </svg>
         )},
-        ...(!isRecepcionista ? [{ href: '/historico', label: 'Historico', icon: (
+        ...(!isRecepcionista ? [{ href: '/historico', label: 'Histórico', icon: (
           <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
             <path d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'/>
           </svg>
@@ -75,7 +75,7 @@ export function Sidebar() {
               <path d='M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18'/>
             </svg>
           )},
-          { href: '/dicionario', label: 'Dicionario clinico', icon: (
+          { href: '/dicionario', label: 'Dicionário clínico', icon: (
             <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
               <path d='M4 19.5A2.5 2.5 0 016.5 17H20'/>
               <path d='M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z'/>
@@ -88,23 +88,23 @@ export function Sidebar() {
       label: 'SETTINGS',
       items: [
         ...(isAdmin ? [
-          { href: '/configuracoes/sofia', label: 'Sofia IA', icon: (
+          { href: '/configuracoes/sofia', label: 'Sofia · IA', icon: (
             <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
               <path d='M12 8V4H8'/><rect x='4' y='12' width='16' height='8' rx='2'/>
               <path d='M2 14h2M20 14h2M15 13v2M9 13v2'/>
             </svg>
           )},
-          { href: '/automacoes', label: 'Automacoes', icon: (
+          { href: '/automacoes', label: 'Automações', icon: (
             <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
               <path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/>
             </svg>
           )},
-          { href: '/lgpd', label: 'Privacidade', icon: (
+          { href: '/lgpd', label: 'Privacidade & LGPD', icon: (
             <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8'>
               <path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/>
             </svg>
           )},
-          { href: '/minha-clinica', label: 'Minha clinica', icon: (
+          { href: '/minha-clinica', label: 'Minha clínica', icon: (
             <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
               <path d='M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z'/>
               <polyline points='9 22 9 12 15 12 15 22'/>

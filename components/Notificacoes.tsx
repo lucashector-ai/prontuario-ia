@@ -71,7 +71,7 @@ export function Notificacoes({ medicoId }: { medicoId: string }) {
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #F5F5F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Notificações</span>
               {notifs.length > 0 && (
-                <button onClick={marcarTodasLidas} style={{ fontSize: 12, color: '#6043C1', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <button onClick={marcarTodasLidas} style={{ fontSize: 12, color: '#1F9D5C', background: 'none', border: 'none', cursor: 'pointer' }}>
                   Marcar todas como lidas
                 </button>
               )}
@@ -84,7 +84,7 @@ export function Notificacoes({ medicoId }: { medicoId: string }) {
                 </div>
               ) : notifs.map(n => (
                 <div key={n.id} style={{ padding: '12px 16px', borderBottom: '1px solid #F5F5F5', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6043C1', flexShrink: 0, marginTop: 4 }} />
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#1F9D5C', flexShrink: 0, marginTop: 4 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>{n.titulo}</p>
                     <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 6px', lineHeight: 1.4 }}>{n.mensagem}</p>

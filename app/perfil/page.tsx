@@ -110,12 +110,12 @@ export default function PerfilPage() {
               title="Clique para trocar foto">
               {medico.foto_url
                 ? <img src={medico.foto_url} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
-                : <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: 'white' }}>{iniciais}</div>
+                : <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: 'white' }}>{iniciais}</div>
               }
-              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 20, height: 20, background: '#6043C1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white' }}>
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 20, height: 20, background: '#1F9D5C', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
               </div>
-              {uploadandoFoto && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 18, height: 18, border: '2px solid #6043C1', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/></div>}
+              {uploadandoFoto && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 18, height: 18, border: '2px solid #1F9D5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/></div>}
             </div>
             <input id="foto-perfil-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadFoto(e.target.files[0])}/>
             <div>
@@ -129,8 +129,8 @@ export default function PerfilPage() {
             {(['perfil', 'senha'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: '8px 16px', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
-                background: 'transparent', borderBottom: tab === t ? '2px solid #6043C1' : '2px solid transparent',
-                color: tab === t ? '#6043C1' : '#6b7280', marginBottom: -1, textTransform: 'capitalize'
+                background: 'transparent', borderBottom: tab === t ? '2px solid #1F9D5C' : '2px solid transparent',
+                color: tab === t ? '#1F9D5C' : '#6b7280', marginBottom: -1, textTransform: 'capitalize'
               }}>{t === 'perfil' ? 'Dados pessoais' : 'Alterar senha'}</button>
             ))}
           </div>
@@ -168,7 +168,7 @@ export default function PerfilPage() {
                   style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 8, boxSizing: 'border-box', resize: 'vertical' }} />
               </div>
               <button onClick={salvarPerfil} disabled={salvando}
-                style={{ padding: '12px 24px', background: salvando ? '#b9a9ef' : '#6043C1', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                style={{ padding: '12px 24px', background: salvando ? '#b9a9ef' : '#1F9D5C', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                 {salvando ? 'Salvando...' : 'Salvar perfil'}
               </button>
             </div>
@@ -214,7 +214,7 @@ export default function PerfilPage() {
                 <div key={ex.label} style={{ marginBottom: 12 }}>
                   <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 4px' }}>{ex.label}</p>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <code style={{ fontSize: 11, background: 'white', borderRadius: 6, padding: '4px 8px', flex: 1, wordBreak: 'break-all' as const, color: '#6043C1' }}>GET {ex.url}</code>
+                    <code style={{ fontSize: 11, background: 'white', borderRadius: 6, padding: '4px 8px', flex: 1, wordBreak: 'break-all' as const, color: '#1F9D5C' }}>GET {ex.url}</code>
                     <button onClick={() => navigator.clipboard.writeText(ex.url)} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, background: 'white', cursor: 'pointer', flexShrink: 0 }}>Copiar</button>
                   </div>
                 </div>
@@ -240,7 +240,7 @@ export default function PerfilPage() {
                 </div>
               ))}
               <button onClick={salvarSenha} disabled={salvandoSenha}
-                style={{ padding: '12px 24px', background: salvandoSenha ? '#b9a9ef' : '#6043C1', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                style={{ padding: '12px 24px', background: salvandoSenha ? '#b9a9ef' : '#1F9D5C', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                 {salvandoSenha ? 'Alterando...' : 'Alterar senha'}
               </button>
             </div>
