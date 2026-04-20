@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { iniciarPreAtendimento, registrarRespostaEAvancar, getPreConsultaAtiva, marcarPermissaoConcedida, marcarPermissaoNegada } from '@/lib/sofia/preatendimento'
+import { getSofiaConfig } from '@/lib/sofia/config'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -538,6 +540,43 @@ export async function POST(req: NextRequest) {
           .update({ pre_consulta_contexto: novoContexto })
           .eq('id', agendPreConsulta.id)
       }
+
+      // === INTERCEPTADOR PRÉ-ATENDIMENTO ADAPTATIVO ===
+      const preAtiva = await getPreConsultaAtiva(conversa.id)
+      if (preAtiva) {
+        const credsPre = await getWppCredentials(MEDICO_ID)
+        if (preAtiva.status === 'aguardando_permissao') {
+          const rl = texto.toLowerCase().trim()
+          const aceitou = ['pode sim', 'sim', 'pode', 'claro', 'ok', 'manda', 'vamos'].some(p => rl.includes(p))
+          const recusou = ['agora não', 'agora nao', 'nao', 'não', 'depois', 'mais tarde'].some(p => rl.includes(p))
+          if (aceitou) {
+            await marcarPermissaoConcedida(preAtiva.id)
+            const primeira = (preAtiva.perguntas as any[])[0]
+            const msg = `Ótimo! Vamos lá:\n\n${primeira.texto}`
+            await supabase.from('whatsapp_mensagens').insert({ conversa_id: conversa.id, tipo: 'enviada', conteudo: msg, metadata: { ia: true, pre_consulta: true } })
+            await enviarWpp(telefone, msg, credsPre.token, credsPre.phoneId)
+            continue
+          }
+          if (recusou) {
+            await marcarPermissaoNegada(preAtiva.id)
+            const msg = 'Sem problema! Nos vemos na consulta. 😊'
+            await supabase.from('whatsapp_mensagens').insert({ conversa_id: conversa.id, tipo: 'enviada', conteudo: msg, metadata: { ia: true } })
+            await enviarWpp(telefone, msg, credsPre.token, credsPre.phoneId)
+            continue
+          }
+        }
+        if (preAtiva.status === 'em_andamento') {
+          const r = await registrarRespostaEAvancar(preAtiva.id, texto)
+          const msg = r.completo
+            ? 'Perfeito! Anotei tudo aqui. O médico vai chegar na consulta já sabendo o essencial. Até breve! 💜'
+            : r.proxima ? r.proxima.texto : 'Obrigada!'
+          await supabase.from('whatsapp_mensagens').insert({ conversa_id: conversa.id, tipo: 'enviada', conteudo: msg, metadata: { ia: true, pre_consulta: true } })
+          await enviarWpp(telefone, msg, credsPre.token, credsPre.phoneId)
+          await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString() }).eq('id', conversa.id)
+          continue
+        }
+      }
+      // === FIM INTERCEPTADOR ===
 
       if (conversa.modo === 'humano') continue
 
