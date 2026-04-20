@@ -363,8 +363,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    }
-
     const value = body.entry?.[0]?.changes?.[0]?.value
     if (!value || value.statuses) return NextResponse.json({ ok: true })
 
