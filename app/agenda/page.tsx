@@ -254,17 +254,17 @@ export default function Agenda() {
     if (!medico) return
     setEnviandoPreConsulta(true)
     try {
-      const res = await fetch('/api/pre-consulta', {
+      const res = await fetch('/api/sofia/preatendimento', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agendamento_id: agendamentoId, medico_id: medico.id })
+        body: JSON.stringify({ agendamento_id: agendamentoId })
       })
       const data = await res.json()
       if (data.ok) {
         setPreConsultaEnviada(true)
         setAgendamentos(prev => prev.map(a => a.id === agendamentoId ? { ...a, pre_consulta_enviada: true } : a))
-        toast('Pré-consulta enviada por WhatsApp!')
+        toast(`Sofia vai fazer ${data.total_perguntas} perguntas adaptativas ao paciente`)
       } else {
-        toast(data.error || 'Erro ao enviar pré-consulta', 'error')
+        toast(data.error || 'Erro ao enviar pré-atendimento', 'error')
       }
     } catch (e) { alert('Erro de conexao') }
     finally { setEnviandoPreConsulta(false) }

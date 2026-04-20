@@ -18,6 +18,11 @@ export type SofiaConfig = {
   pre_atendimento_ativo: boolean
   pre_atendimento_automatico: boolean
   pre_atendimento_prompt_extra?: string | null
+  relatorio_diario_ativo?: boolean
+  relatorio_diario_canais?: string[]
+  relatorio_diario_horario?: string
+  relatorio_whatsapp?: string | null
+  relatorio_email?: string | null
 }
 
 const DEFAULT: Omit<SofiaConfig, 'medico_id'> = {
@@ -34,6 +39,11 @@ const DEFAULT: Omit<SofiaConfig, 'medico_id'> = {
   pre_atendimento_ativo: true,
   pre_atendimento_automatico: true,
   pre_atendimento_prompt_extra: null,
+  relatorio_diario_ativo: true,
+  relatorio_diario_canais: ['whatsapp'],
+  relatorio_diario_horario: '07:00',
+  relatorio_whatsapp: null,
+  relatorio_email: null,
 }
 
 export async function getSofiaConfig(medico_id: string): Promise<SofiaConfig> {

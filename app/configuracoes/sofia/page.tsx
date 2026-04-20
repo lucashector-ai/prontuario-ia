@@ -221,6 +221,79 @@ export default function SofiaConfig() {
             />
           </Card>
 
+                    {/* Relatório diário */}
+          <Card title="Relatório diário">
+            <ToggleRow
+              label="Relatório diário ativo"
+              desc="Sofia envia resumo das consultas do dia toda manhã"
+              value={config.relatorio_diario_ativo !== false}
+              onChange={v => setConfig({ ...config, relatorio_diario_ativo: v })}
+            />
+            <div style={{ marginTop: 14 }}>
+              <Label>Horário de envio</Label>
+              <input type="time" value={config.relatorio_diario_horario || '07:00'}
+                onChange={e => setConfig({ ...config, relatorio_diario_horario: e.target.value })}
+                style={{ width: 140, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+              <p style={{ margin: '4px 0 0', fontSize: 11, color: '#9ca3af' }}>
+                Envio aproximado (pode variar em até 30min)
+              </p>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <Label>Canais de envio</Label>
+              <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+                {(['whatsapp', 'email'] as const).map(canal => {
+                  const canais: string[] = config.relatorio_diario_canais || ['whatsapp']
+                  const ativo = canais.includes(canal)
+                  return (
+                    <button key={canal}
+                      onClick={() => {
+                        const novos = ativo ? canais.filter(c => c !== canal) : [...canais, canal]
+                        setConfig({ ...config, relatorio_diario_canais: novos })
+                      }}
+                      style={{
+                        padding: '8px 16px', borderRadius: 8,
+                        border: `1.5px solid ${ativo ? '#6043C1' : '#e5e7eb'}`,
+                        background: ativo ? '#f3f0fd' : 'white',
+                        color: ativo ? '#6043C1' : '#6b7280',
+                        fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        textTransform: 'capitalize',
+                      }}>
+                      {canal === 'whatsapp' ? '💬 WhatsApp' : '📧 E-mail'}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <Label>WhatsApp do médico (para receber relatório)</Label>
+              <input type="tel" value={config.relatorio_whatsapp || ''}
+                onChange={e => setConfig({ ...config, relatorio_whatsapp: e.target.value })}
+                placeholder="+55 47 99999-9999"
+                style={{ width: '100%', maxWidth: 300, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <Label>E-mail do médico</Label>
+              <input type="email" value={config.relatorio_email || ''}
+                onChange={e => setConfig({ ...config, relatorio_email: e.target.value })}
+                placeholder="medico@clinica.com"
+                style={{ width: '100%', maxWidth: 300, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+            </div>
+            <button onClick={async () => {
+              if (!medico) return
+              const r = await fetch('/api/sofia/relatorio-diario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ medico_id: medico.id }),
+              })
+              const d = await r.json()
+              if (d.error) toast('Erro: ' + d.error, 'error')
+              else toast('Relatório de teste enviado!')
+            }}
+              style={{ marginTop: 14, padding: '8px 16px', borderRadius: 7, border: '1px solid #e5e7eb', background: 'white', color: '#374151', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              📤 Enviar relatório de teste agora
+            </button>
+          </Card>
+
           <div style={{ position: 'sticky', bottom: 0, padding: '16px 0', background: '#F9FAFC', borderTop: '1px solid #f3f4f6', marginTop: 20, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button onClick={() => router.back()}
               style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151' }}>

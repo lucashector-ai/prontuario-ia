@@ -44,6 +44,11 @@ FLUXO DE AGENDAMENTO:
 5. Se confirmar: [AGENDAR:{"data":"YYYY-MM-DDTHH:mm:00","motivo":"consulta"}]
 IMPORTANTE: NUNCA agende em horario que o paciente simplesmente mencionar. Sempre ofereca opcoes dos horarios disponiveis.
 
+VALORES:
+- Quando houver TABELA DE VALORES no contexto, cite os valores pedidos de forma clara e objetiva
+- Se nao houver valores configurados, diga: "Vou verificar isso com a recepcao e te confirmo" e inclua [HUMANO]
+- Nunca invente valores
+
 REGRAS:
 - Para transferir: [HUMANO]
 - NUNCA dar diagnosticos ou receitas
@@ -590,6 +595,24 @@ export async function POST(req: NextRequest) {
       }
       
       // Se mensagem é sobre agendamento, busca horários disponíveis
+      // Palavras que disparam contexto de preços
+      const palavrasPreco = ['preço', 'preco', 'valor', 'custa', 'quanto', 'quanto custa', 'valores', 'cobra', 'cobram']
+      const mencionaPreco = palavrasPreco.some(p => texto.toLowerCase().includes(p))
+      if (mencionaPreco) {
+        try {
+          const cfgSofia = await getSofiaConfig(MEDICO_ID)
+          const linhas: string[] = []
+          if (cfgSofia.preco_consulta) linhas.push(`Consulta padrão: R$ ${cfgSofia.preco_consulta}`)
+          const outros = Object.entries(cfgSofia.precos_tipos || {})
+          outros.forEach(([k, v]) => linhas.push(`${k}: R$ ${v}`))
+          if (linhas.length > 0) {
+            contextoExtra += `\n\nTABELA DE VALORES DA CLÍNICA:\n${linhas.join('\n')}\n(Cite os valores quando o paciente perguntar)`
+          } else {
+            contextoExtra += `\n\nNOTA: valores não configurados. Se o paciente perguntar valor, diga que vai verificar com a recepção.`
+          }
+        } catch {}
+      }
+
       const palavrasAgendamento = ['agendar', 'consulta', 'horario', 'horários', 'marcar', 'disponivel', 'data', 'agenda']
       const mencionaAgendamento = palavrasAgendamento.some(p => texto.toLowerCase().includes(p)) ||
         historico.slice(-4).some((h: any) => palavrasAgendamento.some(p => h.conteudo?.toLowerCase().includes(p)))
