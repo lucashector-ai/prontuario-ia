@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { ToastProvider } from '@/components/Toast'
+import { AppShell } from '@/components/AppShell'
 
 export const metadata: Metadata = {
   title: 'MedIA — Prontuário Inteligente',
@@ -13,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR">
       <body>
         <ToastProvider>
-          {children}
+          <AppShell>{children}</AppShell>
         </ToastProvider>
       </body>
     </html>
