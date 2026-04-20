@@ -292,7 +292,7 @@ export default function Agenda() {
                     const ags = getAgHora(dia, h)
                     const agendamentosSlot = agendamentos.filter(a => {
                       const d = new Date(a.data_hora)
-                      return d.toDateString() === dia.toDateString() && d.getUTCHours() === h
+                      return d.toDateString() === dia.toDateString() && d.getHours() === h
                     })
                     return (
                       <div key={h}
