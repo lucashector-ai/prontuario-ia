@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 const ACCENT = '#1F9D5C'
 const TEXT_DEFAULT = '#111827'
 const TEXT_MUTED = '#6B7280'
-const BUSCA_BG = '#F5F5F5'
+const BUSCA_BG = '#EAECEF'
 
 export function Topbar() {
   const router = useRouter()
@@ -146,9 +146,9 @@ export function Topbar() {
     }}>
       {/* ESQUERDA — Busca */}
       <div ref={buscaRef}
-        style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
+        style={{ width: 320, position: 'relative' }}>
         <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke={TEXT_MUTED} strokeWidth='2'
-          style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+          style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
           <circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/>
         </svg>
         <input
@@ -160,12 +160,11 @@ export function Topbar() {
           onFocus={() => { setBuscaFocus(true); if (busca.length >= 2) setResultadosOpen(true) }}
           onBlur={() => setBuscaFocus(false)}
           style={{
-            width: '100%', height: 44,
-            padding: '0 16px 0 42px',
-            background: buscaBg,
-            border: 'none', borderRadius: 12,
-            outline: 'none', fontSize: 14, color: TEXT_DEFAULT,
-            transition: 'background 0.15s',
+            width: '100%', height: 40,
+            padding: '0 14px 0 38px',
+            background: BUSCA_BG,
+            border: 'none', borderRadius: 10,
+            outline: 'none', fontSize: 13, color: TEXT_DEFAULT,
             boxSizing: 'border-box',
             WebkitAppearance: 'none' as const,
             MozAppearance: 'none' as const,
@@ -176,7 +175,7 @@ export function Topbar() {
 
         {resultadosOpen && busca.length >= 2 && (
           <div style={{
-            position: 'absolute', top: 52, left: 0, right: 0,
+            position: 'absolute', top: 48, left: 0, right: 0,
             background: 'white', borderRadius: 12,
             maxHeight: 380, overflow: 'auto', zIndex: 100,
             boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
