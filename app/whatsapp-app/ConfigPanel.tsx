@@ -20,6 +20,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
   const [configForm, setConfigForm] = useState({phone_number_id:'', token:'', nome_clinica:''})
   const [salvandoConfig, setSalvandoConfig] = useState(false)
   const [transmissaoMsg, setTransmissaoMsg] = useState('')
+  const [followupEnviando, setFollowupEnviando] = useState(false)
   const [transmissaoEnviando, setTransmissaoEnviando] = useState(false)
 
   useEffect(() => {
@@ -183,6 +184,13 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
               <div style={{display:'flex',gap:12}}>
                 <button onClick={carregarMetricas} style={btn('#6043C1')}>Atualizar métricas</button>
                 <button onClick={enviarCheckin} disabled={checkinEnviando} style={btn('#00a884')}>{checkinEnviando?'Enviando...':'Enviar check-in aos pacientes'}</button>
+                <button onClick={async()=>{
+                  setFollowupEnviando(true)
+                  const res = await fetch(`/api/followup?medico_id=${medico.id}`)
+                  const d = await res.json()
+                  setFollowupEnviando(false)
+                  alert(d.error ? 'Erro: '+d.error : `Follow-up enviado para ${d.enviados} paciente(s)!`)
+                }} disabled={followupEnviando} style={btn('#8b5cf6')}>{followupEnviando?'Enviando...':'📩 Follow-up 3 dias pós-consulta'}</button>
               </div>
             </div>
           )}

@@ -559,7 +559,8 @@ export default function WhatsAppApp() {
               <p style={{fontSize:13,color:'#aebac1',textAlign:'center' as const,marginTop:24}}>Nenhum atendente ainda</p>
             )}
 
-            {/* Formulário novo atendente */}
+            {/* Formulário novo atendente — só admin vê */}
+            {(!localStorage.getItem('atendente') || medico?.cargo==='admin') && (
             <div style={{marginTop:20,padding:14,background:'#f0f2f5',borderRadius:10}}>
               <p style={{fontSize:12,fontWeight:600,color:'#00a884',margin:'0 0 12px'}}>+ Novo atendente</p>
               <input value={novoAt.nome} onChange={e=>setNovoAt(p=>({...p,nome:e.target.value}))} placeholder="Nome completo" style={{width:'100%',padding:'8px 10px',fontSize:13,borderRadius:7,border:'1px solid #d1d7db',background:'white',color:'#111',marginBottom:7,outline:'none',display:'block'}}/>
@@ -587,6 +588,7 @@ export default function WhatsAppApp() {
                 O atendente acessa via <a href="/login-atendente" target="_blank" style={{color:'#00a884'}}>login-atendente</a>
               </p>
             </div>
+            )}
           </div>
         )}
       </div>
