@@ -229,20 +229,6 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, [transcricao, modoPerfeita])
 
-  const enviarWhatsApp = async (tipo: string, conteudo: string) => {
-    if (!pacienteSelecionado?.telefone) { alert('Paciente sem telefone cadastrado'); return }
-    const tel = pacienteSelecionado.telefone.replace(/[^0-9]/g, '')
-    const telWpp = tel.startsWith('55') ? tel : '55' + tel
-    const m = localStorage.getItem('medico')
-    const med = m ? JSON.parse(m) : null
-    await fetch('/api/whatsapp/enviar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ telefone: telWpp, texto: conteudo, medico_id: med?.id })
-    })
-    alert('Enviado pelo WhatsApp!')
-  }
-
   const handleNovo = () => {
     limpar(); setTranscricao(''); setProntuario(null); setReceita(null)
     setEstado('idle'); setErroMsg(''); setConsultaSalva(false)
@@ -604,7 +590,6 @@ export default function Home() {
                             <div style={{ display: 'flex', gap: 8 }}>
                               <button onClick={() => { navigator.clipboard.writeText(resumoPaciente) }} style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Copiar</button>
                               <button onClick={() => setResumoPaciente('')} style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Regenerar</button>
-                              <button onClick={() => enviarWhatsApp('resumo', resumoPaciente)} style={{ fontSize: 11, color: 'white', background: '#25d366', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>📱 WA</button>
                               <button onClick={() => enviarWhatsApp('resumo', resumoPaciente)} style={{ fontSize: 11, color: 'white', background: '#25d366', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <svg width="11" height="11" viewBox="0 0 175 176" fill="white"><path d="M87.2 25.2c-33.7 0-61.2 27.4-61.2 61.1a60.9 60.9 0 009.4 32.5l1.4 2.3-6.2 22.6 23.1-6.1 2.2 1.3c9.4 5.6 20.2 8.5 31.1 8.5h.1c33.7 0 61.1-27.4 61.2-61.1a60.8 60.8 0 00-17.9-43.3 60.8 60.8 0 00-43.2-17.9z"/><path fill="#25d366" d="M68.8 55.6c-1.4-3.1-2.8-3.1-4.1-3.2l-3.5-.1c-1.2 0-3.2.5-4.9 2.3s-6.4 6.3-6.4 15.3 6.6 17.8 7.5 19 12.7 20.4 31.4 27.8c15.5 6.1 18.7 4.9 22.1 4.6s10.9-4.4 12.4-8.7 1.5-8 1.1-8.7-1.7-1.2-3.5-2.1-10.9-5.4-12.6-6-2.9-.9-4.1.9-4.7 6-5.8 7.2-2.1 1.4-4 .5-7.8-2.9-14.8-9.1c-5.5-4.9-9.2-10.9-10.2-12.7s-.1-2.8.8-3.8c.8-.8 1.8-2.1 2.8-3.2s1.2-1.8 1.8-3.1.3-2.3-.2-3.2-4-10-5.7-13.6z"/></svg>
                                 Enviar WA
@@ -710,5 +695,6 @@ ${exames.observacoes||''}`
         </div>
       </div>
     </div>
+  </div>
   )
 }
