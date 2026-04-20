@@ -125,7 +125,7 @@ export default function Agenda() {
       if (modal.ag) {
         const { data } = await supabase.from('agendamentos').update({
           paciente_id: form.paciente_id || null,
-          data_hora: form.data_hora + ':00',  // Mantém hora local sem converter para UTC
+          data_hora: new Date(form.data_hora).toISOString(),  // Converte para UTC corretamente
           tipo: form.tipo, motivo: form.motivo, observacoes: form.observacoes,
         }).eq('id', modal.ag.id).select(`*, pacientes(nome)`).single()
         if (data) setAgendamentos(prev => prev.map(a => a.id === data.id ? data : a))
@@ -148,7 +148,7 @@ export default function Agenda() {
         const { data } = await supabase.from('agendamentos').insert({
           medico_id: medico.id,
           paciente_id: form.paciente_id || null,
-          data_hora: form.data_hora + ':00',  // Mantém hora local sem converter para UTC
+          data_hora: new Date(form.data_hora).toISOString(),  // Converte para UTC corretamente
           tipo: form.tipo, motivo: form.motivo, observacoes: form.observacoes,
           status: 'agendado',
           meet_link: meetLinkFinal || null,
