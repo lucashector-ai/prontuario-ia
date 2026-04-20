@@ -57,21 +57,6 @@ export function Sidebar() {
       width: 220, background: 'transparent', borderRight: 'none',
       display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100vh',
     }}>
-      {/* Logo */}
-      <div style={{ padding: '20px 20px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-            </svg>
-          </div>
-          <div>
-            <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.2 }}>MedIA</p>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Prontuário inteligente</p>
-          </div>
-        </div>
-      </div>
-
       {/* Nav */}
       <nav style={{ padding: '8px 12px', flex: 1, overflow: 'auto' }}>
         {grupos.map((grupo, gi) => (

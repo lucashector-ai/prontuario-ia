@@ -4,6 +4,38 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+// mapa de títulos por rota
+const TITULOS: Record<string, string> = {
+  '/dashboard': 'Dashboard',
+  '/nova-consulta': 'Nova consulta',
+  '/agenda': 'Agenda',
+  '/historico': 'Histórico',
+  '/pacientes': 'Pacientes',
+  '/teleconsulta': 'Teleconsulta',
+  '/ditado': 'Ditado livre',
+  '/exames': 'Analisar exames',
+  '/dicionario': 'Dicionário clínico',
+  '/lgpd': 'Privacidade & LGPD',
+  '/minha-clinica': 'Minha clínica',
+  '/automacoes': 'Automações',
+  '/admin': 'Painel admin',
+  '/perfil': 'Perfil',
+  '/whatsapp-app': 'WhatsApp',
+  '/contatos': 'Contatos',
+  '/insights': 'Insights',
+  '/configuracoes': 'Configurações',
+  '/cadastro': 'Cadastro',
+}
+
+function tituloDaRota(pathname: string): string {
+  if (TITULOS[pathname]) return TITULOS[pathname]
+  // match por prefixo (ex: /pacientes/abc123)
+  for (const rota of Object.keys(TITULOS)) {
+    if (pathname.startsWith(rota + '/')) return TITULOS[rota]
+  }
+  return 'MedIA'
+}
+
 export function Topbar() {
   const router = useRouter()
   const pathname = usePathname()
@@ -13,7 +45,6 @@ export function Topbar() {
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifs, setNotifs] = useState<any[]>([])
 
-  // busca
   const [buscaOpen, setBuscaOpen] = useState(false)
   const [busca, setBusca] = useState('')
   const [resultados, setResultados] = useState<{ pacientes: any[]; agendamentos: any[] }>({ pacientes: [], agendamentos: [] })
@@ -28,7 +59,6 @@ export function Topbar() {
     if (m) setMedico(JSON.parse(m))
   }, [])
 
-  // fecha dropdowns ao clicar fora
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
@@ -39,7 +69,6 @@ export function Topbar() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // busca (debounced)
   useEffect(() => {
     if (!medico || !busca.trim() || busca.length < 2) {
       setResultados({ pacientes: [], agendamentos: [] })
@@ -58,7 +87,6 @@ export function Topbar() {
     return () => clearTimeout(timer)
   }, [busca, medico])
 
-  // atalho Cmd/Ctrl+K para abrir busca
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -84,15 +112,49 @@ export function Topbar() {
   }
 
   const notifsNaoLidas = notifs.filter(n => !n.lida).length
+  const titulo = tituloDaRota(pathname)
 
   return (
     <>
       <header style={{
         height: 56, background: 'white', borderBottom: '1px solid #f3f4f6',
-        padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+        padding: '0 20px 0 0', display: 'flex', alignItems: 'center',
         gap: 8, flexShrink: 0,
       }}>
-        {/* WhatsApp */}
+        {/* Logo + marca (alinhada à sidebar) */}
+        <button onClick={() => router.push('/dashboard')}
+          style={{
+            width: 220, height: '100%', padding: '0 20px',
+            display: 'flex', alignItems: 'center', gap: 10,
+            border: 'none', background: 'transparent', cursor: 'pointer',
+            flexShrink: 0,
+          }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, background: '#6043C1',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.2 }}>MedIA</p>
+            <p style={{ fontSize: 10, color: '#9ca3af', margin: 0 }}>Prontuário inteligente</p>
+          </div>
+        </button>
+
+        {/* Divisor sutil */}
+        <div style={{ width: 1, height: 24, background: '#f3f4f6', marginRight: 12 }}/>
+
+        {/* Título da página */}
+        <h1 style={{
+          fontSize: 14, fontWeight: 600, color: '#111827', margin: 0,
+          flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {titulo}
+        </h1>
+
+        {/* Ações à direita */}
         <button onClick={() => router.push('/whatsapp-app')}
           title="WhatsApp"
           style={iconBtnStyle(pathname.startsWith('/whatsapp'))}>
@@ -101,14 +163,12 @@ export function Topbar() {
           </svg>
         </button>
 
-        {/* Busca */}
         <button onClick={() => setBuscaOpen(true)} title="Buscar (Cmd+K)" style={iconBtnStyle(false)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
         </button>
 
-        {/* Notificações */}
         <div ref={notifRef} style={{ position: 'relative' }}>
           <button onClick={() => setNotifOpen(!notifOpen)} title="Notificações" style={iconBtnStyle(notifOpen)}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -152,7 +212,6 @@ export function Topbar() {
           )}
         </div>
 
-        {/* Avatar + menu */}
         <div ref={menuRef} style={{ position: 'relative', marginLeft: 8 }}>
           <button onClick={() => setMenuOpen(!menuOpen)}
             style={{
@@ -205,7 +264,6 @@ export function Topbar() {
         </div>
       </header>
 
-      {/* Modal de busca global */}
       {buscaOpen && (
         <div onClick={() => setBuscaOpen(false)}
           style={{

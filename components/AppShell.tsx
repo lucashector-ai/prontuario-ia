@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation'
 import { Topbar } from './Topbar'
 
-// rotas públicas onde a topbar NÃO aparece
 const ROTAS_PUBLICAS = ['/login', '/cadastro', '/forgot-password', '/reset-password']
 const PREFIXOS_PUBLICOS = ['/sala/', '/pre-consulta/', '/paciente-publico/']
 
@@ -17,18 +16,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (ehPublica) return <>{children}</>
 
-  // Em páginas logadas, renderiza Topbar fixa no topo.
-  // A Topbar é posicionada absoluta no topo-direito,
-  // flutuando sobre o conteúdo sem quebrar os layouts existentes.
   return (
     <>
-      <div style={{
-        position: 'fixed', top: 0, right: 0, left: 220,
-        zIndex: 80, pointerEvents: 'none',
-      }}>
-        <div style={{ pointerEvents: 'auto' }}>
-          <Topbar />
-        </div>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 80 }}>
+        <Topbar />
       </div>
       <div style={{ paddingTop: 56 }}>
         {children}

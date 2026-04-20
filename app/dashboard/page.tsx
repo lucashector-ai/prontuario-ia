@@ -4,9 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
-import { BuscaGlobal } from '@/components/BuscaGlobal'
-import { Notificacoes } from '@/components/Notificacoes'
-
 export default function Dashboard() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
@@ -175,9 +172,7 @@ export default function Dashboard() {
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Visão geral da clínica</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {medico && <BuscaGlobal medicoId={medico.id} />}
-            {medico && <Notificacoes medicoId={medico.id} />}
-            <div style={{ display: 'flex', gap: 4, background: '#f3f4f6', borderRadius: 8, padding: 3 }}>
+                                    <div style={{ display: 'flex', gap: 4, background: '#f3f4f6', borderRadius: 8, padding: 3 }}>
             {(['semana', 'mes', 'ano'] as const).map(p => (
               <button key={p} onClick={() => setPeriodo(p)} style={{
                 padding: '5px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 500,
