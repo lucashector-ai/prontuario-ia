@@ -7,8 +7,9 @@ import { supabase } from '@/lib/supabase'
 const ACCENT = '#1F9D5C'
 const TEXT_DEFAULT = '#111827'
 const TEXT_MUTED = '#6B7280'
-const BUSCA_BG = '#F3F4F6'
-const BUSCA_BG_HOVER = '#E9EBEF'
+const BUSCA_BG = '#EAECEF'
+const BUSCA_BG_HOVER = '#EAECEF'
+const BUSCA_BG_FOCUS = '#D8DCE1'
 
 export function Topbar() {
   const router = useRouter()
@@ -137,7 +138,7 @@ export function Topbar() {
   })
 
   // Fundo da busca: normal, hover, ou focus
-  const buscaBg = buscaFocus ? BUSCA_BG : (buscaHover ? BUSCA_BG_HOVER : BUSCA_BG)
+  const buscaBg = buscaFocus ? BUSCA_BG_FOCUS : BUSCA_BG
 
   return (
     <header style={{
@@ -147,8 +148,6 @@ export function Topbar() {
     }}>
       {/* ESQUERDA — Busca */}
       <div ref={buscaRef}
-        onMouseEnter={() => setBuscaHover(true)}
-        onMouseLeave={() => setBuscaHover(false)}
         style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
         <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke={TEXT_MUTED} strokeWidth='2'
           style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
