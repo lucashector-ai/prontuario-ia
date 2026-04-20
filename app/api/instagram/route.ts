@@ -24,15 +24,34 @@ async function enviarIG(recipientId: string, texto: string) {
     console.error('INSTAGRAM: IG_TOKEN ou IG_PAGE_ID nao configurados no Vercel')
     return
   }
-  await fetch(`https://graph.facebook.com/v20.0/${IG_PAGE_ID}/messages`, {
+  // Instagram Messenger API — usa o Instagram Business Account ID
+  const res = await fetch(`https://graph.facebook.com/v20.0/${IG_PAGE_ID}/messages`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${IG_TOKEN}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       recipient: { id: recipientId },
       message: { text: texto },
-      messaging_type: 'RESPONSE'
+      messaging_type: 'RESPONSE',
+      access_token: IG_TOKEN
     })
   })
+  const data = await res.json()
+  if (data.error) {
+    console.error('IG_SEND_ERROR:', JSON.stringify(data.error))
+    // Tenta com endpoint alternativo (Instagram Graph API direto)
+    const res2 = await fetch(`https://graph.facebook.com/v20.0/me/messages?access_token=${IG_TOKEN}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipient: { id: recipientId },
+        message: { text: texto }
+      })
+    })
+    const data2 = await res2.json()
+    console.log('IG_SEND_ALT:', JSON.stringify(data2))
+  } else {
+    console.log('IG_SEND_OK:', data.message_id || 'sent')
+  }
 }
 
 export async function GET(req: NextRequest) {
