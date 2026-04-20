@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { IconBell } from '@/components/Icon'
 
 export function Notificacoes({ medicoId }: { medicoId: string }) {
   const [notifs, setNotifs] = useState<any[]>([])
@@ -78,7 +79,7 @@ export function Notificacoes({ medicoId }: { medicoId: string }) {
             <div style={{ maxHeight: 360, overflow: 'auto' }}>
               {notifs.length === 0 ? (
                 <div style={{ padding: 24, textAlign: 'center' }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>🔔</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}><IconBell size={14} /></div>
                   <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Sem notificações</p>
                 </div>
               ) : notifs.map(n => (

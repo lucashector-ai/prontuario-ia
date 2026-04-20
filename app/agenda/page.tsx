@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
+import { IconGift } from '@/components/Icon'
 
 const TIPOS = {
   consulta: { label: 'Consulta', bg: '#ede9fb', text: '#4e35a3', border: '#d4c9f7', dot: '#6043C1' },
@@ -437,7 +438,7 @@ export default function Agenda() {
                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: isHoje(dia) ? '#6043C1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <p style={{ fontSize: 14, fontWeight: 700, color: isHoje(dia) ? 'white' : '#111827', margin: 0 }}>{dia.getDate()}</p>
                   </div>
-                  {aniversariantes > 0 && <span title={`${aniversariantes} aniversariante(s)`} style={{ fontSize: 12 }}>🎁</span>}
+                  {aniversariantes > 0 && <span title={`${aniversariantes} aniversariante(s)`} style={{ fontSize: 12 }}><IconGift size={14} /></span>}
                 </div>
                 {ags.length > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 3 }}>
