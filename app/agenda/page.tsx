@@ -253,7 +253,7 @@ export default function Agenda() {
               const ags = getAgsDia(dia)
               return (
                 <div key={i} onClick={() => abrirModal(new Date(dia.setHours(9, 0, 0, 0)))}
-                  style={{ padding: '10px 8px', textAlign: 'center', borderRight: i < 6 ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', background: isHoje(dia) ? '#f3f0fd' : 'white', transition: 'background 0.1s' }}>
+                  style={{ padding: '10px 8px', textAlign: 'center', borderRight: i < 6 ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', background: isHoje(dia) ? '#f0ebff' : 'white', transition: 'background 0.1s' }}>
                   <p style={{ fontSize: 11, color: isHoje(dia) ? '#6043C1' : '#9ca3af', fontWeight: 600, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {dia.toLocaleDateString('pt-BR', { weekday: 'short' })}
                   </p>
@@ -287,7 +287,7 @@ export default function Agenda() {
 
               {/* Colunas dos dias */}
               {diasSemana.map((dia, di) => (
-                <div key={di} style={{ borderRight: di < 6 ? '1px solid #e5e7eb' : 'none', background: isHoje(dia) ? '#fafffe' : 'white', position: 'relative' }}>
+                <div key={di} style={{ borderRight: di < 6 ? '1px solid #e5e7eb' : 'none', background: isHoje(dia) ? '#f8f7ff' : 'white', position: 'relative' }}>
                   {HORAS.map(h => {
                     const ags = getAgHora(dia, h)
                     const agendamentosSlot = agendamentos.filter(a => {
