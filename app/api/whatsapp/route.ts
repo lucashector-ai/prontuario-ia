@@ -295,6 +295,12 @@ async function processarIA(mensagem: string, historico: any[]) {
   }
 }
 
+async function getMedicoIdFromDB(): Promise<string> {
+  if (MEDICO_ID_FALLBACK) return MEDICO_ID_FALLBACK
+  const { data } = await supabaseAdmin.from('medicos').select('id').eq('ativo', true).limit(1).maybeSingle()
+  return (data as any)?.id || ''
+}
+
 async function getMedicoId(phoneNumberId: string): Promise<string> {
   try {
     // Tenta achar pelo phone_number_id exato no banco
@@ -356,6 +362,82 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+
+    // Roteia Instagram DM (object: "instagram") 
+    if (body.object === 'instagram') {
+      for (const entry of body.entry || []) {
+        for (const event of entry.messaging || []) {
+          if (!event.message || event.message.is_echo) continue
+          const senderId = event.sender?.id
+          const texto = event.message?.text || ''
+          if (!texto.trim() || !senderId) continue
+
+          const MEDICO_ID = await getMedicoIdFromDB()
+          if (!MEDICO_ID) continue
+
+          console.log('IG_MSG:', senderId, texto.substring(0,50))
+
+          let { data: conversa } = await supabase.from('whatsapp_conversas')
+            .select('*').eq('telefone', senderId).eq('medico_id', MEDICO_ID).eq('canal', 'instagram').maybeSingle()
+
+          if (!conversa) {
+            const { data: nova } = await supabase.from('whatsapp_conversas').insert({
+              medico_id: MEDICO_ID, telefone: senderId,
+              nome_contato: entry.messaging?.[0]?.sender?.name || senderId,
+              modo: 'ia', status: 'ativa', canal: 'instagram',
+              ultimo_contato: new Date().toISOString()
+            }).select().single()
+            conversa = nova
+          }
+          if (!conversa) continue
+
+          if (conversa.status === 'encerrada') {
+            await supabase.from('whatsapp_conversas').update({ status: 'ativa', modo: 'ia' }).eq('id', conversa.id)
+            conversa.status = 'ativa'; conversa.modo = 'ia'
+          }
+
+          await supabase.from('whatsapp_mensagens').insert({
+            conversa_id: conversa.id, tipo: 'recebida', conteudo: texto,
+            metadata: { canal: 'instagram' }
+          })
+          await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString() }).eq('id', conversa.id)
+
+          if (conversa.modo === 'humano') continue
+
+          const historico = await getHistorico(conversa.id)
+          const { texto: resposta } = await processarIA(texto, historico)
+          const respostaLimpa = resposta.replace(/\[BOTOES:[^\]]+\]/g,'').replace('[HUMANO]','').replace('[ENCERRAR]','').trim()
+
+          await supabase.from('whatsapp_mensagens').insert({
+            conversa_id: conversa.id, tipo: 'enviada', conteudo: respostaLimpa,
+            metadata: { ia: true, canal: 'instagram' }
+          })
+
+          // Envia pelo Instagram
+          const igToken = process.env.INSTAGRAM_TOKEN || WPP_TOKEN
+          const igPageId = process.env.INSTAGRAM_PAGE_ID || ''
+          if (igToken && igPageId) {
+            const igRes = await fetch(`https://graph.facebook.com/v20.0/${igPageId}/messages`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                recipient: { id: senderId },
+                message: { text: respostaLimpa },
+                messaging_type: 'RESPONSE',
+                access_token: igToken
+              })
+            })
+            const igData = await igRes.json()
+            if (igData.error) console.error('IG_SEND_ERROR:', JSON.stringify(igData.error))
+            else console.log('IG_SEND_OK:', senderId)
+          } else {
+            console.error('IG: INSTAGRAM_TOKEN ou INSTAGRAM_PAGE_ID nao configurados')
+          }
+        }
+      }
+      return NextResponse.json({ ok: true })
+    }
+
     const value = body.entry?.[0]?.changes?.[0]?.value
     if (!value || value.statuses) return NextResponse.json({ ok: true })
 
