@@ -45,7 +45,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             flex: 1,
             overflow: 'auto',
             minHeight: 0,
-            padding: 24,
           }}>
             {children}
           </main>

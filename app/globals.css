@@ -93,3 +93,17 @@ input:focus, textarea:focus, select:focus {
   .sidebar-desktop { display: none !important; }
   .main-full { padding-left: 0 !important; }
 }
+
+
+/* PADDING_PADRAO_PAGINAS - aplica 24px em todas as páginas automaticamente */
+main > div:first-child {
+  padding: 24px;
+  box-sizing: border-box;
+  min-height: 100%;
+}
+
+/* Remove padding interno duplicado de wrappers com flex + height 100vh */
+main > div[style*="height: 100vh"] {
+  height: auto !important;
+  min-height: 100%;
+}
