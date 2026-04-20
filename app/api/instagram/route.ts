@@ -32,10 +32,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    // Retorna imediatamente para evitar timeout do Meta (5s)
-    // Processa em background
-    processarInstagram(body).catch(e => console.error('IG_BG_ERROR:', e.message))
-
+    // Processa de forma síncrona com max 25s
+    await processarInstagram(body)
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     console.error('INSTAGRAM_ERROR:', e.message)
