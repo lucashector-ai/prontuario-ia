@@ -229,6 +229,16 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, [transcricao, modoPerfeita])
 
+  const enviarWhatsApp = async (tipo: string, conteudo: string) => {
+    if (!pacienteSelecionado?.telefone) { alert('Paciente sem telefone'); return }
+    const tel = pacienteSelecionado.telefone.replace(/[^0-9]/g, '')
+    const telWpp = tel.startsWith('55') ? tel : '55' + tel
+    const m = localStorage.getItem('medico')
+    const med = m ? JSON.parse(m) : null
+    await fetch('/api/whatsapp/enviar', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:telWpp,texto:conteudo,medico_id:med?.id})})
+    alert('Enviado pelo WhatsApp!')
+  }
+
   const handleNovo = () => {
     limpar(); setTranscricao(''); setProntuario(null); setReceita(null)
     setEstado('idle'); setErroMsg(''); setConsultaSalva(false)
