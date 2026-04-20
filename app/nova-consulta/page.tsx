@@ -8,6 +8,9 @@ import { supabase } from '@/lib/supabase'
 import { ProntuarioCard } from '@/components/ProntuarioCard'
 import { ReceitaCard } from '@/components/ReceitaCard'
 import { Sidebar } from '@/components/Sidebar'
+import { PacienteBanner } from '@/components/PacienteBanner'
+import { PreConsultaCard } from '@/components/PreConsultaCard'
+import { HistoricoRapido } from '@/components/HistoricoRapido'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
 type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
@@ -331,13 +334,7 @@ export default function Home() {
                  Salvo
               </span>
             )}
-            {pacienteSelecionado && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f3f0fd', border: '1px solid #d4c9f7', borderRadius: 8, padding: '5px 12px' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
-                <span style={{ fontSize: 12, color: '#6043C1', fontWeight: 600 }}>{pacienteSelecionado.nome}</span>
-                <span onClick={() => { setPacienteSelecionado(null); setModalPaciente(true) }} style={{ fontSize: 16, color: '#9ca3af', cursor: 'pointer', lineHeight: 1, marginLeft: 2 }}>×</span>
-              </div>
-            )}
+            
             <button onClick={() => setModoPerfeita(m => !m)} style={{
               fontSize: 12, fontWeight: 600,
               color: modoPerfeita ? '#6043C1' : '#6b7280',

@@ -28,14 +28,13 @@ export function Topbar() {
     if (m) {
       const med = JSON.parse(m)
       setMedico(med)
-      // Carrega dados da clínica — tenta 'clinicas' primeiro, se não tiver cai no próprio médico
       if (med.clinica_id) {
         supabase.from('clinicas').select('id, nome, logo_url').eq('id', med.clinica_id).single().then(({ data }) => {
           if (data) setClinica(data)
-          else setClinica({ nome: med.clinica_nome || med.nome, logo_url: med.clinica_logo || null })
+          else setClinica({ nome: med.clinica_nome || null, logo_url: med.clinica_logo || null })
         })
       } else {
-        setClinica({ nome: med.clinica_nome || med.nome || 'Minha clínica', logo_url: med.clinica_logo || med.foto_url || null })
+        setClinica({ nome: med.clinica_nome || null, logo_url: med.clinica_logo || med.foto_url || null })
       }
     }
   }, [])
@@ -77,10 +76,7 @@ export function Topbar() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  const inicialClinica = useMemo(() => {
-    return clinica?.nome?.[0]?.toUpperCase() || 'M'
-  }, [clinica])
-
+  const inicialClinica = useMemo(() => clinica?.nome?.[0]?.toUpperCase() || '·', [clinica])
   const iniciaisUsuario = useMemo(() => {
     if (!medico?.nome) return '??'
     return medico.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
@@ -100,38 +96,31 @@ export function Topbar() {
         padding: '0 20px 0 0', display: 'flex', alignItems: 'center',
         gap: 8, flexShrink: 0,
       }}>
-        {/* Logo + nome da CLÍNICA (ocupa largura da sidebar) */}
+        {/* LOGO MedIA (esquerda) */}
         <button onClick={() => router.push('/dashboard')}
           style={{
-            width: 220, height: '100%', padding: '0 16px',
+            width: 220, height: '100%', padding: '0 20px',
             display: 'flex', alignItems: 'center', gap: 10,
             border: 'none', background: 'transparent', cursor: 'pointer',
-            flexShrink: 0, minWidth: 0,
+            flexShrink: 0,
           }}>
           <div style={{
-            width: 34, height: 34, borderRadius: 8, flexShrink: 0,
-            background: clinica?.logo_url ? `url(${clinica.logo_url}) center/cover` : '#6043C1',
+            width: 32, height: 32, borderRadius: 8, background: '#6043C1',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', fontSize: 14, fontWeight: 700,
-            border: clinica?.logo_url ? '1px solid #f3f4f6' : 'none',
           }}>
-            {!clinica?.logo_url && inicialClinica}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
           </div>
-          <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
-            <p style={{
-              fontSize: 13, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.2,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
-              {clinica?.nome || 'MedIA'}
-            </p>
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.2 }}>MedIA</p>
             <p style={{ fontSize: 10, color: '#9ca3af', margin: 0 }}>Prontuário inteligente</p>
           </div>
         </button>
 
-        {/* Espaço flexível — sem título de página */}
         <div style={{ flex: 1 }}/>
 
-        {/* Ações à direita */}
+        {/* Ações */}
         <button onClick={() => router.push('/whatsapp-app')} title="WhatsApp"
           style={iconBtnStyle(pathname.startsWith('/whatsapp'))}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -152,10 +141,7 @@ export function Topbar() {
               <path d="M13.73 21a2 2 0 01-3.46 0"/>
             </svg>
             {notifsNaoLidas > 0 && (
-              <span style={{
-                position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%',
-                background: '#dc2626', border: '2px solid white',
-              }}/>
+              <span style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: '#dc2626', border: '2px solid white' }}/>
             )}
           </button>
           {notifOpen && (
@@ -188,7 +174,36 @@ export function Topbar() {
           )}
         </div>
 
-        <div ref={menuRef} style={{ position: 'relative', marginLeft: 8 }}>
+        {/* Divisor antes da área de identidade */}
+        <div style={{ width: 1, height: 24, background: '#f3f4f6', margin: '0 4px 0 8px' }}/>
+
+        {/* CLÍNICA (se tiver) */}
+        {clinica?.nome && (
+          <button onClick={() => router.push('/minha-clinica')} title="Minha clínica"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px 4px 4px',
+              borderRadius: 22, border: '1px solid #f3f4f6', background: 'white', cursor: 'pointer',
+            }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
+              background: clinica?.logo_url ? `url(${clinica.logo_url}) center/cover` : '#ede9fb',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#6043C1', fontSize: 12, fontWeight: 700,
+              border: '1.5px solid #d4c9f7',
+            }}>
+              {!clinica?.logo_url && inicialClinica}
+            </div>
+            <span style={{
+              fontSize: 12, fontWeight: 600, color: '#374151',
+              maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {clinica.nome}
+            </span>
+          </button>
+        )}
+
+        {/* USUÁRIO (mais à direita) */}
+        <div ref={menuRef} style={{ position: 'relative' }}>
           <button onClick={() => setMenuOpen(!menuOpen)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px 4px 10px',
@@ -199,10 +214,13 @@ export function Topbar() {
               {medico?.nome?.split(' ')[0] || 'Médico'}
             </span>
             <div style={{
-              width: 32, height: 32, borderRadius: '50%', background: '#ede9fb',
+              width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
+              background: medico?.foto_url ? `url(${medico.foto_url}) center/cover` : '#ede9fb',
               border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 700, color: '#6043C1', flexShrink: 0,
-            }}>{iniciaisUsuario}</div>
+              fontSize: 11, fontWeight: 700, color: '#6043C1',
+            }}>
+              {!medico?.foto_url && iniciaisUsuario}
+            </div>
           </button>
           {menuOpen && (
             <div style={dropdownStyle(240)}>
