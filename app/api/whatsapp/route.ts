@@ -414,7 +414,9 @@ export async function POST(req: NextRequest) {
           })
 
           // Envia pelo Instagram
-          const igToken = process.env.INSTAGRAM_TOKEN || WPP_TOKEN
+          const igToken = process.env.INSTAGRAM_TOKEN || ''
+          const igTokenPreview = igToken ? igToken.substring(0,15)+'...(len:'+igToken.length+')' : 'VAZIO'
+          console.log('IG_TOKEN_DEBUG:', igTokenPreview, 'pageId:', igPageId)
           const igPageId = process.env.INSTAGRAM_PAGE_ID || ''
           if (igToken && igPageId) {
             const igRes = await fetch(`https://graph.facebook.com/v20.0/${igPageId}/messages`, {
