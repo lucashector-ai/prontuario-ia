@@ -49,7 +49,7 @@ export default function Contatos() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ position: 'relative' }}>
               <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-              <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar contato..." style={{ padding: '8px 12px 8px 34px', borderRadius: 8, border: '1px solid #e5e7eb', outline: 'none', fontSize: 14, width: 220, color: '#111827' }} />
+              <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar contato..." style={{ padding: '8px 12px 8px 34px', borderRadius: 8, outline: 'none', fontSize: 14, width: 220, color: '#111827' }} />
             </div>
             <button onClick={() => router.push('/whatsapp-app')} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#00a884', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
               Abrir Chat
@@ -76,7 +76,7 @@ export default function Contatos() {
                 const ultima = c.whatsapp_mensagens?.sort((a: any, b: any) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime())[0]
                 const totalMsgs = c.whatsapp_mensagens?.length || 0
                 return (
-                  <div key={c.id} style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', padding: 16, cursor: 'pointer', transition: 'box-shadow 0.15s' }}
+                  <div key={c.id} style={{ background: 'white', borderRadius: 12, padding: 16, cursor: 'pointer', transition: 'box-shadow 0.15s' }}
                     onClick={() => router.push('/whatsapp-app')}
                     onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)')}
                     onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}>

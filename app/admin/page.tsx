@@ -101,14 +101,14 @@ export default function Admin() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 900 }}>
               {medicos.map(m => (
-                <div key={m.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f3f0fd', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#6043C1', flexShrink: 0 }}>
+                <div key={m.id} style={{ background: 'white', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f3f0fd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#6043C1', flexShrink: 0 }}>
                     {m.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('')}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                       <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>{m.nome}</p>
-                      {m.cargo === 'admin' && <span style={{ fontSize: 10, fontWeight: 700, color: '#6043C1', background: '#f3f0fd', padding: '1px 7px', borderRadius: 10, border: '1px solid #d4c9f7' }}>admin</span>}
+                      {m.cargo === 'admin' && <span style={{ fontSize: 10, fontWeight: 700, color: '#6043C1', background: '#f3f0fd', padding: '1px 7px', borderRadius: 10 }}>admin</span>}
                       {!m.ativo && <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', background: '#fef2f2', padding: '1px 7px', borderRadius: 10, border: '1px solid #fecaca' }}>inativo</span>}
                     </div>
                     <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{m.especialidade || 'Sem especialidade'} {m.crm ? '· CRM ' + m.crm : ''} · {m.email}</p>
@@ -158,13 +158,13 @@ export default function Admin() {
                     value={(form as any)[f.key]}
                     onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                     placeholder={f.placeholder}
-                    style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '8px 12px', fontSize: 13, borderRadius: 8, outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
               ))}
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
-              <button onClick={() => setModalNovoMedico(false)} style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={() => setModalNovoMedico(false)} style={{ padding: '9px 18px', borderRadius: 8, background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
               <button onClick={handleCriarMedico} disabled={salvando} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                 {salvando ? 'Salvando...' : 'Criar médico'}
               </button>

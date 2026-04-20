@@ -70,7 +70,7 @@ export function HistoricoRapido({ pacienteId, medicoId }: Props) {
           const horario = new Date(c.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
           const cids = c.cids || []
           return (
-            <div key={c.id} style={{ background: 'white', border: '1px solid #f3f4f6', borderRadius: 8, overflow: 'hidden' }}>
+            <div key={c.id} style={{ background: 'white', borderRadius: 8, overflow: 'hidden' }}>
               <button onClick={() => toggle(c.id)}
                 style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#6043C1', background: '#f3f0fd', padding: '3px 8px', borderRadius: 6, flexShrink: 0 }}>

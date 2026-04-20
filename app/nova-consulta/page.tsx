@@ -273,10 +273,10 @@ export default function Home() {
                 value={buscaPaciente}
                 onChange={e => setBuscaPaciente(e.target.value)}
                 placeholder="Buscar por nome..."
-                style={{ width: '100%', padding: '9px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, outline: 'none', boxSizing: 'border-box' }}
               />
               {buscaPaciente && (
-                <div style={{ marginTop: 4, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden', maxHeight: 200, overflowY: 'auto' }}>
+                <div style={{ marginTop: 4, borderRadius: 8, overflow: 'hidden', maxHeight: 200, overflowY: 'auto' }}>
                   {pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase())).length === 0 ? (
                     <p style={{ fontSize: 12, color: '#9ca3af', padding: '12px 14px', margin: 0 }}>Nenhum paciente encontrado</p>
                   ) : pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase())).map(p => (
@@ -300,7 +300,7 @@ export default function Home() {
             <div style={{ borderTop: '1px solid #f3f4f6', marginTop: 20, paddingTop: 20, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setModalPaciente(false)}
-                style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+                style={{ padding: '9px 18px', borderRadius: 8, background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
                 Consulta avulsa
               </button>
               <button
@@ -330,7 +330,7 @@ export default function Home() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {consultaSalva && (
-              <span style={{ fontSize: 12, color: '#6043C1', background: '#f0fdf4', border: '1px solid #ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
+              <span style={{ fontSize: 12, color: '#6043C1', background: '#f0fdf4', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
                  Salvo
               </span>
             )}
@@ -349,7 +349,7 @@ export default function Home() {
               {modoPerfeita ? 'Modo perfeita ativo' : 'Modo perfeita'}
             </button>
             {estado === 'pronto' && (
-              <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', border: '1px solid #e5e7eb', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
+              <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
                 + Nova consulta
               </button>
             )}
@@ -459,14 +459,14 @@ export default function Home() {
                     </span>
                   )}
                   {transcricao && (
-                    <button onClick={handleNovo} style={{ fontSize: 11, color: '#6b7280', background: 'none', border: '1px solid #e5e7eb', padding: '2px 8px', borderRadius: 5, cursor: 'pointer' }}>
+                    <button onClick={handleNovo} style={{ fontSize: 11, color: '#6b7280', background: 'none', padding: '2px 8px', borderRadius: 5, cursor: 'pointer' }}>
                       Limpar
                     </button>
                   )}
                 </div>
               </div>
               {modoPerfeita && estado === 'gravando' && (
-                <div style={{ marginBottom: 16, background: '#f0ebff', border: '1px solid #d4c9f7', borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ marginBottom: 16, background: '#f0ebff', borderRadius: 10, padding: '12px 14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
@@ -486,7 +486,7 @@ export default function Home() {
                   {sugestoes.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
                       {sugestoes.map((s, i) => (
-                        <div key={i} style={{ background: 'white', border: '1px solid #d4c9f7', borderRadius: 6, padding: '7px 10px', fontSize: 12, color: '#3C3489', display: 'flex', alignItems: 'center', gap: 7, cursor: 'default' }}>
+                        <div key={i} style={{ background: 'white', borderRadius: 6, padding: '7px 10px', fontSize: 12, color: '#3C3489', display: 'flex', alignItems: 'center', gap: 7, cursor: 'default' }}>
                           <span style={{ width: 16, height: 16, borderRadius: '50%', background: '#6043C1', color: 'white', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                           {s}
                         </div>
@@ -567,7 +567,7 @@ export default function Home() {
                   )}
                   {aba === 'receita' && !receita && (
                     <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-                      <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', border: '1px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                       </div>
                       <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Gerar receita médica</p>
@@ -612,7 +612,7 @@ export default function Home() {
                   )}
                   {aba === 'documentos' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px' }}>
+                      <div style={{ background: 'white', borderRadius: 12, padding: '16px' }}>
                         <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Pedido de exames</p>
                         {!exames ? (
                           <button onClick={handleGerarExames} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#f9fafb', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
@@ -641,12 +641,12 @@ export default function Home() {
                           </div>
                         )}
                       </div>
-                      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px' }}>
+                      <div style={{ background: 'white', borderRadius: 12, padding: '16px' }}>
                         <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Atestado médico</p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                           <label style={{ fontSize: 12, color: '#6b7280' }}>Dias de afastamento:</label>
                           <input type="number" min={1} max={30} value={diasAtestado} onChange={e => setDiasAtestado(Number(e.target.value))}
-                            style={{ width: 60, padding: '5px 8px', borderRadius: 6, border: '1px solid #e5e7eb', fontSize: 13, textAlign: 'center' }} />
+                            style={{ width: 60, padding: '5px 8px', borderRadius: 6, fontSize: 13, textAlign: 'center' }} />
                         </div>
                         {!atestado ? (
                           <button onClick={handleGerarAtestado} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#f9fafb', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
@@ -675,7 +675,7 @@ export default function Home() {
 
             {(estado === 'idle' || estado === 'gravando') && !prontuario && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 48, background: 'white' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', border: '1.5px solid #ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
                     <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
@@ -688,7 +688,7 @@ export default function Home() {
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {['Prontuário SOAP', 'CID-10 automático', 'Receita médica', 'Salvo no banco'].map(f => (
-                    <span key={f} style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', border: '1px solid #ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{f}</span>
+                    <span key={f} style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{f}</span>
                   ))}
                 </div>
               </div>

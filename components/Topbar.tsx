@@ -182,14 +182,13 @@ export function Topbar() {
           <button onClick={() => router.push('/minha-clinica')} title="Minha clínica"
             style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px 4px 4px',
-              borderRadius: 22, border: '1px solid #f3f4f6', background: 'white', cursor: 'pointer',
+              borderRadius: 22, background: 'white', cursor: 'pointer',
             }}>
             <div style={{
               width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
               background: clinica?.logo_url ? `url(${clinica.logo_url}) center/cover` : '#ede9fb',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#6043C1', fontSize: 12, fontWeight: 700,
-              border: '1.5px solid #d4c9f7',
             }}>
               {!clinica?.logo_url && inicialClinica}
             </div>
@@ -207,7 +206,7 @@ export function Topbar() {
           <button onClick={() => setMenuOpen(!menuOpen)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px 4px 10px',
-              borderRadius: 22, border: '1px solid #f3f4f6', background: menuOpen ? '#faf8ff' : 'white',
+              borderRadius: 22, background: menuOpen ? '#faf8ff' : 'white',
               cursor: 'pointer', transition: 'background 0.15s',
             }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#374151', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -215,8 +214,7 @@ export function Topbar() {
             </span>
             <div style={{
               width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-              background: medico?.foto_url ? `url(${medico.foto_url}) center/cover` : '#ede9fb',
-              border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: medico?.foto_url ? `url(${medico.foto_url}) center/cover` : '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 11, fontWeight: 700, color: '#6043C1',
             }}>
               {!medico?.foto_url && iniciaisUsuario}
@@ -270,7 +268,7 @@ export function Topbar() {
               <input autoFocus value={busca} onChange={e => setBusca(e.target.value)}
                 placeholder="Buscar pacientes ou agendamentos..."
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, color: '#111827' }}/>
-              <kbd style={{ fontSize: 10, padding: '2px 6px', border: '1px solid #e5e7eb', borderRadius: 4, color: '#9ca3af', fontFamily: 'inherit' }}>ESC</kbd>
+              <kbd style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, color: '#9ca3af', fontFamily: 'inherit' }}>ESC</kbd>
             </div>
             <div style={{ maxHeight: '50vh', overflow: 'auto' }}>
               {busca.length < 2 ? (
@@ -337,7 +335,7 @@ const iconBtnStyle = (active: boolean): React.CSSProperties => ({
 
 const dropdownStyle = (width: number): React.CSSProperties => ({
   position: 'absolute', top: 'calc(100% + 6px)', right: 0, width,
-  background: 'white', borderRadius: 10, border: '1px solid #f3f4f6',
+  background: 'white', borderRadius: 10,
   boxShadow: '0 8px 24px rgba(17,24,39,0.08)', overflow: 'hidden', zIndex: 150,
 })
 

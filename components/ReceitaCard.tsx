@@ -24,8 +24,7 @@ export function ReceitaCard({ receita, nomeMedico, crm, especialidade, onImprimi
           {receita.medicamentos?.map((med, i) => (
             <div key={i} style={{ display: 'flex', gap: 12, paddingBottom: 12, borderBottom: i < receita.medicamentos.length - 1 ? '1px solid #f0f4f0' : 'none' }}>
               <div style={{
-                width: 28, height: 28, borderRadius: '50%', background: '#f3f0fd',
-                border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 28, height: 28, borderRadius: '50%', background: '#f3f0fd', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 11, fontWeight: 700, color: '#6043C1', flexShrink: 0
               }}>{i + 1}</div>
               <div style={{ flex: 1 }}>

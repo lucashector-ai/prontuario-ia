@@ -134,7 +134,7 @@ export default function SofiaConfig() {
                 onChange={e => setConfig({ ...config, pre_atendimento_prompt_extra: e.target.value })}
                 rows={3}
                 style={{
-                  width: '100%', padding: 10, borderRadius: 8, border: '1.5px solid #e5e7eb',
+                  width: '100%', padding: 10, borderRadius: 8,
                   fontSize: 13, fontFamily: 'inherit', resize: 'vertical',
                 }}
               />
@@ -182,7 +182,7 @@ export default function SofiaConfig() {
               <input type="number" min={5} max={60}
                 value={config.lembrete_teleconsulta_min || 10}
                 onChange={e => setConfig({ ...config, lembrete_teleconsulta_min: Number(e.target.value) })}
-                style={{ width: 100, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+                style={{ width: 100, padding: '7px 10px', borderRadius: 7, fontSize: 13 }}/>
               <span style={{ marginLeft: 6, fontSize: 12, color: '#9ca3af' }}>min</span>
             </div>
           </Card>
@@ -205,7 +205,7 @@ export default function SofiaConfig() {
                     }
                   })}
                   placeholder="08:00-18:00 ou vazio"
-                  style={{ flex: 1, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}
+                  style={{ flex: 1, padding: '7px 10px', borderRadius: 7, fontSize: 13 }}
                 />
               </div>
             ))}
@@ -213,7 +213,7 @@ export default function SofiaConfig() {
               <Label>Duração padrão da consulta (min)</Label>
               <input type="number" value={config.duracao_consulta_padrao}
                 onChange={e => setConfig({ ...config, duracao_consulta_padrao: Number(e.target.value) })}
-                style={{ width: 120, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+                style={{ width: 120, padding: '7px 10px', borderRadius: 7, fontSize: 13 }}/>
             </div>
           </Card>
 
@@ -226,7 +226,7 @@ export default function SofiaConfig() {
               <Label>Consulta padrão</Label>
               <input type="number" value={config.preco_consulta || ''} onChange={e => setConfig({ ...config, preco_consulta: Number(e.target.value) || null })}
                 placeholder="Ex: 250"
-                style={{ width: 180, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+                style={{ width: 180, padding: '7px 10px', borderRadius: 7, fontSize: 13 }}/>
               <span style={{ marginLeft: 6, fontSize: 12, color: '#9ca3af' }}>R$</span>
             </div>
 
@@ -241,10 +241,10 @@ export default function SofiaConfig() {
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <input value={novoPrecoLabel} onChange={e => setNovoPrecoLabel(e.target.value)}
                 placeholder="Ex: Retorno"
-                style={{ flex: 1, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+                style={{ flex: 1, padding: '7px 10px', borderRadius: 7, fontSize: 13 }}/>
               <input type="number" value={novoPrecoValor} onChange={e => setNovoPrecoValor(e.target.value)}
                 placeholder="Valor"
-                style={{ width: 100, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+                style={{ width: 100, padding: '7px 10px', borderRadius: 7, fontSize: 13 }}/>
               <button onClick={addPreco}
                 style={{ padding: '7px 14px', borderRadius: 7, border: 'none', background: '#6043C1', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                 Adicionar
@@ -262,7 +262,7 @@ export default function SofiaConfig() {
               value={config.saudacao || ''}
               onChange={e => setConfig({ ...config, saudacao: e.target.value })}
               rows={3}
-              style={{ width: '100%', padding: 10, borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, fontFamily: 'inherit', resize: 'vertical' }}
+              style={{ width: '100%', padding: 10, borderRadius: 8, fontSize: 13, fontFamily: 'inherit', resize: 'vertical' }}
               placeholder="Deixe em branco para usar o padrão"
             />
           </Card>
@@ -279,7 +279,7 @@ export default function SofiaConfig() {
               <Label>Horário de envio</Label>
               <input type="time" value={config.relatorio_diario_horario || '07:00'}
                 onChange={e => setConfig({ ...config, relatorio_diario_horario: e.target.value })}
-                style={{ width: 140, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+                style={{ width: 140, padding: '7px 10px', borderRadius: 7, fontSize: 13 }}/>
               <p style={{ margin: '4px 0 0', fontSize: 11, color: '#9ca3af' }}>
                 Envio aproximado (pode variar em até 30min)
               </p>
@@ -315,14 +315,14 @@ export default function SofiaConfig() {
               <input type="tel" value={config.relatorio_whatsapp || ''}
                 onChange={e => setConfig({ ...config, relatorio_whatsapp: e.target.value })}
                 placeholder="+55 47 99999-9999"
-                style={{ width: '100%', maxWidth: 300, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+                style={{ width: '100%', maxWidth: 300, padding: '7px 10px', borderRadius: 7, fontSize: 13 }}/>
             </div>
             <div style={{ marginTop: 14 }}>
               <Label>E-mail do médico</Label>
               <input type="email" value={config.relatorio_email || ''}
                 onChange={e => setConfig({ ...config, relatorio_email: e.target.value })}
                 placeholder="medico@clinica.com"
-                style={{ width: '100%', maxWidth: 300, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 13 }}/>
+                style={{ width: '100%', maxWidth: 300, padding: '7px 10px', borderRadius: 7, fontSize: 13 }}/>
             </div>
             <button onClick={async () => {
               if (!medico) return
@@ -335,14 +335,14 @@ export default function SofiaConfig() {
               if (d.error) toast('Erro: ' + d.error, 'error')
               else toast('Relatório de teste enviado!')
             }}
-              style={{ marginTop: 14, padding: '8px 16px', borderRadius: 7, border: '1px solid #e5e7eb', background: 'white', color: '#374151', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              style={{ marginTop: 14, padding: '8px 16px', borderRadius: 7, background: 'white', color: '#374151', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
               📤 Enviar relatório de teste agora
             </button>
           </Card>
 
           <div style={{ position: 'sticky', bottom: 0, padding: '16px 0', background: '#F9FAFC', borderTop: '1px solid #f3f4f6', marginTop: 20, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button onClick={() => router.back()}
-              style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151' }}>
+              style={{ padding: '10px 18px', borderRadius: 8, background: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151' }}>
               Cancelar
             </button>
             <button onClick={salvar} disabled={salvando}
@@ -358,7 +358,7 @@ export default function SofiaConfig() {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: 'white', borderRadius: 12, padding: 20, marginBottom: 14, border: '1px solid #f3f4f6' }}>
+    <div style={{ background: 'white', borderRadius: 12, padding: 20, marginBottom: 14 }}>
       <h2 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: '#111827' }}>{title}</h2>
       {children}
     </div>

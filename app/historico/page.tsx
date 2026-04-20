@@ -87,7 +87,7 @@ export default function Historico() {
             <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Histórico de consultas</h1>
             <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{consultasFiltradas.length}{busca ? ` de ${consultas.length}` : ''} consultas registradas</p>
           </div>
-          <a href="/consulta" style={{ fontSize: 12, fontWeight: 600, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '7px 16px', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <a href="/consulta" style={{ fontSize: 12, fontWeight: 600, color: '#6043C1', background: '#f3f0fd', padding: '7px 16px', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Nova consulta
           </a>
@@ -97,7 +97,7 @@ export default function Historico() {
           {/* Lista */}
           <div style={{ borderRight: 'none', overflow: 'auto', background: 'white', padding: '12px 10px', borderRadius: 12, height: '100%' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f9fafb', borderRadius: 8, padding: '7px 12px' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             <input
               value={busca}
@@ -126,7 +126,7 @@ export default function Historico() {
                 {c.cids?.length > 0 && (
                   <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
                     {c.cids.slice(0, 3).map((cid: any, i: number) => (
-                      <span key={i} style={{ fontSize: 10, color: '#6043C1', background: '#f3f0fd', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700, border: '1px solid #d4c9f7' }}>{cid.codigo}</span>
+                      <span key={i} style={{ fontSize: 10, color: '#6043C1', background: '#f3f0fd', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700 }}>{cid.codigo}</span>
                     ))}
                   </div>
                 )}
@@ -166,7 +166,7 @@ export default function Historico() {
                         </button>
                             <a href={'/api/pdf-prontuario?consulta_id=' + selecionada.id + '&medico_id=' + medico?.id}
                               target="_blank" rel="noreferrer"
-                              style={{display:'inline-flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:6,border:'1px solid #d4c9f7',background:'#f0ebff',color:'#6043C1',fontSize:12,fontWeight:600,textDecoration:'none',marginRight:8}}>
+                              style={{display:'inline-flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:6,background:'#f0ebff',color:'#6043C1',fontSize:12,fontWeight:600,textDecoration:'none',marginRight:8}}>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
                               PDF Prontuário
                             </a>
@@ -200,7 +200,7 @@ export default function Historico() {
                       <p style={{ fontSize: 10, fontWeight: 700, color: '#8aa8a5', margin: '0 0 10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>CID-10</p>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {selecionada.cids.map((cid: any, i: number) => (
-                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f3f0fd', border: '1px solid #d4c9f7', borderRadius: 8, padding: '6px 12px' }}>
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f3f0fd', borderRadius: 8, padding: '6px 12px' }}>
                             <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#6043C1' }}>{cid.codigo}</span>
                             <span style={{ fontSize: 12, color: '#3d5452' }}>{cid.descricao}</span>
                           </div>
@@ -212,7 +212,7 @@ export default function Historico() {
               </div>
             ) : (
               <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 16, background: '#f3f0fd', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: '#f3f0fd', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
                 <div style={{ textAlign: 'center' }}>

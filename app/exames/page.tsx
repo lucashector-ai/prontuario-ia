@@ -93,7 +93,7 @@ export default function Exames() {
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: 40 }}>
-                  <div style={{ width: 56, height: 56, borderRadius: 14, background: '#F9FAFC', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 14, background: '#F9FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                     </svg>
@@ -156,7 +156,7 @@ export default function Exames() {
                     <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>{analise.tipo_exame}</p>
                     {analise.data_exame && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Data: {analise.data_exame}</p>}
                   </div>
-                  <span style={{ fontSize: 11, color: '#6043C1', background: '#F9FAFC', border: '1px solid #d4c9f7', padding: '3px 10px', borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: '#6043C1', background: '#F9FAFC', padding: '3px 10px', borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
                     ✓ Analisado pela IA
                   </span>
                 </div>
@@ -210,7 +210,7 @@ export default function Exames() {
 
               {/* Recomendações */}
               {analise.recomendacoes?.length > 0 && (
-                <div style={{ background: '#F9FAFC', border: '1px solid #d4c9f7', borderRadius: 12, padding: '16px 20px' }}>
+                <div style={{ background: '#F9FAFC', borderRadius: 12, padding: '16px 20px' }}>
                   <p style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Recomendações</p>
                   {analise.recomendacoes.map((r: string, i: number) => (
                     <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 6 }}>

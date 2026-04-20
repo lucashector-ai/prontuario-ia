@@ -99,10 +99,10 @@ export default function Ditado() {
           <div style={{ display: 'flex', gap: 8 }}>
             {prontuario && (
               <>
-                <button onClick={copiarTudo} style={{ fontSize: 12, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '6px 14px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
+                <button onClick={copiarTudo} style={{ fontSize: 12, color: '#6043C1', background: '#f3f0fd', padding: '6px 14px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
                   Copiar tudo
                 </button>
-                <button onClick={reiniciar} style={{ fontSize: 12, color: '#6b7280', background: 'white', border: '1px solid #e5e7eb', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
+                <button onClick={reiniciar} style={{ fontSize: 12, color: '#6b7280', background: 'white', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
                   Novo ditado
                 </button>
               </>
@@ -130,7 +130,7 @@ export default function Ditado() {
             </div>
 
             {/* Área de entrada */}
-            <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+            <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden' }}>
               {modo === 'gravar' ? (
                 <div style={{ padding: 24 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -183,7 +183,7 @@ export default function Ditado() {
           {prontuario && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {campos.map(campo => prontuario[campo.key] && (
-                <div key={campo.key} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
+                <div key={campo.key} style={{ background: 'white', borderRadius: 10, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid #f3f4f6' }}>
                     <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: campo.cor }}>{campo.label}</span>
                     <button onClick={() => copiar(campo.key, prontuario[campo.key])} style={{ fontSize: 11, color: copiado === campo.key ? '#059669' : '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
@@ -194,7 +194,7 @@ export default function Ditado() {
                 </div>
               ))}
               {prontuario.cids?.length > 0 && (
-                <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px' }}>
                   <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: '#6b7280', margin: '0 0 8px' }}>CID-10</p>
                   {prontuario.cids.map((cid: any) => (
                     <div key={cid.codigo} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>

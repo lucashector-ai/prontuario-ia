@@ -83,19 +83,19 @@ export default function Pacientes() {
         {/* Filtros */}
         <div style={{ padding: '8px 28px', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <select value={filtroSexo} onChange={e => setFiltroSexo(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, color: '#374151', background: 'white', cursor: 'pointer' }}>
+            style={{ padding: '6px 10px', borderRadius: 8, fontSize: 13, color: '#374151', background: 'white', cursor: 'pointer' }}>
             <option value="">Todos os sexos</option>
             <option value="M">Masculino</option>
             <option value="F">Feminino</option>
           </select>
           <select value={filtroConvenio} onChange={e => setFiltroConvenio(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, color: '#374151', background: 'white', cursor: 'pointer' }}>
+            style={{ padding: '6px 10px', borderRadius: 8, fontSize: 13, color: '#374151', background: 'white', cursor: 'pointer' }}>
             <option value="">Todos os convênios</option>
             <option value="particular">Particular</option>
             <option value="convenio">Com convênio</option>
           </select>
           <select value={ordenar} onChange={e => setOrdenar(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, color: '#374151', background: 'white', cursor: 'pointer' }}>
+            style={{ padding: '6px 10px', borderRadius: 8, fontSize: 13, color: '#374151', background: 'white', cursor: 'pointer' }}>
             <option value="nome">A → Z</option>
             <option value="recente">Mais recentes</option>
           </select>
@@ -121,7 +121,7 @@ export default function Pacientes() {
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Nome completo *</label>
                     <input required value={form.nome} onChange={e => setForm(f => ({...f, nome: e.target.value}))}
-                      style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }} placeholder="Nome completo do paciente"/>
+                      style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8 }} placeholder="Nome completo do paciente"/>
                   </div>
                   {[
                     { label: 'CPF', key: 'cpf', type: 'text', placeholder: '000.000.000-00' },
@@ -132,13 +132,13 @@ export default function Pacientes() {
                     <div key={key}>
                       <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{label}</label>
                       <input type={type} value={(form as any)[key]} onChange={e => setForm(f => ({...f, [key]: e.target.value}))}
-                        style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }} placeholder={placeholder}/>
+                        style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8 }} placeholder={placeholder}/>
                     </div>
                   ))}
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Sexo</label>
                     <select value={form.sexo} onChange={e => setForm(f => ({...f, sexo: e.target.value}))}
-                      style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }}>
+                      style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8 }}>
                       <option value="">Selecionar</option>
                       <option value="Masculino">Masculino</option>
                       <option value="Feminino">Feminino</option>
@@ -166,7 +166,7 @@ export default function Pacientes() {
               <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: 40 }}>Carregando...</p>
             ) : pacientesFiltrados.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f3f0fd', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f3f0fd', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
                 </div>
                 <p style={{ fontSize: 14, fontWeight: 600, color: '#374151', margin: '0 0 6px' }}>{busca ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}</p>
@@ -182,7 +182,7 @@ export default function Pacientes() {
                       style={{ background: 'white', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
                       onMouseOver={e => { e.currentTarget.style.borderColor = '#d4c9f7'; e.currentTarget.style.background = '#fafffe' }}
                       onMouseOut={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.background = 'white' }}>
-                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f3f0fd', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#6043C1', flexShrink: 0 }}>{ini}</div>
+                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f3f0fd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#6043C1', flexShrink: 0 }}>{ini}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>{p.nome}</p>
                         <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>{[p.sexo, idade ? `${idade} anos` : null, p.telefone].filter(Boolean).join(' · ')}</p>

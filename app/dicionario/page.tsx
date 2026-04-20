@@ -86,31 +86,31 @@ export default function Dicionario() {
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Dicionário clínico</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Termos personalizados para melhorar a transcrição e o prontuário</p>
           </div>
-          <span style={{ fontSize: 12, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{termos.length} termos</span>
+          <span style={{ fontSize: 12, color: '#6043C1', background: '#f3f0fd', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{termos.length} termos</span>
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: 24, display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20, alignContent: 'start' }}>
 
           {/* Formulário adicionar */}
-          <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20, height: 'fit-content' }}>
+          <div style={{ background: 'white', borderRadius: 12, padding: 20, height: 'fit-content' }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 16px' }}>Adicionar termo</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
                 <p style={{ fontSize: 11, fontWeight: 600, color: '#374151', margin: '0 0 5px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Termo *</p>
                 <input value={novoTermo} onChange={e => setNovoTermo(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdicionar()}
                   placeholder="ex: BDZ, Quetiapina, PCR..."
-                  style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, outline: 'none', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '8px 12px', fontSize: 13, borderRadius: 8, outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
                 <p style={{ fontSize: 11, fontWeight: 600, color: '#374151', margin: '0 0 5px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Descrição</p>
                 <input value={novaDescricao} onChange={e => setNovaDescricao(e.target.value)}
                   placeholder="ex: Benzodiazepínico"
-                  style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, outline: 'none', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '8px 12px', fontSize: 13, borderRadius: 8, outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
                 <p style={{ fontSize: 11, fontWeight: 600, color: '#374151', margin: '0 0 5px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Categoria</p>
                 <select value={novaCategoria} onChange={e => setNovaCategoria(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, outline: 'none', background: 'white', boxSizing: 'border-box' }}>
+                  style={{ width: '100%', padding: '8px 12px', fontSize: 13, borderRadius: 8, outline: 'none', background: 'white', boxSizing: 'border-box' }}>
                   {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
@@ -119,7 +119,7 @@ export default function Dicionario() {
               </button>
             </div>
 
-            <div style={{ marginTop: 20, padding: '12px 14px', background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb' }}>
+            <div style={{ marginTop: 20, padding: '12px 14px', background: '#f9fafb', borderRadius: 8 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Como funciona</p>
               <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>Os termos aqui cadastrados são usados pela IA para corrigir a transcrição e gerar prontuários mais precisos para a sua especialidade.</p>
             </div>
@@ -127,7 +127,7 @@ export default function Dicionario() {
 
           {/* Lista de termos */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'white', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'white', borderRadius: 8, padding: '7px 12px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
               <input value={filtro} onChange={e => setFiltro(e.target.value)} placeholder="Filtrar termos..."
                 style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, outline: 'none', color: '#374151' }} />
@@ -138,14 +138,14 @@ export default function Dicionario() {
                 <div style={{ width: 28, height: 28, border: '3px solid #ede9fb', borderTopColor: '#6043C1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
               </div>
             ) : termosFiltrados.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '48px 24px', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb' }}>
+              <div style={{ textAlign: 'center', padding: '48px 24px', background: 'white', borderRadius: 12 }}>
                 <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>{termos.length === 0 ? 'Nenhum termo cadastrado' : 'Nenhum resultado'}</p>
                 <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>{termos.length === 0 ? 'Adicione termos específicos da sua especialidade' : 'Tente outro filtro'}</p>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
                 {termosFiltrados.map(t => (
-                  <div key={t.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                  <div key={t.id} style={{ background: 'white', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                         <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{t.termo}</span>

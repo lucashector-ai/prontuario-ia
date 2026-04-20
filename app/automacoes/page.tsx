@@ -222,7 +222,7 @@ export default function AutomacoesPage() {
                     ))}
                   </div>
                   {resultado.resumo_ia && (
-                    <div style={{ background: "#f0ebff", border: "1px solid #d4c9f7", borderRadius: 8, padding: "12px 14px" }}>
+                    <div style={{ background: "#f0ebff", borderRadius: 8, padding: "12px 14px" }}>
                       <p style={{ fontSize: 12, color: "#4c1d95", margin: 0, lineHeight: 1.6 }}>{resultado.resumo_ia}</p>
                     </div>
                   )}

@@ -119,7 +119,7 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar }: Props) {
         <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
           {cidsCronicos.slice(0, 3).map((c: any, i: number) => (
             <span key={i} title={c.descricao || c.codigo || c}
-              style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, background: '#f3f0fd', color: '#6043C1', border: '1px solid #d4c9f7', padding: '3px 7px', borderRadius: 5 }}>
+              style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, background: '#f3f0fd', color: '#6043C1', padding: '3px 7px', borderRadius: 5 }}>
               {c.codigo || c}
             </span>
           ))}
@@ -129,7 +129,7 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar }: Props) {
 
       {onTrocar && (
         <button onClick={onTrocar} title="Trocar paciente"
-          style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          style={{ width: 32, height: 32, borderRadius: 8, background: 'white', color: '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
         </button>
       )}

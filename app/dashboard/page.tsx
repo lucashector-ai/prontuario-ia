@@ -184,7 +184,7 @@ export default function Dashboard() {
               </button>
             ))}
             </div>
-            <button onClick={gerarRelatorio} disabled={gerandoRelatorio} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 7, border: '1px solid #e5e7eb', background: 'white', color: '#374151', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+            <button onClick={gerarRelatorio} disabled={gerandoRelatorio} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 7, background: 'white', color: '#374151', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               {gerandoRelatorio ? 'Gerando...' : 'Relatório mensal'}
             </button>
@@ -250,7 +250,7 @@ export default function Dashboard() {
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Consultas por dia</p>
                       <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>Últimos 14 dias</p>
                     </div>
-                    <span style={{ fontSize: 11, color: '#6043C1', background: '#f3f0fd', border: '1px solid #d4c9f7', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
+                    <span style={{ fontSize: 11, color: '#6043C1', background: '#f3f0fd', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
                       {dados.porDia.reduce((a: number, d: any) => a + d.total, 0)} total
                     </span>
                   </div>
@@ -303,7 +303,7 @@ export default function Dashboard() {
                     </div>
                   ) : dados.proximosAgendamentos.map((ag: any, i: number) => (
                     <div key={ag.id} style={{ padding: '12px 20px', borderBottom: i < dados.proximosAgendamentos.length - 1 ? '1px solid #f9fafb' : 'none', display: 'flex', gap: 12, alignItems: 'center' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f0fd', border: '1px solid #d4c9f7', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f0fd', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <p style={{ fontSize: 14, fontWeight: 800, color: '#6043C1', margin: 0, lineHeight: 1 }}>{new Date(ag.data_hora).getDate()}</p>
                         <p style={{ fontSize: 9, color: '#6043C1', margin: 0, textTransform: 'uppercase' }}>{new Date(ag.data_hora).toLocaleDateString('pt-BR', { month: 'short' })}</p>
                       </div>
@@ -377,7 +377,7 @@ export default function Dashboard() {
                         </div>
                         <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
                           {(c.cids || []).slice(0, 2).map((cid: any) => (
-                            <span key={cid.codigo} style={{ fontSize: 9, color: '#6043C1', background: '#f3f0fd', padding: '1px 5px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700, border: '1px solid #d4c9f7' }}>{cid.codigo}</span>
+                            <span key={cid.codigo} style={{ fontSize: 9, color: '#6043C1', background: '#f3f0fd', padding: '1px 5px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700 }}>{cid.codigo}</span>
                           ))}
                         </div>
                       </div>

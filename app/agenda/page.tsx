@@ -281,8 +281,7 @@ export default function Agenda() {
     textTransform: 'uppercase', letterSpacing: '0.06em',
   }
   const selectStyle: React.CSSProperties = {
-    width: '100%', padding: '8px 10px', fontSize: 12, borderRadius: 7,
-    border: '1.5px solid #e5e7eb', background: 'white', color: '#111827', cursor: 'pointer',
+    width: '100%', padding: '8px 10px', fontSize: 12, borderRadius: 7, background: 'white', color: '#111827', cursor: 'pointer',
   }
 
   const renderHeader = () => {
@@ -296,16 +295,16 @@ export default function Agenda() {
       <div style={{ padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => { setSemana(new Date()); setDiaSelecionado(new Date()); setMesVisualizado(new Date()) }}
-            style={{ fontSize: 12, fontWeight: 600, color: '#374151', background: 'white', padding: '5px 14px', borderRadius: 7, cursor: 'pointer', border: '1px solid #e5e7eb' }}>
+            style={{ fontSize: 12, fontWeight: 600, color: '#374151', background: 'white', padding: '5px 14px', borderRadius: 7, cursor: 'pointer' }}>
             Hoje
           </button>
           <div style={{ display: 'flex', gap: 1 }}>
             <button onClick={() => viewMode === 'mes' ? navegarMes(-1) : navegarSemana(-1)}
-              style={{ width: 28, height: 28, background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e5e7eb' }}>
+              style={{ width: 28, height: 28, background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
             <button onClick={() => viewMode === 'mes' ? navegarMes(1) : navegarSemana(1)}
-              style={{ width: 28, height: 28, background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e5e7eb', borderLeft: 'none' }}>
+              style={{ width: 28, height: 28, background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', borderLeft: 'none' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
             </button>
           </div>
@@ -313,12 +312,12 @@ export default function Agenda() {
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button onClick={() => setListaEsperaOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, border: '1px solid #e5e7eb', background: 'white', fontSize: 12, color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: 'white', fontSize: 12, color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Lista de espera
             {listaEspera.length > 0 && <span style={{ background: '#6043C1', color: 'white', borderRadius: 10, padding: '0 6px', fontSize: 10 }}>{listaEspera.length}</span>}
           </button>
-          <div style={{ display: 'flex', border: '1px solid #e5e7eb', borderRadius: 7, overflow: 'hidden', background: 'white' }}>
+          <div style={{ display: 'flex', borderRadius: 7, overflow: 'hidden', background: 'white' }}>
             {(['dia', 'semana', 'mes'] as const).map((v, i) => (
               <button key={v} onClick={() => setViewMode(v)}
                 style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: viewMode === v ? '#6043C1' : 'white', color: viewMode === v ? 'white' : '#6b7280', border: 'none', borderLeft: i > 0 ? '1px solid #e5e7eb' : 'none' }}>
@@ -422,7 +421,7 @@ export default function Agenda() {
     const agoraIdx = toSlotIdx(agora)
     const mostrarLinhaAgora = agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
     return (
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px', border: '1px solid #f3f4f6' }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
           <div/>
           {diasSemana.map((dia, i) => {
@@ -515,7 +514,7 @@ export default function Agenda() {
     const grid = getMonthGrid(mesVisualizado)
     const mesAtual = mesVisualizado.getMonth()
     return (
-      <div style={{ flex: 1, background: 'white', borderRadius: 12, margin: '0 16px 16px', border: '1px solid #f3f4f6', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, background: 'white', borderRadius: 12, margin: '0 16px 16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #f3f4f6' }}>
           {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((l, i) => (
             <div key={i} style={{ padding: 8, fontSize: 11, fontWeight: 700, color: '#9ca3af', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{l}</div>
@@ -555,7 +554,7 @@ export default function Agenda() {
     const mostrarLinhaAgora = isHoje(diaSelecionado) && agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
     const ags = getAgsDia(diaSelecionado)
     return (
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px', border: '1px solid #f3f4f6' }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px' }}>
         <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: '50%', background: isHoje(diaSelecionado) ? '#6043C1' : '#ede9fb', color: isHoje(diaSelecionado) ? 'white' : '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700 }}>
             {diaSelecionado.getDate()}
@@ -649,7 +648,7 @@ export default function Agenda() {
           <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, overflow: 'hidden' }}>
             <div style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f3f0fd', border: '1px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f3f0fd', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 </div>
                 <div>
@@ -674,7 +673,7 @@ export default function Agenda() {
               <div>
                 <label style={labelStyle}>Paciente</label>
                 <select value={form.paciente_id} onChange={e => setForm(f => ({...f, paciente_id: e.target.value}))}
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', background: 'white', color: '#111827' }}>
+                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: '#111827' }}>
                   <option value="">Selecionar paciente</option>
                   {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
@@ -683,12 +682,12 @@ export default function Agenda() {
                 <div>
                   <label style={labelStyle}>Data e hora *</label>
                   <input type="datetime-local" required value={form.data_hora} onChange={e => setForm(f => ({...f, data_hora: e.target.value}))}
-                    style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }}/>
+                    style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8 }}/>
                 </div>
                 <div>
                   <label style={labelStyle}>Duração</label>
                   <select value={form.duracao} onChange={e => setForm(f => ({...f, duracao: e.target.value}))}
-                    style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', background: 'white' }}>
+                    style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white' }}>
                     <option value="15">15 min</option>
                     <option value="30">30 min</option>
                     <option value="45">45 min</option>
@@ -700,17 +699,17 @@ export default function Agenda() {
               <div>
                 <label style={labelStyle}>Motivo</label>
                 <input value={form.motivo} onChange={e => setForm(f => ({...f, motivo: e.target.value}))}
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb' }}
+                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8 }}
                   placeholder="Ex: Consulta de rotina, dor abdominal..."/>
               </div>
               <div>
                 <label style={labelStyle}>Observações</label>
                 <textarea value={form.observacoes} onChange={e => setForm(f => ({...f, observacoes: e.target.value}))}
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', minHeight: 56, resize: 'none' }}
+                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, minHeight: 56, resize: 'none' }}
                   placeholder="Observações adicionais..."/>
               </div>
               {modal.ag && (
-                <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #e5e7eb' }}>
+                <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>Status atual: <strong style={{ color: '#111827' }}>{modal.ag.status}</strong></span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     {modal.ag.status !== 'confirmado' && (
@@ -758,7 +757,7 @@ export default function Agenda() {
                   </div>
                   {!(preConsultaEnviada || modal.ag.pre_consulta_enviada) && (
                     <button type="button" onClick={() => enviarPreConsulta(modal.ag.id)} disabled={enviandoPreConsulta}
-                      style={{ fontSize: 12, color: '#6043C1', background: 'white', border: '1px solid #d4c9f7', padding: '5px 12px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
+                      style={{ fontSize: 12, color: '#6043C1', background: 'white', padding: '5px 12px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
                       {enviandoPreConsulta ? 'Enviando...' : 'Enviar'}
                     </button>
                   )}

@@ -54,14 +54,14 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
       )}
 
       {prontuario.resumo_copiloto && (
-        <div style={{ background: '#f0ebff', border: '1px solid #d4c9f7', borderLeft: '4px solid #6043C1', borderRadius: '0 10px 10px 0', padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <div style={{ background: '#f0ebff', borderLeft: '4px solid #6043C1', borderRadius: '0 10px 10px 0', padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2" style={{flexShrink:0,marginTop:1}}><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 5v6m0 3h.01"/></svg>
           <p style={{ fontSize: 12, color: '#4c1d95', margin: 0, lineHeight: 1.5 }}><strong>Copiloto:</strong> {prontuario.resumo_copiloto}</p>
         </div>
       )}
 
       {prontuario.hipoteses && prontuario.hipoteses.length > 0 && (
-        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
+        <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px' }}>
           <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 10px' }}>Hipóteses diagnósticas</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {prontuario.hipoteses.map((h, i) => {
@@ -81,7 +81,7 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
       )}
 
       {(insights && insights.length > 0) && (
-        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
+        <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>Histórico comparativo</p>
             {totalConsultas && <span style={{ fontSize: 11, color: '#9ca3af' }}>{totalConsultas} consulta{totalConsultas !== 1 ? 's' : ''} anteriores</span>}
@@ -119,7 +119,7 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {prontuario.cids.map((cid, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'white', borderRadius: 8, padding: '8px 10px' }}>
-                <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#6043C1', background: '#f3f0fd', padding: '2px 8px', borderRadius: 5, border: '1px solid #d4c9f7', flexShrink: 0 }}>{cid.codigo}</span>
+                <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#6043C1', background: '#f3f0fd', padding: '2px 8px', borderRadius: 5, flexShrink: 0 }}>{cid.codigo}</span>
                 <div>
                   <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0 }}>{cid.descricao}</p>
                   <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{cid.justificativa}</p>
@@ -156,7 +156,7 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
           Copiar
         </button>
         <button onClick={handleExportarPDF} style={{
-          padding: '9px', borderRadius: 8, border: '1px solid #d4c9f7', background: '#f3f0fd',
+          padding: '9px', borderRadius: 8, background: '#f3f0fd',
           color: '#6043C1', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontWeight: 600,
         }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

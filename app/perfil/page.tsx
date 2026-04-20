@@ -105,7 +105,7 @@ export default function PerfilPage() {
           <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 32px' }}>Gerencie suas informações pessoais e senha</p>
 
           {/* Avatar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32, padding: 20, background: 'white', borderRadius: 12, border: '1px solid #f0f0f0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32, padding: 20, background: 'white', borderRadius: 12 }}>
             <div style={{ position: 'relative', cursor: 'pointer', width: 64, height: 64, flexShrink: 0 }}
               onClick={() => (document.getElementById('foto-perfil-input') as HTMLInputElement)?.click()}
               title="Clique para trocar foto">
@@ -158,7 +158,7 @@ export default function PerfilPage() {
                   <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{f.label}</label>
                   <input value={(form as any)[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
                     placeholder={f.placeholder}
-                    style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 8, border: '1.5px solid #e5e7eb', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 8, boxSizing: 'border-box' }} />
                 </div>
               ))}
               <div>
@@ -166,7 +166,7 @@ export default function PerfilPage() {
                 <textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))}
                   placeholder="Breve descrição sobre você e sua especialidade..."
                   rows={3}
-                  style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 8, border: '1.5px solid #e5e7eb', boxSizing: 'border-box', resize: 'vertical' }} />
+                  style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 8, boxSizing: 'border-box', resize: 'vertical' }} />
               </div>
               <button onClick={salvarPerfil} disabled={salvando}
                 style={{ padding: '12px 24px', background: salvando ? '#b9a9ef' : '#6043C1', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
@@ -205,7 +205,7 @@ export default function PerfilPage() {
           </div>
 
           {apiKey && (
-            <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
+            <div style={{ background: '#f9fafb', borderRadius: 12, padding: 20 }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Exemplos de uso</h3>
               {[
                 { label: 'Listar pacientes', url: `https://prontuario-ia-five.vercel.app/api/public?key=${apiKey}&recurso=pacientes` },
@@ -215,8 +215,8 @@ export default function PerfilPage() {
                 <div key={ex.label} style={{ marginBottom: 12 }}>
                   <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 4px' }}>{ex.label}</p>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <code style={{ fontSize: 11, background: 'white', border: '1px solid #e5e7eb', borderRadius: 6, padding: '4px 8px', flex: 1, wordBreak: 'break-all' as const, color: '#6043C1' }}>GET {ex.url}</code>
-                    <button onClick={() => navigator.clipboard.writeText(ex.url)} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, border: '1px solid #e5e7eb', background: 'white', cursor: 'pointer', flexShrink: 0 }}>Copiar</button>
+                    <code style={{ fontSize: 11, background: 'white', borderRadius: 6, padding: '4px 8px', flex: 1, wordBreak: 'break-all' as const, color: '#6043C1' }}>GET {ex.url}</code>
+                    <button onClick={() => navigator.clipboard.writeText(ex.url)} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, background: 'white', cursor: 'pointer', flexShrink: 0 }}>Copiar</button>
                   </div>
                 </div>
               ))}
@@ -237,7 +237,7 @@ export default function PerfilPage() {
                   <input type="password" value={(senhaForm as any)[f.key]}
                     onChange={e => setSenhaForm(p => ({ ...p, [f.key]: e.target.value }))}
                     placeholder={f.placeholder}
-                    style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 8, border: '1.5px solid #e5e7eb', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 8, boxSizing: 'border-box' }} />
                 </div>
               ))}
               <button onClick={salvarSenha} disabled={salvandoSenha}
