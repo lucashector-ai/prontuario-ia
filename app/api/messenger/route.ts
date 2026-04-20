@@ -97,9 +97,9 @@ export async function POST(req: NextRequest) {
           .order('criado_em', { ascending: true })
           .limit(20)
 
-        const msgs = (historico || []).map((h: any) => ({
-          role: h.tipo === 'enviada' ? 'assistant' : 'user',
-          content: h.conteudo
+        const msgs: {role:'user'|'assistant', content:string}[] = (historico || []).map((h: any) => ({
+          role: (h.tipo === 'enviada' ? 'assistant' : 'user') as 'user'|'assistant',
+          content: h.conteudo as string
         }))
 
         const res = await anthropic.messages.create({
