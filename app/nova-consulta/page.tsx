@@ -625,13 +625,8 @@ export default function Home() {
                             ))}
                             {exames.observacoes && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 10, fontStyle: 'italic' }}>{exames.observacoes}</p>}
                             <button onClick={()=>{
-                              const txt = `📋 *Pedido de Exames*
-
-${exames.exames?.map((e:any)=>`• ${e.nome} (${e.urgencia})
-  ${e.indicacao}`).join('
-')}
-
-${exames.observacoes||''}`
+                              const linhas = (exames.exames||[]).map((e:any) => '• ' + e.nome + ' (' + e.urgencia + '): ' + e.indicacao).join('\n')
+                              const txt = 'Pedido de Exames:\n\n' + linhas + (exames.observacoes ? '\n\n' + exames.observacoes : '')
                               enviarWhatsApp('exames', txt)
                             }} style={{marginTop:10,padding:'7px 14px',borderRadius:7,border:'none',background:'#25d366',color:'white',fontSize:12,fontWeight:600,cursor:'pointer'}}>
                               📱 Enviar pelo WhatsApp
