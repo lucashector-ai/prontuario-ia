@@ -95,7 +95,7 @@ export function HistoricoRapido({ pacienteId, medicoId }: Props) {
               </button>
 
               {expandida && (
-                <div style={{ padding: '0 14px 14px', fontSize: 12, color: '#4b5563', lineHeight: 1.6, borderTop: '1px solid #f9fafb' }}>
+                <div style={{ padding: '0 14px 14px', fontSize: 12, color: '#4b5563', lineHeight: 1.6, borderTop: '1px solid #EAECEF' }}>
                   <p style={{ margin: '10px 0 2px', fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Queixa</p>
                   <p style={{ margin: 0 }}>{c.subjetivo || '—'}</p>
                   <p style={{ margin: '10px 0 2px', fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avaliação</p>

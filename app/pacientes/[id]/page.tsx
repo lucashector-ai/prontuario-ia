@@ -8,14 +8,14 @@ import { Sidebar } from '@/components/Sidebar'
 type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario' | 'timeline'
 
 const TIPO_CORES: Record<string, {bg:string;text:string;border:string}> = {
-  consulta: {bg:'#F9FAFC',text:'#6043C1',border:'#d4c9f7'},
+  consulta: {bg:'#EAECEF',text:'#6043C1',border:'#d4c9f7'},
   retorno:  {bg:'#eff6ff',text:'#2563eb',border:'#bfdbfe'},
   exame:    {bg:'#f5f3ff',text:'#7c3aed',border:'#ddd6fe'},
   urgencia: {bg:'#fef2f2',text:'#dc2626',border:'#fecaca'},
 }
 const STATUS_CORES: Record<string, {bg:string;text:string}> = {
   agendado:   {bg:'#eff6ff',text:'#2563eb'},
-  confirmado: {bg:'#F9FAFC',text:'#6043C1'},
+  confirmado: {bg:'#EAECEF',text:'#6043C1'},
   cancelado:  {bg:'#fef2f2',text:'#dc2626'},
   realizado:  {bg:'#f3f4f6',text:'#6b7280'},
 }
@@ -124,11 +124,11 @@ export default function PacienteDetalhe() {
     {key:'subjetivo',letra:'S',titulo:'Subjetivo',cor:'#2563eb',bg:'#eff6ff',border:'#bfdbfe'},
     {key:'objetivo', letra:'O',titulo:'Objetivo', cor:'#0d9488',bg:'#f0fdfa',border:'#99f6e4'},
     {key:'avaliacao',letra:'A',titulo:'Avaliacao',cor:'#7c3aed',bg:'#f5f3ff',border:'#ddd6fe'},
-    {key:'plano',    letra:'P',titulo:'Plano',    cor:'#6043C1',bg:'#F9FAFC',border:'#d4c9f7'},
+    {key:'plano',    letra:'P',titulo:'Plano',    cor:'#6043C1',bg:'#EAECEF',border:'#d4c9f7'},
   ]
 
   return (
-    <div style={{display:'flex',height:'100vh',background:'#f9fafb',overflow:'hidden'}}>
+    <div style={{display:'flex',height:'100vh',background:'#EAECEF',overflow:'hidden'}}>
       <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
         {carregando ? (
           <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -143,7 +143,7 @@ export default function PacienteDetalhe() {
             <span style={{color:'#d1d5db'}}>/</span>
             <div style={{display:'flex',alignItems:'center',gap:10,flex:1}}>
               <div style={{position:'relative',cursor:'pointer'}} onClick={()=>(document.getElementById('foto-hdr') as HTMLInputElement)?.click()} title="Trocar foto">
-                {paciente?.foto_url?<img src={paciente.foto_url} style={{width:36,height:36,borderRadius:'50%',objectFit:'cover',border:'2px solid #d4c9f7'}}/>:<div style={{width:36,height:36,borderRadius:'50%',background:'#F9FAFC',border:'2px solid #d4c9f7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#6043C1'}}>{ini}</div>}
+                {paciente?.foto_url?<img src={paciente.foto_url} style={{width:36,height:36,borderRadius:'50%',objectFit:'cover',border:'2px solid #d4c9f7'}}/>:<div style={{width:36,height:36,borderRadius:'50%',background:'#EAECEF',border:'2px solid #d4c9f7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#6043C1'}}>{ini}</div>}
               </div>
               <input id="foto-hdr" type="file" accept="image/*" style={{display:'none'}} onChange={e=>e.target.files?.[0]&&uploadFoto(e.target.files[0])}/>
               <div>
@@ -152,7 +152,7 @@ export default function PacienteDetalhe() {
               </div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>setModalAg(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,background:'#F9FAFC',color:'#6043C1',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar</button>
+              <button onClick={()=>setModalAg(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,background:'#EAECEF',color:'#6043C1',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar</button>
               <a href="/consulta" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
             </div>
           </div>
@@ -213,17 +213,17 @@ export default function PacienteDetalhe() {
                     </div>
                   </div>
                   {(paciente?.alergias||paciente?.comorbidades||paciente?.medicamentos_uso)&&!editando&&(
-                    <div style={{background: '#F9FAFC',borderRadius:14,padding:'16px 20px',display:'flex',flexDirection:'column',gap:10}}>
+                    <div style={{background: '#EAECEF',borderRadius:14,padding:'16px 20px',display:'flex',flexDirection:'column',gap:10}}>
                       {paciente.alergias&&<div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#dc2626',margin:'0 0 3px',textTransform:'uppercase'}}>Alergias</p><p style={{fontSize:12,color:'#b91c1c',margin:0}}>{paciente.alergias}</p></div>}
                       {paciente.comorbidades&&<div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#d97706',margin:'0 0 3px',textTransform:'uppercase'}}>Comorbidades</p><p style={{fontSize:12,color:'#92400e',margin:0}}>{paciente.comorbidades}</p></div>}
-                      {paciente.medicamentos_uso&&<div style={{background:'#F9FAFC',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#6043C1',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:12,color:'#6043C1',margin:0}}>{paciente.medicamentos_uso}</p></div>}
+                      {paciente.medicamentos_uso&&<div style={{background:'#EAECEF',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#6043C1',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:12,color:'#6043C1',margin:0}}>{paciente.medicamentos_uso}</p></div>}
                     </div>
                   )}
                 </div>
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
                     {[{l:'Consultas',v:String(consultas.length),c:'#2563eb'},{l:'Agendamentos',v:String(agendamentos.filter(a=>a.status!=='cancelado').length),c:'#6043C1'},{l:'Proximo',v:prox?fmt(prox.data_hora):'Nao agendado',c:'#7c3aed'}].map(m=>(
-                      <div key={m.l} style={{background: '#F9FAFC',borderRadius:12,padding:'16px 18px'}}>
+                      <div key={m.l} style={{background: '#EAECEF',borderRadius:12,padding:'16px 18px'}}>
                         <p style={{fontSize:22,fontWeight:800,color:m.c,margin:'0 0 4px'}}>{m.v}</p>
                         <p style={{fontSize:12,color:'#9ca3af',margin:0}}>{m.l}</p>
                       </div>
@@ -236,7 +236,7 @@ export default function PacienteDetalhe() {
                     </div>
                     {consultas.length===0?<div style={{padding:24,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta</p></div>
                     :consultas.slice(0,4).map(c=>(
-                      <div key={c.id} onClick={()=>{setConsultaAberta(c);setAba('consultas')}} style={{padding:'12px 20px',borderBottom:'1px solid #f9fafb',cursor:'pointer'}}>
+                      <div key={c.id} onClick={()=>{setConsultaAberta(c);setAba('consultas')}} style={{padding:'12px 20px',borderBottom:'1px solid #EAECEF',cursor:'pointer'}}>
                         <p style={{fontSize:11,color:'#9ca3af',margin:'0 0 3px'}}>{fmt(c.criado_em)}</p>
                         <p style={{fontSize:12,color:'#374151',margin:0}}>{(c.subjetivo||'').substring(0,80)}</p>
                       </div>
@@ -250,10 +250,10 @@ export default function PacienteDetalhe() {
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
                   {consultas.length===0?<div style={{background:'white',borderRadius:12,padding:24,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta</p></div>
                   :consultas.map(c=>(
-                    <div key={c.id} onClick={()=>setConsultaAberta(consultaAberta?.id===c.id?null:c)} style={{background: '#F9FAFC',border:'1px solid '+(consultaAberta?.id===c.id?'#d4c9f7':'#e5e7eb'),borderRadius:12,padding:'12px 16px',cursor:'pointer'}}>
+                    <div key={c.id} onClick={()=>setConsultaAberta(consultaAberta?.id===c.id?null:c)} style={{background: '#EAECEF',border:'1px solid '+(consultaAberta?.id===c.id?'#d4c9f7':'#e5e7eb'),borderRadius:12,padding:'12px 16px',cursor:'pointer'}}>
                       <p style={{fontSize:11,color:'#9ca3af',margin:'0 0 4px'}}>{fmt(c.criado_em)}</p>
                       <p style={{fontSize:12,color:'#374151',margin:'0 0 7px'}}>{(c.subjetivo||'').substring(0,90)}</p>
-                      <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#6043C1',background:'#F9FAFC',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700}}>{cid.codigo}</span>)}</div>
+                      <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#6043C1',background:'#EAECEF',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700}}>{cid.codigo}</span>)}</div>
                     </div>
                   ))}
                 </div>
@@ -294,7 +294,7 @@ export default function PacienteDetalhe() {
                       const sc=STATUS_CORES[ag.status]||STATUS_CORES.agendado
                       const passado=new Date(ag.data_hora)<new Date()
                       return(
-                        <div key={ag.id} style={{background: '#F9FAFC',borderRadius:12,padding:'16px 20px',display:'flex',gap:16,opacity:ag.status==='cancelado'?0.5:1}}>
+                        <div key={ag.id} style={{background: '#EAECEF',borderRadius:12,padding:'16px 20px',display:'flex',gap:16,opacity:ag.status==='cancelado'?0.5:1}}>
                           <div style={{background:tc.bg,border:'1px solid '+tc.border,borderRadius:10,padding:'8px 12px',textAlign:'center',flexShrink:0,minWidth:56}}>
                             <p style={{fontSize:18,fontWeight:800,color:tc.text,margin:0,lineHeight:1}}>{new Date(ag.data_hora).getDate()}</p>
                             <p style={{fontSize:10,color:tc.text,margin:0,textTransform:'uppercase'}}>{new Date(ag.data_hora).toLocaleDateString('pt-BR',{month:'short'})}</p>
@@ -309,7 +309,7 @@ export default function PacienteDetalhe() {
                             {ag.observacoes&&<p style={{fontSize:12,color:'#6b7280',margin:'0 0 8px'}}>{ag.observacoes}</p>}
                             <div style={{display:'flex',gap:8}}>
                               {!passado&&ag.status==='agendado'&&<>
-                                <button onClick={()=>atualizarAg(ag.id,'confirmado')} style={{fontSize:11,color:'#6043C1',background:'#F9FAFC',padding:'3px 10px',borderRadius:6,cursor:'pointer',fontWeight:600}}>Confirmar</button>
+                                <button onClick={()=>atualizarAg(ag.id,'confirmado')} style={{fontSize:11,color:'#6043C1',background:'#EAECEF',padding:'3px 10px',borderRadius:6,cursor:'pointer',fontWeight:600}}>Confirmar</button>
                                 <button onClick={()=>atualizarAg(ag.id,'cancelado')} style={{fontSize:11,color:'#dc2626',background:'#fef2f2',border:'1px solid #fecaca',padding:'3px 10px',borderRadius:6,cursor:'pointer',fontWeight:600}}>Cancelar</button>
                               </>}
                               {passado&&ag.status!=='realizado'&&ag.status!=='cancelado'&&(
@@ -335,7 +335,7 @@ export default function PacienteDetalhe() {
                     <div style={{display:'flex',flexDirection:'column',gap:10}}>
                       {paciente.alergias&&<div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#dc2626',margin:'0 0 3px',textTransform:'uppercase'}}>Alergias</p><p style={{fontSize:13,color:'#b91c1c',margin:0}}>{paciente.alergias}</p></div>}
                       {paciente.comorbidades&&<div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#d97706',margin:'0 0 3px',textTransform:'uppercase'}}>Comorbidades</p><p style={{fontSize:13,color:'#92400e',margin:0}}>{paciente.comorbidades}</p></div>}
-                      {paciente.medicamentos_uso&&<div style={{background:'#F9FAFC',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#6043C1',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:13,color:'#6043C1',margin:0}}>{paciente.medicamentos_uso}</p></div>}
+                      {paciente.medicamentos_uso&&<div style={{background:'#EAECEF',borderRadius:8,padding:'10px 14px'}}><p style={{fontSize:10,fontWeight:700,color:'#6043C1',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:13,color:'#6043C1',margin:0}}>{paciente.medicamentos_uso}</p></div>}
                     </div>
                   ):<p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhum dado clinico preenchido.</p>}
                 </div>
@@ -345,7 +345,7 @@ export default function PacienteDetalhe() {
                       <div style={{padding:'10px 18px',background: 'transparent',borderBottom: 'none',display:'flex',justifyContent:'space-between'}}>
                         <p style={{fontSize:13,fontWeight:600,color:'#374151',margin:0}}>#{consultas.length-idx} {fmtF(c.criado_em)}</p>
                             {c.transcricao && <span style={{fontSize:9,fontWeight:700,color:'#1d4ed8',background:'#eff6ff',border:'1px solid #bfdbfe',padding:'2px 7px',borderRadius:10}}>📹 Teleconsulta</span>}
-                        <div style={{display:'flex',gap:4}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#6043C1',background:'#F9FAFC',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700}}>{cid.codigo}</span>)}</div>
+                        <div style={{display:'flex',gap:4}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#6043C1',background:'#EAECEF',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700}}>{cid.codigo}</span>)}</div>
                       </div>
                       <div style={{padding:'14px 18px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                         {secoes.map(s=>(
@@ -469,7 +469,7 @@ export default function PacienteDetalhe() {
                                   </div>
                                 )}
                                 {i>0&&consultas[i-1]&&(
-                                  <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid #f9fafb'}}>
+                                  <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid #EAECEF'}}>
                                     <p style={{fontSize:10,color:'#9ca3af',margin:'0 0 3px',fontStyle:'italic'}}>vs consulta anterior ({new Date(consultas[i-1].criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})})</p>
                                     {c.subjetivo&&consultas[i-1].subjetivo&&c.subjetivo.substring(0,50)===consultas[i-1].subjetivo.substring(0,50)&&(
                                       <p style={{fontSize:11,color:'#d97706',margin:0}}>↻ Queixa similar à consulta anterior</p>
@@ -498,7 +498,7 @@ export default function PacienteDetalhe() {
               <h3 style={{fontSize:16,fontWeight:700,color:'#111827',margin:0}}>Agendar consulta</h3>
               <button onClick={()=>setModalAg(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af',fontSize:18,lineHeight:1}}>x</button>
             </div>
-            <div style={{background:'#F9FAFC',borderRadius:10,padding:'10px 14px',marginBottom:18}}>
+            <div style={{background:'#EAECEF',borderRadius:10,padding:'10px 14px',marginBottom:18}}>
               <p style={{fontSize:13,fontWeight:600,color:'#6043C1',margin:'0 0 2px'}}>{paciente?.nome}</p>
               <p style={{fontSize:11,color:'#6b7280',margin:0}}>{[paciente?.sexo,idadePac?idadePac+' anos':null].filter(Boolean).join(' · ')}</p>
             </div>

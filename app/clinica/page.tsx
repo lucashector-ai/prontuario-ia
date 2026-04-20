@@ -80,7 +80,7 @@ export default function ClinicaPage() {
   const pctUso = Math.round((usados / maxMedicos) * 100)
 
   if (carregando) return (
-    <div style={{ display: "flex", height: "100vh", background: "#F9FAFC" }}>
+    <div style={{ display: "flex", height: "100vh", background: "#EAECEF" }}>
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid #ede9fb", borderTopColor: "#6043C1", animation: "spin 0.8s linear infinite" }}/>
       </div>
@@ -89,7 +89,7 @@ export default function ClinicaPage() {
   )
 
   if (!medico?.clinica_id) return (
-    <div style={{ display: "flex", height: "100vh", background: "#F9FAFC" }}>
+    <div style={{ display: "flex", height: "100vh", background: "#EAECEF" }}>
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
         <p style={{ fontSize: 15, color: "#6b7280" }}>Sua conta não está associada a nenhuma clínica.</p>
         <p style={{ fontSize: 13, color: "#9ca3af" }}>Crie uma nova conta para configurar sua clínica.</p>
@@ -98,7 +98,7 @@ export default function ClinicaPage() {
   )
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "#F9FAFC", overflow: "hidden" }}>
+    <div style={{ display: "flex", height: "100vh", background: "#EAECEF", overflow: "hidden" }}>
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 28px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <div>
@@ -180,14 +180,14 @@ export default function ClinicaPage() {
 
           {/* Lista de médicos */}
           <div style={{ background: "white", borderRadius: 14, overflow: "hidden" }}>
-            <div style={{ padding: "14px 20px", borderBottom: "1px solid #f9fafb" }}>
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid #EAECEF" }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: 0 }}>Equipe médica ({medicos.length})</p>
             </div>
             {medicos.map((m, i) => {
               const iniciais = m.nome?.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase() || "??"
               const isMe = m.id === medico?.id
               return (
-                <div key={m.id} style={{ padding: "14px 20px", borderBottom: i < medicos.length - 1 ? "1px solid #f9fafb" : "none", display: "flex", alignItems: "center", gap: 12 }}>
+                <div key={m.id} style={{ padding: "14px 20px", borderBottom: i < medicos.length - 1 ? "1px solid #EAECEF" : "none", display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: m.cargo === "admin" ? "#6043C1" : "#f0ebff", color: m.cargo === "admin" ? "white" : "#6043C1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{iniciais}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

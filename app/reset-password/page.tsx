@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F9FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
+    <div style={{ minHeight: '100vh', background: '#EAECEF', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
       <div style={{ background: 'white', borderRadius: 16, border: '1px solid #f0f0f0', padding: '40px 36px', width: '100%', maxWidth: 380 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', textAlign: 'center', margin: '0 0 6px' }}>Nova senha</h1>
         <p style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', margin: '0 0 28px' }}>Digite sua nova senha abaixo</p>

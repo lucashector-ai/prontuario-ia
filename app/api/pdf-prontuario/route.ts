@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const secao = (label: string, content: string) => content ? `
       <div style="margin-bottom:20px">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;margin-bottom:6px">${label}</div>
-        <div style="font-size:13px;line-height:1.8;color:#111827;white-space:pre-wrap;background:#f9fafb;border-radius:8px;padding:12px 14px;border:1px solid #e5e7eb">${content}</div>
+        <div style="font-size:13px;line-height:1.8;color:#111827;white-space:pre-wrap;background:#EAECEF;border-radius:8px;padding:12px 14px;border:1px solid #e5e7eb">${content}</div>
       </div>` : ''
 
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
@@ -37,7 +37,7 @@ body{font-family:Arial,sans-serif;color:#111827;background:#fff;padding:40px;max
 .clinic{font-size:20px;font-weight:700;color:#6043C1}
 .clinic-info{font-size:12px;color:#6b7280;margin-top:2px}
 .meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
-.meta-card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px}
+.meta-card{background:#EAECEF;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px}
 .meta-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;margin-bottom:4px}
 .meta-value{font-size:13px;font-weight:600;color:#111827}
 .meta-sub{font-size:11px;color:#6b7280;margin-top:2px}

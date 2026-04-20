@@ -114,7 +114,7 @@ export function NotificacoesSofia({ medicoId }: { medicoId: string }) {
                     key={n.id}
                     style={{
                       padding: '12px 16px',
-                      borderBottom: '1px solid #f9fafb',
+                      borderBottom: '1px solid #EAECEF',
                       cursor: 'pointer',
                     }}
                     onClick={() => {

@@ -166,7 +166,7 @@ REGRAS:
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32 }}>
             {['✅ Responde dúvidas dos pacientes', '📅 Agenda consultas automaticamente', '🔄 Transfere para humano quando necessário', '⭐ Tom de comunicação personalizado'].map(t => (
-              <div key={t} style={{ background: '#f9fafb', borderRadius: 10, padding: '10px 16px', fontSize: 14, color: '#374151', textAlign: 'left' }}>{t}</div>
+              <div key={t} style={{ background: '#EAECEF', borderRadius: 10, padding: '10px 16px', fontSize: 14, color: '#374151', textAlign: 'left' }}>{t}</div>
             ))}
           </div>
           <button onClick={iniciar} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: '#00a884', color: 'white', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
@@ -235,7 +235,7 @@ REGRAS:
 
       {passo === 'revisao' && (
         <div style={{ background: 'white', borderRadius: 20, maxWidth: 640, width: '100%', overflow: 'hidden' }}>
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid #f0f2f5', background: '#f9fafb' }}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #f0f2f5', background: '#EAECEF' }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>✅ Instruções geradas!</h2>
             <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Revise e edite se quiser antes de salvar</p>
           </div>

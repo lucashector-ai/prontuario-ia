@@ -37,7 +37,7 @@ export default function Contatos() {
   const fmt = (iso: string) => iso ? new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : ''
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#EAECEF', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Header */}
         <div style={{ padding: '20px 28px', borderBottom: '1px solid #e5e7eb', background: 'white', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -99,7 +99,7 @@ export default function Contatos() {
                       </span>
                       {c.status === 'encerrada' && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#f3f4f6', color: '#6b7280', fontWeight: 500 }}>✅ Encerrado</span>}
                       {c.nps_nota && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#fef9c3', color: '#854d0e', fontWeight: 500 }}>{'⭐'.repeat(c.nps_nota)} {c.nps_nota}/5</span>}
-                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#f9fafb', color: '#6b7280' }}>{totalMsgs} msgs</span>
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#EAECEF', color: '#6b7280' }}>{totalMsgs} msgs</span>
                     </div>
                   </div>
                 )

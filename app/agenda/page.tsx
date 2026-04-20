@@ -470,7 +470,7 @@ export default function Agenda() {
                   return (
                     <div key={i}
                       onClick={() => { const d = new Date(dia); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
-                      style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : (isMeia ? '1px dashed #f9fafb' : 'none'), cursor: 'pointer', transition: 'background 0.1s' }}
+                      style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : (isMeia ? '1px dashed #EAECEF' : 'none'), cursor: 'pointer', transition: 'background 0.1s' }}
                       onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
                       onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
                   )
@@ -580,7 +580,7 @@ export default function Agenda() {
                 return (
                   <div key={i}
                     onClick={() => { const d = new Date(diaSelecionado); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
-                    style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : (isMeia ? '1px dashed #f9fafb' : 'none'), cursor: 'pointer' }}
+                    style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : (isMeia ? '1px dashed #EAECEF' : 'none'), cursor: 'pointer' }}
                     onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
                     onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
                 )
@@ -614,7 +614,7 @@ export default function Agenda() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#EAECEF', overflow: 'hidden' }}>
       {renderPainel()}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderHeader()}
@@ -723,7 +723,7 @@ export default function Agenda() {
                 </div>
               )}
               {!modal.ag && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: comVideo ? '#f3f0fd' : '#f9fafb', borderRadius: 10, border: '1px solid ' + (comVideo ? '#d4c9f7' : '#e5e7eb') }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: comVideo ? '#f3f0fd' : '#EAECEF', borderRadius: 10, border: '1px solid ' + (comVideo ? '#d4c9f7' : '#e5e7eb') }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={comVideo ? '#6043C1' : '#9ca3af'} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                     <div>

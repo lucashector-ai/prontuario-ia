@@ -5,7 +5,7 @@
 * { box-sizing: border-box; }
 
 body {
-  background: #F9FAFC;
+  background: #EAECEF;
   color: #111827;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -37,10 +37,10 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(22,163,74,0.1) !important;
 }
 
-.nav-item:hover { background: #f9fafb !important; }
+.nav-item:hover { background: #EAECEF !important; }
 
 :root {
-  --color-bg: #F9FAFC;
+  --color-bg: #EAECEF;
   --color-primary: #6043C1;
   --color-primary-dark: #4e35a3;
   --color-primary-light: #ede9fb;
@@ -48,7 +48,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 :root {
-  --bg: #F9FAFC;
+  --bg: #EAECEF;
   --primary: #6043C1;
   --primary-dark: #4e35a3;
   --primary-light: #ede9fb;

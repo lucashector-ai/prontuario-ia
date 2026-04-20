@@ -73,11 +73,11 @@ export default function Dicionario() {
   }
   const bgCategoria: Record<string, string> = {
     'Medicamento': '#eff6ff', 'Patologia': '#fef2f2', 'Procedimento': '#f3f0fd',
-    'Anatomia': '#f0fdf4', 'Sigla': '#fffbeb', 'Outro': '#f9fafb'
+    'Anatomia': '#f0fdf4', 'Sigla': '#fffbeb', 'Outro': '#EAECEF'
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F9FAFC', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#EAECEF', overflow: 'hidden' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -118,7 +118,7 @@ export default function Dicionario() {
               </button>
             </div>
 
-            <div style={{ marginTop: 20, padding: '12px 14px', background: '#f9fafb', borderRadius: 8 }}>
+            <div style={{ marginTop: 20, padding: '12px 14px', background: '#EAECEF', borderRadius: 8 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Como funciona</p>
               <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>Os termos aqui cadastrados são usados pela IA para corrigir a transcrição e gerar prontuários mais precisos para a sua especialidade.</p>
             </div>
@@ -148,7 +148,7 @@ export default function Dicionario() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                         <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{t.termo}</span>
-                        <span style={{ fontSize: 10, fontWeight: 600, color: corCategoria[t.categoria] || '#6b7280', background: bgCategoria[t.categoria] || '#f9fafb', padding: '1px 6px', borderRadius: 8, flexShrink: 0 }}>{t.categoria}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, color: corCategoria[t.categoria] || '#6b7280', background: bgCategoria[t.categoria] || '#EAECEF', padding: '1px 6px', borderRadius: 8, flexShrink: 0 }}>{t.categoria}</span>
                       </div>
                       {t.descricao && <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{t.descricao}</p>}
                     </div>

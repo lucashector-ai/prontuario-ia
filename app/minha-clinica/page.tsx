@@ -62,7 +62,7 @@ export default function MinhaClinica() {
   const iniciais = clinica?.nome?.split(' ').map((n:string)=>n[0]).slice(0,2).join('').toUpperCase() || '??'
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#EAECEF', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       <main style={{ flex: 1, overflow: 'auto' }}>
         <div style={{ maxWidth: 720, margin: '0 auto', padding: 32 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Minha Clínica</h1>
@@ -139,7 +139,7 @@ export default function MinhaClinica() {
           <div style={{ background: 'white', borderRadius: 14, padding: 24, marginTop: 20 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Equipe médica</h2>
             <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>Médicos cadastrados na sua clínica</p>
-            <div style={{ padding: 20, background: '#f9fafb', borderRadius: 10, textAlign: 'center', color: '#6b7280', fontSize: 13 }}>
+            <div style={{ padding: 20, background: '#EAECEF', borderRadius: 10, textAlign: 'center', color: '#6b7280', fontSize: 13 }}>
               <p style={{ margin: 0 }}>Gerencie os médicos em <strong>Painel Admin</strong></p>
             </div>
           </div>
