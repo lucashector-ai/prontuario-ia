@@ -13,6 +13,7 @@ export default function PerfilPage() {
   const [senhaForm, setSenhaForm] = useState({ atual: '', nova: '', confirma: '' })
   const [salvandoSenha, setSalvandoSenha] = useState(false)
   const [tab, setTab] = useState<'perfil'|'senha'>('perfil')
+  const [uploadandoFoto, setUploadandoFoto] = useState(false)
 
   useEffect(() => {
     const m = localStorage.getItem('medico')
@@ -28,6 +29,21 @@ export default function PerfilPage() {
       bio: med.bio || '',
     })
   }, [router])
+
+  const uploadFoto = async (file: File) => {
+    if (!file || !medico) return
+    setUploadandoFoto(true)
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      const base64 = e.target?.result as string
+      await supabase.from('medicos').update({ foto_url: base64 }).eq('id', medico.id)
+      const novoMedico = { ...medico, foto_url: base64 }
+      localStorage.setItem('medico', JSON.stringify(novoMedico))
+      setMedico(novoMedico)
+      setUploadandoFoto(false)
+    }
+    reader.readAsDataURL(file)
+  }
 
   async function salvarPerfil() {
     setSalvando(true); setMsg(null)
@@ -87,9 +103,19 @@ export default function PerfilPage() {
 
           {/* Avatar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32, padding: 20, background: 'white', borderRadius: 12, border: '1px solid #f0f0f0' }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: 'white', flexShrink: 0 }}>
-              {iniciais}
+            <div style={{ position: 'relative', cursor: 'pointer', width: 64, height: 64, flexShrink: 0 }}
+              onClick={() => (document.getElementById('foto-perfil-input') as HTMLInputElement)?.click()}
+              title="Clique para trocar foto">
+              {medico.foto_url
+                ? <img src={medico.foto_url} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
+                : <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: 'white' }}>{iniciais}</div>
+              }
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 20, height: 20, background: '#6043C1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white' }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+              {uploadandoFoto && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 18, height: 18, border: '2px solid #6043C1', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/></div>}
             </div>
+            <input id="foto-perfil-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadFoto(e.target.files[0])}/>
             <div>
               <p style={{ fontWeight: 600, fontSize: 16, margin: '0 0 2px', color: '#111827' }}>{medico.nome || 'Sem nome'}</p>
               <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>{medico.email} • {medico.especialidade || 'Especialidade não informada'}</p>

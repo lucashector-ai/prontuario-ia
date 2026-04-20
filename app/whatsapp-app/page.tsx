@@ -309,8 +309,11 @@ export default function WhatsAppApp() {
 
       {/* Sidebar */}
       <div style={{width:56,background:'#f0f2f5',borderRight:'1px solid #d1d7db',display:'flex',flexDirection:'column',alignItems:'center',padding:'12px 0',flexShrink:0}}>
-        <div onClick={()=>router.push('/perfil')} style={{width:38,height:38,borderRadius:'50%',background:'#00a884',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:600,color:'white',cursor:'pointer',marginBottom:20}} title={(usuario?.nome||medico?.nome)+' — Ver perfil'}>
-          {ini(usuario?.nome||medico?.nome||'M')}
+        <div onClick={()=>router.push('/perfil')} style={{position:'relative',cursor:'pointer',marginBottom:20}} title={(usuario?.nome||medico?.nome)+' — Ver perfil'}>
+          {medico?.foto_url
+            ? <img src={medico.foto_url} style={{width:38,height:38,borderRadius:'50%',objectFit:'cover' as const,border:'2px solid rgba(255,255,255,0.3)'}}/>
+            : <div style={{width:38,height:38,borderRadius:'50%',background:'#00a884',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:600,color:'white'}}>{ini(usuario?.nome||medico?.nome||'M')}</div>
+          }
         </div>
         <div title="Chats" onClick={()=>setAba('chats')} className="ibtn" style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:aba==='chats'?'#00a884':'#54656f',marginBottom:4}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
