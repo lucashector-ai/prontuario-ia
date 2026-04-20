@@ -54,7 +54,9 @@ async function processarInstagram(body: any) {
 
       console.log('IG_PROCESS:', { senderId, pageId, texto: texto.substring(0, 40) })
 
+      console.log('IG_STEP1')
       const MEDICO_ID = await getMedicoIdFallback()
+      console.log('IG_STEP2:', MEDICO_ID?.substring(0,8))
       if (!MEDICO_ID) { console.error('IG: sem medico_id'); continue }
 
       let { data: conversa } = await supabase
@@ -104,6 +106,7 @@ async function processarInstagram(body: any) {
         content: h.conteudo as string
       }))
 
+      console.log('IG_STEP3: chamando Claude')
       const aiRes = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 500,
@@ -123,6 +126,7 @@ async function processarInstagram(body: any) {
       })
 
       // Envia pelo Instagram
+      console.log('IG_STEP4: enviando IG')
       console.log('IG_SEND:', { senderId, pageId, tokenStart: IG_TOKEN.substring(0, 10) })
       const igRes = await fetch(`https://graph.facebook.com/v20.0/${pageId}/messages`, {
         method: 'POST',
