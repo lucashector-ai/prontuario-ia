@@ -19,10 +19,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
       background: '#EAECEF',
       padding: 12,
       display: 'flex',
+      overflow: 'hidden',
     }}>
       <div style={{
         flex: 1,
@@ -30,25 +31,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         borderRadius: 20,
         display: 'flex',
         overflow: 'hidden',
-        minHeight: 'calc(100vh - 24px)',
       }}>
-        {/* Sidebar dentro do card */}
         <Sidebar />
-        
-        {/* Área de conteúdo com topbar + children */}
         <div style={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          minWidth: 0,
         }}>
           <Topbar />
-          <div style={{
+          <main style={{
             flex: 1,
             overflow: 'auto',
+            minHeight: 0,
           }}>
             {children}
-          </div>
+          </main>
         </div>
       </div>
     </div>
