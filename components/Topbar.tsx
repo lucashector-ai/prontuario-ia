@@ -4,43 +4,12 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-// mapa de títulos por rota
-const TITULOS: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/nova-consulta': 'Nova consulta',
-  '/agenda': 'Agenda',
-  '/historico': 'Histórico',
-  '/pacientes': 'Pacientes',
-  '/teleconsulta': 'Teleconsulta',
-  '/ditado': 'Ditado livre',
-  '/exames': 'Analisar exames',
-  '/dicionario': 'Dicionário clínico',
-  '/lgpd': 'Privacidade & LGPD',
-  '/minha-clinica': 'Minha clínica',
-  '/automacoes': 'Automações',
-  '/admin': 'Painel admin',
-  '/perfil': 'Perfil',
-  '/whatsapp-app': 'WhatsApp',
-  '/contatos': 'Contatos',
-  '/insights': 'Insights',
-  '/configuracoes': 'Configurações',
-  '/cadastro': 'Cadastro',
-}
-
-function tituloDaRota(pathname: string): string {
-  if (TITULOS[pathname]) return TITULOS[pathname]
-  // match por prefixo (ex: /pacientes/abc123)
-  for (const rota of Object.keys(TITULOS)) {
-    if (pathname.startsWith(rota + '/')) return TITULOS[rota]
-  }
-  return 'MedIA'
-}
-
 export function Topbar() {
   const router = useRouter()
   const pathname = usePathname()
 
   const [medico, setMedico] = useState<any>(null)
+  const [clinica, setClinica] = useState<any>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifs, setNotifs] = useState<any[]>([])
@@ -56,7 +25,19 @@ export function Topbar() {
 
   useEffect(() => {
     const m = localStorage.getItem('medico')
-    if (m) setMedico(JSON.parse(m))
+    if (m) {
+      const med = JSON.parse(m)
+      setMedico(med)
+      // Carrega dados da clínica — tenta 'clinicas' primeiro, se não tiver cai no próprio médico
+      if (med.clinica_id) {
+        supabase.from('clinicas').select('id, nome, logo_url').eq('id', med.clinica_id).single().then(({ data }) => {
+          if (data) setClinica(data)
+          else setClinica({ nome: med.clinica_nome || med.nome, logo_url: med.clinica_logo || null })
+        })
+      } else {
+        setClinica({ nome: med.clinica_nome || med.nome || 'Minha clínica', logo_url: med.clinica_logo || med.foto_url || null })
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -89,19 +70,18 @@ export function Topbar() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setBuscaOpen(true)
-      }
-      if (e.key === 'Escape') {
-        setBuscaOpen(false); setMenuOpen(false); setNotifOpen(false)
-      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setBuscaOpen(true) }
+      if (e.key === 'Escape') { setBuscaOpen(false); setMenuOpen(false); setNotifOpen(false) }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  const iniciais = useMemo(() => {
+  const inicialClinica = useMemo(() => {
+    return clinica?.nome?.[0]?.toUpperCase() || 'M'
+  }, [clinica])
+
+  const iniciaisUsuario = useMemo(() => {
     if (!medico?.nome) return '??'
     return medico.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
   }, [medico])
@@ -112,7 +92,6 @@ export function Topbar() {
   }
 
   const notifsNaoLidas = notifs.filter(n => !n.lida).length
-  const titulo = tituloDaRota(pathname)
 
   return (
     <>
@@ -121,42 +100,39 @@ export function Topbar() {
         padding: '0 20px 0 0', display: 'flex', alignItems: 'center',
         gap: 8, flexShrink: 0,
       }}>
-        {/* Logo + marca (alinhada à sidebar) */}
+        {/* Logo + nome da CLÍNICA (ocupa largura da sidebar) */}
         <button onClick={() => router.push('/dashboard')}
           style={{
-            width: 220, height: '100%', padding: '0 20px',
+            width: 220, height: '100%', padding: '0 16px',
             display: 'flex', alignItems: 'center', gap: 10,
             border: 'none', background: 'transparent', cursor: 'pointer',
-            flexShrink: 0,
+            flexShrink: 0, minWidth: 0,
           }}>
           <div style={{
-            width: 32, height: 32, borderRadius: 8, background: '#6043C1',
+            width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+            background: clinica?.logo_url ? `url(${clinica.logo_url}) center/cover` : '#6043C1',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'white', fontSize: 14, fontWeight: 700,
+            border: clinica?.logo_url ? '1px solid #f3f4f6' : 'none',
           }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-            </svg>
+            {!clinica?.logo_url && inicialClinica}
           </div>
-          <div style={{ textAlign: 'left' }}>
-            <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.2 }}>MedIA</p>
+          <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+            <p style={{
+              fontSize: 13, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.2,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {clinica?.nome || 'MedIA'}
+            </p>
             <p style={{ fontSize: 10, color: '#9ca3af', margin: 0 }}>Prontuário inteligente</p>
           </div>
         </button>
 
-        {/* Divisor sutil */}
-        <div style={{ width: 1, height: 24, background: '#f3f4f6', marginRight: 12 }}/>
-
-        {/* Título da página */}
-        <h1 style={{
-          fontSize: 14, fontWeight: 600, color: '#111827', margin: 0,
-          flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {titulo}
-        </h1>
+        {/* Espaço flexível — sem título de página */}
+        <div style={{ flex: 1 }}/>
 
         {/* Ações à direita */}
-        <button onClick={() => router.push('/whatsapp-app')}
-          title="WhatsApp"
+        <button onClick={() => router.push('/whatsapp-app')} title="WhatsApp"
           style={iconBtnStyle(pathname.startsWith('/whatsapp'))}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
@@ -226,7 +202,7 @@ export function Topbar() {
               width: 32, height: 32, borderRadius: '50%', background: '#ede9fb',
               border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 12, fontWeight: 700, color: '#6043C1', flexShrink: 0,
-            }}>{iniciais}</div>
+            }}>{iniciaisUsuario}</div>
           </button>
           {menuOpen && (
             <div style={dropdownStyle(240)}>
@@ -266,16 +242,9 @@ export function Topbar() {
 
       {buscaOpen && (
         <div onClick={() => setBuscaOpen(false)}
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.4)',
-            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-            paddingTop: '10vh', zIndex: 200,
-          }}>
+          style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.4)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '10vh', zIndex: 200 }}>
           <div ref={buscaRef} onClick={e => e.stopPropagation()}
-            style={{
-              width: '100%', maxWidth: 560, background: 'white', borderRadius: 12,
-              boxShadow: '0 20px 40px rgba(0,0,0,0.15)', overflow: 'hidden',
-            }}>
+            style={{ width: '100%', maxWidth: 560, background: 'white', borderRadius: 12, boxShadow: '0 20px 40px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', borderBottom: '1px solid #f3f4f6' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -287,17 +256,11 @@ export function Topbar() {
             </div>
             <div style={{ maxHeight: '50vh', overflow: 'auto' }}>
               {busca.length < 2 ? (
-                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>
-                  Digite ao menos 2 caracteres para buscar
-                </div>
+                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>Digite ao menos 2 caracteres para buscar</div>
               ) : buscando ? (
-                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>
-                  Buscando...
-                </div>
+                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>Buscando...</div>
               ) : resultados.pacientes.length === 0 && resultados.agendamentos.length === 0 ? (
-                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>
-                  Nenhum resultado para "{busca}"
-                </div>
+                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>Nenhum resultado para "{busca}"</div>
               ) : (
                 <>
                   {resultados.pacientes.length > 0 && (
@@ -327,9 +290,7 @@ export function Topbar() {
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
                           </div>
                           <div style={{ flex: 1, textAlign: 'left', overflow: 'hidden' }}>
-                            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {a.motivo || 'Agendamento'}
-                            </p>
+                            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.motivo || 'Agendamento'}</p>
                             <p style={{ margin: 0, fontSize: 11, color: '#9ca3af' }}>
                               {(a.pacientes as any)?.nome || 'Paciente'} · {new Date(a.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                             </p>
