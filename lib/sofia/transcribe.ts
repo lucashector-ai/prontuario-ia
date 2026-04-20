@@ -50,7 +50,7 @@ async function transcreverComGroq(audio: Buffer): Promise<string | null> {
   if (!GROQ_KEY) return null
   try {
     const form = new FormData()
-    const blob = new Blob([audio], { type: 'audio/ogg' })
+    const blob = new Blob([new Uint8Array(audio)], { type: 'audio/ogg' })
     form.append('file', blob, 'audio.ogg')
     form.append('model', 'whisper-large-v3-turbo')
     form.append('language', 'pt')
@@ -80,7 +80,7 @@ async function transcreverComOpenAI(audio: Buffer): Promise<string | null> {
   if (!OPENAI_KEY) return null
   try {
     const form = new FormData()
-    const blob = new Blob([audio], { type: 'audio/ogg' })
+    const blob = new Blob([new Uint8Array(audio)], { type: 'audio/ogg' })
     form.append('file', blob, 'audio.ogg')
     form.append('model', 'whisper-1')
     form.append('language', 'pt')
