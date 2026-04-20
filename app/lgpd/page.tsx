@@ -101,13 +101,13 @@ export default function LGPD() {
             <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Seus direitos (LGPD)</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
               {[
-                { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', titulo: 'Acesso', desc: 'Acesse todos os dados armazenados sobre você' },
-                { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>', titulo: 'Portabilidade', desc: 'Exporte seus dados em formato legível' },
-                { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', titulo: 'Correção', desc: 'Corrija dados incorretos no perfil' },
-                { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>', titulo: 'Eliminação', desc: 'Delete sua conta e todos os dados' },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={1.8}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>, titulo: 'Acesso', desc: 'Acesse todos os dados armazenados sobre você' },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={1.8}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>, titulo: 'Portabilidade', desc: 'Exporte seus dados em formato legível' },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={1.8}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>, titulo: 'Correção', desc: 'Corrija dados incorretos no perfil' },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={1.8}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, titulo: 'Eliminação', desc: 'Delete sua conta e todos os dados' },
               ].map(d => (
                 <div key={d.titulo} style={{ background: '#F5F5F5', borderRadius: 10, padding: 14 }}>
-                  <p style={{ fontSize: 18, margin: '0 0 4px' }}>{d.icon}</p>
+                  <div style={{ marginBottom: 8, color: '#6b7280' }}>{d.icon}</div>
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>{d.titulo}</p>
                   <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{d.desc}</p>
                 </div>
@@ -122,7 +122,12 @@ export default function LGPD() {
             </p>
             <button onClick={exportarDados} disabled={exportando}
               style={{ padding: '10px 20px', borderRadius: 9, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-              {exportando ? 'Exportando...' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar todos os dados'}
+              {exportando ? 'Exportando...' : (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Exportar todos os dados
+                </span>
+              )}
             </button>
           </Card>
 
@@ -159,7 +164,12 @@ export default function LGPD() {
               style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #fecaca', outline: 'none', fontSize: 14, marginBottom: 12, color: '#111827', background: 'white' }}/>
             <button onClick={deletarConta} disabled={deletando || confirmDelete !== medico?.email}
               style={{ padding: '10px 20px', borderRadius: 9, border: 'none', background: confirmDelete === medico?.email ? '#dc2626' : '#f3f4f6', color: confirmDelete === medico?.email ? 'white' : '#9ca3af', fontSize: 13, fontWeight: 600, cursor: confirmDelete === medico?.email ? 'pointer' : 'not-allowed' }}>
-              {deletando ? 'Deletando...' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Deletar minha conta permanentemente'}
+              {deletando ? 'Deletando...' : (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                  Deletar minha conta permanentemente
+                </span>
+              )}
             </button>
           </Card>
 
