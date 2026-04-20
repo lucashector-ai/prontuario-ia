@@ -178,7 +178,11 @@ export async function POST(req: NextRequest) {
           metadata: { ia: true, canal: 'instagram' }
         })
 
+        console.log('IG_ENVIANDO para:', senderId, 'pageId:', IG_PAGE_ID, 'temToken:', !!IG_TOKEN)
+        console.log('IG_ENVIANDO para:', senderId, 'pageId:', IG_PAGE_ID, 'temToken:', !!IG_TOKEN)
         await enviarIG(senderId, resposta)
+        console.log('IG_ENVIOU')
+        console.log('IG_ENVIOU')
         await supabase.from('whatsapp_conversas')
           .update({ ultimo_contato: new Date().toISOString() })
           .eq('id', conversa.id)
