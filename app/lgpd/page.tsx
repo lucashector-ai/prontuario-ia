@@ -85,7 +85,7 @@ export default function LGPD() {
   if (!medico) return null
 
   const Card = ({ children, border = '#e5e7eb' }: any) => (
-    <div style={{ background: 'white', borderRadius: 14, border: `1px solid ${border}`, padding: 24, marginBottom: 20 }}>
+    <div style={{ background: 'white', borderRadius: 14, padding: 24, marginBottom: 20 }}>
       {children}
     </div>
   )

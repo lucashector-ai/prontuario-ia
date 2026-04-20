@@ -183,7 +183,7 @@ export default function Historico() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {secoes.map(({ key, titulo, cor, bg, border }) => (
-                    <div key={key} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 16px' }}>
+                    <div key={key} style={{ background: bg, borderRadius: 10, padding: '14px 16px' }}>
                       <p style={{ fontSize: 11, fontWeight: 700, color: cor, margin: '0 0 8px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{titulo}</p>
                       {editando ? (
                         <textarea value={editForm[key] || ''}

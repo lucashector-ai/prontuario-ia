@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { iniciarPreAtendimento, registrarRespostaEAvancar, getPreConsultaAtiva, marcarPermissaoConcedida, marcarPermissaoNegada } from '@/lib/sofia/preatendimento'
 import { getSofiaConfig } from '@/lib/sofia/config'
 import { transcreverAudioWhatsApp } from '@/lib/sofia/transcribe'
+import { dispararConfirmacoes24h, detectarRespostaConfirmacao24h, notificarMedico } from '@/lib/sofia/confirmacao'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -57,6 +58,14 @@ TIPO DE CONSULTA (quando contexto mencionar):
 MÚLTIPLOS MÉDICOS (quando contexto mencionar):
 - Se há outros médicos na clínica, pergunta naturalmente: "Você tem preferência por algum médico? Tenho a Dra. X especialista em Y e o Dr. Z..."
 - Se paciente não sabe, deixa ele escolher o horário e a clínica aloca
+
+REAGENDAMENTO:
+- Se o paciente disser "quero remarcar", "preciso mudar a consulta", "trocar meu horário" ou similar, você interpreta isso como pedido de reagendamento
+- Pergunta primeiro qual consulta ele quer remarcar (se tiver mais de uma marcada)
+- Oferece 2-3 horários alternativos do CONTEXTO do sistema
+- Quando confirmado, usa: [REAGENDAR:{"data":"YYYY-MM-DDTHH:mm:00","agendamento_id_antigo":"uuid","modalidade":"presencial ou online"}]
+- O agendamento_id_antigo vem do CONTEXTO (se houver estado_reagendamento ativo)
+- Se paciente mudar de ideia, volta pro fluxo normal
 
 FLUXO DE AGENDAMENTO:
 - Descobre o motivo conversando ("O que tá acontecendo?" ou "Em que você precisa de ajuda?")
@@ -478,6 +487,7 @@ export async function POST(req: NextRequest) {
 
     // Dispara lembretes de teleconsulta pendentes em background (non-blocking)
     verificarLembretesTeleconsulta(MEDICO_ID).catch(e => console.error('lembrete bg erro:', e))
+    dispararConfirmacoes24h(MEDICO_ID).catch(e => console.error('conf24h bg erro:', e))
 
     console.log('WEBHOOK_OK medico:', MEDICO_ID, 'msgs:', messages.length, 'phoneId:', phoneNumberId)
     if (!MEDICO_ID) {
@@ -701,6 +711,93 @@ export async function POST(req: NextRequest) {
           continue
         }
       }
+      
+      // === INTERCEPTADOR CONFIRMAÇÃO 24H ===
+      try {
+        const agConf = await detectarRespostaConfirmacao24h(telefone, MEDICO_ID)
+        if (agConf) {
+          const textoLower = texto.toLowerCase().trim()
+          const confirmou = ['sim', 'confirmo', 'confirmado', 'pode sim', 'vou', 'tô indo', 'to indo', 'estarei', 'sim confirmo'].some(p => textoLower.includes(p))
+          const recusou = ['não poderei', 'nao poderei', 'não vou', 'nao vou', 'não posso', 'nao posso', 'cancelar'].some(p => textoLower.includes(p))
+          const querRemarcar = ['remarcar', 'reagendar', 'outro dia', 'outro horario', 'outro horário', 'mudar', 'trocar'].some(p => textoLower.includes(p))
+
+          if (confirmou) {
+            await supabaseAdmin
+              .from('agendamentos')
+              .update({ 
+                confirmacao_24h_status: 'confirmado', 
+                status: 'confirmado',
+                confirmacao_24h_resposta_em: new Date().toISOString() 
+              })
+              .eq('id', agConf.id)
+
+            const credsC = await getWppCredentials(MEDICO_ID)
+            const msgC = 'Show! Tá confirmado então 💜 Até amanhã!'
+            await supabase.from('whatsapp_mensagens').insert({
+              conversa_id: conversa.id, tipo: 'enviada', conteudo: msgC,
+              metadata: { ia: true, confirmacao_24h: true, resposta: 'confirmado' }
+            })
+            await enviarWpp(telefone, msgC, credsC.token, credsC.phoneId)
+            continue
+          }
+
+          if (recusou) {
+            await supabaseAdmin
+              .from('agendamentos')
+              .update({ 
+                confirmacao_24h_status: 'nao_confirmado',
+                confirmacao_24h_resposta_em: new Date().toISOString()
+              })
+              .eq('id', agConf.id)
+
+            await notificarMedico({
+              medico_id: MEDICO_ID,
+              tipo: 'confirmacao_recusada',
+              agendamento_id: agConf.id,
+              paciente_id: agConf.pacientes?.id,
+              titulo: `${agConf.pacientes?.nome} não poderá comparecer`,
+              descricao: `Consulta em ${new Date(agConf.data_hora).toLocaleString('pt-BR')}`
+            })
+
+            const credsR = await getWppCredentials(MEDICO_ID)
+            const msgR = 'Tudo bem! Vou avisar a clínica. Se quiser remarcar, é só me mandar uma mensagem 💜'
+            await supabase.from('whatsapp_mensagens').insert({
+              conversa_id: conversa.id, tipo: 'enviada', conteudo: msgR,
+              metadata: { ia: true, confirmacao_24h: true, resposta: 'recusou' }
+            })
+            await enviarWpp(telefone, msgR, credsR.token, credsR.phoneId)
+            continue
+          }
+
+          if (querRemarcar) {
+            await supabaseAdmin
+              .from('agendamentos')
+              .update({ 
+                confirmacao_24h_status: 'reagendou',
+                confirmacao_24h_resposta_em: new Date().toISOString()
+              })
+              .eq('id', agConf.id)
+
+            // Marca estado de reagendamento na conversa pra continuar o fluxo
+            await supabase
+              .from('whatsapp_conversas')
+              .update({ 
+                estado_reagendamento: { 
+                  etapa: 'aguardando_horario', 
+                  agendamento_id_antigo: agConf.id 
+                } 
+              })
+              .eq('id', conversa.id)
+
+            // Deixa o fluxo normal da Sofia continuar — ela vai oferecer horários
+            // através do prompt (que já detecta intent de agendar)
+          }
+        }
+      } catch (e) {
+        console.error('Interceptador confirmação 24h erro:', e)
+      }
+      // === FIM INTERCEPTADOR CONFIRMAÇÃO 24H ===
+
       // === FIM INTERCEPTADOR ===
 
       if (conversa.modo === 'humano') continue
@@ -715,6 +812,22 @@ export async function POST(req: NextRequest) {
       }
       
       // Se mensagem é sobre agendamento, busca horários disponíveis
+      // Contexto: se paciente está em fluxo de reagendamento
+      try {
+        const estadoReag = (conversa as any).estado_reagendamento
+        if (estadoReag?.etapa === 'aguardando_horario' && estadoReag?.agendamento_id_antigo) {
+          const { data: agAntigo } = await supabase
+            .from('agendamentos')
+            .select('data_hora, motivo')
+            .eq('id', estadoReag.agendamento_id_antigo)
+            .single()
+          if (agAntigo) {
+            const dataFmt = new Date(agAntigo.data_hora).toLocaleString('pt-BR')
+            contextoExtra += `\n\nREAGENDAMENTO ATIVO: paciente quer remarcar consulta marcada para ${dataFmt} (motivo: ${agAntigo.motivo || 'consulta'}). Ofereça horários alternativos. agendamento_id_antigo: ${estadoReag.agendamento_id_antigo}`
+          }
+        }
+      } catch {}
+
       // Contexto extra: tipos de consulta aceitos pela clínica
       try {
         const cfgPara = await getSofiaConfig(MEDICO_ID)
