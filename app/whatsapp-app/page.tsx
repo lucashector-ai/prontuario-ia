@@ -452,7 +452,7 @@ export default function WhatsAppApp() {
                       {cv.foto_url?(
                         <img src={cv.foto_url} alt={nomeCv(cv)} style={{width:49,height:49,borderRadius:'50%',objectFit:'cover' as const,flexShrink:0}}/>
                       ):(
-                        <div style={{width:49,height:49,borderRadius:'50%',background:'#dfe5e7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#54656f',flexShrink:0}}>{ini(nomeCv(cv))}</div>
+                        <div style={{width:49,height:49,borderRadius:'50%',background:corAvatar(cv.telefone||''),display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'white',fontWeight:600,flexShrink:0}}>{ini(nomeCv(cv))}</div>
                       )}
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}}>
