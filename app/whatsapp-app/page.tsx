@@ -689,7 +689,7 @@ export default function WhatsAppApp() {
               <p style={{fontSize:12,color:'#667781',margin:0}}>{dadosPaciente.sexo}{dadosPaciente.data_nascimento?` · ${new Date().getFullYear()-new Date(dadosPaciente.data_nascimento).getFullYear()} anos`:''}</p>
             </div>
             {/* Dados */}
-            <div style={{background:'#EAECEF',borderRadius:10,padding:'12px 14px',marginBottom:14}}>
+            <div style={{background:'#FAFAFA',borderRadius:10,padding:'12px 14px',marginBottom:14}}>
               {[
                 {label:'Telefone',val:dadosPaciente.telefone},
                 {label:'Email',val:dadosPaciente.email},
@@ -707,7 +707,7 @@ export default function WhatsAppApp() {
             {consultasPaciente.length===0
               ? <p style={{fontSize:12,color:'#aebac1',textAlign:'center' as const,padding:'12px 0'}}>Nenhuma consulta registrada</p>
               : consultasPaciente.map((c:any,i:number)=>(
-                <div key={i} style={{background:'#EAECEF',borderRadius:8,padding:'10px 12px',marginBottom:8,border:'1px solid #f0f2f5'}}>
+                <div key={i} style={{background:'#FAFAFA',borderRadius:8,padding:'10px 12px',marginBottom:8,border:'1px solid #f0f2f5'}}>
                   <p style={{fontSize:11,color:'#667781',margin:'0 0 4px'}}>{new Date(c.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})}</p>
                   {c.diagnostico_principal&&<p style={{fontSize:12,fontWeight:600,color:'#111827',margin:'0 0 3px'}}>{c.diagnostico_principal}</p>}
                   {c.resumo_ia&&<p style={{fontSize:11,color:'#374151',margin:0,lineHeight:1.5}}>{c.resumo_ia.substring(0,120)}{c.resumo_ia.length>120?'...':''}</p>}

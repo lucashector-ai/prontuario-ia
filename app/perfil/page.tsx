@@ -97,7 +97,7 @@ export default function PerfilPage() {
   const iniciais = medico.nome?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || '??'
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#EAECEF' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#FAFAFA' }}>
       <main style={{ flex: 1, overflow: 'auto', padding: '32px 40px' }}>
         <div style={{ maxWidth: 640 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Meu perfil</h1>
@@ -204,7 +204,7 @@ export default function PerfilPage() {
           </div>
 
           {apiKey && (
-            <div style={{ background: '#EAECEF', borderRadius: 12, padding: 20 }}>
+            <div style={{ background: '#FAFAFA', borderRadius: 12, padding: 20 }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Exemplos de uso</h3>
               {[
                 { label: 'Listar pacientes', url: `https://prontuario-ia-five.vercel.app/api/public?key=${apiKey}&recurso=pacientes` },

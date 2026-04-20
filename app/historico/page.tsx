@@ -77,8 +77,8 @@ export default function Historico() {
   ]
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#EAECEF', overflow: 'hidden' }}>
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '16px 16px 16px 0', gap: 0, background: '#EAECEF' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#FAFAFA', overflow: 'hidden' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '16px 16px 16px 0', gap: 0, background: '#FAFAFA' }}>
         {/* Header */}
         <div style={{ padding: '16px 24px 12px', borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
@@ -95,7 +95,7 @@ export default function Historico() {
           {/* Lista */}
           <div style={{ borderRight: 'none', overflow: 'auto', background: 'white', padding: '12px 10px', borderRadius: 12, height: '100%' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#EAECEF', borderRadius: 8, padding: '7px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FAFAFA', borderRadius: 8, padding: '7px 12px' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             <input
               value={busca}
@@ -149,7 +149,7 @@ export default function Historico() {
                         <button onClick={handleSalvar} disabled={salvando} style={{ fontSize: 12, fontWeight: 600, color: 'white', background: '#6043C1', border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
                           {salvando ? 'Salvando...' : 'Salvar alterações'}
                         </button>
-                        <button onClick={() => setEditando(false)} style={{ fontSize: 12, color: '#3d5452', background: '#EAECEF', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
+                        <button onClick={() => setEditando(false)} style={{ fontSize: 12, color: '#3d5452', background: '#FAFAFA', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
                           Cancelar
                         </button>
                       </>
@@ -194,7 +194,7 @@ export default function Historico() {
                   ))}
 
                   {selecionada.cids?.length > 0 && (
-                    <div style={{ background: '#EAECEF', borderRadius: 10, padding: '14px 16px' }}>
+                    <div style={{ background: '#FAFAFA', borderRadius: 10, padding: '14px 16px' }}>
                       <p style={{ fontSize: 10, fontWeight: 700, color: '#8aa8a5', margin: '0 0 10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>CID-10</p>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {selecionada.cids.map((cid: any, i: number) => (

@@ -7,9 +7,7 @@ import { supabase } from '@/lib/supabase'
 const ACCENT = '#1F9D5C'
 const TEXT_DEFAULT = '#111827'
 const TEXT_MUTED = '#6B7280'
-const BUSCA_BG = '#EAECEF'
-const BUSCA_BG_HOVER = '#EAECEF'
-const BUSCA_BG_FOCUS = '#D8DCE1'
+const BUSCA_BG = '#FAFAFA'
 
 export function Topbar() {
   const router = useRouter()
@@ -138,7 +136,7 @@ export function Topbar() {
   })
 
   // Fundo da busca: normal, hover, ou focus
-  const buscaBg = buscaFocus ? BUSCA_BG_FOCUS : BUSCA_BG
+  const buscaBg = BUSCA_BG
 
   return (
     <header style={{
@@ -190,7 +188,7 @@ export function Topbar() {
                   <button key={p.id}
                     onClick={() => { router.push(`/pacientes/${p.id}`); setBusca(''); setResultadosOpen(false) }}
                     style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#EAECEF'}
+                    onMouseEnter={e => e.currentTarget.style.background = '#FAFAFA'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     {p.nome}
@@ -206,7 +204,7 @@ export function Topbar() {
                   <button key={a.id}
                     onClick={() => { router.push('/agenda'); setBusca(''); setResultadosOpen(false) }}
                     style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#EAECEF'}
+                    onMouseEnter={e => e.currentTarget.style.background = '#FAFAFA'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     {a.motivo || 'Consulta'}
@@ -227,7 +225,7 @@ export function Topbar() {
         onClick={() => router.push('/whatsapp-app')}
         title='Chat'
         style={iconBtnStyle(pathname.startsWith('/whatsapp'))}
-        onMouseEnter={e => { if (!pathname.startsWith('/whatsapp')) e.currentTarget.style.background = '#EAECEF' }}
+        onMouseEnter={e => { if (!pathname.startsWith('/whatsapp')) e.currentTarget.style.background = '#FAFAFA' }}
         onMouseLeave={e => { if (!pathname.startsWith('/whatsapp')) e.currentTarget.style.background = 'transparent' }}
       >
         <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke={TEXT_DEFAULT} strokeWidth='2'>
@@ -240,7 +238,7 @@ export function Topbar() {
         <button
           onClick={() => setNotifOpen(!notifOpen)}
           style={iconBtnStyle(notifOpen)}
-          onMouseEnter={e => { if (!notifOpen) e.currentTarget.style.background = '#EAECEF' }}
+          onMouseEnter={e => { if (!notifOpen) e.currentTarget.style.background = '#FAFAFA' }}
           onMouseLeave={e => { if (!notifOpen) e.currentTarget.style.background = 'transparent' }}
         >
           <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke={TEXT_DEFAULT} strokeWidth='2'>
@@ -333,7 +331,7 @@ export function Topbar() {
             border: 'none', cursor: 'pointer',
             transition: 'background 0.12s',
           }}
-          onMouseEnter={e => { if (!menuOpen) e.currentTarget.style.background = '#EAECEF' }}
+          onMouseEnter={e => { if (!menuOpen) e.currentTarget.style.background = '#FAFAFA' }}
           onMouseLeave={e => { if (!menuOpen) e.currentTarget.style.background = 'transparent' }}
         >
           {medico?.foto_url ? (
@@ -358,7 +356,7 @@ export function Topbar() {
             <button
               onClick={() => { router.push('/perfil'); setMenuOpen(false) }}
               style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-              onMouseEnter={e => e.currentTarget.style.background = '#EAECEF'}
+              onMouseEnter={e => e.currentTarget.style.background = '#FAFAFA'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >Meu perfil</button>
             <button

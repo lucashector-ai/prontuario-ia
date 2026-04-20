@@ -154,7 +154,7 @@ export function formatarRelatorioEmail(r: RelatorioData): { assunto: string; htm
   const html = `
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>${assunto}</title></head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#EAECEF;padding:20px;margin:0">
+<body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#FAFAFA;padding:20px;margin:0">
   <div style="max-width:600px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;border:1px solid #f3f4f6">
     <div style="background:#6043C1;padding:20px 24px;color:white">
       <h1 style="margin:0;font-size:18px;font-weight:700">Bom dia, ${r.medico_nome.split(' ')[0]}!</h1>

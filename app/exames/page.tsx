@@ -54,11 +54,11 @@ export default function Exames() {
   const statusCor = (s: string) => {
     if (s === 'critico') return { bg: '#fef2f2', border: '#fecaca', text: '#dc2626', badge: '#dc2626', badgeBg: '#fef2f2' }
     if (s === 'alterado') return { bg: '#fffbeb', border: '#fde68a', text: '#92400e', badge: '#d97706', badgeBg: '#fffbeb' }
-    return { bg: '#EAECEF', border: '#d4c9f7', text: '#6043C1', badge: '#6043C1', badgeBg: '#EAECEF' }
+    return { bg: '#FAFAFA', border: '#d4c9f7', text: '#6043C1', badge: '#6043C1', badgeBg: '#FAFAFA' }
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#EAECEF', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#FAFAFA', overflow: 'hidden' }}>
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '0 32px', height: 56, borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
@@ -91,7 +91,7 @@ export default function Exames() {
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: 40 }}>
-                  <div style={{ width: 56, height: 56, borderRadius: 14, background: '#EAECEF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 14, background: '#FAFAFA', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                     </svg>
@@ -105,7 +105,7 @@ export default function Exames() {
             <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }}
               onChange={e => { const f = e.target.files?.[0]; if (f) handleImagem(f) }}/>
 
-            <div style={{ background: '#EAECEF', borderRadius: 12, padding: '16px 20px' }}>
+            <div style={{ background: '#FAFAFA', borderRadius: 12, padding: '16px 20px' }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 8 }}>
                 Contexto clínico <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>(opcional)</span>
               </label>
@@ -148,17 +148,17 @@ export default function Exames() {
           {analise && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, overflow: 'auto' }}>
               {/* Header do exame */}
-              <div style={{ background: '#EAECEF', borderRadius: 12, padding: '16px 20px' }}>
+              <div style={{ background: '#FAFAFA', borderRadius: 12, padding: '16px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>{analise.tipo_exame}</p>
                     {analise.data_exame && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Data: {analise.data_exame}</p>}
                   </div>
-                  <span style={{ fontSize: 11, color: '#6043C1', background: '#EAECEF', padding: '3px 10px', borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: '#6043C1', background: '#FAFAFA', padding: '3px 10px', borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
                     ✓ Analisado pela IA
                   </span>
                 </div>
-                <p style={{ fontSize: 13, color: '#374151', margin: 0, lineHeight: 1.6, background: '#EAECEF', borderRadius: 8, padding: '10px 12px' }}>{analise.resumo}</p>
+                <p style={{ fontSize: 13, color: '#374151', margin: 0, lineHeight: 1.6, background: '#FAFAFA', borderRadius: 8, padding: '10px 12px' }}>{analise.resumo}</p>
               </div>
 
               {/* Alertas */}
@@ -180,7 +180,7 @@ export default function Exames() {
                   {analise.valores.map((v: any, i: number) => {
                     const c = statusCor(v.status)
                     return (
-                      <div key={i} style={{ padding: '12px 16px', borderBottom: i < analise.valores.length - 1 ? '1px solid #EAECEF' : 'none', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                      <div key={i} style={{ padding: '12px 16px', borderBottom: i < analise.valores.length - 1 ? '1px solid #FAFAFA' : 'none', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                             <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{v.nome}</p>
@@ -201,14 +201,14 @@ export default function Exames() {
               )}
 
               {/* Conclusão */}
-              <div style={{ background: '#EAECEF', borderRadius: 12, padding: '16px 20px' }}>
+              <div style={{ background: '#FAFAFA', borderRadius: 12, padding: '16px 20px' }}>
                 <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Conclusão clínica</p>
                 <p style={{ fontSize: 13, color: '#374151', margin: 0, lineHeight: 1.7 }}>{analise.conclusao}</p>
               </div>
 
               {/* Recomendações */}
               {analise.recomendacoes?.length > 0 && (
-                <div style={{ background: '#EAECEF', borderRadius: 12, padding: '16px 20px' }}>
+                <div style={{ background: '#FAFAFA', borderRadius: 12, padding: '16px 20px' }}>
                   <p style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Recomendações</p>
                   {analise.recomendacoes.map((r: string, i: number) => (
                     <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 6 }}>

@@ -104,7 +104,7 @@ body{font-family:Arial,sans-serif;color:#111827;background:#fff;padding:40px;max
 .periodo{font-size:13px;opacity:0.8;margin-top:4px}
 .medico-info{text-align:right;font-size:12px;opacity:0.8}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-.metric{background:#EAECEF;border:1px solid #e5e7eb;border-radius:10px;padding:16px}
+.metric{background:#FAFAFA;border:1px solid #e5e7eb;border-radius:10px;padding:16px}
 .metric-label{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
 .metric-value{font-size:26px;font-weight:800;color:#111827}
 .metric-sub{font-size:11px;margin-top:4px;font-weight:600}

@@ -161,7 +161,7 @@ export default function Dashboard() {
   const maxDia = dados ? Math.max(...dados.porDia.map((d: any) => d.total), 1) : 1
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#EAECEF', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#FAFAFA', overflow: 'hidden' }}>
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
@@ -301,7 +301,7 @@ export default function Dashboard() {
                       <a href="/agenda" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Agendar consulta</a>
                     </div>
                   ) : dados.proximosAgendamentos.map((ag: any, i: number) => (
-                    <div key={ag.id} style={{ padding: '12px 20px', borderBottom: i < dados.proximosAgendamentos.length - 1 ? '1px solid #EAECEF' : 'none', display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div key={ag.id} style={{ padding: '12px 20px', borderBottom: i < dados.proximosAgendamentos.length - 1 ? '1px solid #FAFAFA' : 'none', display: 'flex', gap: 12, alignItems: 'center' }}>
                       <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f0fd', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <p style={{ fontSize: 14, fontWeight: 800, color: '#6043C1', margin: 0, lineHeight: 1 }}>{new Date(ag.data_hora).getDate()}</p>
                         <p style={{ fontSize: 9, color: '#6043C1', margin: 0, textTransform: 'uppercase' }}>{new Date(ag.data_hora).toLocaleDateString('pt-BR', { month: 'short' })}</p>
@@ -366,7 +366,7 @@ export default function Dashboard() {
                       <a href="/consulta" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Nova consulta</a>
                     </div>
                   ) : dados.consultasRecentes.map((c: any, i: number) => (
-                    <div key={c.id} style={{ padding: '12px 20px', borderBottom: i < dados.consultasRecentes.length - 1 ? '1px solid #EAECEF' : 'none' }}>
+                    <div key={c.id} style={{ padding: '12px 20px', borderBottom: i < dados.consultasRecentes.length - 1 ? '1px solid #FAFAFA' : 'none' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 3px' }}>{fmtFull(c.criado_em)}</p>

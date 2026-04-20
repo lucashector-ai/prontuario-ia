@@ -65,7 +65,7 @@ export default function Pacientes() {
     .sort((a, b) => ordenar === 'nome' ? (a.nome || '').localeCompare(b.nome || '') : new Date(b.criado_em || 0).getTime() - new Date(a.criado_em || 0).getTime())
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#EAECEF', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#FAFAFA', overflow: 'hidden' }}>
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '0 28px', height: 56, borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>

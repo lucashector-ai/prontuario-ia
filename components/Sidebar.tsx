@@ -189,7 +189,7 @@ export function Sidebar() {
                       border: 'none',
                       transition: 'background 0.12s',
                     }}
-                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#EAECEF' }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#FAFAFA' }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
                   >
                     <span style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }}>{item.icon}</span>

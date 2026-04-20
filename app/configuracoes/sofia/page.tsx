@@ -69,7 +69,7 @@ export default function SofiaConfig() {
   if (!medico || !config) return null
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#EAECEF', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#FAFAFA', overflow: 'hidden' }}>
       <main style={{ flex: 1, overflow: 'auto', padding: '24px 32px' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -339,7 +339,7 @@ export default function SofiaConfig() {
             </button>
           </Card>
 
-          <div style={{ position: 'sticky', bottom: 0, padding: '16px 0', background: '#EAECEF', borderTop: '1px solid #f3f4f6', marginTop: 20, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+          <div style={{ position: 'sticky', bottom: 0, padding: '16px 0', background: '#FAFAFA', borderTop: '1px solid #f3f4f6', marginTop: 20, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button onClick={() => router.back()}
               style={{ padding: '10px 18px', borderRadius: 8, background: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151' }}>
               Cancelar
@@ -370,7 +370,7 @@ function Label({ children }: { children: React.ReactNode }) {
 
 function ToggleRow({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #EAECEF' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #FAFAFA' }}>
       <div>
         <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#111827' }}>{label}</p>
         <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9ca3af' }}>{desc}</p>

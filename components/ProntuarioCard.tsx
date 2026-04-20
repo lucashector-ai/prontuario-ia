@@ -114,7 +114,7 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
       ))}
 
       {prontuario.cids?.length > 0 && (
-        <div style={{ background: '#EAECEF', borderRadius: 10, padding: '12px 14px' }}>
+        <div style={{ background: '#FAFAFA', borderRadius: 10, padding: '12px 14px' }}>
           <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 10px' }}>CID-10 sugeridos</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {prontuario.cids.map((cid, i) => (

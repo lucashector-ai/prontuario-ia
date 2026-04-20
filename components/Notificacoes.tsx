@@ -68,7 +68,7 @@ export function Notificacoes({ medicoId }: { medicoId: string }) {
             border: '1px solid #f0f0f0',
             zIndex: 50, overflow: 'hidden'
           }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #EAECEF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #FAFAFA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Notificações</span>
               {notifs.length > 0 && (
                 <button onClick={marcarTodasLidas} style={{ fontSize: 12, color: '#6043C1', background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -83,7 +83,7 @@ export function Notificacoes({ medicoId }: { medicoId: string }) {
                   <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Sem notificações</p>
                 </div>
               ) : notifs.map(n => (
-                <div key={n.id} style={{ padding: '12px 16px', borderBottom: '1px solid #EAECEF', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <div key={n.id} style={{ padding: '12px 16px', borderBottom: '1px solid #FAFAFA', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6043C1', flexShrink: 0, marginTop: 4 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>{n.titulo}</p>

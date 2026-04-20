@@ -90,7 +90,7 @@ export default function OnboardingPage() {
   const progresso = ((passo + 1) / passos.length) * 100
 
   return (
-    <div style={{ minHeight: "100vh", background: "#EAECEF", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
+    <div style={{ minHeight: "100vh", background: "#FAFAFA", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
       <div style={{ width: "100%", maxWidth: 480 }}>
         
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>

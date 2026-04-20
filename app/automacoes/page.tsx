@@ -66,7 +66,7 @@ export default function AutomacoesPage() {
   )
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "#EAECEF", overflow: "hidden" }}>
+    <div style={{ display: "flex", height: "100vh", background: "#FAFAFA", overflow: "hidden" }}>
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         <div style={{ padding: "0 28px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
@@ -214,7 +214,7 @@ export default function AutomacoesPage() {
                       { label: "Alertas pendentes", valor: resultado.alertas_pendentes?.length ?? 0, cor: "#dc2626" },
                       { label: "Novos no WhatsApp", valor: resultado.novos_pacientes_wpp ?? 0, cor: "#16a34a" },
                     ].map(m => (
-                      <div key={m.label} style={{ background: "#EAECEF", borderRadius: 8, padding: "12px 14px", textAlign: "center" as const }}>
+                      <div key={m.label} style={{ background: "#FAFAFA", borderRadius: 8, padding: "12px 14px", textAlign: "center" as const }}>
                         <p style={{ fontSize: 22, fontWeight: 800, color: m.cor, margin: "0 0 2px" }}>{m.valor}</p>
                         <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>{m.label}</p>
                       </div>
