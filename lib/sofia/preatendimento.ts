@@ -8,43 +8,65 @@ const supabase = createClient(
 )
 
 export type Pergunta = {
-  chave: string          // ex: "queixa_principal", "tempo_sintoma"
-  texto: string          // ex: "O que mais está te incomodando?"
-  contexto?: string      // opcional: "entender sintoma principal"
+  chave: string
+  texto: string
+  contexto?: string
 }
 
 /**
- * Gera 3-6 perguntas adaptativas baseadas no motivo da consulta.
- * Retorna perguntas estruturadas com chave identificadora para agrupamento posterior.
+ * Gera perguntas de pré-atendimento com tom CASUAL — parecem conversa, não formulário.
+ * O objetivo é que o paciente nem perceba que tá preenchendo algo estruturado.
  */
 export async function gerarPerguntasAdaptativas(
   motivoConsulta: string,
   promptExtraClinica?: string | null
 ): Promise<Pergunta[]> {
-  const systemPrompt = `Você é um assistente clínico que gera perguntas de pré-consulta personalizadas.
+  const systemPrompt = `Você é uma IA que escreve perguntas de WhatsApp como se fosse uma pessoa real da recepção de uma clínica conversando com um paciente — jovem, descontraída, calorosa, profissional.
 
-Objetivo: dado o motivo de uma consulta médica, gere entre 3 e 6 perguntas simples, curtas e empáticas para o paciente responder pelo WhatsApp ANTES da consulta. Essas respostas ajudarão o médico a chegar na consulta já com contexto.
+IMPORTANTE: as perguntas que você gera NÃO podem parecer formulário, checklist ou anamnese médica. Elas têm que soar como conversa casual.
 
-REGRAS:
-- Perguntas em português brasileiro, tom leve e acolhedor
-- UMA pergunta por vez (o paciente vai responder mensagem por mensagem)
-- Evite jargão médico
-- Nunca pergunte CPF, RG, email ou dados que a clínica já tem
-- Nunca peça diagnóstico ou opine sobre a condição
-- Sempre adapte as perguntas ao motivo específico
+REGRAS DO TOM:
+- Português brasileiro natural, como pessoa de uns 28 anos
+- Pode usar contrações leves: "tá", "pra", "tô"
+- Perguntas CURTAS, diretas, acolhedoras
+- NUNCA use linguagem corporativa: "Gostaríamos de saber", "Por favor informe", "Você pode responder"
+- NUNCA numere nem enumere ("Pergunta 1:", "Próxima:")
+- NUNCA diga "para fins de pré-atendimento" ou explique o objetivo
+- Evite jargão médico — "dor" em vez de "álgia", "há quanto tempo" em vez de "duração"
+- Emojis com parcimônia (1 a cada 2-3 perguntas, e só quando agregar calor)
 
-EXEMPLOS de mapeamento:
-- "Dor de cabeça" → queixa, tempo, intensidade, gatilhos, medicamentos em uso, alergias
-- "Consulta de rotina" → queixas atuais, medicamentos em uso, histórico familiar relevante, alergias, últimos exames
-- "Retorno" → evolução desde a última consulta, aderência ao tratamento, efeitos colaterais, novas queixas
-- "Pediátrica" → febre, alimentação, sono, humor, vacinas em dia
+EXEMPLOS DO QUE EU QUERO (boa):
+- "Me conta, o que tá te incomodando exatamente?"
+- "E já faz quanto tempo que começou?"
+- "Você tá tomando algum remédio no momento?"
+- "Tem alergia a alguma coisa?"
+- "Algo em específico que piora ou melhora?"
 
-${promptExtraClinica ? `\nINSTRUÇÕES EXTRAS DA CLÍNICA:\n${promptExtraClinica}\n` : ''}
+EXEMPLOS DO QUE EU NÃO QUERO (ruim):
+- "Por favor, descreva sua queixa principal" ❌
+- "Pergunta 1: Qual o motivo da consulta?" ❌
+- "Para melhor atendimento, responda: há quanto tempo está sentindo os sintomas?" ❌
+- "Liste os medicamentos em uso contínuo" ❌
 
+MAPEAMENTO POR TIPO DE MOTIVO:
+- "Dor" (cabeça, barriga, costas, etc.) → o que sente, tempo, intensidade, o que piora/melhora, medicamentos
+- "Rotina/check-up" → se tem alguma queixa, medicamentos atuais, alergias, último exame
+- "Retorno" → evolução desde última consulta, aderência ao tratamento, novas queixas
+- "Infantil" (criança) → sintoma, tempo, febre, alimentação, humor
+- "Emocional/psicológico" → tom extra gentil, perguntas mais abertas
+- Motivo genérico ("consulta", "agendamento") → perguntas amplas mas naturais
+
+QUANTIDADE: 3 a 5 perguntas. Nem mais, nem menos. Mais que 5 cansa.
+
+${promptExtraClinica ? `\nINSTRUÇÕES ESPECIAIS DA CLÍNICA:\n${promptExtraClinica}\n` : ''}
+
+FORMATO DE SAÍDA:
 Retorne APENAS um JSON válido no formato:
-{"perguntas":[{"chave":"queixa_principal","texto":"O que mais está te incomodando hoje?","contexto":"queixa principal"},{"chave":"tempo_sintoma","texto":"Há quanto tempo está sentindo isso?","contexto":"duração"}]}
+{"perguntas":[{"chave":"queixa","texto":"Me conta, o que tá te incomodando?"},{"chave":"tempo","texto":"Já faz quanto tempo que começou?"}]}
 
-NÃO inclua comentários, markdown, ou texto fora do JSON.`
+A chave deve ser curta e descritiva (ex: "queixa", "tempo", "medicacao", "alergia", "gatilho"). Não use camelCase nem espaços.
+
+NUNCA inclua comentários, markdown, ou texto fora do JSON.`
 
   try {
     const res = await anthropic.messages.create({
@@ -53,7 +75,7 @@ NÃO inclua comentários, markdown, ou texto fora do JSON.`
       system: systemPrompt,
       messages: [{
         role: 'user',
-        content: `Motivo da consulta: "${motivoConsulta}"\n\nGere as perguntas de pré-atendimento.`
+        content: `Motivo da consulta que o paciente mencionou: "${motivoConsulta}"\n\nGere as perguntas.`
       }]
     })
     const texto = res.content[0].type === 'text' ? res.content[0].text : ''
@@ -61,7 +83,7 @@ NÃO inclua comentários, markdown, ou texto fora do JSON.`
     if (!jsonMatch) return PERGUNTAS_FALLBACK
     const parsed = JSON.parse(jsonMatch[0])
     const perguntas: Pergunta[] = parsed.perguntas || []
-    if (perguntas.length < 2 || perguntas.length > 8) return PERGUNTAS_FALLBACK
+    if (perguntas.length < 2 || perguntas.length > 6) return PERGUNTAS_FALLBACK
     return perguntas
   } catch (e) {
     console.error('gerarPerguntasAdaptativas erro:', e)
@@ -70,16 +92,46 @@ NÃO inclua comentários, markdown, ou texto fora do JSON.`
 }
 
 const PERGUNTAS_FALLBACK: Pergunta[] = [
-  { chave: 'queixa_principal', texto: 'O que mais está te incomodando hoje?', contexto: 'queixa' },
-  { chave: 'tempo_sintoma', texto: 'Há quanto tempo está sentindo isso?', contexto: 'duração' },
-  { chave: 'medicacao_uso', texto: 'Está usando algum medicamento atualmente?', contexto: 'medicamentos' },
-  { chave: 'alergias', texto: 'Tem alguma alergia a medicamentos ou alimentos?', contexto: 'alergias' },
+  { chave: 'queixa', texto: 'Me conta, o que tá te incomodando?' },
+  { chave: 'tempo', texto: 'Já faz quanto tempo que começou?' },
+  { chave: 'medicacao', texto: 'Tá tomando algum remédio no momento?' },
+  { chave: 'alergia', texto: 'Tem alergia a algum medicamento ou alimento?' },
 ]
 
 /**
- * Cria uma pré-consulta nova no banco, no estado "aguardando_permissao".
- * Retorna o id da pré-consulta criada.
+ * Avalia se a resposta do paciente preenche a pergunta ou se precisa de follow-up.
+ * Retorna null se tá OK, ou uma mensagem de follow-up gentil se faltou info.
  */
+export async function avaliarRespostaERedigirFollowup(
+  pergunta: Pergunta,
+  resposta: string
+): Promise<string | null> {
+  // Se resposta muito curta ou claramente evasiva, pede complemento
+  const respostaLimpa = resposta.trim().toLowerCase()
+  const vazias = ['sim', 'nao', 'não', 'ok', 'talvez', 'pode ser', 'não sei', 'nao sei', '.', '?', 'hm']
+
+  if (respostaLimpa.length < 3 || vazias.includes(respostaLimpa)) {
+    // Resposta claramente insuficiente — pede complemento natural
+    const systemPrompt = `Você é uma assistente de clínica conversando no WhatsApp. A pessoa respondeu de forma muito curta ou evasiva a uma pergunta. Reformule a pergunta de forma mais acolhedora, sem parecer insistente. Seja jovem, descontraída, curta e natural. Máximo 1 frase, sem parecer formulário.`
+    try {
+      const res = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        system: systemPrompt,
+        messages: [{
+          role: 'user',
+          content: `Pergunta original: "${pergunta.texto}"\nResposta do paciente: "${resposta}"\n\nReformule de forma mais aberta e acolhedora. Se a resposta foi "não sei" ou similar, aceita e faz uma pergunta que facilite.`
+        }]
+      })
+      return res.content[0].type === 'text' ? res.content[0].text.trim() : null
+    } catch {
+      return null
+    }
+  }
+
+  return null // resposta OK, pode avançar
+}
+
 export async function iniciarPreAtendimento(params: {
   medico_id: string
   paciente_id: string
@@ -115,13 +167,12 @@ export async function iniciarPreAtendimento(params: {
 }
 
 /**
- * Registra resposta do paciente para a pergunta atual e avança.
- * Retorna próxima pergunta ou null se terminou.
+ * Registra resposta e avança. Agora também avalia se a resposta faz sentido.
  */
 export async function registrarRespostaEAvancar(
   preConsultaId: string,
   resposta: string
-): Promise<{ proxima?: Pergunta; completo: boolean }> {
+): Promise<{ proxima?: Pergunta; completo: boolean; followup?: string }> {
   const { data: pre } = await supabase
     .from('pre_consultas')
     .select('*')
@@ -134,6 +185,18 @@ export async function registrarRespostaEAvancar(
   const idx = pre.pergunta_atual_index || 0
   const perguntaAtual = perguntas[idx]
   if (!perguntaAtual) return { completo: true }
+
+  // Verifica se precisa de follow-up ANTES de avançar
+  const followup = await avaliarRespostaERedigirFollowup(perguntaAtual, resposta)
+  if (followup) {
+    // NÃO avança — salva a resposta atual como parcial e pede complemento
+    const respostasParciais = { ...pre.respostas, [perguntaAtual.chave + '_parcial']: resposta }
+    await supabase
+      .from('pre_consultas')
+      .update({ respostas: respostasParciais })
+      .eq('id', preConsultaId)
+    return { followup, completo: false }
+  }
 
   const novasRespostas = { ...pre.respostas, [perguntaAtual.chave]: resposta }
   const novoIdx = idx + 1
@@ -154,9 +217,6 @@ export async function registrarRespostaEAvancar(
     : { proxima: perguntas[novoIdx], completo: false }
 }
 
-/**
- * Busca pré-consulta ativa para uma conversa WhatsApp.
- */
 export async function getPreConsultaAtiva(conversa_id: string) {
   const { data } = await supabase
     .from('pre_consultas')
