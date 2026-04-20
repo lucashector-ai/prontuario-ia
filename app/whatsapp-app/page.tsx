@@ -5,6 +5,13 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import ConfigPanel from './ConfigPanel'
 
+function corAvatar(str:string): string {
+  const cores = ['#25d366','#00a884','#6043C1','#0d9488','#d97706','#dc2626','#7c3aed','#0891b2','#be185d','#065f46']
+  let hash = 0
+  for(let i=0;i<str.length;i++) hash = str.charCodeAt(i) + ((hash<<5)-hash)
+  return cores[Math.abs(hash)%cores.length]
+}
+
 export default function WhatsAppApp() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
