@@ -8,7 +8,7 @@ export function ReceitaCard({ receita, nomeMedico, crm, especialidade, onImprimi
   const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden' }}>
         <div style={{ background: '#f3f0fd', borderBottom: '1px solid #d4c9f7', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>{nomeMedico || 'Médico responsável'}</p>
@@ -66,7 +66,7 @@ export function ReceitaCard({ receita, nomeMedico, crm, especialidade, onImprimi
       </div>
 
       <button onClick={onImprimir} style={{
-        padding: '10px', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        padding: '10px', borderRadius: 8,
         background: 'white', color: '#3d5452', fontSize: 12, cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontWeight: 500,
       }}>

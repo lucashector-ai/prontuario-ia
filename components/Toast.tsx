@@ -44,7 +44,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               display: 'flex', alignItems: 'center', gap: 10,
               background: c.bg, border: `1px solid ${c.border}`,
               borderRadius: 10, padding: '11px 16px',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
               fontSize: 13, color: c.text, fontWeight: 500,
               minWidth: 240, maxWidth: 360,
               animation: 'toastIn 0.2s ease',

@@ -114,11 +114,11 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
       ))}
 
       {prontuario.cids?.length > 0 && (
-        <div style={{ background: '#f9fafb', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderRadius: 10, padding: '12px 14px' }}>
+        <div style={{ background: '#f9fafb', borderRadius: 10, padding: '12px 14px' }}>
           <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 10px' }}>CID-10 sugeridos</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {prontuario.cids.map((cid, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'white', borderRadius: 8, padding: '8px 10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'white', borderRadius: 8, padding: '8px 10px' }}>
                 <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#6043C1', background: '#f3f0fd', padding: '2px 8px', borderRadius: 5, border: '1px solid #d4c9f7', flexShrink: 0 }}>{cid.codigo}</span>
                 <div>
                   <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0 }}>{cid.descricao}</p>
@@ -132,7 +132,7 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
 
       {/* Assinatura */}
       {nomeMedico && (
-        <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 2px' }}>{hoje}</p>
             <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{nomeMedico}</p>
@@ -147,7 +147,7 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
       {/* Ações */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <button onClick={onCopiar} style={{
-          padding: '9px', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', background: 'white',
+          padding: '9px', borderRadius: 8, background: 'white',
           color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontWeight: 500,
         }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

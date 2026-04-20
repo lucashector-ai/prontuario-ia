@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F9FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
-      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #f0f0f0', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: '40px 36px', width: '100%', maxWidth: 380 }}>
+      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #f0f0f0', padding: '40px 36px', width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ width: 48, height: 48, background: '#f0ebff', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
             <svg width="22" height="22" fill="none" stroke="#6043C1" strokeWidth="2" viewBox="0 0 24 24">

@@ -87,7 +87,7 @@ export default function Exames() {
                 <div style={{ position: 'relative', width: '100%' }}>
                   <img src={preview} alt="Exame" style={{ width: '100%', maxHeight: 400, objectFit: 'contain' }}/>
                   <button onClick={e => { e.stopPropagation(); setImagem(null); setPreview(null); setAnalise(null) }}
-                    style={{ position: 'absolute', top: 10, right: 10, background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 8, padding: '4px 10px', fontSize: 12, cursor: 'pointer', color: '#6b7280' }}>
+                    style={{ position: 'absolute', top: 10, right: 10, background: 'white', borderRadius: 8, padding: '4px 10px', fontSize: 12, cursor: 'pointer', color: '#6b7280' }}>
                     Trocar imagem
                   </button>
                 </div>
@@ -107,12 +107,12 @@ export default function Exames() {
             <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }}
               onChange={e => { const f = e.target.files?.[0]; if (f) handleImagem(f) }}/>
 
-            <div style={{ background: '#F9FAFC', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 12, padding: '16px 20px' }}>
+            <div style={{ background: '#F9FAFC', borderRadius: 12, padding: '16px 20px' }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 8 }}>
                 Contexto clínico <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>(opcional)</span>
               </label>
               <textarea value={contexto} onChange={e => setContexto(e.target.value)}
-                style={{ width: '100%', minHeight: 80, fontSize: 13, borderRadius: 8, padding: '10px 12px', resize: 'vertical', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', color: '#374151', lineHeight: 1.6 }}
+                style={{ width: '100%', minHeight: 80, fontSize: 13, borderRadius: 8, padding: '10px 12px', resize: 'vertical', color: '#374151', lineHeight: 1.6 }}
                 placeholder="Ex: Paciente com diabetes e hipertensão, 58 anos, em acompanhamento por dislipidemia..."/>
             </div>
 
@@ -150,7 +150,7 @@ export default function Exames() {
           {analise && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, overflow: 'auto' }}>
               {/* Header do exame */}
-              <div style={{ background: '#F9FAFC', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 12, padding: '16px 20px' }}>
+              <div style={{ background: '#F9FAFC', borderRadius: 12, padding: '16px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>{analise.tipo_exame}</p>
@@ -175,7 +175,7 @@ export default function Exames() {
 
               {/* Valores */}
               {analise.valores?.length > 0 && (
-                <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+                <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 16px', borderBottom: 'none' }}>
                     <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: 0, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Valores encontrados</p>
                   </div>
@@ -203,7 +203,7 @@ export default function Exames() {
               )}
 
               {/* Conclusão */}
-              <div style={{ background: '#F9FAFC', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 12, padding: '16px 20px' }}>
+              <div style={{ background: '#F9FAFC', borderRadius: 12, padding: '16px 20px' }}>
                 <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Conclusão clínica</p>
                 <p style={{ fontSize: 13, color: '#374151', margin: 0, lineHeight: 1.7 }}>{analise.conclusao}</p>
               </div>

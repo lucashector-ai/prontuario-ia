@@ -616,7 +616,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 900 }}>
           {/* Preview camera */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ width: 'min(460px,90vw)', aspectRatio: '4/3', borderRadius: 12, overflow: 'hidden', background: '#1f2937', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+            <div style={{ width: 'min(460px,90vw)', aspectRatio: '4/3', borderRadius: 12, overflow: 'hidden', background: '#1f2937', position: 'relative' }}>
               <video ref={esperaRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
               {!camOn && (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1f2937' }}>

@@ -39,7 +39,7 @@ export default function LoginAtendente() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-      <div style={{ background: 'white', borderRadius: 16, padding: 40, width: 380, boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+      <div style={{ background: 'white', borderRadius: 16, padding: 40, width: 380 }}>
         {/* Logo WA */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ width: 64, height: 64, background: '#25d366', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>

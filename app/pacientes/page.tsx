@@ -112,7 +112,7 @@ export default function Pacientes() {
           <div style={{ maxWidth: 760, margin: '0 auto' }}>
 
             {mostrarForm && (
-              <div style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, padding: 24, marginBottom: 20 }}>
+              <div style={{ background: 'white', borderRadius: 14, padding: 24, marginBottom: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                   <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Cadastrar novo paciente</h2>
                   <button onClick={() => setMostrarForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 18 }}>✕</button>
@@ -149,7 +149,7 @@ export default function Pacientes() {
                     <button type="submit" disabled={salvando} style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                       {salvando ? 'Cadastrando...' : 'Cadastrar e abrir ficha'}
                     </button>
-                    <button type="button" onClick={() => setMostrarForm(false)} style={{ padding: '11px 20px', borderRadius: 9, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+                    <button type="button" onClick={() => setMostrarForm(false)} style={{ padding: '11px 20px', borderRadius: 9, background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
                   </div>
                 </form>
               </div>
@@ -158,7 +158,7 @@ export default function Pacientes() {
             <div style={{ position: 'relative', marginBottom: 16 }}>
               <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
               <input value={busca} onChange={e => setBusca(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px 10px 36px', fontSize: 13, borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', background: 'white' }}
+                style={{ width: '100%', padding: '10px 12px 10px 36px', fontSize: 13, borderRadius: 10, background: 'white' }}
                 placeholder="Buscar paciente por nome ou telefone..."/>
             </div>
 
@@ -179,7 +179,7 @@ export default function Pacientes() {
                   const ini = p.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
                   return (
                     <div key={p.id} onClick={() => router.push(`/pacientes/${p.id}`)}
-                      style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
+                      style={{ background: 'white', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
                       onMouseOver={e => { e.currentTarget.style.borderColor = '#d4c9f7'; e.currentTarget.style.background = '#fafffe' }}
                       onMouseOut={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.background = 'white' }}>
                       <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f3f0fd', border: '1.5px solid #d4c9f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#6043C1', flexShrink: 0 }}>{ini}</div>

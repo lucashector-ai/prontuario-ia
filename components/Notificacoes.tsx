@@ -64,7 +64,7 @@ export function Notificacoes({ medicoId }: { medicoId: string }) {
           <div style={{
             position: 'absolute', right: 0, top: '100%', marginTop: 8,
             width: 340, background: 'white', borderRadius: 12,
-            border: '1px solid #f0f0f0', boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+            border: '1px solid #f0f0f0',
             zIndex: 50, overflow: 'hidden'
           }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #f9fafb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

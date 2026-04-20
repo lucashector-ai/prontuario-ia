@@ -367,7 +367,7 @@ export default function WhatsAppApp() {
               {menuLista&&(
                 <>
                   <div style={{position:'fixed' as const,inset:0,zIndex:50}} onClick={()=>setMenuLista(false)}/>
-                  <div style={{position:'absolute' as const,right:0,top:40,background:'white',borderRadius:10,boxShadow:'0 4px 20px rgba(0,0,0,0.15)',zIndex:51,minWidth:200,overflow:'hidden',padding:'4px 0'}}>
+                  <div style={{position:'absolute' as const,right:0,top:40,background:'white',borderRadius:10,zIndex:51,minWidth:200,overflow:'hidden',padding:'4px 0'}}>
                     {[
                       {label:'Nova conversa',fn:()=>{setNovaConversa(v=>!v);setMenuLista(false)}},
                       {label:'Marcar todas lidas',fn:async()=>{await Promise.all(conversas.map(cv=>supabase.from('whatsapp_mensagens').update({lida:true}).eq('conversa_id',cv.id).eq('tipo','recebida')));carregarConversas();setMenuLista(false)}},
@@ -624,7 +624,7 @@ export default function WhatsAppApp() {
       {showInfo&&(
         <>
           <div style={{position:'fixed' as const,inset:0,zIndex:100}} onClick={()=>setShowInfo(false)}/>
-          <div style={{position:'fixed' as const,left:60,top:200,background:'white',borderRadius:12,boxShadow:'0 8px 32px rgba(0,0,0,0.15)',zIndex:101,width:280,padding:20}}>
+          <div style={{position:'fixed' as const,left:60,top:200,background:'white',borderRadius:12,zIndex:101,width:280,padding:20}}>
             <p style={{fontSize:13,fontWeight:600,color:'#00a884',margin:'0 0 14px',letterSpacing:'0.05em'}}>CONEXÃO WHATSAPP</p>
             <div style={{display:'flex',flexDirection:'column' as const,gap:10}}>
               <div style={{padding:'10px 12px',background:'#f0f2f5',borderRadius:8}}>
@@ -651,7 +651,7 @@ export default function WhatsAppApp() {
       {menuConversa&&(
         <>
           <div style={{position:'fixed',inset:0,zIndex:100}} onClick={()=>setMenuConversa(null)}/>
-          <div style={{position:'fixed',left:menuConversa.x,top:menuConversa.y,background:'white',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,0.15)',zIndex:101,minWidth:210,overflow:'hidden',padding:'4px 0'}}>
+          <div style={{position:'fixed',left:menuConversa.x,top:menuConversa.y,background:'white',borderRadius:10,zIndex:101,minWidth:210,overflow:'hidden',padding:'4px 0'}}>
             {[
               {label:'Marcar como não lida',fn:async()=>{await supabase.from('whatsapp_mensagens').update({lida:false}).eq('conversa_id',menuConversa.id).eq('tipo','recebida');carregarConversas();setMenuConversa(null)}},
               {label:'Limpar mensagens',fn:async()=>{if(confirm('Limpar mensagens?')){await supabase.from('whatsapp_mensagens').delete().eq('conversa_id',menuConversa.id);if(ativa?.id===menuConversa.id) setMensagens([]);setMenuConversa(null)}}},
@@ -764,7 +764,7 @@ export default function WhatsAppApp() {
                 {menuHeader&&(
                   <>
                     <div style={{position:'fixed' as const,inset:0,zIndex:50}} onClick={()=>setMenuHeader(false)}/>
-                    <div style={{position:'absolute' as const,right:0,top:40,background:'white',borderRadius:8,boxShadow:'0 4px 20px rgba(0,0,0,0.15)',zIndex:51,minWidth:200,overflow:'hidden',padding:'4px 0'}}>
+                    <div style={{position:'absolute' as const,right:0,top:40,background:'white',borderRadius:8,zIndex:51,minWidth:200,overflow:'hidden',padding:'4px 0'}}>
                       {[
                         {label:'Dados do contato'},
                         {label:'Mensagens favoritas'},
@@ -806,7 +806,7 @@ export default function WhatsAppApp() {
                 <div key={m.id}>
                   {mostraData&&(
                     <div style={{textAlign:'center',margin:'12px 0'}}>
-                      <span style={{fontSize:12,color:'#54656f',background:'rgba(255,255,255,0.85)',padding:'5px 14px',borderRadius:8,boxShadow:'0 1px 2px rgba(0,0,0,0.1)'}}>{fmtData(m.criado_em)}</span>
+                      <span style={{fontSize:12,color:'#54656f',background:'rgba(255,255,255,0.85)',padding:'5px 14px',borderRadius:8}}>{fmtData(m.criado_em)}</span>
                     </div>
                   )}
                   {isSistema?(
@@ -815,7 +815,7 @@ export default function WhatsAppApp() {
                     </div>
                   ):(
                     <div style={{display:'flex',flexDirection:'column' as const,alignItems:rec?'flex-start':'flex-end',marginBottom:2}}>
-                      <div style={{maxWidth:'65%',padding:'6px 10px 8px',borderRadius:rec?'0 7.5px 7.5px 7.5px':'7.5px 7.5px 0 7.5px',background:rec?'#ffffff':'#d9fdd3',boxShadow:'0 1px 0.5px rgba(0,0,0,0.13)'}}>
+                      <div style={{maxWidth:'65%',padding:'6px 10px 8px',borderRadius:rec?'0 7.5px 7.5px 7.5px':'7.5px 7.5px 0 7.5px',background:rec?'#ffffff':'#d9fdd3'}}>
                         {!rec&&isIA&&<p style={{fontSize:11,fontWeight:700,color:'#00a884',margin:'0 0 2px',textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>Sofia IA</p>}
                         {!rec&&!isIA&&m.metadata?.remetente&&<p style={{fontSize:11,fontWeight:600,color:'#53bdeb',margin:'0 0 2px'}}>{m.metadata.remetente}</p>}
                         <p style={{fontSize:14,color:'#111827',margin:0,lineHeight:1.5,wordBreak:'break-word' as const}} dangerouslySetInnerHTML={{__html:md(m.conteudo)}}/>
@@ -828,7 +828,7 @@ export default function WhatsAppApp() {
                         <div style={{display:'flex',flexDirection:'column' as const,gap:4,marginTop:6,maxWidth:'65%'}}>
                           {m.metadata.botoes.map((b:string,i:number)=>(
                             <button key={i} className="botao-resp" onClick={()=>enviarResposta(b)}
-                              style={{padding:'10px 16px',borderRadius:8,border:'1px solid #25d366',background:'white',color:'#128c7e',fontSize:14,cursor:'pointer',textAlign:'center' as const,fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 1px 2px rgba(0,0,0,0.1)',transition:'all 0.15s'}}>
+                              style={{padding:'10px 16px',borderRadius:8,border:'1px solid #25d366',background:'white',color:'#128c7e',fontSize:14,cursor:'pointer',textAlign:'center' as const,fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',gap:8,transition:'all 0.15s'}}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
                               {b}
                             </button>
@@ -852,7 +852,7 @@ export default function WhatsAppApp() {
               {showEmoji&&(
                 <>
                   <div style={{position:'fixed' as const,inset:0,zIndex:50}} onClick={()=>setShowEmoji(false)}/>
-                  <div style={{position:'absolute' as const,bottom:50,left:0,background:'white',borderRadius:12,boxShadow:'0 4px 20px rgba(0,0,0,0.15)',zIndex:51,padding:12,display:'flex',flexWrap:'wrap' as const,gap:4,width:280}}>
+                  <div style={{position:'absolute' as const,bottom:50,left:0,background:'white',borderRadius:12,zIndex:51,padding:12,display:'flex',flexWrap:'wrap' as const,gap:4,width:280}}>
                     {['😊','😂','❤️','👍','🙏','😭','😍','🎉','🔥','✅','⚠️','📅','💊','🏥','👨‍⚕️','🩺','💉','🩹','📋','📞','⏰','🔔','✉️','📲','👋','😷','🤒','💪','🌟','👏'].map(e=>(
                       <button key={e} onClick={()=>{setMsg(p=>p+e);setShowEmoji(false)}} style={{fontSize:22,background:'none',border:'none',cursor:'pointer',padding:'4px',borderRadius:6,lineHeight:1}} onMouseEnter={el=>(el.currentTarget.style.background='#f0f2f5')} onMouseLeave={el=>(el.currentTarget.style.background='none')}>{e}</button>
                     ))}
@@ -870,7 +870,7 @@ export default function WhatsAppApp() {
               if(nova) setMensagens(p=>[...p,nova])
               e.target.value=''
             }}/>
-            <div style={{flex:1,background:'white',borderRadius:24,padding:'9px 16px',display:'flex',alignItems:'flex-end',boxShadow:'0 1px 2px rgba(0,0,0,0.1)'}}>
+            <div style={{flex:1,background:'white',borderRadius:24,padding:'9px 16px',display:'flex',alignItems:'flex-end'}}>
               {gravando?(
                 <div style={{flex:1,display:'flex',alignItems:'center',gap:8}}>
                   <div style={{width:8,height:8,borderRadius:'50%',background:'#f15c6d',animation:'pulse 1s infinite',flexShrink:0}}/>

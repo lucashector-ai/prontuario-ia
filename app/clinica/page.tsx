@@ -125,7 +125,7 @@ export default function ClinicaPage() {
           )}
 
           {/* Card da clínica */}
-          <div style={{ background: "white", borderRadius: 14, boxShadow: "0 1px 3px rgba(0,0,0,0.07)", padding: "20px 24px" }}>
+          <div style={{ background: "white", borderRadius: 14, padding: "20px 24px" }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>{clinica?.nome}</h2>
@@ -154,7 +154,7 @@ export default function ClinicaPage() {
 
           {/* Form novo médico */}
           {showForm && (
-            <div style={{ background: "white", borderRadius: 14, boxShadow: "0 1px 3px rgba(0,0,0,0.07)", padding: "20px 24px" }}>
+            <div style={{ background: "white", borderRadius: 14, padding: "20px 24px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: 0 }}>Adicionar médico à clínica</h3>
                 <button onClick={() => setShowForm(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>×</button>
@@ -182,7 +182,7 @@ export default function ClinicaPage() {
           )}
 
           {/* Lista de médicos */}
-          <div style={{ background: "white", borderRadius: 14, boxShadow: "0 1px 3px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+          <div style={{ background: "white", borderRadius: 14, overflow: "hidden" }}>
             <div style={{ padding: "14px 20px", borderBottom: "1px solid #f9fafb" }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: 0 }}>Equipe médica ({medicos.length})</p>
             </div>
@@ -226,7 +226,7 @@ export default function ClinicaPage() {
           </div>
 
           {/* Upgrade de plano */}
-          <div style={{ background: "white", borderRadius: 14, boxShadow: "0 1px 3px rgba(0,0,0,0.07)", padding: "20px 24px" }}>
+          <div style={{ background: "white", borderRadius: 14, padding: "20px 24px" }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 16px" }}>Planos disponíveis</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {Object.entries(PLANOS).map(([id, p]) => {

@@ -137,7 +137,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
   return (
     <div style={{position:'fixed',inset:0,zIndex:200,display:'flex'}}>
       <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.4)'}} onClick={onClose}/>
-      <div style={{position:'relative',width:860,maxWidth:'96vw',background:'white',marginLeft:'auto',display:'flex',flexDirection:'column',height:'100vh',boxShadow:'-4px 0 32px rgba(0,0,0,0.2)'}}>
+      <div style={{position:'relative',width:860,maxWidth:'96vw',background:'white',marginLeft:'auto',display:'flex',flexDirection:'column',height:'100vh'}}>
         
         {/* Header */}
         <div style={{padding:'16px 24px',borderBottom:'1px solid #e5e7eb',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0,background:'white'}}>
@@ -203,7 +203,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
                 <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
                   <span style={{fontSize:13,color:'#6b7280'}}>Sofia {sofiaAtiva?'ativa':'pausada'}</span>
                   <div onClick={()=>setSofiaAtiva(v=>!v)} style={{width:44,height:24,borderRadius:12,background:sofiaAtiva?'#00a884':'#d1d5db',cursor:'pointer',position:'relative',transition:'background 0.2s'}}>
-                    <div style={{position:'absolute',width:20,height:20,borderRadius:'50%',background:'white',top:2,left:sofiaAtiva?22:2,transition:'left 0.2s',boxShadow:'0 1px 4px rgba(0,0,0,0.2)'}}/>
+                    <div style={{position:'absolute',width:20,height:20,borderRadius:'50%',background:'white',top:2,left:sofiaAtiva?22:2,transition:'left 0.2s'}}/>
                   </div>
                 </label>
               </div>

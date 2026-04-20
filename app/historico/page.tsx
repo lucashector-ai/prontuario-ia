@@ -95,7 +95,7 @@ export default function Historico() {
 
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden', borderRadius: 12 }}>
           {/* Lista */}
-          <div style={{ borderRight: 'none', overflow: 'auto', background: 'white', padding: '12px 10px', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', height: '100%' }}>
+          <div style={{ borderRight: 'none', overflow: 'auto', background: 'white', padding: '12px 10px', borderRadius: 12, height: '100%' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px 12px' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -151,13 +151,13 @@ export default function Historico() {
                         <button onClick={handleSalvar} disabled={salvando} style={{ fontSize: 12, fontWeight: 600, color: 'white', background: '#6043C1', border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
                           {salvando ? 'Salvando...' : 'Salvar alterações'}
                         </button>
-                        <button onClick={() => setEditando(false)} style={{ fontSize: 12, color: '#3d5452', background: '#F9FAFC', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
+                        <button onClick={() => setEditando(false)} style={{ fontSize: 12, color: '#3d5452', background: '#F9FAFC', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
                           Cancelar
                         </button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => setEditando(true)} style={{ fontSize: 12, color: '#3d5452', background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '7px 14px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <button onClick={() => setEditando(true)} style={{ fontSize: 12, color: '#3d5452', background: 'white', padding: '7px 14px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                           Editar
                         </button>
@@ -188,7 +188,7 @@ export default function Historico() {
                       {editando ? (
                         <textarea value={editForm[key] || ''}
                           onChange={e => setEditForm((f: any) => ({...f, [key]: e.target.value}))}
-                          style={{ width: '100%', minHeight: 80, fontSize: 13, lineHeight: 1.6, padding: '8px', resize: 'vertical', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', background: 'white', color: '#3d5452' }}/>
+                          style={{ width: '100%', minHeight: 80, fontSize: 13, lineHeight: 1.6, padding: '8px', resize: 'vertical', borderRadius: 8, background: 'white', color: '#3d5452' }}/>
                       ) : (
                         <p style={{ fontSize: 13, color: '#3d5452', margin: 0, lineHeight: 1.7 }}>{(selecionada as any)[key] || '—'}</p>
                       )}
@@ -196,7 +196,7 @@ export default function Historico() {
                   ))}
 
                   {selecionada.cids?.length > 0 && (
-                    <div style={{ background: '#F9FAFC', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderRadius: 10, padding: '14px 16px' }}>
+                    <div style={{ background: '#F9FAFC', borderRadius: 10, padding: '14px 16px' }}>
                       <p style={{ fontSize: 10, fontWeight: 700, color: '#8aa8a5', margin: '0 0 10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>CID-10</p>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {selecionada.cids.map((cid: any, i: number) => (

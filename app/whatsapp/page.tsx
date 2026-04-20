@@ -412,10 +412,10 @@ REGRAS:
         {aba === 'conversas' && (
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden', gap: 16 }}>
             {/* Lista conversas */}
-            <div style={{ width: 300, background: 'white', borderRight: 'none', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+            <div style={{ width: 300, background: 'white', borderRight: 'none', borderRadius: 12, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
               <div style={{ padding: '10px 12px', borderBottom: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, padding: '7px 10px', fontSize: 12, borderRadius: 7, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', background: '#f9fafb', outline: 'none' }} placeholder="Pesquisar"/>
+                  <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, padding: '7px 10px', fontSize: 12, borderRadius: 7, background: '#f9fafb', outline: 'none' }} placeholder="Pesquisar"/>
                   <button onClick={() => setNovaConversa(true)} title="Nova conversa" style={{ width: 34, height: 34, borderRadius: 7, border: 'none', background: '#6043C1', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                   </button>
@@ -440,7 +440,7 @@ REGRAS:
                   <input value={novaMsgTexto} onChange={e => setNovaMsgTexto(e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 12, borderRadius: 7, border: '1px solid #d4c9f7', marginBottom: 8, outline: 'none' }} placeholder="Primeira mensagem..."/>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={iniciarConversa} disabled={iniciando || !novoTel || !novaMsgTexto} style={{ flex: 1, padding: '7px', fontSize: 11, fontWeight: 700, borderRadius: 7, border: 'none', background: '#6043C1', color: 'white', cursor: 'pointer' }}>{iniciando ? 'Enviando...' : 'Iniciar'}</button>
-                    <button onClick={() => { setNovaConversa(false); setNovoTel(''); setNovaMsgTexto('') }} style={{ padding: '7px 12px', fontSize: 11, borderRadius: 7, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', background: 'white', cursor: 'pointer', color: '#6b7280' }}>Cancelar</button>
+                    <button onClick={() => { setNovaConversa(false); setNovoTel(''); setNovaMsgTexto('') }} style={{ padding: '7px 12px', fontSize: 11, borderRadius: 7, background: 'white', cursor: 'pointer', color: '#6b7280' }}>Cancelar</button>
                   </div>
                 </div>
               )}
@@ -555,14 +555,14 @@ REGRAS:
                       <div key={m.id + '_wrapper'}>
                         {mostraData && (
                           <div style={{ textAlign: 'center', margin: '12px 0 8px' }}>
-                            <span style={{ fontSize: 11, color: '#667781', background: 'rgba(255,255,255,0.85)', padding: '4px 12px', borderRadius: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>{fmtData(m.criado_em)}</span>
+                            <span style={{ fontSize: 11, color: '#667781', background: 'rgba(255,255,255,0.85)', padding: '4px 12px', borderRadius: 8 }}>{fmtData(m.criado_em)}</span>
                           </div>
                         )}
                       <div key={m.id}
                         style={{ display: 'flex', justifyContent: rec ? 'flex-start' : 'flex-end', marginBottom: 2, position: 'relative' as const }}
                         onMouseEnter={() => setMsgHover(String(m.id))}
                         onMouseLeave={() => { setMsgHover(null); setMsgMenu(null) }}>
-                        <div style={{ maxWidth: '65%', padding: '7px 10px 6px 10px', borderRadius: rec ? '0px 10px 10px 10px' : '10px 10px 0px 10px', background: rec ? 'white' : (isIA ? '#d9fdd3' : '#d1e7ff'), boxShadow: '0 1px 2px rgba(0,0,0,0.15)', position: 'relative' as const }}>
+                        <div style={{ maxWidth: '65%', padding: '7px 10px 6px 10px', borderRadius: rec ? '0px 10px 10px 10px' : '10px 10px 0px 10px', background: rec ? 'white' : (isIA ? '#d9fdd3' : '#d1e7ff'), position: 'relative' as const }}>
                           {!rec && isIA && <p style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sofia IA</p>}
                           {!rec && !isIA && remetente && <p style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', margin: '0 0 3px' }}>{remetente}</p>}
                           <p style={{ fontSize: 13, color: '#111827', margin: 0, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: m.conteudo
@@ -583,7 +583,7 @@ REGRAS:
                         )}
                         {/* Menu contexto */}
                         {msgMenu === String(m.id) && (
-                          <div style={{ position: 'absolute' as const, top: 30, right: rec ? 'auto' : 4, left: rec ? 4 : 'auto', background: 'white', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', zIndex: 20, minWidth: 160, overflow: 'hidden' }}>
+                          <div style={{ position: 'absolute' as const, top: 30, right: rec ? 'auto' : 4, left: rec ? 4 : 'auto', background: 'white', borderRadius: 8, zIndex: 20, minWidth: 160, overflow: 'hidden' }}>
                             {[
                               { label: '↩ Responder', fn: () => { setRespondendoMsg(m); setMsgMenu(null) } },
                               { label: '📋 Copiar', fn: () => { navigator.clipboard.writeText(m.conteudo); setMsgMenu(null) } },
@@ -647,7 +647,7 @@ REGRAS:
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-5H6.5C6.78 9.5 9.13 8 12 8s5.22 1.5 5.5 3.5z"/></svg>
                   </button>
                   {/* Campo de texto */}
-                  <div style={{ flex: 1, background: 'white', borderRadius: 24, padding: '8px 16px', display: 'flex', alignItems: 'flex-end', minHeight: 42, boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                  <div style={{ flex: 1, background: 'white', borderRadius: 24, padding: '8px 16px', display: 'flex', alignItems: 'flex-end', minHeight: 42 }}>
                     {gravandoAudio ? (
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', animation: 'pulse 1s infinite' }}/>
@@ -685,7 +685,7 @@ REGRAS:
               </div>
             ) : (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', flexDirection: 'column', gap: 16 }}>
-                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 175.216 175.552">
                     <path fill="#25D366" d="M87.184 25.227c-33.733 0-61.166 27.423-61.178 61.13a60.98 60.98 0 0 0 9.349 32.535l1.455 2.313-6.179 22.558 23.146-6.069 2.235 1.324c9.387 5.571 20.15 8.517 31.126 8.523h.023c33.707 0 61.14-27.426 61.153-61.135a60.75 60.75 0 0 0-17.895-43.251 60.75 60.75 0 0 0-43.235-17.928z"/>
                     <path fill="#fff" fillRule="evenodd" d="M68.772 55.603c-1.378-3.061-2.828-3.123-4.137-3.176l-3.524-.043c-1.226 0-3.218.46-4.902 2.3s-6.435 6.287-6.435 15.332 6.588 17.785 7.506 19.013 12.718 20.381 31.405 27.75c15.529 6.124 18.689 4.906 22.061 4.6s10.877-4.447 12.408-8.74 1.532-7.971 1.073-8.74-1.685-1.226-3.525-2.146-10.877-5.367-12.562-5.981-2.91-.919-4.137.921-4.746 5.979-5.819 7.206-2.144 1.381-3.984.462-7.76-2.861-14.784-9.124c-5.465-4.873-9.154-10.891-10.228-12.73s-.114-2.835.808-3.751c.825-.824 1.838-2.147 2.759-3.22s1.224-1.84 1.836-3.065.307-2.301-.153-3.22-4.032-10.011-5.666-13.647"/>
@@ -709,7 +709,7 @@ REGRAS:
         {aba === 'sofia' && (
           <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
             <div style={{ maxWidth: 720 }}>
-              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Sofia IA  Assistente Virtual</h2>
@@ -735,7 +735,7 @@ REGRAS:
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={salvarSofia} disabled={salvandoSofia} style={{ padding: '9px 20px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvandoSofia ? 'Salvando...' : 'Salvar'}</button>
-                    <button onClick={() => setSofiaPrompt(PROMPT_DEFAULT)} style={{ padding: '9px 14px', borderRadius: 9, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', background: 'white', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>Restaurar padrao</button>
+                    <button onClick={() => setSofiaPrompt(PROMPT_DEFAULT)} style={{ padding: '9px 14px', borderRadius: 9, background: 'white', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>Restaurar padrao</button>
                     {sofiaMsg && <span style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, alignSelf: 'center' }}>{sofiaMsg}</span>}
                   </div>
                 </div>
@@ -748,7 +748,7 @@ REGRAS:
         {aba === 'equipe' && (
           <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
             <div style={{ maxWidth: 680 }}>
-              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
+              <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Equipe de atendimento</h2>
                   <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Atendentes podem acessar a plataforma e responder conversas com o proprio nome</p>
@@ -768,7 +768,7 @@ REGRAS:
                   ))}
                 </div>
               </div>
-              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Adicionar atendente</h2>
                 </div>
@@ -820,7 +820,7 @@ REGRAS:
                     Mensagens de risco ({alertas.length})
                   </p>
                   {alertas.map((a: any) => (
-                    <div key={a.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16, marginBottom: 10, borderLeft: '4px solid #dc2626' }}>
+                    <div key={a.id} style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 10, borderLeft: '4px solid #dc2626' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                         <div>
                           <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>
@@ -871,14 +871,14 @@ REGRAS:
                   )}
                 </div>
                 {inativos.length === 0 ? (
-                  <div style={{ background: 'white', borderRadius: 12, padding: 24, textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+                  <div style={{ background: 'white', borderRadius: 12, padding: 24, textAlign: 'center' }}>
                     <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>Nenhum paciente inativo nos ultimos 7 dias</p>
                   </div>
                 ) : (
                   inativos.map((p: any) => {
                     const dias = Math.floor((Date.now() - new Date(p.ultimo_contato).getTime()) / (1000 * 60 * 60 * 24))
                     return (
-                      <div key={p.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 14, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div key={p.id} style={{ background: 'white', borderRadius: 12, padding: 14, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div>
                           <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>{p.nome_contato}</p>
                           <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{p.telefone} - Ultimo contato: {dias} dias atras</p>
@@ -900,7 +900,7 @@ REGRAS:
               <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Campanhas</h2>
               <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px' }}>Envie mensagens personalizadas para seus pacientes</p>
 
-              <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20, marginBottom: 24 }}>
+              <div style={{ background: 'white', borderRadius: 12, padding: 20, marginBottom: 24 }}>
                 <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', margin: '0 0 12px' }}>Nova campanha</p>
                 <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px' }}>Use {"{{nome}}"} para personalizar com o nome do paciente</p>
                 <textarea
@@ -934,7 +934,7 @@ REGRAS:
                 <div>
                   <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Campanhas anteriores</p>
                   {campanhas.map((c: any) => (
-                    <div key={c.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 14, marginBottom: 8 }}>
+                    <div key={c.id} style={{ background: 'white', borderRadius: 12, padding: 14, marginBottom: 8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                         <span style={{ fontSize: 12, color: '#6b7280' }}>{new Date(c.criado_em).toLocaleDateString('pt-BR')}</span>
                         <span style={{ fontSize: 12, fontWeight: 600, color: '#6043C1' }}>{c.total_enviado}/{c.total_destino} enviados</span>
@@ -976,20 +976,20 @@ REGRAS:
                       { label: 'Novos pacientes WPP', valor: relatorio.novos_pacientes_wpp, cor: '#0891b2' },
                       { label: 'Alertas pendentes', valor: relatorio.alertas_pendentes?.length || 0, cor: '#dc2626' },
                     ].map((item: any) => (
-                      <div key={item.label} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16, textAlign: 'center' }}>
+                      <div key={item.label} style={{ background: 'white', borderRadius: 12, padding: 16, textAlign: 'center' }}>
                         <p style={{ fontSize: 28, fontWeight: 800, color: item.cor, margin: '0 0 4px' }}>{item.valor}</p>
                         <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{item.label}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20, marginBottom: 16 }}>
+                  <div style={{ background: 'white', borderRadius: 12, padding: 20, marginBottom: 16 }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Resumo IA</p>
                     <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-line' }}>{relatorio.resumo_ia}</p>
                   </div>
 
                   {relatorio.proximos_agendamentos?.length > 0 && (
-                    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
+                    <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Próximos agendamentos</p>
                       {relatorio.proximos_agendamentos.slice(0, 5).map((a: any, i: number) => (
                         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < 4 ? '1px solid #f3f4f6' : 'none' }}>
@@ -1003,7 +1003,7 @@ REGRAS:
               )}
 
               {!relatorio && !relatorioCarregando && (
-                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
                   <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Relatorio semanal com IA</p>
                   <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Clique em "Gerar relatorio" para ver o resumo da semana</p>
@@ -1032,7 +1032,7 @@ REGRAS:
               </div>
 
               {aderencias.length === 0 ? (
-                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
                   <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Score de aderencia</p>
                   <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Clique em "Carregar scores" para ver o ranking de aderencia dos pacientes</p>
@@ -1042,7 +1042,7 @@ REGRAS:
                   const cor = a.nivel === 'alto' ? '#16a34a' : a.nivel === 'medio' ? '#d97706' : '#dc2626'
                   const bgCor = a.nivel === 'alto' ? '#f0fdf4' : a.nivel === 'medio' ? '#fffbeb' : '#fef2f2'
                   return (
-                    <div key={a.paciente_id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16, marginBottom: 10 }}>
+                    <div key={a.paciente_id} style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 10 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                         <div>
                           <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>{a.pacientes?.nome || a.paciente}</p>
@@ -1097,7 +1097,7 @@ REGRAS:
               </div>
 
               {agenda24h.length === 0 ? (
-                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
                   <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Nenhuma consulta pendente</p>
                   <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Clique em "Ver pendentes" para carregar os agendamentos</p>
@@ -1107,7 +1107,7 @@ REGRAS:
                   const statusCor = a.status === 'confirmacao_enviada' ? '#d97706' : '#6043C1'
                   const statusBg = a.status === 'confirmacao_enviada' ? '#fffbeb' : '#ede9fb'
                   return (
-                    <div key={a.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16, marginBottom: 10 }}>
+                    <div key={a.id} style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 10 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                           <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>{(a.pacientes as any)?.nome || 'Paciente'}</p>
@@ -1149,7 +1149,7 @@ REGRAS:
                       { label: 'Msgs enviadas/semana', valor: metricas.mensagens_semana?.enviadas || 0, cor: '#059669', sub: metricas.mensagens_semana?.recebidas + ' recebidas' },
                       { label: 'Taxa de resposta', valor: metricas.taxa_resposta + '%', cor: '#7c3aed', sub: 'Ultimos 7 dias' },
                     ].map((item: any) => (
-                      <div key={item.label} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16 }}>
+                      <div key={item.label} style={{ background: 'white', borderRadius: 12, padding: 16 }}>
                         <p style={{ fontSize: 26, fontWeight: 800, color: item.cor, margin: '0 0 4px' }}>{item.valor}</p>
                         <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 2px' }}>{item.label}</p>
                         <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{item.sub}</p>
@@ -1158,7 +1158,7 @@ REGRAS:
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
+                    <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 16px' }}>Acoes rapidas</p>
                       {[
                         { label: 'Ver alertas de risco', aba: 'alertas', cor: '#dc2626' },
@@ -1172,7 +1172,7 @@ REGRAS:
                       ))}
                     </div>
 
-                    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
+                    <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 16px' }}>Status do sistema</p>
                       {[
                         { label: 'Sofia IA', status: 'Ativa', cor: '#059669' },
@@ -1191,7 +1191,7 @@ REGRAS:
               )}
 
               {!metricas && (
-                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
                   <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Clique em "Atualizar" para carregar as metricas</p>
                 </div>
@@ -1235,7 +1235,7 @@ REGRAS:
                       { label: 'Promotores', valor: npsData.promotores, cor: '#059669' },
                       { label: 'Detratores', valor: npsData.detratores, cor: '#dc2626' },
                     ].map((item: any) => (
-                      <div key={item.label} style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16, textAlign: 'center' }}>
+                      <div key={item.label} style={{ background: 'white', borderRadius: 12, padding: 16, textAlign: 'center' }}>
                         <p style={{ fontSize: 28, fontWeight: 800, color: item.cor, margin: '0 0 4px' }}>{item.valor}</p>
                         <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{item.label}</p>
                       </div>
@@ -1243,7 +1243,7 @@ REGRAS:
                   </div>
 
                   {npsData.respostas?.length > 0 && (
-                    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
+                    <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Ultimas respostas</p>
                       {npsData.respostas.map((r: any, i: number) => {
                         const cor = r.nota >= 9 ? '#059669' : r.nota >= 7 ? '#d97706' : '#dc2626'
@@ -1263,7 +1263,7 @@ REGRAS:
               )}
 
               {!npsData && (
-                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
                   <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Pesquisa de satisfacao</p>
                   <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Envie NPS automaticamente apos cada consulta</p>
@@ -1278,7 +1278,7 @@ REGRAS:
 
               {/* Lista de grupos */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 16 }}>
+                <div style={{ background: 'white', borderRadius: 12, padding: 16 }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Nova lista</p>
                   <input value={novaLista.nome} onChange={e => setNovaLista(l => ({ ...l, nome: e.target.value }))}
                     placeholder="Nome da lista (ex: Pós-cirúrgico)" style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, marginBottom: 8, boxSizing: 'border-box' as const, outline: 'none' }} />
@@ -1296,12 +1296,12 @@ REGRAS:
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {listas.length === 0 ? (
-                    <div style={{ background: 'white', borderRadius: 12, padding: '24px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+                    <div style={{ background: 'white', borderRadius: 12, padding: '24px', textAlign: 'center' }}>
                       <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Nenhuma lista criada</p>
                     </div>
                   ) : listas.map((l: any) => (
                     <div key={l.id} onClick={() => setListaSelecionada(l)}
-                      style={{ background: listaSelecionada?.id === l.id ? '#f0fdf4' : 'white', border: `1px solid ${listaSelecionada?.id === l.id ? '#86efac' : '#e5e7eb'}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+                      style={{ background: listaSelecionada?.id === l.id ? '#f0fdf4' : 'white', border: `1px solid ${listaSelecionada?.id === l.id ? '#86efac' : '#e5e7eb'}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{l.nome}</p>
                         <span style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>{l.total || 0} contatos</span>
@@ -1315,14 +1315,14 @@ REGRAS:
               {/* Painel envio */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {!listaSelecionada ? (
-                  <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 48, textAlign: 'center' }}>
+                  <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                     <p style={{ fontSize: 32, margin: '0 0 12px' }}>📢</p>
                     <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Listas de transmissão</p>
                     <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Crie listas para enviar mensagens em massa para grupos de pacientes específicos — pós-cirúrgico, diabéticos, retorno, etc.</p>
                   </div>
                 ) : (
                   <>
-                    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', padding: 20 }}>
+                    <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                         <div>
                           <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>{listaSelecionada.nome}</p>
@@ -1381,7 +1381,7 @@ REGRAS:
                 </div>
               )}
               {!config && (
-                <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
+                <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
                   <div style={{ padding: '16px 20px', borderBottom: '1px solid #e9edef' }}>
                     <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Conectar WhatsApp Business</h2>
                     <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Siga os passos abaixo para conectar o número da clínica</p>
@@ -1488,7 +1488,7 @@ REGRAS:
               )}
 
               {config && (
-                <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
+                <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
                   <div style={{ padding: '16px 20px', borderBottom: '1px solid #e9edef' }}>
                     <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Atualizar credenciais</h2>
                   </div>
@@ -1510,7 +1510,7 @@ REGRAS:
                   </form>
                 </div>
               )}
-              <div style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Webhook Meta</h2>
                 </div>
@@ -1519,8 +1519,8 @@ REGRAS:
                     <div key={item.label}>
                       <p style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</p>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <code style={{ flex: 1, padding: '7px 10px', background: '#f9fafb', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 6, fontSize: 12, fontFamily: 'monospace', color: '#374151' }}>{item.valor}</code>
-                        <button onClick={() => navigator.clipboard.writeText(item.valor)} style={{ padding: '6px 10px', background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', borderRadius: 6, fontSize: 11, color: '#6b7280', cursor: 'pointer' }}>Copiar</button>
+                        <code style={{ flex: 1, padding: '7px 10px', background: '#f9fafb', borderRadius: 6, fontSize: 12, fontFamily: 'monospace', color: '#374151' }}>{item.valor}</code>
+                        <button onClick={() => navigator.clipboard.writeText(item.valor)} style={{ padding: '6px 10px', background: 'white', borderRadius: 6, fontSize: 11, color: '#6b7280', cursor: 'pointer' }}>Copiar</button>
                       </div>
                     </div>
                   ))}

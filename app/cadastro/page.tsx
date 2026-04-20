@@ -158,7 +158,7 @@ export default function Cadastro() {
   // PASSO: DADOS
   if (passo === 'dados') return (
     <div style={{ ...s, minHeight: '100vh', background: 'linear-gradient(135deg, #f8f7ff 0%, #f0fdf4 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ maxWidth: 520, width: '100%', background: 'white', borderRadius: 20, padding: 36, boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+      <div style={{ maxWidth: 520, width: '100%', background: 'white', borderRadius: 20, padding: 36 }}>
         <button onClick={() => setPasso('plano')} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: 13, marginBottom: 16 }}>← Voltar</button>
         <h2 style={{ fontSize: 22, fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>
           {tipo === 'clinica' ? 'Dados da clínica' : 'Seus dados'}
@@ -238,7 +238,7 @@ export default function Cadastro() {
   // SUCESSO
   return (
     <div style={{ ...s, minHeight: '100vh', background: 'linear-gradient(135deg, #f8f7ff 0%, #f0fdf4 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ maxWidth: 440, width: '100%', background: 'white', borderRadius: 20, padding: 40, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', textAlign: 'center' }}>
+      <div style={{ maxWidth: 440, width: '100%', background: 'white', borderRadius: 20, padding: 40, textAlign: 'center' }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
         <h2 style={{ fontSize: 24, fontWeight: 800, color: '#111827', margin: '0 0 8px' }}>
           {tipo === 'clinica' ? 'Clínica criada!' : 'Bem-vindo ao MedIA!'}

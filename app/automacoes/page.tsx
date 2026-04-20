@@ -52,7 +52,7 @@ export default function AutomacoesPage() {
   ]
 
   const card = (titulo: string, desc: string, cor: string, bg: string, border: string, acao: string, body: any, extra?: React.ReactNode) => (
-    <div style={{ background: "white", borderRadius: 14, boxShadow: "0 1px 3px rgba(0,0,0,0.07)", padding: "20px 24px", display: "flex", flexDirection: "column" as const, gap: 16 }}>
+    <div style={{ background: "white", borderRadius: 14, padding: "20px 24px", display: "flex", flexDirection: "column" as const, gap: 16 }}>
       <div>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>{titulo}</h3>
         <p style={{ fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.6 }}>{desc}</p>
@@ -120,7 +120,7 @@ export default function AutomacoesPage() {
                 { dias_sem_contato: 3 }
               )}
               {resultado?.enviados !== undefined && (
-                <div style={{ background: "white", borderRadius: 12, padding: "16px 20px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)" }}>
+                <div style={{ background: "white", borderRadius: 12, padding: "16px 20px" }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 8px" }}>Resultado</p>
                   <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>Pacientes contatados: <strong style={{ color: "#6043C1" }}>{resultado.enviados}</strong> de {resultado.total || resultado.enviados}</p>
                 </div>
@@ -152,7 +152,7 @@ export default function AutomacoesPage() {
                 {}
               )}
               {resultado && (
-                <div style={{ background: "white", borderRadius: 12, padding: "16px 20px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)" }}>
+                <div style={{ background: "white", borderRadius: 12, padding: "16px 20px" }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 8px" }}>Resultado</p>
                   <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>Pesquisas enviadas: <strong style={{ color: "#7c3aed" }}>{resultado.enviados ?? 0}</strong></p>
                 </div>
@@ -162,7 +162,7 @@ export default function AutomacoesPage() {
             {/* PDF MENSAL */}
             {aba === "pdf" && (
               <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
-                <div style={{ background: "white", borderRadius: 14, boxShadow: "0 1px 3px rgba(0,0,0,0.07)", padding: "20px 24px" }}>
+                <div style={{ background: "white", borderRadius: 14, padding: "20px 24px" }}>
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: "0 0 8px" }}>Relatório mensal completo em PDF</h3>
                   <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 16px", lineHeight: 1.6 }}>Gera um PDF completo do mês atual com consultas, crescimento, diagnósticos mais frequentes, próximos agendamentos e análise por IA. Ideal para arquivar ou compartilhar com a gestão da clínica.</p>
                   <button onClick={async () => {
@@ -207,7 +207,7 @@ export default function AutomacoesPage() {
                 {}
               )}
               {resultado?.periodo && (
-                <div style={{ background: "white", borderRadius: 12, padding: "16px 20px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column" as const, gap: 10 }}>
+                <div style={{ background: "white", borderRadius: 12, padding: "16px 20px", display: "flex", flexDirection: "column" as const, gap: 10 }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: 0 }}>Relatório {resultado.periodo.inicio} – {resultado.periodo.fim}</p>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
                     {[

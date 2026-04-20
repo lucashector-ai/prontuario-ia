@@ -155,7 +155,7 @@ REGRAS:
     <div style={{ ...s, minHeight: '100vh', background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       
       {passo === 'intro' && (
-        <div style={{ background: 'white', borderRadius: 20, padding: 40, maxWidth: 480, width: '100%', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+        <div style={{ background: 'white', borderRadius: 20, padding: 40, maxWidth: 480, width: '100%', textAlign: 'center' }}>
           <div style={{ width: 72, height: 72, background: '#d9fdd3', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <span style={{ fontSize: 32 }}>🤖</span>
           </div>
@@ -177,7 +177,7 @@ REGRAS:
       )}
 
       {(passo === 'perguntas' || passo === 'gerando') && (
-        <div style={{ background: 'white', borderRadius: 20, maxWidth: 580, width: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', height: '80vh' }}>
+        <div style={{ background: 'white', borderRadius: 20, maxWidth: 580, width: '100%', display: 'flex', flexDirection: 'column', height: '80vh' }}>
           {/* Header */}
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f2f5', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 36, height: 36, background: '#d9fdd3', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🤖</div>
@@ -234,7 +234,7 @@ REGRAS:
       )}
 
       {passo === 'revisao' && (
-        <div style={{ background: 'white', borderRadius: 20, maxWidth: 640, width: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+        <div style={{ background: 'white', borderRadius: 20, maxWidth: 640, width: '100%', overflow: 'hidden' }}>
           <div style={{ padding: '20px 24px', borderBottom: '1px solid #f0f2f5', background: '#f9fafb' }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>✅ Instruções geradas!</h2>
             <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Revise e edite se quiser antes de salvar</p>
@@ -259,7 +259,7 @@ REGRAS:
       )}
 
       {passo === 'pronto' && (
-        <div style={{ background: 'white', borderRadius: 20, padding: 40, maxWidth: 440, width: '100%', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+        <div style={{ background: 'white', borderRadius: 20, padding: 40, maxWidth: 440, width: '100%', textAlign: 'center' }}>
           <div style={{ fontSize: 64, marginBottom: 16 }}>🎉</div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Sofia configurada!</h1>
           <p style={{ fontSize: 15, color: '#6b7280', margin: '0 0 32px', lineHeight: 1.6 }}>

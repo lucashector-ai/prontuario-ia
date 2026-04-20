@@ -258,7 +258,7 @@ export default function Home() {
       {/* Modal seleção de paciente */}
       {modalPaciente && !prontuario && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: 'white', borderRadius: 16, padding: '32px', width: 440, boxShadow: '0 24px 60px rgba(0,0,0,0.15)' }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: '32px', width: 440 }}>
             <div style={{ marginBottom: 24 }}>
               <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Nova consulta</h2>
               <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Vincule a um paciente ou inicie uma consulta avulsa.</p>
@@ -363,7 +363,7 @@ export default function Home() {
           <div className="grid-consulta">
 
           {/* Left  -  Gravação + Transcrição */}
-          <div style={{ borderRight: 'none', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>
+          <div style={{ borderRight: 'none', borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>
 
             {/* Gravação section */}
             <div style={{ padding: '28px 32px', borderBottom: '1px solid #f3f4f6' }}>

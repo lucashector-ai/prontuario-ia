@@ -141,7 +141,7 @@ export default function Admin() {
 
       {modalNovoMedico && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalNovoMedico(false) }}>
-          <div style={{ background: 'white', borderRadius: 16, padding: 32, width: 420, boxShadow: '0 24px 60px rgba(0,0,0,0.15)' }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 32, width: 420 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 20px' }}>Novo médico</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[

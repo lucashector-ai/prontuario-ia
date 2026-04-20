@@ -206,14 +206,14 @@ export default function Agenda() {
         {/* Header */}
         <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={() => setSemana(new Date())} style={{ fontSize: 12, fontWeight: 600, color: '#374151', background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', padding: '5px 12px', borderRadius: 7, cursor: 'pointer' }}>
+            <button onClick={() => setSemana(new Date())} style={{ fontSize: 12, fontWeight: 600, color: '#374151', background: 'white', padding: '5px 12px', borderRadius: 7, cursor: 'pointer' }}>
               Hoje
             </button>
             <div style={{ display: 'flex', gap: 1 }}>
-              <button onClick={() => navegarSemana(-1)} style={{ width: 28, height: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => navegarSemana(-1)} style={{ width: 28, height: 28, background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
               </button>
-              <button onClick={() => navegarSemana(1)} style={{ width: 28, height: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderLeft: 'none', background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => navegarSemana(1)} style={{ width: 28, height: 28, borderLeft: 'none', background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
               </button>
             </div>
@@ -274,7 +274,7 @@ export default function Agenda() {
           </div>
 
           {/* Grade de horas */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+          <div style={{ flex: 1, overflow: 'auto', background: 'white', borderRadius: 12 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(7, 1fr)', minHeight: `${HORAS.length * 64}px` }}>
               {/* Coluna de horas */}
               <div style={{ borderRight: '1px solid #e5e7eb', background: 'white', position: 'sticky', left: 0, zIndex: 10 }}>
@@ -312,7 +312,6 @@ export default function Agenda() {
                                 borderLeft: `3px solid ${tipo.dot}`,
                                 borderRadius: 6, padding: '3px 6px', cursor: 'pointer', zIndex: 10,
                                 overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                               }}>
                               <p style={{ fontSize: 11, fontWeight: 700, color: tipo.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {new Date(ag.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} {ag.motivo || tipo.label}
@@ -337,7 +336,7 @@ export default function Agenda() {
       {modal.open && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 24 }}
           onClick={e => { if (e.target === e.currentTarget) setModal({ open: false }) }}>
-          <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+          <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, overflow: 'hidden' }}>
             {/* Header modal */}
             <div style={{ padding: '18px 24px', borderBottom: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -440,14 +439,14 @@ export default function Agenda() {
                     </div>
                   </div>
                   <button type="button" onClick={() => { setComVideo(!comVideo); setSalaLink(''); setSalaId('') }} style={{ width: 42, height: 24, borderRadius: 12, border: 'none', background: comVideo ? '#6043C1' : '#d1d5db', cursor: 'pointer', position: 'relative' as const, flexShrink: 0 }}>
-                    <span style={{ position: 'absolute' as const, top: 2, left: comVideo ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}/>
+                    <span style={{ position: 'absolute' as const, top: 2, left: comVideo ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left .2s' }}/>
                   </button>
                 </div>
               )}
               {salaLink && (
                 <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                  <span style={{ fontSize: 11, color: '#4e35a3', flex: 1, overflow: 'hidden', background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{salaLink}</span>
+                  <span style={{ fontSize: 11, color: '#4e35a3', flex: 1, overflow: 'hidden', background: 'white', borderRadius: 12, textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{salaLink}</span>
                   <button type="button" onClick={() => { navigator.clipboard.writeText(salaLink); window.open('/sala/' + salaId, '_blank') }} style={{ fontSize: 11, color: '#6043C1', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>Copiar e abrir</button>
                 </div>
               )}
