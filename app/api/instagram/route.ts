@@ -20,7 +20,10 @@ const IG_PAGE_ID = process.env.INSTAGRAM_PAGE_ID || ''
 
 // Envia mensagem pelo Instagram
 async function enviarIG(recipientId: string, texto: string) {
-  if (!IG_TOKEN || !IG_PAGE_ID) return
+  if (!IG_TOKEN || !IG_PAGE_ID) {
+    console.error('INSTAGRAM: IG_TOKEN ou IG_PAGE_ID nao configurados no Vercel')
+    return
+  }
   await fetch(`https://graph.facebook.com/v20.0/${IG_PAGE_ID}/messages`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${IG_TOKEN}`, 'Content-Type': 'application/json' },
@@ -55,15 +58,23 @@ export async function POST(req: NextRequest) {
         const texto = event.message.text || ''
         if (!texto.trim()) continue
 
-        // Busca nome do usuário no Instagram
-        let nomeIG = senderId
-        try {
-          const profileRes = await fetch(
-            `https://graph.facebook.com/v20.0/${senderId}?fields=name&access_token=${IG_TOKEN}`
-          )
-          const profile = await profileRes.json()
-          if (profile.name) nomeIG = profile.name
-        } catch {}
+        // Pega nome do payload ou busca na API
+        let nomeIG = entry.changes?.[0]?.value?.contacts?.find((ct:any)=>ct.wa_id===senderId||ct.id===senderId)?.profile?.name
+          || body.entry?.[0]?.messaging?.[0]?.sender?.name
+          || senderId
+        
+        // Tenta buscar na API se tiver token
+        if (nomeIG === senderId && IG_TOKEN) {
+          try {
+            const profileRes = await fetch(
+              `https://graph.facebook.com/v20.0/${senderId}?fields=name,profile_pic&access_token=${IG_TOKEN}`
+            )
+            const profile = await profileRes.json()
+            if (profile.name) nomeIG = profile.name
+          } catch {}
+        }
+        
+        console.log('IG MSG from:', senderId, 'nome:', nomeIG, 'token:', !!IG_TOKEN, 'pageId:', IG_PAGE_ID||'NAO_CONFIG')
 
         // Resolve medico_id
         const MEDICO_ID = await getMedicoIdFallback()
