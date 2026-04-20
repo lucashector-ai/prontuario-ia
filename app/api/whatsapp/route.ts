@@ -612,16 +612,7 @@ export async function POST(req: NextRequest) {
           console.log('AGENDADO:', agCreated?.id, agendarData.data)
           // Envia mensagem de confirmação com instruções de pré-consulta
           const dataFmt = new Date(agendarData.data).toLocaleDateString('pt-BR', {weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'})
-          const msgConfirm = `✅ Consulta confirmada para ${dataFmt}!\n\nPara agilizar seu atendimento, responda algumas perguntas rápidas:\n\n1️⃣ Qual o motivo principal da consulta?\n2️⃣ Tem algum sintoma há quanto tempo?\n3️⃣ Usa algum medicamento regularmente?\n\nSuas respostas ajudam o médico a se preparar melhor. 🩺`
-          await supabase.from('whatsapp_mensagens').insert({
-            conversa_id: conversa.id, tipo: 'enviada', conteudo: msgConfirm,
-            metadata: { ia: true, pre_consulta: true }
-          })
-          // Envia pré-consulta pelo WhatsApp real
-          const creds2 = await getWppCredentials(MEDICO_ID)
-          if (creds2.token && creds2.phoneId) {
-            await enviarWpp(telefone, msgConfirm, creds2.token, creds2.phoneId)
-          }
+          // Pré-consulta integrada na próxima interação — não envia mensagem separada
           await supabase.from('whatsapp_conversas').update({
             ultimo_contato: new Date().toISOString()
           }).eq('id', conversa.id)
