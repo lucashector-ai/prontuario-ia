@@ -91,7 +91,9 @@ export default function Agenda() {
   const getAgHora = (dia: Date, hora: number) => {
     return agendamentos.filter(a => {
       const d = new Date(a.data_hora)
-      return d.toDateString() === dia.toDateString() && d.getHours() === hora
+      // Usa hora local do navegador para exibir corretamente
+      const dLocal = new Date(d.getTime())
+      return dLocal.toDateString() === dia.toDateString() && dLocal.getHours() === hora
     })
   }
 
@@ -123,7 +125,7 @@ export default function Agenda() {
       if (modal.ag) {
         const { data } = await supabase.from('agendamentos').update({
           paciente_id: form.paciente_id || null,
-          data_hora: new Date(form.data_hora).toISOString(),
+          data_hora: form.data_hora + ':00',  // Mantém hora local sem converter para UTC
           tipo: form.tipo, motivo: form.motivo, observacoes: form.observacoes,
         }).eq('id', modal.ag.id).select(`*, pacientes(nome)`).single()
         if (data) setAgendamentos(prev => prev.map(a => a.id === data.id ? data : a))
@@ -146,7 +148,7 @@ export default function Agenda() {
         const { data } = await supabase.from('agendamentos').insert({
           medico_id: medico.id,
           paciente_id: form.paciente_id || null,
-          data_hora: new Date(form.data_hora).toISOString(),
+          data_hora: form.data_hora + ':00',  // Mantém hora local sem converter para UTC
           tipo: form.tipo, motivo: form.motivo, observacoes: form.observacoes,
           status: 'agendado',
           meet_link: meetLinkFinal || null,

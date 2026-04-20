@@ -247,7 +247,7 @@ async function buscarHorariosDisponiveis(medicoId: string): Promise<string> {
       const diaSemana = cursor.getDay()
       const hora = cursor.getHours()
       
-      if (diaSemana >= 1 && diaSemana <= 5 && hora >= 8 && hora <= 17) {
+      if (diaSemana >= 1 && diaSemana <= 6 && hora >= 8 && hora <= 18) {
         const isoStr = cursor.toISOString().substring(0, 16)
         if (!ocupados.has(isoStr)) {
           const dataFmt = cursor.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })
@@ -612,11 +612,16 @@ export async function POST(req: NextRequest) {
           console.log('AGENDADO:', agCreated?.id, agendarData.data)
           // Envia mensagem de confirmação com instruções de pré-consulta
           const dataFmt = new Date(agendarData.data).toLocaleDateString('pt-BR', {weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'})
-          const msgConfirm = `✅ Consulta confirmada para ${dataFmt}!\n\nPara agilizar seu atendimento, responda algumas perguntas rápidas antes da consulta:\n\n1️⃣ Qual o motivo principal da consulta?\n2️⃣ Tem algum sintoma há quanto tempo?\n3️⃣ Usa algum medicamento regularmente?\n\nSuas respostas ajudam o médico a se preparar melhor. 🩺`
+          const msgConfirm = `✅ Consulta confirmada para ${dataFmt}!\n\nPara agilizar seu atendimento, responda algumas perguntas rápidas:\n\n1️⃣ Qual o motivo principal da consulta?\n2️⃣ Tem algum sintoma há quanto tempo?\n3️⃣ Usa algum medicamento regularmente?\n\nSuas respostas ajudam o médico a se preparar melhor. 🩺`
           await supabase.from('whatsapp_mensagens').insert({
             conversa_id: conversa.id, tipo: 'enviada', conteudo: msgConfirm,
             metadata: { ia: true, pre_consulta: true }
           })
+          // Envia pré-consulta pelo WhatsApp real
+          const creds2 = await getWppCredentials(MEDICO_ID)
+          if (creds2.token && creds2.phoneId) {
+            await enviarWpp(telefone, msgConfirm, creds2.token, creds2.phoneId)
+          }
           await supabase.from('whatsapp_conversas').update({
             ultimo_contato: new Date().toISOString()
           }).eq('id', conversa.id)

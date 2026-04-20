@@ -187,8 +187,18 @@ export default function Pacientes() {
                         <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>{p.nome}</p>
                         <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>{[p.sexo, idade ? `${idade} anos` : null, p.telefone].filter(Boolean).join(' · ')}</p>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} onClick={e=>e.stopPropagation()}>
                         {p.email && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{p.email}</p>}
+                        <button onClick={async(e)=>{
+                          e.stopPropagation()
+                          if(!confirm(`Deletar ${p.nome}? Isso remove todas as consultas e agendamentos.`)) return
+                          await fetch(`/api/pacientes?id=${p.id}`,{method:'DELETE'})
+                          setPacientes((prev:any[])=>prev.filter((x:any)=>x.id!==p.id))
+                        }} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',padding:'4px 6px',borderRadius:6,fontSize:11,opacity:0.6,transition:'opacity 0.15s'}}
+                        onMouseOver={e=>(e.currentTarget.style.opacity='1')}
+                        onMouseOut={e=>(e.currentTarget.style.opacity='0.6')}>
+                          🗑
+                        </button>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                       </div>
                     </div>

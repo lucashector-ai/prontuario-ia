@@ -104,9 +104,10 @@ export default function WhatsAppApp() {
     setShowPaciente(true)
   }
 
-  const carregarAtendentes = (mid:string) =>
+  const carregarAtendentes = (mid:string) => {
     fetch('/api/atendentes?medico_id='+mid).then(r=>r.json()).then(d=>setAtendentes(d.atendentes||[]))
     supabase.from('departamentos').select('*').eq('medico_id',mid).then(({data})=>setDepartamentos(data||[]))
+  }
 
   useEffect(()=>{
     const m=localStorage.getItem('medico')
