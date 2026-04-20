@@ -9,23 +9,21 @@ const supabase = createClient(
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'media_whatsapp_2026'
 const MEDICO_ID_ENV = process.env.WHATSAPP_MEDICO_ID || ''
+const IG_TOKEN = process.env.INSTAGRAM_TOKEN || ''
 
 async function getMedicoIdFallback(): Promise<string> {
   if (MEDICO_ID_ENV) return MEDICO_ID_ENV
   const { data } = await supabase.from('medicos').select('id').eq('ativo', true).limit(1).maybeSingle()
   return (data as any)?.id || ''
 }
-const IG_TOKEN = process.env.INSTAGRAM_TOKEN || process.env.WHATSAPP_TOKEN || ''
-const IG_PAGE_ID = process.env.INSTAGRAM_PAGE_ID || ''
 
-// Envia mensagem pelo Instagram
-async function enviarIG(recipientId: string, texto: string) {
-  if (!IG_TOKEN || !IG_PAGE_ID) {
-    console.error('INSTAGRAM: IG_TOKEN ou IG_PAGE_ID nao configurados no Vercel')
+async function enviarIG(recipientId: string, texto: string, pageId: string) {
+  if (!IG_TOKEN || !pageId) {
+    console.error('IG: token ou pageId faltando', { temToken: !!IG_TOKEN, pageId })
     return
   }
-  // Instagram Messenger API — usa o Instagram Business Account ID
-  const res = await fetch(`https://graph.facebook.com/v20.0/${IG_PAGE_ID}/messages`, {
+  console.log('IG_SEND_ATTEMPT:', { recipientId, pageId, tokenStart: IG_TOKEN.substring(0,10) })
+  const res = await fetch(`https://graph.facebook.com/v20.0/${pageId}/messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -36,22 +34,8 @@ async function enviarIG(recipientId: string, texto: string) {
     })
   })
   const data = await res.json()
-  if (data.error) {
-    console.error('IG_SEND_ERROR:', JSON.stringify(data.error))
-    // Tenta com endpoint alternativo (Instagram Graph API direto)
-    const res2 = await fetch(`https://graph.facebook.com/v20.0/me/messages?access_token=${IG_TOKEN}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        recipient: { id: recipientId },
-        message: { text: texto }
-      })
-    })
-    const data2 = await res2.json()
-    console.log('IG_SEND_ALT:', JSON.stringify(data2))
-  } else {
-    console.log('IG_SEND_OK:', data.message_id || 'sent')
-  }
+  if (data.error) console.error('IG_SEND_ERROR:', JSON.stringify(data.error))
+  else console.log('IG_SEND_OK:', data)
 }
 
 export async function GET(req: NextRequest) {
@@ -70,36 +54,32 @@ export async function POST(req: NextRequest) {
     }
 
     for (const entry of body.entry || []) {
+      const entryId = entry.id // ID da página que recebe
+
       for (const event of entry.messaging || []) {
         if (!event.message || event.message.is_echo) continue
 
-        const senderId = event.sender.id
-        const texto = event.message.text || ''
-        if (!texto.trim()) continue
+        const senderId = event.sender?.id
+        const pageId = event.recipient?.id || entryId // Página que deve responder
+        const texto = event.message?.text || ''
 
-        // Pega nome do payload ou busca na API
-        let nomeIG = entry.changes?.[0]?.value?.contacts?.find((ct:any)=>ct.wa_id===senderId||ct.id===senderId)?.profile?.name
-          || body.entry?.[0]?.messaging?.[0]?.sender?.name
-          || senderId
-        
-        // Tenta buscar na API se tiver token
-        if (nomeIG === senderId && IG_TOKEN) {
+        if (!texto.trim() || !senderId) continue
+
+        console.log('IG_MSG:', { senderId, pageId, texto: texto.substring(0,50) })
+
+        // Tenta buscar nome
+        let nomeIG = senderId
+        if (IG_TOKEN) {
           try {
-            const profileRes = await fetch(
-              `https://graph.facebook.com/v20.0/${senderId}?fields=name,profile_pic&access_token=${IG_TOKEN}`
-            )
+            const profileRes = await fetch(`https://graph.facebook.com/v20.0/${senderId}?fields=name&access_token=${IG_TOKEN}`)
             const profile = await profileRes.json()
             if (profile.name) nomeIG = profile.name
           } catch {}
         }
-        
-        console.log('IG MSG from:', senderId, 'nome:', nomeIG, 'token:', !!IG_TOKEN, 'pageId:', IG_PAGE_ID||'NAO_CONFIG')
 
-        // Resolve medico_id
         const MEDICO_ID = await getMedicoIdFallback()
         if (!MEDICO_ID) continue
 
-        // Cria ou busca conversa
         let { data: conversa } = await supabase
           .from('whatsapp_conversas')
           .select('*')
@@ -112,12 +92,8 @@ export async function POST(req: NextRequest) {
           const { data: nova } = await supabase
             .from('whatsapp_conversas')
             .insert({
-              medico_id: MEDICO_ID,
-              telefone: senderId,
-              nome_contato: nomeIG,
-              modo: 'ia',
-              status: 'ativa',
-              canal: 'instagram',
+              medico_id: MEDICO_ID, telefone: senderId, nome_contato: nomeIG,
+              modo: 'ia', status: 'ativa', canal: 'instagram',
               ultimo_contato: new Date().toISOString()
             })
             .select().single()
@@ -126,21 +102,19 @@ export async function POST(req: NextRequest) {
 
         if (!conversa) continue
 
-        // Salva mensagem recebida
+        if (conversa.status === 'encerrada') {
+          await supabase.from('whatsapp_conversas').update({ status: 'ativa', modo: 'ia' }).eq('id', conversa.id)
+          conversa.status = 'ativa'; conversa.modo = 'ia'
+        }
+
         await supabase.from('whatsapp_mensagens').insert({
-          conversa_id: conversa.id,
-          tipo: 'recebida',
-          conteudo: texto,
+          conversa_id: conversa.id, tipo: 'recebida', conteudo: texto,
           metadata: { canal: 'instagram' }
         })
-
-        await supabase.from('whatsapp_conversas')
-          .update({ ultimo_contato: new Date().toISOString() })
-          .eq('id', conversa.id)
+        await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString() }).eq('id', conversa.id)
 
         if (conversa.modo === 'humano') continue
 
-        // Busca histórico e responde com Sofia
         const { data: historico } = await supabase
           .from('whatsapp_mensagens')
           .select('tipo, conteudo')
@@ -153,39 +127,26 @@ export async function POST(req: NextRequest) {
           content: h.conteudo as string
         }))
 
-        const res = await anthropic.messages.create({
+        const aiRes = await anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
-          system: `Voce e Sofia, assistente virtual da clinica. Seja calorosa e objetiva. Responda em portugues.
-          O paciente esta entrando em contato pelo Instagram.
-          NUNCA use botoes [BOTOES:...] no Instagram — use texto simples com opcoes numeradas.
-          Para transferir para humano: [HUMANO]`,
+          system: `Voce e Sofia, assistente virtual da clinica. Responda em portugues. Use texto simples sem botoes. Para transferir: [HUMANO]`,
           messages: [...msgs, { role: 'user', content: texto }]
         })
 
-        let resposta = res.content[0].type === 'text' ? res.content[0].text : ''
+        let resposta = aiRes.content[0].type === 'text' ? aiRes.content[0].text : ''
         const humano = resposta.includes('[HUMANO]')
         resposta = resposta.replace('[HUMANO]', '').replace(/\[BOTOES:[^\]]+\]/g, '').trim()
 
-        if (humano) {
-          await supabase.from('whatsapp_conversas').update({ modo: 'humano' }).eq('id', conversa.id)
-        }
+        if (humano) await supabase.from('whatsapp_conversas').update({ modo: 'humano' }).eq('id', conversa.id)
 
         await supabase.from('whatsapp_mensagens').insert({
-          conversa_id: conversa.id,
-          tipo: 'enviada',
-          conteudo: resposta,
+          conversa_id: conversa.id, tipo: 'enviada', conteudo: resposta,
           metadata: { ia: true, canal: 'instagram' }
         })
 
-        console.log('IG_ENVIANDO para:', senderId, 'pageId:', IG_PAGE_ID, 'temToken:', !!IG_TOKEN)
-        console.log('IG_ENVIANDO para:', senderId, 'pageId:', IG_PAGE_ID, 'temToken:', !!IG_TOKEN)
-        await enviarIG(senderId, resposta)
-        console.log('IG_ENVIOU')
-        console.log('IG_ENVIOU')
-        await supabase.from('whatsapp_conversas')
-          .update({ ultimo_contato: new Date().toISOString() })
-          .eq('id', conversa.id)
+        await enviarIG(senderId, resposta, pageId)
+        await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString() }).eq('id', conversa.id)
       }
     }
 
