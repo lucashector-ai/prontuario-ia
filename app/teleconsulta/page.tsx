@@ -83,7 +83,7 @@ export default function Teleconsulta() {
 
   return (
     <div>
-      <main style={{ flex: 1, overflow: 'auto', padding: '0 24px 24px' }}>
+      <main style={{ flex: 1, overflow: 'auto' }}>
 
         {/* Hero */}
         <div style={{ background: 'transparent', borderBottom: 'none', padding: '32px 32px 28px' }}>
