@@ -229,6 +229,20 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, [transcricao, modoPerfeita])
 
+  const enviarWhatsApp = async (tipo: string, conteudo: string) => {
+    if (!pacienteSelecionado?.telefone) { alert('Paciente sem telefone cadastrado'); return }
+    const tel = pacienteSelecionado.telefone.replace(/[^0-9]/g, '')
+    const telWpp = tel.startsWith('55') ? tel : '55' + tel
+    const m = localStorage.getItem('medico')
+    const med = m ? JSON.parse(m) : null
+    await fetch('/api/whatsapp/enviar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telefone: telWpp, texto: conteudo, medico_id: med?.id })
+    })
+    alert('✅ Enviado pelo WhatsApp!')
+  }
+
   const handleNovo = () => {
     limpar(); setTranscricao(''); setProntuario(null); setReceita(null)
     setEstado('idle'); setErroMsg(''); setConsultaSalva(false)
@@ -624,13 +638,8 @@ export default function Home() {
                             ))}
                             {exames.observacoes && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 10, fontStyle: 'italic' }}>{exames.observacoes}</p>}
                             <button onClick={()=>{
-                              const txt = `📋 *Pedido de Exames*
-
-${exames.exames?.map((e:any)=>`• ${e.nome} (${e.urgencia})
-  ${e.indicacao}`).join('
-')}
-
-${exames.observacoes||''}`
+                              const linhas = (exames.exames||[]).map((e:any)=>'• '+e.nome+' ('+e.urgencia+')\n  '+e.indicacao).join('\n')
+                              const txt = '📋 *Pedido de Exames*\n\n' + linhas + (exames.observacoes ? '\n\n'+exames.observacoes : '')
                               enviarWhatsApp('exames', txt)
                             }} style={{marginTop:10,padding:'7px 14px',borderRadius:7,border:'none',background:'#25d366',color:'white',fontSize:12,fontWeight:600,cursor:'pointer'}}>
                               📱 Enviar pelo WhatsApp
