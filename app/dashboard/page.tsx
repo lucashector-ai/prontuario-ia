@@ -126,6 +126,18 @@ export default function Dashboard() {
     })
     const porMes = Object.entries(mesesMap).map(([mes, total]) => ({ mes, total }))
 
+    // Calcula tempo médio de consulta (baseado em agendamentos com duração)
+    const { data: agendamentosRealizados } = await supabase
+      .from('agendamentos')
+      .select('data_hora, duracao_minutos')
+      .eq('medico_id', medico.id)
+      .eq('status', 'realizado')
+      .not('duracao_minutos', 'is', null)
+      .limit(50)
+    const tempoMedioConsulta = agendamentosRealizados?.length
+      ? Math.round(agendamentosRealizados.reduce((a: number, ag: any) => a + (ag.duracao_minutos || 30), 0) / agendamentosRealizados.length)
+      : null
+
     setDados({
       totalConsultas,
       totalPacientes,
@@ -136,6 +148,7 @@ export default function Dashboard() {
       consultasRecentes: consultasRecentes?.slice(0, 5) || [],
       proximosAgendamentos: agendamentos || [],
       taxaRetorno,
+      tempoMedioConsulta,
       pacientesRetorno,
       pacientesInativos,
       novosPacientesMes,
@@ -212,6 +225,14 @@ export default function Dashboard() {
                   {
                     label: 'CIDs registrados', valor: Object.keys(dados.topCids).length, icon: '🏷',
                     sub: 'diagnósticos únicos', cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe'
+                  },
+                  {
+                    label: 'Tempo médio', valor: dados.tempoMedioConsulta ? `${dados.tempoMedioConsulta}min` : '--', icon: '⏱',
+                    sub: 'por consulta no período', cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4'
+                  },
+                  {
+                    label: 'Taxa de retorno', valor: dados.taxaRetorno ? `${dados.taxaRetorno}%` : '--', icon: '🔄',
+                    sub: 'pacientes que voltaram', cor: '#d97706', bg: '#fffbeb', border: '#fde68a'
                   },
                 ].map(m => (
                   <div key={m.label} style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderRadius: 14, padding: '18px 20px' }}>

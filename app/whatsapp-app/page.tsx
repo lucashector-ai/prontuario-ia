@@ -25,6 +25,7 @@ export default function WhatsAppApp() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder|null>(null)
   const [aba, setAba] = useState<'chats'|'equipe'|'contatos'>('chats')
   const [atendentes, setAtendentes] = useState<any[]>([])
+  const [departamentos, setDepartamentos] = useState<any[]>([])
   const [novoAt, setNovoAt] = useState({nome:'',email:'',senha:'',cargo:'Atendente'})
   const [salvandoAt, setSalvandoAt] = useState(false)
   const [atMsg, setAtMsg] = useState('')
@@ -105,6 +106,7 @@ export default function WhatsAppApp() {
 
   const carregarAtendentes = (mid:string) =>
     fetch('/api/atendentes?medico_id='+mid).then(r=>r.json()).then(d=>setAtendentes(d.atendentes||[]))
+    supabase.from('departamentos').select('*').eq('medico_id',mid).then(({data})=>setDepartamentos(data||[]))
 
   useEffect(()=>{
     const m=localStorage.getItem('medico')
@@ -536,6 +538,23 @@ export default function WhatsAppApp() {
         {/* ABA EQUIPE */}
         {aba==='equipe'&&(
           <div style={{flex:1,overflowY:'auto',padding:16}}>
+            {/* Departamentos */}
+            <p style={{fontSize:11,fontWeight:600,color:'#aebac1',margin:'0 0 10px',letterSpacing:'0.08em'}}>DEPARTAMENTOS</p>
+            <div style={{display:'flex',flexWrap:'wrap' as const,gap:6,marginBottom:16}}>
+              {departamentos.map((d:any)=>(
+                <span key={d.id} style={{fontSize:12,padding:'4px 10px',borderRadius:20,background:d.cor+'22',color:d.cor,fontWeight:500,border:`1px solid ${d.cor}44`}}>{d.nome}</span>
+              ))}
+              {departamentos.length===0&&<span style={{fontSize:12,color:'#aebac1'}}>Nenhum departamento</span>}
+              {(!localStorage.getItem('atendente'))&&(
+                <button onClick={async()=>{
+                  const nome=prompt('Nome do departamento:')
+                  const cor=prompt('Cor (hex, ex: #6043C1):','#00a884')
+                  if(!nome) return
+                  const {data}=await supabase.from('departamentos').insert({medico_id:medico?.id,nome,cor:cor||'#00a884'}).select().single()
+                  if(data) setDepartamentos((p:any)=>[...p,data])
+                }} style={{fontSize:11,padding:'4px 10px',borderRadius:20,border:'1px dashed #aebac1',background:'none',color:'#aebac1',cursor:'pointer'}}>+ Novo</button>
+              )}
+            </div>
             <p style={{fontSize:11,fontWeight:600,color:'#aebac1',margin:'0 0 14px',letterSpacing:'0.08em'}}>ATENDENTES ATIVOS</p>
             {atendentes.filter((a:any)=>a.ativo!==false).map((at:any)=>(
               <div key={at.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderBottom:'1px solid #f0f2f5'}}>
