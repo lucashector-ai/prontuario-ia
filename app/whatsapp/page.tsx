@@ -357,7 +357,7 @@ REGRAS:
   })
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
+    <div>
       <main style={{ flex: 1, display: 'flex', overflow: 'hidden', flexDirection: 'column', padding: '16px 16px 16px 0' }}>
 
         {/* Header */}

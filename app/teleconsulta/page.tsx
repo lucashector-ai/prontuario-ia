@@ -82,7 +82,7 @@ export default function Teleconsulta() {
   const fmtData = (iso: string) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
+    <div>
       <main style={{ flex: 1, overflow: 'auto', padding: '0 24px 24px' }}>
 
         {/* Hero */}

@@ -161,8 +161,8 @@ export default function Dashboard() {
   const maxDia = dados ? Math.max(...dados.porDia.map((d: any) => d.total), 1) : 1
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div>
+      <main>
 
         {/* Header */}
         <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
