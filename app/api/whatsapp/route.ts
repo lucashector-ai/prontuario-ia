@@ -596,15 +596,40 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        const { data: agCreated, error: agError } = await supabase.from('agendamentos').insert({
-          medico_id: MEDICO_ID,
-          paciente_id: pacienteId,
-          data_hora: agendarData.data,
-          tipo: agendarData.tipo || 'consulta',
-          motivo: agendarData.motivo || 'Consulta via WhatsApp',
-          status: 'agendado',
-          observacoes: `Agendado pela Sofia IA via WhatsApp — ${conversa.nome_contato || telefone}`
-        }).select().single()
+        // Ajusta timezone — agendarData.data vem em hora local mas Postgres interpreta como UTC
+        // Adiciona offset do Brasil (UTC-3) para compensar
+        const dataLocal = new Date(agendarData.data)
+        const offsetMs = dataLocal.getTimezoneOffset() * 60 * 1000
+        // Como estamos no servidor (UTC), a data já está correta se vier com offset
+        // Usa a string diretamente com timezone explícito
+        const dataHoraFinal = agendarData.data.includes('+') || agendarData.data.includes('Z')
+          ? agendarData.data
+          : agendarData.data + '-03:00'  // Assume Brasil UTC-3
+
+        // Verifica se já existe agendamento próximo para evitar duplicata
+        const { data: existente } = await supabase.from('agendamentos')
+          .select('id')
+          .eq('medico_id', MEDICO_ID)
+          .eq('paciente_id', pacienteId || '')
+          .gte('data_hora', new Date(dataLocal.getTime() - 30*60*1000).toISOString())
+          .lte('data_hora', new Date(dataLocal.getTime() + 30*60*1000).toISOString())
+          .maybeSingle()
+
+        if (existente) {
+          console.log('AGENDAR: já existe agendamento próximo, ignorando duplicata')
+        }
+
+        const { data: agCreated, error: agError } = existente
+          ? { data: existente, error: null }
+          : await supabase.from('agendamentos').insert({
+              medico_id: MEDICO_ID,
+              paciente_id: pacienteId,
+              data_hora: dataHoraFinal,
+              tipo: agendarData.tipo || 'consulta',
+              motivo: agendarData.motivo || 'Consulta via WhatsApp',
+              status: 'agendado',
+              observacoes: `Agendado pela Sofia IA via WhatsApp — ${conversa.nome_contato || telefone}`
+            }).select().single()
 
         if (agError) {
           console.error('AGENDAR_ERRO:', agError.message)
