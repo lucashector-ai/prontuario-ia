@@ -8,7 +8,13 @@ const supabase = createClient(
 )
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'media_whatsapp_2026'
-const MEDICO_ID = process.env.WHATSAPP_MEDICO_ID || ''
+const MEDICO_ID_ENV = process.env.WHATSAPP_MEDICO_ID || ''
+
+async function getMedicoIdFallback(): Promise<string> {
+  if (MEDICO_ID_ENV) return MEDICO_ID_ENV
+  const { data } = await supabase.from('medicos').select('id').eq('ativo', true).limit(1).maybeSingle()
+  return (data as any)?.id || ''
+}
 const MSG_TOKEN = process.env.MESSENGER_TOKEN || process.env.WHATSAPP_TOKEN || ''
 const MSG_PAGE_ID = process.env.MESSENGER_PAGE_ID || ''
 
