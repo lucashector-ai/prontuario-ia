@@ -82,7 +82,7 @@ export default function Teleconsulta() {
   const fmtData = (iso: string) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#FAFAFA', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
       <main style={{ flex: 1, overflow: 'auto', padding: '0 24px 24px' }}>
 
         {/* Hero */}
@@ -135,7 +135,7 @@ export default function Teleconsulta() {
                   const st = statusInfo(c.status)
                   return (
                     <div key={c.id} style={{ background: 'white', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: c.status === 'em_andamento' ? '#ede9fb' : '#FAFAFA', border: '1px solid ' + (c.status === 'em_andamento' ? '#d4c9f7' : '#e5e7eb'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: c.status === 'em_andamento' ? '#ede9fb' : '#F5F5F5', border: '1px solid ' + (c.status === 'em_andamento' ? '#d4c9f7' : '#e5e7eb'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.status === 'em_andamento' ? '#6043C1' : '#9ca3af'} strokeWidth="1.5"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>

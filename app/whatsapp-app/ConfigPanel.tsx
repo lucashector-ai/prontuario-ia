@@ -175,7 +175,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
                   {label:'Msgs recebidas (7d)',val:metricas?.recebidas||0,cor:'#8b5cf6'},
                   {label:'Taxa de resposta',val:(metricas?.taxa||0)+'%',cor:'#10b981'},
                 ].map(m => (
-                  <div key={m.label} style={{background:'#FAFAFA',borderRadius:12,padding:'16px 20px',border:'1px solid #e5e7eb'}}>
+                  <div key={m.label} style={{background:'#F5F5F5',borderRadius:12,padding:'16px 20px',border:'1px solid #e5e7eb'}}>
                     <p style={{fontSize:11,color:'#6b7280',margin:'0 0 8px',textTransform:'uppercase',letterSpacing:'0.05em'}}>{m.label}</p>
                     <p style={{fontSize:28,fontWeight:800,color:m.cor,margin:0}}>{m.val}</p>
                   </div>
@@ -266,7 +266,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
               </div>
               {relatorio&&(
                 <div>
-                  <div style={{background:'#FAFAFA',borderRadius:10,border:'1px solid #e5e7eb',overflow:'hidden'}}>
+                  <div style={{background:'#F5F5F5',borderRadius:10,border:'1px solid #e5e7eb',overflow:'hidden'}}>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',padding:'10px 16px',borderBottom:'1px solid #e5e7eb',background:'#f3f4f6'}}>
                       <span style={{fontSize:11,fontWeight:700,color:'#6b7280',textTransform:'uppercase'}}>Data</span>
                       <span style={{fontSize:11,fontWeight:700,color:'#6b7280',textTransform:'uppercase'}}>Enviadas</span>
@@ -310,7 +310,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
                 </div>
                 <button onClick={salvarConfig} disabled={salvandoConfig} style={btn('#00a884')}>{salvandoConfig?'Salvando...':'Salvar configurações'}</button>
               </div>
-              <div style={{marginTop:24,padding:'14px 18px',background:'#FAFAFA',borderRadius:10,border:'1px solid #e5e7eb'}}>
+              <div style={{marginTop:24,padding:'14px 18px',background:'#F5F5F5',borderRadius:10,border:'1px solid #e5e7eb'}}>
                 <p style={{fontSize:12,fontWeight:700,color:'#374151',margin:'0 0 12px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Webhooks Meta</p>
                 {[
                   {nome:'WhatsApp 📱', url:'https://prontuario-ia-five.vercel.app/api/whatsapp'},

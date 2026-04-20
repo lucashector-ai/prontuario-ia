@@ -600,7 +600,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   )
 
   if (tela === 'precall') return (
-    <div style={{ minHeight: '100dvh', background: '#FAFAFA', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', background: '#F5F5F5', display: 'flex', flexDirection: 'column' }}>
       {/* Header MedIA */}
       <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 34, height: 34, borderRadius: 8, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

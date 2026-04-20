@@ -37,7 +37,7 @@ export function HistoricoRapido({ pacienteId, medicoId }: Props) {
   if (!pacienteId || loading) return null
   if (consultas.length === 0) {
     return (
-      <div style={{ padding: '20px 24px', margin: '0 24px 20px', background: '#fafafa', borderRadius: 10, textAlign: 'center' }}>
+      <div style={{ padding: '20px 24px', margin: '0 24px 20px', background: '#F5F5F5', borderRadius: 10, textAlign: 'center' }}>
         <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>Este é o primeiro atendimento com este paciente.</p>
       </div>
     )
@@ -95,7 +95,7 @@ export function HistoricoRapido({ pacienteId, medicoId }: Props) {
               </button>
 
               {expandida && (
-                <div style={{ padding: '0 14px 14px', fontSize: 12, color: '#4b5563', lineHeight: 1.6, borderTop: '1px solid #FAFAFA' }}>
+                <div style={{ padding: '0 14px 14px', fontSize: 12, color: '#4b5563', lineHeight: 1.6, borderTop: '1px solid #F5F5F5' }}>
                   <p style={{ margin: '10px 0 2px', fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Queixa</p>
                   <p style={{ margin: 0 }}>{c.subjetivo || '—'}</p>
                   <p style={{ margin: '10px 0 2px', fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avaliação</p>

@@ -91,7 +91,7 @@ export default function LGPD() {
   )
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#FAFAFA', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       <main style={{ flex: 1, overflow: 'auto' }}>
         <div style={{ maxWidth: 680, margin: '0 auto', padding: 32 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Privacidade e LGPD</h1>
@@ -106,7 +106,7 @@ export default function LGPD() {
                 { icon: '✏️', titulo: 'Correção', desc: 'Corrija dados incorretos no perfil' },
                 { icon: '🗑', titulo: 'Eliminação', desc: 'Delete sua conta e todos os dados' },
               ].map(d => (
-                <div key={d.titulo} style={{ background: '#FAFAFA', borderRadius: 10, padding: 14 }}>
+                <div key={d.titulo} style={{ background: '#F5F5F5', borderRadius: 10, padding: 14 }}>
                   <p style={{ fontSize: 18, margin: '0 0 4px' }}>{d.icon}</p>
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>{d.titulo}</p>
                   <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{d.desc}</p>
@@ -135,7 +135,7 @@ export default function LGPD() {
                 { label: 'Envio de mensagens pelo WhatsApp', desc: 'Integração com Meta WhatsApp Business API', obrig: false },
                 { label: 'Análise de métricas e relatórios', desc: 'Dados aggregados para o dashboard', obrig: false },
               ].map(item => (
-                <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 14px', background: '#FAFAFA', borderRadius: 8 }}>
+                <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 14px', background: '#F5F5F5', borderRadius: 8 }}>
                   <div style={{ width: 18, height: 18, borderRadius: 4, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   </div>

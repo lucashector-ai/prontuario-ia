@@ -251,7 +251,7 @@ export default function Home() {
   if (!medico) return null
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#FAFAFA' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F5F5F5' }}>
       <Suspense fallback={null}>
         <SearchParamsReader onParams={handleSearchParams} />
       </Suspense>
@@ -280,8 +280,8 @@ export default function Home() {
                   ) : pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase())).map(p => (
                     <div key={p.id}
                       onClick={() => { setPacienteSelecionado(p); setBuscaPaciente(''); setModalPaciente(false) }}
-                      style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #FAFAFA', background: 'white' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#FAFAFA')}
+                      style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #F5F5F5', background: 'white' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#F5F5F5')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'white')}>
                       <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: '#111827' }}>{p.nome}</p>
                       {p.telefone && <p style={{ margin: 0, fontSize: 11, color: '#9ca3af' }}>{p.telefone}</p>}
@@ -513,7 +513,7 @@ export default function Home() {
           </div>
 
           {/* Right  -  Prontuario / Receita */}
-          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#FAFAFA' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F5F5F5' }}>
 
             {estado === 'processando' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: 'white' }}>
@@ -548,7 +548,7 @@ export default function Home() {
                       <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} insights={copiloto?.insights} padroes={copiloto?.padroes} totalConsultas={copiloto?.total_consultas} />
                       <button onClick={handleGerarReceita} disabled={gerandoReceita} style={{
                         width: '100%', marginTop: 12, padding: '10px', borderRadius: 8,
-                        border: '1px dashed #d1d5db', background: '#FAFAFA',
+                        border: '1px dashed #d1d5db', background: '#F5F5F5',
                         color: '#6b7280', fontSize: 12, cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontWeight: 500,
                       }}>
@@ -613,14 +613,14 @@ export default function Home() {
                       <div style={{ background: 'white', borderRadius: 12, padding: '16px' }}>
                         <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Pedido de exames</p>
                         {!exames ? (
-                          <button onClick={handleGerarExames} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#FAFAFA', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                          <button onClick={handleGerarExames} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#F5F5F5', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             {gerandoDoc ? 'Gerando...' : 'Gerar pedido de exames'}
                           </button>
                         ) : (
                           <div>
                             {exames.exames?.map((e: any, i: number) => (
-                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid #FAFAFA' }}>
+                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid #F5F5F5' }}>
                                 <div>
                                   <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{e.nome}</p>
                                   <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{e.indicacao}</p>
@@ -647,13 +647,13 @@ export default function Home() {
                             style={{ width: 60, padding: '5px 8px', borderRadius: 6, fontSize: 13, textAlign: 'center' }} />
                         </div>
                         {!atestado ? (
-                          <button onClick={handleGerarAtestado} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#FAFAFA', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                          <button onClick={handleGerarAtestado} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#F5F5F5', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             {gerandoDoc ? 'Gerando...' : 'Gerar atestado'}
                           </button>
                         ) : (
                           <div>
-                            <div style={{ background: '#FAFAFA', borderRadius: 8, padding: '12px', marginBottom: 12, fontSize: 13, color: '#374151', lineHeight: 1.7 }}>
+                            <div style={{ background: '#F5F5F5', borderRadius: 8, padding: '12px', marginBottom: 12, fontSize: 13, color: '#374151', lineHeight: 1.7 }}>
                               <p><strong>Paciente:</strong> {atestado.cid ? `CID ${atestado.cid}` : 'conforme avaliação médica'}</p>
                               <p><strong>Afastamento:</strong> {atestado.dias} dia{atestado.dias > 1 ? 's' : ''}</p>
                               {atestado.motivo && <p><strong>Motivo:</strong> {atestado.motivo}</p>}
