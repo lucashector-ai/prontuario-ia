@@ -66,14 +66,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Conta desativada. Procure o administrador.' }, { status: 403 })
       }
 
-      // A senha do médico pode estar em formato texto ou hash bcrypt
+      // Senha armazenada em senha_hash (bcrypt)
       let senhaOk = false
-      if (medico.senha && medico.senha.startsWith('$2')) {
-        // hash bcrypt
-        senhaOk = await bcrypt.compare(senha, medico.senha)
-      } else if (medico.senha === senha) {
-        // texto puro (dados legados)
-        senhaOk = true
+      if (medico.senha_hash && medico.senha_hash.startsWith('$2')) {
+        senhaOk = await bcrypt.compare(senha, medico.senha_hash)
       }
 
       if (!senhaOk) {
