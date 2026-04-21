@@ -12,14 +12,25 @@ export function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
   const [medico, setMedico] = useState<any>(null)
+  const [clinicaAdmin, setClinicaAdmin] = useState<any>(null)
 
   useEffect(() => {
+    const ca = localStorage.getItem('clinica_admin')
+    if (ca) {
+      setClinicaAdmin(JSON.parse(ca))
+      return
+    }
     const m = localStorage.getItem('medico')
     if (m) setMedico(JSON.parse(m))
   }, [])
 
+  // Clínica admin vê TUDO (incluindo Painel admin + Minha clínica)
+  const isClinicaAdmin = !!clinicaAdmin
   const isRecepcionista = medico?.cargo === 'recepcionista'
-  const isAdmin = medico?.cargo === 'admin'
+  const isMedicoAdmin = medico?.cargo === 'admin' // médico com cargo admin (legado)
+
+  // Mostra painel admin e configurações administrativas se for clínica admin OU médico admin
+  const temAcessoAdmin = isClinicaAdmin || isMedicoAdmin
 
   const grupos = [
     {
@@ -87,7 +98,7 @@ export function Sidebar() {
     {
       label: 'SETTINGS',
       items: [
-        ...(isAdmin ? [
+        ...(temAcessoAdmin ? [
           { href: '/configuracoes/sofia', label: 'Sofia · IA', icon: (
             <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
               <path d='M12 8V4H8'/><rect x='4' y='12' width='16' height='8' rx='2'/>
@@ -128,6 +139,8 @@ export function Sidebar() {
 
   const sair = () => {
     localStorage.removeItem('medico')
+    localStorage.removeItem('clinica_admin')
+    localStorage.removeItem('clinica')
     router.push('/login')
   }
 
