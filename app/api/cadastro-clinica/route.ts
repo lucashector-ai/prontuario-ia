@@ -1,40 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+function senhaEhForte(s: string) {
+  return s.length >= 8 && /[A-Z]/.test(s) && /[a-z]/.test(s) && /[0-9]/.test(s)
+}
+
+function gerarToken() {
+  return crypto.randomBytes(32).toString('hex')
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { clinica, admin, medicos } = body
 
-    // Validações básicas
     if (!clinica?.nome || !clinica?.email) {
       return NextResponse.json({ error: 'Nome e email da clínica são obrigatórios' }, { status: 400 })
     }
-    if (!admin?.email || !admin?.senha || admin.senha.length < 6) {
-      return NextResponse.json({ error: 'Admin precisa de email e senha (min 6 caracteres)' }, { status: 400 })
+    if (!admin?.email || !senhaEhForte(admin?.senha || '')) {
+      return NextResponse.json({ error: 'Admin precisa de email e senha forte (8+ caracteres com maiúscula, minúscula e número)' }, { status: 400 })
     }
 
-    // Verifica se email da clínica já existe
     const { data: clinicaExistente } = await supabase
       .from('clinicas').select('id').eq('email', clinica.email).maybeSingle()
     if (clinicaExistente) {
       return NextResponse.json({ error: 'Email da clínica já cadastrado' }, { status: 400 })
     }
 
-    // Verifica se email do admin já existe
     const { data: adminExistente } = await supabase
       .from('clinica_admins').select('id').eq('email', admin.email).maybeSingle()
     if (adminExistente) {
       return NextResponse.json({ error: 'Email do admin já está em uso' }, { status: 400 })
     }
 
-    // 1. Cria a clínica
+    // 1. Cria clínica
     const { data: novaClinica, error: errC } = await supabase
       .from('clinicas')
       .insert({
@@ -45,11 +51,12 @@ export async function POST(req: NextRequest) {
       })
       .select()
       .single()
-
     if (errC) return NextResponse.json({ error: errC.message }, { status: 500 })
 
-    // 2. Cria o admin (owner) da clínica
+    // 2. Cria admin com token de verificação
     const senhaHash = await bcrypt.hash(admin.senha, 10)
+    const tokenAdmin = gerarToken()
+    const expira = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString() // 48h
     const { error: errA } = await supabase
       .from('clinica_admins')
       .insert({
@@ -58,16 +65,19 @@ export async function POST(req: NextRequest) {
         senha_hash: senhaHash,
         nome: admin.nome || clinica.nome,
         role: 'owner',
+        verificado: false,
+        token_verificacao: tokenAdmin,
+        token_expira_em: expira,
       })
-
     if (errA) return NextResponse.json({ error: errA.message }, { status: 500 })
 
-    // 3. Cria os médicos da clínica (se houver)
+    // 3. Cria médicos
     const medicosCriados: any[] = []
     if (medicos && Array.isArray(medicos)) {
       for (const m of medicos) {
-        if (!m.nome || !m.email || !m.senha) continue
+        if (!m.nome || !m.email || !senhaEhForte(m.senha || '')) continue
         const senhaMedHash = await bcrypt.hash(m.senha, 10)
+        const tokenMed = gerarToken()
         const { data: novoMedico, error: errM } = await supabase
           .from('medicos')
           .insert({
@@ -79,6 +89,9 @@ export async function POST(req: NextRequest) {
             especialidade: m.especialidade || null,
             cargo: 'medico',
             ativo: true,
+            verificado: false,
+            token_verificacao: tokenMed,
+            token_expira_em: expira,
           })
           .select()
           .single()
@@ -86,10 +99,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // TODO: quando Resend estiver integrado, enviar emails de verificação aqui
+    // Links gerados (pra debug ou envio manual):
+    const baseUrl = req.headers.get('origin') || 'https://prontuario-ia-five.vercel.app'
+    const linkAdminVerify = `${baseUrl}/verificar-email?token=${tokenAdmin}&tipo=admin`
+
     return NextResponse.json({
       ok: true,
       clinica: novaClinica,
       medicos_criados: medicosCriados.length,
+      verificacao_pendente: true,
+      link_admin_verify_debug: linkAdminVerify, // só pra desenvolvimento
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
