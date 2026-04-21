@@ -9,16 +9,32 @@ const supabase = createClient(
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const medico_id = searchParams.get('medico_id')
+  const clinica_id = searchParams.get('clinica_id')
   const apenas_nao_lidas = searchParams.get('nao_lidas') === 'true'
 
-  if (!medico_id) return NextResponse.json({ error: 'medico_id obrigatorio' }, { status: 400 })
+  if (!medico_id && !clinica_id) {
+    return NextResponse.json({ error: 'medico_id ou clinica_id obrigatorio' }, { status: 400 })
+  }
 
   let query = supabase
     .from('notificacoes_medico')
     .select('*')
-    .eq('medico_id', medico_id)
     .order('criada_em', { ascending: false })
-    .limit(20)
+    .limit(30)
+
+  if (clinica_id) {
+    const { data: meds } = await supabase
+      .from('medicos')
+      .select('id')
+      .eq('clinica_id', clinica_id)
+    const medicoIds = (meds || []).map((m: any) => m.id)
+    if (medicoIds.length === 0) {
+      return NextResponse.json({ notificacoes: [] })
+    }
+    query = query.in('medico_id', medicoIds)
+  } else if (medico_id) {
+    query = query.eq('medico_id', medico_id)
+  }
 
   if (apenas_nao_lidas) query = query.eq('lida', false)
 

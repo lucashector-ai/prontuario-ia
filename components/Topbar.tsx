@@ -52,6 +52,11 @@ export function Topbar() {
           }
         })
       }
+      if (parsedAdmin.clinica_id) {
+        carregarNotificacoesClinica(parsedAdmin.clinica_id)
+        const intervalId = setInterval(() => carregarNotificacoesClinica(parsedAdmin.clinica_id), 60000)
+        return () => clearInterval(intervalId)
+      }
       return
     }
 
@@ -77,6 +82,20 @@ export function Topbar() {
   const carregarNotificacoes = async (medicoId: string) => {
     try {
       const r = await fetch(`/api/notificacoes-sofia?medico_id=${medicoId}&nao_lidas=true`)
+      const d = await r.json()
+      if (d.notificacoes) {
+        setNotifs(d.notificacoes.map((n: any) => ({
+          id: n.id, titulo: n.titulo, descricao: n.descricao,
+          tempo: formatarTempo(n.criada_em), lida: n.lida,
+          agendamento_id: n.agendamento_id, tipo: n.tipo,
+        })))
+      }
+    } catch {}
+  }
+
+  const carregarNotificacoesClinica = async (clinicaId: string) => {
+    try {
+      const r = await fetch(`/api/notificacoes-sofia?clinica_id=${clinicaId}&nao_lidas=true`)
       const d = await r.json()
       if (d.notificacoes) {
         setNotifs(d.notificacoes.map((n: any) => ({
@@ -253,7 +272,7 @@ export function Topbar() {
       <div style={{ flex: 1 }}/>
 
       {/* Chat e Notificações — só pra médico */}
-      {modo === 'medico' && (
+      {(modo === 'medico' || modo === 'clinica') && (
         <>
           <button
             onClick={() => router.push('/whatsapp-app')}
@@ -388,7 +407,7 @@ export function Topbar() {
             background: 'white', borderRadius: 12, zIndex: 100,
             padding: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           }}>
-            {modo === 'medico' && (
+            {(modo === 'medico' || modo === 'clinica') && (
               <button
                 onClick={() => { router.push('/perfil'); setMenuOpen(false) }}
                 style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
