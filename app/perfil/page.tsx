@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
 import { supabase } from '@/lib/supabase'
 
 const ACCENT = '#1F9D5C'
@@ -143,9 +142,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: BG }}>
-      <Sidebar />
-      <main style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Meu perfil</h1>
@@ -306,8 +303,7 @@ export default function PerfilPage() {
             </div>
           </div>
         </div>
-      </main>
       <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
+    </main>
   )
 }
