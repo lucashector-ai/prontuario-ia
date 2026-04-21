@@ -48,9 +48,13 @@ function VerificarContent() {
         setStatus('ok')
         setMensagem('Email confirmado! Redirecionando...')
 
-        // Todos vão pro onboarding
+        // Clínica admin vai pro painel, médico vai pro onboarding
         setTimeout(() => {
-          router.push('/onboarding')
+          if (data.tipo_conta === 'clinica') {
+            router.push('/admin')
+          } else {
+            router.push('/onboarding')
+          }
         }, 1200)
       })
       .catch(() => {
