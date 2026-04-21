@@ -28,7 +28,8 @@ function gerarSenhaProvisoria(): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { nome, crm, especialidade, email, senha, nome_clinica, clinica_id } = body
+    const { nome, crm, especialidade, email, senha, nome_clinica, clinica_id, cargo: cargoBody } = body
+    const cargoFinal = cargoBody === 'recepcionista' ? 'recepcionista' : 'medico'
 
     if (!nome || !email) {
       return NextResponse.json({ error: "Nome e email são obrigatórios" }, { status: 400 })
@@ -58,8 +59,8 @@ export async function POST(req: NextRequest) {
           senha_provisoria: true,
           ativo: true,
           clinica_id,
-          cargo: "medico",
-          verificado: true, // cadastrado pela clínica, já vem verificado
+          cargo: cargoFinal,
+          verificado: true,
         })
         .select()
         .single()
