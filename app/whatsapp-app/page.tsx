@@ -117,18 +117,69 @@ export default function WhatsAppApp() {
   }
 
   useEffect(()=>{
-    const m=localStorage.getItem('medico')
-    if(!m){router.push('/login');return}
-    const med=JSON.parse(m); setMedico(med)
-    const at=localStorage.getItem('atendente')
-    setUsuario(at?JSON.parse(at):med)
-    // Registra último acesso se for atendente
-    if (at) {
-      const atObj = JSON.parse(at)
-      fetch('/api/atendentes', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:atObj.id, ultimo_acesso: new Date().toISOString()})})
-    }
-    supabase.from('whatsapp_config').select('*').eq('medico_id',med.id).single().then(({data})=>setConfig(data))
-    carregarAtendentes(med.id)
+    (async () => {
+      // Cenario 1: clinica admin logada - usa primeiro medico da clinica
+      const ca = localStorage.getItem('clinica_admin')
+      if (ca) {
+        const admin = JSON.parse(ca)
+        if (!admin.clinica_id) { router.push('/admin'); return }
+        const { data: primeiroMedico } = await supabase
+          .from('medicos')
+          .select('*')
+          .eq('clinica_id', admin.clinica_id)
+          .eq('cargo', 'medico')
+          .eq('ativo', true)
+          .order('criado_em', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+        if (!primeiroMedico) {
+          // Sem medicos ainda - manda pro admin pra cadastrar
+          router.push('/admin')
+          return
+        }
+        setMedico(primeiroMedico)
+        setUsuario(admin)
+        supabase.from('whatsapp_config').select('*').eq('medico_id', primeiroMedico.id).single().then(({data})=>setConfig(data))
+        carregarAtendentes(primeiroMedico.id)
+        return
+      }
+
+      // Cenario 2: medico ou recepcionista logado
+      const m = localStorage.getItem('medico')
+      if (!m) { router.push('/login'); return }
+      const med = JSON.parse(m)
+
+      // Recepcionista: usa primeiro medico da clinica (paliativo)
+      if (med.cargo === 'recepcionista') {
+        if (!med.clinica_id) { router.push('/dashboard'); return }
+        const { data: primeiroMedico } = await supabase
+          .from('medicos')
+          .select('*')
+          .eq('clinica_id', med.clinica_id)
+          .eq('cargo', 'medico')
+          .eq('ativo', true)
+          .order('criado_em', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+        if (!primeiroMedico) { router.push('/agenda'); return }
+        setMedico(primeiroMedico)
+        setUsuario(med)
+        supabase.from('whatsapp_config').select('*').eq('medico_id', primeiroMedico.id).single().then(({data})=>setConfig(data))
+        carregarAtendentes(primeiroMedico.id)
+        return
+      }
+
+      // Medico normal - comportamento original
+      setMedico(med)
+      const at = localStorage.getItem('atendente')
+      setUsuario(at ? JSON.parse(at) : med)
+      if (at) {
+        const atObj = JSON.parse(at)
+        fetch('/api/atendentes', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:atObj.id, ultimo_acesso: new Date().toISOString()})})
+      }
+      supabase.from('whatsapp_config').select('*').eq('medico_id', med.id).single().then(({data})=>setConfig(data))
+      carregarAtendentes(med.id)
+    })()
   },[router])
 
   useEffect(()=>{
