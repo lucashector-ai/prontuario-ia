@@ -80,10 +80,10 @@ export default function Agenda() {
   const [pacientes, setPacientes] = useState<any[]>([])
   const [agendamentos, setAgendamentos] = useState<any[]>([])
 
-  const [semana, setSemana] = useState(new Date())
-  const [diaSelecionado, setDiaSelecionado] = useState(new Date())
+  const [semana, setSemana] = useState<Date>(() => new Date(0))
+  const [diaSelecionado, setDiaSelecionado] = useState<Date>(() => new Date(0))
   const [viewMode, setViewMode] = useState<'semana' | 'dia' | 'mes'>('semana')
-  const [mesVisualizado, setMesVisualizado] = useState(new Date())
+  const [mesVisualizado, setMesVisualizado] = useState<Date>(() => new Date(0))
 
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
   const [filtroTipo, setFiltroTipo] = useState<string>('todos')
@@ -104,15 +104,20 @@ export default function Agenda() {
   const [enviandoPreConsulta, setEnviandoPreConsulta] = useState(false)
   const [preConsultaEnviada, setPreConsultaEnviada] = useState(false)
 
-  const [agora, setAgora] = useState(new Date())
+  const [agora, setAgora] = useState<Date | null>(null)
   useEffect(() => {
+    const agora_ = new Date()
+    setAgora(agora_)
+    setSemana(agora_)
+    setDiaSelecionado(agora_)
+    setMesVisualizado(agora_)
     const t = setInterval(() => setAgora(new Date()), 60000)
     return () => clearInterval(t)
   }, [])
 
   const diasSemana = getWeekDays(semana)
-  const hojeStr = new Date().toDateString()
-  const isHoje = (d: Date) => d.toDateString() === hojeStr
+  const hojeStr = agora ? agora.toDateString() : ''
+  const isHoje = (d: Date) => hojeStr !== '' && d.toDateString() === hojeStr
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -418,8 +423,8 @@ export default function Agenda() {
   }
 
   const renderGridSemana = () => {
-    const agoraIdx = toSlotIdx(agora)
-    const mostrarLinhaAgora = agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
+    const agoraIdx = agora ? toSlotIdx(agora) : -1
+    const mostrarLinhaAgora = agora !== null && agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
     return (
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
@@ -550,8 +555,8 @@ export default function Agenda() {
   }
 
   const renderGridDia = () => {
-    const agoraIdx = toSlotIdx(agora)
-    const mostrarLinhaAgora = isHoje(diaSelecionado) && agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
+    const agoraIdx = agora ? toSlotIdx(agora) : -1
+    const mostrarLinhaAgora = agora !== null && isHoje(diaSelecionado) && agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
     const ags = getAgsDia(diaSelecionado)
     return (
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px' }}>
