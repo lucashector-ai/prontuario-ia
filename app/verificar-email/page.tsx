@@ -1,12 +1,12 @@
 'use client'
 
 import { Suspense, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 const ACCENT = '#1F9D5C'
 
 function VerificarContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'carregando' | 'ok' | 'erro'>('carregando')
   const [mensagem, setMensagem] = useState('')
@@ -28,19 +28,36 @@ function VerificarContent() {
     })
       .then(r => r.json())
       .then(data => {
-        if (data.ok) {
-          setStatus('ok')
-          setMensagem(data.mensagem || 'Email verificado com sucesso!')
-        } else {
+        if (!data.ok) {
           setStatus('erro')
           setMensagem(data.error || 'Não foi possível verificar o email')
+          return
         }
+
+        // Auto-login: grava localStorage
+        if (data.tipo_conta === 'clinica') {
+          localStorage.setItem('clinica_admin', JSON.stringify(data.admin))
+          localStorage.setItem('clinica', JSON.stringify(data.clinica))
+          localStorage.removeItem('medico')
+        } else {
+          localStorage.setItem('medico', JSON.stringify(data.medico))
+          if (data.clinica) localStorage.setItem('clinica', JSON.stringify(data.clinica))
+          localStorage.removeItem('clinica_admin')
+        }
+
+        setStatus('ok')
+        setMensagem('Email confirmado! Redirecionando...')
+
+        // Todos vão pro onboarding
+        setTimeout(() => {
+          router.push('/onboarding')
+        }, 1200)
       })
       .catch(() => {
         setStatus('erro')
         setMensagem('Erro de conexão')
       })
-  }, [searchParams])
+  }, [searchParams, router])
 
   return (
     <div style={{ minHeight: '100vh', background: '#F5F5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -48,7 +65,7 @@ function VerificarContent() {
         {status === 'carregando' && (
           <>
             <div style={{ width: 40, height: 40, border: `3px solid #E8F7EF`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 20px' }}/>
-            <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Verificando seu email...</p>
+            <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Confirmando sua conta...</p>
           </>
         )}
         {status === 'ok' && (
@@ -58,11 +75,8 @@ function VerificarContent() {
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Email verificado!</h1>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.6 }}>{mensagem}</p>
-            <Link href="/login" style={{ display: 'inline-block', padding: '12px 24px', background: ACCENT, color: 'white', fontSize: 13, fontWeight: 600, borderRadius: 10, textDecoration: 'none' }}>
-              Ir para o login
-            </Link>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Conta confirmada!</h1>
+            <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>{mensagem}</p>
           </>
         )}
         {status === 'erro' && (
@@ -76,9 +90,9 @@ function VerificarContent() {
             </div>
             <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Não foi possível verificar</h1>
             <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.6 }}>{mensagem}</p>
-            <Link href="/login" style={{ display: 'inline-block', padding: '12px 24px', background: 'white', color: '#374151', fontSize: 13, fontWeight: 600, borderRadius: 10, textDecoration: 'none', border: '1px solid #e5e7eb' }}>
+            <button onClick={() => router.push('/login')} style={{ padding: '12px 24px', background: 'white', color: '#374151', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid #e5e7eb', cursor: 'pointer' }}>
               Voltar ao login
-            </Link>
+            </button>
           </>
         )}
       </div>

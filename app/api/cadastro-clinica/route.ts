@@ -40,7 +40,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email do admin já está em uso' }, { status: 400 })
     }
 
-    // 1. Cria clínica
     const { data: novaClinica, error: errC } = await supabase
       .from('clinicas')
       .insert({
@@ -53,11 +52,11 @@ export async function POST(req: NextRequest) {
       .single()
     if (errC) return NextResponse.json({ error: errC.message }, { status: 500 })
 
-    // 2. Cria admin com token de verificação
     const senhaHash = await bcrypt.hash(admin.senha, 10)
     const tokenAdmin = gerarToken()
-    const expira = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString() // 48h
-    const { error: errA } = await supabase
+    const expira = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
+
+    const { data: novoAdmin, error: errA } = await supabase
       .from('clinica_admins')
       .insert({
         clinica_id: novaClinica.id,
@@ -69,9 +68,10 @@ export async function POST(req: NextRequest) {
         token_verificacao: tokenAdmin,
         token_expira_em: expira,
       })
+      .select()
+      .single()
     if (errA) return NextResponse.json({ error: errA.message }, { status: 500 })
 
-    // 3. Cria médicos
     const medicosCriados: any[] = []
     if (medicos && Array.isArray(medicos)) {
       for (const m of medicos) {
@@ -99,17 +99,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // TODO: quando Resend estiver integrado, enviar emails de verificação aqui
-    // Links gerados (pra debug ou envio manual):
-    const baseUrl = req.headers.get('origin') || 'https://prontuario-ia-five.vercel.app'
-    const linkAdminVerify = `${baseUrl}/verificar-email?token=${tokenAdmin}&tipo=admin`
-
     return NextResponse.json({
       ok: true,
       clinica: novaClinica,
+      admin_id: novoAdmin.id,
+      admin_email: novoAdmin.email,
       medicos_criados: medicosCriados.length,
-      verificacao_pendente: true,
-      link_admin_verify_debug: linkAdminVerify, // só pra desenvolvimento
+      token_verificacao: tokenAdmin,
+      tipo_conta: 'clinica',
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

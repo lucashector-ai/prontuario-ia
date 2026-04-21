@@ -106,7 +106,12 @@ export default function CadastroPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erro ao cadastrar')
-      router.push('/login?cadastrado=1')
+      const params = new URLSearchParams({
+        token: data.token_verificacao,
+        tipo: 'admin',
+        email: data.admin_email,
+      })
+      router.push(`/cadastro-sucesso?${params.toString()}`)
     } catch (e: any) {
       setErro(e.message)
     } finally {
@@ -141,7 +146,12 @@ export default function CadastroPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erro ao cadastrar')
-      router.push('/login?cadastrado=1')
+      const params = new URLSearchParams({
+        token: data.token_verificacao,
+        tipo: 'medico',
+        email: data.email,
+      })
+      router.push(`/cadastro-sucesso?${params.toString()}`)
     } catch (e: any) {
       setErro(e.message)
     } finally {

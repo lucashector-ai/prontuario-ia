@@ -65,14 +65,12 @@ export async function POST(req: NextRequest) {
       .single()
     if (errM) return NextResponse.json({ error: errM.message }, { status: 500 })
 
-    const baseUrl = req.headers.get('origin') || 'https://prontuario-ia-five.vercel.app'
-    const linkVerify = `${baseUrl}/verificar-email?token=${token}&tipo=medico`
-
     return NextResponse.json({
       ok: true,
       medico: novoMedico,
-      verificacao_pendente: true,
-      link_verify_debug: linkVerify,
+      token_verificacao: token,
+      tipo_conta: 'medico',
+      email,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
