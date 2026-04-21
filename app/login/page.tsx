@@ -1,28 +1,67 @@
 'use client'
 import Link from 'next/link'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function Login() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [form, setForm] = useState({ email: '', senha: '' })
   const [erro, setErro] = useState('')
+  const [sucesso, setSucesso] = useState('')
   const [carregando, setCarregando] = useState(false)
   const [showSenha, setShowSenha] = useState(false)
 
+  useEffect(() => {
+    if (searchParams?.get('cadastrado') === '1') {
+      setSucesso('Conta criada com sucesso! Faça login pra entrar.')
+    }
+  }, [searchParams])
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setCarregando(true); setErro('')
+    e.preventDefault(); setCarregando(true); setErro(''); setSucesso('')
     try {
       const res = await fetch('/api/login', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
       const data = await res.json()
-      if (data.medico) { localStorage.setItem('medico', JSON.stringify(data.medico)); if (!data.medico.onboarding_concluido) { router.push('/onboarding') } else { router.push('/') } }
-      else setErro(data.error || 'E-mail ou senha incorretos')
-    } catch { setErro('Erro de conexão') }
-    finally { setCarregando(false) }
+
+      if (!res.ok) {
+        setErro(data.error || 'Erro ao entrar')
+        return
+      }
+
+      // Login como clínica
+      if (data.tipo === 'clinica') {
+        localStorage.setItem('clinica_admin', JSON.stringify(data.admin))
+        localStorage.setItem('clinica', JSON.stringify(data.clinica))
+        localStorage.removeItem('medico')
+        router.push('/admin')
+        return
+      }
+
+      // Login como médico (comportamento atual mantido)
+      if (data.tipo === 'medico' && data.medico) {
+        localStorage.setItem('medico', JSON.stringify(data.medico))
+        if (data.clinica) localStorage.setItem('clinica', JSON.stringify(data.clinica))
+        localStorage.removeItem('clinica_admin')
+
+        if (!data.medico.onboarding_concluido) {
+          router.push('/onboarding')
+        } else {
+          router.push('/')
+        }
+        return
+      }
+
+      setErro('Resposta inesperada do servidor')
+    } catch {
+      setErro('Erro de conexão')
+    } finally {
+      setCarregando(false)
+    }
   }
 
   return (
@@ -91,6 +130,12 @@ export default function Login() {
             </p>
           </div>
 
+          {sucesso && (
+            <div style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: 10, padding: '11px 16px', marginBottom: 20 }}>
+              <p style={{ fontSize: 13, color: '#16a34a', margin: 0, fontWeight: 500 }}>{sucesso}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 8 }}>E-mail</label>
@@ -129,7 +174,7 @@ export default function Login() {
 
             <button type="submit" disabled={carregando} style={{
               padding: '14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-              background: carregando ? '#b9a9ef' : '#1F9D5C',
+              background: carregando ? '#9ca3af' : '#1F9D5C',
               color: 'white', fontSize: 15, fontWeight: 700,
               letterSpacing: '0.01em', marginTop: 4,
               transition: 'background 0.15s',
@@ -140,11 +185,19 @@ export default function Login() {
 
           <div style={{ marginTop: 32, paddingTop: 28, borderTop: '1px solid #f3f4f6', textAlign: 'center' }}>
             <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
-              Acesso exclusivo para clínicas cadastradas.
+              Não tem conta? <Link href="/cadastro" style={{ color: '#1F9D5C', textDecoration: 'none', fontWeight: 600 }}>Cadastre sua clínica ou consultório</Link>
             </p>
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>Carregando...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 }

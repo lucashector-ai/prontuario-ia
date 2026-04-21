@@ -14,6 +14,7 @@ export function Topbar() {
   const pathname = usePathname()
 
   const [medico, setMedico] = useState<any>(null)
+  const [clinicaAdmin, setClinicaAdmin] = useState<any>(null)
   const [clinica, setClinica] = useState<any>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
@@ -21,7 +22,6 @@ export function Topbar() {
 
   const [busca, setBusca] = useState('')
   const [buscaFocus, setBuscaFocus] = useState(false)
-  const [buscaHover, setBuscaHover] = useState(false)
   const [resultadosOpen, setResultadosOpen] = useState(false)
   const [resultados, setResultados] = useState<{ pacientes: any[]; agendamentos: any[] }>({ pacientes: [], agendamentos: [] })
   const [buscando, setBuscando] = useState(false)
@@ -31,13 +31,37 @@ export function Topbar() {
   const buscaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Modo: 'clinica' quando logado como clinica_admin, 'medico' quando logado como médico
+  const modo: 'clinica' | 'medico' | null = clinicaAdmin ? 'clinica' : (medico ? 'medico' : null)
+
   useEffect(() => {
+    // Primeiro tenta clinica_admin
+    const ca = localStorage.getItem('clinica_admin')
+    const c = localStorage.getItem('clinica')
+
+    if (ca) {
+      const parsedAdmin = JSON.parse(ca)
+      setClinicaAdmin(parsedAdmin)
+      if (c) {
+        setClinica(JSON.parse(c))
+      } else if (parsedAdmin.clinica_id) {
+        supabase.from('clinicas').select('id, nome, logo_url, tipo').eq('id', parsedAdmin.clinica_id).single().then(({ data }) => {
+          if (data) {
+            setClinica(data)
+            localStorage.setItem('clinica', JSON.stringify(data))
+          }
+        })
+      }
+      return
+    }
+
+    // Senão, tenta medico
     const m = localStorage.getItem('medico')
     if (m) {
       const med = JSON.parse(m)
       setMedico(med)
       if (med.clinica_id) {
-        supabase.from('clinicas').select('id, nome, logo_url').eq('id', med.clinica_id).single().then(({ data }) => {
+        supabase.from('clinicas').select('id, nome, logo_url, tipo').eq('id', med.clinica_id).single().then(({ data }) => {
           if (data) setClinica(data)
           else setClinica({ nome: med.clinica_nome || null, logo_url: med.clinica_logo || null })
         })
@@ -93,7 +117,7 @@ export function Topbar() {
   }, [])
 
   useEffect(() => {
-    if (!medico || !busca.trim() || busca.length < 2) {
+    if (modo !== 'medico' || !medico || !busca.trim() || busca.length < 2) {
       setResultados({ pacientes: [], agendamentos: [] })
       return
     }
@@ -109,18 +133,21 @@ export function Topbar() {
       setBuscando(false)
     }, 250)
     return () => clearTimeout(timer)
-  }, [busca, medico])
+  }, [busca, medico, modo])
 
   const iniciaisUsuario = useMemo(() => {
-    if (!medico?.nome) return '??'
-    return medico.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
-  }, [medico])
+    const nome = clinicaAdmin?.nome || medico?.nome
+    if (!nome) return '??'
+    return nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
+  }, [medico, clinicaAdmin])
 
-  const primeiroNome = medico?.nome?.split(' ')[0] || ''
+  const primeiroNome = (clinicaAdmin?.nome || medico?.nome || '').split(' ')[0] || ''
   const inicialClinica = clinica?.nome?.[0]?.toUpperCase() || ''
 
   const sair = () => {
     localStorage.removeItem('medico')
+    localStorage.removeItem('clinica_admin')
+    localStorage.removeItem('clinica')
     router.push('/login')
   }
 
@@ -135,175 +162,179 @@ export function Topbar() {
     transition: 'background 0.12s',
   })
 
-  // Fundo da busca: normal, hover, ou focus
-  const buscaBg = BUSCA_BG
-
   return (
     <header style={{
       height: 64, background: 'white',
       display: 'flex', alignItems: 'center',
       gap: 8, padding: '0 20px', flexShrink: 0,
     }}>
-      {/* ESQUERDA — Busca */}
-      <div ref={buscaRef}
-        style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
-        <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke={TEXT_MUTED} strokeWidth='2'
-          style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-          <circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/>
-        </svg>
-        <input
-          ref={inputRef}
-          type='text'
-          placeholder='Buscar pacientes, agendamentos...'
-          value={busca}
-          onChange={e => setBusca(e.target.value)}
-          onFocus={() => { setBuscaFocus(true); if (busca.length >= 2) setResultadosOpen(true) }}
-          onBlur={() => setBuscaFocus(false)}
-          style={{
-            width: '100%', height: 44,
-            padding: '0 16px 0 42px',
-            background: buscaBg,
-            border: 'none', borderRadius: 12,
-            outline: 'none', fontSize: 14, color: TEXT_DEFAULT,
-            transition: 'background 0.15s',
-            boxSizing: 'border-box',
-            WebkitAppearance: 'none' as const,
-            MozAppearance: 'none' as const,
-            appearance: 'none' as const,
-            boxShadow: 'none',
-          }}
-        />
-
-        {resultadosOpen && busca.length >= 2 && (
-          <div style={{
-            position: 'absolute', top: 52, left: 0, right: 0,
-            background: 'white', borderRadius: 12,
-            maxHeight: 380, overflow: 'auto', zIndex: 100,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          }}>
-            {buscando && <div style={{ padding: 16, fontSize: 12, color: TEXT_MUTED }}>Buscando...</div>}
-            {!buscando && resultados.pacientes.length === 0 && resultados.agendamentos.length === 0 && (
-              <div style={{ padding: 16, fontSize: 12, color: TEXT_MUTED }}>Nenhum resultado</div>
-            )}
-            {resultados.pacientes.length > 0 && (
-              <div>
-                <p style={{ margin: 0, padding: '10px 16px 6px', fontSize: 10, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Pacientes</p>
-                {resultados.pacientes.map((p: any) => (
-                  <button key={p.id}
-                    onClick={() => { router.push(`/pacientes/${p.id}`); setBusca(''); setResultadosOpen(false) }}
-                    style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    {p.nome}
-                    {p.telefone && <span style={{ color: TEXT_MUTED, marginLeft: 8, fontSize: 11 }}>{p.telefone}</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-            {resultados.agendamentos.length > 0 && (
-              <div>
-                <p style={{ margin: 0, padding: '10px 16px 6px', fontSize: 10, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Agendamentos</p>
-                {resultados.agendamentos.map((a: any) => (
-                  <button key={a.id}
-                    onClick={() => { router.push('/agenda'); setBusca(''); setResultadosOpen(false) }}
-                    style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    {a.motivo || 'Consulta'}
-                    <span style={{ color: TEXT_MUTED, marginLeft: 8, fontSize: 11 }}>{new Date(a.data_hora).toLocaleDateString('pt-BR')}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* DIREITA — empurra todo o resto pra direita */}
-      <div style={{ flex: 1 }}/>
-
-      {/* 1. Chat */}
-      <button
-        onClick={() => router.push('/whatsapp-app')}
-        title='Chat'
-        style={iconBtnStyle(pathname.startsWith('/whatsapp'))}
-        onMouseEnter={e => { if (!pathname.startsWith('/whatsapp')) e.currentTarget.style.background = '#F5F5F5' }}
-        onMouseLeave={e => { if (!pathname.startsWith('/whatsapp')) e.currentTarget.style.background = 'transparent' }}
-      >
-        <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke={TEXT_DEFAULT} strokeWidth='2'>
-          <path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/>
-        </svg>
-      </button>
-
-      {/* 2. Notificação */}
-      <div ref={notifRef} style={{ position: 'relative' }}>
-        <button
-          onClick={() => setNotifOpen(!notifOpen)}
-          style={iconBtnStyle(notifOpen)}
-          onMouseEnter={e => { if (!notifOpen) e.currentTarget.style.background = '#F5F5F5' }}
-          onMouseLeave={e => { if (!notifOpen) e.currentTarget.style.background = 'transparent' }}
-        >
-          <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke={TEXT_DEFAULT} strokeWidth='2'>
-            <path d='M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9'/>
-            <path d='M13.73 21a2 2 0 01-3.46 0'/>
+      {/* ESQUERDA — Busca (só mostra se for médico) */}
+      {modo === 'medico' ? (
+        <div ref={buscaRef}
+          style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
+          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke={TEXT_MUTED} strokeWidth='2'
+            style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+            <circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/>
           </svg>
-          {notifsNaoLidas > 0 && (
-            <span style={{
-              position: 'absolute', top: 9, right: 10,
-              width: 8, height: 8, borderRadius: '50%', background: '#DC2626',
-            }}/>
-          )}
-        </button>
+          <input
+            ref={inputRef}
+            type='text'
+            placeholder='Buscar pacientes, agendamentos...'
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+            onFocus={() => { setBuscaFocus(true); if (busca.length >= 2) setResultadosOpen(true) }}
+            onBlur={() => setBuscaFocus(false)}
+            style={{
+              width: '100%', height: 44,
+              padding: '0 16px 0 42px',
+              background: BUSCA_BG,
+              border: 'none', borderRadius: 12,
+              outline: 'none', fontSize: 14, color: TEXT_DEFAULT,
+              transition: 'background 0.15s',
+              boxSizing: 'border-box',
+              WebkitAppearance: 'none' as const,
+              MozAppearance: 'none' as const,
+              appearance: 'none' as const,
+              boxShadow: 'none',
+            }}
+          />
 
-        {notifOpen && (
-          <div style={{
-            position: 'absolute', top: 48, right: 0, width: 340,
-            background: 'white', borderRadius: 12, zIndex: 100,
-            maxHeight: 440, overflow: 'auto',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          }}>
-            <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: TEXT_DEFAULT }}>Notificacoes</p>
-              {notifs.length > 0 && (
-                <button
-                  onClick={async () => {
-                    await Promise.all(notifs.map((n: any) => fetch('/api/notificacoes-sofia', {
-                      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ id: n.id, lida: true }),
-                    })))
-                    setNotifs([])
-                  }}
-                  style={{ fontSize: 11, color: ACCENT, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
-                >Marcar todas</button>
+          {resultadosOpen && busca.length >= 2 && (
+            <div style={{
+              position: 'absolute', top: 52, left: 0, right: 0,
+              background: 'white', borderRadius: 12,
+              maxHeight: 380, overflow: 'auto', zIndex: 100,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            }}>
+              {buscando && <div style={{ padding: 16, fontSize: 12, color: TEXT_MUTED }}>Buscando...</div>}
+              {!buscando && resultados.pacientes.length === 0 && resultados.agendamentos.length === 0 && (
+                <div style={{ padding: 16, fontSize: 12, color: TEXT_MUTED }}>Nenhum resultado</div>
+              )}
+              {resultados.pacientes.length > 0 && (
+                <div>
+                  <p style={{ margin: 0, padding: '10px 16px 6px', fontSize: 10, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Pacientes</p>
+                  {resultados.pacientes.map((p: any) => (
+                    <button key={p.id}
+                      onClick={() => { router.push(`/pacientes/${p.id}`); setBusca(''); setResultadosOpen(false) }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      {p.nome}
+                      {p.telefone && <span style={{ color: TEXT_MUTED, marginLeft: 8, fontSize: 11 }}>{p.telefone}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {resultados.agendamentos.length > 0 && (
+                <div>
+                  <p style={{ margin: 0, padding: '10px 16px 6px', fontSize: 10, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Agendamentos</p>
+                  {resultados.agendamentos.map((a: any) => (
+                    <button key={a.id}
+                      onClick={() => { router.push('/agenda'); setBusca(''); setResultadosOpen(false) }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      {a.motivo || 'Consulta'}
+                      <span style={{ color: TEXT_MUTED, marginLeft: 8, fontSize: 11 }}>{new Date(a.data_hora).toLocaleDateString('pt-BR')}</span>
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
-            {notifs.length === 0 ? (
-              <div style={{ padding: '32px 20px', textAlign: 'center', fontSize: 12, color: TEXT_MUTED }}>Tudo em dia</div>
-            ) : (
-              notifs.map((n: any) => (
-                <div key={n.id}
-                  onClick={() => {
-                    marcarNotifLida(n.id)
-                    if (n.agendamento_id) router.push('/agenda')
-                    setNotifOpen(false)
-                  }}
-                  style={{ padding: '12px 16px', cursor: 'pointer', background: n.lida ? 'white' : '#F8FAFC' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
-                  onMouseLeave={e => e.currentTarget.style.background = n.lida ? 'white' : '#F8FAFC'}
-                >
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: TEXT_DEFAULT }}>{n.titulo}</p>
-                  {n.descricao && <p style={{ margin: '2px 0 0', fontSize: 11, color: TEXT_MUTED }}>{n.descricao}</p>}
-                  <p style={{ margin: '4px 0 0', fontSize: 10, color: TEXT_MUTED }}>{n.tempo}</p>
+          )}
+        </div>
+      ) : (
+        <div style={{ flex: 1 }}/>
+      )}
+
+      {/* DIREITA — empurra resto pra direita */}
+      <div style={{ flex: 1 }}/>
+
+      {/* Chat e Notificações — só pra médico */}
+      {modo === 'medico' && (
+        <>
+          <button
+            onClick={() => router.push('/whatsapp-app')}
+            title='Chat'
+            style={iconBtnStyle(pathname.startsWith('/whatsapp'))}
+            onMouseEnter={e => { if (!pathname.startsWith('/whatsapp')) e.currentTarget.style.background = '#F5F5F5' }}
+            onMouseLeave={e => { if (!pathname.startsWith('/whatsapp')) e.currentTarget.style.background = 'transparent' }}
+          >
+            <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke={TEXT_DEFAULT} strokeWidth='2'>
+              <path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/>
+            </svg>
+          </button>
+
+          <div ref={notifRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setNotifOpen(!notifOpen)}
+              style={iconBtnStyle(notifOpen)}
+              onMouseEnter={e => { if (!notifOpen) e.currentTarget.style.background = '#F5F5F5' }}
+              onMouseLeave={e => { if (!notifOpen) e.currentTarget.style.background = 'transparent' }}
+            >
+              <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke={TEXT_DEFAULT} strokeWidth='2'>
+                <path d='M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9'/>
+                <path d='M13.73 21a2 2 0 01-3.46 0'/>
+              </svg>
+              {notifsNaoLidas > 0 && (
+                <span style={{
+                  position: 'absolute', top: 9, right: 10,
+                  width: 8, height: 8, borderRadius: '50%', background: '#DC2626',
+                }}/>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div style={{
+                position: 'absolute', top: 48, right: 0, width: 340,
+                background: 'white', borderRadius: 12, zIndex: 100,
+                maxHeight: 440, overflow: 'auto',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              }}>
+                <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: TEXT_DEFAULT }}>Notificacoes</p>
+                  {notifs.length > 0 && (
+                    <button
+                      onClick={async () => {
+                        await Promise.all(notifs.map((n: any) => fetch('/api/notificacoes-sofia', {
+                          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ id: n.id, lida: true }),
+                        })))
+                        setNotifs([])
+                      }}
+                      style={{ fontSize: 11, color: ACCENT, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                    >Marcar todas</button>
+                  )}
                 </div>
-              ))
+                {notifs.length === 0 ? (
+                  <div style={{ padding: '32px 20px', textAlign: 'center', fontSize: 12, color: TEXT_MUTED }}>Tudo em dia</div>
+                ) : (
+                  notifs.map((n: any) => (
+                    <div key={n.id}
+                      onClick={() => {
+                        marcarNotifLida(n.id)
+                        if (n.agendamento_id) router.push('/agenda')
+                        setNotifOpen(false)
+                      }}
+                      style={{ padding: '12px 16px', cursor: 'pointer', background: n.lida ? 'white' : '#F8FAFC' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
+                      onMouseLeave={e => e.currentTarget.style.background = n.lida ? 'white' : '#F8FAFC'}
+                    >
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: TEXT_DEFAULT }}>{n.titulo}</p>
+                      {n.descricao && <p style={{ margin: '2px 0 0', fontSize: 11, color: TEXT_MUTED }}>{n.descricao}</p>}
+                      <p style={{ margin: '4px 0 0', fontSize: 10, color: TEXT_MUTED }}>{n.tempo}</p>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
-      {/* 3. Clínica */}
+      {/* Clínica — aparece em ambos os modos */}
       {clinica?.nome && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
@@ -320,11 +351,11 @@ export function Topbar() {
               fontSize: 11, fontWeight: 700,
             }}>{inicialClinica}</div>
           )}
-          <span style={{ fontSize: 13, fontWeight: 500, color: TEXT_DEFAULT, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clinica.nome}</span>
+          <span style={{ fontSize: 13, fontWeight: 500, color: TEXT_DEFAULT, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clinica.nome}</span>
         </div>
       )}
 
-      {/* 4. Médico */}
+      {/* Avatar do usuário — mostra médico OU admin da clínica */}
       <div ref={menuRef} style={{ position: 'relative' }}>
         <button
           onClick={() => setMenuOpen(!menuOpen)}
@@ -357,12 +388,30 @@ export function Topbar() {
             background: 'white', borderRadius: 12, zIndex: 100,
             padding: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           }}>
-            <button
-              onClick={() => { router.push('/perfil'); setMenuOpen(false) }}
-              style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-              onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-            >Meu perfil</button>
+            {modo === 'medico' && (
+              <button
+                onClick={() => { router.push('/perfil'); setMenuOpen(false) }}
+                style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
+                onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >Meu perfil</button>
+            )}
+            {modo === 'clinica' && (
+              <>
+                <button
+                  onClick={() => { router.push('/admin'); setMenuOpen(false) }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >Painel administrativo</button>
+                <button
+                  onClick={() => { router.push('/minha-clinica'); setMenuOpen(false) }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >Dados da clínica</button>
+              </>
+            )}
             <button
               onClick={sair}
               style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: '#DC2626' }}

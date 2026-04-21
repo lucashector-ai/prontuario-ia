@@ -11,7 +11,6 @@
     "@anthropic-ai/sdk": "^0.24.0",
     "@deepgram/sdk": "^5.0.0",
     "@supabase/supabase-js": "^2.100.0",
-    "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^3.0.3",
     "formidable": "^3.5.1",
     "next": "14.2.0",
@@ -20,6 +19,7 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "autoprefixer": "^10.4.0",
