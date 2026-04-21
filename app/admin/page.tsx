@@ -26,6 +26,16 @@ export default function Admin() {
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
+    // Prioriza clínica admin
+    const ca = localStorage.getItem('clinica_admin')
+    if (ca) {
+      const admin = JSON.parse(ca)
+      // Adapta pro shape que o resto do componente espera
+      setMedico({ ...admin, cargo: 'admin' })
+      carregarDados(admin.clinica_id)
+      return
+    }
+    // Fallback: médico com cargo admin
     const m = localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
     const med = JSON.parse(m)

@@ -8,14 +8,32 @@ export default function HomePage() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('medico')
-      if (!raw) { router.replace('/login'); return }
-      const medico = JSON.parse(raw)
-      if (!medico.onboarding_concluido) {
-        router.replace('/onboarding')
-      } else {
-        router.replace('/dashboard')
+      // Prioridade 1: clínica admin
+      const rawAdmin = localStorage.getItem('clinica_admin')
+      if (rawAdmin) {
+        const admin = JSON.parse(rawAdmin)
+        if (!admin.onboarding_concluido) {
+          router.replace('/onboarding')
+        } else {
+          router.replace('/admin')
+        }
+        return
       }
+
+      // Prioridade 2: médico
+      const rawMedico = localStorage.getItem('medico')
+      if (rawMedico) {
+        const medico = JSON.parse(rawMedico)
+        if (!medico.onboarding_concluido) {
+          router.replace('/onboarding')
+        } else {
+          router.replace('/dashboard')
+        }
+        return
+      }
+
+      // Nenhum dos dois: manda pro login
+      router.replace('/login')
     } catch {
       router.replace('/login')
     }
