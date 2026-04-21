@@ -36,14 +36,22 @@ export default function Admin() {
 
   const carregarDados = async (clinicaId: string) => {
     setCarregando(true)
-    const { data: meds } = await supabase
-      .from('medicos')
-      .select('id, nome, email, crm, especialidade, ativo, criado_em, cargo, telefone, foto_url')
-      .eq('clinica_id', clinicaId)
-      .order('criado_em')
+    try {
+      const { data: meds, error } = await supabase
+        .from('medicos')
+        .select('id, nome, email, crm, especialidade, ativo, criado_em, cargo, telefone, foto_url, clinica_id')
+        .eq('clinica_id', clinicaId)
+        .order('criado_em')
 
-    if (meds) {
-      setMedicos(meds)
+      if (error) {
+        console.error('Erro ao carregar médicos:', error)
+        setCarregando(false)
+        return
+      }
+
+      const medicosLista = meds || []
+      setMedicos(medicosLista)
+
       const statsMap: Record<string, any> = {}
       let totalConsultas = 0
       let totalConsultasMes = 0
@@ -52,25 +60,33 @@ export default function Admin() {
       inicioMes.setDate(1)
       inicioMes.setHours(0, 0, 0, 0)
 
-      await Promise.all(meds.map(async (m: any) => {
-        const [{ count: consultas }, { count: consultasMes }, { count: pacientes }] = await Promise.all([
-          supabase.from('consultas').select('*', { count: 'exact', head: true }).eq('medico_id', m.id),
-          supabase.from('consultas').select('*', { count: 'exact', head: true }).eq('medico_id', m.id).gte('criado_em', inicioMes.toISOString()),
-          supabase.from('pacientes').select('*', { count: 'exact', head: true }).eq('medico_id', m.id),
-        ])
-        statsMap[m.id] = {
-          consultas: consultas || 0,
-          consultasMes: consultasMes || 0,
-          pacientes: pacientes || 0,
+      await Promise.all(medicosLista.map(async (m: any) => {
+        try {
+          const [{ count: consultas }, { count: consultasMes }, { count: pacientes }] = await Promise.all([
+            supabase.from('consultas').select('*', { count: 'exact', head: true }).eq('medico_id', m.id),
+            supabase.from('consultas').select('*', { count: 'exact', head: true }).eq('medico_id', m.id).gte('criado_em', inicioMes.toISOString()),
+            supabase.from('pacientes').select('*', { count: 'exact', head: true }).eq('medico_id', m.id),
+          ])
+          statsMap[m.id] = {
+            consultas: consultas || 0,
+            consultasMes: consultasMes || 0,
+            pacientes: pacientes || 0,
+          }
+          totalConsultas += consultas || 0
+          totalConsultasMes += consultasMes || 0
+          totalPacientes += pacientes || 0
+        } catch (e) {
+          statsMap[m.id] = { consultas: 0, consultasMes: 0, pacientes: 0 }
         }
-        totalConsultas += consultas || 0
-        totalConsultasMes += consultasMes || 0
-        totalPacientes += pacientes || 0
       }))
+
       setStats(statsMap)
       setKpis({ totalPacientes, consultasMes: totalConsultasMes, consultasTotal: totalConsultas })
+    } catch (e) {
+      console.error('Erro geral:', e)
+    } finally {
+      setCarregando(false)
     }
-    setCarregando(false)
   }
 
   const handleCriarMedico = async () => {
@@ -83,7 +99,6 @@ export default function Admin() {
       })
       const data = await res.json()
       if (data.medico) {
-        setMedicos(prev => [...prev, data.medico])
         setModalNovoMedico(false)
         setForm({ nome: '', email: '', crm: '', especialidade: '', senha: '' })
         toast('Médico cadastrado com sucesso!')
@@ -214,6 +229,10 @@ export default function Admin() {
         <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
           <div style={{ width: 32, height: 32, border: `3px solid ${ACCENT_LIGHT}`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
+      ) : medicos.length === 0 ? (
+        <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 40, textAlign: 'center' }}>
+          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Nenhum médico cadastrado ainda. Clique em "+ Novo médico" pra começar.</p>
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {medicos.map(m => {
@@ -222,25 +241,24 @@ export default function Admin() {
             return (
               <div key={m.id} style={{
                 background: 'white', borderRadius: CARD_RADIUS, padding: 20,
-                display: 'grid', gridTemplateColumns: '1fr auto', gap: 20, alignItems: 'center',
                 opacity: m.ativo ? 1 : 0.6,
               }}>
-                {/* Esquerda: identidade + métricas */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+                {/* Linha 1: identidade + ações */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
                   {m.foto_url ? (
-                    <img src={m.foto_url} style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}/>
+                    <img src={m.foto_url} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}/>
                   ) : (
                     <div style={{
-                      width: 52, height: 52, borderRadius: '50%',
+                      width: 48, height: 48, borderRadius: '50%',
                       background: ACCENT_LIGHT, color: ACCENT,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 16, fontWeight: 700, flexShrink: 0,
+                      fontSize: 15, fontWeight: 700, flexShrink: 0,
                     }}>
                       {iniciais}
                     </div>
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
                       <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>{m.nome}</p>
                       {m.cargo === 'admin' && (
                         <span style={{ fontSize: 10, fontWeight: 700, color: ACCENT, background: ACCENT_LIGHT, padding: '2px 8px', borderRadius: 10 }}>admin</span>
@@ -249,63 +267,68 @@ export default function Admin() {
                         <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', background: '#fef2f2', padding: '2px 8px', borderRadius: 10, border: '1px solid #fecaca' }}>inativo</span>
                       )}
                     </div>
-                    <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
                       {m.especialidade || 'Sem especialidade'}{m.crm ? ' · CRM ' + m.crm : ''} · {m.email}
                     </p>
-                    {/* Mini-stats */}
-                    <div style={{ display: 'flex', gap: 20 }}>
-                      <div>
-                        <p style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1 }}>{s.pacientes}</p>
-                        <p style={{ fontSize: 10, color: '#9ca3af', margin: '3px 0 0' }}>pacientes</p>
-                      </div>
-                      <div>
-                        <p style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1 }}>{s.consultas}</p>
-                        <p style={{ fontSize: 10, color: '#9ca3af', margin: '3px 0 0' }}>consultas totais</p>
-                      </div>
-                      <div>
-                        <p style={{ fontSize: 18, fontWeight: 700, color: ACCENT, margin: 0, lineHeight: 1 }}>{s.consultasMes}</p>
-                        <p style={{ fontSize: 10, color: '#9ca3af', margin: '3px 0 0' }}>este mês</p>
-                      </div>
-                      <div>
-                        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>desde</p>
-                        <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '2px 0 0' }}>{fmt(m.criado_em)}</p>
-                      </div>
-                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    <button onClick={() => abrirEditar(m)} title="Editar" style={{
+                      padding: '8px 12px', borderRadius: 9,
+                      border: '1px solid #e5e7eb', background: 'white',
+                      color: '#374151', fontSize: 12, fontWeight: 500,
+                      cursor: 'pointer',
+                    }}>Editar</button>
+                    {m.id !== medico.id && (
+                      <>
+                        <button onClick={() => toggleAtivo(m.id, m.ativo)} style={{
+                          padding: '8px 12px', borderRadius: 9,
+                          border: m.ativo ? '1px solid #fecaca' : '1px solid #bbf7d0',
+                          background: m.ativo ? '#fef2f2' : '#f0fdf4',
+                          color: m.ativo ? '#dc2626' : '#16a34a',
+                          fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                        }}>
+                          {m.ativo ? 'Desativar' : 'Reativar'}
+                        </button>
+                        <button onClick={() => setModalExcluir(m)} title="Excluir" style={{
+                          padding: '8px 10px', borderRadius: 9,
+                          border: '1px solid #fecaca', background: '#fef2f2',
+                          color: '#dc2626', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center',
+                        }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                          </svg>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                {/* Direita: ações */}
-                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                  <button onClick={() => abrirEditar(m)} title="Editar" style={{
-                    padding: '8px 12px', borderRadius: 9,
-                    border: '1px solid #e5e7eb', background: 'white',
-                    color: '#374151', fontSize: 12, fontWeight: 500,
-                    cursor: 'pointer',
-                  }}>Editar</button>
-                  {m.id !== medico.id && (
-                    <>
-                      <button onClick={() => toggleAtivo(m.id, m.ativo)} style={{
-                        padding: '8px 12px', borderRadius: 9,
-                        border: m.ativo ? '1px solid #fecaca' : '1px solid #bbf7d0',
-                        background: m.ativo ? '#fef2f2' : '#f0fdf4',
-                        color: m.ativo ? '#dc2626' : '#16a34a',
-                        fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                      }}>
-                        {m.ativo ? 'Desativar' : 'Reativar'}
-                      </button>
-                      <button onClick={() => setModalExcluir(m)} title="Excluir" style={{
-                        padding: '8px 10px', borderRadius: 9,
-                        border: '1px solid #fecaca', background: '#fef2f2',
-                        color: '#dc2626', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center',
-                      }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6"/>
-                          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                        </svg>
-                      </button>
-                    </>
-                  )}
+                {/* Linha 2: métricas separadas por divisor */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
+                  gap: 16,
+                  paddingTop: 16,
+                  borderTop: '1px solid #f3f4f6',
+                }}>
+                  <div>
+                    <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Pacientes</p>
+                    <p style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1 }}>{s.pacientes}</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Consultas totais</p>
+                    <p style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1 }}>{s.consultas}</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Este mês</p>
+                    <p style={{ fontSize: 20, fontWeight: 700, color: ACCENT, margin: 0, lineHeight: 1 }}>{s.consultasMes}</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Cadastrado em</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', margin: 0 }}>{fmt(m.criado_em)}</p>
+                  </div>
                 </div>
               </div>
             )
