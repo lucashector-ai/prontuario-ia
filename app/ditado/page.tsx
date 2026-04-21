@@ -90,7 +90,7 @@ export default function Ditado() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Ditado livre</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Dite ou escreva — a IA estrutura o prontuário</p>

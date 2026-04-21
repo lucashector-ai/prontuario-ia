@@ -93,7 +93,7 @@ export default function LGPD() {
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       <main style={{ flex: 1, overflow: 'auto' }}>
-        <div style={{ maxWidth: 680, margin: '0 auto', padding: 32 }}>
+        <div style={{ maxWidth: 680, margin: '0 auto', padding: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Privacidade e LGPD</h1>
           <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 32px' }}>Gerencie seus dados conforme a Lei Geral de Proteção de Dados</p>
 

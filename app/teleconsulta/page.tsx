@@ -83,10 +83,10 @@ export default function Teleconsulta() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
-      <main style={{ flex: 1, overflow: 'auto', padding: '0 24px 24px' }}>
+      <main style={{ flex: 1, overflow: 'auto', padding: 24 }}>
 
         {/* Hero */}
-        <div style={{ background: 'transparent', borderBottom: 'none', padding: '32px 32px 28px' }}>
+        <div style={{ background: 'transparent', borderBottom: 'none', padding: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#111827', margin: '0 0 6px', letterSpacing: '-0.4px' }}>Teleconsulta</h1>
           <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 28px' }}>Video em tempo real  o paciente entra pelo link, sem instalar nada</p>
 
@@ -122,7 +122,7 @@ export default function Teleconsulta() {
         </div>
 
         {/* Salas ativas */}
-        <div style={{ padding: '24px 32px' }}>
+        <div style={{ padding: 24 }}>
           {consultas.length === 0 ? (
             <div style={{ background: 'white', borderRadius: 14, padding: '40px 24px', textAlign: 'center' }}>
               <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>Nenhuma sala ativa. Crie uma consulta acima.</p>

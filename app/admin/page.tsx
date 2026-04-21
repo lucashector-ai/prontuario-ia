@@ -81,7 +81,7 @@ export default function Admin() {
     <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Painel administrativo</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{medicos.length} médico{medicos.length !== 1 ? 's' : ''} na clínica</p>
@@ -140,7 +140,7 @@ export default function Admin() {
 
       {modalNovoMedico && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalNovoMedico(false) }}>
-          <div style={{ background: 'white', borderRadius: 16, padding: 32, width: 420 }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 24, width: 420 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 20px' }}>Novo médico</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[

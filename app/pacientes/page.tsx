@@ -67,7 +67,7 @@ export default function Pacientes() {
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '0 28px', height: 56, borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ padding: '0 24px', height: 56, borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Meus pacientes</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{pacientes.length} paciente{pacientes.length !== 1 ? 's' : ''}</p>
@@ -79,7 +79,7 @@ export default function Pacientes() {
         </div>
 
         {/* Filtros */}
-        <div style={{ padding: '8px 28px', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ padding: '8px 24px', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <select value={filtroSexo} onChange={e => setFiltroSexo(e.target.value)}
             style={{ padding: '6px 10px', borderRadius: 8, fontSize: 13, color: '#374151', background: 'white', cursor: 'pointer' }}>
             <option value="">Todos os sexos</option>

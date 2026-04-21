@@ -60,14 +60,14 @@ export default function Exames() {
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '0 32px', height: 56, borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ padding: '0 24px', height: 56, borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Análise de exames</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>IA interpreta laudos e resultados laboratoriais</p>
           </div>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: 28, display: 'grid', gridTemplateColumns: analise ? '1fr 1fr' : '1fr', gap: 20 }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: 24, display: 'grid', gridTemplateColumns: analise ? '1fr 1fr' : '1fr', gap: 20 }}>
 
           {/* Upload + contexto */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
