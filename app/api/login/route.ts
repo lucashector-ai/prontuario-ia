@@ -16,14 +16,16 @@ export async function POST(req: NextRequest) {
     }
 
     const emailNorm = email.trim().toLowerCase()
+    console.log('[LOGIN] Tentando autenticar:', emailNorm)
 
     // 1. Tenta encontrar em clinica_admins
     const { data: admin } = await supabase
       .from('clinica_admins')
       .select('id, email, senha_hash, nome, role, clinica_id, ativo')
-      .eq('email', emailNorm)
+      .ilike('email', emailNorm)
       .maybeSingle()
 
+    console.log('[LOGIN] Admin encontrado:', admin ? admin.id : 'nao')
     if (admin) {
       if (!admin.ativo) {
         return NextResponse.json({ error: 'Conta desativada' }, { status: 403 })
@@ -58,9 +60,10 @@ export async function POST(req: NextRequest) {
     const { data: medico } = await supabase
       .from('medicos')
       .select('*')
-      .eq('email', emailNorm)
+      .ilike('email', emailNorm)
       .maybeSingle()
 
+    console.log('[LOGIN] Medico encontrado:', medico ? medico.id : 'nao')
     if (medico) {
       if (!medico.ativo) {
         return NextResponse.json({ error: 'Conta desativada. Procure o administrador.' }, { status: 403 })
