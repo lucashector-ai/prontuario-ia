@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         clinica_id: novaClinica.id,
         nome,
         email,
-        senha: senhaHash,
+        senha_hash: senhaHash,
         crm: crm || null,
         especialidade: especialidade || null,
         telefone: telefone || null,
