@@ -21,7 +21,9 @@ export default function Admin() {
   const [modalNovoMedico, setModalNovoMedico] = useState(false)
   const [modalEditar, setModalEditar] = useState<any>(null)
   const [modalExcluir, setModalExcluir] = useState<any>(null)
-  const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', senha: '' })
+  const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '' })
+  const [senhaGerada, setSenhaGerada] = useState<{ medico: any; senha: string } | null>(null)
+  const [senhaCopiada, setSenhaCopiada] = useState(false)
   const [formEditar, setFormEditar] = useState({ nome: '', email: '', crm: '', especialidade: '', cargo: 'medico' })
   const [salvando, setSalvando] = useState(false)
 
@@ -100,7 +102,7 @@ export default function Admin() {
   }
 
   const handleCriarMedico = async () => {
-    if (!form.nome || !form.email || !form.senha) { toast('Preencha nome, email e senha', 'error'); return }
+    if (!form.nome || !form.email) { toast('Preencha nome e email', 'error'); return }
     setSalvando(true)
     try {
       const res = await fetch('/api/medicos', {
@@ -108,14 +110,29 @@ export default function Admin() {
         body: JSON.stringify({ ...form, clinica_id: medico.clinica_id }),
       })
       const data = await res.json()
-      if (data.medico) {
+      if (data.medico && data.senha_provisoria_gerada) {
         setModalNovoMedico(false)
-        setForm({ nome: '', email: '', crm: '', especialidade: '', senha: '' })
-        toast('Médico cadastrado com sucesso!')
+        setForm({ nome: '', email: '', crm: '', especialidade: '' })
+        setSenhaGerada({ medico: data.medico, senha: data.senha_provisoria_gerada })
         await carregarDados(medico.clinica_id)
-      } else throw new Error(data.error)
+      } else throw new Error(data.error || 'Erro ao criar médico')
     } catch (e: any) { toast(e.message, 'error') }
     finally { setSalvando(false) }
+  }
+
+  const copiarSenha = () => {
+    if (!senhaGerada) return
+    navigator.clipboard.writeText(senhaGerada.senha)
+    setSenhaCopiada(true)
+    setTimeout(() => setSenhaCopiada(false), 2000)
+  }
+
+  const copiarCredenciais = () => {
+    if (!senhaGerada) return
+    const texto = `Acesso MedIA — ${senhaGerada.medico.nome}\nEmail: ${senhaGerada.medico.email}\nSenha provisória: ${senhaGerada.senha}\n\nNo primeiro login você vai precisar trocar a senha.`
+    navigator.clipboard.writeText(texto)
+    setSenhaCopiada(true)
+    setTimeout(() => setSenhaCopiada(false), 2000)
   }
 
   const handleEditarMedico = async () => {
@@ -356,14 +373,13 @@ export default function Admin() {
               {[
                 { label: 'Nome completo *', key: 'nome', placeholder: 'Dr. João Silva' },
                 { label: 'E-mail *', key: 'email', placeholder: 'joao@clinica.com.br' },
-                { label: 'Senha *', key: 'senha', placeholder: 'Mínimo 6 caracteres', type: 'password' },
                 { label: 'CRM', key: 'crm', placeholder: 'CRM/SP 123456' },
                 { label: 'Especialidade', key: 'especialidade', placeholder: 'Clínico Geral' },
               ].map(f => (
                 <div key={f.key}>
                   <label style={labelStyle}>{f.label}</label>
                   <input
-                    type={f.type || 'text'}
+                    type={(f as any).type || 'text'}
                     value={(form as any)[f.key]}
                     onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                     placeholder={f.placeholder}
@@ -441,6 +457,49 @@ export default function Admin() {
               <button onClick={() => setModalExcluir(null)} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
               <button onClick={handleExcluir} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? '#9ca3af' : '#dc2626', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                 {salvando ? 'Excluindo...' : 'Sim, excluir permanentemente'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {senhaGerada && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 32, width: '100%', maxWidth: 480 }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: ACCENT_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Médico cadastrado!</h2>
+            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px', lineHeight: 1.6 }}>
+              Envie essas credenciais para <strong style={{ color: '#111827' }}>{senhaGerada.medico.nome}</strong>. No primeiro login, ele vai precisar criar uma senha própria.
+            </p>
+
+            <div style={{ background: '#F5F5F5', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 12px', wordBreak: 'break-all' }}>{senhaGerada.medico.email}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Senha provisória</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'white', borderRadius: 8, padding: '8px 12px' }}>
+                <code style={{ flex: 1, fontSize: 15, fontWeight: 700, color: ACCENT, fontFamily: 'monospace', letterSpacing: '0.02em', wordBreak: 'break-all' }}>{senhaGerada.senha}</code>
+                <button onClick={copiarSenha} style={{ padding: '5px 10px', borderRadius: 6, background: senhaCopiada ? '#16a34a' : ACCENT, color: 'white', border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+                  {senhaCopiada ? '✓ Copiado' : 'Copiar'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
+              <p style={{ fontSize: 12, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+                ⚠ Esta senha <strong>só aparece agora</strong>. Anote ou copie antes de fechar.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={copiarCredenciais} style={{ flex: 1, padding: '11px', borderRadius: 10, background: 'white', color: '#374151', border: '1px solid #e5e7eb', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                Copiar tudo
+              </button>
+              <button onClick={() => { setSenhaGerada(null); setSenhaCopiada(false); toast('Médico cadastrado com sucesso!') }} style={{ flex: 1, padding: '11px', borderRadius: 10, background: ACCENT, color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                Pronto, avisei
               </button>
             </div>
           </div>

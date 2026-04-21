@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
         tipo: 'medico',
         medico: { ...medico, senha: undefined, senha_hash: undefined },
         clinica,
+        precisa_trocar_senha: medico.senha_provisoria === true,
       })
     }
 

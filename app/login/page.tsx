@@ -48,6 +48,12 @@ function LoginForm() {
         if (data.clinica) localStorage.setItem('clinica', JSON.stringify(data.clinica))
         localStorage.removeItem('clinica_admin')
 
+        // Precisa trocar senha provisória antes de qualquer coisa
+        if (data.precisa_trocar_senha) {
+          router.push('/trocar-senha-obrigatoria')
+          return
+        }
+
         if (!data.medico.onboarding_concluido) {
           router.push('/onboarding')
         } else {

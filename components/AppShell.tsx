@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import { Topbar } from './Topbar'
 import { Sidebar } from './Sidebar'
 
-const ROTAS_PUBLICAS = ['/login', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/onboarding', '/forgot-password', '/reset-password']
+const ROTAS_PUBLICAS = ['/login', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password']
 const PREFIXOS_PUBLICOS = ['/sala/', '/pre-consulta/', '/paciente-publico/']
 
 export function AppShell({ children }: { children: React.ReactNode }) {
