@@ -19,13 +19,14 @@ export async function POST(req: NextRequest) {
     console.log('[LOGIN] Tentando autenticar:', emailNorm)
 
     // 1. Tenta encontrar em clinica_admins
-    const { data: admin } = await supabase
+    const adminRes = await supabase
       .from('clinica_admins')
       .select('id, email, senha_hash, nome, role, clinica_id, ativo')
       .ilike('email', emailNorm)
       .maybeSingle()
 
-    console.log('[LOGIN] Admin encontrado:', admin ? admin.id : 'nao')
+    console.log('[LOGIN] Admin query:', JSON.stringify({ data: adminRes.data, error: adminRes.error }))
+    const admin = adminRes.data
     if (admin) {
       if (!admin.ativo) {
         return NextResponse.json({ error: 'Conta desativada' }, { status: 403 })
@@ -57,13 +58,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Tenta encontrar em medicos
-    const { data: medico } = await supabase
+    const medRes = await supabase
       .from('medicos')
       .select('*')
       .ilike('email', emailNorm)
       .maybeSingle()
 
-    console.log('[LOGIN] Medico encontrado:', medico ? medico.id : 'nao')
+    console.log('[LOGIN] Medico query:', JSON.stringify({ data: medRes.data ? { id: medRes.data.id, email: medRes.data.email, tem_senha_hash: !!medRes.data.senha_hash, ativo: medRes.data.ativo } : null, error: medRes.error }))
+    const medico = medRes.data
     if (medico) {
       if (!medico.ativo) {
         return NextResponse.json({ error: 'Conta desativada. Procure o administrador.' }, { status: 403 })
@@ -94,6 +96,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    console.log('[LOGIN] Nenhum usuario encontrado para:', emailNorm)
     return NextResponse.json({ error: 'Email não encontrado' }, { status: 404 })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
