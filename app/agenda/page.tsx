@@ -131,7 +131,8 @@ export default function Agenda() {
   }, [])
 
   useEffect(() => {
-    const m = localStorage.getItem('medico')
+    const ca_ = localStorage.getItem('clinica_admin')
+    const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
     const med = JSON.parse(m)
     setMedico(med)

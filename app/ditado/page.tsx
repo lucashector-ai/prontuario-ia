@@ -18,7 +18,8 @@ export default function Ditado() {
   const [modo, setModo] = useState<'gravar' | 'digitar'>('gravar')
 
   useEffect(() => {
-    const m = localStorage.getItem('medico')
+    const ca_ = localStorage.getItem('clinica_admin')
+    const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
     setMedico(JSON.parse(m))
   }, [router])

@@ -14,7 +14,8 @@ export default function MinhaClinica() {
   const [uploadandoLogo, setUploadandoLogo] = useState(false)
 
   useEffect(() => {
-    const m = localStorage.getItem('medico')
+    const ca_ = localStorage.getItem('clinica_admin')
+    const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
     const med = JSON.parse(m); setMedico(med)
     carregar(med.clinica_id || med.id)
