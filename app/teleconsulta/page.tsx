@@ -18,12 +18,28 @@ export default function Teleconsulta() {
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro', texto: string } | null>(null)
 
   useEffect(() => {
-    const ca_ = localStorage.getItem('clinica_admin')
-    const m = ca_ || localStorage.getItem('medico')
-    if (!m) { router.push('/login'); return }
-    const med = JSON.parse(m); setMedico(med)
-    carregar(med.id)
-    supabase.from('pacientes').select('id,nome').eq('medico_id', med.id).order('nome').then(({ data }) => setPacientes(data || []))
+    (async () => {
+      const ca = localStorage.getItem('clinica_admin')
+      if (ca) {
+        const admin = JSON.parse(ca)
+        if (!admin.clinica_id) { router.push('/admin'); return }
+        // Busca primeiro medico ativo da clinica
+        const { data: primeiroMedico } = await supabase
+          .from('medicos').select('*')
+          .eq('clinica_id', admin.clinica_id).eq('cargo', 'medico').eq('ativo', true)
+          .order('criado_em', { ascending: true }).limit(1).maybeSingle()
+        if (!primeiroMedico) { router.push('/admin'); return }
+        setMedico(primeiroMedico)
+        carregar(primeiroMedico.id)
+        supabase.from('pacientes').select('id,nome').eq('medico_id', primeiroMedico.id).order('nome').then(({ data }) => setPacientes(data || []))
+        return
+      }
+      const m = localStorage.getItem('medico')
+      if (!m) { router.push('/login'); return }
+      const med = JSON.parse(m); setMedico(med)
+      carregar(med.id)
+      supabase.from('pacientes').select('id,nome').eq('medico_id', med.id).order('nome').then(({ data }) => setPacientes(data || []))
+    })()
   }, [router])
 
   const carregar = useCallback(async (mid: string) => {
