@@ -20,9 +20,10 @@ export default function PerfilPage() {
   const fotoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    const ca = localStorage.getItem('clinica_admin')
     const m = localStorage.getItem('medico')
-    if (!m) { router.push('/login'); return }
-    const med = JSON.parse(m)
+    if (!ca && !m) { router.push('/login'); return }
+    const med = ca ? JSON.parse(ca) : JSON.parse(m!)
     setMedico(med)
     setForm({
       nome: med.nome || '',

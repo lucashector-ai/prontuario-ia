@@ -14,9 +14,10 @@ export default function Dashboard() {
   const [periodo, setPeriodo] = useState<'semana' | 'mes' | 'ano'>('mes')
 
   useEffect(() => {
+    const ca = localStorage.getItem('clinica_admin')
     const m = localStorage.getItem('medico')
-    if (!m) { router.push('/login'); return }
-    setMedico(JSON.parse(m))
+    if (!ca && !m) { router.push('/login'); return }
+    setMedico(ca ? JSON.parse(ca) : JSON.parse(m!))
   }, [router])
 
   useEffect(() => {
