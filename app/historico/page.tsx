@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Sidebar } from '@/components/Sidebar'
+
+const ACCENT = '#6043C1'
+const ACCENT_LIGHT = '#ede9fb'
+const BG = '#F5F5F5'
+const CARD_RADIUS = 16
 
 export default function Historico() {
   const router = useRouter()
@@ -16,6 +20,7 @@ export default function Historico() {
   const [salvando, setSalvando] = useState(false)
   const [deletando, setDeletando] = useState<string | null>(null)
   const [busca, setBusca] = useState('')
+  const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro', texto: string } | null>(null)
 
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
@@ -27,24 +32,48 @@ export default function Historico() {
   }, [router])
 
   const carregarConsultas = async (id: string) => {
-    const { data } = await supabase.from('consultas').select('*').eq('medico_id', id).order('criado_em', { ascending: false })
+    const { data } = await supabase
+      .from('consultas')
+      .select('*')
+      .eq('medico_id', id)
+      .order('criado_em', { ascending: false })
     setConsultas(data || [])
     setCarregando(false)
   }
 
+  const mostrarMsg = (tipo: 'ok' | 'erro', texto: string) => {
+    setMsg({ tipo, texto })
+    setTimeout(() => setMsg(null), 3500)
+  }
+
   const handleSelecionar = (c: any) => {
-    setSelecionada(c); setEditando(false)
-    setEditForm({ subjetivo: c.subjetivo, objetivo: c.objetivo, avaliacao: c.avaliacao, plano: c.plano, receita: c.receita })
+    setSelecionada(c)
+    setEditando(false)
+    setEditForm({
+      subjetivo: c.subjetivo,
+      objetivo: c.objetivo,
+      avaliacao: c.avaliacao,
+      plano: c.plano,
+      receita: c.receita,
+    })
   }
 
   const handleSalvar = async () => {
     if (!selecionada) return
     setSalvando(true)
-    const { data, error } = await supabase.from('consultas').update(editForm).eq('id', selecionada.id).select().single()
+    const { data, error } = await supabase
+      .from('consultas')
+      .update(editForm)
+      .eq('id', selecionada.id)
+      .select()
+      .single()
     if (!error && data) {
       setSelecionada(data)
       setConsultas(prev => prev.map(c => c.id === data.id ? data : c))
       setEditando(false)
+      mostrarMsg('ok', 'Alterações salvas')
+    } else {
+      mostrarMsg('erro', 'Erro ao salvar')
     }
     setSalvando(false)
   }
@@ -56,9 +85,16 @@ export default function Historico() {
     setConsultas(prev => prev.filter(c => c.id !== id))
     if (selecionada?.id === id) setSelecionada(null)
     setDeletando(null)
+    mostrarMsg('ok', 'Consulta removida')
   }
 
-  const fmt = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const fmtCurto = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+  })
+  const fmtLongo = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', {
+    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+
   const consultasFiltradas = consultas.filter(c => {
     if (!busca.trim()) return true
     const b = busca.toLowerCase()
@@ -66,168 +102,407 @@ export default function Historico() {
       c.subjetivo?.toLowerCase().includes(b) ||
       c.avaliacao?.toLowerCase().includes(b) ||
       c.plano?.toLowerCase().includes(b) ||
-      (c.cids || []).some((cid: any) => cid.codigo?.toLowerCase().includes(b) || cid.descricao?.toLowerCase().includes(b))
+      (c.cids || []).some((cid: any) =>
+        cid.codigo?.toLowerCase().includes(b) || cid.descricao?.toLowerCase().includes(b)
+      )
     )
   })
 
   const secoes = [
-    { key: 'subjetivo', titulo: 'S — Subjetivo', cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-    { key: 'objetivo',  titulo: 'O — Objetivo',  cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
-    { key: 'avaliacao', titulo: 'A — Avaliação',  cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
-    { key: 'plano',     titulo: 'P — Plano',      cor: '#6043C1', bg: '#ede9fb', border: '#b9a9ef' },
+    { key: 'subjetivo', titulo: 'Subjetivo', letra: 'S', cor: '#2563eb', bg: '#eff6ff' },
+    { key: 'objetivo', titulo: 'Objetivo', letra: 'O', cor: '#0d9488', bg: '#f0fdfa' },
+    { key: 'avaliacao', titulo: 'Avaliação', letra: 'A', cor: '#d97706', bg: '#fffbeb' },
+    { key: 'plano', titulo: 'Plano', letra: 'P', cor: ACCENT, bg: ACCENT_LIGHT },
   ]
 
-  return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 24, gap: 0, background: '#F5F5F5' }}>
-        {/* Header */}
-        <div style={{ padding: '16px 24px 12px', borderBottom: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Histórico de consultas</h1>
-            <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{consultasFiltradas.length}{busca ? ` de ${consultas.length}` : ''} consultas registradas</p>
-          </div>
-          <a href="/consulta" style={{ fontSize: 12, fontWeight: 600, color: '#6043C1', background: '#ede9fb', padding: '7px 16px', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-            Nova consulta
-          </a>
-        </div>
+  const inputBase: React.CSSProperties = {
+    width: '100%', padding: '10px 14px', fontSize: 14,
+    borderRadius: 10, border: '1px solid #e5e7eb',
+    outline: 'none', fontFamily: 'inherit', color: '#111827',
+    background: 'white', boxSizing: 'border-box',
+  }
 
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden', borderRadius: 12 }}>
-          {/* Lista */}
-          <div style={{ borderRight: 'none', overflow: 'auto', background: 'white', padding: '12px 10px', borderRadius: 12, height: '100%' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#F5F5F5', borderRadius: 8, padding: '7px 12px' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+  return (
+    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Histórico de consultas</h1>
+          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+            {consultasFiltradas.length}
+            {busca ? ` de ${consultas.length}` : ''} consulta{consultasFiltradas.length !== 1 ? 's' : ''} registrada{consultasFiltradas.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <button
+          onClick={() => router.push('/nova-consulta')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '10px 18px', borderRadius: 10, border: 'none',
+            background: ACCENT, color: 'white',
+            fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Nova consulta
+        </button>
+      </div>
+
+      {/* Toast */}
+      {msg && (
+        <div style={{
+          position: 'fixed', top: 24, right: 24, zIndex: 200,
+          padding: '12px 20px', borderRadius: 10,
+          background: msg.tipo === 'ok' ? '#ecfdf5' : '#fef2f2',
+          color: msg.tipo === 'ok' ? '#065f46' : '#991b1b',
+          fontSize: 13, fontWeight: 600,
+          border: `1px solid ${msg.tipo === 'ok' ? '#a7f3d0' : '#fecaca'}`,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        }}>
+          {msg.texto}
+        </div>
+      )}
+
+      {/* Grid horizontal: lista 340px + detalhe */}
+      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20, alignItems: 'start' }}>
+
+        {/* COLUNA ESQUERDA — busca + lista */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Busca */}
+          <div style={{
+            background: 'white', borderRadius: 12,
+            padding: '10px 14px',
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
             <input
               value={busca}
               onChange={e => setBusca(e.target.value)}
-              placeholder="Buscar por CID, sintoma, conduta..."
-              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 12, outline: 'none', color: '#374151' }}
+              placeholder="CID, sintoma, conduta..."
+              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, outline: 'none', color: '#374151' }}
             />
-            {busca && <span onClick={() => setBusca('')} style={{ cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1 }}>×</span>}
-          </div>
-        </div>
-        {carregando ? (
-              <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 24 }}>Carregando...</p>
-            ) : consultas.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#8aa8a5', textAlign: 'center', padding: 24 }}>Nenhuma consulta registrada</p>
-            ) : consultasFiltradas.map(c => (
-              <div key={c.id} onClick={() => handleSelecionar(c)} style={{
-                padding: '12px', borderRadius: 10, marginBottom: 6, cursor: 'pointer',
-                background: selecionada?.id === c.id ? '#ede9fb' : 'white',
-                border: `1px solid ${selecionada?.id === c.id ? '#b9a9ef' : '#e8eeed'}`,
-                transition: 'all 0.15s', position: 'relative',
-              }}>
-                <p style={{ fontSize: 11, color: '#8aa8a5', margin: '0 0 4px', fontWeight: 500 }}>{fmt(c.criado_em)}</p>
-                <p style={{ fontSize: 12, color: '#3d5452', margin: 0, overflow: 'hidden', borderRadius: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, lineHeight: 1.5 }}>
-                  {c.subjetivo?.substring(0, 90) || 'Consulta sem detalhes'}
-                </p>
-                {c.cids?.length > 0 && (
-                  <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
-                    {c.cids.slice(0, 3).map((cid: any, i: number) => (
-                      <span key={i} style={{ fontSize: 10, color: '#6043C1', background: '#ede9fb', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700 }}>{cid.codigo}</span>
-                    ))}
-                  </div>
-                )}
-                <button onClick={e => { e.stopPropagation(); handleDeletar(c.id) }} disabled={deletando === c.id}
-                  className="del-btn"
-                  style={{ position: 'absolute', top: 8, right: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', cursor: 'pointer', padding: '2px 7px', borderRadius: 6, fontSize: 11, opacity: 0, transition: 'opacity 0.15s' }}>
-                  {deletando === c.id ? '...' : '✕'}
-                </button>
-              </div>
-            ))}
+            {busca && (
+              <button
+                onClick={() => setBusca('')}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex' }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            )}
           </div>
 
-          {/* Detalhe */}
-          <div style={{ overflow: 'auto', padding: 28 }}>
-            {selecionada ? (
-              <div style={{ maxWidth: 700 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                  <p style={{ fontSize: 13, color: '#8aa8a5', margin: 0 }}>Consulta de {fmt(selecionada.criado_em)}</p>
-                  <div style={{ display: 'flex', gap: 8 }}>
+          {/* Lista */}
+          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 10, display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 'calc(100vh - 220px)', overflow: 'auto' }}>
+            {carregando ? (
+              <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}>
+                <div style={{ width: 24, height: 24, border: `2px solid ${ACCENT_LIGHT}`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/>
+              </div>
+            ) : consultasFiltradas.length === 0 ? (
+              <div style={{ padding: 32, textAlign: 'center' as const }}>
+                <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
+                  {busca ? 'Nenhuma consulta encontrada' : 'Nenhuma consulta registrada'}
+                </p>
+              </div>
+            ) : (
+              consultasFiltradas.map(c => {
+                const ativa = selecionada?.id === c.id
+                return (
+                  <div
+                    key={c.id}
+                    onClick={() => handleSelecionar(c)}
+                    style={{
+                      padding: 12, borderRadius: 10, cursor: 'pointer',
+                      background: ativa ? ACCENT_LIGHT : 'transparent',
+                      border: ativa ? `1.5px solid ${ACCENT}` : '1.5px solid transparent',
+                      transition: 'all 0.12s', position: 'relative' as const,
+                    }}
+                    onMouseEnter={e => { if (!ativa) e.currentTarget.style.background = '#F9FAFB' }}
+                    onMouseLeave={e => { if (!ativa) e.currentTarget.style.background = 'transparent' }}
+                  >
+                    <p style={{ fontSize: 11, color: ativa ? ACCENT : '#9ca3af', margin: '0 0 4px', fontWeight: 600 }}>
+                      {fmtCurto(c.criado_em)}
+                    </p>
+                    <p style={{
+                      fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5,
+                      overflow: 'hidden', display: '-webkit-box' as any,
+                      WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any,
+                    }}>
+                      {c.subjetivo?.substring(0, 100) || 'Consulta sem detalhes'}
+                    </p>
+                    {c.cids?.length > 0 && (
+                      <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' as const }}>
+                        {c.cids.slice(0, 3).map((cid: any, i: number) => (
+                          <span key={i} style={{
+                            fontSize: 10, color: ACCENT, background: 'white',
+                            padding: '2px 7px', borderRadius: 5,
+                            fontFamily: 'monospace', fontWeight: 700,
+                          }}>
+                            {cid.codigo}
+                          </span>
+                        ))}
+                        {c.cids.length > 3 && (
+                          <span style={{ fontSize: 10, color: '#9ca3af', padding: '2px 4px' }}>
+                            +{c.cids.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
+
+        {/* COLUNA DIREITA — detalhe */}
+        <div style={{ minHeight: 'calc(100vh - 140px)' }}>
+          {selecionada ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Header detalhe */}
+              <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' as const }}>
+                  <div>
+                    <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 4px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>
+                      Consulta
+                    </p>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0, textTransform: 'capitalize' as const }}>
+                      {fmtLongo(selecionada.criado_em)}
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
                     {editando ? (
                       <>
-                        <button onClick={handleSalvar} disabled={salvando} style={{ fontSize: 12, fontWeight: 600, color: 'white', background: '#6043C1', border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
-                          {salvando ? 'Salvando...' : 'Salvar alterações'}
-                        </button>
-                        <button onClick={() => setEditando(false)} style={{ fontSize: 12, color: '#3d5452', background: '#F5F5F5', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
+                        <button
+                          onClick={() => setEditando(false)}
+                          disabled={salvando}
+                          style={{
+                            padding: '8px 16px', borderRadius: 9,
+                            background: 'white', color: '#6b7280',
+                            border: '1px solid #e5e7eb',
+                            fontSize: 12, cursor: 'pointer',
+                          }}
+                        >
                           Cancelar
+                        </button>
+                        <button
+                          onClick={handleSalvar}
+                          disabled={salvando}
+                          style={{
+                            padding: '8px 16px', borderRadius: 9,
+                            background: salvando ? '#9ca3af' : ACCENT,
+                            color: 'white', border: 'none',
+                            fontSize: 12, fontWeight: 700,
+                            cursor: salvando ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          {salvando ? 'Salvando...' : 'Salvar alterações'}
                         </button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => setEditando(true)} style={{ fontSize: 12, color: '#3d5452', background: 'white', padding: '7px 14px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        
+                          href={`/api/pdf-prontuario?consulta_id=${selecionada.id}&medico_id=${medico?.id}`}
+                          target="_blank" rel="noreferrer"
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            padding: '8px 14px', borderRadius: 9,
+                            background: ACCENT_LIGHT, color: ACCENT,
+                            fontSize: 12, fontWeight: 600, textDecoration: 'none',
+                          }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                          </svg>
+                          PDF prontuário
+                        </a>
+                        
+                          href={`/api/pdf-receita?consulta_id=${selecionada.id}&medico_id=${medico?.id}`}
+                          target="_blank" rel="noreferrer"
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            padding: '8px 14px', borderRadius: 9,
+                            background: '#eff6ff', color: '#1d4ed8',
+                            border: '1px solid #bfdbfe',
+                            fontSize: 12, fontWeight: 600, textDecoration: 'none',
+                          }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                          </svg>
+                          PDF receita
+                        </a>
+                        <button
+                          onClick={() => setEditando(true)}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            padding: '8px 14px', borderRadius: 9,
+                            background: 'white', color: '#374151',
+                            border: '1px solid #e5e7eb',
+                            fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                          }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
                           Editar
                         </button>
-                        <button onClick={() => handleDeletar(selecionada.id)} style={{ fontSize: 12, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '7px 14px', borderRadius: 8, cursor: 'pointer' }}>
-                          Deletar
+                        <button
+                          onClick={() => handleDeletar(selecionada.id)}
+                          title="Deletar consulta"
+                          style={{
+                            padding: '8px 10px', borderRadius: 9,
+                            background: '#fef2f2', color: '#dc2626',
+                            border: '1px solid #fecaca',
+                            cursor: 'pointer',
+                            display: 'inline-flex', alignItems: 'center',
+                          }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                          </svg>
                         </button>
-                            <a href={'/api/pdf-prontuario?consulta_id=' + selecionada.id + '&medico_id=' + medico?.id}
-                              target="_blank" rel="noreferrer"
-                              style={{display:'inline-flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:6,background:'#f0ebff',color:'#6043C1',fontSize:12,fontWeight:600,textDecoration:'none',marginRight:8}}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
-                              PDF Prontuário
-                            </a>
-                            <a href={'/api/pdf-receita?consulta_id=' + selecionada.id + '&medico_id=' + medico?.id}
-                              target="_blank" rel="noreferrer"
-                              style={{ fontSize: 12, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '7px 14px', borderRadius: 8, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                              PDF Receita
-                            </a>
                       </>
                     )}
                   </div>
                 </div>
+              </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {secoes.map(({ key, titulo, cor, bg, border }) => (
-                    <div key={key} style={{ background: bg, borderRadius: 10, padding: '14px 16px' }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: cor, margin: '0 0 8px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{titulo}</p>
-                      {editando ? (
-                        <textarea value={editForm[key] || ''}
-                          onChange={e => setEditForm((f: any) => ({...f, [key]: e.target.value}))}
-                          style={{ width: '100%', minHeight: 80, fontSize: 13, lineHeight: 1.6, padding: '8px', resize: 'vertical', borderRadius: 8, background: 'white', color: '#3d5452' }}/>
-                      ) : (
-                        <p style={{ fontSize: 13, color: '#3d5452', margin: 0, lineHeight: 1.7 }}>{(selecionada as any)[key] || '—'}</p>
-                      )}
+              {/* Cards SOAP */}
+              {secoes.map(s => (
+                <div key={s.key} style={{ background: 'white', borderRadius: CARD_RADIUS, overflow: 'hidden' as const }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '14px 20px', background: s.bg,
+                  }}>
+                    <div style={{
+                      width: 26, height: 26, borderRadius: 7,
+                      background: 'white', color: s.cor,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 13, fontWeight: 700,
+                    }}>
+                      {s.letra}
                     </div>
-                  ))}
+                    <span style={{
+                      fontSize: 12, fontWeight: 700,
+                      textTransform: 'uppercase' as const, letterSpacing: '0.06em',
+                      color: s.cor,
+                    }}>
+                      {s.titulo}
+                    </span>
+                  </div>
+                  <div style={{ padding: 20 }}>
+                    {editando ? (
+                      <textarea
+                        value={editForm[s.key] || ''}
+                        onChange={e => setEditForm((f: any) => ({ ...f, [s.key]: e.target.value }))}
+                        style={{
+                          ...inputBase, minHeight: 100,
+                          resize: 'vertical' as const, lineHeight: 1.7,
+                        }}
+                      />
+                    ) : (
+                      <p style={{
+                        fontSize: 14, color: '#111827', margin: 0,
+                        lineHeight: 1.7, whiteSpace: 'pre-wrap' as const,
+                      }}>
+                        {(selecionada as any)[s.key] || <span style={{ color: '#9ca3af', fontStyle: 'italic' as const }}>—</span>}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
 
-                  {selecionada.cids?.length > 0 && (
-                    <div style={{ background: '#F5F5F5', borderRadius: 10, padding: '14px 16px' }}>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: '#8aa8a5', margin: '0 0 10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>CID-10</p>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {selecionada.cids.map((cid: any, i: number) => (
-                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#ede9fb', borderRadius: 8, padding: '6px 12px' }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#6043C1' }}>{cid.codigo}</span>
-                            <span style={{ fontSize: 12, color: '#3d5452' }}>{cid.descricao}</span>
-                          </div>
-                        ))}
+              {/* CIDs */}
+              {selecionada.cids?.length > 0 && (
+                <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
+                  <p style={{
+                    fontSize: 11, fontWeight: 700, color: '#6b7280', margin: '0 0 12px',
+                    letterSpacing: '0.06em', textTransform: 'uppercase' as const,
+                  }}>
+                    CID-10 Sugeridos
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
+                    {selecionada.cids.map((cid: any, i: number) => (
+                      <div key={i} style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        background: '#F9FAFB', borderRadius: 10,
+                        padding: '8px 12px',
+                      }}>
+                        <span style={{
+                          fontFamily: 'monospace', fontSize: 12, fontWeight: 700,
+                          color: ACCENT, background: ACCENT_LIGHT,
+                          padding: '3px 8px', borderRadius: 6,
+                        }}>
+                          {cid.codigo}
+                        </span>
+                        <span style={{ fontSize: 13, color: '#374151' }}>{cid.descricao}</span>
                       </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
+              )}
+            </div>
+          ) : (
+            <div style={{
+              background: 'white', borderRadius: CARD_RADIUS,
+              padding: 60, textAlign: 'center' as const,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              minHeight: 400,
+            }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: 16,
+                background: ACCENT_LIGHT, color: ACCENT,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 16,
+              }}>
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
               </div>
-            ) : (
-              <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 16, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#0d1f1c', margin: '0 0 4px' }}>{consultas.length === 0 ? 'Nenhuma consulta ainda' : 'Selecione uma consulta'}</p>
-                  {consultas.length === 0 && (
-                    <a href="/nova-consulta" style={{ display: 'inline-block', marginTop: 16, padding: '9px 20px', borderRadius: 8, background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>+ Nova consulta</a>
-                  )}
-                  <p style={{ fontSize: 13, color: '#8aa8a5', margin: 0 }}>{consultas.length === 0 ? 'Comece gravando sua primeira consulta' : 'Clique em qualquer consulta na lista para ver os detalhes'}</p>
-                </div>
-              </div>
-            )}
-          </div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>
+                {consultas.length === 0 ? 'Nenhuma consulta ainda' : 'Selecione uma consulta'}
+              </p>
+              <p style={{ fontSize: 13, color: '#9ca3af', margin: 0, maxWidth: 320 }}>
+                {consultas.length === 0
+                  ? 'Comece gravando sua primeira consulta — o prontuário é gerado automaticamente'
+                  : 'Clique em qualquer consulta na lista ao lado pra ver os detalhes'}
+              </p>
+              {consultas.length === 0 && (
+                <button
+                  onClick={() => router.push('/nova-consulta')}
+                  style={{
+                    marginTop: 20, padding: '11px 24px', borderRadius: 10,
+                    background: ACCENT, color: 'white', border: 'none',
+                    fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    display: 'inline-flex', alignItems: 'center', gap: 7,
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                  Nova consulta
+                </button>
+              )}
+            </div>
+          )}
         </div>
-      </main>
+      </div>
 
-      <style>{`.del-btn { opacity: 0 !important; } div:hover > .del-btn { opacity: 1 !important; }`}</style>
-    </div>
+      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+    </main>
   )
 }
