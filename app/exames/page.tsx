@@ -75,7 +75,7 @@ export default function Exames() {
         display: 'grid',
         gridTemplateColumns: analise ? '1fr 1fr' : '1fr',
         gap: 20,
-        maxWidth: analise ? 'none' : 720,
+        maxWidth: 'none',
       }}>
 
         {/* COLUNA ESQUERDA — upload + contexto + botão */}
