@@ -122,7 +122,7 @@ export default function LGPD() {
               Baixe todos os seus dados — pacientes, consultas e agendamentos — em formato JSON.
             </p>
             <button onClick={exportarDados} disabled={exportando}
-              style={{ padding: '10px 20px', borderRadius: 9, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              style={{ padding: '10px 20px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
               {exportando ? 'Exportando...' : (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -142,7 +142,7 @@ export default function LGPD() {
                 { label: 'Análise de métricas e relatórios', desc: 'Dados aggregados para o dashboard', obrig: false },
               ].map(item => (
                 <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 14px', background: '#F5F5F5', borderRadius: 8 }}>
-                  <div style={{ width: 18, height: 18, borderRadius: 4, background: '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 4, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   </div>
                   <div>

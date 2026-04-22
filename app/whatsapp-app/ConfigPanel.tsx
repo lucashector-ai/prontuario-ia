@@ -132,7 +132,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
   ]
 
   const s = {padding:'10px 14px',borderRadius:8,border:'1px solid #e5e7eb',fontSize:13,outline:'none',width:'100%',fontFamily:'inherit',color:'#111827',background:'white'}
-  const btn = (cor='#1F9D5C') => ({padding:'10px 20px',borderRadius:8,border:'none',background:cor,color:'white',fontSize:13,fontWeight:600,cursor:'pointer'})
+  const btn = (cor='#6043C1') => ({padding:'10px 20px',borderRadius:8,border:'none',background:cor,color:'white',fontSize:13,fontWeight:600,cursor:'pointer'})
 
   return (
     <div style={{position:'fixed',inset:0,zIndex:200,display:'flex'}}>
@@ -168,7 +168,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
               <h3 style={{fontSize:16,fontWeight:700,color:'#111827',margin:'0 0 20px'}}>Visão geral do atendimento</h3>
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:24}}>
                 {[
-                  {label:'Total conversas',val:metricas?.total||0,cor:'#1F9D5C'},
+                  {label:'Total conversas',val:metricas?.total||0,cor:'#6043C1'},
                   {label:'Sofia IA',val:metricas?.ia||0,cor:'#00a884'},
                   {label:'Atendimento humano',val:metricas?.humano||0,cor:'#f59e0b'},
                   {label:'Msgs enviadas (7d)',val:metricas?.enviadas||0,cor:'#3b82f6'},
@@ -182,7 +182,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
                 ))}
               </div>
               <div style={{display:'flex',gap:12}}>
-                <button onClick={carregarMetricas} style={btn('#1F9D5C')}>Atualizar métricas</button>
+                <button onClick={carregarMetricas} style={btn('#6043C1')}>Atualizar métricas</button>
                 <button onClick={enviarCheckin} disabled={checkinEnviando} style={btn('#00a884')}>{checkinEnviando?'Enviando...':'Enviar check-in aos pacientes'}</button>
                 <button onClick={async()=>{
                   setFollowupEnviando(true)
@@ -262,7 +262,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
             <div>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
                 <h3 style={{fontSize:16,fontWeight:700,color:'#111827',margin:0}}>Relatório últimos 30 dias</h3>
-                <button onClick={carregarRelatorio} style={btn('#1F9D5C')}>{relatorioCarregando?'Carregando...':'Atualizar'}</button>
+                <button onClick={carregarRelatorio} style={btn('#6043C1')}>{relatorioCarregando?'Carregando...':'Atualizar'}</button>
               </div>
               {relatorio&&(
                 <div>
@@ -276,7 +276,7 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
                       <div key={dia} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',padding:'10px 16px',borderBottom:'1px solid #f0f0f0'}}>
                         <span style={{fontSize:13,color:'#374151'}}>{new Date(dia+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'})}</span>
                         <span style={{fontSize:13,color:'#00a884',fontWeight:600}}>{vals.enviadas}</span>
-                        <span style={{fontSize:13,color:'#1F9D5C',fontWeight:600}}>{vals.recebidas}</span>
+                        <span style={{fontSize:13,color:'#6043C1',fontWeight:600}}>{vals.recebidas}</span>
                       </div>
                     ))}
                   </div>

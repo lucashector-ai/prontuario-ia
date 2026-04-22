@@ -68,11 +68,11 @@ export default function Dicionario() {
   )
 
   const corCategoria: Record<string, string> = {
-    'Medicamento': '#2563eb', 'Patologia': '#dc2626', 'Procedimento': '#1F9D5C',
+    'Medicamento': '#2563eb', 'Patologia': '#dc2626', 'Procedimento': '#6043C1',
     'Anatomia': '#059669', 'Sigla': '#d97706', 'Outro': '#6b7280'
   }
   const bgCategoria: Record<string, string> = {
-    'Medicamento': '#eff6ff', 'Patologia': '#fef2f2', 'Procedimento': '#E8F7EF',
+    'Medicamento': '#eff6ff', 'Patologia': '#fef2f2', 'Procedimento': '#ede9fb',
     'Anatomia': '#f0fdf4', 'Sigla': '#fffbeb', 'Outro': '#F5F5F5'
   }
 
@@ -85,7 +85,7 @@ export default function Dicionario() {
             <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Dicionário clínico</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Termos personalizados para melhorar a transcrição e o prontuário</p>
           </div>
-          <span style={{ fontSize: 12, color: '#1F9D5C', background: '#E8F7EF', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{termos.length} termos</span>
+          <span style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{termos.length} termos</span>
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: 24, display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20, alignContent: 'start' }}>
@@ -113,7 +113,7 @@ export default function Dicionario() {
                   {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              <button onClick={handleAdicionar} disabled={salvando} style={{ padding: '9px', borderRadius: 8, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 4 }}>
+              <button onClick={handleAdicionar} disabled={salvando} style={{ padding: '9px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 4 }}>
                 {salvando ? 'Salvando...' : '+ Adicionar'}
               </button>
             </div>
@@ -134,7 +134,7 @@ export default function Dicionario() {
 
             {carregando ? (
               <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-                <div style={{ width: 28, height: 28, border: '3px solid #E8F7EF', borderTopColor: '#1F9D5C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                <div style={{ width: 28, height: 28, border: '3px solid #ede9fb', borderTopColor: '#6043C1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
               </div>
             ) : termosFiltrados.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 24px', background: 'white', borderRadius: 12 }}>

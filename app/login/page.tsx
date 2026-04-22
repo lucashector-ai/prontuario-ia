@@ -169,7 +169,7 @@ function LoginForm() {
             </div>
 
             <div style={{ textAlign: 'right', marginTop: -8 }}>
-              <Link href="/forgot-password" style={{ fontSize: 13, color: '#1F9D5C', textDecoration: 'none' }}>Esqueceu sua senha?</Link>
+              <Link href="/forgot-password" style={{ fontSize: 13, color: '#6043C1', textDecoration: 'none' }}>Esqueceu sua senha?</Link>
             </div>
 
             {erro && (
@@ -180,7 +180,7 @@ function LoginForm() {
 
             <button type="submit" disabled={carregando} style={{
               padding: '14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-              background: carregando ? '#9ca3af' : '#1F9D5C',
+              background: carregando ? '#9ca3af' : '#6043C1',
               color: 'white', fontSize: 15, fontWeight: 700,
               letterSpacing: '0.01em', marginTop: 4,
               transition: 'background 0.15s',
@@ -191,7 +191,7 @@ function LoginForm() {
 
           <div style={{ marginTop: 32, paddingTop: 28, borderTop: '1px solid #f3f4f6', textAlign: 'center' }}>
             <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
-              Não tem conta? <Link href="/cadastro" style={{ color: '#1F9D5C', textDecoration: 'none', fontWeight: 600 }}>Cadastre sua clínica ou consultório</Link>
+              Não tem conta? <Link href="/cadastro" style={{ color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>Cadastre sua clínica ou consultório</Link>
             </p>
           </div>
         </div>

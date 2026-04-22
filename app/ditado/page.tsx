@@ -81,7 +81,7 @@ export default function Ditado() {
 
   const campos = [
     { key: 'subjetivo', label: 'Subjetivo', cor: '#2563eb' },
-    { key: 'objetivo', label: 'Objetivo', cor: '#1F9D5C' },
+    { key: 'objetivo', label: 'Objetivo', cor: '#6043C1' },
     { key: 'avaliacao', label: 'Avaliação', cor: '#d97706' },
     { key: 'plano', label: 'Plano', cor: '#059669' },
   ]
@@ -99,7 +99,7 @@ export default function Ditado() {
           <div style={{ display: 'flex', gap: 8 }}>
             {prontuario && (
               <>
-                <button onClick={copiarTudo} style={{ fontSize: 12, color: '#1F9D5C', background: '#E8F7EF', padding: '6px 14px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
+                <button onClick={copiarTudo} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', padding: '6px 14px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
                   Copiar tudo
                 </button>
                 <button onClick={reiniciar} style={{ fontSize: 12, color: '#6b7280', background: 'white', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
@@ -179,7 +179,7 @@ export default function Ditado() {
 
             {/* Botão estruturar */}
             {textoFinal.trim().length >= 20 && !gravando && (
-              <button onClick={handleEstruturar} disabled={processando} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 9, border: 'none', background: '#1F9D5C', color: 'white', fontSize: 14, fontWeight: 700, cursor: processando ? 'default' : 'pointer', opacity: processando ? 0.7 : 1 }}>
+              <button onClick={handleEstruturar} disabled={processando} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 14, fontWeight: 700, cursor: processando ? 'default' : 'pointer', opacity: processando ? 0.7 : 1 }}>
                 {processando ? (
                   <><svg style={{ animation: 'spin 0.8s linear infinite' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M2 12h4M18 12h4"/></svg>Estruturando...</>
                 ) : (
@@ -208,7 +208,7 @@ export default function Ditado() {
                   <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: '#6b7280', margin: '0 0 8px' }}>CID-10</p>
                   {prontuario.cids.map((cid: any) => (
                     <div key={cid.codigo} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#1F9D5C', background: '#E8F7EF', padding: '1px 6px', borderRadius: 4 }}>{cid.codigo}</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#6043C1', background: '#ede9fb', padding: '1px 6px', borderRadius: 4 }}>{cid.codigo}</span>
                       <span style={{ fontSize: 12, color: '#374151' }}>{cid.descricao}</span>
                     </div>
                   ))}

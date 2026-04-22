@@ -9,7 +9,7 @@ export function ReceitaCard({ receita, nomeMedico, crm, especialidade, onImprimi
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ background: '#E8F7EF', borderBottom: '1px solid #A7E0BF', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ background: '#ede9fb', borderBottom: '1px solid #b9a9ef', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>{nomeMedico || 'Médico responsável'}</p>
             <p style={{ fontSize: 11, color: '#3d5452', margin: '2px 0 0' }}>{[especialidade, crm].filter(Boolean).join(' · ')}</p>
@@ -24,8 +24,8 @@ export function ReceitaCard({ receita, nomeMedico, crm, especialidade, onImprimi
           {receita.medicamentos?.map((med, i) => (
             <div key={i} style={{ display: 'flex', gap: 12, paddingBottom: 12, borderBottom: i < receita.medicamentos.length - 1 ? '1px solid #f0f4f0' : 'none' }}>
               <div style={{
-                width: 28, height: 28, borderRadius: '50%', background: '#E8F7EF', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 700, color: '#1F9D5C', flexShrink: 0
+                width: 28, height: 28, borderRadius: '50%', background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 700, color: '#6043C1', flexShrink: 0
               }}>{i + 1}</div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 14, fontWeight: 700, color: '#0d1f1c', margin: '0 0 6px' }}>{med.nome} {med.dose}</p>

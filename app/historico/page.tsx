@@ -74,7 +74,7 @@ export default function Historico() {
     { key: 'subjetivo', titulo: 'S — Subjetivo', cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
     { key: 'objetivo',  titulo: 'O — Objetivo',  cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
     { key: 'avaliacao', titulo: 'A — Avaliação',  cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
-    { key: 'plano',     titulo: 'P — Plano',      cor: '#1F9D5C', bg: '#E8F7EF', border: '#A7E0BF' },
+    { key: 'plano',     titulo: 'P — Plano',      cor: '#6043C1', bg: '#ede9fb', border: '#b9a9ef' },
   ]
 
   return (
@@ -86,7 +86,7 @@ export default function Historico() {
             <h1 style={{ fontSize: 16, fontWeight: 700, color: '#0d1f1c', margin: 0 }}>Histórico de consultas</h1>
             <p style={{ fontSize: 12, color: '#8aa8a5', margin: 0 }}>{consultasFiltradas.length}{busca ? ` de ${consultas.length}` : ''} consultas registradas</p>
           </div>
-          <a href="/consulta" style={{ fontSize: 12, fontWeight: 600, color: '#1F9D5C', background: '#E8F7EF', padding: '7px 16px', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <a href="/consulta" style={{ fontSize: 12, fontWeight: 600, color: '#6043C1', background: '#ede9fb', padding: '7px 16px', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Nova consulta
           </a>
@@ -114,8 +114,8 @@ export default function Historico() {
             ) : consultasFiltradas.map(c => (
               <div key={c.id} onClick={() => handleSelecionar(c)} style={{
                 padding: '12px', borderRadius: 10, marginBottom: 6, cursor: 'pointer',
-                background: selecionada?.id === c.id ? '#E8F7EF' : 'white',
-                border: `1px solid ${selecionada?.id === c.id ? '#A7E0BF' : '#e8eeed'}`,
+                background: selecionada?.id === c.id ? '#ede9fb' : 'white',
+                border: `1px solid ${selecionada?.id === c.id ? '#b9a9ef' : '#e8eeed'}`,
                 transition: 'all 0.15s', position: 'relative',
               }}>
                 <p style={{ fontSize: 11, color: '#8aa8a5', margin: '0 0 4px', fontWeight: 500 }}>{fmt(c.criado_em)}</p>
@@ -125,7 +125,7 @@ export default function Historico() {
                 {c.cids?.length > 0 && (
                   <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
                     {c.cids.slice(0, 3).map((cid: any, i: number) => (
-                      <span key={i} style={{ fontSize: 10, color: '#1F9D5C', background: '#E8F7EF', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700 }}>{cid.codigo}</span>
+                      <span key={i} style={{ fontSize: 10, color: '#6043C1', background: '#ede9fb', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontWeight: 700 }}>{cid.codigo}</span>
                     ))}
                   </div>
                 )}
@@ -147,7 +147,7 @@ export default function Historico() {
                   <div style={{ display: 'flex', gap: 8 }}>
                     {editando ? (
                       <>
-                        <button onClick={handleSalvar} disabled={salvando} style={{ fontSize: 12, fontWeight: 600, color: 'white', background: '#1F9D5C', border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
+                        <button onClick={handleSalvar} disabled={salvando} style={{ fontSize: 12, fontWeight: 600, color: 'white', background: '#6043C1', border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
                           {salvando ? 'Salvando...' : 'Salvar alterações'}
                         </button>
                         <button onClick={() => setEditando(false)} style={{ fontSize: 12, color: '#3d5452', background: '#F5F5F5', padding: '7px 16px', borderRadius: 8, cursor: 'pointer' }}>
@@ -165,7 +165,7 @@ export default function Historico() {
                         </button>
                             <a href={'/api/pdf-prontuario?consulta_id=' + selecionada.id + '&medico_id=' + medico?.id}
                               target="_blank" rel="noreferrer"
-                              style={{display:'inline-flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:6,background:'#f0ebff',color:'#1F9D5C',fontSize:12,fontWeight:600,textDecoration:'none',marginRight:8}}>
+                              style={{display:'inline-flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:6,background:'#f0ebff',color:'#6043C1',fontSize:12,fontWeight:600,textDecoration:'none',marginRight:8}}>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
                               PDF Prontuário
                             </a>
@@ -199,8 +199,8 @@ export default function Historico() {
                       <p style={{ fontSize: 10, fontWeight: 700, color: '#8aa8a5', margin: '0 0 10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>CID-10</p>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {selecionada.cids.map((cid: any, i: number) => (
-                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#E8F7EF', borderRadius: 8, padding: '6px 12px' }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#1F9D5C' }}>{cid.codigo}</span>
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#ede9fb', borderRadius: 8, padding: '6px 12px' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#6043C1' }}>{cid.codigo}</span>
                             <span style={{ fontSize: 12, color: '#3d5452' }}>{cid.descricao}</span>
                           </div>
                         ))}
@@ -211,13 +211,13 @@ export default function Historico() {
               </div>
             ) : (
               <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 16, background: '#E8F7EF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1F9D5C" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: '#0d1f1c', margin: '0 0 4px' }}>{consultas.length === 0 ? 'Nenhuma consulta ainda' : 'Selecione uma consulta'}</p>
                   {consultas.length === 0 && (
-                    <a href="/nova-consulta" style={{ display: 'inline-block', marginTop: 16, padding: '9px 20px', borderRadius: 8, background: '#1F9D5C', color: 'white', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>+ Nova consulta</a>
+                    <a href="/nova-consulta" style={{ display: 'inline-block', marginTop: 16, padding: '9px 20px', borderRadius: 8, background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>+ Nova consulta</a>
                   )}
                   <p style={{ fontSize: 13, color: '#8aa8a5', margin: 0 }}>{consultas.length === 0 ? 'Comece gravando sua primeira consulta' : 'Clique em qualquer consulta na lista para ver os detalhes'}</p>
                 </div>

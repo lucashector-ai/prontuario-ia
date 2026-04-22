@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-const ACCENT = '#1F9D5C'
+const ACCENT = '#6043C1'
 const TEXT_DEFAULT = '#111827'
 const TEXT_MUTED = '#6B7280'
 const BUSCA_BG = '#F5F5F5'

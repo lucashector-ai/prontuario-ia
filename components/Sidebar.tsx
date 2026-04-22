@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 
-const ACCENT = '#1F9D5C'
-const ACCENT_LIGHT = '#E8F7EF'
+const ACCENT = '#6043C1'
+const ACCENT_LIGHT = '#ede9fb'
 const TEXT_DEFAULT = '#374151'
 const TEXT_MUTED = '#9CA3AF'
 

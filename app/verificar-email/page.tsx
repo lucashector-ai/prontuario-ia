@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-const ACCENT = '#1F9D5C'
+const ACCENT = '#6043C1'
 
 function VerificarContent() {
   const router = useRouter()
@@ -68,13 +68,13 @@ function VerificarContent() {
       <div style={{ background: 'white', borderRadius: 16, padding: 48, maxWidth: 420, width: '100%', textAlign: 'center' }}>
         {status === 'carregando' && (
           <>
-            <div style={{ width: 40, height: 40, border: `3px solid #E8F7EF`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 20px' }}/>
+            <div style={{ width: 40, height: 40, border: `3px solid #ede9fb`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 20px' }}/>
             <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Confirmando sua conta...</p>
           </>
         )}
         {status === 'ok' && (
           <>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#E8F7EF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>

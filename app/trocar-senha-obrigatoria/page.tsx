@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SenhaStrength, senhaEhForte } from '@/components/SenhaStrength'
 
-const ACCENT = '#1F9D5C'
+const ACCENT = '#6043C1'
 const BG = '#F5F5F5'
 
 export default function TrocarSenhaObrigatoria() {
@@ -59,7 +59,7 @@ export default function TrocarSenhaObrigatoria() {
     <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 460 }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#E8F7EF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ede9fb', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <path d="M7 11V7a5 5 0 0110 0v4"/>

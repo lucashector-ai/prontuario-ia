@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
-const ACCENT = '#1F9D5C'
-const ACCENT_LIGHT = '#E8F7EF'
+const ACCENT = '#6043C1'
+const ACCENT_LIGHT = '#ede9fb'
 const BG = '#F5F5F5'
 const CARD_RADIUS = 16
 

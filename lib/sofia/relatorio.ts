@@ -141,7 +141,7 @@ export function formatarRelatorioEmail(r: RelatorioData): { assunto: string; htm
       : ''
     return `
       <tr>
-        <td style="padding:10px 6px;vertical-align:top;width:60px;font-weight:700;color:#1F9D5C">${c.horario}</td>
+        <td style="padding:10px 6px;vertical-align:top;width:60px;font-weight:700;color:#6043C1">${c.horario}</td>
         <td style="padding:10px 6px;vertical-align:top">
           <div style="font-weight:600;color:#111827">${c.paciente}</div>
           <div style="font-size:13px;color:#6b7280">${c.motivo}${c.tipo !== 'consulta' ? ' · ' + c.tipo : ''}</div>
@@ -156,7 +156,7 @@ export function formatarRelatorioEmail(r: RelatorioData): { assunto: string; htm
 <html><head><meta charset="utf-8"><title>${assunto}</title></head>
 <body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F5F5F5;padding:20px;margin:0">
   <div style="max-width:600px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;border:1px solid #f3f4f6">
-    <div style="background:#1F9D5C;padding:20px 24px;color:white">
+    <div style="background:#6043C1;padding:20px 24px;color:white">
       <h1 style="margin:0;font-size:18px;font-weight:700">Bom dia, ${r.medico_nome.split(' ')[0]}!</h1>
       <p style="margin:4px 0 0;font-size:13px;opacity:0.9">Seu resumo de ${r.data}</p>
     </div>

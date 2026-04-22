@@ -65,7 +65,7 @@ export function BuscaGlobal({ medicoId }: { medicoId: string }) {
           <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)}
             placeholder="Buscar pacientes, agendamentos..." autoFocus
             style={{ flex: 1, border: 'none', outline: 'none', fontSize: 15, color: '#111827' }} />
-          {loading && <div style={{ width: 16, height: 16, border: '2px solid #1F9D5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />}
+          {loading && <div style={{ width: 16, height: 16, border: '2px solid #6043C1', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />}
           <button onClick={() => setAberto(false)} style={{ background: 'none', border: '1px solid #e5e7eb', borderRadius: 6, padding: '2px 8px', fontSize: 12, color: '#9ca3af', cursor: 'pointer' }}>Esc</button>
         </div>
         <div style={{ maxHeight: 400, overflow: 'auto', padding: 8 }}>
@@ -78,7 +78,7 @@ export function BuscaGlobal({ medicoId }: { medicoId: string }) {
               {resultados.pacientes.map((p: any) => (
                 <button key={p.id} onClick={() => navegar('/pacientes/' + p.id)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '8px', borderRadius: 8, border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1F9D5C', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#6043C1', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                     {p.nome?.substring(0, 2).toUpperCase()}
                   </div>
                   <div>
@@ -95,7 +95,7 @@ export function BuscaGlobal({ medicoId }: { medicoId: string }) {
               {resultados.agendamentos.map((a: any) => (
                 <button key={a.id} onClick={() => navegar('/agenda')}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '8px', borderRadius: 8, border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f0ebff', color: '#1F9D5C', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f0ebff', color: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                   </div>
                   <div>

@@ -51,7 +51,7 @@ export function NotificacoesSofia({ medicoId }: { medicoId: string }) {
   const corPorTipo: Record<string, string> = {
     confirmacao_recusada: '#dc2626',
     confirmacao_ignorada: '#d97706',
-    reagendamento_solicitado: '#1F9D5C',
+    reagendamento_solicitado: '#6043C1',
   }
 
   return (

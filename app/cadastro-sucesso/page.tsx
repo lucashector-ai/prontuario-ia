@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-const ACCENT = '#1F9D5C'
-const ACCENT_LIGHT = '#E8F7EF'
+const ACCENT = '#6043C1'
+const ACCENT_LIGHT = '#ede9fb'
 
 function Content() {
   const router = useRouter()

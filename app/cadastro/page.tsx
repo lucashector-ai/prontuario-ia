@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SenhaStrength, senhaEhForte } from '@/components/SenhaStrength'
 
-const ACCENT = '#1F9D5C'
-const ACCENT_LIGHT = '#E8F7EF'
+const ACCENT = '#6043C1'
+const ACCENT_LIGHT = '#ede9fb'
 const BG = '#F5F5F5'
 
 function ToggleSenha({ show, onToggle }: { show: boolean; onToggle: () => void }) {
