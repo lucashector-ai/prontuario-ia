@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
+import { SetupChecklist } from '@/components/SetupChecklist'
 export default function Dashboard() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
@@ -197,6 +198,9 @@ export default function Dashboard() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1200 }}>
+
+              {/* Setup checklist */}
+              <SetupChecklist />
 
               {/* Métricas principais */}
               <div className="grid-dash-metrics">
