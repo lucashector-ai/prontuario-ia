@@ -14,7 +14,8 @@ export default function AutomacoesPage() {
   const [msg, setMsg] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null)
 
   useEffect(() => {
-    const m = localStorage.getItem("medico")
+    const ca_ = localStorage.getItem("clinica_admin")
+    const m = ca_ || localStorage.getItem("medico")
     if (!m) { router.push("/login"); return }
     setMedico(JSON.parse(m))
   }, [router])
