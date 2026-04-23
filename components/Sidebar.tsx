@@ -176,7 +176,7 @@ export function Sidebar() {
       </div>
 
       {/* Grupos de navegação */}
-      <nav style={{ flex: 1, overflow: 'auto' }}>
+      <nav style={{ flex: 1, overflow: 'auto', overscrollBehavior: 'contain' as const }}>
         {grupos.map((grupo, gi) => {
           if (grupo.items.length === 0) return null
           return (

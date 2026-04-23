@@ -44,6 +44,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <main style={{
             flex: 1,
             overflow: 'auto',
+            overscrollBehavior: 'contain',
             minHeight: 0,
           }}>
             {children}
