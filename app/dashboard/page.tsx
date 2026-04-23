@@ -219,14 +219,6 @@ export default function Dashboard() {
                     border: variacao >= 0 ? '#b9a9ef' : '#fecaca'
                   },
                   {
-                    label: 'CIDs registrados', valor: Object.keys(dados.topCids).length, icon: '🏷',
-                    sub: 'diagnósticos únicos', cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe'
-                  },
-                  {
-                    label: 'Tempo médio', valor: dados.tempoMedioConsulta ? `${dados.tempoMedioConsulta}min` : '--', icon: '⏱',
-                    sub: 'por consulta no período', cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4'
-                  },
-                  {
                     label: 'Taxa de retorno', valor: dados.taxaRetorno ? `${dados.taxaRetorno}%` : '--', icon: '🔄',
                     sub: 'pacientes que voltaram', cor: '#d97706', bg: '#fffbeb', border: '#fde68a'
                   },
@@ -315,48 +307,10 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="grid-dash-bottom">
-
-                {/* CIDs mais frequentes */}
-                <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden' }}>
-                  <div style={{ padding: '16px 20px', borderBottom: 'none' }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>CIDs mais frequentes</p>
-                    <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>Diagnósticos registrados no período</p>
-                  </div>
-                  {dados.topCids.length === 0 ? (
-                    <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-                      <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Nenhum CID registrado ainda</p>
-                    </div>
-                  ) : (
-                    <div style={{ padding: '12px 0' }}>
-                      {dados.topCids.map((cid: any, i: number) => {
-                        const maxTotal = dados.topCids[0]?.total || 1
-                        const pct = Math.round((cid.total / maxTotal) * 100)
-                        const cores = ['#2563eb','#6043C1','#7c3aed','#d97706','#0d9488','#dc2626','#0891b2','#9333ea']
-                        const cor = cores[i % cores.length]
-                        return (
-                          <div key={cid.codigo} style={{ padding: '10px 20px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-                                <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: cor, background: cor + '15', padding: '1px 7px', borderRadius: 5, flexShrink: 0 }}>{cid.codigo}</span>
-                                <span style={{ fontSize: 12, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cid.descricao}</span>
-                              </div>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginLeft: 8, flexShrink: 0 }}>{cid.total}x</span>
-                            </div>
-                            <div style={{ height: 4, background: '#f3f4f6', borderRadius: 4, overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${pct}%`, background: cor, borderRadius: 4, transition: 'width 0.5s ease' }}/>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Últimas consultas */}
-                <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden' }}>
-                  <div style={{ padding: '16px 20px', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Últimas consultas</p>
+              {/* Últimas consultas (ocupa largura inteira) */}
+              <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden' }}>
+                  <div style={{ padding: '18px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Últimas consultas</p>
                     <a href="/histórico" style={{ fontSize: 11, color: '#6043C1', textDecoration: 'none', fontWeight: 600 }}>Ver histórico →</a>
                   </div>
                   {dados.consultasRecentes.length === 0 ? (
@@ -381,7 +335,6 @@ export default function Dashboard() {
                       </div>
                     </div>
                   ))}
-                </div>
               </div>
 
             </div>
