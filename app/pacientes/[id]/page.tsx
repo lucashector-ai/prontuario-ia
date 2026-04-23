@@ -48,9 +48,20 @@ export default function PacienteDetalhe() {
   }, [id])
 
   const carregar = async (medicoId: string) => {
+    // Se for clinica admin, busca de todos os medicos da clinica
+    const caStr = localStorage.getItem('clinica_admin')
+    let medicoIds = [medicoId]
+    if (caStr) {
+      const admin = JSON.parse(caStr)
+      if (admin.clinica_id) {
+        const { data: meds } = await supabase.from('medicos').select('id').eq('clinica_id', admin.clinica_id).eq('ativo', true)
+        if (meds && meds.length > 0) medicoIds = meds.map((m: any) => m.id)
+      }
+    }
+
     const [pR, cR, aR] = await Promise.all([
       fetch('/api/pacientes/' + id),
-      supabase.from('consultas').select('*').eq('medico_id', medicoId).order('criado_em', {ascending:false}),
+      supabase.from('consultas').select('*').in('medico_id', medicoIds).order('criado_em', {ascending:false}),
       fetch('/api/agendamentos?paciente_id=' + id),
     ])
     const pd = await pR.json(); const ad = await aR.json()
