@@ -214,7 +214,7 @@ export default function PacienteDetalhe() {
                     </div>
                   </div>
                   {(paciente?.alergias||paciente?.comorbidades||paciente?.medicamentos_uso)&&!editando&&(
-                    <div style={{background: '#F5F5F5',borderRadius:16,padding:'16px 20px',display:'flex',flexDirection:'column',gap:10}}>
+                    <div style={{background:'white',borderRadius:16,padding:'16px 20px',display:'flex',flexDirection:'column',gap:10}}>
                       {paciente.alergias&&<div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#dc2626',margin:'0 0 3px',textTransform:'uppercase'}}>Alergias</p><p style={{fontSize:12,color:'#b91c1c',margin:0}}>{paciente.alergias}</p></div>}
                       {paciente.comorbidades&&<div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#d97706',margin:'0 0 3px',textTransform:'uppercase'}}>Comorbidades</p><p style={{fontSize:12,color:'#92400e',margin:0}}>{paciente.comorbidades}</p></div>}
                       {paciente.medicamentos_uso&&<div style={{background:'#F5F5F5',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#6043C1',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:12,color:'#6043C1',margin:0}}>{paciente.medicamentos_uso}</p></div>}
@@ -224,7 +224,7 @@ export default function PacienteDetalhe() {
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
                     {[{l:'Consultas',v:String(consultas.length),c:'#2563eb'},{l:'Agendamentos',v:String(agendamentos.filter(a=>a.status!=='cancelado').length),c:'#6043C1'},{l:'Proximo',v:prox?fmt(prox.data_hora):'Nao agendado',c:'#7c3aed'}].map(m=>(
-                      <div key={m.l} style={{background: '#F5F5F5',borderRadius:12,padding:'16px 18px'}}>
+                      <div key={m.l} style={{background:'white',borderRadius:16,padding:'18px 20px'}}>
                         <p style={{fontSize:22,fontWeight:800,color:m.c,margin:'0 0 4px'}}>{m.v}</p>
                         <p style={{fontSize:12,color:'#9ca3af',margin:0}}>{m.l}</p>
                       </div>
@@ -235,7 +235,7 @@ export default function PacienteDetalhe() {
                       <p style={{fontSize:13,fontWeight:700,color:'#111827',margin:0}}>Últimas consultas</p>
                       <button onClick={()=>setAba('consultas')} style={{fontSize:12,color:'#6043C1',background:'none',border:'none',cursor:'pointer',fontWeight:600}}>Ver todas</button>
                     </div>
-                    {consultas.length===0?<div style={{padding:24,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta</p></div>
+                    {consultas.length===0?<div style={{padding:'60px 24px',textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta registrada ainda</p></div>
                     :consultas.slice(0,4).map(c=>(
                       <div key={c.id} onClick={()=>{setConsultaAberta(c);setAba('consultas')}} style={{padding:'12px 20px',borderBottom:'1px solid #F5F5F5',cursor:'pointer'}}>
                         <p style={{fontSize:11,color:'#9ca3af',margin:'0 0 3px'}}>{fmt(c.criado_em)}</p>
@@ -249,9 +249,9 @@ export default function PacienteDetalhe() {
             {aba==='consultas'&&(
               <div style={{display:'grid',gridTemplateColumns:'320px 1fr',gap:20}}>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  {consultas.length===0?<div style={{background:'white',borderRadius:12,padding:24,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta</p></div>
+                  {consultas.length===0?<div style={{background:'white',borderRadius:16,padding:'60px 24px',textAlign:'center',minHeight:200}}><p style={{fontSize:14,fontWeight:600,color:'#374151',margin:'0 0 6px'}}>Nenhuma consulta ainda</p><p style={{fontSize:12,color:'#9ca3af',margin:0}}>Inicie uma nova consulta pra registrar</p></div>
                   :consultas.map(c=>(
-                    <div key={c.id} onClick={()=>setConsultaAberta(consultaAberta?.id===c.id?null:c)} style={{background: '#F5F5F5',border:'1px solid '+(consultaAberta?.id===c.id?'#b9a9ef':'#e5e7eb'),borderRadius:12,padding:'12px 16px',cursor:'pointer'}}>
+                    <div key={c.id} onClick={()=>setConsultaAberta(consultaAberta?.id===c.id?null:c)} style={{background:'white',border:'1.5px solid '+(consultaAberta?.id===c.id?'#6043C1':'transparent'),borderRadius:12,padding:'14px 16px',cursor:'pointer'}}>
                       <p style={{fontSize:11,color:'#9ca3af',margin:'0 0 4px'}}>{fmt(c.criado_em)}</p>
                       <p style={{fontSize:12,color:'#374151',margin:'0 0 7px'}}>{(c.subjetivo||'').substring(0,90)}</p>
                       <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#6043C1',background:'#F5F5F5',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700}}>{cid.codigo}</span>)}</div>
@@ -274,7 +274,7 @@ export default function PacienteDetalhe() {
                         ))}
                       </div>
                     </div>
-                  ):<div style={{background:'white',border:'1px dashed #e5e7eb',borderRadius:16,padding:40,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Selecione uma consulta</p></div>}
+                  ):<div style={{background:'white',border:'1px dashed #e5e7eb',borderRadius:16,padding:'60px 40px',textAlign:'center',minHeight:400,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}><div style={{width:56,height:56,borderRadius:14,background:'#ede9fb',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14,color:'#6043C1'}}><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><p style={{fontSize:14,fontWeight:600,color:'#374151',margin:'0 0 4px'}}>Selecione uma consulta</p><p style={{fontSize:12,color:'#9ca3af',margin:0}}>Clique em qualquer consulta na lista pra ver os detalhes</p></div>}
                 </div>
               </div>
             )}
@@ -295,7 +295,7 @@ export default function PacienteDetalhe() {
                       const sc=STATUS_CORES[ag.status]||STATUS_CORES.agendado
                       const passado=new Date(ag.data_hora)<new Date()
                       return(
-                        <div key={ag.id} style={{background: '#F5F5F5',borderRadius:12,padding:'16px 20px',display:'flex',gap:16,opacity:ag.status==='cancelado'?0.5:1}}>
+                        <div key={ag.id} style={{background:'white',borderRadius:16,padding:'16px 20px',display:'flex',gap:16,opacity:ag.status==='cancelado'?0.5:1}}>
                           <div style={{background:tc.bg,border:'1px solid '+tc.border,borderRadius:10,padding:'8px 12px',textAlign:'center',flexShrink:0,minWidth:56}}>
                             <p style={{fontSize:18,fontWeight:800,color:tc.text,margin:0,lineHeight:1}}>{new Date(ag.data_hora).getDate()}</p>
                             <p style={{fontSize:10,color:tc.text,margin:0,textTransform:'uppercase'}}>{new Date(ag.data_hora).toLocaleDateString('pt-BR',{month:'short'})}</p>
