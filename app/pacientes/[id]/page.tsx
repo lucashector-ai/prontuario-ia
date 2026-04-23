@@ -31,6 +31,7 @@ export default function PacienteDetalhe() {
   const [agendamentos, setAgendamentos] = useState<any[]>([])
   const [aba, setAba] = useState<Aba>('overview')
   const [carregando, setCarregando] = useState(true)
+  const [mapaMedicos, setMapaMedicos] = useState<Record<string, string>>({})
   const [editando, setEditando] = useState(false)
   const [editForm, setEditForm] = useState<any>({})
   const [salvando, setSalvando] = useState(false)
