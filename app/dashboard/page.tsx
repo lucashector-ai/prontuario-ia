@@ -231,11 +231,8 @@ export default function Dashboard() {
                     sub: 'pacientes que voltaram', cor: '#d97706', bg: '#fffbeb', border: '#fde68a'
                   },
                 ].map(m => (
-                  <div key={m.label} style={{ background: 'white', borderRadius: 14, padding: '18px 20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                      <p style={{ fontSize: 12, color: '#6b7280', margin: 0, fontWeight: 500 }}>{m.label}</p>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: m.bg, border: `1px solid ${m.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{m.icon}</div>
-                    </div>
+                  <div key={m.label} style={{ background: 'white', borderRadius: 16, padding: 20 }}>
+                    <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 12px', fontWeight: 500 }}>{m.label}</p>
                     <p style={{ fontSize: 28, fontWeight: 800, color: '#111827', margin: '0 0 4px', lineHeight: 1 }}>{m.valor}</p>
                     <p style={{ fontSize: 11, color: m.cor, margin: 0, fontWeight: 600 }}>{m.sub}</p>
                   </div>
