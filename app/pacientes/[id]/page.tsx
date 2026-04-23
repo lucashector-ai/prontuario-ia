@@ -247,7 +247,7 @@ export default function PacienteDetalhe() {
               </div>
             )}
             {aba==='consultas'&&(
-              <div style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:20,maxWidth:1100}}>
+              <div style={{display:'grid',gridTemplateColumns:'320px 1fr',gap:20}}>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
                   {consultas.length===0?<div style={{background:'white',borderRadius:12,padding:24,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta</p></div>
                   :consultas.map(c=>(
@@ -279,7 +279,7 @@ export default function PacienteDetalhe() {
               </div>
             )}
             {aba==='agendamentos'&&(
-              <div style={{maxWidth:800}}>
+              <div>
                 <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
                   <button onClick={()=>setModalAg(true)} style={{padding:'8px 16px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>+ Novo agendamento</button>
                 </div>
@@ -329,7 +329,7 @@ export default function PacienteDetalhe() {
               </div>
             )}
             {aba==='prontuario'&&(
-              <div style={{maxWidth:800}}>
+              <div>
                 <div style={{background:'white',borderRadius:16,padding:'20px 24px',marginBottom:20}}>
                   <h2 style={{fontSize:15,fontWeight:700,color:'#111827',margin:'0 0 14px'}}>Resumo clinico</h2>
                   {(paciente?.alergias||paciente?.comorbidades||paciente?.medicamentos_uso)?(
@@ -404,7 +404,7 @@ export default function PacienteDetalhe() {
             )
 }
               {aba==='timeline'&&(
-                <div style={{maxWidth:800}}>
+                <div>
                   <div style={{marginBottom:20}}>
                     <h2 style={{fontSize:15,fontWeight:700,color:'#111827',margin:'0 0 4px'}}>Linha do tempo clínica</h2>
                     <p style={{fontSize:12,color:'#9ca3af',margin:0}}>{consultas.length} consulta{consultas.length!==1?'s':''} registrada{consultas.length!==1?'s':''}</p>
