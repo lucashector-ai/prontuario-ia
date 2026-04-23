@@ -308,16 +308,34 @@ export default function PacienteDetalhe() {
                           </button>
                         </div>
                       </div>
-                      <div style={{padding:20}}>
+                      <div style={{padding:20,display:'flex',flexDirection:'column' as const,gap:12}}>
                         {secoes.map(s=>(
-                          <div key={s.key} style={{background:s.bg,border:'1px solid '+s.border,borderRadius:10,padding:'12px 14px',marginBottom:10}}>
-                            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
-                              <div style={{width:22,height:22,borderRadius:6,background:s.cor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'white'}}>{s.letra}</div>
-                              <p style={{fontSize:12,fontWeight:700,color:'#111827',margin:0}}>{s.titulo}</p>
+                          <div key={s.key} style={{background:'white',borderRadius:16,overflow:'hidden' as const,border:'1px solid #f3f4f6'}}>
+                            <div style={{display:'flex',alignItems:'center',gap:10,padding:'14px 20px',background:s.bg}}>
+                              <div style={{width:26,height:26,borderRadius:7,background:'white',color:s.cor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700}}>{s.letra}</div>
+                              <span style={{fontSize:12,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.06em',color:s.cor}}>{s.titulo}</span>
                             </div>
-                            <p style={{fontSize:12,color:'#374151',margin:0,lineHeight:1.7,paddingLeft:30}}>{consultaAberta[s.key]||'--'}</p>
+                            <div style={{padding:20}}>
+                              <p style={{fontSize:14,color:'#111827',margin:0,lineHeight:1.7,whiteSpace:'pre-wrap' as const}}>
+                                {consultaAberta[s.key] || <span style={{color:'#9ca3af',fontStyle:'italic' as const}}>—</span>}
+                              </p>
+                            </div>
                           </div>
                         ))}
+
+                        {consultaAberta.cids && consultaAberta.cids.length > 0 && (
+                          <div style={{background:'white',borderRadius:16,padding:20,border:'1px solid #f3f4f6'}}>
+                            <p style={{fontSize:11,fontWeight:700,color:'#6b7280',margin:'0 0 12px',letterSpacing:'0.06em',textTransform:'uppercase' as const}}>CID-10 Sugeridos</p>
+                            <div style={{display:'flex',gap:8,flexWrap:'wrap' as const}}>
+                              {consultaAberta.cids.map((cid:any,i:number)=>(
+                                <div key={i} style={{display:'flex',alignItems:'center',gap:8,background:'#F9FAFB',borderRadius:10,padding:'8px 12px'}}>
+                                  <span style={{fontFamily:'monospace' as const,fontSize:12,fontWeight:700,color:'#6043C1',background:'#ede9fb',padding:'3px 8px',borderRadius:6}}>{cid.codigo}</span>
+                                  <span style={{fontSize:13,color:'#374151'}}>{cid.descricao}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ):<div style={{background:'white',border:'1px dashed #e5e7eb',borderRadius:16,padding:'60px 40px',textAlign:'center',minHeight:400,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}><div style={{width:56,height:56,borderRadius:14,background:'#ede9fb',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14,color:'#6043C1'}}><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><p style={{fontSize:14,fontWeight:600,color:'#374151',margin:'0 0 4px'}}>Selecione uma consulta</p><p style={{fontSize:12,color:'#9ca3af',margin:0}}>Clique em qualquer consulta na lista pra ver os detalhes</p></div>}
