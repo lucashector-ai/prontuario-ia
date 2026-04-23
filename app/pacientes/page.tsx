@@ -548,6 +548,32 @@ export default function Pacientes() {
                   </div>
                 </div>
 
+                {/* Badge do medico (so aparece pra clinica admin que ve varios medicos) */}
+                {p.medico && p.medico.nome && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '5px 10px', borderRadius: 20,
+                    background: '#ede9fb',
+                    flexShrink: 0,
+                  }}>
+                    <div style={{
+                      width: 18, height: 18, borderRadius: '50%',
+                      background: '#6043C1', color: 'white',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 9, fontWeight: 700,
+                    }}>
+                      {(p.medico.nome || '').split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()}
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#6043C1', whiteSpace: 'nowrap' as const }}>
+                      {(() => {
+                        const partes = (p.medico.nome || '').split(' ')
+                        const primeiro = partes[0] || ''
+                        return 'Dr. ' + primeiro
+                      })()}
+                    </span>
+                  </div>
+                )}
+
                 {/* Ações */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                   <button

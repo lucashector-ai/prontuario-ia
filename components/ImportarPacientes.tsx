@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as XLSX from 'xlsx'
+import { supabase } from '@/lib/supabase'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
@@ -43,6 +44,8 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
   medicoId?: string
   clinicaId?: string
 }) {
+  const [medicos, setMedicos] = useState<any[]>([])
+  const [medicoDestino, setMedicoDestino] = useState<string>('')
   const [etapa, setEtapa] = useState<Etapa>('origem')
   const [linhasBrutas, setLinhasBrutas] = useState<any[]>([])
   const [preview, setPreview] = useState<PreviewResult | null>(null)
@@ -52,6 +55,23 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
   const [urlSheets, setUrlSheets] = useState('')
   const [nomeArquivo, setNomeArquivo] = useState('')
   const inputFileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!aberto || !clinicaId) return
+    supabase
+      .from('medicos')
+      .select('id, nome, cargo, ativo')
+      .eq('clinica_id', clinicaId)
+      .eq('ativo', true)
+      .neq('cargo', 'recepcionista')
+      .order('nome')
+      .then(({ data }) => {
+        const lista = data || []
+        setMedicos(lista)
+        // Se tem exatamente 1 medico, seleciona automaticamente
+        if (lista.length === 1) setMedicoDestino(lista[0].id)
+      })
+  }, [aberto, clinicaId])
 
   const resetar = () => {
     setEtapa('origem')
@@ -149,7 +169,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
     const res = await fetch('/api/pacientes/importar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ medico_id: medicoId, clinica_id: clinicaId, linhas, modo: 'preview' }),
+      body: JSON.stringify({ medico_id: medicoDestino || medicoId, clinica_id: clinicaId, linhas, modo: 'preview' }),
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Erro ao processar preview')
@@ -176,7 +196,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
       const res = await fetch('/api/pacientes/importar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ medico_id: medicoId, clinica_id: clinicaId, linhas: linhasBrutas, modo: 'import' }),
+        body: JSON.stringify({ medico_id: medicoDestino || medicoId, clinica_id: clinicaId, linhas: linhasBrutas, modo: 'import' }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erro ao importar')
@@ -255,6 +275,47 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
           {/* ETAPA: ORIGEM */}
           {etapa === 'origem' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Dropdown de medico destino (so aparece se houver 2+ medicos) */}
+              {medicos.length > 1 && (
+                <div>
+                  <label style={{
+                    fontSize: 11, fontWeight: 600, color: '#6b7280',
+                    display: 'block', marginBottom: 6,
+                    textTransform: 'uppercase' as const, letterSpacing: '0.04em',
+                  }}>
+                    Vincular pacientes a
+                  </label>
+                  <select
+                    value={medicoDestino}
+                    onChange={e => setMedicoDestino(e.target.value)}
+                    style={{
+                      width: '100%', padding: '10px 14px', fontSize: 14,
+                      borderRadius: 10, border: '1px solid #e5e7eb',
+                      background: 'white', outline: 'none',
+                      color: '#111827', cursor: 'pointer',
+                    }}
+                  >
+                    <option value="">Sem vínculo — atribui no atendimento</option>
+                    {medicos.map(m => (
+                      <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
+                    ))}
+                  </select>
+                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0', lineHeight: 1.5 }}>
+                    Se deixar sem vínculo, o médico será atribuído quando o paciente fizer a primeira consulta.
+                  </p>
+                </div>
+              )}
+
+              {/* Info quando tem so 1 medico */}
+              {medicos.length === 1 && (
+                <div style={{
+                  padding: '10px 14px', background: '#F9FAFB',
+                  borderRadius: 10, fontSize: 12, color: '#6b7280',
+                }}>
+                  Os pacientes serão vinculados a <strong style={{ color: '#111827' }}>Dr(a). {medicos[0].nome}</strong>
+                </div>
+              )}
+
               {/* Upload */}
               <button
                 onClick={() => inputFileRef.current?.click()}

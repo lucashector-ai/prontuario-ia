@@ -195,18 +195,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Limite de 2000 pacientes por importação' }, { status: 400 })
     }
 
-    // Busca CPFs e emails existentes do médico
+    // Normaliza nome: lowercase, sem acentos, sem espacos duplos
+    const normNome = (n: string) => (n || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().trim().replace(/\s+/g, ' ')
+
+    // Busca existentes do médico (CPF, email, nome+data)
     const { data: existentes } = await supabase
       .from('pacientes')
-      .select('cpf, email')
+      .select('cpf, email, nome, data_nascimento')
       .eq('medico_id', medico_id)
 
     const cpfsExistentes = new Set((existentes || []).map(p => p.cpf).filter(Boolean))
     const emailsExistentes = new Set((existentes || []).map(p => (p.email || '').toLowerCase()).filter(Boolean))
+    // chave nome+data_nascimento (so conta se tiver ambos)
+    const nomeDataExistente = new Set(
+      (existentes || [])
+        .filter(p => p.nome && p.data_nascimento)
+        .map(p => normNome(p.nome) + '|' + p.data_nascimento)
+    )
 
     // Processa cada linha
     const cpfsLote = new Set<string>()
     const emailsLote = new Set<string>()
+    const nomeDataLote = new Set<string>()
+    const nomeDataLote = new Set<string>()
     const resultado: LinhaProcessada[] = []
 
     for (let i = 0; i < linhas.length; i++) {
@@ -229,6 +242,19 @@ export async function POST(req: NextRequest) {
       } else if (normalizada.email && emailsLote.has(normalizada.email)) {
         status = 'duplicado'
         motivo = 'Email duplicado na planilha'
+      } else if (normalizada.nome && normalizada.data_nascimento) {
+        const chave = normNome(normalizada.nome) + '|' + normalizada.data_nascimento
+        if (nomeDataExistente.has(chave)) {
+          status = 'duplicado'
+          motivo = 'Paciente ja cadastrado (mesmo nome e data de nascimento)'
+        } else if (nomeDataLote.has(chave)) {
+          status = 'duplicado'
+          motivo = 'Duplicado na planilha (mesmo nome e data de nascimento)'
+        } else {
+          nomeDataLote.add(chave)
+          if (normalizada.cpf) cpfsLote.add(normalizada.cpf)
+          if (normalizada.email) emailsLote.add(normalizada.email)
+        }
       } else {
         if (normalizada.cpf) cpfsLote.add(normalizada.cpf)
         if (normalizada.email) emailsLote.add(normalizada.email)
