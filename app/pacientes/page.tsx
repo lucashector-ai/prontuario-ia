@@ -51,7 +51,14 @@ export default function Pacientes() {
 
   const carregarPacientes = async (id: string) => {
     setCarregando(true)
-    const res = await fetch(`/api/pacientes?medico_id=${id}`)
+    // Se for clinica admin, busca pacientes de todos medicos da clinica
+    const ca = localStorage.getItem('clinica_admin')
+    let url = '/api/pacientes?medico_id=' + id
+    if (ca) {
+      const admin = JSON.parse(ca)
+      if (admin.clinica_id) url = '/api/pacientes?clinica_id=' + admin.clinica_id
+    }
+    const res = await fetch(url)
     const data = await res.json()
     setPacientes(data.pacientes || [])
     setCarregando(false)
