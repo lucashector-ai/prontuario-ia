@@ -46,6 +46,9 @@ export default function Pacientes() {
   const [modoSelecao, setModoSelecao] = useState(false)
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
   const [deletandoLote, setDeletandoLote] = useState(false)
+  const [pagina, setPagina] = useState(1)
+  const [paginaInput, setPaginaInput] = useState('')
+  const PACIENTES_POR_PAGINA = 10
 
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
@@ -153,6 +156,42 @@ export default function Pacientes() {
     setSalvando(false)
   }
 
+  const exportarCSV = () => {
+    if (pacientes.length === 0) {
+      mostrarMsg('erro', 'Nenhum paciente pra exportar')
+      return
+    }
+    // Helper pra escapar CSV
+    const esc = (v: any) => {
+      if (v === null || v === undefined) return ''
+      const s = String(v)
+      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+        return '"' + s.replace(/"/g, '""') + '"'
+      }
+      return s
+    }
+    const cabecalho = ['nome', 'cpf', 'data_nascimento', 'telefone', 'sexo', 'email', 'convenio']
+    const linhas = pacientes.map(p => [
+      esc(p.nome),
+      esc(p.cpf),
+      esc(p.data_nascimento),
+      esc(p.telefone),
+      esc(p.sexo),
+      esc(p.email),
+      esc(p.convenio),
+    ].join(','))
+    const csv = cabecalho.join(',') + '\n' + linhas.join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const data = new Date().toISOString().slice(0, 10)
+    link.href = url
+    link.download = 'pacientes-' + data + '.csv'
+    link.click()
+    URL.revokeObjectURL(url)
+    mostrarMsg('ok', pacientes.length + ' paciente' + (pacientes.length !== 1 ? 's' : '') + ' exportado' + (pacientes.length !== 1 ? 's' : ''))
+  }
+
   const deletar = async (e: React.MouseEvent, p: any) => {
     e.stopPropagation()
     if (!confirm(`Deletar ${p.nome}? Isso remove todas as consultas e agendamentos.`)) return
@@ -168,6 +207,9 @@ export default function Pacientes() {
     if (hoje.getMonth() < dn.getMonth() || (hoje.getMonth() === dn.getMonth() && hoje.getDate() < dn.getDate())) idade--
     return idade
   }
+
+  // Reset pagina quando muda filtro
+  useEffect(() => { setPagina(1) }, [busca, filtroSexo, filtroConvenio, ordenar])
 
   const pacientesFiltrados = pacientes
     .filter(p => {
@@ -239,6 +281,20 @@ export default function Pacientes() {
                 <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
               </svg>
               Selecionar
+            </button>
+          )}
+          {pacientes.length > 0 && (
+            <button onClick={exportarCSV} style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '10px 16px', borderRadius: 10,
+              border: '1px solid #e5e7eb', background: 'white',
+              color: '#374151',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }} title={'Exportar ' + pacientes.length + ' pacientes para CSV'}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+              </svg>
+              Exportar
             </button>
           )}
           <button onClick={() => setMostrarImport(true)} style={{
@@ -631,7 +687,12 @@ export default function Pacientes() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {pacientesFiltrados.map(p => {
+          {(() => {
+            const totalPaginas = Math.max(1, Math.ceil(pacientesFiltrados.length / PACIENTES_POR_PAGINA))
+            const paginaAtual = Math.min(pagina, totalPaginas)
+            const ini = (paginaAtual - 1) * PACIENTES_POR_PAGINA
+            const visiveis = pacientesFiltrados.slice(ini, ini + PACIENTES_POR_PAGINA)
+            return visiveis.map(p => {
             const idade = calcularIdade(p.data_nascimento)
             const ini = (p.nome || '').split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
             const cor = getCorAvatar(p.nome || '')
@@ -797,9 +858,88 @@ export default function Pacientes() {
                 </div>
               </div>
             )
-          })}
+          })
+          })()}
         </div>
       )}
+
+      {/* Controles de paginação */}
+      {!carregando && pacientesFiltrados.length > PACIENTES_POR_PAGINA && (() => {
+        const totalPaginas = Math.max(1, Math.ceil(pacientesFiltrados.length / PACIENTES_POR_PAGINA))
+        const paginaAtual = Math.min(pagina, totalPaginas)
+        const ini = (paginaAtual - 1) * PACIENTES_POR_PAGINA
+        const fim = Math.min(ini + PACIENTES_POR_PAGINA, pacientesFiltrados.length)
+        const btnBase: React.CSSProperties = {
+          minWidth: 36, height: 36, padding: '0 10px',
+          borderRadius: 8, border: '1px solid #e5e7eb',
+          background: 'white', color: '#374151',
+          fontSize: 13, fontWeight: 500, cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        }
+        const btnDisabled: React.CSSProperties = {
+          ...btnBase, color: '#d1d5db', cursor: 'not-allowed', background: '#F9FAFB',
+        }
+        const irPara = (n: number) => setPagina(Math.max(1, Math.min(totalPaginas, n)))
+        return (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginTop: 20, padding: '14px 20px',
+            background: 'white', borderRadius: 16,
+            flexWrap: 'wrap' as const, gap: 12,
+          }}>
+            <span style={{ fontSize: 13, color: '#6b7280' }}>
+              Mostrando <strong style={{ color: '#111827' }}>{ini + 1}</strong>–<strong style={{ color: '#111827' }}>{fim}</strong> de <strong style={{ color: '#111827' }}>{pacientesFiltrados.length}</strong>
+            </span>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const }}>
+              <button onClick={() => irPara(1)} disabled={paginaAtual === 1} style={paginaAtual === 1 ? btnDisabled : btnBase} title="Primeira página">
+                «
+              </button>
+              <button onClick={() => irPara(paginaAtual - 1)} disabled={paginaAtual === 1} style={paginaAtual === 1 ? btnDisabled : btnBase} title="Página anterior">
+                ‹
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px' }}>
+                <span style={{ fontSize: 13, color: '#6b7280' }}>Página</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={totalPaginas}
+                  value={paginaInput !== '' ? paginaInput : paginaAtual}
+                  onChange={e => setPaginaInput(e.target.value)}
+                  onBlur={() => {
+                    const n = parseInt(paginaInput || '0')
+                    if (n >= 1 && n <= totalPaginas) setPagina(n)
+                    setPaginaInput('')
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      const n = parseInt(paginaInput || '0')
+                      if (n >= 1 && n <= totalPaginas) setPagina(n)
+                      setPaginaInput('')
+                      ;(e.target as HTMLInputElement).blur()
+                    }
+                  }}
+                  style={{
+                    width: 50, height: 36, padding: '0 8px',
+                    borderRadius: 8, border: '1px solid #e5e7eb',
+                    fontSize: 13, textAlign: 'center' as const,
+                    outline: 'none', color: '#111827', background: 'white',
+                  }}
+                />
+                <span style={{ fontSize: 13, color: '#6b7280' }}>de <strong style={{ color: '#111827' }}>{totalPaginas}</strong></span>
+              </div>
+
+              <button onClick={() => irPara(paginaAtual + 1)} disabled={paginaAtual === totalPaginas} style={paginaAtual === totalPaginas ? btnDisabled : btnBase} title="Próxima página">
+                ›
+              </button>
+              <button onClick={() => irPara(totalPaginas)} disabled={paginaAtual === totalPaginas} style={paginaAtual === totalPaginas ? btnDisabled : btnBase} title="Última página">
+                »
+              </button>
+            </div>
+          </div>
+        )
+      })()}
 
       <ImportarPacientes
         aberto={mostrarImport}
