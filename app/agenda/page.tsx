@@ -8,9 +8,9 @@ import { Sidebar } from '@/components/Sidebar'
 import { IconGift } from '@/components/Icon'
 
 const TIPOS = {
-  consulta: { label: 'Consulta', bg: '#ede9fb', text: '#176F44', border: '#b9a9ef', dot: '#6043C1' },
+  consulta: { label: 'Consulta', bg: '#ede9fb', text: '#4c1d95', border: '#b9a9ef', dot: '#6043C1' },
   retorno:  { label: 'Retorno',  bg: '#f3effd', text: '#5b42b0', border: '#dfd3f5', dot: '#7c3aed' },
-  exame:    { label: 'Exame',    bg: '#e8f5ee', text: '#1f6b3d', border: '#c4e4d2', dot: '#16a34a' },
+  exame:    { label: 'Exame',    bg: '#f5f3ff', text: '#6d28d9', border: '#ddd6fe', dot: '#8b5cf6' },
   urgencia: { label: 'Urgência', bg: '#fee2e2', text: '#991b1b', border: '#fca5a5', dot: '#dc2626' },
 }
 
@@ -487,7 +487,7 @@ export default function Agenda() {
         </div>
         <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', minHeight: `${TOTAL_SLOTS * SLOT_PX}px`, position: 'relative' }}>
-            <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5 }}>
+            <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5, paddingTop: 8 }}>
               {Array.from({ length: HORA_FIM - HORA_INI }, (_, i) => (
                 <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: '1px solid #f3f4f6' }}>
                   <span style={{ position: 'absolute', top: -7, right: 8, fontSize: 10, color: '#9ca3af', fontWeight: 600, background: 'white', padding: '0 2px' }}>
@@ -497,7 +497,7 @@ export default function Agenda() {
               ))}
             </div>
             {diasSemana.map((dia, di) => (
-              <div key={di} style={{ borderLeft: '1px solid #f3f4f6', background: isHoje(dia) ? '#faf8ff' : 'white', position: 'relative' }}>
+              <div key={di} style={{ borderLeft: '1px solid #f3f4f6', background: isHoje(dia) ? '#faf8ff' : 'white', position: 'relative', paddingTop: 8 }}>
                 {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
                   const isHoraCheia = i % 4 === 0
                   const isMeia = i % 4 === 2
@@ -607,7 +607,7 @@ export default function Agenda() {
                 </div>
               ))}
             </div>
-            <div style={{ borderLeft: '1px solid #f3f4f6', position: 'relative' }}>
+            <div style={{ borderLeft: '1px solid #f3f4f6', position: 'relative', paddingTop: 8 }}>
               {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
                 const isHoraCheia = i % 4 === 0
                 const isMeia = i % 4 === 2
