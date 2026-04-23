@@ -198,7 +198,7 @@ export default function Dashboard() {
               <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid #ede9fb', borderTopColor: '#6043C1', animation: 'spin 0.8s linear infinite' }}/>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1200 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
               {/* Métricas principais */}
               <div className="grid-dash-metrics">
