@@ -302,11 +302,7 @@ export default function PacienteDetalhe() {
                           )}
                         </div>
                         <div style={{display:'flex',gap:8}}>
-                          <button onClick={()=>router.push('/historico?consulta='+consultaAberta.id)} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:9,background:'#6043C1',color:'white',border:'none',fontSize:12,fontWeight:600,cursor:'pointer'}}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            Prontuário completo
-                          </button>
-                          <button onClick={()=>window.open('/api/pdf-prontuario?consulta_id='+consultaAberta.id+'&medico_id='+(consultaAberta.medico_id||''),'_blank')} title="Baixar PDF" style={{padding:'8px 12px',borderRadius:9,background:'white',color:'#374151',border:'1px solid #e5e7eb',fontSize:12,fontWeight:500,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:5}}>
+<button onClick={()=>window.open('/api/pdf-prontuario?consulta_id='+consultaAberta.id+'&medico_id='+(consultaAberta.medico_id||''),'_blank')} title="Baixar PDF" style={{padding:'8px 12px',borderRadius:9,background:'white',color:'#374151',border:'1px solid #e5e7eb',fontSize:12,fontWeight:500,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:5}}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                             PDF
                           </button>
@@ -436,12 +432,12 @@ export default function PacienteDetalhe() {
                       )}
                       {/* Botoes */}
                       <div style={{padding:'8px 18px 12px',borderTop:'1px solid #f3f4f6',display:'flex',gap:8}}>
-                        <a href={'/api/pdf-prontuario?consulta_id='+c.id+'&medico_id='+medico?.id} target="_blank" rel="noreferrer"
+                        <a href={'/api/pdf-prontuario?consulta_id='+c.id+'&medico_id='+(c.medico_id||medico?.id)} target="_blank" rel="noreferrer"
                           style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:6,background:'#f0ebff',color:'#6043C1',fontSize:12,fontWeight:600,textDecoration:'none'}}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
                           PDF Prontuário
                         </a>
-                        <a href={'/api/pdf-receita?consulta_id='+c.id+'&medico_id='+medico?.id} target="_blank" rel="noreferrer"
+                        <a href={'/api/pdf-receita?consulta_id='+c.id+'&medico_id='+(c.medico_id||medico?.id)} target="_blank" rel="noreferrer"
                           style={{fontSize:11,color:'#1d4ed8',background:'#eff6ff',border:'1px solid #bfdbfe',padding:'5px 10px',borderRadius:6,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:4}}>
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                           PDF Receita
@@ -489,7 +485,7 @@ export default function PacienteDetalhe() {
                                     {isUltima&&<span style={{fontSize:10,fontWeight:700,color:'#6043C1',background:'#f0ebff',padding:'2px 8px',borderRadius:10}}>mais recente</span>}
                                   </div>
                                   <div style={{display:'flex',gap:6}}>
-                                    <a href={'/api/pdf-prontuario?consulta_id='+c.id+'&medico_id='+medico?.id} target="_blank" rel="noreferrer" style={{fontSize:11,color:'#6043C1',background:'#f0ebff',padding:'4px 10px',borderRadius:6,textDecoration:'none',fontWeight:600}}>PDF</a>
+                                    <a href={'/api/pdf-prontuario?consulta_id='+c.id+'&medico_id='+(c.medico_id||medico?.id)} target="_blank" rel="noreferrer" style={{fontSize:11,color:'#6043C1',background:'#f0ebff',padding:'4px 10px',borderRadius:6,textDecoration:'none',fontWeight:600}}>PDF</a>
                                   </div>
                                 </div>
                                 {alertas.length>0&&(

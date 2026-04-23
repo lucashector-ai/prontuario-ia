@@ -31,10 +31,21 @@ export default function Historico() {
   }, [router])
 
   const carregar = async (id: string) => {
+    // Clinica admin: busca de todos os medicos da clinica
+    const caStr = localStorage.getItem('clinica_admin')
+    let medicoIds = [id]
+    if (caStr) {
+      const admin = JSON.parse(caStr)
+      if (admin.clinica_id) {
+        const { data: meds } = await supabase.from('medicos').select('id').eq('clinica_id', admin.clinica_id).eq('ativo', true)
+        if (meds && meds.length > 0) medicoIds = meds.map((m: any) => m.id)
+      }
+    }
+
     const { data } = await supabase
       .from('consultas')
       .select('*')
-      .eq('medico_id', id)
+      .in('medico_id', medicoIds)
       .order('criado_em', { ascending: false })
     setConsultas(data || [])
     setCarregando(false)
