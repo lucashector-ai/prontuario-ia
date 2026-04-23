@@ -9,6 +9,8 @@ const ACCENT_LIGHT = '#ede9fb'
 const BG = '#F5F5F5'
 const CARD_RADIUS = 16
 
+const CONVENIOS_LISTA = ['Particular', 'Unimed', 'Amil', 'Bradesco Saúde', 'Hapvida', 'SulAmérica', 'NotreDame Intermédica', 'Porto Seguro', 'Outro']
+
 function formatarTelefone(v: string) {
   const nums = v.replace(/\D/g, '').slice(0, 11)
   if (nums.length <= 2) return nums
@@ -28,17 +30,22 @@ function formatarCPF(v: string) {
 export default function Pacientes() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
+  const [medicosClinica, setMedicosClinica] = useState<any[]>([])
+  const [ehClinicaAdmin, setEhClinicaAdmin] = useState(false)
   const [pacientes, setPacientes] = useState<any[]>([])
   const [carregando, setCarregando] = useState(true)
   const [mostrarForm, setMostrarForm] = useState(false)
   const [mostrarImport, setMostrarImport] = useState(false)
-  const [form, setForm] = useState({ nome: '', data_nascimento: '', sexo: '', telefone: '', email: '', cpf: '' })
+  const [form, setForm] = useState({ nome: '', data_nascimento: '', sexo: '', telefone: '', email: '', cpf: '', convenio: '', convenio_outro: '', medico_id: '' })
   const [salvando, setSalvando] = useState(false)
   const [busca, setBusca] = useState('')
   const [filtroSexo, setFiltroSexo] = useState('todos')
   const [filtroConvenio, setFiltroConvenio] = useState('todos')
   const [ordenar, setOrdenar] = useState<'nome' | 'recente'>('nome')
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro', texto: string } | null>(null)
+  const [modoSelecao, setModoSelecao] = useState(false)
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
+  const [deletandoLote, setDeletandoLote] = useState(false)
 
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
@@ -47,6 +54,21 @@ export default function Pacientes() {
     const med = JSON.parse(m)
     setMedico(med)
     carregarPacientes(med.id)
+
+    // Se for clinica admin, carrega lista de medicos
+    if (ca_ && med.clinica_id) {
+      setEhClinicaAdmin(true)
+      import('@/lib/supabase').then(({ supabase }) => {
+        supabase
+          .from('medicos')
+          .select('id, nome')
+          .eq('clinica_id', med.clinica_id)
+          .eq('ativo', true)
+          .neq('cargo', 'recepcionista')
+          .order('nome')
+          .then(({ data }) => setMedicosClinica(data || []))
+      })
+    }
   }, [router])
 
   const carregarPacientes = async (id: string) => {
@@ -69,13 +91,58 @@ export default function Pacientes() {
     setTimeout(() => setMsg(null), 3500)
   }
 
+  const toggleSelecionado = (id: string) => {
+    setSelecionados(prev => {
+      const novo = new Set(prev)
+      if (novo.has(id)) novo.delete(id)
+      else novo.add(id)
+      return novo
+    })
+  }
+
+  const sairSelecao = () => {
+    setModoSelecao(false)
+    setSelecionados(new Set())
+  }
+
+  const selecionarTodos = () => {
+    setSelecionados(new Set(pacientesFiltrados.map((p: any) => p.id)))
+  }
+
+  const deletarSelecionados = async () => {
+    if (selecionados.size === 0) return
+    if (!confirm('Deletar ' + selecionados.size + ' paciente' + (selecionados.size !== 1 ? 's' : '') + '? Isso remove todas as consultas e agendamentos.')) return
+    setDeletandoLote(true)
+    const ids = Array.from(selecionados)
+    const resultados = await Promise.all(
+      ids.map(id => fetch('/api/pacientes?id=' + id, { method: 'DELETE' }))
+    )
+    const ok = resultados.filter(r => r.ok).length
+    setPacientes(prev => prev.filter(p => !selecionados.has(p.id)))
+    sairSelecao()
+    mostrarMsg('ok', ok + ' paciente' + (ok !== 1 ? 's' : '') + ' removido' + (ok !== 1 ? 's' : ''))
+    setDeletandoLote(false)
+  }
+
   const salvarPaciente = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!medico) return
     setSalvando(true)
+    const convenioFinal = form.convenio === 'Outro' ? form.convenio_outro.trim() : form.convenio
+    const medicoIdFinal = form.medico_id || medico.id
+    const payload = {
+      nome: form.nome,
+      data_nascimento: form.data_nascimento || null,
+      sexo: form.sexo || null,
+      telefone: form.telefone || null,
+      email: form.email || null,
+      cpf: form.cpf || null,
+      convenio: convenioFinal || null,
+      medico_id: medicoIdFinal,
+    }
     const res = await fetch('/api/pacientes', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, medico_id: medico.id }),
+      body: JSON.stringify(payload),
     })
     const data = await res.json()
     if (data.paciente) {
@@ -159,6 +226,21 @@ export default function Pacientes() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+          {!modoSelecao && pacientes.length > 0 && (
+            <button onClick={() => setModoSelecao(true)} style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '10px 16px', borderRadius: 10,
+              border: '1px solid #e5e7eb', background: 'white',
+              color: '#374151',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="9 11 12 14 22 4"/>
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+              </svg>
+              Selecionar
+            </button>
+          )}
           <button onClick={() => setMostrarImport(true)} style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '10px 16px', borderRadius: 10,
@@ -184,6 +266,52 @@ export default function Pacientes() {
           </button>
         </div>
       </div>
+
+      {/* Barra flutuante de selecao */}
+      {modoSelecao && (
+        <div style={{
+          position: 'fixed' as const, bottom: 24, left: '50%',
+          transform: 'translateX(-50%)', zIndex: 90,
+          background: '#111827', color: 'white',
+          borderRadius: 14, padding: '12px 20px',
+          display: 'flex', alignItems: 'center', gap: 14,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>
+            {selecionados.size === 0
+              ? 'Selecione pacientes'
+              : selecionados.size + ' selecionado' + (selecionados.size !== 1 ? 's' : '')
+            }
+          </span>
+          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)' }}/>
+          <button onClick={selecionarTodos} style={{
+            background: 'transparent', border: 'none', color: 'white',
+            fontSize: 12, cursor: 'pointer', fontWeight: 500,
+          }}>
+            Selecionar todos
+          </button>
+          <button
+            onClick={deletarSelecionados}
+            disabled={selecionados.size === 0 || deletandoLote}
+            style={{
+              padding: '7px 14px', borderRadius: 8,
+              background: selecionados.size === 0 ? '#374151' : '#dc2626',
+              color: 'white', border: 'none',
+              fontSize: 12, fontWeight: 600,
+              cursor: selecionados.size === 0 || deletandoLote ? 'not-allowed' : 'pointer',
+              opacity: deletandoLote ? 0.5 : 1,
+            }}
+          >
+            {deletandoLote ? 'Deletando...' : 'Deletar ' + (selecionados.size > 0 ? '(' + selecionados.size + ')' : '')}
+          </button>
+          <button onClick={sairSelecao} style={{
+            background: 'transparent', border: 'none', color: '#9ca3af',
+            fontSize: 12, cursor: 'pointer', fontWeight: 500,
+          }}>
+            Cancelar
+          </button>
+        </div>
+      )}
 
       {/* Toast */}
       {msg && (
@@ -282,6 +410,46 @@ export default function Pacientes() {
                   placeholder="email@paciente.com"
                 />
               </div>
+
+              <div>
+                <label style={labelStyle}>Convênio</label>
+                <select
+                  value={form.convenio}
+                  onChange={e => setForm(f => ({ ...f, convenio: e.target.value, convenio_outro: '' }))}
+                  style={{ ...inputStyle, cursor: 'pointer' as const }}
+                >
+                  <option value="">Selecionar</option>
+                  {CONVENIOS_LISTA.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              {form.convenio === 'Outro' && (
+                <div>
+                  <label style={labelStyle}>Qual convênio?</label>
+                  <input
+                    value={form.convenio_outro}
+                    onChange={e => setForm(f => ({ ...f, convenio_outro: e.target.value }))}
+                    placeholder="Nome do convênio"
+                    style={inputStyle}
+                  />
+                </div>
+              )}
+
+              {ehClinicaAdmin && medicosClinica.length > 0 && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={labelStyle}>Vincular ao médico</label>
+                  <select
+                    value={form.medico_id}
+                    onChange={e => setForm(f => ({ ...f, medico_id: e.target.value }))}
+                    style={{ ...inputStyle, cursor: 'pointer' as const }}
+                  >
+                    <option value="">Sem vínculo (atribui no atendimento)</option>
+                    {medicosClinica.map(m => (
+                      <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10, marginTop: 8 }}>
                 <button
@@ -470,23 +638,46 @@ export default function Pacientes() {
             return (
               <div
                 key={p.id}
-                onClick={() => router.push(`/pacientes/${p.id}`)}
+                onClick={() => {
+                  if (modoSelecao) toggleSelecionado(p.id)
+                  else router.push('/pacientes/' + p.id)
+                }}
                 style={{
                   background: 'white', borderRadius: CARD_RADIUS,
                   padding: '16px 20px',
                   display: 'flex', alignItems: 'center', gap: 16,
                   cursor: 'pointer',
                   transition: 'transform 0.15s, box-shadow 0.15s',
+                  border: modoSelecao && selecionados.has(p.id) ? '2px solid #6043C1' : '2px solid transparent',
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-1px)'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)'
+                  if (!modoSelecao) {
+                    e.currentTarget.style.transform = 'translateY(-1px)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)'
+                  }
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'none'
-                  e.currentTarget.style.boxShadow = 'none'
+                  if (!modoSelecao) {
+                    e.currentTarget.style.transform = 'none'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }
                 }}
               >
+                {modoSelecao && (
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 6,
+                    border: selecionados.has(p.id) ? 'none' : '2px solid #d1d5db',
+                    background: selecionados.has(p.id) ? '#6043C1' : 'white',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    {selecionados.has(p.id) && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    )}
+                  </div>
+                )}
                 {/* Avatar */}
                 <div style={{
                   width: 48, height: 48, borderRadius: '50%',
