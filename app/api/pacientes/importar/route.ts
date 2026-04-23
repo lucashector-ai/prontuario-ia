@@ -219,7 +219,6 @@ export async function POST(req: NextRequest) {
     const cpfsLote = new Set<string>()
     const emailsLote = new Set<string>()
     const nomeDataLote = new Set<string>()
-    const nomeDataLote = new Set<string>()
     const resultado: LinhaProcessada[] = []
 
     for (let i = 0; i < linhas.length; i++) {
