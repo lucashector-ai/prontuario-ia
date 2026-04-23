@@ -1,0 +1,259 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+type LinhaBruta = Record<string, any>
+
+interface PacienteNormalizado {
+  nome: string
+  cpf: string | null
+  data_nascimento: string | null
+  telefone: string | null
+  sexo: string | null
+  email: string | null
+}
+
+interface LinhaProcessada {
+  linha: number
+  dados: PacienteNormalizado
+  status: 'valido' | 'duplicado' | 'invalido'
+  motivo?: string
+}
+
+// Normaliza nome de coluna: remove acentos, espaços, caixa baixa
+function normalizarColuna(key: string): string {
+  return (key || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+}
+
+// Mapeia nomes alternativos pra chave canônica
+const MAPA_COLUNAS: Record<string, string> = {
+  nome: 'nome',
+  nomecompleto: 'nome',
+  paciente: 'nome',
+  pacientenome: 'nome',
+  cpf: 'cpf',
+  documento: 'cpf',
+  datanascimento: 'data_nascimento',
+  nascimento: 'data_nascimento',
+  datadenascimento: 'data_nascimento',
+  dtnasc: 'data_nascimento',
+  telefone: 'telefone',
+  celular: 'telefone',
+  whatsapp: 'telefone',
+  fone: 'telefone',
+  sexo: 'sexo',
+  genero: 'sexo',
+  email: 'email',
+  emailcontato: 'email',
+  mail: 'email',
+}
+
+function mapearChave(key: string): string | null {
+  const norm = normalizarColuna(key)
+  return MAPA_COLUNAS[norm] || null
+}
+
+function limparTexto(v: any): string {
+  if (v === null || v === undefined) return ''
+  return String(v).trim()
+}
+
+function formatarCPF(v: any): string | null {
+  const raw = limparTexto(v).replace(/\D/g, '')
+  if (!raw) return null
+  if (raw.length !== 11) return null
+  return raw.substring(0, 3) + '.' + raw.substring(3, 6) + '.' + raw.substring(6, 9) + '-' + raw.substring(9)
+}
+
+function formatarTelefone(v: any): string | null {
+  const raw = limparTexto(v).replace(/\D/g, '')
+  if (!raw) return null
+  if (raw.length < 10 || raw.length > 11) return null
+  const nums = raw.length === 11 ? raw : raw
+  if (nums.length === 11) {
+    return '(' + nums.substring(0, 2) + ') ' + nums.substring(2, 7) + '-' + nums.substring(7)
+  }
+  return '(' + nums.substring(0, 2) + ') ' + nums.substring(2, 6) + '-' + nums.substring(6)
+}
+
+function formatarDataNascimento(v: any): string | null {
+  const raw = limparTexto(v)
+  if (!raw) return null
+
+  // Tenta ISO (YYYY-MM-DD)
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+    const iso = raw.substring(0, 10)
+    if (!isNaN(Date.parse(iso))) return iso
+  }
+
+  // Tenta BR (DD/MM/YYYY)
+  const matchBR = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/)
+  if (matchBR) {
+    let [, dd, mm, yyyy] = matchBR
+    if (yyyy.length === 2) yyyy = parseInt(yyyy) > 30 ? '19' + yyyy : '20' + yyyy
+    const iso = yyyy + '-' + mm.padStart(2, '0') + '-' + dd.padStart(2, '0')
+    if (!isNaN(Date.parse(iso))) return iso
+  }
+
+  return null
+}
+
+function normalizarSexo(v: any): string | null {
+  const raw = limparTexto(v).toLowerCase()
+  if (!raw) return null
+  if (raw.startsWith('m') || raw.startsWith('h')) return 'Masculino'
+  if (raw.startsWith('f')) return 'Feminino'
+  if (raw.length > 0) return 'Outro'
+  return null
+}
+
+function normalizarEmail(v: any): string | null {
+  const raw = limparTexto(v).toLowerCase()
+  if (!raw) return null
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) return null
+  return raw
+}
+
+function normalizarLinha(raw: LinhaBruta): PacienteNormalizado {
+  const out: PacienteNormalizado = {
+    nome: '',
+    cpf: null,
+    data_nascimento: null,
+    telefone: null,
+    sexo: null,
+    email: null,
+  }
+
+  for (const [k, v] of Object.entries(raw)) {
+    const chave = mapearChave(k)
+    if (!chave) continue
+    if (chave === 'nome') out.nome = limparTexto(v)
+    if (chave === 'cpf') out.cpf = formatarCPF(v)
+    if (chave === 'data_nascimento') out.data_nascimento = formatarDataNascimento(v)
+    if (chave === 'telefone') out.telefone = formatarTelefone(v)
+    if (chave === 'sexo') out.sexo = normalizarSexo(v)
+    if (chave === 'email') out.email = normalizarEmail(v)
+  }
+
+  return out
+}
+
+// POST: preview ou import
+// body: { medico_id, linhas: [{...}, ...], modo: 'preview' | 'import' }
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const { medico_id, linhas, modo } = body
+
+    if (!medico_id || !Array.isArray(linhas)) {
+      return NextResponse.json({ error: 'Dados insuficientes' }, { status: 400 })
+    }
+
+    if (linhas.length === 0) {
+      return NextResponse.json({ error: 'Arquivo vazio' }, { status: 400 })
+    }
+
+    if (linhas.length > 2000) {
+      return NextResponse.json({ error: 'Limite de 2000 pacientes por importação' }, { status: 400 })
+    }
+
+    // Busca CPFs e emails existentes do médico
+    const { data: existentes } = await supabase
+      .from('pacientes')
+      .select('cpf, email')
+      .eq('medico_id', medico_id)
+
+    const cpfsExistentes = new Set((existentes || []).map(p => p.cpf).filter(Boolean))
+    const emailsExistentes = new Set((existentes || []).map(p => (p.email || '').toLowerCase()).filter(Boolean))
+
+    // Processa cada linha
+    const cpfsLote = new Set<string>()
+    const emailsLote = new Set<string>()
+    const resultado: LinhaProcessada[] = []
+
+    for (let i = 0; i < linhas.length; i++) {
+      const normalizada = normalizarLinha(linhas[i])
+      let status: 'valido' | 'duplicado' | 'invalido' = 'valido'
+      let motivo: string | undefined
+
+      if (!normalizada.nome || normalizada.nome.length < 2) {
+        status = 'invalido'
+        motivo = 'Nome ausente ou muito curto'
+      } else if (normalizada.cpf && cpfsExistentes.has(normalizada.cpf)) {
+        status = 'duplicado'
+        motivo = 'CPF já cadastrado'
+      } else if (normalizada.email && emailsExistentes.has(normalizada.email)) {
+        status = 'duplicado'
+        motivo = 'Email já cadastrado'
+      } else if (normalizada.cpf && cpfsLote.has(normalizada.cpf)) {
+        status = 'duplicado'
+        motivo = 'CPF duplicado na planilha'
+      } else if (normalizada.email && emailsLote.has(normalizada.email)) {
+        status = 'duplicado'
+        motivo = 'Email duplicado na planilha'
+      } else {
+        if (normalizada.cpf) cpfsLote.add(normalizada.cpf)
+        if (normalizada.email) emailsLote.add(normalizada.email)
+      }
+
+      resultado.push({
+        linha: i + 2, // +2 porque linha 1 é cabeçalho
+        dados: normalizada,
+        status,
+        motivo,
+      })
+    }
+
+    // Se é preview, retorna só o resultado sem salvar
+    if (modo === 'preview') {
+      return NextResponse.json({
+        total: resultado.length,
+        validos: resultado.filter(r => r.status === 'valido').length,
+        duplicados: resultado.filter(r => r.status === 'duplicado').length,
+        invalidos: resultado.filter(r => r.status === 'invalido').length,
+        linhas: resultado,
+      })
+    }
+
+    // Modo import: insere os válidos
+    const paraInserir = resultado
+      .filter(r => r.status === 'valido')
+      .map(r => ({
+        medico_id,
+        nome: r.dados.nome,
+        cpf: r.dados.cpf,
+        data_nascimento: r.dados.data_nascimento,
+        telefone: r.dados.telefone,
+        sexo: r.dados.sexo,
+        email: r.dados.email,
+      }))
+
+    let inseridos = 0
+    if (paraInserir.length > 0) {
+      // Insere em lotes de 100
+      const tamLote = 100
+      for (let i = 0; i < paraInserir.length; i += tamLote) {
+        const lote = paraInserir.slice(i, i + tamLote)
+        const { data, error } = await supabase.from('pacientes').insert(lote).select('id')
+        if (!error && data) inseridos += data.length
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      inseridos,
+      pulados: resultado.filter(r => r.status === 'duplicado').length,
+      invalidos: resultado.filter(r => r.status === 'invalido').length,
+    })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
+  }
+}

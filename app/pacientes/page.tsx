@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { ImportarPacientes } from '@/components/ImportarPacientes'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
@@ -30,6 +31,7 @@ export default function Pacientes() {
   const [pacientes, setPacientes] = useState<any[]>([])
   const [carregando, setCarregando] = useState(true)
   const [mostrarForm, setMostrarForm] = useState(false)
+  const [mostrarImport, setMostrarImport] = useState(false)
   const [form, setForm] = useState({ nome: '', data_nascimento: '', sexo: '', telefone: '', email: '', cpf: '' })
   const [salvando, setSalvando] = useState(false)
   const [busca, setBusca] = useState('')
@@ -149,18 +151,31 @@ export default function Pacientes() {
             {totalHomens + totalMulheres > 0 && ` · ${totalHomens} ${totalHomens === 1 ? 'homem' : 'homens'}, ${totalMulheres} ${totalMulheres === 1 ? 'mulher' : 'mulheres'}`}
           </p>
         </div>
-        <button onClick={() => setMostrarForm(true)} style={{
-          display: 'flex', alignItems: 'center', gap: 7,
-          padding: '10px 18px', borderRadius: 10, border: 'none',
-          background: ACCENT, color: 'white',
-          fontSize: 13, fontWeight: 600, cursor: 'pointer',
-          flexShrink: 0,
-        }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M12 5v14M5 12h14"/>
-          </svg>
-          Novo paciente
-        </button>
+        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+          <button onClick={() => setMostrarImport(true)} style={{
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '10px 16px', borderRadius: 10,
+            border: '1px solid #e5e7eb', background: 'white',
+            color: '#374151',
+            fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+            Importar
+          </button>
+          <button onClick={() => setMostrarForm(true)} style={{
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '10px 18px', borderRadius: 10, border: 'none',
+            background: ACCENT, color: 'white',
+            fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Novo paciente
+          </button>
+        </div>
       </div>
 
       {/* Toast */}
@@ -561,6 +576,13 @@ export default function Pacientes() {
           })}
         </div>
       )}
+
+      <ImportarPacientes
+        aberto={mostrarImport}
+        onFechar={() => setMostrarImport(false)}
+        onImportado={() => { if (medico) carregarPacientes(medico.id) }}
+        medicoId={medico?.id || ''}
+      />
 
       <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </main>
