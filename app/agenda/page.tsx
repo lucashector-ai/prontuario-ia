@@ -487,7 +487,7 @@ export default function Agenda() {
         </div>
         <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', minHeight: `${TOTAL_SLOTS * SLOT_PX}px`, position: 'relative' }}>
-            <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5, paddingTop: 8 }}>
+            <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5, paddingTop: 28, paddingBottom: 28 }}>
               {Array.from({ length: HORA_FIM - HORA_INI }, (_, i) => (
                 <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: '1px solid #f3f4f6' }}>
                   <span style={{ position: 'absolute', top: -7, right: 8, fontSize: 10, color: '#9ca3af', fontWeight: 600, background: 'white', padding: '0 2px' }}>
@@ -497,7 +497,7 @@ export default function Agenda() {
               ))}
             </div>
             {diasSemana.map((dia, di) => (
-              <div key={di} style={{ borderLeft: '1px solid #f3f4f6', background: isHoje(dia) ? '#faf8ff' : 'white', position: 'relative', paddingTop: 8 }}>
+              <div key={di} style={{ borderLeft: '1px solid #f3f4f6', background: isHoje(dia) ? '#faf8ff' : 'white', position: 'relative', paddingTop: 28, paddingBottom: 28 }}>
                 {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
                   const isHoraCheia = i % 4 === 0
                   const isMeia = i % 4 === 2
@@ -551,7 +551,7 @@ export default function Agenda() {
       <div style={{ flex: 1, background: 'white', borderRadius: 12, margin: '0 16px 16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #f3f4f6' }}>
           {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((l, i) => (
-            <div key={i} style={{ padding: 8, fontSize: 11, fontWeight: 700, color: '#9ca3af', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{l}</div>
+            <div key={i} style={{ padding: '12px 8px', fontSize: 11, fontWeight: 700, color: i === 0 || i === 6 ? '#6043C1' : '#374151', textAlign: 'center' as const, textTransform: 'uppercase' as const, letterSpacing: '0.08em', background: '#F9FAFB' }}>{l}</div>
           ))}
         </div>
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: '1fr' }}>
@@ -561,9 +561,9 @@ export default function Agenda() {
             const hoje = isHoje(d)
             return (
               <div key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
-                style={{ borderTop: '1px solid #f3f4f6', borderLeft: i % 7 !== 0 ? '1px solid #f3f4f6' : 'none', padding: 6, cursor: 'pointer', background: noMes ? '#F5F5F5' : (hoje ? '#faf8ff' : 'white'), overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                style={{ borderTop: '1px solid #f3f4f6', borderLeft: i % 7 !== 0 ? '1px solid #f3f4f6' : 'none', padding: 8, cursor: 'pointer', background: !noMes ? 'white' : '#FAFAFA', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 4, minHeight: 90, transition: 'background 0.12s' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 11, fontWeight: hoje ? 700 : 600, color: !noMes ? '#d1d5db' : hoje ? 'white' : '#374151', background: hoje ? '#6043C1' : 'transparent', width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d.getDate()}</span>
+                  <span style={{ fontSize: 12, fontWeight: hoje ? 800 : 600, color: !noMes ? '#d1d5db' : (hoje ? 'white' : '#374151'), background: hoje ? '#6043C1' : 'transparent', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{d.getDate()}</span>
                   {ags.length > 2 && <span style={{ fontSize: 9, color: '#9ca3af', fontWeight: 600 }}>+{ags.length - 2}</span>}
                 </div>
                 {ags.slice(0, 2).map(ag => {
@@ -607,7 +607,7 @@ export default function Agenda() {
                 </div>
               ))}
             </div>
-            <div style={{ borderLeft: '1px solid #f3f4f6', position: 'relative', paddingTop: 8 }}>
+            <div style={{ borderLeft: '1px solid #f3f4f6', position: 'relative', paddingTop: 28, paddingBottom: 28 }}>
               {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
                 const isHoraCheia = i % 4 === 0
                 const isMeia = i % 4 === 2
