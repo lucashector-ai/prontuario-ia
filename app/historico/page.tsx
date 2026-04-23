@@ -20,6 +20,7 @@ export default function Historico() {
   const [salvando, setSalvando] = useState(false)
   const [busca, setBusca] = useState('')
   const [toast, setToast] = useState<{tipo: string, texto: string} | null>(null)
+  const [mapaMedicos, setMapaMedicos] = useState<Record<string, string>>({})
 
   useEffect(() => {
     const ca = localStorage.getItem('clinica_admin')
@@ -44,10 +45,29 @@ export default function Historico() {
 
     const { data } = await supabase
       .from('consultas')
-      .select('*')
+      .select('*, pacientes(id, nome)')
       .in('medico_id', medicoIds)
       .order('criado_em', { ascending: false })
     setConsultas(data || [])
+
+    // Carrega mapa de medicos da clinica pra exibir nome no card
+    if (caStr) {
+      const admin = JSON.parse(caStr)
+      if (admin.clinica_id) {
+        const { data: meds } = await supabase.from('medicos').select('id, nome').eq('clinica_id', admin.clinica_id)
+        const mapa: Record<string, string> = {}
+        ;(meds || []).forEach((m: any) => { mapa[m.id] = m.nome })
+        setMapaMedicos(mapa)
+      }
+    } else {
+      // Medico logado: ele mesmo
+      const m = localStorage.getItem('medico')
+      if (m) {
+        const med = JSON.parse(m)
+        setMapaMedicos({ [med.id]: med.nome })
+      }
+    }
+
     setCarregando(false)
   }
 
@@ -206,29 +226,52 @@ export default function Historico() {
             ) : (
               filtradas.map((c: any) => {
                 const ativa = selecionada && selecionada.id === c.id
+                const ehTele = !!(c.meet_link || c.sala_id)
+                const nomePaciente = c.pacientes?.nome || 'Paciente'
+                const nomeMedico = mapaMedicos[c.medico_id] || ''
+                const primNomeMed = nomeMedico.split(' ')[0] || ''
                 return (
                   <div
                     key={c.id}
                     onClick={() => selecionar(c)}
                     style={{
-                      padding: 12, borderRadius: 10, cursor: 'pointer',
+                      padding: 14, borderRadius: 10, cursor: 'pointer',
                       background: ativa ? ACCENT_LIGHT : 'transparent',
                       border: ativa ? '1.5px solid ' + ACCENT : '1.5px solid transparent',
                     }}
                   >
-                    <p style={{ fontSize: 11, color: ativa ? ACCENT : '#9ca3af', margin: '0 0 4px', fontWeight: 600 }}>
-                      {fmtCurto(c.criado_em)}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+                      <p style={{ fontSize: 11, color: ativa ? ACCENT : '#9ca3af', margin: 0, fontWeight: 700 }}>
+                        {fmtCurto(c.criado_em)}
+                      </p>
+                      <span style={{
+                        fontSize: 9, fontWeight: 700,
+                        color: ehTele ? '#2563eb' : ACCENT,
+                        background: ehTele ? '#eff6ff' : 'white',
+                        padding: '2px 8px', borderRadius: 10,
+                        textTransform: 'uppercase' as const, letterSpacing: '0.04em',
+                      }}>
+                        {ehTele ? 'Tele' : 'Consulta'}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 13, color: '#111827', fontWeight: 600, margin: '0 0 3px' }}>
+                      {nomePaciente}
                     </p>
+                    {primNomeMed && (
+                      <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 8px' }}>
+                        Dr(a). {primNomeMed}
+                      </p>
+                    )}
                     <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>
-                      {(c.subjetivo || 'Consulta sem detalhes').substring(0, 100)}
+                      {(c.subjetivo || 'Consulta sem detalhes').substring(0, 90)}{(c.subjetivo || '').length > 90 ? '...' : ''}
                     </p>
                     {c.cids && c.cids.length > 0 && (
                       <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' as const }}>
                         {c.cids.slice(0, 3).map((cid: any, i: number) => (
                           <span key={i} style={{
-                            fontSize: 10, color: ACCENT, background: 'white',
+                            fontSize: 10, color: ACCENT, background: ativa ? 'white' : ACCENT_LIGHT,
                             padding: '2px 7px', borderRadius: 5,
-                            fontFamily: 'monospace', fontWeight: 700,
+                            fontFamily: 'monospace' as const, fontWeight: 700,
                           }}>
                             {cid.codigo}
                           </span>
