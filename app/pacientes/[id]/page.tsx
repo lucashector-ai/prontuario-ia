@@ -129,14 +129,14 @@ export default function PacienteDetalhe() {
   ]
 
   return (
-    <div style={{display:'flex',height:'100vh',background:'#F5F5F5',overflow:'hidden'}}>
+    <div style={{display:'flex',flexDirection:'column',height:'100vh',background:'#F5F5F5',overflow:'hidden'}}>
       <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
         {carregando ? (
           <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center'}}>
             <div style={{width:40,height:40,borderRadius:'50%',border:'3px solid #ede9fb',borderTopColor:'#6043C1',animation:'spin 0.8s linear infinite'}}/>
           </div>
         ) : (<>
-          <div style={{background: 'transparent',borderBottom: 'none',padding:'0 28px',height:64,display:'flex',alignItems:'center',gap:16,flexShrink:0}}>
+          <div style={{background:'white',borderRadius:16,padding:'14px 20px',margin:'24px 24px 0',display:'flex',alignItems:'center',gap:16,flexShrink:0}}>
             <button onClick={()=>router.push('/pacientes')} style={{background:'none',border:'none',cursor:'pointer',color:'#6b7280',display:'flex',alignItems:'center',gap:6,fontSize:13}}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Pacientes
@@ -157,16 +157,16 @@ export default function PacienteDetalhe() {
               <a href="/consulta" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
             </div>
           </div>
-          <div style={{background: 'transparent',borderBottom: 'none',padding:'0 28px',display:'flex',flexShrink:0}}>
+          <div style={{background:'white',borderRadius:16,padding:'0 16px',margin:'12px 24px 0',display:'flex',flexShrink:0,gap:4}}>
             {([{id:'overview',label:'Visão geral'},{id:'consultas',label:'Consultas ('+consultas.length+')'},{id:'agendamentos',label:'Agenda ('+agendamentos.filter(a=>a.status!=='cancelado').length+')'},{id:'prontuario',label:'Prontuário'},{id:'timeline',label:'Linha do tempo'}] as {id:Aba;label:string}[]).map(tab=>(
               <button key={tab.id} onClick={()=>setAba(tab.id)} style={{padding:'14px 16px',background:'transparent',border:'none',cursor:'pointer',fontSize:13,fontWeight:aba===tab.id?600:400,color:aba===tab.id?'#111827':'#6b7280',borderBottom:aba===tab.id?'2px solid #6043C1':'2px solid transparent',marginBottom:-1}}>{tab.label}</button>
             ))}
           </div>
-          <div style={{flex:1,overflow:'auto',padding:28}}>
+          <div style={{flex:1,overflow:'auto',padding:'20px 24px 24px'}}>
             {aba==='overview'&&(
-              <div style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:20,maxWidth:1100}}>
+              <div style={{display:'grid',gridTemplateColumns:'320px 1fr',gap:20}}>
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                  <div style={{background:'white',borderRadius:14,overflow:'hidden'}}>
+                  <div style={{background:'white',borderRadius:16,overflow:'hidden'}}>
                     <div style={{background:'linear-gradient(135deg,#ede9fb,#ede9fb)',padding:'24px 20px',textAlign:'center',borderBottom: 'none'}}>
                       <div style={{position:'relative',cursor:'pointer',width:64,height:64,margin:'0 auto 12px'}} onClick={()=>(document.getElementById('foto-card') as HTMLInputElement)?.click()} title="Trocar foto">
                         {paciente?.foto_url?<img src={paciente.foto_url} style={{width:64,height:64,borderRadius:'50%',objectFit:'cover',border:'3px solid #b9a9ef'}}/>:<div style={{width:64,height:64,borderRadius:'50%',background:'white',border:'3px solid #b9a9ef',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,color:'#6043C1'}}>{ini}</div>}
@@ -214,7 +214,7 @@ export default function PacienteDetalhe() {
                     </div>
                   </div>
                   {(paciente?.alergias||paciente?.comorbidades||paciente?.medicamentos_uso)&&!editando&&(
-                    <div style={{background: '#F5F5F5',borderRadius:14,padding:'16px 20px',display:'flex',flexDirection:'column',gap:10}}>
+                    <div style={{background: '#F5F5F5',borderRadius:16,padding:'16px 20px',display:'flex',flexDirection:'column',gap:10}}>
                       {paciente.alergias&&<div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#dc2626',margin:'0 0 3px',textTransform:'uppercase'}}>Alergias</p><p style={{fontSize:12,color:'#b91c1c',margin:0}}>{paciente.alergias}</p></div>}
                       {paciente.comorbidades&&<div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#d97706',margin:'0 0 3px',textTransform:'uppercase'}}>Comorbidades</p><p style={{fontSize:12,color:'#92400e',margin:0}}>{paciente.comorbidades}</p></div>}
                       {paciente.medicamentos_uso&&<div style={{background:'#F5F5F5',borderRadius:8,padding:'10px 12px'}}><p style={{fontSize:10,fontWeight:700,color:'#6043C1',margin:'0 0 3px',textTransform:'uppercase'}}>Medicamentos</p><p style={{fontSize:12,color:'#6043C1',margin:0}}>{paciente.medicamentos_uso}</p></div>}
@@ -230,7 +230,7 @@ export default function PacienteDetalhe() {
                       </div>
                     ))}
                   </div>
-                  <div style={{background:'white',borderRadius:14,overflow:'hidden'}}>
+                  <div style={{background:'white',borderRadius:16,overflow:'hidden'}}>
                     <div style={{padding:'14px 20px',borderBottom: 'none',display:'flex',justifyContent:'space-between'}}>
                       <p style={{fontSize:13,fontWeight:700,color:'#111827',margin:0}}>Últimas consultas</p>
                       <button onClick={()=>setAba('consultas')} style={{fontSize:12,color:'#6043C1',background:'none',border:'none',cursor:'pointer',fontWeight:600}}>Ver todas</button>
@@ -260,7 +260,7 @@ export default function PacienteDetalhe() {
                 </div>
                 <div>
                   {consultaAberta?(
-                    <div style={{background:'white',borderRadius:14}}>
+                    <div style={{background:'white',borderRadius:16}}>
                       <div style={{padding:'14px 20px',borderBottom: 'none'}}><p style={{fontSize:14,fontWeight:700,color:'#111827',margin:0}}>{fmtF(consultaAberta.criado_em)}</p></div>
                       <div style={{padding:20}}>
                         {secoes.map(s=>(
@@ -274,7 +274,7 @@ export default function PacienteDetalhe() {
                         ))}
                       </div>
                     </div>
-                  ):<div style={{background:'white',border:'1px dashed #e5e7eb',borderRadius:14,padding:40,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Selecione uma consulta</p></div>}
+                  ):<div style={{background:'white',border:'1px dashed #e5e7eb',borderRadius:16,padding:40,textAlign:'center'}}><p style={{fontSize:13,color:'#9ca3af',margin:0}}>Selecione uma consulta</p></div>}
                 </div>
               </div>
             )}
@@ -284,7 +284,7 @@ export default function PacienteDetalhe() {
                   <button onClick={()=>setModalAg(true)} style={{padding:'8px 16px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>+ Novo agendamento</button>
                 </div>
                 {agendamentos.length===0?(
-                  <div style={{background:'white',border:'1px dashed #e5e7eb',borderRadius:14,padding:40,textAlign:'center'}}>
+                  <div style={{background:'white',border:'1px dashed #e5e7eb',borderRadius:16,padding:40,textAlign:'center'}}>
                     <p style={{fontSize:14,fontWeight:600,color:'#374151',margin:'0 0 12px'}}>Nenhum agendamento</p>
                     <button onClick={()=>setModalAg(true)} style={{padding:'8px 20px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar agora</button>
                   </div>
@@ -330,7 +330,7 @@ export default function PacienteDetalhe() {
             )}
             {aba==='prontuario'&&(
               <div style={{maxWidth:800}}>
-                <div style={{background:'white',borderRadius:14,padding:'20px 24px',marginBottom:20}}>
+                <div style={{background:'white',borderRadius:16,padding:'20px 24px',marginBottom:20}}>
                   <h2 style={{fontSize:15,fontWeight:700,color:'#111827',margin:'0 0 14px'}}>Resumo clinico</h2>
                   {(paciente?.alergias||paciente?.comorbidades||paciente?.medicamentos_uso)?(
                     <div style={{display:'flex',flexDirection:'column',gap:10}}>
@@ -410,7 +410,7 @@ export default function PacienteDetalhe() {
                     <p style={{fontSize:12,color:'#9ca3af',margin:0}}>{consultas.length} consulta{consultas.length!==1?'s':''} registrada{consultas.length!==1?'s':''}</p>
                   </div>
                   {consultas.length===0?(
-                    <div style={{textAlign:'center',padding:'40px 20px',background:'white',borderRadius:14}}>
+                    <div style={{textAlign:'center',padding:'40px 20px',background:'white',borderRadius:16}}>
                       <p style={{fontSize:13,color:'#9ca3af',margin:0}}>Nenhuma consulta registrada ainda</p>
                     </div>
                   ):(
