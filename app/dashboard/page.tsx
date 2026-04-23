@@ -167,10 +167,10 @@ export default function Dashboard() {
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F5F5F5' }}>
 
         {/* Header */}
-        <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ padding: '24px 24px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexShrink: 0, gap: 16 }}>
           <div>
-            <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Dashboard</h1>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Visão geral da clínica</p>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dashboard</h1>
+            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Visão geral da clínica e métricas</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                     <div style={{ display: 'flex', gap: 4, background: '#f3f4f6', borderRadius: 8, padding: 3 }}>
@@ -199,9 +199,6 @@ export default function Dashboard() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1200 }}>
-
-              {/* Setup checklist */}
-              <SetupChecklist />
 
               {/* Métricas principais */}
               <div className="grid-dash-metrics">

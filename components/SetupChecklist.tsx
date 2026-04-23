@@ -20,6 +20,7 @@ export function SetupChecklist() {
   const router = useRouter()
   const [passos, setPassos] = useState<Passo[]>([])
   const [carregando, setCarregando] = useState(true)
+  const [aberto, setAberto] = useState(false)
 
   useEffect(() => {
     carregar()
@@ -27,7 +28,6 @@ export function SetupChecklist() {
 
   const carregar = async () => {
     try {
-      // Detecta contexto de usuário
       const ca = localStorage.getItem('clinica_admin')
       const m = localStorage.getItem('medico')
       let clinicaId: string | null = null
@@ -45,7 +45,6 @@ export function SetupChecklist() {
         return
       }
 
-      // 1. Cadastrar médicos — conta médicos ativos com cargo 'medico' na clínica
       const { count: numMedicos } = await supabase
         .from('medicos')
         .select('*', { count: 'exact', head: true })
@@ -53,7 +52,6 @@ export function SetupChecklist() {
         .eq('cargo', 'medico')
         .eq('ativo', true)
 
-      // 2. Primeiro médico da clínica pra checar WhatsApp e Sofia
       const { data: primeiroMedico } = await supabase
         .from('medicos')
         .select('id')
@@ -76,7 +74,6 @@ export function SetupChecklist() {
         sofiaConfigurada = !!(config && config.sofia_instrucoes && config.sofia_instrucoes.length > 10)
       }
 
-      // 3. Dados da clínica
       const { data: clinica } = await supabase
         .from('clinicas')
         .select('nome, telefone, logo_url, email')
@@ -89,7 +86,7 @@ export function SetupChecklist() {
         {
           key: 'medicos',
           label: 'Cadastre seus médicos',
-          desc: numMedicos ? `${numMedicos} médico${numMedicos !== 1 ? 's' : ''} cadastrado${numMedicos !== 1 ? 's' : ''}` : 'Adicione os médicos que atendem na sua clínica',
+          desc: numMedicos ? (numMedicos + ' médico' + (numMedicos !== 1 ? 's' : '') + ' cadastrado' + (numMedicos !== 1 ? 's' : '')) : 'Adicione os médicos que atendem na sua clínica',
           completo: (numMedicos || 0) > 0,
           href: '/admin',
           ctaLabel: (numMedicos || 0) > 0 ? 'Gerenciar' : 'Cadastrar',
@@ -128,109 +125,194 @@ export function SetupChecklist() {
     }
   }
 
-  if (carregando) return null
-  if (passos.length === 0) return null
+  if (carregando || passos.length === 0) return null
 
   const completos = passos.filter(p => p.completo).length
   const total = passos.length
+  const pendentes = total - completos
   const tudoPronto = completos === total
   const progressoPct = (completos / total) * 100
 
   return (
-    <div style={{
-      background: 'white',
-      borderRadius: 16,
-      padding: 20,
-      marginBottom: 20,
-      border: tudoPronto ? `1px solid ${ACCENT_LIGHT}` : '1px solid #f3f4f6',
-    }}>
-      {/* Header com progresso */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>
-            {tudoPronto ? '✓ Tudo configurado!' : 'Comece por aqui'}
-          </p>
-          <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>
-            {tudoPronto ? 'Sua clínica está 100% pronta pra operar' : `${completos} de ${total} passos concluídos`}
-          </p>
-        </div>
-        <div style={{
-          width: 36, height: 36, borderRadius: '50%',
-          background: tudoPronto ? ACCENT_LIGHT : '#f3f4f6',
-          color: tudoPronto ? ACCENT : '#9ca3af',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 13, fontWeight: 700,
-        }}>
-          {tudoPronto ? '✓' : `${completos}/${total}`}
-        </div>
-      </div>
-
-      {/* Barra de progresso */}
-      <div style={{
-        height: 3, background: '#f3f4f6', borderRadius: 2,
-        overflow: 'hidden', marginBottom: 16,
-      }}>
-        <div style={{
-          width: progressoPct + '%', height: '100%',
-          background: ACCENT,
-          borderRadius: 2,
-          transition: 'width 0.4s ease',
-        }}/>
-      </div>
-
-      {/* Lista de passos */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {passos.map(p => (
-          <div
-            key={p.key}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '10px 12px', borderRadius: 10,
-              background: p.completo ? ACCENT_LIGHT : '#F9FAFB',
-            }}
-          >
-            {/* Check ou círculo */}
-            <div style={{
-              width: 22, height: 22, borderRadius: '50%',
-              background: p.completo ? ACCENT : 'white',
-              border: p.completo ? 'none' : '1.5px solid #d1d5db',
+    <>
+      {/* FAB no canto inferior direito */}
+      <button
+        onClick={() => setAberto(true)}
+        style={{
+          position: 'fixed' as const,
+          bottom: 24, right: 24, zIndex: 90,
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: tudoPronto ? '12px 16px' : '12px 18px 12px 14px',
+          borderRadius: 999, border: 'none',
+          background: tudoPronto ? '#10b981' : ACCENT, color: 'white',
+          fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+          transition: 'transform 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+        onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+        title={tudoPronto ? 'Tudo configurado' : (pendentes + ' passo' + (pendentes !== 1 ? 's' : '') + ' pendente' + (pendentes !== 1 ? 's' : ''))}
+      >
+        {tudoPronto ? (
+          <>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Tudo configurado
+          </>
+        ) : (
+          <>
+            <span style={{
+              width: 24, height: 24, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 700,
+            }}>
+              {pendentes}
+            </span>
+            Configurar plataforma
+          </>
+        )}
+      </button>
+
+      {/* Drawer */}
+      {aberto && (
+        <>
+          {/* Overlay */}
+          <div
+            onClick={() => setAberto(false)}
+            style={{
+              position: 'fixed' as const, inset: 0,
+              background: 'rgba(0,0,0,0.3)', zIndex: 100,
+              animation: 'fadeIn 0.2s ease',
+            }}
+          />
+
+          {/* Drawer panel */}
+          <div style={{
+            position: 'fixed' as const,
+            top: 0, right: 0, bottom: 0, width: 440,
+            background: 'white', zIndex: 101,
+            boxShadow: '-12px 0 30px rgba(0,0,0,0.12)',
+            display: 'flex', flexDirection: 'column' as const,
+            animation: 'slideIn 0.25s ease',
+          }}>
+            {/* Header drawer */}
+            <div style={{
+              padding: '20px 24px',
+              borderBottom: '1px solid #f3f4f6',
+              display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
               flexShrink: 0,
             }}>
-              {p.completo && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                  <polyline points="20 6 9 17 4 12"/>
+              <div>
+                <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>
+                  {tudoPronto ? 'Configuração completa' : 'Comece por aqui'}
+                </h2>
+                <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                  {tudoPronto
+                    ? 'Sua clínica está 100% pronta pra operar'
+                    : (completos + ' de ' + total + ' passos concluídos')
+                  }
+                </p>
+              </div>
+              <button
+                onClick={() => setAberto(false)}
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  border: 'none', background: '#F5F5F5', color: '#6b7280',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = '#e5e7eb'}
+                onMouseLeave={e => e.currentTarget.style.background = '#F5F5F5'}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
-              )}
+              </button>
             </div>
 
-            {/* Texto */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: p.completo ? ACCENT : '#111827', margin: '0 0 2px' }}>
-                {p.label}
-              </p>
-              <p style={{ fontSize: 11, color: p.completo ? ACCENT : '#6b7280', margin: 0 }}>
-                {p.desc}
-              </p>
+            {/* Barra de progresso */}
+            <div style={{ padding: '16px 24px 0' }}>
+              <div style={{
+                height: 6, background: '#f3f4f6', borderRadius: 3,
+                overflow: 'hidden' as const,
+              }}>
+                <div style={{
+                  width: progressoPct + '%', height: '100%',
+                  background: tudoPronto ? '#10b981' : ACCENT,
+                  borderRadius: 3,
+                  transition: 'width 0.4s ease',
+                }}/>
+              </div>
             </div>
 
-            {/* Botão */}
-            <button
-              onClick={() => router.push(p.href)}
-              style={{
-                padding: '6px 14px', borderRadius: 8,
-                background: p.completo ? 'white' : ACCENT,
-                color: p.completo ? ACCENT : 'white',
-                border: p.completo ? `1px solid ${ACCENT}` : 'none',
-                fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              {p.ctaLabel}
-            </button>
+            {/* Lista */}
+            <div style={{ flex: 1, overflow: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {passos.map(p => (
+                <div
+                  key={p.key}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 14,
+                    padding: 16, borderRadius: 12,
+                    background: p.completo ? ACCENT_LIGHT : '#F9FAFB',
+                    border: p.completo ? '1px solid #d4c9f7' : '1px solid #f3f4f6',
+                  }}
+                >
+                  <div style={{
+                    width: 28, height: 28, borderRadius: '50%',
+                    background: p.completo ? ACCENT : 'white',
+                    border: p.completo ? 'none' : '1.5px solid #d1d5db',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    {p.completo && (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    )}
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                      fontSize: 14, fontWeight: 700,
+                      color: p.completo ? ACCENT : '#111827',
+                      margin: '0 0 4px',
+                    }}>
+                      {p.label}
+                    </p>
+                    <p style={{
+                      fontSize: 12,
+                      color: p.completo ? ACCENT : '#6b7280',
+                      margin: '0 0 12px', lineHeight: 1.5,
+                    }}>
+                      {p.desc}
+                    </p>
+                    <button
+                      onClick={() => { setAberto(false); router.push(p.href) }}
+                      style={{
+                        padding: '7px 14px', borderRadius: 8,
+                        background: p.completo ? 'white' : ACCENT,
+                        color: p.completo ? ACCENT : 'white',
+                        border: p.completo ? '1px solid ' + ACCENT : 'none',
+                        fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                      }}
+                    >
+                      {p.ctaLabel}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <style>{
+              '@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } } ' +
+              '@keyframes slideIn { from { transform: translateX(100%) } to { transform: translateX(0) } }'
+            }</style>
           </div>
-        ))}
-      </div>
-    </div>
+        </>
+      )}
+    </>
   )
 }
