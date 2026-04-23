@@ -151,10 +151,40 @@ function normalizarLinha(raw: LinhaBruta): PacienteNormalizado {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { medico_id, linhas, modo } = body
+    const { medico_id: medicoIdBody, clinica_id, linhas, modo } = body
 
-    if (!medico_id || !Array.isArray(linhas)) {
+    if (!Array.isArray(linhas)) {
       return NextResponse.json({ error: 'Dados insuficientes' }, { status: 400 })
+    }
+
+    // Resolve medico_id: se veio direto, valida. Se veio clinica_id, pega primeiro medico ativo
+    let medico_id: string | null = null
+
+    if (medicoIdBody) {
+      // Verifica se existe na tabela medicos
+      const { data: medicoCheck } = await supabase
+        .from('medicos').select('id, clinica_id').eq('id', medicoIdBody).maybeSingle()
+      if (medicoCheck) {
+        medico_id = medicoCheck.id
+      }
+    }
+
+    // Se nao resolveu e veio clinica_id, busca primeiro medico
+    if (!medico_id && clinica_id) {
+      const { data: primeiroMedico } = await supabase
+        .from('medicos')
+        .select('id')
+        .eq('clinica_id', clinica_id)
+        .eq('cargo', 'medico')
+        .eq('ativo', true)
+        .order('criado_em', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      if (primeiroMedico) medico_id = primeiroMedico.id
+    }
+
+    if (!medico_id) {
+      return NextResponse.json({ error: 'Nenhum medico ativo encontrado para vincular pacientes. Cadastre um medico antes de importar.' }, { status: 400 })
     }
 
     if (linhas.length === 0) {

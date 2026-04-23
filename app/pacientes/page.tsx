@@ -582,6 +582,7 @@ export default function Pacientes() {
         onFechar={() => setMostrarImport(false)}
         onImportado={() => { if (medico) carregarPacientes(medico.id) }}
         medicoId={medico?.id || ''}
+        clinicaId={medico?.clinica_id || ''}
       />
 
       <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>

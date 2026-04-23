@@ -36,11 +36,12 @@ type ResultadoImport = {
   invalidos: number
 }
 
-export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId }: {
+export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, clinicaId }: {
   aberto: boolean
   onFechar: () => void
   onImportado: () => void
-  medicoId: string
+  medicoId?: string
+  clinicaId?: string
 }) {
   const [etapa, setEtapa] = useState<Etapa>('origem')
   const [linhasBrutas, setLinhasBrutas] = useState<any[]>([])
@@ -148,7 +149,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId }: {
     const res = await fetch('/api/pacientes/importar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ medico_id: medicoId, linhas, modo: 'preview' }),
+      body: JSON.stringify({ medico_id: medicoId, clinica_id: clinicaId, linhas, modo: 'preview' }),
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Erro ao processar preview')
@@ -175,7 +176,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId }: {
       const res = await fetch('/api/pacientes/importar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ medico_id: medicoId, linhas: linhasBrutas, modo: 'import' }),
+        body: JSON.stringify({ medico_id: medicoId, clinica_id: clinicaId, linhas: linhasBrutas, modo: 'import' }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erro ao importar')
