@@ -140,9 +140,23 @@ export default function Agenda() {
   }, [router])
 
   const carregarDados = async (medicoId: string) => {
+    // Se for clinica admin, busca pacientes e agendamentos de TODOS os medicos da clinica
+    const ca = localStorage.getItem('clinica_admin')
+    let medicoIds: string[] = [medicoId]
+
+    if (ca) {
+      const admin = JSON.parse(ca)
+      if (admin.clinica_id) {
+        const { data: meds } = await supabase
+          .from('medicos').select('id').eq('clinica_id', admin.clinica_id).eq('ativo', true)
+        medicoIds = (meds || []).map((m: any) => m.id)
+        if (medicoIds.length === 0) medicoIds = [medicoId] // fallback
+      }
+    }
+
     const [{ data: pacs }, { data: ags }] = await Promise.all([
-      supabase.from('pacientes').select('id, nome, data_nascimento, telefone').eq('medico_id', medicoId).order('nome'),
-      supabase.from('agendamentos').select(`*, pacientes(nome, data_nascimento, telefone)`).eq('medico_id', medicoId).order('data_hora'),
+      supabase.from('pacientes').select('id, nome, data_nascimento, telefone, medico_id').in('medico_id', medicoIds).order('nome'),
+      supabase.from('agendamentos').select(`*, pacientes(nome, data_nascimento, telefone)`).in('medico_id', medicoIds).order('data_hora'),
     ])
     setPacientes(pacs || [])
     setAgendamentos(ags || [])
@@ -232,8 +246,22 @@ export default function Agenda() {
             setSalaLink(meetLinkFinal); setSalaId(meetCodeFinal)
           }
         }
+        // Se for clinica admin, usa medico_id do paciente selecionado
+        let medicoIdFinal = medico.id
+        const ca = localStorage.getItem('clinica_admin')
+        if (ca && form.paciente_id) {
+          const pac = pacientes.find((p: any) => p.id === form.paciente_id)
+          if (pac && pac.medico_id) medicoIdFinal = pac.medico_id
+        }
+        // Se ainda for admin sem paciente, usa primeiro medico da clinica
+        if (ca && !form.paciente_id) {
+          const { data: primMed } = await supabase
+            .from('medicos').select('id').eq('clinica_id', medico.clinica_id).eq('cargo', 'medico').eq('ativo', true).order('criado_em').limit(1).maybeSingle()
+          if (primMed) medicoIdFinal = primMed.id
+        }
+
         const { data } = await supabase.from('agendamentos').insert({
-          medico_id: medico.id,
+          medico_id: medicoIdFinal,
           paciente_id: form.paciente_id || null,
           data_hora: new Date(form.data_hora).toISOString(),
           tipo: form.tipo,
