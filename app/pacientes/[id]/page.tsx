@@ -54,8 +54,13 @@ export default function PacienteDetalhe() {
     if (caStr) {
       const admin = JSON.parse(caStr)
       if (admin.clinica_id) {
-        const { data: meds } = await supabase.from('medicos').select('id').eq('clinica_id', admin.clinica_id).eq('ativo', true)
-        if (meds && meds.length > 0) medicoIds = meds.map((m: any) => m.id)
+        const { data: meds } = await supabase.from('medicos').select('id, nome').eq('clinica_id', admin.clinica_id).eq('ativo', true)
+        if (meds && meds.length > 0) {
+          medicoIds = meds.map((m: any) => m.id)
+          const mapa: Record<string, string> = {}
+          meds.forEach((m: any) => { mapa[m.id] = m.nome })
+          setMapaMedicos(mapa)
+        }
       }
     }
 
@@ -261,18 +266,51 @@ export default function PacienteDetalhe() {
               <div style={{display:'grid',gridTemplateColumns:'320px 1fr',gap:20}}>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
                   {consultas.length===0?<div style={{background:'white',borderRadius:16,padding:'60px 24px',textAlign:'center',minHeight:200}}><p style={{fontSize:14,fontWeight:600,color:'#374151',margin:'0 0 6px'}}>Nenhuma consulta ainda</p><p style={{fontSize:12,color:'#9ca3af',margin:0}}>Inicie uma nova consulta pra registrar</p></div>
-                  :consultas.map(c=>(
-                    <div key={c.id} onClick={()=>setConsultaAberta(consultaAberta?.id===c.id?null:c)} style={{background:'white',border:'1.5px solid '+(consultaAberta?.id===c.id?'#6043C1':'transparent'),borderRadius:12,padding:'14px 16px',cursor:'pointer'}}>
-                      <p style={{fontSize:11,color:'#9ca3af',margin:'0 0 4px'}}>{fmt(c.criado_em)}</p>
-                      <p style={{fontSize:12,color:'#374151',margin:'0 0 7px'}}>{(c.subjetivo||'').substring(0,90)}</p>
-                      <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#6043C1',background:'#F5F5F5',padding:'1px 6px',borderRadius:4,fontFamily:'monospace',fontWeight:700}}>{cid.codigo}</span>)}</div>
+                  :consultas.map(c=>{
+                    const ativa = consultaAberta?.id===c.id
+                    const ehTele = !!(c.meet_link || c.sala_id)
+                    const nomeMed = mapaMedicos[c.medico_id] || ''
+                    const primNome = nomeMed.split(' ')[0] || ''
+                    return (
+                    <div key={c.id} onClick={()=>setConsultaAberta(ativa?null:c)} style={{background:'white',border:'1.5px solid '+(ativa?'#6043C1':'transparent'),borderRadius:12,padding:'14px 16px',cursor:'pointer'}}>
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,gap:8}}>
+                        <p style={{fontSize:12,fontWeight:700,color:ativa?'#6043C1':'#374151',margin:0}}>{fmt(c.criado_em)} · {fmtH ? fmtH(c.criado_em) : new Date(c.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</p>
+                        <span style={{fontSize:9,fontWeight:700,color:ehTele?'#2563eb':'#6043C1',background:ehTele?'#eff6ff':'#ede9fb',padding:'2px 7px',borderRadius:10,textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>{ehTele?'Tele':'Consulta'}</span>
+                      </div>
+                      {primNome && <p style={{fontSize:10,color:'#9ca3af',margin:'0 0 6px'}}>Dr(a). {primNome}</p>}
+                      <p style={{fontSize:12,color:'#374151',margin:'0 0 7px',lineHeight:1.5}}>{(c.subjetivo||'').substring(0,90)}{(c.subjetivo||'').length>90?'...':''}</p>
+                      <div style={{display:'flex',gap:4,flexWrap:'wrap' as const}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#6043C1',background:'#ede9fb',padding:'1px 6px',borderRadius:4,fontFamily:'monospace' as const,fontWeight:700}}>{cid.codigo}</span>)}</div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
                 <div>
                   {consultaAberta?(
                     <div style={{background:'white',borderRadius:16}}>
-                      <div style={{padding:'14px 20px',borderBottom: 'none'}}><p style={{fontSize:14,fontWeight:700,color:'#111827',margin:0}}>{fmtF(consultaAberta.criado_em)}</p></div>
+                      <div style={{padding:'18px 22px',borderBottom:'1px solid #f3f4f6',display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap' as const}}>
+                        <div>
+                          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4,flexWrap:'wrap' as const}}>
+                            <p style={{fontSize:15,fontWeight:700,color:'#111827',margin:0,textTransform:'capitalize' as const}}>{fmtF(consultaAberta.criado_em)}</p>
+                            <span style={{fontSize:10,fontWeight:700,color:(consultaAberta.meet_link||consultaAberta.sala_id)?'#2563eb':'#6043C1',background:(consultaAberta.meet_link||consultaAberta.sala_id)?'#eff6ff':'#ede9fb',padding:'3px 10px',borderRadius:20,textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>{(consultaAberta.meet_link||consultaAberta.sala_id)?'Teleconsulta':'Consulta'}</span>
+                          </div>
+                          {mapaMedicos[consultaAberta.medico_id] && (
+                            <p style={{fontSize:12,color:'#6b7280',margin:0,display:'flex',alignItems:'center',gap:6}}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                              Dr(a). {mapaMedicos[consultaAberta.medico_id]}
+                            </p>
+                          )}
+                        </div>
+                        <div style={{display:'flex',gap:8}}>
+                          <button onClick={()=>router.push('/historico?consulta='+consultaAberta.id)} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:9,background:'#6043C1',color:'white',border:'none',fontSize:12,fontWeight:600,cursor:'pointer'}}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Prontuário completo
+                          </button>
+                          <button onClick={()=>window.open('/api/pdf-prontuario?consulta_id='+consultaAberta.id+'&medico_id='+(consultaAberta.medico_id||''),'_blank')} title="Baixar PDF" style={{padding:'8px 12px',borderRadius:9,background:'white',color:'#374151',border:'1px solid #e5e7eb',fontSize:12,fontWeight:500,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:5}}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            PDF
+                          </button>
+                        </div>
+                      </div>
                       <div style={{padding:20}}>
                         {secoes.map(s=>(
                           <div key={s.key} style={{background:s.bg,border:'1px solid '+s.border,borderRadius:10,padding:'12px 14px',marginBottom:10}}>
