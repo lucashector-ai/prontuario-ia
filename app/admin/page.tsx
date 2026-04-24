@@ -10,6 +10,11 @@ const ACCENT_LIGHT = '#ede9fb'
 const BG = '#F5F5F5'
 const CARD_RADIUS = 16
 
+const PALETA_CORES = [
+  '#6043C1', '#2563eb', '#059669', '#d97706', '#db2777',
+  '#0891b2', '#9333ea', '#e11d48', '#65a30d', '#0d9488',
+]
+
 export default function Admin() {
   const router = useRouter()
   const { toast } = useToast()
@@ -27,7 +32,7 @@ export default function Admin() {
   const [senhaGerada, setSenhaGerada] = useState<{ pessoa: any; senha: string; tipo: 'medico' | 'recepcionista' } | null>(null)
   const [senhaCopiada, setSenhaCopiada] = useState(false)
 
-  const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '' })
+  const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1' })
   const [formEditar, setFormEditar] = useState({ nome: '', email: '', crm: '', especialidade: '', cargo: 'medico' })
   const [salvando, setSalvando] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -118,6 +123,7 @@ export default function Admin() {
       if (modalNovoTipo === 'medico') {
         payload.crm = form.crm
         payload.especialidade = form.especialidade
+        payload.cor = form.cor
       }
 
       const res = await fetch('/api/medicos', {
@@ -128,7 +134,7 @@ export default function Admin() {
       if (data.medico && data.senha_provisoria_gerada) {
         const tipoSalvo = modalNovoTipo!
         setModalNovoTipo(null)
-        setForm({ nome: '', email: '', crm: '', especialidade: '' })
+        setForm({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1' })
         setSenhaGerada({ pessoa: data.medico, senha: data.senha_provisoria_gerada, tipo: tipoSalvo })
         await carregarDados(medico.clinica_id)
       } else throw new Error(data.error || 'Erro ao criar')
@@ -254,14 +260,14 @@ export default function Admin() {
               padding: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
             }}>
               <button
-                onClick={() => { setModalNovoTipo('medico'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '' }) }}
+                onClick={() => { setModalNovoTipo('medico'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1' }) }}
                 style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: '#374151', background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
                 onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 + Médico
               </button>
               <button
-                onClick={() => { setModalNovoTipo('recepcionista'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '' }) }}
+                onClick={() => { setModalNovoTipo('recepcionista'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1' }) }}
                 style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: '#374151', background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
                 onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
@@ -415,6 +421,41 @@ export default function Admin() {
                     <label style={labelStyle}>Especialidade</label>
                     <input value={form.especialidade} onChange={e => setForm(p => ({ ...p, especialidade: e.target.value }))} placeholder="Clínico Geral" style={inputStyle}/>
                   </div>
+                </div>
+              )}
+              {modalNovoTipo === 'medico' && (
+                <div>
+                  <label style={labelStyle}>Cor na agenda</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
+                    {PALETA_CORES.map(cor => {
+                      const selecionada = form.cor === cor
+                      return (
+                        <button
+                          key={cor}
+                          type="button"
+                          onClick={() => setForm(p => ({ ...p, cor }))}
+                          title={cor}
+                          style={{
+                            width: 36, height: 36, borderRadius: '50%',
+                            background: cor, cursor: 'pointer',
+                            border: selecionada ? '3px solid #111827' : '3px solid transparent',
+                            transform: selecionada ? 'scale(1.1)' : 'scale(1)',
+                            transition: 'all 0.15s',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}
+                        >
+                          {selecionada && (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '8px 0 0' }}>
+                    Essa cor aparece nos agendamentos do médico na agenda.
+                  </p>
                 </div>
               )}
               <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#0369a1', lineHeight: 1.5 }}>
