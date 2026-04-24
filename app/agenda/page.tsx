@@ -198,7 +198,7 @@ export default function Agenda() {
     const [{ data: pacs }, { data: ags }, { data: meds }, { data: blqs }] = await Promise.all([
       supabase.from('pacientes').select('id, nome, data_nascimento, telefone, medico_id').in('medico_id', medicoIds).order('nome'),
       supabase.from('agendamentos').select(`*, pacientes(nome, data_nascimento, telefone)`).in('medico_id', medicoIds).order('data_hora'),
-      supabase.from('medicos').select('id, nome, cor').in('id', medicoIds).eq('ativo', true).order('nome'),
+      supabase.from('medicos').select('id, nome, cor').in('id', medicoIds).eq('ativo', true).neq('cargo', 'recepcionista').order('nome'),
       supabase.from('bloqueios_agenda').select('*').in('medico_id', medicoIds).order('data_inicio'),
     ])
     setPacientes(pacs || [])
