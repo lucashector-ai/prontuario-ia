@@ -479,7 +479,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       // podem ser incompatíveis com streaming, então omitimos.
       const wsUrl = 'wss://api.deepgram.com/v1/listen?model=nova-2&language=pt-BR&smart_format=true&punctuate=true&interim_results=true&encoding=opus'
 
-      const ws = new WebSocket(wsUrl, ['token', tokData.access_token])
+      const ws = new WebSocket(wsUrl, ['bearer', tokData.access_token])
       dgSocketRef.current = ws
 
       await new Promise<void>((resolve, reject) => {
