@@ -477,7 +477,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
       // Parâmetros streaming — nova-2 tem streaming estável em pt-br; keyterms (nova-3)
       // podem ser incompatíveis com streaming, então omitimos.
-      const wsUrl = 'wss://api.deepgram.com/v1/listen?model=nova-2&language=pt-BR&smart_format=true&punctuate=true&interim_results=true'
+      const wsUrl = 'wss://api.deepgram.com/v1/listen?model=nova-3&language=multi&smart_format=true&punctuate=true&interim_results=true&endpointing=500&utterance_end_ms=1500&vad_events=true'
 
       const ws = new WebSocket(wsUrl, ['bearer', tokData.access_token])
       dgSocketRef.current = ws
