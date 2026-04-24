@@ -297,6 +297,65 @@ export default function Agenda() {
     }
   }
 
+  const criarSalaAgora = async () => {
+    if (!medico || salaLink) return
+    try {
+      const tcRes = await fetch('/api/teleconsulta', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          medico_id: medico.id,
+          paciente_id: form.paciente_id || null,
+          titulo: form.motivo || 'Teleconsulta',
+        }),
+      })
+      const tcData = await tcRes.json()
+      if (tcData.teleconsulta) {
+        const sid = tcData.teleconsulta.sala_id
+        const link = window.location.origin + '/sala/' + sid
+        setSalaId(sid)
+        setSalaLink(link)
+        setComVideo(true)
+      }
+    } catch (err) {
+      console.error('Erro criando sala:', err)
+    }
+  }
+
+  const removerSala = async () => {
+    // Encerra a sala órfã no servidor pra não poluir o painel
+    if (salaId) {
+      try {
+        const { data: tc } = await supabase
+          .from('teleconsultas').select('id').eq('sala_id', salaId).maybeSingle()
+        if (tc?.id) {
+          await supabase.from('teleconsultas').update({ status: 'encerrada', encerrada_em: new Date().toISOString() }).eq('id', tc.id)
+        }
+      } catch (err) { console.error('Erro removendo sala:', err) }
+    }
+    setSalaLink(''); setSalaId(''); setComVideo(false)
+  }
+
+  const copiarLinkSala = () => {
+    navigator.clipboard.writeText(salaLink).catch(() => {})
+    toast('Link copiado!')
+  }
+
+  const enviarSalaWhatsApp = async () => {
+    if (!salaLink) return
+    const pac = pacientes.find((p: any) => p.id === form.paciente_id)
+    const msgTxt = 'Olá! Dr(a). ' + (medico?.nome || '') + ' te convidou para uma teleconsulta.\n\nAcesse pelo link (não precisa instalar nada):\n' + salaLink
+    if (pac?.telefone) {
+      await fetch('/api/whatsapp/enviar', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telefone: pac.telefone, texto: msgTxt, medico_id: medico.id })
+      })
+      toast('Enviado por WhatsApp!')
+    } else {
+      navigator.clipboard.writeText(msgTxt).catch(() => {})
+      toast('Paciente sem telefone — mensagem copiada')
+    }
+  }
+
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault(); setSalvando(true)
     try {
@@ -313,17 +372,10 @@ export default function Agenda() {
       } else {
         let meetLinkFinal = ''
         let meetCodeFinal = ''
-        if (comVideo) {
-          const tcRes = await fetch('/api/teleconsulta', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ medico_id: medico.id, paciente_id: form.paciente_id || null, titulo: form.motivo || 'Teleconsulta' })
-          })
-          const tcData = await tcRes.json()
-          if (tcData.teleconsulta) {
-            meetCodeFinal = tcData.teleconsulta.sala_id
-            meetLinkFinal = window.location.origin + '/sala/' + meetCodeFinal
-            setSalaLink(meetLinkFinal); setSalaId(meetCodeFinal)
-          }
+        // Sala já criada ao clicar em "Adicionar videoconferência" — só reaproveita
+        if (salaLink && salaId) {
+          meetLinkFinal = salaLink
+          meetCodeFinal = salaId
         }
         // Se for clinica admin, usa medico_id do paciente selecionado
         let medicoIdFinal = medico.id
@@ -1201,27 +1253,42 @@ export default function Agenda() {
                   </div>
                 </div>
               )}
-              {!modal.ag && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: comVideo ? '#ede9fb' : '#F5F5F5', borderRadius: 10, border: '1px solid ' + (comVideo ? '#b9a9ef' : '#e5e7eb') }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={comVideo ? '#6043C1' : '#9ca3af'} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: comVideo ? '#6043C1' : '#374151', margin: 0 }}>Incluir sala de vídeo</p>
-                      <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Link gerado automaticamente</p>
-                    </div>
+              {!modal.ag && !salaLink && (
+                <button type="button" onClick={criarSalaAgora}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, cursor: 'pointer', textAlign: 'left' as const }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                   </div>
-                  <button type="button" onClick={() => { setComVideo(!comVideo); setSalaLink(''); setSalaId('') }}
-                    style={{ width: 42, height: 24, borderRadius: 12, border: 'none', background: comVideo ? '#6043C1' : '#d1d5db', cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
-                    <span style={{ position: 'absolute', top: 2, left: comVideo ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left .2s' }}/>
-                  </button>
-                </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#6043C1' }}>Adicionar videoconferência</span>
+                </button>
               )}
-              {salaLink && (
-                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                  <span style={{ fontSize: 11, color: '#176F44', flex: 1, overflow: 'hidden', background: 'white', padding: '4px 8px', borderRadius: 6, textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salaLink}</span>
-                  <button type="button" onClick={() => { navigator.clipboard.writeText(salaLink); window.open('/sala/' + salaId, '_blank') }}
-                    style={{ fontSize: 11, color: '#6043C1', background: 'white', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap' }}>Copiar e abrir</button>
+              {!modal.ag && salaLink && (
+                <div style={{ background: '#faf8ff', border: '1px solid #ddd3f7', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#6043C1', margin: '0 0 2px' }}>Entrar na sala</p>
+                      <p style={{ fontSize: 11, color: '#6b7280', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salaLink}</p>
+                    </div>
+                    <button type="button" onClick={removerSala} title="Remover sala"
+                      style={{ padding: 6, background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button type="button" onClick={copiarLinkSala}
+                      style={{ flex: 1, padding: '7px 10px', borderRadius: 8, background: 'white', border: '1px solid #e5e7eb', fontSize: 12, color: '#374151', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                      Copiar link
+                    </button>
+                    <button type="button" onClick={enviarSalaWhatsApp}
+                      style={{ flex: 1, padding: '7px 10px', borderRadius: 8, background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      WhatsApp
+                    </button>
+                  </div>
                 </div>
               )}
               {modal.ag && modal.ag.paciente_id && (
