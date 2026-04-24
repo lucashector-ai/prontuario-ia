@@ -20,7 +20,7 @@ export default function Historico() {
   const [salvando, setSalvando] = useState(false)
   const [busca, setBusca] = useState('')
   const [toast, setToast] = useState<{tipo: string, texto: string} | null>(null)
-  const [mapaMedicos, setMapaMedicos] = useState<Record<string, string>>({})
+  const [mapaMedicos, setMapaMedicos] = useState<Record<string, { nome: string, cor: string }>>({})
 
   useEffect(() => {
     const ca = localStorage.getItem('clinica_admin')
@@ -54,9 +54,9 @@ export default function Historico() {
     if (caStr) {
       const admin = JSON.parse(caStr)
       if (admin.clinica_id) {
-        const { data: meds } = await supabase.from('medicos').select('id, nome').eq('clinica_id', admin.clinica_id)
-        const mapa: Record<string, string> = {}
-        ;(meds || []).forEach((m: any) => { mapa[m.id] = m.nome })
+        const { data: meds } = await supabase.from('medicos').select('id, nome, cor').eq('clinica_id', admin.clinica_id)
+        const mapa: Record<string, { nome: string, cor: string }> = {}
+        ;(meds || []).forEach((m: any) => { mapa[m.id] = { nome: m.nome, cor: m.cor || '#6043C1' } })
         setMapaMedicos(mapa)
       }
     } else {
@@ -64,7 +64,7 @@ export default function Historico() {
       const m = localStorage.getItem('medico')
       if (m) {
         const med = JSON.parse(m)
-        setMapaMedicos({ [med.id]: med.nome })
+        setMapaMedicos({ [med.id]: { nome: med.nome, cor: '#6043C1' } })
       }
     }
 
@@ -228,7 +228,9 @@ export default function Historico() {
                 const ativa = selecionada && selecionada.id === c.id
                 const ehTele = !!(c.meet_link || c.sala_id)
                 const nomePaciente = c.pacientes?.nome || 'Paciente'
-                const nomeMedico = mapaMedicos[c.medico_id] || ''
+                const medInfo = mapaMedicos[c.medico_id]
+                const nomeMedico = medInfo?.nome || ''
+                const corMedico = medInfo?.cor || '#6043C1'
                 const primNomeMed = nomeMedico.split(' ')[0] || ''
                 return (
                   <div
@@ -258,9 +260,10 @@ export default function Historico() {
                       {nomePaciente}
                     </p>
                     {primNomeMed && (
-                      <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 8px' }}>
-                        Dr(a). {primNomeMed}
-                      </p>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: corMedico, flexShrink: 0 }}/>
+                        <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 500 }}>Dr(a). {primNomeMed}</span>
+                      </div>
                     )}
                     <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>
                       {(c.subjetivo || 'Consulta sem detalhes').substring(0, 90)}{(c.subjetivo || '').length > 90 ? '...' : ''}

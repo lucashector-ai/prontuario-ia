@@ -55,11 +55,11 @@ export default function PacienteDetalhe() {
     if (caStr) {
       const admin = JSON.parse(caStr)
       if (admin.clinica_id) {
-        const { data: meds } = await supabase.from('medicos').select('id, nome').eq('clinica_id', admin.clinica_id).eq('ativo', true)
+        const { data: meds } = await supabase.from('medicos').select('id, nome, cor').eq('clinica_id', admin.clinica_id).eq('ativo', true)
         if (meds && meds.length > 0) {
           medicoIds = meds.map((m: any) => m.id)
-          const mapa: Record<string, string> = {}
-          meds.forEach((m: any) => { mapa[m.id] = m.nome })
+          const mapa: Record<string, { nome: string, cor: string }> = {}
+          meds.forEach((m: any) => { mapa[m.id] = { nome: m.nome, cor: m.cor || '#6043C1' } })
           setMapaMedicos(mapa)
         }
       }
@@ -270,7 +270,9 @@ export default function PacienteDetalhe() {
                   :consultas.map(c=>{
                     const ativa = consultaAberta?.id===c.id
                     const ehTele = !!(c.meet_link || c.sala_id)
-                    const nomeMed = mapaMedicos[c.medico_id] || ''
+                    const medInfo = mapaMedicos[c.medico_id]
+                    const nomeMed = medInfo?.nome || ''
+                    const corMed = medInfo?.cor || '#6043C1'
                     const primNome = nomeMed.split(' ')[0] || ''
                     return (
                     <div key={c.id} onClick={()=>setConsultaAberta(ativa?null:c)} style={{background:'white',border:'1.5px solid '+(ativa?'#6043C1':'transparent'),borderRadius:12,padding:'14px 16px',cursor:'pointer'}}>
@@ -278,7 +280,7 @@ export default function PacienteDetalhe() {
                         <p style={{fontSize:12,fontWeight:700,color:ativa?'#6043C1':'#374151',margin:0}}>{fmt(c.criado_em)} · {fmtH ? fmtH(c.criado_em) : new Date(c.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</p>
                         <span style={{fontSize:9,fontWeight:700,color:ehTele?'#2563eb':'#6043C1',background:ehTele?'#eff6ff':'#ede9fb',padding:'2px 7px',borderRadius:10,textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>{ehTele?'Tele':'Consulta'}</span>
                       </div>
-                      {primNome && <p style={{fontSize:10,color:'#9ca3af',margin:'0 0 6px'}}>Dr(a). {primNome}</p>}
+                      {primNome && (<div style={{display:'inline-flex' as const,alignItems:'center',gap:5,marginBottom:6}}><span style={{width:7,height:7,borderRadius:'50%',background:corMed,flexShrink:0}}/><span style={{fontSize:10,color:'#6b7280',fontWeight:500}}>Dr(a). {primNome}</span></div>)}
                       <p style={{fontSize:12,color:'#374151',margin:'0 0 7px',lineHeight:1.5}}>{(c.subjetivo||'').substring(0,90)}{(c.subjetivo||'').length>90?'...':''}</p>
                       <div style={{display:'flex',gap:4,flexWrap:'wrap' as const}}>{(c.cids||[]).map((cid:any)=><span key={cid.codigo} style={{fontSize:10,color:'#6043C1',background:'#ede9fb',padding:'1px 6px',borderRadius:4,fontFamily:'monospace' as const,fontWeight:700}}>{cid.codigo}</span>)}</div>
                     </div>
@@ -296,8 +298,8 @@ export default function PacienteDetalhe() {
                           </div>
                           {mapaMedicos[consultaAberta.medico_id] && (
                             <p style={{fontSize:12,color:'#6b7280',margin:0,display:'flex',alignItems:'center',gap:6}}>
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
-                              Dr(a). {mapaMedicos[consultaAberta.medico_id]}
+                              <span style={{width:10,height:10,borderRadius:'50%',background:mapaMedicos[consultaAberta.medico_id].cor,flexShrink:0}}/>
+                              Dr(a). {mapaMedicos[consultaAberta.medico_id].nome}
                             </p>
                           )}
                         </div>
