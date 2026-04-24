@@ -97,6 +97,22 @@ export default function Agenda() {
   const [pacientes, setPacientes] = useState<any[]>([])
   const [agendamentos, setAgendamentos] = useState<any[]>([])
   const [mapaCoresMedicos, setMapaCoresMedicos] = useState<Record<string, string>>({})
+  const [bloqueios, setBloqueios] = useState<any[]>([])
+  const [modalBloqueio, setModalBloqueio] = useState(false)
+  const [medicosClinica, setMedicosClinica] = useState<any[]>([])
+  const [formBloqueio, setFormBloqueio] = useState({
+    medico_id: '',
+    tipo: 'horario' as 'horario' | 'dia' | 'periodo',
+    data: '',
+    hora_inicio: '08:00',
+    hora_fim: '09:00',
+    data_inicio: '',
+    data_fim: '',
+    motivo: '',
+    recorrente: false,
+    dias_semana: [] as string[],
+  })
+  const [salvandoBloqueio, setSalvandoBloqueio] = useState(false)
 
   const [semana, setSemana] = useState<Date>(() => new Date(0))
   const [diaSelecionado, setDiaSelecionado] = useState<Date>(() => new Date(0))
@@ -179,12 +195,16 @@ export default function Agenda() {
       if (med) setMapaCoresMedicos({ [med.id]: (med as any).cor || '#6043C1' })
     }
 
-    const [{ data: pacs }, { data: ags }] = await Promise.all([
+    const [{ data: pacs }, { data: ags }, { data: meds }, { data: blqs }] = await Promise.all([
       supabase.from('pacientes').select('id, nome, data_nascimento, telefone, medico_id').in('medico_id', medicoIds).order('nome'),
       supabase.from('agendamentos').select(`*, pacientes(nome, data_nascimento, telefone)`).in('medico_id', medicoIds).order('data_hora'),
+      supabase.from('medicos').select('id, nome, cor').in('id', medicoIds).eq('ativo', true).order('nome'),
+      supabase.from('bloqueios_agenda').select('*').in('medico_id', medicoIds).order('data_inicio'),
     ])
     setPacientes(pacs || [])
     setAgendamentos(ags || [])
+    setMedicosClinica(meds || [])
+    setBloqueios(blqs || [])
   }
 
   const agendamentosFiltrados = useMemo(() => {
@@ -199,6 +219,36 @@ export default function Agenda() {
       return true
     })
   }, [agendamentos, filtroStatus, filtroTipo, filtroPaciente, filtroProfissional])
+
+  const getBloqueiosDia = (dia: Date) => {
+    const diaSemana = dia.getDay().toString()
+    const iniDia = new Date(dia); iniDia.setHours(0, 0, 0, 0)
+    const fimDia = new Date(dia); fimDia.setHours(23, 59, 59, 999)
+
+    return bloqueios.flatMap((b: any) => {
+      const dIni = new Date(b.data_inicio)
+      const dFim = new Date(b.data_fim)
+
+      // Bloqueio recorrente semanal
+      if (b.recorrente && b.dias_semana) {
+        const dias = b.dias_semana.split(',')
+        if (!dias.includes(diaSemana)) return []
+        // Data tem que estar no range do bloqueio (data_inicio define quando a recorrencia comeca)
+        if (iniDia < new Date(new Date(b.data_inicio).setHours(0, 0, 0, 0))) return []
+
+        // Cria ocorrencia do dia atual usando as horas do bloqueio original
+        const ocorrIni = new Date(dia)
+        ocorrIni.setHours(dIni.getHours(), dIni.getMinutes(), 0, 0)
+        const ocorrFim = new Date(dia)
+        ocorrFim.setHours(dFim.getHours(), dFim.getMinutes(), 0, 0)
+        return [{ ...b, data_inicio: ocorrIni.toISOString(), data_fim: ocorrFim.toISOString() }]
+      }
+
+      // Bloqueio pontual: verifica overlap com o dia
+      if (dFim < iniDia || dIni > fimDia) return []
+      return [b]
+    })
+  }
 
   const getAgsDia = (dia: Date) =>
     agendamentosFiltrados.filter(a => new Date(a.data_hora).toDateString() === dia.toDateString())
@@ -330,6 +380,81 @@ export default function Agenda() {
     finally { setEnviandoPreConsulta(false) }
   }
 
+  const abrirModalBloqueio = () => {
+    const hoje = new Date().toISOString().split('T')[0]
+    setFormBloqueio({
+      medico_id: medicosClinica[0]?.id || medico?.id || '',
+      tipo: 'horario',
+      data: hoje,
+      hora_inicio: '12:00',
+      hora_fim: '13:00',
+      data_inicio: hoje,
+      data_fim: hoje,
+      motivo: '',
+      recorrente: false,
+      dias_semana: [],
+    })
+    setModalBloqueio(true)
+  }
+
+  const salvarBloqueio = async () => {
+    if (!formBloqueio.medico_id) { toast('Escolha um medico', 'error'); return }
+
+    let data_inicio: string, data_fim: string
+
+    if (formBloqueio.tipo === 'horario') {
+      data_inicio = new Date(formBloqueio.data + 'T' + formBloqueio.hora_inicio + ':00').toISOString()
+      data_fim = new Date(formBloqueio.data + 'T' + formBloqueio.hora_fim + ':00').toISOString()
+    } else if (formBloqueio.tipo === 'dia') {
+      data_inicio = new Date(formBloqueio.data + 'T00:00:00').toISOString()
+      data_fim = new Date(formBloqueio.data + 'T23:59:59').toISOString()
+    } else {
+      // periodo
+      if (!formBloqueio.data_inicio || !formBloqueio.data_fim) { toast('Preencha as datas', 'error'); return }
+      data_inicio = new Date(formBloqueio.data_inicio + 'T00:00:00').toISOString()
+      data_fim = new Date(formBloqueio.data_fim + 'T23:59:59').toISOString()
+    }
+
+    setSalvandoBloqueio(true)
+    try {
+      const clinicaId = JSON.parse(localStorage.getItem('clinica_admin') || 'null')?.clinica_id
+        || JSON.parse(localStorage.getItem('medico') || 'null')?.clinica_id
+
+      const res = await fetch('/api/bloqueios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          medico_id: formBloqueio.medico_id,
+          clinica_id: clinicaId,
+          data_inicio,
+          data_fim,
+          motivo: formBloqueio.motivo || null,
+          recorrente: formBloqueio.recorrente,
+          dias_semana: formBloqueio.recorrente && formBloqueio.dias_semana.length > 0 ? formBloqueio.dias_semana.join(',') : null,
+        }),
+      })
+      const data = await res.json()
+      if (data.bloqueio) {
+        setBloqueios(prev => [...prev, data.bloqueio])
+        setModalBloqueio(false)
+        toast('Horario bloqueado!')
+      } else {
+        toast(data.error || 'Erro ao bloquear', 'error')
+      }
+    } catch (e: any) {
+      toast('Erro de conexao', 'error')
+    } finally {
+      setSalvandoBloqueio(false)
+    }
+  }
+
+  const removerBloqueio = async (id: string) => {
+    if (!confirm('Remover este bloqueio?')) return
+    await fetch('/api/bloqueios?id=' + id, { method: 'DELETE' })
+    setBloqueios(prev => prev.filter(b => b.id !== id))
+    toast('Bloqueio removido')
+  }
+
   const atualizarStatus = async (id: string, status: string) => {
     const { data } = await supabase.from('agendamentos').update({ status }).eq('id', id).select(`*, pacientes(nome, data_nascimento, telefone)`).single()
     if (data) setAgendamentos(prev => prev.map(a => a.id === id ? data : a))
@@ -384,6 +509,15 @@ export default function Agenda() {
               </button>
             ))}
           </div>
+          <button onClick={abrirModalBloqueio}
+            title="Bloquear horario"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+            Bloquear
+          </button>
           <button onClick={() => abrirModal()}
             style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -578,6 +712,34 @@ export default function Agenda() {
                     </div>
                   )
                 })}
+                {/* Renderiza bloqueios */}
+                {getBloqueiosDia(dia).map((b: any) => {
+                  const dIni = new Date(b.data_inicio)
+                  const dFim = new Date(b.data_fim)
+                  // Se o bloqueio cobre o dia inteiro, renderiza de 0h a fim do grid
+                  const ehDiaInteiro = dIni.getHours() === 0 && dFim.getHours() === 23 && dFim.getMinutes() === 59
+                  const idx = ehDiaInteiro ? 0 : Math.max(0, toSlotIdx(dIni))
+                  const idxFim = ehDiaInteiro ? TOTAL_SLOTS : Math.min(TOTAL_SLOTS, toSlotIdx(dFim))
+                  const altura = (idxFim - idx) * SLOT_PX
+                  if (altura <= 0) return null
+                  return (
+                    <div key={'blq-' + b.id + '-' + dia.toISOString()}
+                      title={b.motivo || 'Horário bloqueado'}
+                      onClick={e => { e.stopPropagation(); if (confirm('Remover bloqueio?' + (b.motivo ? ' (' + b.motivo + ')' : ''))) removerBloqueio(b.id) }}
+                      style={{
+                        position: 'absolute' as const, left: 0, right: 0,
+                        top: slotToPx(idx), height: altura,
+                        background: 'repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 6px, #e5e7eb 6px, #e5e7eb 12px)',
+                        borderTop: '1px solid #d1d5db', borderBottom: '1px solid #d1d5db',
+                        zIndex: 5, cursor: 'pointer', overflow: 'hidden' as const,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4,
+                      }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em', background: 'white', padding: '2px 8px', borderRadius: 12 }}>
+                        🚫 {b.motivo || 'Bloqueado'}
+                      </span>
+                    </div>
+                  )
+                })}
                 {isHoje(dia) && mostrarLinhaAgora && (
                   <div style={{ position: 'absolute', top: slotToPx(agoraIdx) + (agora.getMinutes() % SLOT_MIN) * (SLOT_PX / SLOT_MIN), left: 0, right: 0, height: 2, background: '#dc2626', zIndex: 20, pointerEvents: 'none' }}>
                     <div style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: '50%', background: '#dc2626' }}/>
@@ -704,6 +866,33 @@ export default function Agenda() {
                   </div>
                 )
               })}
+              {/* Bloqueios no dia */}
+              {getBloqueiosDia(diaSelecionado).map((b: any) => {
+                const dIni = new Date(b.data_inicio)
+                const dFim = new Date(b.data_fim)
+                const ehDiaInteiro = dIni.getHours() === 0 && dFim.getHours() === 23 && dFim.getMinutes() === 59
+                const idx = ehDiaInteiro ? 0 : Math.max(0, toSlotIdx(dIni))
+                const idxFim = ehDiaInteiro ? TOTAL_SLOTS : Math.min(TOTAL_SLOTS, toSlotIdx(dFim))
+                const altura = (idxFim - idx) * SLOT_PX
+                if (altura <= 0) return null
+                return (
+                  <div key={'blq-' + b.id}
+                    title={b.motivo || 'Horário bloqueado'}
+                    onClick={e => { e.stopPropagation(); if (confirm('Remover bloqueio?' + (b.motivo ? ' (' + b.motivo + ')' : ''))) removerBloqueio(b.id) }}
+                    style={{
+                      position: 'absolute' as const, left: 0, right: 0,
+                      top: slotToPx(idx), height: altura,
+                      background: 'repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 8px, #e5e7eb 8px, #e5e7eb 16px)',
+                      borderTop: '1px solid #d1d5db', borderBottom: '1px solid #d1d5db',
+                      zIndex: 5, cursor: 'pointer', overflow: 'hidden' as const,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8,
+                    }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em', background: 'white', padding: '4px 14px', borderRadius: 20, border: '1px solid #e5e7eb' }}>
+                      🚫 {b.motivo || 'Horário bloqueado'}
+                    </span>
+                  </div>
+                )
+              })}
               {mostrarLinhaAgora && (
                 <div style={{ position: 'absolute', top: slotToPx(agoraIdx) + (agora.getMinutes() % SLOT_MIN) * (SLOT_PX / SLOT_MIN), left: 0, right: 0, height: 2, background: '#dc2626', zIndex: 20, pointerEvents: 'none' }}>
                   <div style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: '50%', background: '#dc2626' }}/>
@@ -739,6 +928,189 @@ export default function Agenda() {
               </svg>
               <p style={{ margin: 0, fontSize: 13 }}>Nenhum paciente na lista de espera.</p>
               <p style={{ margin: '6px 0 0', fontSize: 11 }}>Pacientes aguardando encaixe aparecem aqui.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalBloqueio && (
+        <div onClick={e => { if (e.target === e.currentTarget) setModalBloqueio(false) }}
+          style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 520, maxHeight: '90vh', overflow: 'auto' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Bloquear horário</h3>
+                  <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Impede agendamentos nesse período</p>
+                </div>
+              </div>
+              <button onClick={() => setModalBloqueio(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 20, padding: 4 }}>✕</button>
+            </div>
+
+            <div style={{ padding: 24, display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
+              {/* Médico */}
+              <div>
+                <label style={labelStyle}>Médico</label>
+                <select value={formBloqueio.medico_id}
+                  onChange={e => setFormBloqueio(p => ({ ...p, medico_id: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#111827', cursor: 'pointer' }}>
+                  <option value="">Selecionar médico</option>
+                  {medicosClinica.map(m => (
+                    <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tipo de bloqueio */}
+              <div>
+                <label style={labelStyle}>Tipo</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  {([
+                    { v: 'horario', label: 'Horário', sub: 'Só umas horas' },
+                    { v: 'dia', label: 'Dia inteiro', sub: 'Dia todo' },
+                    { v: 'periodo', label: 'Período', sub: 'Vários dias' },
+                  ] as const).map(t => (
+                    <button key={t.v} type="button"
+                      onClick={() => setFormBloqueio(p => ({ ...p, tipo: t.v }))}
+                      style={{
+                        padding: '10px 8px', borderRadius: 10, textAlign: 'left' as const,
+                        border: formBloqueio.tipo === t.v ? '1.5px solid #dc2626' : '1.5px solid #e5e7eb',
+                        background: formBloqueio.tipo === t.v ? '#fef2f2' : 'white',
+                        cursor: 'pointer',
+                      }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: formBloqueio.tipo === t.v ? '#dc2626' : '#111827', margin: 0 }}>{t.label}</p>
+                      <p style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 0' }}>{t.sub}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Datas conforme tipo */}
+              {formBloqueio.tipo === 'horario' && (
+                <>
+                  <div>
+                    <label style={labelStyle}>Data</label>
+                    <input type="date" value={formBloqueio.data}
+                      onChange={e => setFormBloqueio(p => ({ ...p, data: e.target.value }))}
+                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label style={labelStyle}>Das</label>
+                      <input type="time" value={formBloqueio.hora_inicio}
+                        onChange={e => setFormBloqueio(p => ({ ...p, hora_inicio: e.target.value }))}
+                        style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Até</label>
+                      <input type="time" value={formBloqueio.hora_fim}
+                        onChange={e => setFormBloqueio(p => ({ ...p, hora_fim: e.target.value }))}
+                        style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {formBloqueio.tipo === 'dia' && (
+                <div>
+                  <label style={labelStyle}>Data</label>
+                  <input type="date" value={formBloqueio.data}
+                    onChange={e => setFormBloqueio(p => ({ ...p, data: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0' }}>Dia inteiro indisponível</p>
+                </div>
+              )}
+
+              {formBloqueio.tipo === 'periodo' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <label style={labelStyle}>De</label>
+                    <input type="date" value={formBloqueio.data_inicio}
+                      onChange={e => setFormBloqueio(p => ({ ...p, data_inicio: e.target.value }))}
+                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Até</label>
+                    <input type="date" value={formBloqueio.data_fim}
+                      onChange={e => setFormBloqueio(p => ({ ...p, data_fim: e.target.value }))}
+                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                  </div>
+                </div>
+              )}
+
+              {/* Motivo */}
+              <div>
+                <label style={labelStyle}>Motivo (opcional)</label>
+                <input value={formBloqueio.motivo}
+                  onChange={e => setFormBloqueio(p => ({ ...p, motivo: e.target.value }))}
+                  placeholder="Ex: Almoço, Reunião, Férias..."
+                  style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+              </div>
+
+              {/* Recorrência (só pra tipo horário/dia) */}
+              {(formBloqueio.tipo === 'horario' || formBloqueio.tipo === 'dia') && (
+                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: 14 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={formBloqueio.recorrente}
+                      onChange={e => setFormBloqueio(p => ({ ...p, recorrente: e.target.checked }))}
+                      style={{ width: 18, height: 18, cursor: 'pointer' }}/>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>Repetir semanalmente</p>
+                      <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>Bloqueio toda semana nos dias escolhidos</p>
+                    </div>
+                  </label>
+
+                  {formBloqueio.recorrente && (
+                    <div style={{ marginTop: 12 }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 8 }}>Dias da semana</p>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {([
+                          { v: '0', label: 'D' },
+                          { v: '1', label: 'S' },
+                          { v: '2', label: 'T' },
+                          { v: '3', label: 'Q' },
+                          { v: '4', label: 'Q' },
+                          { v: '5', label: 'S' },
+                          { v: '6', label: 'S' },
+                        ] as const).map(d => {
+                          const ativo = formBloqueio.dias_semana.includes(d.v)
+                          return (
+                            <button key={d.v} type="button"
+                              onClick={() => setFormBloqueio(p => ({
+                                ...p,
+                                dias_semana: ativo ? p.dias_semana.filter(x => x !== d.v) : [...p.dias_semana, d.v],
+                              }))}
+                              style={{
+                                width: 36, height: 36, borderRadius: 8,
+                                border: ativo ? '1.5px solid #dc2626' : '1.5px solid #e5e7eb',
+                                background: ativo ? '#dc2626' : 'white',
+                                color: ativo ? 'white' : '#6b7280',
+                                fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                              }}>{d.label}</button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Botões */}
+              <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                <button onClick={() => setModalBloqueio(false)}
+                  style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>
+                  Cancelar
+                </button>
+                <button onClick={salvarBloqueio} disabled={salvandoBloqueio}
+                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: salvandoBloqueio ? '#9ca3af' : '#dc2626', color: 'white', fontSize: 14, fontWeight: 700, cursor: salvandoBloqueio ? 'not-allowed' : 'pointer' }}>
+                  {salvandoBloqueio ? 'Bloqueando...' : 'Bloquear'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
