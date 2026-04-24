@@ -58,6 +58,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [carregandoSugestoes, setCarregandoSugestoes] = useState(false)
   const audioContextRef = useRef<AudioContext | null>(null)
   const mixDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null)
+  const dgSocketRef = useRef<WebSocket | null>(null)
+  const dgKeepAliveRef = useRef<any>(null)
   const chatIARef = useRef<HTMLDivElement>(null)
   const mensagensVistasRef = useRef<Set<string>>(new Set())
   const [historicoIAAberto, setHistoricoIAAberto] = useState(false)
@@ -446,45 +448,113 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     chatIARef.current?.scrollTo({ top: chatIARef.current.scrollHeight, behavior: 'smooth' })
   }, [mensagensIA])
 
-  const iniciarGravação = () => {
+  const iniciarGravação = async () => {
     if (!streamRef.current) return
-    // Grava áudio local do médico direto do stream original (sem AudioContext,
-    // que corrompe o WebM em chunks curtos). A voz do paciente é captada pelo
-    // eco natural do alto-falante + fala reformulada pelo médico durante consulta.
     const audioStream = new MediaStream(streamRef.current.getAudioTracks())
 
-    // Escolhe o melhor mimeType suportado pelo browser (alguns não suportam 'audio/webm' puro)
-    const mimeCandidates = [
-      'audio/webm;codecs=opus',
-      'audio/webm',
-      'audio/ogg;codecs=opus',
-      'audio/mp4',
-    ]
+    // Mime pro MediaRecorder (alguns browsers não suportam 'audio/webm' puro)
+    const mimeCandidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus']
     let chosenMime = ''
     for (const m of mimeCandidates) {
       if (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(m)) {
-        chosenMime = m
-        break
+        chosenMime = m; break
       }
     }
-    console.log('[ModoPerfeita] mimeType escolhido:', chosenMime || '(default do browser)')
+    console.log('[ModoPerfeita] mimeType:', chosenMime || '(default)')
 
     const recorder = chosenMime
       ? new MediaRecorder(audioStream, { mimeType: chosenMime })
       : new MediaRecorder(audioStream)
     chunksRef.current = []
-    recorder.ondataavailable = (e) => {
-      // Só acumula chunks pra transcrição final no encerrar()
-      // A transcrição AO VIVO virá via WebSocket Deepgram (Commit 2, pendente)
-      if (e.data.size >= 1000) chunksRef.current.push(e.data)
-    }
-    // Chunk a cada 10s — menos que 6s pode gerar WebM malformado em alguns browsers
-    recorder.start(10000)
     recorderRef.current = recorder
+
+    // ========== Tenta abrir WebSocket Deepgram pra transcrição ao vivo ==========
+    let wsReady = false
+    try {
+      const tokRes = await fetch('/api/deepgram-token', { method: 'POST' })
+      const tokData = await tokRes.json()
+      if (!tokData.access_token) throw new Error('sem token: ' + JSON.stringify(tokData).slice(0, 200))
+
+      // Parâmetros Deepgram — mesmos keyterms/model da /api/transcrever
+      const KEYTERMS = [
+        'losartana','metformina','omeprazol','atenolol','sinvastatina',
+        'amoxicilina','dipirona','ibuprofeno','paracetamol','enalapril',
+        'anlodipino','hidroclorotiazida','levotiroxina','prednisona',
+        'hemograma','creatinina','HbA1c','hipertensão','diabetes',
+      ].map(t => 'keyterm=' + encodeURIComponent(t)).join('&')
+      const wsUrl = 'wss://api.deepgram.com/v1/listen?model=nova-3&language=pt-br&smart_format=true&punctuate=true&interim_results=true&' + KEYTERMS
+
+      const ws = new WebSocket(wsUrl, ['token', tokData.access_token])
+      dgSocketRef.current = ws
+
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('timeout conectando')), 5000)
+        ws.onopen = () => { clearTimeout(timeout); wsReady = true; resolve() }
+        ws.onerror = (err) => { clearTimeout(timeout); reject(err) }
+      })
+      console.log('[ModoPerfeita] WebSocket Deepgram conectado')
+
+      ws.onmessage = (msg) => {
+        try {
+          const data = JSON.parse(msg.data)
+          // Só usamos transcrições "is_final" pra não poluir o buffer com parciais
+          if (data.type === 'Results' && data.is_final) {
+            const alt = data.channel?.alternatives?.[0]
+            const texto = alt?.transcript?.trim()
+            if (texto) {
+              setTranscrição(prev => (prev ? prev + ' ' : '') + texto)
+            }
+          }
+        } catch {}
+      }
+
+      ws.onclose = (ev) => {
+        console.log('[ModoPerfeita] WebSocket fechado:', ev.code, ev.reason)
+        if (dgKeepAliveRef.current) { clearInterval(dgKeepAliveRef.current); dgKeepAliveRef.current = null }
+      }
+
+      // KeepAlive cada 8s — Deepgram dropa se passar 10s sem dados
+      dgKeepAliveRef.current = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'KeepAlive' }))
+        }
+      }, 8000)
+
+    } catch (err: any) {
+      console.warn('[ModoPerfeita] WebSocket falhou, gravação ficará só pra transcrição final:', err?.message || err)
+      wsReady = false
+    }
+
+    // ========== MediaRecorder: envia chunks pro WS E acumula pro encerramento ==========
+    recorder.ondataavailable = (e) => {
+      if (e.data.size < 500) return
+      // Acumula pra transcrição final do encerrar()
+      chunksRef.current.push(e.data)
+      // Manda pro Deepgram ao vivo se o socket está aberto
+      const ws = dgSocketRef.current
+      if (wsReady && ws && ws.readyState === WebSocket.OPEN) {
+        try { ws.send(e.data) } catch (err) { console.error('[ModoPerfeita] ws send error:', err) }
+      }
+    }
+
+    // Chunks de 250ms — streaming suave, Deepgram recomenda 100-500ms
+    recorder.start(250)
     setGravando(true)
   }
 
   const pararGravação = () => {
+    // Envia CloseStream pro Deepgram pra ele finalizar a transcrição
+    const ws = dgSocketRef.current
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      try { ws.send(JSON.stringify({ type: 'CloseStream' })) } catch {}
+      try { ws.close() } catch {}
+    }
+    if (dgKeepAliveRef.current) {
+      clearInterval(dgKeepAliveRef.current)
+      dgKeepAliveRef.current = null
+    }
+    dgSocketRef.current = null
+
     recorderRef.current?.stop()
     setGravando(false)
   }
