@@ -343,7 +343,15 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     if (papelRef.current === 'medico') {
       setProcessando(true)
       await new Promise(res => setTimeout(res, 300))
-      const texto = await transcreverAudio()
+      // Prioriza transcrição que já veio do Modo Perfeita via WebSocket
+      let texto = transcricao?.trim() || ''
+      if (!texto || texto.length < 10) {
+        // Fallback: tenta transcrever chunks acumulados em batch
+        console.log('[encerrar] transcrição vazia, tentando batch...')
+        texto = await transcreverAudio()
+      } else {
+        console.log('[encerrar] reutilizando transcrição do Modo Perfeita:', texto.length, 'chars')
+      }
       if (texto && texto.trim().length > 10) {
         await gerarProntuario(texto)
       } else {
@@ -630,7 +638,9 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       const body = {
         medico_id: med.id,
         paciente_id: sala?.paciente_id || null,
+        agendamento_id: sala?.agendamento_id || null,
         data_consulta: new Date().toISOString(),
+        tipo_consulta: 'teleconsulta',
         transcricao: transcricao || '',
         subjetivo:  campos.subjetivo  ?? pd.subjetivo  ?? '',
         objetivo:   campos.objetivo   ?? pd.objetivo   ?? '',
@@ -757,56 +767,111 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   )
 
   if (tela === 'encerrado') return (
-    <div style={{ minHeight: '100dvh', background: '#0f172a', overflowY: 'auto' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 16px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-            <svg width='26' height='26' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><polyline points='20 6 9 17 4 12'/></svg>
+    <div style={{ minHeight:'100dvh', background:'#0f172a', overflowY:'auto' }}>
+      <div style={{ maxWidth:760, margin:'0 auto', padding:'32px 16px' }}>
+        {/* Header */}
+        <div style={{ textAlign:'center', marginBottom:28 }}>
+          <div style={{ width:56, height:56, borderRadius:'50%', background:'#6043C1', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <h1 style={{ color: 'white', fontSize: 22, fontWeight: 700, margin: '0 0 4px' }}>Consulta encerrada</h1>
-          <p style={{ color: '#64748b', fontSize: 13, margin: 0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}</p>
-          {timer > 0 && <p style={{ color: '#475569', fontSize: 12, margin: '4px 0 0' }}>Duracao: {fmtTimer(timer)}</p>}
+          <h1 style={{ color:'white', fontSize:22, fontWeight:700, margin:'0 0 4px' }}>Consulta encerrada</h1>
+          <p style={{ color:'#64748b', fontSize:13, margin:0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}</p>
+          {timer > 0 && <p style={{ color:'#475569', fontSize:12, margin:'4px 0 0' }}>Duração: {fmtTimer(timer)}</p>}
         </div>
-        {transcricaoFinal ? (
-          <div style={{ background: '#1e293b', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid #334155' }}>
-            <h2 style={{ color: '#60a5fa', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Transcrição da consulta</h2>
-            <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{transcricaoFinal}</p>
-          </div>
-        ) : (
-          <div style={{ background: '#1e293b', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #334155', textAlign: 'center' }}>
-            <p style={{ color: '#64748b', fontSize: 13, margin: 0 }}>Processando transcricao...</p>
+
+        {/* Processando */}
+        {processando && !prontuarioData && (
+          <div style={{ background:'#1e293b', borderRadius:12, padding:24, marginBottom:16, border:'1px solid #334155', textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:12 }}>
+            <div style={{ width:20, height:20, borderRadius:'50%', border:'2px solid rgba(234,179,8,0.4)', borderTopColor:'#eab308', animation:'spin 0.8s linear infinite' }}/>
+            <p style={{ color:'#fbbf24', fontSize:14, margin:0, fontWeight:600 }}>Gerando prontuário com IA...</p>
           </div>
         )}
-        {prontuarioFinal && (
-          <div style={{ background: '#1e293b', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid #334155' }}>
-            <h2 style={{ color: '#34d399', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Prontuário gerado</h2>
-            {['subjetivo','objetivo','avaliacao','plano'].map((k: string) => (prontuarioFinal as any)[k] && (
-              <div key={k} style={{ marginBottom: 14 }}>
-                <p style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', margin: '0 0 4px' }}>{k}</p>
-                <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.6, margin: 0 }}>{(prontuarioFinal as any)[k]}</p>
-              </div>
-            ))}
+
+        {/* Transcrição */}
+        {transcricao ? (
+          <div style={{ background:'#1e293b', borderRadius:12, padding:20, marginBottom:16, border:'1px solid #334155' }}>
+            <h2 style={{ color:'#60a5fa', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.08em', margin:'0 0 12px' }}>Transcrição da consulta</h2>
+            <p style={{ color:'#e2e8f0', fontSize:14, lineHeight:1.7, margin:0, whiteSpace:'pre-wrap' as const, maxHeight:200, overflow:'auto' }}>{transcricao}</p>
+          </div>
+        ) : !processando && (
+          <div style={{ background:'#1e293b', borderRadius:12, padding:16, marginBottom:16, border:'1px solid #334155', textAlign:'center' }}>
+            <p style={{ color:'#64748b', fontSize:13, margin:0 }}>Nenhuma transcrição disponível (Modo Perfeita não foi ativado)</p>
           </div>
         )}
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 }}>
+
+        {/* Prontuário SOAP editável */}
+        {prontuarioData && (() => {
+          const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
+          return (
+            <div style={{ background:'#1e293b', borderRadius:12, padding:20, marginBottom:16, border:'1px solid #334155' }}>
+              <h2 style={{ color:'#34d399', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.08em', margin:'0 0 16px' }}>Prontuário gerado pela IA — edite antes de salvar</h2>
+              {(['subjetivo','objetivo','avaliacao','plano'] as const).map(campo => {
+                const val = pd[campo] ?? ''
+                if (!val) return null
+                const label = campo === 'subjetivo' ? 'S · Subjetivo' : campo === 'objetivo' ? 'O · Objetivo' : campo === 'avaliacao' ? 'A · Avaliação / CID' : 'P · Plano'
+                return (
+                  <div key={campo} style={{ marginBottom:12 }}>
+                    <p style={{ color:'#94a3b8', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 4px', letterSpacing:'0.05em' }}>{label}</p>
+                    <textarea defaultValue={val} rows={3} onChange={e => { camposRef.current[campo] = e.target.value }}
+                      style={{ width:'100%', padding:'10px 12px', fontSize:13, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
+                  </div>
+                )
+              })}
+              {pd.receita && (
+                <div style={{ marginBottom:8 }}>
+                  <p style={{ color:'#94a3b8', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 4px', letterSpacing:'0.05em' }}>Receita / Prescrição</p>
+                  <textarea defaultValue={pd.receita} rows={3} onChange={e => { camposRef.current.receita = e.target.value }}
+                    style={{ width:'100%', padding:'10px 12px', fontSize:13, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
+                </div>
+              )}
+              {Array.isArray(pd.cids) && pd.cids.length > 0 && (
+                <div style={{ marginBottom:8 }}>
+                  <p style={{ color:'#94a3b8', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 6px', letterSpacing:'0.05em' }}>CIDs sugeridos</p>
+                  <div style={{ display:'flex', flexWrap:'wrap' as const, gap:6 }}>
+                    {pd.cids.map((cid: any, i: number) => (
+                      <span key={i} style={{ fontSize:11, padding:'5px 10px', borderRadius:6, background:'#334155', color:'#e2e8f0', border:'1px solid #475569' }}>
+                        {cid.codigo} — {cid.descricao}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })()}
+
+        {/* Botões de ação */}
+        <div style={{ display:'flex', gap:10, flexWrap:'wrap' as const, justifyContent:'center', marginTop:8 }}>
+          {prontuarioData && (
+            <button onClick={salvarProntuario} disabled={salvando || salvado}
+              style={{ padding:'12px 24px', borderRadius:9, border:'none', background: salvado ? '#14532d' : '#6043C1', color:'white', fontSize:14, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', gap:8 }}>
+              {salvado
+                ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Salvo! Abrindo histórico...</>
+                : salvando
+                ? <><div style={{ width:14, height:14, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'white', animation:'spin 0.8s linear infinite' }}/>Salvando...</>
+                : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Salvar no histórico</>
+              }
+            </button>
+          )}
           <button onClick={() => window.location.href = '/agenda'}
-            style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            style={{ padding:'10px 20px', borderRadius:8, border:'1px solid #334155', background:'transparent', color:'#94a3b8', fontSize:14, cursor:'pointer' }}>
             Agendar retorno
           </button>
-          <button onClick={() => window.location.href = '/histórico'}
-            style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => window.location.href = '/historico'}
+            style={{ padding:'10px 20px', borderRadius:8, border:'1px solid #334155', background:'transparent', color:'#94a3b8', fontSize:14, cursor:'pointer' }}>
             Ver histórico
           </button>
           <button onClick={() => window.location.href = '/teleconsulta'}
-            style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #334155', background: 'transparent', color: '#94a3b8', fontSize: 14, cursor: 'pointer' }}>
+            style={{ padding:'10px 20px', borderRadius:8, border:'1px solid #334155', background:'transparent', color:'#94a3b8', fontSize:14, cursor:'pointer' }}>
             Nova consulta
           </button>
         </div>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 
-  if (tela === 'precall') return (
+    if (tela === 'precall') return (
     <div style={{ minHeight: '100dvh', background: '#F5F5F5', display: 'flex', flexDirection: 'column' }}>
       {/* Header MedIA */}
       <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
