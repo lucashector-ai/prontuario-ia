@@ -475,14 +475,9 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       const tokData = await tokRes.json()
       if (!tokData.access_token) throw new Error('sem token: ' + JSON.stringify(tokData).slice(0, 200))
 
-      // Parâmetros Deepgram — mesmos keyterms/model da /api/transcrever
-      const KEYTERMS = [
-        'losartana','metformina','omeprazol','atenolol','sinvastatina',
-        'amoxicilina','dipirona','ibuprofeno','paracetamol','enalapril',
-        'anlodipino','hidroclorotiazida','levotiroxina','prednisona',
-        'hemograma','creatinina','HbA1c','hipertensão','diabetes',
-      ].map(t => 'keyterm=' + encodeURIComponent(t)).join('&')
-      const wsUrl = 'wss://api.deepgram.com/v1/listen?model=nova-3&language=pt-br&smart_format=true&punctuate=true&interim_results=true&' + KEYTERMS
+      // Parâmetros streaming — nova-2 tem streaming estável em pt-br; keyterms (nova-3)
+      // podem ser incompatíveis com streaming, então omitimos.
+      const wsUrl = 'wss://api.deepgram.com/v1/listen?model=nova-2&language=pt-BR&smart_format=true&punctuate=true&interim_results=true&encoding=opus'
 
       const ws = new WebSocket(wsUrl, ['token', tokData.access_token])
       dgSocketRef.current = ws
