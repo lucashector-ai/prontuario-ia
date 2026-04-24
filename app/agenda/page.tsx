@@ -65,6 +65,23 @@ const fmtMesAno = (d: Date) =>
 const fmtDia = (d: Date) =>
   d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
 
+function coresDerivadas(hex: string) {
+  const base = hex || '#6043C1'
+  // Remove # e converte pra RGB
+  const h = base.replace('#', '')
+  const r = parseInt(h.substring(0, 2), 16)
+  const g = parseInt(h.substring(2, 4), 16)
+  const b = parseInt(h.substring(4, 6), 16)
+  // Fundo: cor base com transparencia alta (hex alpha 1A = ~10%)
+  const bg = base + '1A'
+  // Texto: escurecer 30% para contraste
+  const darken = (v: number) => Math.max(0, Math.floor(v * 0.5))
+  const text = '#' + darken(r).toString(16).padStart(2, '0') + darken(g).toString(16).padStart(2, '0') + darken(b).toString(16).padStart(2, '0')
+  // Borda: cor base com alpha moderado
+  const border = base + '4D' // ~30%
+  return { bg, text, border, dot: base }
+}
+
 const ehAniversario = (nascStr: string | null | undefined, alvo: Date) => {
   if (!nascStr) return false
   const n = new Date(nascStr)
@@ -79,6 +96,7 @@ export default function Agenda() {
   const [medico, setMedico] = useState<any>(null)
   const [pacientes, setPacientes] = useState<any[]>([])
   const [agendamentos, setAgendamentos] = useState<any[]>([])
+  const [mapaCoresMedicos, setMapaCoresMedicos] = useState<Record<string, string>>({})
 
   const [semana, setSemana] = useState<Date>(() => new Date(0))
   const [diaSelecionado, setDiaSelecionado] = useState<Date>(() => new Date(0))
@@ -148,10 +166,17 @@ export default function Agenda() {
       const admin = JSON.parse(ca)
       if (admin.clinica_id) {
         const { data: meds } = await supabase
-          .from('medicos').select('id').eq('clinica_id', admin.clinica_id).eq('ativo', true)
+          .from('medicos').select('id, cor').eq('clinica_id', admin.clinica_id).eq('ativo', true)
         medicoIds = (meds || []).map((m: any) => m.id)
-        if (medicoIds.length === 0) medicoIds = [medicoId] // fallback
+        const mapa: Record<string, string> = {}
+        ;(meds || []).forEach((m: any) => { mapa[m.id] = m.cor || '#6043C1' })
+        setMapaCoresMedicos(mapa)
+        if (medicoIds.length === 0) medicoIds = [medicoId]
       }
+    } else {
+      // Medico logado sozinho: busca sua propria cor
+      const { data: med } = await supabase.from('medicos').select('id, cor').eq('id', medicoId).maybeSingle()
+      if (med) setMapaCoresMedicos({ [med.id]: (med as any).cor || '#6043C1' })
     }
 
     const [{ data: pacs }, { data: ags }] = await Promise.all([
@@ -512,6 +537,7 @@ export default function Agenda() {
                 })}
                 {getAgsDia(dia).map(ag => {
                   const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
+                  const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || '#6043C1')
                   const d = new Date(ag.data_hora)
                   const idx = toSlotIdx(d)
                   const dur = Number(ag.duracao) || 30
@@ -519,7 +545,7 @@ export default function Agenda() {
                   const cancelado = ag.status === 'cancelado'
                   return (
                     <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
-                      style={{ position: 'absolute', left: 3, right: 3, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: cancelado ? '#f3f4f6' : tipo.bg, border: `1px solid ${cancelado ? '#d1d5db' : tipo.border}`, borderLeft: `3px solid ${cancelado ? '#9ca3af' : tipo.dot}`, borderRadius: 6, padding: '3px 6px', cursor: 'pointer', zIndex: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', opacity: cancelado ? 0.6 : 1, textDecoration: cancelado ? 'line-through' : 'none' }}>
+                      style={{ position: 'absolute', left: 3, right: 3, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: cancelado ? '#f3f4f6' : corMed.bg, border: `1px solid ${cancelado ? '#d1d5db' : corMed.border}`, borderLeft: `3px solid ${cancelado ? '#9ca3af' : corMed.dot}`, borderRadius: 6, padding: '3px 6px', cursor: 'pointer', zIndex: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', opacity: cancelado ? 0.6 : 1, textDecoration: cancelado ? 'line-through' : 'none' }}>
                       {/* Indicadores no canto superior direito */}
                       {(ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) && (
                         <div style={{ position: 'absolute', top: 3, right: 3, display: 'flex', flexDirection: 'column' as const, gap: 2, zIndex: 2 }}>
@@ -540,12 +566,12 @@ export default function Agenda() {
                           )}
                         </div>
                       )}
-                      <p style={{ fontSize: 11, fontWeight: 700, color: tipo.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: (ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) ? 16 : 0 }}>{pacNome}</p>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: corMed.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: (ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) ? 16 : 0 }}>{pacNome}</p>
                       {durToPx(dur) > 28 && (
-                        <p style={{ fontSize: 10, color: tipo.text, margin: '1px 0 0', opacity: 0.75, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ag.motivo || tipo.label}</p>
+                        <p style={{ fontSize: 10, color: corMed.text, margin: '1px 0 0', opacity: 0.75, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ag.motivo || tipo.label}</p>
                       )}
                       {durToPx(dur) > 44 && (
-                        <p style={{ fontSize: 9, color: tipo.text, margin: 'auto 0 0', opacity: 0.65, fontWeight: 600 }}>
+                        <p style={{ fontSize: 9, color: corMed.text, margin: 'auto 0 0', opacity: 0.65, fontWeight: 600 }}>
                           {d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} – {new Date(d.getTime() + dur * 60000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       )}
@@ -589,9 +615,10 @@ export default function Agenda() {
                 </div>
                 {ags.slice(0, 2).map(ag => {
                   const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
+                  const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || '#6043C1')
                   return (
                     <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
-                      style={{ fontSize: 10, padding: '2px 5px', borderRadius: 4, background: tipo.bg, color: tipo.text, borderLeft: `2px solid ${tipo.dot}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                      style={{ fontSize: 10, padding: '2px 5px', borderRadius: 4, background: corMed.bg, color: corMed.text, borderLeft: `2px solid ${corMed.dot}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
                       {new Date(ag.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} {ag.pacientes?.nome || 'Paciente'}
                     </div>
                   )
@@ -643,13 +670,14 @@ export default function Agenda() {
               })}
               {ags.map(ag => {
                 const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
+                const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || '#6043C1')
                 const d = new Date(ag.data_hora)
                 const idx = toSlotIdx(d)
                 const dur = Number(ag.duracao) || 30
                 const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Paciente'
                 return (
                   <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
-                    style={{ position: 'absolute', left: 8, right: 8, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: tipo.bg, border: `1px solid ${tipo.border}`, borderLeft: `3px solid ${tipo.dot}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', zIndex: 10, overflow: 'hidden' }}>
+                    style={{ position: 'absolute', left: 8, right: 8, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: corMed.bg, border: `1px solid ${corMed.border}`, borderLeft: `3px solid ${corMed.dot}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', zIndex: 10, overflow: 'hidden' }}>
                     {/* Indicadores no canto superior direito */}
                     {(ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) && (
                       <div style={{ position: 'absolute', top: 6, right: 8, display: 'flex', gap: 4, zIndex: 2 }}>
@@ -669,8 +697,8 @@ export default function Agenda() {
                         ) : null}
                       </div>
                     )}
-                    <p style={{ fontSize: 13, fontWeight: 700, color: tipo.text, margin: 0, paddingRight: (ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) ? 48 : 0 }}>{pacNome}</p>
-                    <p style={{ fontSize: 11, color: tipo.text, margin: '2px 0 0', opacity: 0.75 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: corMed.text, margin: 0, paddingRight: (ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) ? 48 : 0 }}>{pacNome}</p>
+                    <p style={{ fontSize: 11, color: corMed.text, margin: '2px 0 0', opacity: 0.75 }}>
                       {d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {ag.motivo || tipo.label}
                     </p>
                   </div>
