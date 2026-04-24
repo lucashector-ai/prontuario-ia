@@ -75,8 +75,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   useEffect(() => {
     const med = localStorage.getItem('medico')
-    papelRef.current = med ? 'medico' : 'paciente'
-    setIsMedico(!!med)
+    const adm = localStorage.getItem('clinica_admin')
+    const ehMedico = !!(med || adm)
+    papelRef.current = ehMedico ? 'medico' : 'paciente'
+    setIsMedico(ehMedico)
     carregarSala()
     return () => pararEspera()
   }, [sala_id])
