@@ -473,26 +473,52 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       audioStream = new MediaStream(streamRef.current.getAudioTracks())
     }
 
-    const recorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' })
+    // Escolhe o melhor mimeType suportado pelo browser (alguns não suportam 'audio/webm' puro)
+    const mimeCandidates = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/ogg;codecs=opus',
+      'audio/mp4',
+    ]
+    let chosenMime = ''
+    for (const m of mimeCandidates) {
+      if (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(m)) {
+        chosenMime = m
+        break
+      }
+    }
+    console.log('[ModoPerfeita] mimeType escolhido:', chosenMime || '(default do browser)')
+
+    const recorder = chosenMime
+      ? new MediaRecorder(audioStream, { mimeType: chosenMime })
+      : new MediaRecorder(audioStream)
     chunksRef.current = []
     recorder.ondataavailable = async (e) => {
-      if (e.data.size < 1000) return
+      if (e.data.size < 1000) {
+        console.log('[ModoPerfeita] chunk muito pequeno, ignorado:', e.data.size)
+        return
+      }
       chunksRef.current.push(e.data)
-      // Transcrição ao vivo: envia cada chunk individualmente
+      // Usa o mimeType real que o recorder escolheu pro File (senão default)
+      const realMime = recorder.mimeType || e.data.type || 'audio/webm'
+      console.log('[ModoPerfeita] enviando chunk:', { size: e.data.size, type: e.data.type, realMime })
       try {
+        const ext = realMime.includes('mp4') ? 'mp4' : realMime.includes('ogg') ? 'ogg' : 'webm'
         const fd = new FormData()
-        fd.append('audio', new File([e.data], 'chunk.webm', { type: 'audio/webm' }))
+        fd.append('audio', new File([e.data], 'chunk.' + ext, { type: realMime }))
         const r = await fetch('/api/transcrever', { method: 'POST', body: fd })
         const d = await r.json()
         if (d.texto) {
           setTranscrição(prev => (prev ? prev + ' ' : '') + d.texto)
+        } else if (d.error) {
+          console.warn('[ModoPerfeita] transcrição vazia, erro da API:', d.error.slice(0, 200))
         }
       } catch (err) {
-        console.error('Chunk transcription failed:', err)
+        console.error('[ModoPerfeita] chunk transcription failed:', err)
       }
     }
-    // Chunk a cada 6s para transcrição quase em tempo real
-    recorder.start(6000)
+    // Chunk a cada 10s — menos que 6s pode gerar WebM malformado em alguns browsers
+    recorder.start(10000)
     recorderRef.current = recorder
     setGravando(true)
   }

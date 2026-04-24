@@ -20,8 +20,16 @@ export async function POST(req: NextRequest) {
 
     const params = `model=nova-3&language=pt-br&smart_format=true&punctuate=true&${KEYTERMS}`
 
-    // Usa o mime-type real do arquivo — browser grava em webm/opus, API antes mandava 'audio/wav' errado
+    // Usa o mime-type real do arquivo — pode ser 'audio/webm;codecs=opus' etc
     const mimeType = audioFile.type || 'audio/webm'
+    console.log('[transcrever] chunk recebido:', {
+      size: audioFile.size,
+      type: audioFile.type,
+      name: audioFile.name,
+      mimeEnviado: mimeType,
+    })
+
+    const buf = await audioFile.arrayBuffer()
 
     const res = await fetch(`https://api.deepgram.com/v1/listen?${params}`, {
       method: 'POST',
@@ -29,7 +37,7 @@ export async function POST(req: NextRequest) {
         'Authorization': `Token ${DEEPGRAM_KEY}`,
         'Content-Type': mimeType,
       },
-      body: await audioFile.arrayBuffer(),
+      body: buf,
     })
 
     if (!res.ok) {
