@@ -487,7 +487,7 @@ export default function Agenda() {
         </div>
         <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', minHeight: `${TOTAL_SLOTS * SLOT_PX}px`, position: 'relative' }}>
-            <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5, paddingTop: 28, paddingBottom: 28 }}>
+            <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5, paddingTop: 12, paddingBottom: 12 }}>
               {Array.from({ length: HORA_FIM - HORA_INI }, (_, i) => (
                 <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: '1px solid #f3f4f6' }}>
                   <span style={{ position: 'absolute', top: -7, right: 8, fontSize: 10, color: '#9ca3af', fontWeight: 600, background: 'white', padding: '0 2px' }}>
@@ -497,7 +497,7 @@ export default function Agenda() {
               ))}
             </div>
             {diasSemana.map((dia, di) => (
-              <div key={di} style={{ borderLeft: '1px solid #f3f4f6', background: isHoje(dia) ? '#faf8ff' : 'white', position: 'relative', paddingTop: 28, paddingBottom: 28 }}>
+              <div key={di} style={{ borderLeft: '1px solid #f3f4f6', background: isHoje(dia) ? '#faf8ff' : 'white', position: 'relative', paddingTop: 12, paddingBottom: 12 }}>
                 {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
                   const isHoraCheia = i % 4 === 0
                   const isMeia = i % 4 === 2
@@ -607,7 +607,7 @@ export default function Agenda() {
                 </div>
               ))}
             </div>
-            <div style={{ borderLeft: '1px solid #f3f4f6', position: 'relative', paddingTop: 28, paddingBottom: 28 }}>
+            <div style={{ borderLeft: '1px solid #f3f4f6', position: 'relative', paddingTop: 12, paddingBottom: 12 }}>
               {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
                 const isHoraCheia = i % 4 === 0
                 const isMeia = i % 4 === 2
