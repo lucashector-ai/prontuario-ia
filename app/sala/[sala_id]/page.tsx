@@ -492,15 +492,20 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       ws.onmessage = (msg) => {
         try {
           const data = JSON.parse(msg.data)
-          // Só usamos transcrições "is_final" pra não poluir o buffer com parciais
-          if (data.type === 'Results' && data.is_final) {
+          // Log TODAS as mensagens pra diagnóstico
+          if (data.type === 'Results') {
             const alt = data.channel?.alternatives?.[0]
             const texto = alt?.transcript?.trim()
-            if (texto) {
+            console.log('[DG]', data.is_final ? 'FINAL' : 'interim', '|', texto || '(vazio)')
+            if (data.is_final && texto) {
               setTranscrição(prev => (prev ? prev + ' ' : '') + texto)
             }
+          } else {
+            console.log('[DG] msg tipo:', data.type, data)
           }
-        } catch {}
+        } catch (err) {
+          console.warn('[DG] parse erro:', msg.data)
+        }
       }
 
       ws.onclose = (ev) => {
@@ -521,14 +526,22 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     }
 
     // ========== MediaRecorder: envia chunks pro WS E acumula pro encerramento ==========
+    let chunkCount = 0
     recorder.ondataavailable = (e) => {
-      if (e.data.size < 500) return
-      // Acumula pra transcrição final do encerrar()
+      if (e.data.size < 500) {
+        console.log('[DG] chunk vazio ignorado:', e.data.size)
+        return
+      }
+      chunkCount++
+      if (chunkCount <= 3 || chunkCount % 20 === 0) {
+        console.log('[DG] chunk #' + chunkCount, 'tamanho:', e.data.size, 'bytes')
+      }
       chunksRef.current.push(e.data)
-      // Manda pro Deepgram ao vivo se o socket está aberto
       const ws = dgSocketRef.current
       if (wsReady && ws && ws.readyState === WebSocket.OPEN) {
-        try { ws.send(e.data) } catch (err) { console.error('[ModoPerfeita] ws send error:', err) }
+        try { ws.send(e.data) } catch (err) { console.error('[DG] ws send error:', err) }
+      } else {
+        console.warn('[DG] WS nao aberto, chunk perdido. State:', ws?.readyState)
       }
     }
 
