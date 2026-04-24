@@ -473,29 +473,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       ? new MediaRecorder(audioStream, { mimeType: chosenMime })
       : new MediaRecorder(audioStream)
     chunksRef.current = []
-    recorder.ondataavailable = async (e) => {
-      if (e.data.size < 1000) {
-        console.log('[ModoPerfeita] chunk muito pequeno, ignorado:', e.data.size)
-        return
-      }
-      chunksRef.current.push(e.data)
-      // Usa o mimeType real que o recorder escolheu pro File (senão default)
-      const realMime = recorder.mimeType || e.data.type || 'audio/webm'
-      console.log('[ModoPerfeita] enviando chunk:', { size: e.data.size, type: e.data.type, realMime })
-      try {
-        const ext = realMime.includes('mp4') ? 'mp4' : realMime.includes('ogg') ? 'ogg' : 'webm'
-        const fd = new FormData()
-        fd.append('audio', new File([e.data], 'chunk.' + ext, { type: realMime }))
-        const r = await fetch('/api/transcrever', { method: 'POST', body: fd })
-        const d = await r.json()
-        if (d.texto) {
-          setTranscrição(prev => (prev ? prev + ' ' : '') + d.texto)
-        } else if (d.error) {
-          console.warn('[ModoPerfeita] transcrição vazia, erro da API:', d.error.slice(0, 200))
-        }
-      } catch (err) {
-        console.error('[ModoPerfeita] chunk transcription failed:', err)
-      }
+    recorder.ondataavailable = (e) => {
+      // Só acumula chunks pra transcrição final no encerrar()
+      // A transcrição AO VIVO virá via WebSocket Deepgram (Commit 2, pendente)
+      if (e.data.size >= 1000) chunksRef.current.push(e.data)
     }
     // Chunk a cada 10s — menos que 6s pode gerar WebM malformado em alguns browsers
     recorder.start(10000)
