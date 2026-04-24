@@ -195,16 +195,20 @@ export default function Agenda() {
       if (med) setMapaCoresMedicos({ [med.id]: (med as any).cor || '#6043C1' })
     }
 
-    const [{ data: pacs }, { data: ags }, { data: meds }, { data: blqs }] = await Promise.all([
+    const clinicaIdLocal = JSON.parse(localStorage.getItem('clinica_admin') || 'null')?.clinica_id
+      || JSON.parse(localStorage.getItem('medico') || 'null')?.clinica_id
+
+    const [pacsR, agsR, medsR, blqsResp] = await Promise.all([
       supabase.from('pacientes').select('id, nome, data_nascimento, telefone, medico_id').in('medico_id', medicoIds).order('nome'),
       supabase.from('agendamentos').select(`*, pacientes(nome, data_nascimento, telefone)`).in('medico_id', medicoIds).order('data_hora'),
       supabase.from('medicos').select('id, nome, cor').in('id', medicoIds).eq('ativo', true).neq('cargo', 'recepcionista').order('nome'),
-      supabase.from('bloqueios_agenda').select('*').in('medico_id', medicoIds).order('data_inicio'),
+      // Bloqueios via API (service_role, sem RLS)
+      fetch('/api/bloqueios?' + (clinicaIdLocal ? 'clinica_id=' + clinicaIdLocal : 'medico_id=' + medicoId)).then(r => r.json()),
     ])
-    setPacientes(pacs || [])
-    setAgendamentos(ags || [])
-    setMedicosClinica(meds || [])
-    setBloqueios(blqs || [])
+    setPacientes(pacsR.data || [])
+    setAgendamentos(agsR.data || [])
+    setMedicosClinica(medsR.data || [])
+    setBloqueios(blqsResp.bloqueios || [])
   }
 
   const agendamentosFiltrados = useMemo(() => {
