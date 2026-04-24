@@ -60,6 +60,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const mixDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null)
   const chatIARef = useRef<HTMLDivElement>(null)
   const mensagensVistasRef = useRef<Set<string>>(new Set())
+  const [historicoIAAberto, setHistoricoIAAberto] = useState(false)
+  const [toastsIA, setToastsIA] = useState<{id:string; tipo:'foco'|'sugestao'|'alerta'; texto:string; hora:string}[]>([])
   const [salvando, setSalvando] = useState(false)
   const [salvado, setSalvado] = useState(false)
   const camposRef = useRef<Record<string, string>>({})
@@ -383,14 +385,22 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           novas.push({ tipo: 'alerta', texto: a, hora })
         }
       }
-      if (novas.length > 0) setMensagensIA(prev => [...prev, ...novas])
+      if (novas.length > 0) {
+        setMensagensIA(prev => [...prev, ...novas])
+        // Toasts flutuantes: mostra as novas por 20s no canto, no máximo 4 simultâneas
+        const novoToasts = novas.map(m => ({ ...m, id: Date.now() + '_' + Math.random().toString(36).slice(-4) }))
+        setToastsIA(prev => [...prev, ...novoToasts].slice(-4))
+        novoToasts.forEach(t => {
+          setTimeout(() => setToastsIA(prev => prev.filter(x => x.id !== t.id)), 20000)
+        })
+      }
     } catch (e) { console.error('Sugestões IA:', e) }
     finally { setCarregandoSugestoes(false) }
   }
 
   useEffect(() => {
     if (!modoPerfeita || !transcricao || transcricao.trim().length < 50) return
-    const timer = setTimeout(() => buscarSugestoes(transcricao), 3000)
+    const timer = setTimeout(() => buscarSugestoes(transcricao), 500)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transcricao, modoPerfeita])
@@ -453,8 +463,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         console.error('Chunk transcription failed:', err)
       }
     }
-    // Chunk a cada 15s para transcrição ao vivo
-    recorder.start(15000)
+    // Chunk a cada 6s para transcrição quase em tempo real
+    recorder.start(6000)
     recorderRef.current = recorder
     setGravando(true)
   }
@@ -913,48 +923,73 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           )}
 
           {/* Botao flutuante do chat */}
-          {tela === 'chamada' && modoPerfeita && isMedico && (
-            <div style={{ position: 'fixed', top: 70, right: 16, bottom: 90, width: 300, background: 'rgba(15,23,42,0.94)', borderRadius: 14, border: '1px solid rgba(96,67,193,0.4)', zIndex: 40, backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column' }}>
-              {/* Header fixo */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: '1px solid rgba(148,163,184,0.18)' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2">
-                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/>
-                </svg>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: '#c4b5fd', letterSpacing: '0.03em', margin: 0 }}>MODO PERFEITA</p>
-                  <p style={{ fontSize: 10, color: '#64748b', margin: '1px 0 0' }}>
-                    {carregandoSugestoes ? 'Analisando...' : mensagensIA.length > 0 ? mensagensIA.length + ' insights' : 'Aguardando conversa'}
-                  </p>
-                </div>
-                {carregandoSugestoes && (
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid rgba(196,181,253,0.3)', borderTopColor: '#c4b5fd', animation: 'spin 0.8s linear infinite' }}/>
-                )}
-              </div>
-
-              {/* Chat scrollável */}
-              <div ref={chatIARef} style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {mensagensIA.length === 0 && (
-                  <p style={{ fontSize: 11, color: '#64748b', margin: 0, lineHeight: 1.5, fontStyle: 'italic', textAlign: 'center', marginTop: 20 }}>
-                    A IA vai analisar a conversa e enviar sugestões aqui. ~30s de diálogo pra começar.
-                  </p>
-                )}
-                {mensagensIA.map((m, i) => {
-                  const cfg = m.tipo === 'foco'
-                    ? { icon: '🎯', label: 'Foco', bg: 'rgba(59,130,246,0.14)', border: 'rgba(59,130,246,0.3)', cor: '#93c5fd' }
-                    : m.tipo === 'alerta'
-                    ? { icon: '⚠️', label: 'Alerta', bg: 'rgba(220,38,38,0.14)', border: 'rgba(220,38,38,0.35)', cor: '#fca5a5' }
-                    : { icon: '💡', label: 'Sugestão', bg: 'rgba(96,67,193,0.14)', border: 'rgba(96,67,193,0.3)', cor: '#c4b5fd' }
-                  return (
-                    <div key={i} style={{ background: cfg.bg, border: '1px solid ' + cfg.border, borderRadius: 10, padding: '8px 10px', animation: 'slideIn 0.3s ease-out' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                        <span style={{ fontSize: 11 }}>{cfg.icon}</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: cfg.cor, letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>{cfg.label}</span>
-                        <span style={{ fontSize: 9, color: '#64748b', marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' as const }}>{m.hora}</span>
-                      </div>
-                      <p style={{ fontSize: 12, color: '#e2e8f0', margin: 0, lineHeight: 1.45 }}>{m.texto}</p>
+          {/* MODO PERFEITA: Toasts flutuantes no canto superior direito */}
+          {tela === 'chamada' && modoPerfeita && isMedico && toastsIA.length > 0 && (
+            <div style={{ position: 'fixed', top: 70, right: 16, width: 300, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 45, pointerEvents: 'none' }}>
+              {toastsIA.map(t => {
+                const cfg = t.tipo === 'foco'
+                  ? { icon: '🎯', label: 'Foco', bg: 'rgba(59,130,246,0.95)', cor: 'white' }
+                  : t.tipo === 'alerta'
+                  ? { icon: '⚠️', label: 'Alerta', bg: 'rgba(220,38,38,0.95)', cor: 'white' }
+                  : { icon: '💡', label: 'Sugestão', bg: 'rgba(96,67,193,0.95)', cor: 'white' }
+                return (
+                  <div key={t.id} style={{ background: cfg.bg, borderRadius: 12, padding: '10px 14px', backdropFilter: 'blur(8px)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)', animation: 'slideInToast 0.3s ease-out', pointerEvents: 'auto' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                      <span style={{ fontSize: 12 }}>{cfg.icon}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: cfg.cor, letterSpacing: '0.04em', textTransform: 'uppercase' as const, opacity: 0.9 }}>{cfg.label}</span>
+                      <span style={{ fontSize: 9, color: cfg.cor, marginLeft: 'auto', opacity: 0.75, fontVariantNumeric: 'tabular-nums' as const }}>{t.hora}</span>
                     </div>
-                  )
-                })}
+                    <p style={{ fontSize: 13, color: cfg.cor, margin: 0, lineHeight: 1.4, fontWeight: 500 }}>{t.texto}</p>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* MODO PERFEITA: Botão de histórico flutuante (quando tem pelo menos 1 msg) */}
+          {tela === 'chamada' && modoPerfeita && isMedico && mensagensIA.length > 0 && (
+            <button onClick={() => setHistoricoIAAberto(true)}
+              style={{ position: 'fixed', top: 70, right: 16 + (toastsIA.length > 0 ? 308 : 0), background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(96,67,193,0.4)', color: '#c4b5fd', padding: '6px 10px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, zIndex: 46, backdropFilter: 'blur(8px)', transition: 'right 0.3s' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              {mensagensIA.length} insights
+            </button>
+          )}
+
+          {/* MODO PERFEITA: Modal de histórico completo */}
+          {historicoIAAberto && (
+            <div onClick={() => setHistoricoIAAberto(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+              <div onClick={e => e.stopPropagation()} style={{ background: 'rgba(15,23,42,0.98)', borderRadius: 16, border: '1px solid rgba(96,67,193,0.4)', width: 480, maxWidth: '100%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderBottom: '1px solid rgba(148,163,184,0.18)' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2">
+                    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/>
+                  </svg>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#c4b5fd', margin: 0 }}>Modo Perfeita — Histórico</p>
+                    <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0' }}>{mensagensIA.length} insights nesta consulta</p>
+                  </div>
+                  <button onClick={() => setHistoricoIAAberto(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4, display: 'flex' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+                <div ref={chatIARef} style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {mensagensIA.map((m, i) => {
+                    const cfg = m.tipo === 'foco'
+                      ? { icon: '🎯', label: 'Foco', bg: 'rgba(59,130,246,0.14)', border: 'rgba(59,130,246,0.3)', cor: '#93c5fd' }
+                      : m.tipo === 'alerta'
+                      ? { icon: '⚠️', label: 'Alerta', bg: 'rgba(220,38,38,0.14)', border: 'rgba(220,38,38,0.35)', cor: '#fca5a5' }
+                      : { icon: '💡', label: 'Sugestão', bg: 'rgba(96,67,193,0.14)', border: 'rgba(96,67,193,0.3)', cor: '#c4b5fd' }
+                    return (
+                      <div key={i} style={{ background: cfg.bg, border: '1px solid ' + cfg.border, borderRadius: 10, padding: '10px 12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <span style={{ fontSize: 11 }}>{cfg.icon}</span>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: cfg.cor, letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>{cfg.label}</span>
+                          <span style={{ fontSize: 9, color: '#64748b', marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' as const }}>{m.hora}</span>
+                        </div>
+                        <p style={{ fontSize: 13, color: '#e2e8f0', margin: 0, lineHeight: 1.45 }}>{m.texto}</p>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           )}
@@ -1163,7 +1198,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInToast { from { opacity: 0; transform: translateX(30px) } to { opacity: 1; transform: translateX(0) } } @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background: #0f172a; overflow: hidden; }
