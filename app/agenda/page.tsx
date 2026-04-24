@@ -501,10 +501,11 @@ export default function Agenda() {
                 {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
                   const isHoraCheia = i % 4 === 0
                   const isMeia = i % 4 === 2
+                  const isUltimo = i === (HORA_FIM - HORA_INI) * 4 - 1
                   return (
                     <div key={i}
                       onClick={() => { const d = new Date(dia); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
-                      style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
+                      style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : 'none', borderBottom: isUltimo ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
                       onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
                       onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
                   )
@@ -611,10 +612,11 @@ export default function Agenda() {
               {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
                 const isHoraCheia = i % 4 === 0
                 const isMeia = i % 4 === 2
+                const isUltimo = i === (HORA_FIM - HORA_INI) * 4 - 1
                 return (
                   <div key={i}
                     onClick={() => { const d = new Date(diaSelecionado); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
-                    style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : 'none', cursor: 'pointer' }}
+                    style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : 'none', borderBottom: isUltimo ? '1px solid #f3f4f6' : 'none', cursor: 'pointer' }}
                     onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
                     onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
                 )
