@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { HipotesesCard } from '@/components/HipotesesCard'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
@@ -448,6 +449,8 @@ export default function Historico() {
                   </div>
                 </div>
               ))}
+
+              <HipotesesCard hipoteses={selecionada.hipoteses} />
 
               {selecionada.cids && selecionada.cids.length > 0 && (
                 <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>

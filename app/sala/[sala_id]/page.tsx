@@ -432,6 +432,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         plano:      campos.plano      ?? pd.plano      ?? '',
         cids:       pd.cids    ?? [],
         alertas:    pd.alertas ?? [],
+        hipoteses:  pd.hipoteses ?? [],
         receita:    campos.receita ?? pd.receita ?? '',
       }
       const r = await fetch('/api/consultas', {

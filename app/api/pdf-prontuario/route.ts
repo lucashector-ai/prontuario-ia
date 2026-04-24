@@ -40,6 +40,32 @@ export async function GET(req: NextRequest) {
     const nomeClinica = (clinica && clinica.nome) || 'Consultório ' + (m.nome || '')
     const infoClinica = [clinica?.telefone, clinica?.endereco, clinica?.email].filter(Boolean).join(' · ')
 
+    // Hipoteses diagnosticas
+    const probCor = (p: string) => {
+      const pp = (p || '').toLowerCase()
+      if (pp === 'alta') return { bg: '#dcfce7', text: '#166534' }
+      if (pp === 'media' || pp === 'média') return { bg: '#fef3c7', text: '#854d0e' }
+      return { bg: '#f3f4f6', text: '#6b7280' }
+    }
+    const hipotesesHtml = (c.hipoteses || []).length > 0 ? `
+      <div class="section">
+        <div class="section-label">Hipóteses diagnósticas</div>
+        <div class="hipoteses-list">
+          ${c.hipoteses.map((h: any, i: number) => {
+            const cor = probCor(h.probabilidade || '')
+            return `
+            <div class="hipotese-item">
+              <div class="hipotese-header">
+                <span class="hipotese-num">${i + 1}</span>
+                <span class="hipotese-nome">${h.nome || ''}</span>
+                ${h.probabilidade ? `<span class="hipotese-prob" style="background:${cor.bg};color:${cor.text}">${(h.probabilidade || '').toUpperCase()}</span>` : ''}
+              </div>
+              ${h.justificativa ? `<p class="hipotese-just">${h.justificativa}</p>` : ''}
+            </div>
+          `}).join('')}
+        </div>
+      </div>` : ''
+
     const cidsHtml = (c.cids || []).length > 0 ? `
       <div class="section">
         <div class="section-label">CID-10</div>
@@ -97,6 +123,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 .cid-item{display:flex;gap:12px;align-items:center;padding:8px 12px;background:#ede9fb;border-radius:8px}
 .cid-code{font-family:monospace;font-weight:700;font-size:12px;color:#6043C1;background:white;padding:3px 8px;border-radius:5px;flex-shrink:0}
 .cid-desc{font-size:12px;color:#374151}
+.hipoteses-list{display:flex;flex-direction:column;gap:10px}
+.hipotese-item{padding:10px 12px;background:#fafafa;border-radius:8px;border-left:3px solid #6043C1}
+.hipotese-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.hipotese-num{width:20px;height:20px;border-radius:50%;background:#ede9fb;color:#6043C1;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.hipotese-nome{font-size:13px;font-weight:700;color:#111827}
+.hipotese-prob{font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:0.04em}
+.hipotese-just{font-size:11px;color:#6b7280;margin:4px 0 0 28px;line-height:1.5}
 .alertas{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin-bottom:20px}
 .alertas-label{font-size:11px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
 .alerta-item{font-size:12px;color:#991b1b;line-height:1.6;padding:4px 0}
@@ -143,6 +176,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
   ${secao('Avaliação (hipóteses diagnósticas)', c.avaliacao || '')}
   ${secao('Plano (conduta)', c.plano || '')}
 
+  ${hipotesesHtml}
   ${cidsHtml}
 
   <div class="footer">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { HipotesesCard } from '@/components/HipotesesCard'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 
@@ -333,6 +334,8 @@ export default function PacienteDetalhe() {
                           </div>
                         ))}
 
+                        <HipotesesCard hipoteses={consultaAberta.hipoteses} />
+
                         {consultaAberta.cids && consultaAberta.cids.length > 0 && (
                           <div style={{background:'white',borderRadius:16,padding:20,border:'1px solid #f3f4f6'}}>
                             <p style={{fontSize:11,fontWeight:700,color:'#6b7280',margin:'0 0 12px',letterSpacing:'0.06em',textTransform:'uppercase' as const}}>CID-10 Sugeridos</p>
@@ -433,6 +436,12 @@ export default function PacienteDetalhe() {
                           </div>
                         ))}
                       </div>
+                      {/* Hipoteses diagnosticas */}
+                      {c.hipoteses && Array.isArray(c.hipoteses) && c.hipoteses.length > 0 && (
+                        <div style={{padding:'14px 18px',borderTop:'1px solid #f3f4f6'}}>
+                          <HipotesesCard hipoteses={c.hipoteses} />
+                        </div>
+                      )}
                       {/* Receita */}
                       {c.receita && (
                         <div style={{padding:'10px 18px',borderTop:'1px solid #f3f4f6'}}>
