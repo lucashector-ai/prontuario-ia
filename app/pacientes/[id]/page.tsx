@@ -136,7 +136,15 @@ export default function PacienteDetalhe() {
 
   const ini = paciente?.nome?.split(' ').map((n:string)=>n[0]).slice(0,2).join('').toUpperCase()||'?'
   const idadePac = calcIdade(paciente?.data_nascimento)
-  const prox = agendamentos.find(a=>a.status==='agendado'&&new Date(a.data_hora)>new Date())
+  const prox = (() => {
+    // Inicio do dia atual
+    const inicioHoje = new Date(); inicioHoje.setHours(0, 0, 0, 0)
+    // Aceita agendado ou confirmado, e data >= hoje (inclui hoje mesmo se passou da hora)
+    const futuros = agendamentos
+      .filter(a => (a.status === 'agendado' || a.status === 'confirmado') && new Date(a.data_hora) >= inicioHoje)
+      .sort((a, b) => new Date(a.data_hora).getTime() - new Date(b.data_hora).getTime())
+    return futuros[0] || null
+  })()
 
   const secoes = [
     {key:'subjetivo',letra:'S',titulo:'Subjetivo',cor:'#2563eb',bg:'#eff6ff',border:'#bfdbfe'},
