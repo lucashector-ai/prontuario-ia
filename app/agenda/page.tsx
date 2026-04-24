@@ -504,7 +504,7 @@ export default function Agenda() {
                   return (
                     <div key={i}
                       onClick={() => { const d = new Date(dia); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
-                      style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : (isMeia ? '1px dashed #F5F5F5' : 'none'), cursor: 'pointer', transition: 'background 0.1s' }}
+                      style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
                       onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
                       onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
                   )
@@ -614,7 +614,7 @@ export default function Agenda() {
                 return (
                   <div key={i}
                     onClick={() => { const d = new Date(diaSelecionado); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
-                    style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : (isMeia ? '1px dashed #F5F5F5' : 'none'), cursor: 'pointer' }}
+                    style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : 'none', cursor: 'pointer' }}
                     onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
                     onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
                 )
