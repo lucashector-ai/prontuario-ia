@@ -24,7 +24,7 @@ const STATUS_OPTS = [
 const SLOT_MIN = 15
 const SLOT_PX = 20
 const HORA_INI = 7
-const HORA_FIM = 20
+const HORA_FIM = 21
 const TOTAL_SLOTS = ((HORA_FIM - HORA_INI) * 60) / SLOT_MIN
 
 const toSlotIdx = (d: Date) => Math.floor(((d.getHours() - HORA_INI) * 60 + d.getMinutes()) / SLOT_MIN)
