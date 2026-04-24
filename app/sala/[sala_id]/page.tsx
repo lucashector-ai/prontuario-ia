@@ -52,6 +52,14 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [processando, setProcessando] = useState(false)
   const [prontuarioModal, setProntuarioModal] = useState(false)
   const [prontuarioData, setProntuarioData] = useState<any>(null)
+  // Modo Perfeita — transcrição + IA ao vivo
+  const [modoPerfeita, setModoPerfeita] = useState(false)
+  const [foco, setFoco] = useState('')
+  const [sugestoes, setSugestoes] = useState<string[]>([])
+  const [alertasIA, setAlertasIA] = useState<string[]>([])
+  const [carregandoSugestoes, setCarregandoSugestoes] = useState(false)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const mixDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [salvado, setSalvado] = useState(false)
   const camposRef = useRef<Record<string, string>>({})
@@ -260,6 +268,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         setNaoLidas(n => n + 1)
         tocarSom('mensagem')
       })
+      .on('broadcast', { event: 'modo_perfeita' }, ({ payload }) => {
+        // Paciente fica sabendo quando o médico liga/desliga o Modo Perfeita
+        if (papelRef.current === 'paciente') setModoPerfeita(!!payload.ativo)
+      })
       .on('broadcast', { event: 'encerrar' }, () => {
         tocarSom('saida')
         if (papelRef.current === 'paciente') {
@@ -343,17 +355,90 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const toggleMic = () => { streamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; setMicOn(t.enabled) }) }
   const toggleCam = () => { streamRef.current?.getVideoTracks().forEach(t => { t.enabled = !t.enabled; setCamOn(t.enabled) }) }
   // Inicia gravao  captura o udio local do mdico
+  // Modo Perfeita: IA sugere durante a consulta
+  const buscarSugestoes = async (texto: string) => {
+    if (!texto || texto.trim().length < 50 || carregandoSugestoes) return
+    setCarregandoSugestoes(true)
+    try {
+      const med = localStorage.getItem('medico')
+      const medObj = med ? JSON.parse(med) : null
+      const res = await fetch('/api/sugestoes-consulta', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcricao: texto, especialidade: medObj?.especialidade || '' })
+      })
+      const data = await res.json()
+      if (data.sugestoes) setSugestoes(data.sugestoes)
+      if (data.alertas) setAlertasIA(data.alertas)
+      if (data.foco) setFoco(data.foco)
+    } catch (e) { console.error('Sugestões IA:', e) }
+    finally { setCarregandoSugestoes(false) }
+  }
+
+  useEffect(() => {
+    if (!modoPerfeita || !transcricao || transcricao.trim().length < 50) return
+    const timer = setTimeout(() => buscarSugestoes(transcricao), 3000)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcricao, modoPerfeita])
+
+  // Ao ligar Modo Perfeita, garante que está gravando e avisa o paciente
+  useEffect(() => {
+    if (modoPerfeita && !gravando && tela === 'chamada' && isMedico) {
+      iniciarGravação()
+    }
+    if (channelRef.current && tela === 'chamada') {
+      channelRef.current.send({ type: 'broadcast', event: 'modo_perfeita', payload: { ativo: modoPerfeita } })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modoPerfeita])
+
   const iniciarGravação = () => {
     if (!streamRef.current) return
-    // Pega s as faixas de udio do stream local
-    const audioStream = new MediaStream(streamRef.current.getAudioTracks())
+    // Mix de áudio: médico (local) + paciente (remote stream)
+    let audioStream: MediaStream
+    try {
+      const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext)
+      const ctx = new AudioCtx()
+      audioContextRef.current = ctx
+      const dest = ctx.createMediaStreamDestination()
+      mixDestinationRef.current = dest
+      // Fonte local (médico)
+      const localAudio = new MediaStream(streamRef.current.getAudioTracks())
+      if (localAudio.getAudioTracks().length > 0) {
+        ctx.createMediaStreamSource(localAudio).connect(dest)
+      }
+      // Fonte remota (paciente) — se já conectado
+      const remoteVid = remoteRef.current
+      const remoteStream = (remoteVid?.srcObject as MediaStream | null)
+      if (remoteStream && remoteStream.getAudioTracks().length > 0) {
+        ctx.createMediaStreamSource(remoteStream).connect(dest)
+      }
+      audioStream = dest.stream
+    } catch (err) {
+      console.warn('Mix de áudio falhou, usando só local:', err)
+      audioStream = new MediaStream(streamRef.current.getAudioTracks())
+    }
+
     const recorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' })
     chunksRef.current = []
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunksRef.current.push(e.data)
+    recorder.ondataavailable = async (e) => {
+      if (e.data.size < 1000) return
+      chunksRef.current.push(e.data)
+      // Transcrição ao vivo: envia cada chunk individualmente
+      try {
+        const fd = new FormData()
+        fd.append('audio', new File([e.data], 'chunk.webm', { type: 'audio/webm' }))
+        const r = await fetch('/api/transcrever', { method: 'POST', body: fd })
+        const d = await r.json()
+        if (d.texto) {
+          setTranscrição(prev => (prev ? prev + ' ' : '') + d.texto)
+        }
+      } catch (err) {
+        console.error('Chunk transcription failed:', err)
+      }
     }
-    // Envia chunk a cada 30s para transcrio incremental
-    recorder.start(30000)
+    // Chunk a cada 15s para transcrição ao vivo
+    recorder.start(15000)
     recorderRef.current = recorder
     setGravando(true)
   }
@@ -753,6 +838,19 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               <span style={{ fontSize:11, fontWeight:600 }}>{gravando ? 'Gravando...' : 'Gravar'}</span>
             </button>
           )}
+          {isMedico && tela === 'chamada' && (
+            <button onClick={() => setModoPerfeita(v => !v)}
+              style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer',
+                background: modoPerfeita ? 'rgba(96,67,193,0.2)' : 'rgba(148,163,184,0.12)',
+                color: modoPerfeita ? '#c4b5fd' : '#94a3b8' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/>
+              </svg>
+              <span style={{ fontSize:11, fontWeight:600 }}>
+                {modoPerfeita ? (carregandoSugestoes ? 'Analisando...' : 'Modo Perfeita') : 'Modo Perfeita'}
+              </span>
+            </button>
+          )}
           {isMedico && processando && (
             <div style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, background:'rgba(234,179,8,0.15)' }}>
               <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid rgba(234,179,8,0.4)', borderTopColor:'#eab308', animation:'spin 0.8s linear infinite' }}/>
@@ -799,6 +897,60 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           )}
 
           {/* Botao flutuante do chat */}
+          {tela === 'chamada' && modoPerfeita && (
+            <div style={{ position: 'fixed', top: 70, right: 16, bottom: 90, width: 280, background: 'rgba(15,23,42,0.92)', borderRadius: 14, border: '1px solid rgba(96,67,193,0.4)', padding: 14, overflowY: 'auto', zIndex: 40, backdropFilter: 'blur(8px)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, paddingBottom: 10, borderBottom: '1px solid rgba(148,163,184,0.18)' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2">
+                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/>
+                </svg>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#c4b5fd', letterSpacing: '0.03em' }}>MODO PERFEITA</span>
+                {carregandoSugestoes && (
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid rgba(196,181,253,0.3)', borderTopColor: '#c4b5fd', animation: 'spin 0.8s linear infinite', marginLeft: 'auto' }}/>
+                )}
+              </div>
+
+              {foco && (
+                <div style={{ marginBottom: 14 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', margin: '0 0 5px', letterSpacing: '0.06em' }}>🎯 FOCO</p>
+                  <p style={{ fontSize: 12, color: 'white', margin: 0, lineHeight: 1.45 }}>{foco}</p>
+                </div>
+              )}
+
+              {sugestoes.length > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', margin: '0 0 7px', letterSpacing: '0.06em' }}>💡 SUGESTÕES</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {sugestoes.map((s, i) => (
+                      <div key={i} style={{ fontSize: 12, color: '#e2e8f0', background: 'rgba(96,67,193,0.12)', padding: '8px 10px', borderRadius: 8, lineHeight: 1.4, border: '1px solid rgba(96,67,193,0.2)' }}>{s}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {alertasIA.length > 0 && (
+                <div style={{ marginBottom: 6 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: '#fca5a5', margin: '0 0 7px', letterSpacing: '0.06em' }}>⚠️ ALERTAS</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {alertasIA.map((a, i) => (
+                      <div key={i} style={{ fontSize: 12, color: '#fecaca', background: 'rgba(220,38,38,0.12)', padding: '8px 10px', borderRadius: 8, lineHeight: 1.4, border: '1px solid rgba(220,38,38,0.3)' }}>{a}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!foco && sugestoes.length === 0 && alertasIA.length === 0 && (
+                <p style={{ fontSize: 11, color: '#64748b', margin: 0, lineHeight: 1.5, fontStyle: 'italic' }}>Aguardando transcrição... A IA vai começar a sugerir quando houver conteúdo suficiente (~30s de conversa).</p>
+              )}
+            </div>
+          )}
+
+          {tela === 'chamada' && modoPerfeita && papelRef.current === 'paciente' && (
+            <div style={{ position: 'fixed', top: 70, left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,23,42,0.9)', color: 'white', padding: '7px 14px', borderRadius: 20, fontSize: 11, fontWeight: 500, zIndex: 40, border: '1px solid rgba(196,181,253,0.3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#c4b5fd', animation: 'pulse 2s infinite' }}/>
+              Esta consulta está sendo transcrita por IA para auxiliar seu médico
+            </div>
+          )}
+
           {tela === 'chamada' && remoteConectado && (
             <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
               style={{ position: 'absolute', bottom: 72, left: 12, width: 44, height: 44, borderRadius: '50%', border: 'none', background: chatAberto ? '#6043C1' : 'rgba(30,41,59,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
