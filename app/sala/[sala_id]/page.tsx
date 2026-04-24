@@ -448,30 +448,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   const iniciarGravação = () => {
     if (!streamRef.current) return
-    // Mix de áudio: médico (local) + paciente (remote stream)
-    let audioStream: MediaStream
-    try {
-      const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext)
-      const ctx = new AudioCtx()
-      audioContextRef.current = ctx
-      const dest = ctx.createMediaStreamDestination()
-      mixDestinationRef.current = dest
-      // Fonte local (médico)
-      const localAudio = new MediaStream(streamRef.current.getAudioTracks())
-      if (localAudio.getAudioTracks().length > 0) {
-        ctx.createMediaStreamSource(localAudio).connect(dest)
-      }
-      // Fonte remota (paciente) — se já conectado
-      const remoteVid = remoteRef.current
-      const remoteStream = (remoteVid?.srcObject as MediaStream | null)
-      if (remoteStream && remoteStream.getAudioTracks().length > 0) {
-        ctx.createMediaStreamSource(remoteStream).connect(dest)
-      }
-      audioStream = dest.stream
-    } catch (err) {
-      console.warn('Mix de áudio falhou, usando só local:', err)
-      audioStream = new MediaStream(streamRef.current.getAudioTracks())
-    }
+    // Grava áudio local do médico direto do stream original (sem AudioContext,
+    // que corrompe o WebM em chunks curtos). A voz do paciente é captada pelo
+    // eco natural do alto-falante + fala reformulada pelo médico durante consulta.
+    const audioStream = new MediaStream(streamRef.current.getAudioTracks())
 
     // Escolhe o melhor mimeType suportado pelo browser (alguns não suportam 'audio/webm' puro)
     const mimeCandidates = [
