@@ -43,12 +43,18 @@ export async function POST(req: NextRequest) {
     const txt = message.content[0].type === "text" ? message.content[0].text : "{}"
     const inicio = txt.indexOf("{")
     const fim = txt.lastIndexOf("}")
-    const json = JSON.parse(inicio >= 0 && fim >= 0 ? txt.slice(inicio, fim + 1) : "{}")
+    let json: any = {}
+    try {
+      json = JSON.parse(inicio >= 0 && fim >= 0 ? txt.slice(inicio, fim + 1) : "{}")
+    } catch (parseErr) {
+      console.warn("[sugestoes-consulta] JSON parse falhou — resposta do modelo:", txt.slice(0, 200))
+      return NextResponse.json({ sugestoes: [], alertas: [], foco: "" })
+    }
 
     return NextResponse.json({
-      sugestoes: json.sugestoes || [],
-      alertas: json.alertas || [],
-      foco: json.foco || ""
+      sugestoes: Array.isArray(json.sugestoes) ? json.sugestoes : [],
+      alertas: Array.isArray(json.alertas) ? json.alertas : [],
+      foco: typeof json.foco === "string" ? json.foco : ""
     })
   } catch (e: any) {
     return NextResponse.json({ sugestoes: [], alertas: [], error: e.message })

@@ -357,14 +357,28 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const buscarSugestoes = async (texto: string) => {
     if (!texto || texto.trim().length < 50 || carregandoSugestoes) return
     setCarregandoSugestoes(true)
+    // Timeout de 8s pra não travar o fluxo se a API demorar
+    const ctrl = new AbortController()
+    const timeoutId = setTimeout(() => ctrl.abort(), 8000)
     try {
       const med = localStorage.getItem('medico')
       const medObj = med ? JSON.parse(med) : null
+      // Limita texto enviado aos últimos 1500 chars (API já corta, mas evita payload grande)
+      const trechoRecente = texto.slice(-1500)
       const res = await fetch('/api/sugestoes-consulta', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcricao: texto, especialidade: medObj?.especialidade || '' })
+        body: JSON.stringify({ transcricao: trechoRecente, especialidade: medObj?.especialidade || '' }),
+        signal: ctrl.signal,
       })
+      if (!res.ok) {
+        console.warn('[ModoPerfeita] API retornou', res.status)
+        return
+      }
       const data = await res.json()
+      if (data.error) {
+        console.warn('[ModoPerfeita] API error:', data.error)
+        return
+      }
       const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       const novas: {tipo:'foco'|'sugestao'|'alerta'; texto:string; hora:string}[] = []
       if (data.foco && !mensagensVistasRef.current.has('foco:' + data.foco)) {
@@ -385,17 +399,31 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           novas.push({ tipo: 'alerta', texto: a, hora })
         }
       }
+      // Evita crescimento infinito da ref de dedup (mantém últimos 50 hashes)
+      if (mensagensVistasRef.current.size > 50) {
+        const arr = Array.from(mensagensVistasRef.current).slice(-30)
+        mensagensVistasRef.current = new Set(arr)
+      }
       if (novas.length > 0) {
-        setMensagensIA(prev => [...prev, ...novas])
-        // Toasts flutuantes: mostra as novas por 20s no canto, no máximo 4 simultâneas
+        // Mantém só últimos 30 insights no histórico (evita lag em consultas longas)
+        setMensagensIA(prev => [...prev, ...novas].slice(-30))
+        // Toasts flutuantes: mostra as novas por 20s no canto, máximo 4 simultâneas
         const novoToasts = novas.map(m => ({ ...m, id: Date.now() + '_' + Math.random().toString(36).slice(-4) }))
         setToastsIA(prev => [...prev, ...novoToasts].slice(-4))
         novoToasts.forEach(t => {
           setTimeout(() => setToastsIA(prev => prev.filter(x => x.id !== t.id)), 20000)
         })
       }
-    } catch (e) { console.error('Sugestões IA:', e) }
-    finally { setCarregandoSugestoes(false) }
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        console.warn('[ModoPerfeita] request timeout — próxima tentativa virá com mais contexto')
+      } else {
+        console.error('[ModoPerfeita] erro:', e?.message || e)
+      }
+    } finally {
+      clearTimeout(timeoutId)
+      setCarregandoSugestoes(false)
+    }
   }
 
   useEffect(() => {
