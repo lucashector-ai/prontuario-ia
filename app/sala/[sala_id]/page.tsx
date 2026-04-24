@@ -52,14 +52,14 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [processando, setProcessando] = useState(false)
   const [prontuarioModal, setProntuarioModal] = useState(false)
   const [prontuarioData, setProntuarioData] = useState<any>(null)
-  // Modo Perfeita — transcrição + IA ao vivo
+  // Modo Perfeita — transcrição + IA ao vivo (estilo chat)
   const [modoPerfeita, setModoPerfeita] = useState(false)
-  const [foco, setFoco] = useState('')
-  const [sugestoes, setSugestoes] = useState<string[]>([])
-  const [alertasIA, setAlertasIA] = useState<string[]>([])
+  const [mensagensIA, setMensagensIA] = useState<{tipo:'foco'|'sugestao'|'alerta'; texto:string; hora:string}[]>([])
   const [carregandoSugestoes, setCarregandoSugestoes] = useState(false)
   const audioContextRef = useRef<AudioContext | null>(null)
   const mixDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null)
+  const chatIARef = useRef<HTMLDivElement>(null)
+  const mensagensVistasRef = useRef<Set<string>>(new Set())
   const [salvando, setSalvando] = useState(false)
   const [salvado, setSalvado] = useState(false)
   const camposRef = useRef<Record<string, string>>({})
@@ -268,10 +268,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         setNaoLidas(n => n + 1)
         tocarSom('mensagem')
       })
-      .on('broadcast', { event: 'modo_perfeita' }, ({ payload }) => {
-        // Paciente fica sabendo quando o médico liga/desliga o Modo Perfeita
-        if (papelRef.current === 'paciente') setModoPerfeita(!!payload.ativo)
-      })
       .on('broadcast', { event: 'encerrar' }, () => {
         tocarSom('saida')
         if (papelRef.current === 'paciente') {
@@ -355,7 +351,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const toggleMic = () => { streamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; setMicOn(t.enabled) }) }
   const toggleCam = () => { streamRef.current?.getVideoTracks().forEach(t => { t.enabled = !t.enabled; setCamOn(t.enabled) }) }
   // Inicia gravao  captura o udio local do mdico
-  // Modo Perfeita: IA sugere durante a consulta
+  // Modo Perfeita: IA sugere durante a consulta (estilo chat)
   const buscarSugestoes = async (texto: string) => {
     if (!texto || texto.trim().length < 50 || carregandoSugestoes) return
     setCarregandoSugestoes(true)
@@ -367,9 +363,27 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         body: JSON.stringify({ transcricao: texto, especialidade: medObj?.especialidade || '' })
       })
       const data = await res.json()
-      if (data.sugestoes) setSugestoes(data.sugestoes)
-      if (data.alertas) setAlertasIA(data.alertas)
-      if (data.foco) setFoco(data.foco)
+      const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      const novas: {tipo:'foco'|'sugestao'|'alerta'; texto:string; hora:string}[] = []
+      if (data.foco && !mensagensVistasRef.current.has('foco:' + data.foco)) {
+        mensagensVistasRef.current.add('foco:' + data.foco)
+        novas.push({ tipo: 'foco', texto: data.foco, hora })
+      }
+      for (const s of (data.sugestoes || [])) {
+        const key = 'sug:' + s
+        if (!mensagensVistasRef.current.has(key)) {
+          mensagensVistasRef.current.add(key)
+          novas.push({ tipo: 'sugestao', texto: s, hora })
+        }
+      }
+      for (const a of (data.alertas || [])) {
+        const key = 'alt:' + a
+        if (!mensagensVistasRef.current.has(key)) {
+          mensagensVistasRef.current.add(key)
+          novas.push({ tipo: 'alerta', texto: a, hora })
+        }
+      }
+      if (novas.length > 0) setMensagensIA(prev => [...prev, ...novas])
     } catch (e) { console.error('Sugestões IA:', e) }
     finally { setCarregandoSugestoes(false) }
   }
@@ -381,16 +395,18 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transcricao, modoPerfeita])
 
-  // Ao ligar Modo Perfeita, garante que está gravando e avisa o paciente
+  // Ao ligar Modo Perfeita, garante que está gravando (paciente não sabe)
   useEffect(() => {
     if (modoPerfeita && !gravando && tela === 'chamada' && isMedico) {
       iniciarGravação()
     }
-    if (channelRef.current && tela === 'chamada') {
-      channelRef.current.send({ type: 'broadcast', event: 'modo_perfeita', payload: { ativo: modoPerfeita } })
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modoPerfeita])
+
+  // Auto-scroll no chat da IA quando chega mensagem nova
+  useEffect(() => {
+    chatIARef.current?.scrollTo({ top: chatIARef.current.scrollHeight, behavior: 'smooth' })
+  }, [mensagensIA])
 
   const iniciarGravação = () => {
     if (!streamRef.current) return
@@ -897,57 +913,49 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           )}
 
           {/* Botao flutuante do chat */}
-          {tela === 'chamada' && modoPerfeita && (
-            <div style={{ position: 'fixed', top: 70, right: 16, bottom: 90, width: 280, background: 'rgba(15,23,42,0.92)', borderRadius: 14, border: '1px solid rgba(96,67,193,0.4)', padding: 14, overflowY: 'auto', zIndex: 40, backdropFilter: 'blur(8px)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, paddingBottom: 10, borderBottom: '1px solid rgba(148,163,184,0.18)' }}>
+          {tela === 'chamada' && modoPerfeita && isMedico && (
+            <div style={{ position: 'fixed', top: 70, right: 16, bottom: 90, width: 300, background: 'rgba(15,23,42,0.94)', borderRadius: 14, border: '1px solid rgba(96,67,193,0.4)', zIndex: 40, backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column' }}>
+              {/* Header fixo */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: '1px solid rgba(148,163,184,0.18)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2">
                   <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/>
                 </svg>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#c4b5fd', letterSpacing: '0.03em' }}>MODO PERFEITA</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#c4b5fd', letterSpacing: '0.03em', margin: 0 }}>MODO PERFEITA</p>
+                  <p style={{ fontSize: 10, color: '#64748b', margin: '1px 0 0' }}>
+                    {carregandoSugestoes ? 'Analisando...' : mensagensIA.length > 0 ? mensagensIA.length + ' insights' : 'Aguardando conversa'}
+                  </p>
+                </div>
                 {carregandoSugestoes && (
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid rgba(196,181,253,0.3)', borderTopColor: '#c4b5fd', animation: 'spin 0.8s linear infinite', marginLeft: 'auto' }}/>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid rgba(196,181,253,0.3)', borderTopColor: '#c4b5fd', animation: 'spin 0.8s linear infinite' }}/>
                 )}
               </div>
 
-              {foco && (
-                <div style={{ marginBottom: 14 }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', margin: '0 0 5px', letterSpacing: '0.06em' }}>🎯 FOCO</p>
-                  <p style={{ fontSize: 12, color: 'white', margin: 0, lineHeight: 1.45 }}>{foco}</p>
-                </div>
-              )}
-
-              {sugestoes.length > 0 && (
-                <div style={{ marginBottom: 14 }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', margin: '0 0 7px', letterSpacing: '0.06em' }}>💡 SUGESTÕES</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {sugestoes.map((s, i) => (
-                      <div key={i} style={{ fontSize: 12, color: '#e2e8f0', background: 'rgba(96,67,193,0.12)', padding: '8px 10px', borderRadius: 8, lineHeight: 1.4, border: '1px solid rgba(96,67,193,0.2)' }}>{s}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {alertasIA.length > 0 && (
-                <div style={{ marginBottom: 6 }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: '#fca5a5', margin: '0 0 7px', letterSpacing: '0.06em' }}>⚠️ ALERTAS</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {alertasIA.map((a, i) => (
-                      <div key={i} style={{ fontSize: 12, color: '#fecaca', background: 'rgba(220,38,38,0.12)', padding: '8px 10px', borderRadius: 8, lineHeight: 1.4, border: '1px solid rgba(220,38,38,0.3)' }}>{a}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!foco && sugestoes.length === 0 && alertasIA.length === 0 && (
-                <p style={{ fontSize: 11, color: '#64748b', margin: 0, lineHeight: 1.5, fontStyle: 'italic' }}>Aguardando transcrição... A IA vai começar a sugerir quando houver conteúdo suficiente (~30s de conversa).</p>
-              )}
-            </div>
-          )}
-
-          {tela === 'chamada' && modoPerfeita && papelRef.current === 'paciente' && (
-            <div style={{ position: 'fixed', top: 70, left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,23,42,0.9)', color: 'white', padding: '7px 14px', borderRadius: 20, fontSize: 11, fontWeight: 500, zIndex: 40, border: '1px solid rgba(196,181,253,0.3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#c4b5fd', animation: 'pulse 2s infinite' }}/>
-              Esta consulta está sendo transcrita por IA para auxiliar seu médico
+              {/* Chat scrollável */}
+              <div ref={chatIARef} style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {mensagensIA.length === 0 && (
+                  <p style={{ fontSize: 11, color: '#64748b', margin: 0, lineHeight: 1.5, fontStyle: 'italic', textAlign: 'center', marginTop: 20 }}>
+                    A IA vai analisar a conversa e enviar sugestões aqui. ~30s de diálogo pra começar.
+                  </p>
+                )}
+                {mensagensIA.map((m, i) => {
+                  const cfg = m.tipo === 'foco'
+                    ? { icon: '🎯', label: 'Foco', bg: 'rgba(59,130,246,0.14)', border: 'rgba(59,130,246,0.3)', cor: '#93c5fd' }
+                    : m.tipo === 'alerta'
+                    ? { icon: '⚠️', label: 'Alerta', bg: 'rgba(220,38,38,0.14)', border: 'rgba(220,38,38,0.35)', cor: '#fca5a5' }
+                    : { icon: '💡', label: 'Sugestão', bg: 'rgba(96,67,193,0.14)', border: 'rgba(96,67,193,0.3)', cor: '#c4b5fd' }
+                  return (
+                    <div key={i} style={{ background: cfg.bg, border: '1px solid ' + cfg.border, borderRadius: 10, padding: '8px 10px', animation: 'slideIn 0.3s ease-out' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <span style={{ fontSize: 11 }}>{cfg.icon}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: cfg.cor, letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>{cfg.label}</span>
+                        <span style={{ fontSize: 9, color: '#64748b', marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' as const }}>{m.hora}</span>
+                      </div>
+                      <p style={{ fontSize: 12, color: '#e2e8f0', margin: 0, lineHeight: 1.45 }}>{m.texto}</p>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 
