@@ -562,9 +562,9 @@ export default function Agenda() {
             const hoje = isHoje(d)
             return (
               <div key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
-                style={{ borderTop: '1px solid #f3f4f6', borderLeft: i % 7 !== 0 ? '1px solid #f3f4f6' : 'none', padding: 8, cursor: 'pointer', background: noMes ? '#F5F5F5' : 'white', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 4, minHeight: 90, transition: 'background 0.12s' }}>
+                style={{ borderTop: '1px solid #f3f4f6', borderLeft: i % 7 !== 0 ? '1px solid #f3f4f6' : 'none', padding: 8, cursor: 'pointer', background: noMes ? 'white' : '#F5F5F5', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 4, minHeight: 90, transition: 'background 0.12s' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 12, fontWeight: hoje ? 800 : 600, color: noMes ? '#d1d5db' : (hoje ? 'white' : '#111827'), background: hoje ? '#6043C1' : 'transparent', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{d.getDate()}</span>
+                  <span style={{ fontSize: 12, fontWeight: hoje ? 800 : 600, color: noMes ? (hoje ? 'white' : '#111827') : '#d1d5db', background: hoje ? '#6043C1' : 'transparent', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{d.getDate()}</span>
                   {ags.length > 2 && <span style={{ fontSize: 9, color: '#9ca3af', fontWeight: 600 }}>+{ags.length - 2}</span>}
                 </div>
                 {ags.slice(0, 2).map(ag => {
