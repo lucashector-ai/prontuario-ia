@@ -300,10 +300,26 @@ export default function Agenda() {
   const criarSalaAgora = async () => {
     if (!medico || salaLink) return
     try {
+      // Resolve medico_id real (se estiver como clinica_admin, medico.id é do admin)
+      let medicoIdFinal = medico.id
+      const ca = localStorage.getItem('clinica_admin')
+      if (ca) {
+        if (form.paciente_id) {
+          const pac = pacientes.find((p: any) => p.id === form.paciente_id)
+          if (pac && pac.medico_id) medicoIdFinal = pac.medico_id
+        } else if (medico.clinica_id) {
+          const { data: primMed } = await supabase
+            .from('medicos').select('id')
+            .eq('clinica_id', medico.clinica_id).eq('cargo', 'medico').eq('ativo', true)
+            .order('criado_em').limit(1).maybeSingle()
+          if (primMed) medicoIdFinal = primMed.id
+        }
+      }
+
       const tcRes = await fetch('/api/teleconsulta', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          medico_id: medico.id,
+          medico_id: medicoIdFinal,
           paciente_id: form.paciente_id || null,
           titulo: form.motivo || 'Teleconsulta',
         }),
@@ -315,9 +331,13 @@ export default function Agenda() {
         setSalaId(sid)
         setSalaLink(link)
         setComVideo(true)
+      } else {
+        console.error('Erro criando sala:', tcData.error)
+        toast('Erro ao criar sala: ' + (tcData.error || 'desconhecido'))
       }
     } catch (err) {
       console.error('Erro criando sala:', err)
+      toast('Erro ao criar sala')
     }
   }
 
