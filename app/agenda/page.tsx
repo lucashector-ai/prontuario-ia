@@ -520,7 +520,27 @@ export default function Agenda() {
                   return (
                     <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
                       style={{ position: 'absolute', left: 3, right: 3, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: cancelado ? '#f3f4f6' : tipo.bg, border: `1px solid ${cancelado ? '#d1d5db' : tipo.border}`, borderLeft: `3px solid ${cancelado ? '#9ca3af' : tipo.dot}`, borderRadius: 6, padding: '3px 6px', cursor: 'pointer', zIndex: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', opacity: cancelado ? 0.6 : 1, textDecoration: cancelado ? 'line-through' : 'none' }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: tipo.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pacNome}</p>
+                      {/* Indicadores no canto superior direito */}
+                      {(ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) && (
+                        <div style={{ position: 'absolute', top: 3, right: 3, display: 'flex', flexDirection: 'column' as const, gap: 2, zIndex: 2 }}>
+                          {ag.pre_consulta_enviada && (
+                            <span title="Pré-consulta enviada" style={{ width: 12, height: 12, borderRadius: '50%', background: '#25d366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="7" height="7" viewBox="0 0 24 24" fill="white"><path d="M20.52 3.45C18.38 1.34 15.48 0 12.4 0 6.37 0 1.45 4.92 1.45 11c0 1.95.5 3.85 1.45 5.55L1 23l6.6-1.73c1.6.9 3.5 1.36 5.4 1.36 6.03 0 10.95-4.92 10.95-11 0-2.96-1.14-5.76-3.43-8.18z"/></svg>
+                            </span>
+                          )}
+                          {ag.confirmacao_24h_status === 'confirmado' && (
+                            <span title="Paciente confirmou" style={{ width: 12, height: 12, borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                          )}
+                          {ag.confirmacao_24h_enviada && ag.confirmacao_24h_status !== 'confirmado' && (
+                            <span title="Aguardando confirmação" style={{ width: 12, height: 12, borderRadius: '50%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <p style={{ fontSize: 11, fontWeight: 700, color: tipo.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: (ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) ? 16 : 0 }}>{pacNome}</p>
                       {durToPx(dur) > 28 && (
                         <p style={{ fontSize: 10, color: tipo.text, margin: '1px 0 0', opacity: 0.75, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ag.motivo || tipo.label}</p>
                       )}
@@ -630,7 +650,26 @@ export default function Agenda() {
                 return (
                   <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
                     style={{ position: 'absolute', left: 8, right: 8, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: tipo.bg, border: `1px solid ${tipo.border}`, borderLeft: `3px solid ${tipo.dot}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', zIndex: 10, overflow: 'hidden' }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: tipo.text, margin: 0 }}>{pacNome}</p>
+                    {/* Indicadores no canto superior direito */}
+                    {(ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) && (
+                      <div style={{ position: 'absolute', top: 6, right: 8, display: 'flex', gap: 4, zIndex: 2 }}>
+                        {ag.pre_consulta_enviada && (
+                          <span title="Pré-consulta enviada no WhatsApp" style={{ width: 18, height: 18, borderRadius: '50%', background: '#25d366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M20.52 3.45C18.38 1.34 15.48 0 12.4 0 6.37 0 1.45 4.92 1.45 11c0 1.95.5 3.85 1.45 5.55L1 23l6.6-1.73c1.6.9 3.5 1.36 5.4 1.36 6.03 0 10.95-4.92 10.95-11 0-2.96-1.14-5.76-3.43-8.18z"/></svg>
+                          </span>
+                        )}
+                        {ag.confirmacao_24h_status === 'confirmado' ? (
+                          <span title="Paciente confirmou a consulta" style={{ width: 18, height: 18, borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                          </span>
+                        ) : ag.confirmacao_24h_enviada ? (
+                          <span title="Aguardando confirmação do paciente" style={{ width: 18, height: 18, borderRadius: '50%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          </span>
+                        ) : null}
+                      </div>
+                    )}
+                    <p style={{ fontSize: 13, fontWeight: 700, color: tipo.text, margin: 0, paddingRight: (ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) ? 48 : 0 }}>{pacNome}</p>
                     <p style={{ fontSize: 11, color: tipo.text, margin: '2px 0 0', opacity: 0.75 }}>
                       {d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {ag.motivo || tipo.label}
                     </p>
