@@ -48,7 +48,7 @@ export function WhatsAppConnect({ medicoId, onConnected }: Props) {
 
   return (
     <div style={{
-      height: '100%', width: '100%',
+      minHeight: '100vh', width: '100%',
       background: 'white',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 24, overflow: 'auto',
