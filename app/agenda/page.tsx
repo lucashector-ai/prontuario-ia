@@ -1245,7 +1245,7 @@ export default function Agenda() {
                     <select value={form.medico_id} onChange={e => setForm(f => ({...f, medico_id: e.target.value}))}
                       style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: '#111827' }}>
                       <option value="">Selecionar médico</option>
-                      {medicosClinica.filter((m: any) => m.cargo === 'medico' && m.ativo !== false).map((m: any) => (
+                      {medicosClinica.filter((m: any) => (m.cargo === 'medico' || m.cargo === 'admin' || !m.cargo) && m.ativo !== false).map((m: any) => (
                         <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
                       ))}
                     </select>
