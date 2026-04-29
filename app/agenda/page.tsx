@@ -100,6 +100,7 @@ export default function Agenda() {
   const [bloqueios, setBloqueios] = useState<any[]>([])
   const [modalBloqueio, setModalBloqueio] = useState(false)
   const [medicosClinica, setMedicosClinica] = useState<any[]>([])
+  const [procedimentos, setProcedimentos] = useState<any[]>([])
   const [formBloqueio, setFormBloqueio] = useState({
     medico_id: '',
     tipo: 'horario' as 'horario' | 'dia' | 'periodo',
@@ -128,7 +129,7 @@ export default function Agenda() {
   const [listaEspera] = useState<any[]>([])
 
   const [modal, setModal] = useState<{ open: boolean; date?: Date; ag?: any }>({ open: false })
-  const [form, setForm] = useState({ paciente_id: '', medico_id: '', data_hora: '', tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
+  const [form, setForm] = useState({ paciente_id: '', medico_id: '', procedimento_id: '', data_hora: '', tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
   const [salvando, setSalvando] = useState(false)
 
   const [comVideo, setComVideo] = useState(false)
@@ -208,6 +209,14 @@ export default function Agenda() {
     setPacientes(pacsR.data || [])
     setAgendamentos(agsR.data || [])
     setMedicosClinica(medsR.data || [])
+
+    // Carregar procedimentos da clínica (se houver clinica_id)
+    const cidLoad = medico?.clinica_id
+    if (cidLoad) {
+      const procR = await fetch('/api/procedimentos?clinica_id=' + cidLoad)
+      const procD = await procR.json()
+      setProcedimentos(procD.procedimentos || [])
+    }
     setBloqueios(blqsResp.bloqueios || [])
   }
 
@@ -282,6 +291,7 @@ export default function Agenda() {
       setForm({
         paciente_id: ag.paciente_id || '',
         medico_id: ag.medico_id || '',
+        procedimento_id: ag.procedimento_id || '',
         data_hora: local,
         tipo: ag.tipo || 'consulta',
         motivo: ag.motivo || '',
@@ -293,7 +303,7 @@ export default function Agenda() {
       const d = date || new Date()
       if (d.getHours() < HORA_INI) d.setHours(8, 0, 0, 0)
       const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
-      setForm({ paciente_id: '', medico_id: '', data_hora: local, tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
+      setForm({ paciente_id: '', medico_id: '', procedimento_id: '', data_hora: local, tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
       setModal({ open: true, date: d })
     }
   }
@@ -383,6 +393,7 @@ export default function Agenda() {
       if (modal.ag) {
         const { data } = await supabase.from('agendamentos').update({
           paciente_id: form.paciente_id || null,
+          procedimento_id: form.procedimento_id || null,
           data_hora: new Date(form.data_hora).toISOString(),
           tipo: form.tipo,
           motivo: form.motivo,
@@ -419,6 +430,7 @@ export default function Agenda() {
         const { data } = await supabase.from('agendamentos').insert({
           medico_id: medicoIdFinal,
           paciente_id: form.paciente_id || null,
+          procedimento_id: form.procedimento_id || null,
           data_hora: new Date(form.data_hora).toISOString(),
           tipo: form.tipo,
           motivo: form.motivo,
@@ -1252,6 +1264,31 @@ export default function Agenda() {
                   </div>
                 )
               })()}
+              {procedimentos.length > 0 && (
+                <div>
+                  <label style={labelStyle}>Procedimento</label>
+                  <select
+                    value={form.procedimento_id}
+                    onChange={e => {
+                      const procId = e.target.value
+                      const proc = procedimentos.find((p: any) => p.id === procId)
+                      // Auto-preenche duração se procedimento tem duração definida
+                      setForm(f => ({
+                        ...f,
+                        procedimento_id: procId,
+                        duracao: proc?.duracao ? String(proc.duracao) : f.duracao,
+                      }))
+                    }}
+                    style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: '#111827' }}>
+                    <option value="">Nenhum (consulta padrão)</option>
+                    {procedimentos.map((p: any) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nome}{p.duracao ? ' · ' + p.duracao + 'min' : ''}{p.valor ? ' · R$ ' + Number(p.valor).toFixed(2).replace('.', ',') : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label style={labelStyle}>Paciente</label>
                 <select value={form.paciente_id} onChange={e => setForm(f => ({...f, paciente_id: e.target.value}))}
