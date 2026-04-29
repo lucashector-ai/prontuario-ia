@@ -34,7 +34,7 @@ export function Sidebar() {
 
   const grupos = [
     {
-      label: 'OVERVIEW',
+      // GRUPO 1 — Fluxo do dia
       items: [
         { href: '/dashboard', label: 'Dashboard', icon: (
           <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
@@ -42,11 +42,6 @@ export function Sidebar() {
             <rect x='3' y='14' width='7' height='7'/><rect x='14' y='14' width='7' height='7'/>
           </svg>
         )},
-        ...(!isRecepcionista ? [{ href: '/nova-consulta', label: 'Nova consulta', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M12 5v14M5 12h14'/>
-          </svg>
-        )}] : []),
         { href: '/agenda', label: 'Agenda', icon: (
           <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
             <rect x='3' y='4' width='18' height='18' rx='2'/>
@@ -54,81 +49,51 @@ export function Sidebar() {
             <line x1='3' y1='10' x2='21' y2='10'/>
           </svg>
         )},
-        ...(!isRecepcionista ? [{ href: '/historico', label: 'Histórico', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'/>
-          </svg>
-        )}] : []),
         { href: '/pacientes', label: 'Pacientes', icon: (
           <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
             <path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75'/>
           </svg>
         )},
+        ...(!isRecepcionista ? [{ href: '/historico', label: 'Histórico', icon: (
+          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+            <path d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'/>
+          </svg>
+        )}] : []),
       ],
     },
     {
-      label: 'ATENDIMENTO',
+      // GRUPO 2 — Atendimento
       items: [
+        ...(!isRecepcionista ? [{ href: '/nova-consulta', label: 'Nova consulta', icon: (
+          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+            <path d='M12 5v14M5 12h14'/>
+          </svg>
+        )}] : []),
+        ...(!isRecepcionista ? [{ href: '/teleconsulta', label: 'Teleconsulta', icon: (
+          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+            <path d='M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z'/>
+          </svg>
+        )}] : []),
+        ...(!isRecepcionista ? [{ href: '/exames', label: 'Analisar exames', icon: (
+          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+            <path d='M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18'/>
+          </svg>
+        )}] : []),
         { href: '/whatsapp-app', label: 'WhatsApp', icon: (
           <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
             <path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/>
           </svg>
         )},
-        ...(!isRecepcionista ? [
-          { href: '/teleconsulta', label: 'Teleconsulta', icon: (
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-              <path d='M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z'/>
-            </svg>
-          )},
-          { href: '/ditado', label: 'Ditado livre', icon: (
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-              <path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/>
-              <path d='M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8'/>
-            </svg>
-          )},
-          { href: '/exames', label: 'Analisar exames', icon: (
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-              <path d='M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18'/>
-            </svg>
-          )},
-          { href: '/dicionario', label: 'Dicionário clínico', icon: (
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-              <path d='M4 19.5A2.5 2.5 0 016.5 17H20'/>
-              <path d='M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z'/>
-            </svg>
-          )},
-        ] : []),
       ],
     },
     {
-      label: 'SETTINGS',
+      // GRUPO 3 — Configurações
       items: [
         ...(temAcessoAdmin ? [
-          { href: '/configuracoes/sofia', label: 'Sofia · IA', icon: (
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-              <path d='M12 8V4H8'/><rect x='4' y='12' width='16' height='8' rx='2'/>
-              <path d='M2 14h2M20 14h2M15 13v2M9 13v2'/>
-            </svg>
-          )},
-          { href: '/automacoes', label: 'Automações', icon: (
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-              <path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/>
-            </svg>
-          )},
-          { href: '/lgpd', label: 'Privacidade & LGPD', icon: (
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8'>
-              <path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/>
-            </svg>
-          )},
           { href: '/minha-clinica', label: 'Minha clínica', icon: (
             <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
               <path d='M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z'/>
               <polyline points='9 22 9 12 15 12 15 22'/>
-            </svg>
-          )},
-          { href: '/procedimentos', label: 'Procedimentos', icon: (
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-              <path d='M9 11H1l8-8v6h6v6'/><path d='M15 13h8l-8 8v-6H9V9'/>
             </svg>
           )},
           { href: '/admin', label: 'Painel admin', icon: (
@@ -210,8 +175,8 @@ export function Sidebar() {
                       padding: '9px 12px', borderRadius: 9,
                       marginBottom: 2, cursor: 'pointer',
                       width: '100%', textAlign: 'left' as const,
-                      background: active ? ACCENT_LIGHT : 'transparent',
-                      color: active ? ACCENT : TEXT_DEFAULT,
+                      background: active ? '#F3F4F6' : 'transparent',
+                      color: active ? '#111827' : TEXT_DEFAULT,
                       fontSize: 13, fontWeight: active ? 600 : 500,
                       border: 'none',
                       transition: 'background 0.12s',
