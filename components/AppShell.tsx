@@ -23,33 +23,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       background: '#EAECEF',
       padding: 12,
       display: 'flex',
+      gap: 12,
       overflow: 'hidden',
     }}>
+      {/* Ilha 1 — Sidebar */}
+      <div style={{
+        background: 'white',
+        borderRadius: 20,
+        overflow: 'hidden',
+        flexShrink: 0,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      }}>
+        <Sidebar />
+      </div>
+
+      {/* Ilha 2 — Topbar + Conteúdo */}
       <div style={{
         flex: 1,
         background: 'white',
         borderRadius: 20,
         display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden',
+        minWidth: 0,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}>
-        <Sidebar />
-        <div style={{
+        <Topbar />
+        <main style={{
           flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          minWidth: 0,
+          overflow: 'auto',
+          overscrollBehavior: 'contain',
+          minHeight: 0,
         }}>
-          <Topbar />
-          <main style={{
-            flex: 1,
-            overflow: 'auto',
-            overscrollBehavior: 'contain',
-            minHeight: 0,
-          }}>
-            {children}
-          </main>
-        </div>
+          {children}
+        </main>
       </div>
     </div>
   )

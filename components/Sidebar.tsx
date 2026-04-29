@@ -181,14 +181,11 @@ export function Sidebar() {
           if (grupo.items.length === 0) return null
           return (
             <div key={gi} style={{ marginBottom: 22 }}>
-              {grupo.label && (
-                <p style={{
-                  fontSize: 10, fontWeight: 600, color: TEXT_MUTED,
-                  letterSpacing: '0.08em', margin: '0 10px 8px',
-                  textTransform: 'uppercase',
-                }}>
-                  {grupo.label}
-                </p>
+              {gi > 0 && (
+                <div style={{
+                  height: 1, background: '#F3F4F6',
+                  margin: '6px 10px 14px',
+                }} />
               )}
               {grupo.items.map(item => {
                 const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
