@@ -635,12 +635,13 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       const med = JSON.parse(localStorage.getItem('medico') || '{}')
       const campos = camposRef.current
       const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
+      // Nota: agendamento_id e tipo_consulta foram removidos pois ainda não
+      // existem como colunas em 'consultas'. Adicionar no DB depois pra
+      // habilitar filtro "teleconsulta" no histórico.
       const body = {
         medico_id: med.id,
         paciente_id: sala?.paciente_id || null,
-        agendamento_id: sala?.agendamento_id || null,
         data_consulta: new Date().toISOString(),
-        tipo_consulta: 'teleconsulta',
         transcricao: transcricao || '',
         subjetivo:  campos.subjetivo  ?? pd.subjetivo  ?? '',
         objetivo:   campos.objetivo   ?? pd.objetivo   ?? '',
