@@ -635,23 +635,21 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       const med = JSON.parse(localStorage.getItem('medico') || '{}')
       const campos = camposRef.current
       const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
-      // Nota: agendamento_id e tipo_consulta foram removidos pois ainda não
-      // existem como colunas em 'consultas'. Adicionar no DB depois pra
-      // habilitar filtro "teleconsulta" no histórico.
+      // Mesmo padrão da Nova Consulta: spread do prontuario inteiro vindo da IA,
+      // mas sobrescrevendo S/O/A/P + receita com edições do médico (camposRef).
       const body = {
         medico_id: med.id,
         paciente_id: sala?.paciente_id || null,
-        data_consulta: new Date().toISOString(),
         transcricao: transcricao || '',
-        subjetivo:  campos.subjetivo  ?? pd.subjetivo  ?? '',
-        objetivo:   campos.objetivo   ?? pd.objetivo   ?? '',
-        avaliacao:  campos.avaliacao  ?? pd.avaliacao  ?? '',
-        plano:      campos.plano      ?? pd.plano      ?? '',
-        cids:       pd.cids    ?? [],
-        alertas:    pd.alertas ?? [],
-        hipoteses:  pd.hipoteses ?? [],
-        receita:    campos.receita ?? pd.receita ?? '',
+        ...pd,
+        // Edições manuais sobrescrevem o que veio da IA
+        ...(campos.subjetivo !== undefined && { subjetivo: campos.subjetivo }),
+        ...(campos.objetivo !== undefined && { objetivo: campos.objetivo }),
+        ...(campos.avaliacao !== undefined && { avaliacao: campos.avaliacao }),
+        ...(campos.plano !== undefined && { plano: campos.plano }),
+        ...(campos.receita !== undefined && { receita: campos.receita }),
       }
+      console.log('[salvar] body keys:', Object.keys(body))
       const r = await fetch('/api/consultas', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
