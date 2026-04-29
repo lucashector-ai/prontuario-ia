@@ -20,43 +20,50 @@ export async function POST(req: NextRequest) {
       : { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } }
 
     const partes = [
-      'Voce e um medico especialista analisando um exame medico.',
-      'Analise o exame e retorne APENAS um JSON valido (sem texto antes ou depois).',
+      'Voce e um medico clinico altamente experiente, com formacao em medicina baseada em evidencias e capacidade de mobilizar conhecimento de multiplas especialidades (cardiologia, endocrinologia, nefrologia, hematologia, gastroenterologia, neurologia, ortopedia, ginecologia, pneumologia, dermatologia, pediatria, etc).',
       '',
-      contexto ? 'CONTEXTO CLINICO DO PACIENTE: ' + contexto : '',
-      contexto ? '' : '',
-      'Retorne EXATAMENTE este formato JSON:',
+      'Sua tarefa e analisar o exame anexo com o RIGOR de um medico que vai assinar o laudo.',
+      '',
+      'PROCESSO DE RACIOCINIO (faca isso mentalmente antes de responder):',
+      '1. IDENTIFIQUE O TIPO DE EXAME — laboratorial (hemograma, bioquimica, hormonios, sorologia), imagem (raio-X, USG, TC, RM, ECG, ecocardio), ou outro. Identifique tambem qual especialidade e mais relevante.',
+      '2. ANALISE CADA VALOR/ACHADO — para cada parametro, compare com o intervalo de referencia. Considere idade, sexo e contexto clinico se fornecidos. Lembre que valores no limite as vezes sao mais importantes que voce pensa.',
+      '3. PENSE EM DIAGNOSTICOS DIFERENCIAIS — quais condicoes podem explicar o conjunto de achados? Pense em pelo menos 2-3 hipoteses antes de concluir.',
+      '4. AVALIE GRAVIDADE E URGENCIA — algum achado pede atencao imediata? Ha sinais de descompensacao, risco cardiovascular, malignidade ou doenca aguda?',
+      '5. ESTRUTURE A RESPOSTA — agora preencha o JSON com profundidade clinica.',
+      '',
+      contexto ? 'CONTEXTO CLINICO DO PACIENTE: ' + contexto : 'Sem contexto clinico fornecido — analise os achados de forma generica mas indique quando o contexto seria importante.',
+      '',
+      'RETORNE APENAS um JSON valido (sem texto antes ou depois):',
       '{',
-      '  "tipo": "Nome do exame (ex: Hemograma completo, ECG, Ressonancia de coluna)",',
-      '  "resumo": "Frase curta resumindo o achado principal (1 linha)",',
-      '  "alertas": ["Achado critico 1", "Achado critico 2"],',
+      '  "tipo": "Nome especifico do exame (ex: Hemograma completo com plaquetas e VHS, ECG de 12 derivacoes, Ressonancia magnetica de coluna lombar)",',
+      '  "resumo": "Frase curta e informativa com o achado principal — nao seja generico",',
+      '  "alertas": ["Achados criticos ou urgentes que pedem atencao imediata. Pode ser array vazio se nada critico."],',
       '  "valores": [',
       '    {',
-      '      "nome": "Hemoglobina",',
-      '      "valor": "10.2 g/dL",',
-      '      "referencia": "12.0-15.5 g/dL",',
-      '      "status": "alterado",',
-      '      "interpretacao": "Abaixo do limite, sugere anemia leve"',
+      '      "nome": "Nome do parametro",',
+      '      "valor": "Valor encontrado com unidade",',
+      '      "referencia": "Intervalo de referencia para idade/sexo do paciente",',
+      '      "status": "critico OU alterado OU normal",',
+      '      "interpretacao": "Frase tecnica explicando o significado clinico DESTE valor especifico (nao genericos)"',
       '    }',
       '  ],',
-      '  "conclusao": "Paragrafo com a interpretacao clinica completa do exame, considerando o contexto do paciente",',
-      '  "recomendacoes": ["Solicitar dosagem de ferritina", "Repetir exame em 30 dias"]',
+      '  "conclusao": "Paragrafo de 4-8 linhas com analise clinica completa: identifique o padrao geral, considere diagnosticos diferenciais quando relevante, articule o significado conjunto dos achados. Use linguagem tecnica precisa mas didatica. Mencione diretrizes quando aplicavel (ex: SBC para cardio, SBD para diabetes, ADA, KDIGO, etc).",',
+      '  "recomendacoes": ["Acoes praticas e especificas: exames complementares com nome exato, ajustes terapeuticos, encaminhamentos para especialistas, controles de seguimento, mudancas de habito relevantes"]',
       '}',
       '',
-      'REGRAS DO JSON:',
-      '- "status" SEMPRE deve ser uma destas 3 strings: "critico", "alterado", ou "normal"',
-      '- "alertas" so inclui achados realmente importantes/perigosos. Pode ser array vazio se nada critico.',
-      '- "valores" lista TODOS os parametros mensuraveis (hemograma, bioquimica, etc). Para exames de imagem (raio-X, ressonancia, ECG) pode ser array vazio.',
-      '- "interpretacao" de cada valor: 1 frase explicando o que aquele numero significa',
-      '- "recomendacoes": acoes praticas pro medico considerar. Use linguagem tecnica medica.',
-      '- "conclusao": linguagem tecnica medica, mas didatica. Considera o contexto do paciente se fornecido.',
-      '- Para exames de imagem: foque "valores" em achados anatomicos descritos no laudo (ex: "Disco L4-L5", valor: "Protrusao", referencia: "Sem alteracao", status: "alterado").',
-      '- NAO use markdown nem aspas escapadas dentro de strings. JSON simples e direto.',
+      'REGRAS CRITICAS:',
+      '- "status" SEMPRE deve ser uma destas 3 strings: "critico" (risco imediato), "alterado" (fora do referencia mas nao urgente), ou "normal" (dentro do referencia).',
+      '- Para exames de imagem (raio-X, ressonancia, ECG, ecocardio): "valores" lista achados anatomicos descritos no laudo (ex: nome="Disco L4-L5", valor="Protrusao posterior central", referencia="Sem alteracao morfologica", status="alterado").',
+      '- "interpretacao" precisa ser ESPECIFICA, nao generica. Se hemoglobina baixa, diga se sugere anemia ferropriva vs talassemia vs cronica baseado no quadro. Se TSH alto, diga hipotireoidismo subclinico vs primario.',
+      '- "recomendacoes" precisa nomear exames especificos (ex: "Solicitar ferritina e saturacao de transferrina" e nao "Investigar anemia"). Nomeie medicamentos com classes especificas quando aplicavel.',
+      '- "conclusao" cita diretrizes brasileiras/internacionais quando relevante.',
+      '- NAO use markdown nem aspas escapadas dentro de strings. JSON simples.',
+      '- Se o exame esta totalmente normal, "alertas" e "recomendacoes" podem ser arrays vazios e a "conclusao" deve confirmar normalidade.',
     ].filter(s => s !== null).join('\n')
 
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-7',
-      max_tokens: 4000,
+      max_tokens: 6000,
       messages: [{ role: 'user', content: [srcBlock, { type: 'text', text: partes }] }]
     })
 
@@ -68,7 +75,6 @@ export async function POST(req: NextRequest) {
       analise = JSON.parse(inicio >= 0 && fim >= 0 ? texto.slice(inicio, fim + 1) : '{}')
     } catch (parseErr) {
       console.warn('[analisar-exame] JSON parse falhou, retornando texto bruto. Resposta:', texto.slice(0, 300))
-      // Fallback: retorna texto puro pro front mostrar algo em vez de tela vazia
       return NextResponse.json({
         analise: {
           tipo: 'Exame medico',

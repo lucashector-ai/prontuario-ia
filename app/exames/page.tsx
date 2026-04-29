@@ -19,6 +19,28 @@ export default function Exames() {
   const [analise, setAnalise] = useState<any>(null)
   const [erro, setErro] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const [loadingMsg, setLoadingMsg] = useState('Recebendo o exame...')
+
+  // Mensagens rotativas durante a análise (pra parecer ativo)
+  useEffect(() => {
+    if (!analisando) return
+    const msgs = [
+      'Recebendo o exame...',
+      'Lendo valores e referências...',
+      'Identificando especialidade...',
+      'Analisando achados clínicos...',
+      'Pensando em hipóteses diagnósticas...',
+      'Consultando diretrizes médicas...',
+      'Estruturando interpretação final...',
+    ]
+    let i = 0
+    setLoadingMsg(msgs[0])
+    const t = setInterval(() => {
+      i = Math.min(i + 1, msgs.length - 1)
+      setLoadingMsg(msgs[i])
+    }, 4000)
+    return () => clearInterval(t)
+  }, [analisando])
 
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
@@ -328,6 +350,21 @@ export default function Exames() {
               </>
             )}
           </button>
+          {analisando && (
+            <div style={{ background: ACCENT_LIGHT, borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 4 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 700, color: ACCENT, margin: '0 0 2px' }}>A IA está analisando com cuidado</p>
+                <p style={{ fontSize: 11, color: ACCENT, margin: 0, opacity: 0.8, lineHeight: 1.5 }}>
+                  Pode levar até 30 segundos. Estamos identificando especialidade, comparando valores com referências e consultando diretrizes médicas.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* COLUNA DIREITA — resultado da análise */}
