@@ -99,8 +99,14 @@ export default function Exames() {
     setModalPaciente(true)
   }
 
-  const adicionarAoPaciente = async (pacienteId: string, pacienteNome: string) => {
+  const [pacienteSelecionadoId, setPacienteSelecionadoId] = useState('')
+
+  const adicionarAoPaciente = async () => {
     if (!medico || !analise || salvandoConsulta) return
+    if (!pacienteSelecionadoId) { setSalvouMsg('Erro: selecione um paciente'); setTimeout(() => setSalvouMsg(''), 3000); return }
+    const paciente = pacientesList.find((p: any) => p.id === pacienteSelecionadoId)
+    if (!paciente) return
+
     setSalvandoConsulta(true)
     try {
       // Monta texto formatado com todos os campos da análise pra entrar como "objetivo"
@@ -122,16 +128,16 @@ export default function Exames() {
       let medicoIdFinal = medico.id
       const ca = localStorage.getItem('clinica_admin')
       if (ca) {
-        const { data: pac } = await supabase.from('pacientes').select('medico_id').eq('id', pacienteId).single()
+        const { data: pac } = await supabase.from('pacientes').select('medico_id').eq('id', pacienteSelecionadoId).single()
         if (pac?.medico_id) medicoIdFinal = pac.medico_id
       }
 
+      // Body sem 'tipo' (coluna não existe). Mesmo padrão da Nova Consulta.
       const body = {
         medico_id: medicoIdFinal,
-        paciente_id: pacienteId,
-        tipo: 'exame',
+        paciente_id: pacienteSelecionadoId,
         transcricao: contexto || '',
-        subjetivo: contexto || 'Análise de exame importada via IA',
+        subjetivo: contexto || 'Análise de exame realizada via IA',
         objetivo,
         avaliacao: alertasTxt || conclusaoTxt.slice(0, 200),
         plano: planoTxt,
@@ -147,8 +153,9 @@ export default function Exames() {
       })
       const d = await r.json()
       if (d.id) {
-        setSalvouMsg('Adicionado ao histórico de ' + pacienteNome + '!')
+        setSalvouMsg('Adicionado ao histórico de ' + paciente.nome + '!')
         setModalPaciente(false)
+        setPacienteSelecionadoId('')
         setTimeout(() => setSalvouMsg(''), 4000)
       } else {
         setSalvouMsg('Erro: ' + (d.error || 'falha ao salvar'))
@@ -531,20 +538,51 @@ export default function Exames() {
               {pacientesList.length === 0 ? (
                 <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 24 }}>Nenhum paciente cadastrado</p>
               ) : (
-                pacientesList.map(p => (
-                  <button key={p.id} onClick={() => adicionarAoPaciente(p.id, p.nome)} disabled={salvandoConsulta}
+                <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Paciente</label>
+                    <select
+                      value={pacienteSelecionadoId}
+                      onChange={e => setPacienteSelecionadoId(e.target.value)}
+                      style={{
+                        width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8,
+                        border: '1px solid #e5e7eb', outline: 'none', background: 'white', color: '#111827',
+                      }}
+                    >
+                      <option value="">Selecionar paciente...</option>
+                      {pacientesList.map((p: any) => (
+                        <option key={p.id} value={p.id}>{p.nome}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={adicionarAoPaciente}
+                    disabled={salvandoConsulta || !pacienteSelecionadoId}
                     style={{
-                      width: '100%', padding: '11px 22px', textAlign: 'left' as const,
-                      background: 'white', border: 'none', borderBottom: '1px solid #f9fafb',
-                      cursor: salvandoConsulta ? 'default' : 'pointer', fontSize: 13, color: '#374151',
-                      opacity: salvandoConsulta ? 0.5 : 1,
+                      width: '100%', padding: '11px', borderRadius: 9, border: 'none',
+                      background: ACCENT, color: 'white', fontSize: 13, fontWeight: 700,
+                      cursor: (salvandoConsulta || !pacienteSelecionadoId) ? 'default' : 'pointer',
+                      opacity: (salvandoConsulta || !pacienteSelecionadoId) ? 0.5 : 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     }}
-                    onMouseEnter={e => { if (!salvandoConsulta) e.currentTarget.style.background = '#f9fafb' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'white' }}
                   >
-                    {p.nome}
+                    {salvandoConsulta ? (
+                      <>
+                        <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', animation: 'spin 0.8s linear infinite' }}/>
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                          <polyline points="17 21 17 13 7 13 7 21"/>
+                          <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Salvar no histórico
+                      </>
+                    )}
                   </button>
-                ))
+                </div>
               )}
             </div>
           </div>
