@@ -38,7 +38,7 @@ export default function Exames() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     const file = e.dataTransfer.files[0]
-    if (file && file.type.startsWith('image/')) handleImagem(file)
+    if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) handleImagem(file)
   }
 
   const handleAnalisar = async () => {
@@ -46,7 +46,7 @@ export default function Exames() {
     setAnalisando(true); setErro('')
     try {
       const form = new FormData()
-      form.append('imagem', imagem)
+      form.append('file', imagem)
       if (contexto) form.append('contexto', contexto)
       const res = await fetch('/api/analisar-exame', { method: 'POST', body: form })
       const data = await res.json()
@@ -102,7 +102,20 @@ export default function Exames() {
           >
             {preview ? (
               <div style={{ position: 'relative', width: '100%' }}>
-                <img src={preview} alt="Exame" style={{ width: '100%', maxHeight: 400, objectFit: 'contain', display: 'block' }}/>
+                {imagem?.type === 'application/pdf' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, background: '#FEF2F2', borderRadius: 12, border: '1px solid #FECACA' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="1.5">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#991B1B', margin: '0 0 2px' }}>PDF carregado</p>
+                  <p style={{ fontSize: 12, color: '#7F1D1D', margin: 0 }}>{imagem.name}</p>
+                </div>
+              </div>
+            ) : (
+              <img src={preview} alt="Exame" style={{ width: '100%', maxHeight: 400, objectFit: 'contain', display: 'block' }}/>
+            )}
                 <button onClick={e => { e.stopPropagation(); setImagem(null); setPreview(null); setAnalise(null) }}
                   style={{
                     position: 'absolute', top: 12, right: 12,
@@ -137,7 +150,7 @@ export default function Exames() {
               </div>
             )}
           </div>
-          <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }}
+          <input ref={inputRef} type="file" accept="image/*,application/pdf" style={{ display: 'none' }}
             onChange={e => { const f = e.target.files?.[0]; if (f) handleImagem(f) }}/>
 
           {/* Contexto clínico */}

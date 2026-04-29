@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
       + '5. OBSERVACOES: pontos importantes que merecem atencao medica\n\n'
       + 'Use linguagem clara e acessivel. Seja detalhado mas objetivo.'
     const message = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 2000,
+      model: 'claude-opus-4-7',
+      max_tokens: 4000,
       messages: [{ role: 'user', content: [srcBlock, { type: 'text', text: prompt }] }]
     })
     const analise = (message.content[0] as any).text
