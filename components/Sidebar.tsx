@@ -195,7 +195,7 @@ export function Sidebar() {
       </nav>
 
       {/* Logout separado embaixo */}
-      <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: 14 }}>
+      <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: 14, marginTop: 'auto' }}>
         <button
           onClick={sair}
           style={{
