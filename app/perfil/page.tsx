@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
@@ -264,8 +265,7 @@ export default function PerfilPage() {
               </div>
               <div>
                 <label style={labelStyle}>Especialidade</label>
-                <input value={form.especialidade} onChange={e => setForm(p => ({ ...p, especialidade: e.target.value }))}
-                  placeholder="Ex: Clínica Geral" style={inputStyle}/>
+                <EspecialidadeSelect value={form.especialidade} onChange={v => setForm(p => ({ ...p, especialidade: v }))} />
               </div>
               <div>
                 <label style={labelStyle}>CRM</label>

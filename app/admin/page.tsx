@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
+import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
@@ -419,7 +420,7 @@ export default function Admin() {
                   </div>
                   <div>
                     <label style={labelStyle}>Especialidade</label>
-                    <input value={form.especialidade} onChange={e => setForm(p => ({ ...p, especialidade: e.target.value }))} placeholder="Clínico Geral" style={inputStyle}/>
+                    <EspecialidadeSelect value={form.especialidade} onChange={v => setForm(p => ({ ...p, especialidade: v }))} />
                   </div>
                 </div>
               )}
@@ -495,7 +496,7 @@ export default function Admin() {
                   </div>
                   <div>
                     <label style={labelStyle}>Especialidade</label>
-                    <input value={formEditar.especialidade} onChange={e => setFormEditar(p => ({ ...p, especialidade: e.target.value }))} style={inputStyle}/>
+                    <EspecialidadeSelect value={formEditar.especialidade} onChange={v => setFormEditar(p => ({ ...p, especialidade: v }))} />
                   </div>
                 </div>
               )}
