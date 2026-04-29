@@ -197,7 +197,14 @@ export function Sidebar() {
                 return (
                   <button
                     key={item.href}
-                    onClick={() => router.push(item.href)}
+                    onClick={() => {
+                      // WhatsApp abre em nova aba (atendimento como ferramenta separada)
+                      if (item.href === '/whatsapp-app') {
+                        window.open(item.href, '_blank')
+                      } else {
+                        router.push(item.href)
+                      }
+                    }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 11,
                       padding: '9px 12px', borderRadius: 9,
