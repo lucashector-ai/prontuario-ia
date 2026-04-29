@@ -126,6 +126,11 @@ export function Sidebar() {
               <polyline points='9 22 9 12 15 12 15 22'/>
             </svg>
           )},
+          { href: '/procedimentos', label: 'Procedimentos', icon: (
+            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+              <path d='M9 11H1l8-8v6h6v6'/><path d='M15 13h8l-8 8v-6H9V9'/>
+            </svg>
+          )},
           { href: '/admin', label: 'Painel admin', icon: (
             <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
               <path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/>
