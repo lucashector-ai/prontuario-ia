@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import ConfigPanel from './ConfigPanel'
+import { WhatsAppConnect } from '@/components/WhatsAppConnect'
 
 function corAvatar(str:string): string {
   const cores = ['#25d366','#00a884','#6043C1','#0d9488','#d97706','#dc2626','#7c3aed','#0891b2','#be185d','#065f46']
@@ -357,6 +358,19 @@ export default function WhatsAppApp() {
     setAtiva({...ativa,modo:'ia',atendente_nome:null})
   }
 
+
+  // Gate de conexão: se médico já carregou mas WhatsApp ainda não conectado, mostra tela de onboarding
+  if (medico && (!config || !config.phone_number_id)) {
+    return (
+      <WhatsAppConnect
+        medicoId={medico.id}
+        onConnected={() => {
+          // Recarrega config após conexão bem-sucedida
+          supabase.from('whatsapp_config').select('*').eq('medico_id', medico.id).single().then(({data}) => setConfig(data))
+        }}
+      />
+    )
+  }
   return (
     <div style={{display:'flex',height:'100vh',width:'100vw',background:'#f0f2f5',overflow:'hidden',fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif'}}>
       <style>{`
