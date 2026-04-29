@@ -275,12 +275,14 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       .on('broadcast', { event: 'encerrar' }, () => {
         tocarSom('saida')
         if (papelRef.current === 'paciente') {
+          // Limpa recursos mas NÃO fecha janela nem redireciona — mostra tela de fim
           clearInterval(timerRef.current as any)
           streamRef.current?.getTracks().forEach(t => t.stop())
           pcRef.current?.close()
           channelRef.current?.unsubscribe()
-          try { window.close() } catch {}
-          window.location.href = '/login'
+          if (localRef.current) localRef.current.srcObject = null
+          if (remoteRef.current) remoteRef.current.srcObject = null
+          setTela('encerrada_paciente')
         } else {
           encerrarLocal()
         }
@@ -762,6 +764,28 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
       </div>
       <p style={{ fontSize: 16, color: 'white', fontWeight: 600, margin: 0, textAlign: 'center', maxWidth: 320 }}>{erro}</p>
+    </div>
+  )
+
+  if (tela === 'encerrada_paciente') return (
+    <div style={{ minHeight:'100dvh', background:'#0f172a', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:24, gap:20 }}>
+      <div style={{ width:80, height:80, borderRadius:'50%', background:'linear-gradient(135deg,#6043C1,#8b5cf6)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 8px 32px rgba(96,67,193,0.4)' }}>
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <div style={{ textAlign:'center' as const, maxWidth: 340 }}>
+        <h1 style={{ color:'white', fontSize:24, fontWeight:700, margin:'0 0 8px' }}>Consulta finalizada</h1>
+        <p style={{ color:'#94a3b8', fontSize:15, margin:'0 0 4px', lineHeight:1.5 }}>Obrigado por usar nossa plataforma.</p>
+        <p style={{ color:'#64748b', fontSize:13, margin:0, lineHeight:1.5 }}>O médico encerrou esta videoconsulta. Você já pode fechar esta janela com segurança.</p>
+      </div>
+      <div style={{ display:'flex', gap:10, marginTop:8, flexWrap:'wrap' as const, justifyContent:'center' }}>
+        <button onClick={() => { try { window.close() } catch {} }}
+          style={{ padding:'12px 24px', borderRadius:10, border:'none', background:'#6043C1', color:'white', fontSize:14, fontWeight:600, cursor:'pointer' }}>
+          Fechar janela
+        </button>
+      </div>
+      <p style={{ color:'#475569', fontSize:11, margin:'24px 0 0', textAlign:'center' as const }}>Se tiver dúvidas, entre em contato com a clínica.</p>
     </div>
   )
 
