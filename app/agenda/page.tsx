@@ -756,7 +756,7 @@ export default function Agenda() {
                   const d = new Date(ag.data_hora)
                   const idx = toSlotIdx(d)
                   const dur = Number(ag.duracao) || 30
-                  const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Paciente'
+                  const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Encaixe'
                   const cancelado = ag.status === 'cancelado'
                   return (
                     <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
@@ -862,7 +862,7 @@ export default function Agenda() {
                   return (
                     <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
                       style={{ fontSize: 10, padding: '2px 5px', borderRadius: 4, background: corMed.bg, color: corMed.text, borderLeft: `2px solid ${corMed.dot}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
-                      {new Date(ag.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} {ag.pacientes?.nome || 'Paciente'}
+                      {new Date(ag.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} {ag.pacientes?.nome || 'Encaixe'}
                     </div>
                   )
                 })}
@@ -917,7 +917,7 @@ export default function Agenda() {
                 const d = new Date(ag.data_hora)
                 const idx = toSlotIdx(d)
                 const dur = Number(ag.duracao) || 30
-                const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Paciente'
+                const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Encaixe'
                 return (
                   <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
                     style={{ position: 'absolute', left: 8, right: 8, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: corMed.bg, border: `1px solid ${corMed.border}`, borderLeft: `3px solid ${corMed.dot}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', zIndex: 10, overflow: 'hidden' }}>
@@ -1256,9 +1256,14 @@ export default function Agenda() {
                 <label style={labelStyle}>Paciente</label>
                 <select value={form.paciente_id} onChange={e => setForm(f => ({...f, paciente_id: e.target.value}))}
                   style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: '#111827' }}>
-                  <option value="">Selecionar paciente</option>
+                  <option value="">Selecionar paciente (opcional)</option>
                   {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
+                {!form.paciente_id && (
+                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '5px 2px 0', fontStyle: 'italic' }}>
+                    Deixe em branco para criar um encaixe rápido
+                  </p>
+                )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 10 }}>
                 <div>
