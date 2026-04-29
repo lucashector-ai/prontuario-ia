@@ -128,7 +128,7 @@ export default function Agenda() {
   const [listaEspera] = useState<any[]>([])
 
   const [modal, setModal] = useState<{ open: boolean; date?: Date; ag?: any }>({ open: false })
-  const [form, setForm] = useState({ paciente_id: '', data_hora: '', tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
+  const [form, setForm] = useState({ paciente_id: '', medico_id: '', data_hora: '', tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
   const [salvando, setSalvando] = useState(false)
 
   const [comVideo, setComVideo] = useState(false)
@@ -281,6 +281,7 @@ export default function Agenda() {
       const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
       setForm({
         paciente_id: ag.paciente_id || '',
+        medico_id: ag.medico_id || '',
         data_hora: local,
         tipo: ag.tipo || 'consulta',
         motivo: ag.motivo || '',
@@ -292,7 +293,7 @@ export default function Agenda() {
       const d = date || new Date()
       if (d.getHours() < HORA_INI) d.setHours(8, 0, 0, 0)
       const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
-      setForm({ paciente_id: '', data_hora: local, tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
+      setForm({ paciente_id: '', medico_id: '', data_hora: local, tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
       setModal({ open: true, date: d })
     }
   }
@@ -397,19 +398,23 @@ export default function Agenda() {
           meetLinkFinal = salaLink
           meetCodeFinal = salaId
         }
-        // Se for clinica admin, usa medico_id do paciente selecionado
+        // Resolução do médico responsável pelo agendamento
         let medicoIdFinal = medico.id
         const ca = localStorage.getItem('clinica_admin')
-        if (ca && form.paciente_id) {
-          const pac = pacientes.find((p: any) => p.id === form.paciente_id)
-          if (pac && pac.medico_id) medicoIdFinal = pac.medico_id
+        if (ca) {
+          // Admin da clínica: prioriza médico escolhido no form, senão pega do paciente, senão primeiro ativo
+          if (form.medico_id) {
+            medicoIdFinal = form.medico_id
+          } else if (form.paciente_id) {
+            const pac = pacientes.find((p: any) => p.id === form.paciente_id)
+            if (pac && pac.medico_id) medicoIdFinal = pac.medico_id
+          } else {
+            const { data: primMed } = await supabase
+              .from('medicos').select('id').eq('clinica_id', medico.clinica_id).eq('cargo', 'medico').eq('ativo', true).order('criado_em').limit(1).maybeSingle()
+            if (primMed) medicoIdFinal = primMed.id
+          }
         }
-        // Se ainda for admin sem paciente, usa primeiro medico da clinica
-        if (ca && !form.paciente_id) {
-          const { data: primMed } = await supabase
-            .from('medicos').select('id').eq('clinica_id', medico.clinica_id).eq('cargo', 'medico').eq('ativo', true).order('criado_em').limit(1).maybeSingle()
-          if (primMed) medicoIdFinal = primMed.id
-        }
+        // Se médico logado, medicoIdFinal já é medico.id (default acima)
 
         const { data } = await supabase.from('agendamentos').insert({
           medico_id: medicoIdFinal,
@@ -1220,6 +1225,33 @@ export default function Agenda() {
                   ))}
                 </div>
               </div>
+              {/* Profissional — read-only se médico logado, dropdown se clinica admin */}
+              {(() => {
+                const ehAdminClinica = typeof window !== 'undefined' && !!localStorage.getItem('clinica_admin')
+                if (!ehAdminClinica) {
+                  return (
+                    <div>
+                      <label style={labelStyle}>Profissional</label>
+                      <div style={{ padding: '9px 12px', fontSize: 13, borderRadius: 8, background: '#f9fafb', color: '#111827', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: medico?.cor || '#6043C1' }}/>
+                        Dr(a). {medico?.nome || '...'}
+                      </div>
+                    </div>
+                  )
+                }
+                return (
+                  <div>
+                    <label style={labelStyle}>Profissional</label>
+                    <select value={form.medico_id} onChange={e => setForm(f => ({...f, medico_id: e.target.value}))}
+                      style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: '#111827' }}>
+                      <option value="">Selecionar médico</option>
+                      {medicosClinica.filter((m: any) => m.cargo === 'medico' && m.ativo !== false).map((m: any) => (
+                        <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
+                      ))}
+                    </select>
+                  </div>
+                )
+              })()}
               <div>
                 <label style={labelStyle}>Paciente</label>
                 <select value={form.paciente_id} onChange={e => setForm(f => ({...f, paciente_id: e.target.value}))}
