@@ -702,24 +702,80 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   const fmtTimer = (s: number) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0')
 
+  // Comprime imagem via canvas pra caber nos 512KB do broadcast Realtime
+  const comprimirImagem = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      // Reduz dimensão se for muito grande (max 1600px no maior lado)
+      const maxDim = 1600
+      let { width, height } = img
+      if (width > maxDim || height > maxDim) {
+        const scale = maxDim / Math.max(width, height)
+        width = Math.round(width * scale)
+        height = Math.round(height * scale)
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { reject(new Error('canvas ctx falhou')); return }
+      ctx.drawImage(img, 0, 0, width, height)
+      // JPEG quality 0.7 — equilíbrio entre qualidade visual e peso
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
+      resolve(dataUrl)
+    }
+    img.onerror = () => reject(new Error('falha ao carregar imagem'))
+    img.src = URL.createObjectURL(file)
+  })
+
+  const fileToBase64 = (file: File): Promise<string> => new Promise((res, rej) => {
+    const reader = new FileReader()
+    reader.onload = () => res(reader.result as string)
+    reader.onerror = rej
+    reader.readAsDataURL(file)
+  })
+
   const enviarAnexo = async (file: File) => {
     if (!file || enviandoAnexo) return
     setEnviandoAnexo(true)
     try {
-      // Converte para base64
-      const base64 = await new Promise<string>((res, rej) => {
-        const reader = new FileReader()
-        reader.onload = () => res(reader.result as string)
-        reader.onerror = rej
-        reader.readAsDataURL(file)
-      })
+      const ehImagem = file.type.startsWith('image/')
+      let base64: string
+      let nomeFinal = file.name
+      let tipoFinal = file.type
+
+      if (ehImagem) {
+        // Sempre comprime imagens (cabe no broadcast 512KB)
+        base64 = await comprimirImagem(file)
+        tipoFinal = 'image/jpeg'
+        // Renomeia pra .jpg pra refletir o formato comprimido
+        nomeFinal = file.name.replace(/\.(png|webp|heic|heif|gif|bmp)$/i, '.jpg')
+      } else {
+        // Não-imagem: valida tamanho antes de codificar
+        if (file.size > 400 * 1024) {
+          alert('Arquivo muito grande (max 400KB para PDF/outros). Tente comprimir ou enviar como imagem.')
+          setEnviandoAnexo(false)
+          return
+        }
+        base64 = await fileToBase64(file)
+      }
+
+      // Verifica tamanho final do base64 antes de mandar
+      if (base64.length > 500_000) {
+        alert('Arquivo ainda muito grande após compressão. Tente uma imagem menor.')
+        setEnviandoAnexo(false)
+        return
+      }
+
       const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      const anexo = { nome: file.name, url: base64, tipo: file.type, de: 'Voce', hora }
+      const anexo = { nome: nomeFinal, url: base64, tipo: tipoFinal, de: 'Voce', hora }
       setAnexos(p => [...p, anexo])
-      // Envia pelo broadcast (base64 funciona para imagens/PDFs pequenos)
-      send('anexo', { nome: file.name, url: base64, tipo: file.type })
+      send('anexo', { nome: nomeFinal, url: base64, tipo: tipoFinal })
       if (!chatAberto) { setChatAberto(true); setNaoLidas(0) }
-    } catch { console.error('Erro ao enviar anexo') }
+    } catch (err) {
+      console.error('Erro ao enviar anexo:', err)
+      alert('Erro ao enviar anexo. Tente novamente.')
+    }
     setEnviandoAnexo(false)
   }
 
