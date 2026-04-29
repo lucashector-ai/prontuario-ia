@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
@@ -54,6 +55,109 @@ export default function Exames() {
       else setErro(data.error || 'Erro ao analisar')
     } catch (e: any) { setErro(e.message) }
     finally { setAnalisando(false) }
+  }
+
+  // Estados para Exportar / Adicionar ao prontuário
+  const [modalPaciente, setModalPaciente] = useState(false)
+  const [pacientesList, setPacientesList] = useState<any[]>([])
+  const [salvandoConsulta, setSalvandoConsulta] = useState(false)
+  const [salvouMsg, setSalvouMsg] = useState('')
+
+  const carregarPacientes = async () => {
+    if (!medico) return
+    const ca = localStorage.getItem('clinica_admin')
+    let medicoIdParaBusca = medico.id
+    if (ca) {
+      // Admin: pega pacientes de todos os médicos da clínica
+      const { data: meds } = await supabase.from('medicos').select('id').eq('clinica_id', medico.clinica_id)
+      const ids = (meds || []).map((m: any) => m.id)
+      const { data: pacs } = await supabase.from('pacientes').select('id, nome').in('medico_id', ids).order('nome')
+      setPacientesList(pacs || [])
+    } else {
+      const { data: pacs } = await supabase.from('pacientes').select('id, nome').eq('medico_id', medicoIdParaBusca).order('nome')
+      setPacientesList(pacs || [])
+    }
+  }
+
+  const exportarPDF = async () => {
+    if (!analise) return
+    const res = await fetch('/api/pdf-exame', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ medico, analise, contexto }),
+    })
+    const html = await res.text()
+    const win = window.open('', '_blank')
+    if (win) {
+      win.document.write(html)
+      win.document.close()
+    }
+  }
+
+  const abrirModalPaciente = () => {
+    carregarPacientes()
+    setModalPaciente(true)
+  }
+
+  const adicionarAoPaciente = async (pacienteId: string, pacienteNome: string) => {
+    if (!medico || !analise || salvandoConsulta) return
+    setSalvandoConsulta(true)
+    try {
+      // Monta texto formatado com todos os campos da análise pra entrar como "objetivo"
+      const partes: string[] = []
+      if (analise.tipo) partes.push('TIPO DE EXAME: ' + analise.tipo)
+      if (analise.resumo) partes.push('RESUMO: ' + analise.resumo)
+      if ((analise.valores || []).length > 0) {
+        partes.push('\nVALORES ENCONTRADOS:')
+        for (const v of analise.valores) {
+          partes.push('• ' + v.nome + ': ' + v.valor + ' (ref: ' + v.referencia + ') — ' + (v.status || '') + (v.interpretacao ? '. ' + v.interpretacao : ''))
+        }
+      }
+      const objetivo = partes.join('\n')
+      const alertasTxt = (analise.alertas || []).join(' | ')
+      const conclusaoTxt = analise.conclusao || ''
+      const planoTxt = (analise.recomendacoes || []).join(' • ')
+
+      // Resolve medico_id: se admin, pega medico_id do paciente
+      let medicoIdFinal = medico.id
+      const ca = localStorage.getItem('clinica_admin')
+      if (ca) {
+        const { data: pac } = await supabase.from('pacientes').select('medico_id').eq('id', pacienteId).single()
+        if (pac?.medico_id) medicoIdFinal = pac.medico_id
+      }
+
+      const body = {
+        medico_id: medicoIdFinal,
+        paciente_id: pacienteId,
+        tipo: 'exame',
+        transcricao: contexto || '',
+        subjetivo: contexto || 'Análise de exame importada via IA',
+        objetivo,
+        avaliacao: alertasTxt || conclusaoTxt.slice(0, 200),
+        plano: planoTxt,
+        cids: [],
+        alertas: analise.alertas || [],
+        hipoteses: [],
+        receita: '',
+      }
+      const r = await fetch('/api/consultas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const d = await r.json()
+      if (d.id) {
+        setSalvouMsg('Adicionado ao histórico de ' + pacienteNome + '!')
+        setModalPaciente(false)
+        setTimeout(() => setSalvouMsg(''), 4000)
+      } else {
+        setSalvouMsg('Erro: ' + (d.error || 'falha ao salvar'))
+        setTimeout(() => setSalvouMsg(''), 5000)
+      }
+    } catch (err: any) {
+      setSalvouMsg('Erro: ' + err.message)
+    }
+    setSalvandoConsulta(false)
   }
 
   const statusCor = (s: string) => {
@@ -223,6 +327,42 @@ export default function Exames() {
         {analise && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
+            {/* Barra de ações: Exportar PDF + Adicionar ao prontuário */}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
+              <button onClick={exportarPDF} style={{
+                flex: 1, padding: '10px 14px', borderRadius: 9, border: '1px solid #e5e7eb',
+                background: 'white', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Exportar PDF
+              </button>
+              <button onClick={abrirModalPaciente} style={{
+                flex: 1, padding: '10px 14px', borderRadius: 9, border: 'none',
+                background: ACCENT, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Adicionar ao prontuário
+              </button>
+            </div>
+
+            {salvouMsg && (
+              <div style={{
+                background: salvouMsg.startsWith('Erro') ? '#fef2f2' : '#ecfdf5',
+                border: '1px solid ' + (salvouMsg.startsWith('Erro') ? '#fecaca' : '#a7f3d0'),
+                color: salvouMsg.startsWith('Erro') ? '#991b1b' : '#065f46',
+                padding: '10px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+              }}>{salvouMsg}</div>
+            )}
+
+
             {/* Card: tipo + resumo */}
             <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
@@ -369,7 +509,49 @@ export default function Exames() {
         )}
       </div>
 
-      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+
+      {/* Modal: escolher paciente para adicionar análise ao prontuário */}
+      {modalPaciente && (
+        <div onClick={() => setModalPaciente(false)} style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: 'white', borderRadius: 14, width: '100%', maxWidth: 420,
+            display: 'flex', flexDirection: 'column', maxHeight: '80vh',
+          }}>
+            <div style={{ padding: '18px 22px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Selecionar paciente</h3>
+                <p style={{ fontSize: 12, color: '#6b7280', margin: '3px 0 0' }}>A análise será adicionada ao histórico</p>
+              </div>
+              <button onClick={() => setModalPaciente(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: '#9ca3af', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+              {pacientesList.length === 0 ? (
+                <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 24 }}>Nenhum paciente cadastrado</p>
+              ) : (
+                pacientesList.map(p => (
+                  <button key={p.id} onClick={() => adicionarAoPaciente(p.id, p.nome)} disabled={salvandoConsulta}
+                    style={{
+                      width: '100%', padding: '11px 22px', textAlign: 'left' as const,
+                      background: 'white', border: 'none', borderBottom: '1px solid #f9fafb',
+                      cursor: salvandoConsulta ? 'default' : 'pointer', fontSize: 13, color: '#374151',
+                      opacity: salvandoConsulta ? 0.5 : 1,
+                    }}
+                    onMouseEnter={e => { if (!salvandoConsulta) e.currentTarget.style.background = '#f9fafb' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'white' }}
+                  >
+                    {p.nome}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+            <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </main>
   )
 }
