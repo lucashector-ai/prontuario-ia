@@ -122,6 +122,7 @@ export function Sidebar() {
   return (
     <aside style={{
       width: 240,
+      height: '100%',
       background: 'white',
       display: 'flex',
       flexDirection: 'column',
