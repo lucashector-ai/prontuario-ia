@@ -51,7 +51,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Topbar />
         <main style={{
           flex: 1,
-          overflow: 'auto',
+          overflowY: 'auto',
+          overflowX: 'hidden',
           overscrollBehavior: 'contain',
           minHeight: 0,
         }}>
