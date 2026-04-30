@@ -54,7 +54,7 @@ export default function MinhaClinicaPage() {
   }, [router])
 
   return (
-    <main style={{ height: '100%', overflow: 'auto', background: BG, padding: 24 }}>
+    <div style={{ minHeight: '100%', background: BG, padding: 24 }}>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Minha Clínica</h1>
@@ -91,7 +91,7 @@ export default function MinhaClinicaPage() {
       {tab === 'sofia' && <Sofia />}
       {tab === 'automacoes' && <Automacoes />}
       {tab === 'lgpd' && <Lgpd />}
-    </main>
+    </div>
   )
 }
 
