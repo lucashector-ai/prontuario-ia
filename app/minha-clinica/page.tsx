@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { VisaoGeral } from '@/components/minha-clinica/VisaoGeral'
 import { Procedimentos } from '@/components/minha-clinica/Procedimentos'
+import { Lgpd } from '@/components/minha-clinica/Lgpd'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
@@ -87,7 +88,7 @@ export default function MinhaClinicaPage() {
       {tab === 'procedimentos' && <Procedimentos />}
       {tab === 'sofia' && <Placeholder titulo="Sofia · IA" descricao="Configure a assistente IA do WhatsApp." />}
       {tab === 'automacoes' && <Placeholder titulo="Automações" descricao="Lembretes, follow-ups e mensagens programadas." />}
-      {tab === 'lgpd' && <Placeholder titulo="Privacidade & LGPD" descricao="Direitos do titular dos dados, exportação e exclusão." />}
+      {tab === 'lgpd' && <Lgpd />}
     </main>
   )
 }
