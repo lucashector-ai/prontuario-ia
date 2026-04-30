@@ -5,6 +5,7 @@ import { VisaoGeral } from '@/components/minha-clinica/VisaoGeral'
 import { Procedimentos } from '@/components/minha-clinica/Procedimentos'
 import { Lgpd } from '@/components/minha-clinica/Lgpd'
 import { Automacoes } from '@/components/minha-clinica/Automacoes'
+import { Sofia } from '@/components/minha-clinica/Sofia'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
@@ -87,7 +88,7 @@ export default function MinhaClinicaPage() {
       {/* Conteúdo da tab ativa */}
       {tab === 'visao' && <VisaoGeral />}
       {tab === 'procedimentos' && <Procedimentos />}
-      {tab === 'sofia' && <Placeholder titulo="Sofia · IA" descricao="Configure a assistente IA do WhatsApp." />}
+      {tab === 'sofia' && <Sofia />}
       {tab === 'automacoes' && <Automacoes />}
       {tab === 'lgpd' && <Lgpd />}
     </main>
