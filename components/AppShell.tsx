@@ -49,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}>
         <Topbar />
-        <main style={{
+        <main className="appshell-main" style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',

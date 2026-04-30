@@ -93,3 +93,30 @@ input:focus, textarea:focus, select:focus {
   .sidebar-desktop { display: none !important; }
   .main-full { padding-left: 0 !important; }
 }
+
+
+/* Scrollbar fino e que só aparece em hover (estilo macOS moderno) */
+.appshell-main::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.appshell-main:hover::-webkit-scrollbar {
+  width: 8px;
+}
+.appshell-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+.appshell-main::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.appshell-main::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+.appshell-main {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.appshell-main:hover {
+  scrollbar-color: #cbd5e1 transparent;
+}
