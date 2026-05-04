@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   // Se clinica_id foi passado, retorna pacientes de todos os médicos da clínica
   if (clinicaId) {
     const { data: medicos } = await supabase
-      .from('medicos').select('id').eq('clinica_id', clinicaId)
+      .from('medicos').select('id').eq('clinica_id', clinicaId).eq('cargo', 'medico')
     const medicoIds = (medicos || []).map(m => m.id)
     if (medicoIds.length === 0) return NextResponse.json({ pacientes: [] })
 

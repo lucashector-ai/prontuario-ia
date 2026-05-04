@@ -197,7 +197,7 @@ export default function Agenda() {
       const admin = JSON.parse(ca)
       if (admin.clinica_id) {
         const { data: meds } = await supabase
-          .from('medicos').select('id, cor').eq('clinica_id', admin.clinica_id).eq('ativo', true)
+          .from('medicos').select('id, cor').eq('clinica_id', admin.clinica_id).eq('cargo', 'medico').eq('ativo', true)
         medicoIds = (meds || []).map((m: any) => m.id)
         const mapa: Record<string, string> = {}
         ;(meds || []).forEach((m: any) => { mapa[m.id] = m.cor || '#6043C1' })

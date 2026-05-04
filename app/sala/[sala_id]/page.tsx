@@ -102,7 +102,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       try {
         const a = JSON.parse(adm)
         if (a.clinica_id) {
-          sb.from('medicos').select('*').eq('clinica_id', a.clinica_id).eq('ativo', true).limit(1).single().then(({ data }) => {
+          sb.from('medicos').select('*').eq('clinica_id', a.clinica_id).eq('cargo', 'medico').eq('ativo', true).limit(1).single().then(({ data }) => {
             if (data) setMedicoSala(data)
           })
         }

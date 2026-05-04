@@ -41,7 +41,7 @@ export default function PacienteDetalhe() {
         if (admin.clinica_id) {
           const { data: primMed } = await supabase
             .from('medicos').select('*')
-            .eq('clinica_id', admin.clinica_id).eq('ativo', true)
+            .eq('clinica_id', admin.clinica_id).eq('cargo', 'medico').eq('ativo', true)
             .order('criado_em').limit(1).maybeSingle()
           if (primMed) { setMedicoLogado(primMed); return }
         }
@@ -79,7 +79,7 @@ export default function PacienteDetalhe() {
     if (caStr) {
       const admin = JSON.parse(caStr)
       if (admin.clinica_id) {
-        const { data: meds } = await supabase.from('medicos').select('id, nome, cor').eq('clinica_id', admin.clinica_id).eq('ativo', true)
+        const { data: meds } = await supabase.from('medicos').select('id, nome, cor').eq('clinica_id', admin.clinica_id).eq('cargo', 'medico').eq('ativo', true)
         if (meds && meds.length > 0) {
           medicoIds = meds.map((m: any) => m.id)
           const mapa: Record<string, { nome: string, cor: string }> = {}

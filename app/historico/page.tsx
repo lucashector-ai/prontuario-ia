@@ -39,7 +39,7 @@ export default function Historico() {
     if (caStr) {
       const admin = JSON.parse(caStr)
       if (admin.clinica_id) {
-        const { data: meds } = await supabase.from('medicos').select('id').eq('clinica_id', admin.clinica_id).eq('ativo', true)
+        const { data: meds } = await supabase.from('medicos').select('id').eq('clinica_id', admin.clinica_id).eq('cargo', 'medico').eq('ativo', true)
         if (meds && meds.length > 0) medicoIds = meds.map((m: any) => m.id)
       }
     }
@@ -55,7 +55,7 @@ export default function Historico() {
     if (caStr) {
       const admin = JSON.parse(caStr)
       if (admin.clinica_id) {
-        const { data: meds } = await supabase.from('medicos').select('id, nome, cor').eq('clinica_id', admin.clinica_id)
+        const { data: meds } = await supabase.from('medicos').select('id, nome, cor').eq('clinica_id', admin.clinica_id).eq('cargo', 'medico')
         const mapa: Record<string, { nome: string, cor: string }> = {}
         ;(meds || []).forEach((m: any) => { mapa[m.id] = { nome: m.nome, cor: m.cor || '#6043C1' } })
         setMapaMedicos(mapa)

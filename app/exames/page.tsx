@@ -91,7 +91,7 @@ export default function Exames() {
     let medicoIdParaBusca = medico.id
     if (ca) {
       // Admin: pega pacientes de todos os médicos da clínica
-      const { data: meds } = await supabase.from('medicos').select('id').eq('clinica_id', medico.clinica_id)
+      const { data: meds } = await supabase.from('medicos').select('id').eq('clinica_id', medico.clinica_id).eq('cargo', 'medico')
       const ids = (meds || []).map((m: any) => m.id)
       const { data: pacs } = await supabase.from('pacientes').select('id, nome').in('medico_id', ids).order('nome')
       setPacientesList(pacs || [])

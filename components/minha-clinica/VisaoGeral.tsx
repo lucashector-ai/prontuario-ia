@@ -69,7 +69,7 @@ export function VisaoGeral() {
       })
       // Carrega stats
       const [{ count: nMedicos }, { count: nPacientes }] = await Promise.all([
-        supabase.from('medicos').select('*', { count: 'exact', head: true }).eq('clinica_id', clinicaId).eq('ativo', true),
+        supabase.from('medicos').select('*', { count: 'exact', head: true }).eq('clinica_id', clinicaId).eq('cargo', 'medico').eq('ativo', true),
         supabase.from('pacientes').select('*', { count: 'exact', head: true }).eq('clinica_id', clinicaId).then(r => r.error ? { count: 0 } : r),
       ])
       setStats({ medicos: nMedicos || 0, pacientes: nPacientes || 0 })

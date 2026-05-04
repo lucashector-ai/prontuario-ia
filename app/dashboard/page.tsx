@@ -41,7 +41,7 @@ export default function Dashboard() {
       setMedico(adminData)
       ;(async () => {
         const { data: meds } = await supabase
-          .from('medicos').select('id, nome').eq('clinica_id', adminData.clinica_id || adminData.id).eq('ativo', true)
+          .from('medicos').select('id, nome').eq('clinica_id', adminData.clinica_id || adminData.id).eq('cargo', 'medico').eq('ativo', true)
         setMedicoIds((meds || []).map((x: any) => x.id))
       })()
     } else {
@@ -192,7 +192,7 @@ export default function Dashboard() {
   if (!medico) return null
 
   return (
-    <div style={{ padding: '24px 28px', background: '#F5F5F5', minHeight: '100vh' }}>
+    <div style={{ padding: '24px 28px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dashboard</h1>

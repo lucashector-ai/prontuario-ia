@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     if (clinicaId) {
       // Busca todos os medicos da clinica e depois bloqueios deles
       const { data: meds } = await supabase
-        .from('medicos').select('id').eq('clinica_id', clinicaId)
+        .from('medicos').select('id').eq('clinica_id', clinicaId).eq('cargo', 'medico')
       const ids = (meds || []).map((m: any) => m.id)
       if (ids.length === 0) return NextResponse.json({ bloqueios: [] })
 
