@@ -83,14 +83,17 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
           }
         }, 200)
 
-        // Timeout de 15s pra não ficar travado
-        setTimeout(() => {
+        // Timeout de 30s pra não ficar travado (mas usa flag local pra evitar race condition)
+        let prontoOuErro = false
+        const timeoutId = setTimeout(() => {
           clearInterval(checkReady)
-          if (!abortou && estado === 'carregando') {
-            setErro('Timeout ao carregar Memed (15s)')
+          if (!abortou && !prontoOuErro) {
+            setErro('Timeout ao carregar Memed (30s). Tente fechar e reabrir.')
             setEstado('erro')
           }
-        }, 15000)
+        }, 30000)
+        // Marca quando o módulo carrega — usado dentro do core:moduleInit pra cancelar timeout
+        ;(window as any).__memedReadyMark = () => { prontoOuErro = true; clearTimeout(timeoutId) }
       } catch (e: any) {
         if (abortou) return
         setErro('Erro ao iniciar Memed: ' + (e?.message || 'desconhecido'))
@@ -130,6 +133,9 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
           if (paciente.cidade) dadosPaciente.cidade = paciente.cidade
 
           await window.MdHub.command.send('plataforma.prescricao', 'setPaciente', dadosPaciente)
+
+          // Marca como pronto pra cancelar timeout pendente
+          if ((window as any).__memedReadyMark) (window as any).__memedReadyMark()
 
           // Mostra módulo de prescrição
           window.MdHub.module.show('plataforma.prescricao')
