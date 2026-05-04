@@ -626,9 +626,6 @@ export default function PacienteDetalhe() {
           </div>
         </div>
       )}
-      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
-    </div>
-
       {/* Modal/overlay Memed */}
       {memedAberto && medicoLogado && paciente && (
         <MemedPrescricao
@@ -650,5 +647,7 @@ export default function PacienteDetalhe() {
           }}
         />
       )}
+      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+    </div>
   )
 }
