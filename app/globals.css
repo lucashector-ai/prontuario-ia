@@ -136,3 +136,33 @@ input:focus, textarea:focus, select:focus {
     display: none !important;
   }
 }
+
+
+/* ===== PACIENTES: layout mobile ===== */
+@media (max-width: 767px) {
+  /* Esconde botão Importar em mobile (acessível via menu/perfil ou desktop) */
+  .pac-btn-importar {
+    display: none !important;
+  }
+  /* Botão Novo paciente vira só ícone */
+  .pac-btn-novo {
+    padding: 10px !important;
+    width: 40px;
+    height: 40px;
+    justify-content: center !important;
+  }
+  .pac-btn-novo-text {
+    display: none;
+  }
+  /* Form do modal vira 1 coluna */
+  .pac-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ===== DASHBOARD: KPI cards 4 colunas → 2 em mobile ===== */
+@media (max-width: 767px) {
+  .grid-dash-metrics {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}

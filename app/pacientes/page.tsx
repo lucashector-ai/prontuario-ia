@@ -297,7 +297,7 @@ export default function Pacientes() {
               Exportar
             </button>
           )}
-          <button onClick={() => setMostrarImport(true)} style={{
+          <button onClick={() => setMostrarImport(true)} className="pac-btn-importar" style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '10px 16px', borderRadius: 10,
             border: '1px solid #e5e7eb', background: 'white',
@@ -309,7 +309,7 @@ export default function Pacientes() {
             </svg>
             Importar
           </button>
-          <button onClick={() => setMostrarForm(true)} style={{
+          <button onClick={() => setMostrarForm(true)} className="pac-btn-novo" style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '10px 18px', borderRadius: 10, border: 'none',
             background: ACCENT, color: 'white',
@@ -318,7 +318,7 @@ export default function Pacientes() {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 5v14M5 12h14"/>
             </svg>
-            Novo paciente
+            <span className="pac-btn-novo-text">Novo paciente</span>
           </button>
         </div>
       </div>
@@ -397,7 +397,7 @@ export default function Pacientes() {
             <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Novo paciente</h2>
             <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 20px' }}>Preencha os dados principais pra começar</p>
 
-            <form onSubmit={salvarPaciente} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <form onSubmit={salvarPaciente} className="pac-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>Nome completo *</label>
                 <input
