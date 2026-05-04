@@ -54,27 +54,43 @@ export default function Home() {
   const [showDropdown, setShowDropdown] = useState(false)
 
   useEffect(() => {
-    const ca_ = localStorage.getItem('clinica_admin')
-    const m = ca_ || localStorage.getItem('medico')
-    if (!m) { router.push('/login'); return }
-    const med = JSON.parse(m)
-    setMedico(med)
-    let url = ''
-    if (ca_) {
-      const admin = JSON.parse(ca_)
-      if (admin.clinica_id) url = '/api/pacientes?clinica_id=' + admin.clinica_id
-    } else if (med.clinica_id) {
-      url = '/api/pacientes?clinica_id=' + med.clinica_id
-    } else {
-      url = '/api/pacientes?medico_id=' + med.id
-    }
-    fetch(url).then(r => r.json()).then(data => {
-      const lista = Array.isArray(data) ? data : (data?.pacientes || data?.data || [])
-      setPacientes(lista)
-    }).catch(err => {
-      console.error('[nova-consulta] erro carregando pacientes:', err)
-      setPacientes([])
-    })
+    (async () => {
+      const ca_ = localStorage.getItem('clinica_admin')
+      const m = ca_ || localStorage.getItem('medico')
+      if (!m) { router.push('/login'); return }
+      const med = JSON.parse(m)
+      if (ca_ && med.clinica_id) {
+        const { data: medicos } = await supabase
+          .from('medicos').select('*')
+          .eq('clinica_id', med.clinica_id)
+          .order('criado_em', { ascending: true }).limit(1)
+        if (medicos && medicos.length > 0) {
+          setMedico(medicos[0])
+        } else {
+          setMedico(med)
+        }
+      } else {
+        setMedico(med)
+      }
+      let url = ''
+      if (ca_) {
+        const admin = JSON.parse(ca_)
+        if (admin.clinica_id) url = '/api/pacientes?clinica_id=' + admin.clinica_id
+      } else if (med.clinica_id) {
+        url = '/api/pacientes?clinica_id=' + med.clinica_id
+      } else {
+        url = '/api/pacientes?medico_id=' + med.id
+      }
+      try {
+        const r = await fetch(url)
+        const data = await r.json()
+        const lista = Array.isArray(data) ? data : (data?.pacientes || data?.data || [])
+        setPacientes(lista)
+      } catch (err) {
+        console.error('[nova-consulta] erro carregando pacientes:', err)
+        setPacientes([])
+      }
+    })()
   }, [router])
 
   const handleSearchParams = useCallback((pid: string | null, pnome: string | null, ptel: string | null) => {
