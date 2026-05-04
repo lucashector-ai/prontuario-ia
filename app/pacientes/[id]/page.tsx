@@ -32,9 +32,22 @@ export default function PacienteDetalhe() {
   const [medicoLogado, setMedicoLogado] = useState<any>(null)
 
   useEffect(() => {
-    const ca = localStorage.getItem('clinica_admin')
-    const m = ca || localStorage.getItem('medico')
-    if (m) setMedicoLogado(JSON.parse(m))
+    (async () => {
+      const ca = localStorage.getItem('clinica_admin')
+      if (ca) {
+        // Logado como admin: pega primeiro médico ativo da clínica pra Memed
+        const admin = JSON.parse(ca)
+        if (admin.clinica_id) {
+          const { data: primMed } = await supabase
+            .from('medicos').select('*')
+            .eq('clinica_id', admin.clinica_id).eq('ativo', true)
+            .order('criado_em').limit(1).maybeSingle()
+          if (primMed) { setMedicoLogado(primMed); return }
+        }
+      }
+      const m = localStorage.getItem('medico')
+      if (m) setMedicoLogado(JSON.parse(m))
+    })()
   }, [])
   const [consultas, setConsultas] = useState<any[]>([])
   const [transcricoesAbertas, setTranscricoesAbertas] = useState<Set<string>>(new Set())
