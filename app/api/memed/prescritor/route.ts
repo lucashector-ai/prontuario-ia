@@ -138,7 +138,10 @@ export async function POST(req: NextRequest) {
     const url = `${MEMED_API_URL}/sinapse-prescricao/usuarios?api-key=${MEMED_API_KEY}&secret-key=${MEMED_SECRET_KEY}`
     let res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.api+json',
+      },
       body: JSON.stringify(payload),
     })
     const respText = await res.text()
@@ -163,7 +166,9 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       // Tenta buscar via GET para recuperar o token de um medico ja cadastrado
       const getUrl = `${MEMED_API_URL}/sinapse-prescricao/usuarios/${externalId}?api-key=${MEMED_API_KEY}&secret-key=${MEMED_SECRET_KEY}`
-      const getRes = await fetch(getUrl)
+      const getRes = await fetch(getUrl, {
+        headers: { 'Accept': 'application/vnd.api+json' }
+      })
       if (getRes.ok) {
         memedData = await getRes.json()
       } else {
