@@ -192,7 +192,7 @@ export default function Dashboard() {
   if (!medico) return null
 
   return (
-    <div style={{ padding: '24px 28px' }}>
+    <div style={{ padding: '24px 28px', background: '#fafafa', minHeight: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dashboard</h1>
