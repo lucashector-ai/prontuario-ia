@@ -524,7 +524,7 @@ const handleCopiar = () => {
                     <>
                       <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} insights={copiloto?.insights} padroes={copiloto?.padroes} totalConsultas={copiloto?.total_consultas} />
                       <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
-                        <BotaoMemed onClick={() => setMemedAberto(true)} disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" variant="secondary" />
+                        <BotaoMemed onClick={() => setMemedAberto(true)} disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" variant="primary" />
                       </div>
                                     </>
                   )}

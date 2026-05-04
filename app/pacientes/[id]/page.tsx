@@ -6,6 +6,7 @@ import { HipotesesCard } from '@/components/HipotesesCard'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
+import { BotaoMemed } from '@/components/BotaoMemed'
 
 type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario' | 'timeline'
 
@@ -201,10 +202,7 @@ export default function PacienteDetalhe() {
               </div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>setMemedAberto(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,background:'#6043C1',color:'white',fontSize:13,fontWeight:600,cursor:'pointer',border:'none'}}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                Prescrever
-              </button>
+              <BotaoMemed onClick={()=>setMemedAberto(true)} variant="primary" />
               <button onClick={()=>setModalAg(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,background:'#F5F5F5',color:'#6043C1',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar</button>
               <a href="/consulta" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
             </div>
@@ -487,12 +485,13 @@ export default function PacienteDetalhe() {
                         </div>
                       )}
                       {/* Botoes */}
-                      <div style={{padding:'8px 18px 12px',borderTop:'1px solid #f3f4f6',display:'flex',gap:8}}>
+                      <div style={{padding:'8px 18px 12px',borderTop:'1px solid #f3f4f6',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap' as const}}>
                         <a href={'/api/pdf-prontuario?consulta_id='+c.id+'&medico_id='+(c.medico_id||medico?.id)} target="_blank" rel="noreferrer"
                           style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:6,background:'#f0ebff',color:'#6043C1',fontSize:12,fontWeight:600,textDecoration:'none'}}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
                           PDF Prontuário
                         </a>
+                        <BotaoMemed onClick={()=>setMemedAberto(true)} variant="compact" />
                       </div>
                     </div>
                   ))}

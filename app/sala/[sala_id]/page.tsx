@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { MemedPrescricao } from '@/components/MemedPrescricao'
+import { BotaoMemed } from '@/components/BotaoMemed'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,6 +22,9 @@ type Tela = 'carregando' | 'precall' | 'espera' | 'chamada' | 'encerrado' | 'enc
 export default function Sala({ params }: { params: { sala_id: string } }) {
   const { sala_id } = params
   const [tela, setTela] = useState<Tela>('carregando')
+  const [memedAberto, setMemedAberto] = useState(false)
+  const [pacienteSala, setPacienteSala] = useState<any>(null)
+  const [medicoSala, setMedicoSala] = useState<any>(null)
   const [sala, setSala] = useState<any>(null)
   const [isMedico, setIsMedico] = useState(false)
   const [micOn, setMicOn] = useState(true)
@@ -1425,6 +1430,30 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           html, body { height: 100dvh; }
         }
       `}</style>
+      {memedAberto && medicoSala && pacienteSala && (
+        <MemedPrescricao
+          medicoId={medicoSala.id}
+          paciente={{
+            id: pacienteSala.id,
+            nome: pacienteSala.nome,
+            cpf: pacienteSala.cpf,
+            data_nascimento: pacienteSala.data_nascimento,
+            sexo: pacienteSala.sexo,
+            telefone: pacienteSala.telefone,
+            email: pacienteSala.email,
+            endereco: pacienteSala.endereco,
+          }}
+          onClose={() => setMemedAberto(false)}
+          onPrescricaoGerada={() => setMemedAberto(false)}
+        />
+      )}
+      {papelRef.current !== 'paciente' && (
+        <div style={{ position: 'fixed', bottom: 100, right: 24, zIndex: 50 }}>
+          <BotaoMemed onClick={() => setMemedAberto(true)} variant="floating" disabled={!medicoSala || !pacienteSala} disabledReason="Aguardando dados do paciente" />
+        </div>
+      )}
+
+
     </div>
   )
 }
