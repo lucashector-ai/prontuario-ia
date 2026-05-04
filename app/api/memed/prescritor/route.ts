@@ -161,20 +161,47 @@ export async function POST(req: NextRequest) {
       }, { status: 502 })
     }
 
-    // Se erro 422/409 indica que ja existe, tenta GET pra recuperar
-    // (Memed retorna conflito quando external_id ja existe)
+    // Se erro indica conflito (CPF ou external_id ja existem), tenta recuperar
     if (!res.ok) {
-      // Tenta buscar via GET para recuperar o token de um medico ja cadastrado
-      const getUrl = `${MEMED_API_URL}/sinapse-prescricao/usuarios/${externalId}?api-key=${MEMED_API_KEY}&secret-key=${MEMED_SECRET_KEY}`
-      const getRes = await fetch(getUrl, {
-        headers: { 'Accept': 'application/vnd.api+json' }
-      })
-      if (getRes.ok) {
-        memedData = await getRes.json()
+      const errorMsg = JSON.stringify(memedData).toLowerCase()
+      const conflito = errorMsg.includes('cadastrado') || errorMsg.includes('cpf')
+
+      if (conflito) {
+        // Estratégia 1: busca por external_id
+        let getRes = await fetch(`${MEMED_API_URL}/sinapse-prescricao/usuarios/${externalId}?api-key=${MEMED_API_KEY}&secret-key=${MEMED_SECRET_KEY}`, {
+          headers: { 'Accept': 'application/vnd.api+json' }
+        })
+
+        // Estratégia 2: se nao achou por external_id, busca pelo CPF
+        // (cadastro antigo de teste usou external_id diferente, mesmo CPF)
+        if (!getRes.ok) {
+          const cpfUrl = `${MEMED_API_URL}/sinapse-prescricao/usuarios?api-key=${MEMED_API_KEY}&secret-key=${MEMED_SECRET_KEY}&filter[cpf]=${cpfLimpo}`
+          getRes = await fetch(cpfUrl, {
+            headers: { 'Accept': 'application/vnd.api+json' }
+          })
+        }
+
+        if (getRes.ok) {
+          const getData = await getRes.json()
+          // Se busca por filter retorna array, pega o primeiro
+          memedData = Array.isArray(getData?.data) ? { data: getData.data[0] } : getData
+          if (!memedData?.data?.attributes?.token) {
+            return NextResponse.json({
+              error: 'Memed conflito mas nao retornou token na recuperacao. CPF: ' + cpfLimpo + '. Resposta: ' + JSON.stringify(getData).slice(0, 300)
+            }, { status: 500 })
+          }
+        } else {
+          const recoveryText = await getRes.text()
+          console.error('[memed/prescritor] falha ao recuperar:', recoveryText.slice(0, 300))
+          return NextResponse.json({
+            error: 'Memed conflito ao cadastrar e nao foi possivel recuperar. Erro original: ' +
+              (memedData?.errors?.[0]?.detail || JSON.stringify(memedData).slice(0, 200))
+          }, { status: 500 })
+        }
       } else {
-        console.error('[memed/prescritor] erro Memed:', JSON.stringify(memedData).slice(0, 500))
+        console.error('[memed/prescritor] erro Memed (nao-conflito):', JSON.stringify(memedData).slice(0, 500))
         return NextResponse.json({
-          error: 'Erro ao cadastrar/buscar prescritor na Memed: ' +
+          error: 'Erro ao cadastrar prescritor na Memed: ' +
             (memedData?.errors?.[0]?.detail || memedData?.message || 'desconhecido')
         }, { status: 500 })
       }
