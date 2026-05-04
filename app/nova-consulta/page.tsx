@@ -111,7 +111,16 @@ export default function Home() {
     await iniciarGravacao()
   }
 
-  const handleParar = () => { pararGravacao(); setEstado('idle') }
+  const handleParar = async () => {
+    pararGravacao()
+    setTimeout(() => {
+      if (transcricao && transcricao.trim().length > 10) {
+        handleEstruturar()
+      } else {
+        setEstado('idle')
+      }
+    }, 500)
+  }
 
   const handleEstruturar = async () => {
     if (!transcricao.trim()) return
