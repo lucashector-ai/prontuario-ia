@@ -120,3 +120,11 @@ input:focus, textarea:focus, select:focus {
 .appshell-main:hover {
   scrollbar-color: #cbd5e1 transparent;
 }
+
+
+/* Topbar: oculta nomes longos em mobile (mantém apenas avatares/ícones) */
+@media (max-width: 767px) {
+  .topbar-text-mobile-hide {
+    display: none !important;
+  }
+}

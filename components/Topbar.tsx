@@ -370,7 +370,7 @@ export function Topbar() {
               fontSize: 11, fontWeight: 700,
             }}>{inicialClinica}</div>
           )}
-          <span style={{ fontSize: 13, fontWeight: 500, color: TEXT_DEFAULT, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clinica.nome}</span>
+          <span className="topbar-text-mobile-hide" style={{ fontSize: 13, fontWeight: 500, color: TEXT_DEFAULT, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clinica.nome}</span>
         </div>
       )}
 
@@ -398,7 +398,7 @@ export function Topbar() {
               fontSize: 12, fontWeight: 700,
             }}>{iniciaisUsuario}</div>
           )}
-          {primeiroNome && <span style={{ fontSize: 13, fontWeight: 500, color: TEXT_DEFAULT }}>{primeiroNome}</span>}
+          {primeiroNome && <span className="topbar-text-mobile-hide" style={{ fontSize: 13, fontWeight: 500, color: TEXT_DEFAULT }}>{primeiroNome}</span>}
         </button>
 
         {menuOpen && (
