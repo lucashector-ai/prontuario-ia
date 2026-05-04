@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Sidebar } from '@/components/Sidebar'
 import { SetupChecklist } from '@/components/SetupChecklist'
 
 type Periodo = 'semana' | 'mes' | 'ano'
@@ -193,9 +192,7 @@ export default function Dashboard() {
   if (!medico) return null
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5F5' }}>
-      <Sidebar />
-      <main style={{ flex: 1, padding: '24px 28px', overflow: 'auto' }}>
+    <div style={{ padding: '24px 28px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dashboard</h1>
@@ -425,7 +422,6 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </main>
     </div>
   )
 }
