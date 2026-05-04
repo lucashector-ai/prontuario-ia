@@ -8,6 +8,8 @@ import { SetupChecklist } from '@/components/SetupChecklist'
 export default function Dashboard() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
+  const [ehAdmin, setEhAdmin] = useState(false)
+  const [medicoIds, setMedicoIds] = useState<string[]>([])
   const [dados, setDados] = useState<any>(null)
   const [carregando, setCarregando] = useState(true)
   const [gerandoRelatorio, setGerandoRelatorio] = useState(false)
@@ -17,12 +19,25 @@ export default function Dashboard() {
     const ca = localStorage.getItem('clinica_admin')
     const m = localStorage.getItem('medico')
     if (!ca && !m) { router.push('/login'); return }
-    setMedico(ca ? JSON.parse(ca) : JSON.parse(m!))
+    if (ca) {
+      const adminData = JSON.parse(ca)
+      setEhAdmin(true)
+      setMedico(adminData)
+      ;(async () => {
+        const { data: meds } = await supabase
+          .from('medicos').select('id').eq('clinica_id', adminData.clinica_id || adminData.id).eq('ativo', true)
+        setMedicoIds((meds || []).map((x: any) => x.id))
+      })()
+    } else {
+      const medicoData = JSON.parse(m!)
+      setMedico(medicoData)
+      setMedicoIds([medicoData.id])
+    }
   }, [router])
 
   useEffect(() => {
-    if (medico) carregarDados()
-  }, [medico, periodo])
+    if (medico && medicoIds.length > 0) carregarDados()
+  }, [medico, medicoIds, periodo])
 
   const gerarRelatorio = async () => {
     if (!medico) return
@@ -56,11 +71,11 @@ export default function Dashboard() {
       { data: todasConsultas },
       { data: agendamentos },
     ] = await Promise.all([
-      supabase.from('consultas').select('*', { count: 'exact', head: true }).eq('medico_id', medico.id),
-      supabase.from('pacientes').select('*', { count: 'exact', head: true }).eq('medico_id', medico.id),
-      supabase.from('consultas').select('*').eq('medico_id', medico.id).gte('criado_em', desde.toISOString()).order('criado_em', { ascending: false }),
-      supabase.from('consultas').select('cids, criado_em').eq('medico_id', medico.id),
-      supabase.from('agendamentos').select('*').eq('medico_id', medico.id).gte('data_hora', new Date().toISOString()).order('data_hora').limit(5),
+      supabase.from('consultas').select('*', { count: 'exact', head: true }).in('medico_id', medicoIds),
+      supabase.from('pacientes').select('*', { count: 'exact', head: true }).in('medico_id', medicoIds),
+      supabase.from('consultas').select('*').in('medico_id', medicoIds).gte('criado_em', desde.toISOString()).order('criado_em', { ascending: false }),
+      supabase.from('consultas').select('cids, criado_em').in('medico_id', medicoIds),
+      supabase.from('agendamentos').select('*').in('medico_id', medicoIds).gte('data_hora', new Date().toISOString()).order('data_hora').limit(5),
     ])
 
     // Processa CIDs
@@ -92,7 +107,7 @@ export default function Dashboard() {
     const periodoAnterior = new Date(desde)
     const duracao = Date.now() - desde.getTime()
     periodoAnterior.setTime(periodoAnterior.getTime() - duracao)
-    const { count: consultasAnterior } = await supabase.from('consultas').select('*', { count: 'exact', head: true }).eq('medico_id', medico.id).gte('criado_em', periodoAnterior.toISOString()).lt('criado_em', desde.toISOString())
+    const { count: consultasAnterior } = await supabase.from('consultas').select('*', { count: 'exact', head: true }).in('medico_id', medicoIds).gte('criado_em', periodoAnterior.toISOString()).lt('criado_em', desde.toISOString())
 
     // Insights de negócio
     const inicio90 = new Date(); inicio90.setDate(inicio90.getDate() - 90)
@@ -108,7 +123,7 @@ export default function Dashboard() {
     const consultasRecentes90 = new Set(
       todasConsultas?.filter((c: any) => new Date(c.criado_em) >= inicio90).map((c: any) => c.paciente_id).filter(Boolean)
     )
-    const { data: todosPacientes } = await supabase.from('pacientes').select('id, criado_em').eq('medico_id', medico.id)
+    const { data: todosPacientes } = await supabase.from('pacientes').select('id, criado_em').in('medico_id', medicoIds)
     const pacientesInativos = (todosPacientes || []).filter((p: any) => !consultasRecentes90.has(p.id)).length
     const novosPacientesMes = (todosPacientes || []).filter((p: any) => new Date(p.criado_em) >= inicioMes).length
 
@@ -129,7 +144,7 @@ export default function Dashboard() {
     const { data: agendamentosRealizados } = await supabase
       .from('agendamentos')
       .select('data_hora, duracao_minutos')
-      .eq('medico_id', medico.id)
+      .in('medico_id', medicoIds)
       .eq('status', 'realizado')
       .not('duracao_minutos', 'is', null)
       .limit(50)
