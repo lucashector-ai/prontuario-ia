@@ -326,7 +326,7 @@ const handleCopiar = () => {
 
           {/* SIDEBAR - Contexto do paciente (isolado) */}
           {pacienteSelecionado && medico && (
-            <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f0f0f0', padding: '14px 14px 16px', overflow: 'auto', minHeight: 0 }}>
+            <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f0f0f0', padding: '14px 14px 16px', overflow: 'auto', minHeight: 0, maxHeight: '100%', alignSelf: 'stretch' as const }}>
               <p style={{ fontSize: 9, color: '#9ca3af', letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 10px', textTransform: 'uppercase' as const }}>Contexto do paciente</p>
               <SidebarContextoPaciente pacienteId={pacienteSelecionado.id} medicoId={medico.id} />
             </div>
