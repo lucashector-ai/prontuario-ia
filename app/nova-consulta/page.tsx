@@ -273,30 +273,32 @@ const handleCopiar = () => {
           titulo={pacienteSelecionado ? 'Trocar paciente' : 'Selecionar paciente'}
         />
       )}
-<div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 24 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '20px 24px 24px', minWidth: 0 }}>
         {/* Top header */}
-        <div style={{ padding: '0 4px 16px', display: 'flex', flexDirection: 'column' as const, gap: 12, flexShrink: 0 }}>
+        <div style={{ padding: '0 0 14px', display: 'flex', flexDirection: 'column' as const, gap: 10, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
             <div>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Nova consulta</h1>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
-                Grave e a IA gera prontuário SOAP, receita, exames e mais — {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+              <h1 style={{ fontSize: 19, fontWeight: 700, color: '#111827', margin: '0 0 2px', letterSpacing: '-0.01em' as const }}>Nova consulta</h1>
+              <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
+                {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {consultaSalva && (
-              <span style={{ fontSize: 12, color: '#6043C1', background: '#f0fdf4', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
-                 Salvo
+              <span style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '3px 10px', borderRadius: 20, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Salvo
               </span>
             )}
             
             <button onClick={() => setModoPerfeita(m => !m)} style={{
-              fontSize: 12, fontWeight: 600,
+              fontSize: 11, fontWeight: 600,
               color: modoPerfeita ? '#6043C1' : '#6b7280',
               background: modoPerfeita ? '#f0ebff' : 'white',
               border: modoPerfeita ? '1px solid #b9a9ef' : '1px solid #e5e7eb',
-              padding: '6px 12px', borderRadius: 7, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 5
+              padding: '6px 11px', borderRadius: 8, cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              transition: 'all 0.15s' as const
             }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
@@ -305,7 +307,7 @@ const handleCopiar = () => {
             </button>
             <BotaoMemed onClick={() => setMemedAberto(true)} variant="compact" disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" />
               {estado === 'pronto' && (
-                <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
+                <button onClick={handleNovo} style={{ fontSize: 11, fontWeight: 500, color: '#6b7280', background: 'white', border: '1px solid #e5e7eb', padding: '6px 11px', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s' as const }}>
                   + Nova consulta
                 </button>
               )}
@@ -322,9 +324,10 @@ const handleCopiar = () => {
           <div className="grid-consulta">
 
           {/* Left  -  Gravação + Transcrição */}
-          <div style={{ borderRight: 'none', borderRadius: 16, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>
+          <div style={{ borderRight: 'none', borderRadius: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white', border: '1px solid #f0f0f0' }}>
             {pacienteSelecionado && medico && (
-              <div style={{ padding: '14px 18px 0' }}>
+              <div style={{ padding: '14px 16px 0', borderBottom: '1px solid #f3f4f6', paddingBottom: 14 }}>
+                <p style={{ fontSize: 9, color: '#9ca3af', letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 8px', textTransform: 'uppercase' as const }}>Contexto do paciente</p>
                 <SidebarContextoPaciente pacienteId={pacienteSelecionado.id} medicoId={medico.id} />
               </div>
             )}
