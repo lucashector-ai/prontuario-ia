@@ -96,6 +96,18 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     const ehMedico = !!(med || adm)
     papelRef.current = ehMedico ? 'medico' : 'paciente'
     setIsMedico(ehMedico)
+    if (med) {
+      try { setMedicoSala(JSON.parse(med)) } catch {}
+    } else if (adm) {
+      try {
+        const a = JSON.parse(adm)
+        if (a.clinica_id) {
+          sb.from('medicos').select('*').eq('clinica_id', a.clinica_id).eq('ativo', true).limit(1).single().then(({ data }) => {
+            if (data) setMedicoSala(data)
+          })
+        }
+      } catch {}
+    }
     carregarSala()
     return () => pararEspera()
   }, [sala_id])
@@ -132,6 +144,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       data.status = 'aguardando'
     }
     setSala(data)
+    if (data.paciente_id) {
+      const { data: pac } = await sb.from('pacientes').select('*').eq('id', data.paciente_id).single()
+      if (pac) setPacienteSala(pac)
+    }
     iniciarEspera()
   }
 
