@@ -10,6 +10,7 @@ import { ReceitaCard } from '@/components/ReceitaCard'
 import { PacienteBanner } from '@/components/PacienteBanner'
 import { PreConsultaCard } from '@/components/PreConsultaCard'
 import { HistoricoRapido } from '@/components/HistoricoRapido'
+import { MemedPrescricao } from '@/components/MemedPrescricao'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
 type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
@@ -49,6 +50,7 @@ export default function Home() {
   const [modalPaciente, setModalPaciente] = useState(true)
   const [pacientes, setPacientes] = useState<any[]>([])
   const [pacienteSelecionado, setPacienteSelecionado] = useState<any>(null)
+  const [memedAberto, setMemedAberto] = useState(false)
   const [buscaPaciente, setBuscaPaciente] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
 
@@ -570,6 +572,12 @@ export default function Home() {
                       </div>
                       <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Gerar receita médica</p>
                       <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px' }}>Extraida automaticamente do prontuario gerado.</p>
+                      <button onClick={() => setMemedAberto(true)} disabled={!pacienteSelecionado}
+                        title={pacienteSelecionado ? 'Prescrever via Memed' : 'Selecione um paciente primeiro'}
+                        style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #6043C1', background: 'white', color: '#6043C1', fontSize: 13, fontWeight: 600, cursor: pacienteSelecionado ? 'pointer' : 'not-allowed', opacity: pacienteSelecionado ? 1 : 0.5, display: 'flex', alignItems: 'center', gap: 6, marginRight: 8 }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        Prescrever
+                      </button>
                       <button onClick={handleGerarReceita} style={{ padding: '9px 22px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                         Gerar receita
                       </button>
@@ -694,6 +702,26 @@ export default function Home() {
           </div>
         </div>
       </div>
+      {memedAberto && medico && pacienteSelecionado && (
+        <MemedPrescricao
+          medicoId={medico.id}
+          paciente={{
+            id: pacienteSelecionado.id,
+            nome: pacienteSelecionado.nome,
+            cpf: pacienteSelecionado.cpf,
+            data_nascimento: pacienteSelecionado.data_nascimento,
+            sexo: pacienteSelecionado.sexo,
+            telefone: pacienteSelecionado.telefone,
+            email: pacienteSelecionado.email,
+            endereco: pacienteSelecionado.endereco,
+          }}
+          onClose={() => setMemedAberto(false)}
+          onPrescricaoGerada={(dados) => {
+            console.log('Prescricao gerada:', dados)
+            setMemedAberto(false)
+          }}
+        />
+      )}
     </div>
   )
 }
