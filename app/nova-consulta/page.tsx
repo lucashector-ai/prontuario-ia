@@ -75,7 +75,7 @@ export default function Home() {
   const { gravando, transcrevendo, iniciarGravacao, pararGravacao, pausarGravacao, gravandoPausado, limpar, erro } = useGravador(handleNovoTexto)
 
   const handleIniciar = async () => {
-    limpar(); setProntuario(null); setReceita(null)
+    limpar(); setProntuario(null)
     setConsultaSalva(false); setEstado('gravando')
     await iniciarGravacao()
   }
@@ -220,7 +220,7 @@ const handleCopiar = () => {
   }
 
   const handleNovo = () => {
-    limpar(); setTranscricao(''); setProntuario(null); setReceita(null)
+    limpar(); setTranscricao(''); setProntuario(null)
     setEstado('idle'); setErroMsg(''); setConsultaSalva(false)
     setPacienteSelecionado(null); setBuscaPaciente(''); setModalPaciente(true)
   }
