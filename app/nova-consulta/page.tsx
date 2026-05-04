@@ -58,9 +58,21 @@ export default function Home() {
     if (!m) { router.push('/login'); return }
     const med = JSON.parse(m)
     setMedico(med)
-    supabase.from('pacientes').select('id, nome, telefone').eq('medico_id', med.id).order('nome').then(({ data }) => {
-      setPacientes(data || [])
-      // params lidos pelo SearchParamsReader abaixo
+    let url = ''
+    if (ca_) {
+      const admin = JSON.parse(ca_)
+      if (admin.clinica_id) url = '/api/pacientes?clinica_id=' + admin.clinica_id
+    } else if (med.clinica_id) {
+      url = '/api/pacientes?clinica_id=' + med.clinica_id
+    } else {
+      url = '/api/pacientes?medico_id=' + med.id
+    }
+    fetch(url).then(r => r.json()).then(data => {
+      const lista = Array.isArray(data) ? data : (data?.data || [])
+      setPacientes(lista)
+    }).catch(err => {
+      console.error('[nova-consulta] erro carregando pacientes:', err)
+      setPacientes([])
     })
   }, [router])
 
