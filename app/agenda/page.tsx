@@ -1,8 +1,7 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
 
-import { useEffect, useState, useMemo } from 'react'
+import { Suspense, useEffect, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
@@ -91,7 +90,7 @@ const ehAniversario = (nascStr: string | null | undefined, alvo: Date) => {
   return n.getMonth() === alvo.getMonth() && n.getDate() === alvo.getDate()
 }
 
-export default function Agenda() {
+function AgendaContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -1568,5 +1567,13 @@ export default function Agenda() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function Agenda() {
+  return (
+    <Suspense fallback={<div style={{ padding: 24 }}>Carregando agenda...</div>}>
+      <AgendaContent />
+    </Suspense>
   )
 }
