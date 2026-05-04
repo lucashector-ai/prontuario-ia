@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { HipotesesCard } from '@/components/HipotesesCard'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
+import { MemedPrescricao } from '@/components/MemedPrescricao'
 
 type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario' | 'timeline'
 
@@ -27,6 +28,14 @@ export default function PacienteDetalhe() {
   const id = params.id as string
   const [medico, setMedico] = useState<any>(null)
   const [paciente, setPaciente] = useState<any>(null)
+  const [memedAberto, setMemedAberto] = useState(false)
+  const [medicoLogado, setMedicoLogado] = useState<any>(null)
+
+  useEffect(() => {
+    const ca = localStorage.getItem('clinica_admin')
+    const m = ca || localStorage.getItem('medico')
+    if (m) setMedicoLogado(JSON.parse(m))
+  }, [])
   const [consultas, setConsultas] = useState<any[]>([])
   const [transcricoesAbertas, setTranscricoesAbertas] = useState<Set<string>>(new Set())
   const [agendamentos, setAgendamentos] = useState<any[]>([])
@@ -179,6 +188,10 @@ export default function PacienteDetalhe() {
               </div>
             </div>
             <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>setMemedAberto(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,background:'#6043C1',color:'white',fontSize:13,fontWeight:600,cursor:'pointer',border:'none'}}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Prescrever
+              </button>
               <button onClick={()=>setModalAg(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,background:'#F5F5F5',color:'#6043C1',fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar</button>
               <a href="/consulta" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
             </div>
@@ -615,5 +628,27 @@ export default function PacienteDetalhe() {
       )}
       <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
+
+      {/* Modal/overlay Memed */}
+      {memedAberto && medicoLogado && paciente && (
+        <MemedPrescricao
+          medicoId={medicoLogado.id}
+          paciente={{
+            id: paciente.id,
+            nome: paciente.nome,
+            cpf: paciente.cpf,
+            data_nascimento: paciente.data_nascimento,
+            sexo: paciente.sexo,
+            telefone: paciente.telefone,
+            email: paciente.email,
+            endereco: paciente.endereco,
+          }}
+          onClose={() => setMemedAberto(false)}
+          onPrescricaoGerada={(dados) => {
+            console.log('Prescricao gerada:', dados)
+            setMemedAberto(false)
+          }}
+        />
+      )}
   )
 }
