@@ -118,6 +118,20 @@ export default function Agenda() {
   const [semana, setSemana] = useState<Date>(() => new Date(0))
   const [diaSelecionado, setDiaSelecionado] = useState<Date>(() => new Date(0))
   const [viewMode, setViewMode] = useState<'semana' | 'dia' | 'mes'>('semana')
+  const [isMobile, setIsMobile] = useState(false)
+  const [filtrosMobileOpen, setFiltrosMobileOpen] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  // Em mobile, força view 'dia' (semana de 7 colunas não cabe em 375px)
+  useEffect(() => {
+    if (isMobile && viewMode !== 'dia') setViewMode('dia')
+  }, [isMobile, viewMode])
   const [mesVisualizado, setMesVisualizado] = useState<Date>(() => new Date(0))
 
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
@@ -594,7 +608,24 @@ export default function Agenda() {
             Lista de espera
             {listaEspera.length > 0 && <span style={{ background: '#6043C1', color: 'white', borderRadius: 10, padding: '0 6px', fontSize: 10 }}>{listaEspera.length}</span>}
           </button>
-          <div style={{ display: 'flex', borderRadius: 7, overflow: 'hidden', background: 'white' }}>
+          {isMobile && (
+            <button
+              onClick={() => setFiltrosMobileOpen(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '6px 10px', fontSize: 12, fontWeight: 600,
+                background: 'white', color: '#374151',
+                border: '1px solid #e5e7eb', borderRadius: 7, cursor: 'pointer',
+              }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="4" y1="6" x2="20" y2="6"/>
+                <line x1="7" y1="12" x2="17" y2="12"/>
+                <line x1="10" y1="18" x2="14" y2="18"/>
+              </svg>
+              Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
+            </button>
+          )}
+          <div className="agenda-view-modes" style={{ display: 'flex', borderRadius: 7, overflow: 'hidden', background: 'white' }}>
             {(['dia', 'semana', 'mes'] as const).map((v, i) => (
               <button key={v} onClick={() => setViewMode(v)}
                 style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: viewMode === v ? '#6043C1' : 'white', color: viewMode === v ? 'white' : '#6b7280', border: 'none', borderLeft: i > 0 ? '1px solid #e5e7eb' : 'none' }}>
@@ -625,7 +656,7 @@ export default function Agenda() {
     const monthGrid = getMonthGrid(mesVisualizado)
     const mesAtual = mesVisualizado.getMonth()
     return (
-      <aside style={{ width: 260, background: 'white', borderRight: '1px solid #f3f4f6', padding: 16, overflow: 'auto', flexShrink: 0 }}>
+      <aside style={{ width: 260, background: 'white', borderRight: '1px solid #f3f4f6', padding: 16, overflow: 'auto', flexShrink: 0, display: isMobile ? 'none' : 'block' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0, textTransform: 'capitalize' }}>{fmtMesAno(mesVisualizado)}</h3>
@@ -1008,7 +1039,94 @@ export default function Agenda() {
         {viewMode === 'mes'    && renderGridMes()}
       </main>
 
-      {listaEsperaOpen && (
+      {/* Bottom sheet de filtros (mobile) */}
+      {filtrosMobileOpen && isMobile && (
+        <>
+          <div onClick={() => setFiltrosMobileOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 80 }}/>
+          <div style={{
+            position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 81,
+            background: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+            maxHeight: '85vh', overflowY: 'auto',
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+            animation: 'slideUpAgenda 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}>
+            {/* Drag handle */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: '#e5e7eb' }}/>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 20px 12px' }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Filtros & calendário</h3>
+              <button onClick={() => setFiltrosMobileOpen(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: '#9ca3af', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ padding: '0 20px' }}>
+              {/* Mini-calendário */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0, textTransform: 'capitalize' }}>{fmtMesAno(mesVisualizado)}</h4>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button onClick={() => navegarMes(-1)} style={{ width: 28, height: 28, border: 'none', background: '#f3f4f6', cursor: 'pointer', color: '#6b7280', borderRadius: 6 }}>‹</button>
+                    <button onClick={() => navegarMes(1)} style={{ width: 28, height: 28, border: 'none', background: '#f3f4f6', cursor: 'pointer', color: '#6b7280', borderRadius: 6 }}>›</button>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
+                  {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((l, i) => (
+                    <div key={i} style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', fontWeight: 700, padding: '4px 0' }}>{l}</div>
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+                  {getMonthGrid(mesVisualizado).map((d, i) => {
+                    const noMes = d.getMonth() === mesVisualizado.getMonth()
+                    const hoje = isHoje(d)
+                    const selecionado = isMesmoDia(d, diaSelecionado)
+                    const temAgs = agendamentosFiltrados.some(a => new Date(a.data_hora).toDateString() === d.toDateString())
+                    return (
+                      <button key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setFiltrosMobileOpen(false) }}
+                        style={{ aspectRatio: '1', border: 'none', background: selecionado ? '#6043C1' : (hoje ? '#ede9fb' : 'transparent'), color: selecionado ? 'white' : (!noMes ? '#d1d5db' : (hoje ? '#6043C1' : '#374151')), fontSize: 13, fontWeight: hoje || selecionado ? 700 : 500, borderRadius: 8, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {d.getDate()}
+                        {temAgs && !selecionado && <span style={{ position: 'absolute', bottom: 3, width: 4, height: 4, borderRadius: '50%', background: hoje ? '#6043C1' : '#9ca3af' }}/>}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Filtros */}
+              <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h4 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Filtros</h4>
+                {filtrosAtivos > 0 && <button onClick={limparFiltros} style={{ fontSize: 12, color: '#6043C1', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Limpar ({filtrosAtivos})</button>}
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Status</label>
+                <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={{ ...selectStyle, padding: '10px 12px', fontSize: 14 }}>
+                  <option value="todos">Todos</option>
+                  {STATUS_OPTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Tipo</label>
+                <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} style={{ ...selectStyle, padding: '10px 12px', fontSize: 14 }}>
+                  <option value="todos">Todos</option>
+                  {Object.entries(TIPOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                </select>
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Paciente</label>
+                <input type="text" value={filtroPaciente} onChange={e => setFiltroPaciente(e.target.value)} placeholder="Buscar por nome..." style={{ width: '100%', padding: '10px 12px', fontSize: 14, borderRadius: 8, border: '1px solid #e5e7eb', outline: 'none' }}/>
+              </div>
+              <div style={{ marginBottom: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Profissional</label>
+                <select value={filtroProfissional} onChange={e => setFiltroProfissional(e.target.value)} style={{ ...selectStyle, padding: '10px 12px', fontSize: 14 }}>
+                  <option value="todos">Todos</option>
+                  {medico && <option value={medico.id}>{medico.nome || 'Eu'}</option>}
+                </select>
+              </div>
+            </div>
+            <style>{`@keyframes slideUpAgenda { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
+          </div>
+        </>
+      )}
+
+            {listaEsperaOpen && (
         <div onClick={() => setListaEsperaOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)', zIndex: 90 }}>
           <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 360, background: 'white', boxShadow: '-8px 0 24px rgba(0,0,0,0.08)', padding: 20, overflow: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>

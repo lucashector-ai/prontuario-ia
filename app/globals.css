@@ -128,3 +128,11 @@ input:focus, textarea:focus, select:focus {
     display: none !important;
   }
 }
+
+
+/* Agenda: esconde botões Dia/Semana/Mês em mobile (força view 'dia' por JS) */
+@media (max-width: 767px) {
+  .agenda-view-modes {
+    display: none !important;
+  }
+}
