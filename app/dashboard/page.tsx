@@ -192,7 +192,7 @@ export default function Dashboard() {
   if (!medico) return null
 
   return (
-    <div style={{ padding: '24px 28px' }}>
+    <div style={{ padding: '24px 28px', background: '#F5F5F5', minHeight: '100vh' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dashboard</h1>
@@ -246,7 +246,7 @@ export default function Dashboard() {
           {/* ESQUERDA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* Consultas por dia */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #f0f0f0' }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #ececec' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Consultas por dia</p>
@@ -283,7 +283,7 @@ export default function Dashboard() {
             </div>
 
             {/* Top CIDs */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #f0f0f0' }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #ececec' }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>CIDs mais frequentes</p>
               {topCIDs.length === 0 ? (
                 <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem dados no período</p>
@@ -314,7 +314,7 @@ export default function Dashboard() {
           {/* DIREITA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* Próximos agendamentos */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #f0f0f0' }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #ececec' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Próximos agendamentos</p>
                 <button onClick={() => router.push('/agenda')} style={{ fontSize: 11, color: '#6043C1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver todos →</button>
@@ -368,7 +368,7 @@ export default function Dashboard() {
 
         {/* LINHA 3: Comparativo médicos (só admin) */}
         {comparativoMedicos.length > 0 && (
-          <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #f0f0f0', marginBottom: 16 }}>
+          <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #ececec', marginBottom: 16 }}>
             <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Comparativo entre médicos</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
               {comparativoMedicos.map((m, i) => (
@@ -391,7 +391,7 @@ export default function Dashboard() {
         )}
 
         {/* LINHA 4: Últimas consultas */}
-        <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #f0f0f0' }}>
+        <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #ececec' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Últimas consultas</p>
             <button onClick={() => router.push('/historico')} style={{ fontSize: 11, color: '#6043C1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver histórico →</button>
@@ -428,7 +428,7 @@ export default function Dashboard() {
 
 function Card({ titulo, valor, subtitulo, cor }: { titulo: string; valor: any; subtitulo: string; cor: string }) {
   return (
-    <div style={{ background: 'white', borderRadius: 14, padding: 18, border: '1px solid #f0f0f0' }}>
+    <div style={{ background: 'white', borderRadius: 14, padding: 18, border: '1px solid #ececec' }}>
       <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 6px' }}>{titulo}</p>
       <p style={{ fontSize: 28, fontWeight: 700, color: '#111827', margin: '0 0 4px', letterSpacing: '-0.02em', lineHeight: 1 }}>{valor}</p>
       <p style={{ fontSize: 11, color: cor, margin: 0, fontWeight: 500 }}>{subtitulo}</p>
