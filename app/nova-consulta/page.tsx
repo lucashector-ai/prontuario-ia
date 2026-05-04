@@ -274,54 +274,47 @@ const handleCopiar = () => {
         />
       )}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '20px 24px 24px', minWidth: 0 }}>
-        {/* Top header */}
-        <div style={{ padding: '0 0 14px', display: 'flex', flexDirection: 'column' as const, gap: 10, flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-            <div>
-              <h1 style={{ fontSize: 19, fontWeight: 700, color: '#111827', margin: '0 0 2px', letterSpacing: '-0.01em' as const }}>Nova consulta</h1>
-              <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
-                {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-              </p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Top header - banner com botoes integrados */}
+        <div style={{ padding: '0 0 12px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <PacienteBanner
+              pacienteId={pacienteSelecionado?.id || null}
+              medicoId={medico?.id || ''}
+              onTrocar={() => setModalPaciente(true)}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             {consultaSalva && (
-              <span style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '3px 10px', borderRadius: 20, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '4px 10px', borderRadius: 20, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 Salvo
               </span>
             )}
-            
             <button onClick={() => setModoPerfeita(m => !m)} style={{
-              fontSize: 11, fontWeight: 600,
+              fontSize: 12, fontWeight: 600,
               color: modoPerfeita ? '#6043C1' : '#6b7280',
               background: modoPerfeita ? '#f0ebff' : 'white',
               border: modoPerfeita ? '1px solid #b9a9ef' : '1px solid #e5e7eb',
-              padding: '6px 11px', borderRadius: 8, cursor: 'pointer',
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              transition: 'all 0.15s' as const
+              padding: '8px 14px', borderRadius: 9, cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              transition: 'all 0.15s' as const, whiteSpace: 'nowrap' as const
             }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
               </svg>
               {modoPerfeita ? 'Modo perfeita ativo' : 'Modo perfeita'}
             </button>
-            <BotaoMemed onClick={() => setMemedAberto(true)} variant="compact" disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" />
-              {estado === 'pronto' && (
-                <button onClick={handleNovo} style={{ fontSize: 11, fontWeight: 500, color: '#6b7280', background: 'white', border: '1px solid #e5e7eb', padding: '6px 11px', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s' as const }}>
-                  + Nova consulta
-                </button>
-              )}
-            </div>
+            <BotaoMemed onClick={() => setMemedAberto(true)} variant="primary" disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" />
+            {estado === 'pronto' && (
+              <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#6b7280', background: 'white', border: '1px solid #e5e7eb', padding: '8px 14px', borderRadius: 9, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
+                + Nova
+              </button>
+            )}
           </div>
-          <PacienteBanner
-            pacienteId={pacienteSelecionado?.id || null}
-            medicoId={medico?.id || ''}
-            onTrocar={() => setModalPaciente(true)}
-          />
         </div>
 
         {/* Content */}
-        <div style={{ display: 'grid', gridTemplateColumns: pacienteSelecionado ? '240px 1fr' : '1fr', gap: 12, flex: 1, minHeight: 0 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: pacienteSelecionado ? '300px 1fr' : '1fr', gap: 12, flex: 1, minHeight: 0 }}>
 
           {/* SIDEBAR - Contexto do paciente (isolado) */}
           {pacienteSelecionado && medico && (

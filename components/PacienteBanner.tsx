@@ -104,16 +104,6 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar }: Props) {
         </div>
       </div>
 
-      {/* Tags críticas (alergias) */}
-      {alergias.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '5px 10px', flexShrink: 0 }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <span style={{ fontSize: 11, color: '#991b1b', fontWeight: 700 }}>
-            Alergias: {alergias.slice(0, 2).join(', ')}{alergias.length > 2 ? ` +${alergias.length - 2}` : ''}
-          </span>
-        </div>
-      )}
-
       {/* CIDs crônicos */}
       {cidsCronicos.length > 0 && (
         <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>

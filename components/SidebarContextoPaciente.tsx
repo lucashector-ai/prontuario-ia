@@ -63,20 +63,76 @@ export function SidebarContextoPaciente({ pacienteId, medicoId }: Props) {
     return null
   }
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
+  const alergiasArr = paciente?.alergias ? (Array.isArray(paciente.alergias) ? paciente.alergias : String(paciente.alergias).split(',').map((a: string) => a.trim()).filter(Boolean)) : []
+  const comorbidadesArr = paciente?.comorbidades ? (Array.isArray(paciente.comorbidades) ? paciente.comorbidades : String(paciente.comorbidades).split(',').map((c: string) => c.trim()).filter(Boolean)) : []
+  const medicacoesArr = paciente?.medicamentos_uso ? String(paciente.medicamentos_uso).split('\n').map((m: string) => m.trim()).filter(Boolean) : []
+  const totalConsultas = consultas.length
 
-      {paciente?.medicamentos_uso && (
-        <div style={{ background: 'white', borderRadius: 10, padding: '11px 13px', border: '1px solid #e5e7eb' }}>
-          <p style={{ fontSize: 9, color: '#6043C1', letterSpacing: '0.05em', fontWeight: 700, margin: '0 0 6px', textTransform: 'uppercase' as const }}>Medicações em uso</p>
-          <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap' as const }}>{paciente.medicamentos_uso}</p>
+  const construirResumo = () => {
+    const partes: string[] = []
+    if (comorbidadesArr.length > 0) {
+      partes.push(comorbidadesArr.length === 1 ? comorbidadesArr[0] : comorbidadesArr.slice(0, 2).join(' e ') + (comorbidadesArr.length > 2 ? ' entre outros' : ''))
+    }
+    if (medicacoesArr.length > 0) {
+      partes.push('em uso de ' + medicacoesArr.length + ' medicaç' + (medicacoesArr.length === 1 ? 'ão' : 'ões'))
+    }
+    if (totalConsultas > 0) {
+      const ultima = consultas[0]
+      const dias = Math.floor((Date.now() - new Date(ultima.criado_em).getTime()) / (1000 * 60 * 60 * 24))
+      if (dias === 0) partes.push('última consulta hoje')
+      else if (dias === 1) partes.push('última consulta ontem')
+      else if (dias < 30) partes.push('última consulta há ' + dias + ' dias')
+      else partes.push('última consulta em ' + fmtData(ultima.criado_em))
+    }
+    if (partes.length === 0) return 'Primeira consulta. Sem histórico clínico cadastrado.'
+    return partes.join(', ').replace(/^./, c => c.toUpperCase()) + '.'
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+
+      <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', border: '1px solid #e5e7eb' }}>
+        <p style={{ fontSize: 10, color: '#6b7280', letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 6px', textTransform: 'uppercase' as const }}>Resumo IA</p>
+        <p style={{ fontSize: 13, color: '#374151', margin: 0, lineHeight: 1.55 }}>{construirResumo()}</p>
+      </div>
+
+      {(alergiasArr.length > 0 || comorbidadesArr.length > 0) && (
+        <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', border: '1px solid #e5e7eb' }}>
+          <p style={{ fontSize: 10, color: '#6b7280', letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 8px', textTransform: 'uppercase' as const }}>Alertas</p>
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
+            {alergiasArr.map((a: string, i: number) => (
+              <div key={'al-'+i} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 10px', borderRadius: 6, background: '#fef3c7', border: '1px solid #fde68a' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2.2" style={{ flexShrink: 0 }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span style={{ fontSize: 12, color: '#92400e', fontWeight: 600 }}>Alergia: {a}</span>
+              </div>
+            ))}
+            {comorbidadesArr.map((c: string, i: number) => (
+              <div key={'co-'+i} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 10px', borderRadius: 6, background: '#FAEEDA', border: '1px solid #f5deb6' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#854f0B" strokeWidth="2.2" style={{ flexShrink: 0 }}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                <span style={{ fontSize: 12, color: '#854f0B', fontWeight: 600 }}>{c}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {paciente?.comorbidades && (
-        <div style={{ background: 'white', borderRadius: 10, padding: '11px 13px', border: '1px solid #e5e7eb' }}>
-          <p style={{ fontSize: 9, color: '#854f0B', letterSpacing: '0.05em', fontWeight: 700, margin: '0 0 6px', textTransform: 'uppercase' as const }}>Comorbidades</p>
-          <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap' as const }}>{paciente.comorbidades}</p>
+      {medicacoesArr.length > 0 && (
+        <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', border: '1px solid #e5e7eb' }}>
+          <p style={{ fontSize: 10, color: '#6043C1', letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 8px', textTransform: 'uppercase' as const }}>Medicações ativas</p>
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
+            {medicacoesArr.map((m: string, i: number) => {
+              const partes = m.replace(/^[•\-\*]\s*/, '').split(/\s*[\-\—]\s*/)
+              const nome = partes[0]
+              const posologia = partes.slice(1).join(' - ')
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 6, fontSize: 12, lineHeight: 1.5 }}>
+                  <span style={{ color: '#6043C1', fontSize: 14, lineHeight: 1, marginTop: 2 }}>•</span>
+                  <span style={{ color: '#374151', fontWeight: 500 }}>{nome}</span>
+                  {posologia && <span style={{ color: '#9ca3af' }}>{posologia}</span>}
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
