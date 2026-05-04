@@ -34,11 +34,17 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar, acoes }: Props)
 
   if (!pacienteId) {
     return (
-      <div style={{ padding: '14px 18px', background: '#fffbeb', borderRadius: 12, border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <p style={{ margin: 0, fontSize: 12, color: '#92400e', fontWeight: 500 }}>
-          Consulta avulsa — não vinculada a um paciente. {onTrocar && <button onClick={onTrocar} style={{ background: 'none', border: 'none', color: '#6043C1', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', fontSize: 12, padding: 0 }}>Vincular paciente</button>}
-        </p>
+      <div style={{ padding: '14px 18px', background: 'white', borderRadius: 12, border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 600, color: '#111827' }}>Consulta avulsa</p>
+          <p style={{ margin: 0, fontSize: 12, color: '#92400e' }}>
+            Não vinculada a um paciente. {onTrocar && <button onClick={onTrocar} style={{ background: 'none', border: 'none', color: '#6043C1', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontSize: 12, padding: 0 }}>Vincular paciente</button>}
+          </p>
+        </div>
+        {acoes && <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>{acoes}</div>}
       </div>
     )
   }
