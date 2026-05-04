@@ -81,6 +81,20 @@ export function Topbar() {
 
   const carregarNotificacoes = async (medicoId: string) => {
     try {
+      // Sincroniza notificacoes (gera novas baseadas na agenda do dia)
+      try {
+        const adm = localStorage.getItem('clinica_admin')
+        const med = localStorage.getItem('medico')
+        const dadosClinica = adm ? JSON.parse(adm) : (med ? JSON.parse(med) : null)
+        const clinicaId = dadosClinica?.clinica_id || dadosClinica?.id
+        if (clinicaId) {
+          await fetch('/api/notificacoes/sincronizar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clinica_id: clinicaId, medico_id_logado: medicoId })
+          })
+        }
+      } catch {}
       const r = await fetch(`/api/notificacoes-sofia?medico_id=${medicoId}&nao_lidas=true`)
       const d = await r.json()
       if (d.notificacoes) {
@@ -95,6 +109,14 @@ export function Topbar() {
 
   const carregarNotificacoesClinica = async (clinicaId: string) => {
     try {
+      // Sincroniza notificacoes da clinica (gera novas baseadas na agenda do dia)
+      try {
+        await fetch('/api/notificacoes/sincronizar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clinica_id: clinicaId })
+        })
+      } catch {}
       const r = await fetch(`/api/notificacoes-sofia?clinica_id=${clinicaId}&nao_lidas=true`)
       const d = await r.json()
       if (d.notificacoes) {
