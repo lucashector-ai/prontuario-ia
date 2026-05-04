@@ -356,7 +356,13 @@ export function Topbar() {
                     <div key={n.id}
                       onClick={() => {
                         marcarNotifLida(n.id)
-                        if (n.agendamento_id) router.push('/agenda')
+                        if (n.agendamento_id) {
+                          router.push('/agenda?ag=' + n.agendamento_id)
+                        } else if (n.paciente_id) {
+                          router.push('/pacientes/' + n.paciente_id)
+                        } else {
+                          router.push('/agenda')
+                        }
                         setNotifOpen(false)
                       }}
                       style={{ padding: '12px 16px', cursor: 'pointer', background: n.lida ? 'white' : '#F8FAFC' }}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
@@ -91,6 +91,7 @@ const ehAniversario = (nascStr: string | null | undefined, alvo: Date) => {
 
 export default function Agenda() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
 
   const [medico, setMedico] = useState<any>(null)
@@ -296,6 +297,20 @@ export default function Agenda() {
     (filtroTipo !== 'todos' ? 1 : 0) +
     (filtroPaciente ? 1 : 0) +
     (filtroProfissional !== 'todos' ? 1 : 0)
+
+  // useEffect: abre modal quando ?ag=ID na URL e agendamentos carregaram
+  useEffect(() => {
+    const agId = searchParams?.get('ag')
+    if (!agId || agendamentos.length === 0) return
+    const ag = agendamentos.find((a: any) => a.id === agId)
+    if (ag) {
+      abrirModal(undefined, ag)
+      // Limpa o param da URL pra nao reabrir ao recarregar
+      const url = new URL(window.location.href)
+      url.searchParams.delete('ag')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [searchParams, agendamentos])
 
   const abrirModal = (date?: Date, ag?: any) => {
     setPreConsultaEnviada(false); setComVideo(false); setSalaLink(''); setSalaId('')
