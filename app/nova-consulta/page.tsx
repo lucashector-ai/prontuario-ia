@@ -50,6 +50,7 @@ export default function Home() {
   const [pacienteSelecionado, setPacienteSelecionado] = useState<any>(null)
   const [memedAberto, setMemedAberto] = useState(false)
   const [buscaPaciente, setBuscaPaciente] = useState('')
+  const [buscaInputFocada, setBuscaInputFocada] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
 
   useEffect(() => {
@@ -68,7 +69,7 @@ export default function Home() {
       url = '/api/pacientes?medico_id=' + med.id
     }
     fetch(url).then(r => r.json()).then(data => {
-      const lista = Array.isArray(data) ? data : (data?.data || [])
+      const lista = Array.isArray(data) ? data : (data?.pacientes || data?.data || [])
       setPacientes(lista)
     }).catch(err => {
       console.error('[nova-consulta] erro carregando pacientes:', err)
@@ -259,23 +260,37 @@ const handleCopiar = () => {
               <input
                 value={buscaPaciente}
                 onChange={e => setBuscaPaciente(e.target.value)}
-                placeholder="Buscar por nome..."
-                style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, outline: 'none', boxSizing: 'border-box' }}
+                onFocus={() => setBuscaInputFocada(true)}
+                onBlur={() => setTimeout(() => setBuscaInputFocada(false), 200)}
+                placeholder="Clique para ver pacientes ou buscar por nome..."
+                style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, outline: 'none', boxSizing: 'border-box', border: '1px solid #e5e7eb' }}
               />
-              {buscaPaciente && (
-                <div style={{ marginTop: 4, borderRadius: 8, overflow: 'hidden', maxHeight: 200, overflowY: 'auto' }}>
-                  {pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase())).length === 0 ? (
-                    <p style={{ fontSize: 12, color: '#9ca3af', padding: '12px 14px', margin: 0 }}>Nenhum paciente encontrado</p>
-                  ) : pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase())).map(p => (
-                    <div key={p.id}
-                      onClick={() => { setPacienteSelecionado(p); setBuscaPaciente(''); setModalPaciente(false) }}
-                      style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #F5F5F5', background: 'white' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#F5F5F5')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'white')}>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: '#111827' }}>{p.nome}</p>
-                      {p.telefone && <p style={{ margin: 0, fontSize: 11, color: '#9ca3af' }}>{p.telefone}</p>}
-                    </div>
-                  ))}
+              {(buscaInputFocada || buscaPaciente) && (
+                <div style={{ marginTop: 6, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden', maxHeight: 240, overflowY: 'auto', background: 'white' }}>
+                  {(() => {
+                    const filtrados = buscaPaciente
+                      ? pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase()))
+                      : pacientes
+                    if (pacientes.length === 0) {
+                      return <p style={{ fontSize: 12, color: '#9ca3af', padding: '14px', margin: 0, textAlign: 'center' as const }}>Nenhum paciente cadastrado ainda</p>
+                    }
+                    if (filtrados.length === 0) {
+                      return <p style={{ fontSize: 12, color: '#9ca3af', padding: '14px', margin: 0, textAlign: 'center' as const }}>Nenhum paciente encontrado para "{buscaPaciente}"</p>
+                    }
+                    return (<>
+                      <p style={{ fontSize: 10, color: '#9ca3af', padding: '6px 14px', margin: 0, textTransform: 'uppercase' as const, letterSpacing: '0.05em', fontWeight: 600, background: '#fafafa', borderBottom: '1px solid #f3f4f6' }}>{filtrados.length} {filtrados.length === 1 ? 'paciente' : 'pacientes'}</p>
+                      {filtrados.map(p => (
+                        <div key={p.id}
+                          onClick={() => { setPacienteSelecionado(p); setBuscaPaciente(''); setBuscaInputFocada(false); setModalPaciente(false) }}
+                          style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #F5F5F5', background: 'white' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#F5F5F5')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'white')}>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: '#111827' }}>{p.nome}</p>
+                          {p.telefone && <p style={{ margin: 0, fontSize: 11, color: '#9ca3af' }}>{p.telefone}</p>}
+                        </div>
+                      ))}
+                    </>)
+                  })()}
                 </div>
               )}
             </div>
