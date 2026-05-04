@@ -141,7 +141,22 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
-    let memedData: any = await res.json()
+    const respText = await res.text()
+    let memedData: any
+    try {
+      memedData = JSON.parse(respText)
+    } catch {
+      console.error('[memed/prescritor] Memed retornou nao-JSON. Status:', res.status, 'Body:', respText.slice(0, 500))
+      return NextResponse.json({
+        error: 'Memed nao retornou JSON valido. Status: ' + res.status + '. Resposta: ' + respText.slice(0, 200),
+        debug: {
+          api_key_configurada: !!MEMED_API_KEY,
+          api_key_preview: MEMED_API_KEY.slice(0, 8) + '...',
+          api_url: MEMED_API_URL,
+          status: res.status,
+        }
+      }, { status: 502 })
+    }
 
     // Se erro 422/409 indica que ja existe, tenta GET pra recuperar
     // (Memed retorna conflito quando external_id ja existe)
