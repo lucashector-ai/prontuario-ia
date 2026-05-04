@@ -11,6 +11,8 @@ import { PreConsultaCard } from '@/components/PreConsultaCard'
 import { HistoricoRapido } from '@/components/HistoricoRapido'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
 import { BotaoMemed } from '@/components/BotaoMemed'
+import { HeaderPacienteAtivo } from '@/components/HeaderPacienteAtivo'
+import { ModalSelecionarPaciente } from '@/components/ModalSelecionarPaciente'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
 type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
@@ -45,7 +47,7 @@ export default function Home() {
   const [alertasRT, setAlertasRT] = useState<string[]>([])
   const [focoConsulta, setFocoConsulta] = useState('')
   const [carregandoSugestoes, setCarregandoSugestoes] = useState(false)
-  const [modalPaciente, setModalPaciente] = useState(true)
+  const [modalPaciente, setModalPaciente] = useState(false)
   const [pacientes, setPacientes] = useState<any[]>([])
   const [pacienteSelecionado, setPacienteSelecionado] = useState<any>(null)
   const [memedAberto, setMemedAberto] = useState(false)
@@ -263,90 +265,25 @@ const handleCopiar = () => {
       </Suspense>
 
       {/* Modal seleção de paciente */}
-      {modalPaciente && !prontuario && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: 'white', borderRadius: 16, padding: '32px', width: 440 }}>
-            <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Nova consulta</h2>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Vincule a um paciente ou inicie uma consulta avulsa.</p>
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Selecionar paciente</p>
-              <input
-                value={buscaPaciente}
-                onChange={e => setBuscaPaciente(e.target.value)}
-                onFocus={() => setBuscaInputFocada(true)}
-                onBlur={() => setTimeout(() => setBuscaInputFocada(false), 200)}
-                placeholder="Clique para ver pacientes ou buscar por nome..."
-                style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, outline: 'none', boxSizing: 'border-box', border: '1px solid #e5e7eb' }}
-              />
-              {(buscaInputFocada || buscaPaciente) && (
-                <div style={{ marginTop: 6, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden', maxHeight: 240, overflowY: 'auto', background: 'white' }}>
-                  {(() => {
-                    const filtrados = buscaPaciente
-                      ? pacientes.filter(p => p.nome.toLowerCase().includes(buscaPaciente.toLowerCase()))
-                      : pacientes
-                    if (pacientes.length === 0) {
-                      return <p style={{ fontSize: 12, color: '#9ca3af', padding: '14px', margin: 0, textAlign: 'center' as const }}>Nenhum paciente cadastrado ainda</p>
-                    }
-                    if (filtrados.length === 0) {
-                      return <p style={{ fontSize: 12, color: '#9ca3af', padding: '14px', margin: 0, textAlign: 'center' as const }}>Nenhum paciente encontrado para "{buscaPaciente}"</p>
-                    }
-                    return (<>
-                      <p style={{ fontSize: 10, color: '#9ca3af', padding: '6px 14px', margin: 0, textTransform: 'uppercase' as const, letterSpacing: '0.05em', fontWeight: 600, background: '#fafafa', borderBottom: '1px solid #f3f4f6' }}>{filtrados.length} {filtrados.length === 1 ? 'paciente' : 'pacientes'}</p>
-                      {filtrados.map(p => (
-                        <div key={p.id}
-                          onClick={() => { setPacienteSelecionado(p); setBuscaPaciente(''); setBuscaInputFocada(false); setModalPaciente(false) }}
-                          style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #F5F5F5', background: 'white' }}
-                          onMouseEnter={e => (e.currentTarget.style.background = '#F5F5F5')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'white')}>
-                          <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: '#111827' }}>{p.nome}</p>
-                          {p.telefone && <p style={{ margin: 0, fontSize: 11, color: '#9ca3af' }}>{p.telefone}</p>}
-                        </div>
-                      ))}
-                    </>)
-                  })()}
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
-              <a href="/pacientes" style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, textDecoration: 'none' }}>+ Novo paciente</a>
-            </div>
-
-            <div style={{ borderTop: '1px solid #f3f4f6', marginTop: 20, paddingTop: 20, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setModalPaciente(false)}
-                style={{ padding: '9px 18px', borderRadius: 8, background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
-                Consulta avulsa
-              </button>
-              <button
-                onClick={() => { if (pacienteSelecionado) setModalPaciente(false) }}
-                disabled={!pacienteSelecionado}
-                style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: pacienteSelecionado ? '#6043C1' : '#e5e7eb', color: pacienteSelecionado ? 'white' : '#9ca3af', fontSize: 13, cursor: pacienteSelecionado ? 'pointer' : 'default', fontWeight: 600 }} title={!pacienteSelecionado ? 'Busque e selecione um paciente acima' : ''}>
-                Iniciar consulta
-              </button>
-            </div>
-            {!pacienteSelecionado && (
-              <p style={{ fontSize: 11, color: '#9ca3af', margin: '8px 0 0', textAlign: 'right' }}>
-                Busque um paciente acima ou clique em <strong>Consulta avulsa</strong>
-              </p>
-            )}
-          </div>
-        </div>
+      {modalPaciente && (
+        <ModalSelecionarPaciente
+          pacientes={pacientes}
+          onSelecionar={(p) => { setPacienteSelecionado(p); setModalPaciente(false) }}
+          onFechar={() => setModalPaciente(false)}
+          titulo={pacienteSelecionado ? 'Trocar paciente' : 'Selecionar paciente'}
+        />
       )}
-
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 24 }}>
+<div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 24 }}>
         {/* Top header */}
-        <div style={{ padding: '0 4px 20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexShrink: 0 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Nova consulta</h1>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
-              Grave e a IA gera prontuário SOAP, receita, exames e mais — {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '0 4px 16px', display: 'flex', flexDirection: 'column' as const, gap: 12, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+            <div>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Nova consulta</h1>
+              <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+                Grave e a IA gera prontuário SOAP, receita, exames e mais — {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {consultaSalva && (
               <span style={{ fontSize: 12, color: '#6043C1', background: '#f0fdf4', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>
                  Salvo
@@ -367,12 +304,18 @@ const handleCopiar = () => {
               {modoPerfeita ? 'Modo perfeita ativo' : 'Modo perfeita'}
             </button>
             <BotaoMemed onClick={() => setMemedAberto(true)} variant="compact" disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" />
-            {estado === 'pronto' && (
-              <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
-                + Nova consulta
-              </button>
-            )}
+              {estado === 'pronto' && (
+                <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
+                  + Nova consulta
+                </button>
+              )}
+            </div>
           </div>
+          <HeaderPacienteAtivo
+            paciente={pacienteSelecionado}
+            onTrocar={() => setModalPaciente(true)}
+            onSelecionarPrimeiroPaciente={() => setModalPaciente(true)}
+          />
         </div>
 
         {/* Content */}
