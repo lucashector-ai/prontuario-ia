@@ -161,48 +161,59 @@ export async function POST(req: NextRequest) {
       }, { status: 502 })
     }
 
-    // Se erro indica conflito (CPF ou external_id ja existem), tenta recuperar
+    // Se erro indica conflito de CPF, tenta recuperar usando o external_id antigo
+    // que a Memed retorna na propria mensagem de erro
     if (!res.ok) {
-      const errorMsg = JSON.stringify(memedData).toLowerCase()
-      const conflito = errorMsg.includes('cadastrado') || errorMsg.includes('cpf')
+      const errorDetail = memedData?.errors?.[0]?.detail || memedData?.message || JSON.stringify(memedData)
+      const errorLower = String(errorDetail).toLowerCase()
+
+      // Caso CPF inválido (separadamente de conflito)
+      if (errorLower.includes('precisa ser um cpf válido') || errorLower.includes('cpf invalido')) {
+        return NextResponse.json({
+          error: 'CPF do médico (' + cpfLimpo + ') foi rejeitado pela Memed: precisa ser um CPF válido. Use um CPF real válido em homologação.'
+        }, { status: 400 })
+      }
+
+      const conflito = errorLower.includes('cadastrado') || errorLower.includes('cpf')
 
       if (conflito) {
-        // Estratégia 1: busca por external_id
-        let getRes = await fetch(`${MEMED_API_URL}/sinapse-prescricao/usuarios/${externalId}?api-key=${MEMED_API_KEY}&secret-key=${MEMED_SECRET_KEY}`, {
-          headers: { 'Accept': 'application/vnd.api+json' }
-        })
+        // Memed retorna o external_id antigo na mensagem: "Id externo (XXXX-XXXX-...)"
+        const matchExtId = String(errorDetail).match(/\(([a-f0-9-]{8,})\)/i)
+        const externalIdAntigo = matchExtId?.[1]
 
-        // Estratégia 2: se nao achou por external_id, busca pelo CPF
-        // (cadastro antigo de teste usou external_id diferente, mesmo CPF)
-        if (!getRes.ok) {
-          const cpfUrl = `${MEMED_API_URL}/sinapse-prescricao/usuarios?api-key=${MEMED_API_KEY}&secret-key=${MEMED_SECRET_KEY}&filter[cpf]=${cpfLimpo}`
-          getRes = await fetch(cpfUrl, {
+        // Estratégia 1: GET pelo external_id antigo (que a Memed mencionou)
+        let getRes: Response | null = null
+        if (externalIdAntigo) {
+          getRes = await fetch(`${MEMED_API_URL}/sinapse-prescricao/usuarios/${externalIdAntigo}?api-key=${MEMED_API_KEY}&secret-key=${MEMED_SECRET_KEY}`, {
+            headers: { 'Accept': 'application/vnd.api+json' }
+          })
+        }
+
+        // Estratégia 2: GET pelo nosso external_id (caso retentar)
+        if (!getRes || !getRes.ok) {
+          getRes = await fetch(`${MEMED_API_URL}/sinapse-prescricao/usuarios/${externalId}?api-key=${MEMED_API_KEY}&secret-key=${MEMED_SECRET_KEY}`, {
             headers: { 'Accept': 'application/vnd.api+json' }
           })
         }
 
         if (getRes.ok) {
-          const getData = await getRes.json()
-          // Se busca por filter retorna array, pega o primeiro
-          memedData = Array.isArray(getData?.data) ? { data: getData.data[0] } : getData
+          memedData = await getRes.json()
           if (!memedData?.data?.attributes?.token) {
             return NextResponse.json({
-              error: 'Memed conflito mas nao retornou token na recuperacao. CPF: ' + cpfLimpo + '. Resposta: ' + JSON.stringify(getData).slice(0, 300)
+              error: 'Memed retornou dados mas sem token. external_id usado: ' + (externalIdAntigo || externalId) + '. Resposta: ' + JSON.stringify(memedData).slice(0, 300)
             }, { status: 500 })
           }
         } else {
           const recoveryText = await getRes.text()
-          console.error('[memed/prescritor] falha ao recuperar:', recoveryText.slice(0, 300))
+          console.error('[memed/prescritor] falha ao recuperar GET:', recoveryText.slice(0, 300))
           return NextResponse.json({
-            error: 'Memed conflito ao cadastrar e nao foi possivel recuperar. Erro original: ' +
-              (memedData?.errors?.[0]?.detail || JSON.stringify(memedData).slice(0, 200))
+            error: 'Memed conflito ao cadastrar e nao foi possivel recuperar. Erro original: ' + errorDetail
           }, { status: 500 })
         }
       } else {
         console.error('[memed/prescritor] erro Memed (nao-conflito):', JSON.stringify(memedData).slice(0, 500))
         return NextResponse.json({
-          error: 'Erro ao cadastrar prescritor na Memed: ' +
-            (memedData?.errors?.[0]?.detail || memedData?.message || 'desconhecido')
+          error: 'Erro ao cadastrar prescritor na Memed: ' + errorDetail
         }, { status: 500 })
       }
     }
