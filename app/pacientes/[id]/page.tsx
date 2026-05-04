@@ -468,13 +468,6 @@ export default function PacienteDetalhe() {
                           <HipotesesCard hipoteses={c.hipoteses} />
                         </div>
                       )}
-                      {/* Receita */}
-                      {c.receita && (
-                        <div style={{padding:'10px 18px',borderTop:'1px solid #f3f4f6'}}>
-                          <p style={{fontSize:11,fontWeight:700,color:'#374151',textTransform:'uppercase' as const,letterSpacing:'0.05em',margin:'0 0 6px'}}>Receita / Prescricao</p>
-                          <p style={{fontSize:11,color:'#6b7280',margin:0,lineHeight:1.6,whiteSpace:'pre-wrap' as const}}>{c.receita}</p>
-                        </div>
-                      )}
                       {/* Transcrição colapsavel */}
                       {c.transcricao && (
                         <div style={{padding:'8px 18px',borderTop:'1px solid #f3f4f6'}}>
@@ -499,11 +492,6 @@ export default function PacienteDetalhe() {
                           style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:6,background:'#f0ebff',color:'#6043C1',fontSize:12,fontWeight:600,textDecoration:'none'}}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
                           PDF Prontuário
-                        </a>
-                        <a href={'/api/pdf-receita?consulta_id='+c.id+'&medico_id='+(c.medico_id||medico?.id)} target="_blank" rel="noreferrer"
-                          style={{fontSize:11,color:'#1d4ed8',background:'#eff6ff',border:'1px solid #bfdbfe',padding:'5px 10px',borderRadius:6,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:4}}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                          PDF Receita
                         </a>
                       </div>
                     </div>

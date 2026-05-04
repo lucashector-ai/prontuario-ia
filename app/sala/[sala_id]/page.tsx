@@ -896,13 +896,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   </div>
                 )
               })}
-              {pd.receita && (
-                <div style={{ marginBottom:8 }}>
-                  <p style={{ color:'#94a3b8', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 4px', letterSpacing:'0.05em' }}>Receita / Prescrição</p>
-                  <textarea defaultValue={pd.receita} rows={3} onChange={e => { camposRef.current.receita = e.target.value }}
-                    style={{ width:'100%', padding:'10px 12px', fontSize:13, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
-                </div>
-              )}
               {Array.isArray(pd.cids) && pd.cids.length > 0 && (
                 <div style={{ marginBottom:8 }}>
                   <p style={{ color:'#94a3b8', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 6px', letterSpacing:'0.05em' }}>CIDs sugeridos</p>
@@ -1403,17 +1396,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   </div>
                 )
               })}
-              {(() => {
-                const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
-                const rec = pd.receita ?? ''
-                return rec ? (
-                  <div>
-                    <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase' as const, letterSpacing:'0.05em', margin:'0 0 6px' }}>Receita / Prescricao</p>
-                    <textarea defaultValue={rec} rows={3} onChange={e => { camposRef.current.receita = e.target.value }}
-                      style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
-                  </div>
-                ) : null
-              })()}
             </div>
             <div style={{ padding:'14px 20px', borderTop:'1px solid #334155', display:'flex', gap:10, flexShrink:0 }}>
               <button onClick={salvarProntuario} disabled={salvando || salvado}

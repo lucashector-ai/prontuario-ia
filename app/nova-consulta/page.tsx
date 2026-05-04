@@ -6,11 +6,11 @@ import { useGravador } from '@/lib/useGravador'
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
 import { ProntuarioCard } from '@/components/ProntuarioCard'
-import { ReceitaCard } from '@/components/ReceitaCard'
 import { PacienteBanner } from '@/components/PacienteBanner'
 import { PreConsultaCard } from '@/components/PreConsultaCard'
 import { HistoricoRapido } from '@/components/HistoricoRapido'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
+import { BotaoMemed } from '@/components/BotaoMemed'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
 type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
@@ -29,9 +29,7 @@ export default function Home() {
   const [medico, setMedico] = useState<any>(null)
   const [transcricao, setTranscricao] = useState('')
   const [prontuario, setProntuario] = useState<any>(null)
-  const [receita, setReceita] = useState<any>(null)
   const [estado, setEstado] = useState<Estado>('idle')
-  const [gerandoReceita, setGerandoReceita] = useState(false)
   const [erroMsg, setErroMsg] = useState('')
   const [aba, setAba] = useState<Aba>('prontuario')
   const [consultaSalva, setConsultaSalva] = useState(false)
@@ -119,30 +117,7 @@ export default function Home() {
     } catch (e) { console.error(e) }
   }
 
-  const handleGerarReceita = async () => {
-    if (!prontuario) return
-    setGerandoReceita(true)
-    setErroMsg('')
-    try {
-      const res = await fetch('/api/receita', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prontuario, paciente_id: pacienteSelecionado?.id || null, medico_id: medico?.id || null }),
-      })
-      const data = await res.json()
-      if (data.receita) {
-        setReceita(data.receita)
-        setAba('receita')
-        if (data.receita.alertas_interacao?.length > 0) {
-          data.receita.alertas_interacao.forEach((alerta: string) => toast(alerta, 'error'))
-        }
-      } else throw new Error(data.error || 'Erro ao gerar receita')
-    } catch (e: any) {
-      toast(e.message || 'Erro ao gerar receita', 'error')
-    }
-    finally { setGerandoReceita(false) }
-  }
-
-  const handleCopiar = () => {
+const handleCopiar = () => {
     if (!prontuario) return
     const t = [
       `PRONTUÁRIO  -  ${new Date().toLocaleDateString('pt-BR')}`,
@@ -548,39 +523,19 @@ export default function Home() {
                   {aba === 'prontuario' && (
                     <>
                       <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} insights={copiloto?.insights} padroes={copiloto?.padroes} totalConsultas={copiloto?.total_consultas} />
-                      <button onClick={handleGerarReceita} disabled={gerandoReceita} style={{
-                        width: '100%', marginTop: 12, padding: '10px', borderRadius: 8,
-                        border: '1px dashed #d1d5db', background: '#F5F5F5',
-                        color: '#6b7280', fontSize: 12, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontWeight: 500,
-                      }}>
-                        {gerandoReceita ? (
-                          <><svg className="spinner" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M2 12h4M18 12h4"/></svg>Gerando receita...</>
-                        ) : (
-                          <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>Gerar receita médica</>
-                        )}
-                      </button>
+                      <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+                        <BotaoMemed onClick={() => setMemedAberto(true)} disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" variant="secondary" />
+                      </div>
                                     </>
                   )}
-                  {aba === 'receita' && receita && (
-                    <ReceitaCard receita={receita} nomeMedico={medico?.nome} crm={medico?.crm} especialidade={medico?.especialidade} onImprimir={() => window.print()} />
-                  )}
-                  {aba === 'receita' && !receita && (
+                  {aba === 'receita' && (
                     <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-                      <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                      <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdfa', border: '1px solid #99f6e4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                        <img src="/memed-logo.svg" alt="Memed" width={28} height={28} />
                       </div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Gerar receita médica</p>
-                      <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px' }}>Extraida automaticamente do prontuario gerado.</p>
-                      <button onClick={() => setMemedAberto(true)} disabled={!pacienteSelecionado}
-                        title={pacienteSelecionado ? 'Prescrever via Memed' : 'Selecione um paciente primeiro'}
-                        style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #6043C1', background: 'white', color: '#6043C1', fontSize: 13, fontWeight: 600, cursor: pacienteSelecionado ? 'pointer' : 'not-allowed', opacity: pacienteSelecionado ? 1 : 0.5, display: 'flex', alignItems: 'center', gap: 6, marginRight: 8 }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                        Prescrever
-                      </button>
-                      <button onClick={handleGerarReceita} style={{ padding: '9px 22px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                        Gerar receita
-                      </button>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Prescrição digital</p>
+                      <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px', maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>Crie receitas com validade legal ICP-Brasil e envio direto pra farmácia, via Memed.</p>
+                      <BotaoMemed onClick={() => setMemedAberto(true)} disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" />
                     </div>
                   )}
                   {aba === 'resumo' && (
