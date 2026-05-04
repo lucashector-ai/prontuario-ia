@@ -1,14 +1,24 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Topbar } from './Topbar'
 import { Sidebar } from './Sidebar'
+import { BottomNav } from './BottomNav'
 
 const ROTAS_PUBLICAS = ['/login', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/whatsapp-app']
 const PREFIXOS_PUBLICOS = ['/sala/', '/pre-consulta/', '/paciente-publico/']
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const ehPublica =
     pathname === '/' ||
@@ -17,6 +27,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (ehPublica) return <>{children}</>
 
+  // ===== MOBILE LAYOUT =====
+  if (isMobile) {
+    return (
+      <div style={{
+        height: '100dvh',
+        background: '#F5F5F5',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+        <Topbar />
+        <main style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          overscrollBehavior: 'contain',
+          minHeight: 0,
+          paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
+        }}>
+          {children}
+        </main>
+        <BottomNav />
+      </div>
+    )
+  }
+
+  // ===== DESKTOP LAYOUT (mantido como antes) =====
   return (
     <div style={{
       height: '100vh',
