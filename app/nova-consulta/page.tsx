@@ -323,6 +323,7 @@ const handleCopiar = () => {
               </svg>
               {modoPerfeita ? 'Modo perfeita ativo' : 'Modo perfeita'}
             </button>
+            <BotaoMemed onClick={() => setMemedAberto(true)} variant="compact" disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" />
             {estado === 'pronto' && (
               <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#374151', background: 'white', padding: '6px 14px', borderRadius: 7, cursor: 'pointer' }}>
                 + Nova consulta

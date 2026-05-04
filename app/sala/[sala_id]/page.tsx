@@ -973,7 +973,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         </div>
         <div>
           <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>MedIA</p>
-          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}</p>
+          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}{pacienteSala?.nome ? ' · ' + pacienteSala.nome : ''}</p>
         </div>
       </div>
       {/* Conteudo */}
@@ -1096,9 +1096,17 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           <div style={{ width: 26, height: 26, borderRadius: 6, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
-          <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0 }}>{sala?.titulo || 'Teleconsulta'}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Consulta - {String(sala_id).slice(-4).toUpperCase()}{pacienteSala?.nome ? ' · ' + pacienteSala.nome : ''}
+            </p>
+            {sala?.titulo && <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{sala.titulo}</p>}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {tela === 'chamada' && isMedico && (
+            <BotaoMemed onClick={() => setMemedAberto(true)} variant="compact" disabled={!medicoSala || !pacienteSala} disabledReason="Aguardando dados do paciente" />
+          )}
           {tela === 'chamada' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#0f172a', padding: '3px 10px', borderRadius: 20, border: '1px solid #1e3a2f' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}/>
@@ -1462,11 +1470,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           onClose={() => setMemedAberto(false)}
           onPrescricaoGerada={() => setMemedAberto(false)}
         />
-      )}
-      {papelRef.current !== 'paciente' && (
-        <div style={{ position: 'fixed', bottom: 100, right: 24, zIndex: 50 }}>
-          <BotaoMemed onClick={() => setMemedAberto(true)} variant="floating" disabled={!medicoSala || !pacienteSala} disabledReason="Aguardando dados do paciente" />
-        </div>
       )}
 
 
