@@ -336,7 +336,7 @@ const handleCopiar = () => {
           <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', minHeight: 0 }}>
 
             {estado === 'idle' && !prontuario && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 18, padding: 48 }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 18, padding: 32, overflow: 'auto', minHeight: 0 }}>
                 <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fef2f2', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.8">
                     <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
@@ -434,7 +434,7 @@ const handleCopiar = () => {
             )}
 
             {estado === 'processando' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 48 }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32, overflow: 'auto', minHeight: 0 }}>
                 <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #ede9fb', borderTopColor: '#6043C1', animation: 'spin 0.8s linear infinite' as const }}/>
                 <div style={{ textAlign: 'center' as const }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>Analisando consulta</p>
@@ -444,7 +444,7 @@ const handleCopiar = () => {
             )}
 
             {estado === 'erro' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 48 }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 32, overflow: 'auto', minHeight: 0 }}>
                 <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fef2f2', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 </div>
