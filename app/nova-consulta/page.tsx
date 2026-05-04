@@ -12,6 +12,7 @@ import { HistoricoRapido } from '@/components/HistoricoRapido'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
 import { BotaoMemed } from '@/components/BotaoMemed'
 import { SidebarContextoPaciente } from '@/components/SidebarContextoPaciente'
+import { ModalDadosPacienteAvulso } from '@/components/ModalDadosPacienteAvulso'
 import { ModalSelecionarPaciente } from '@/components/ModalSelecionarPaciente'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
@@ -48,6 +49,8 @@ export default function Home() {
   const [focoConsulta, setFocoConsulta] = useState('')
   const [carregandoSugestoes, setCarregandoSugestoes] = useState(false)
   const [modalPaciente, setModalPaciente] = useState(false)
+  const [modalAvulso, setModalAvulso] = useState(false)
+  const [pacienteAvulso, setPacienteAvulso] = useState<any>(null)
   const [pacientes, setPacientes] = useState<any[]>([])
   const [pacienteSelecionado, setPacienteSelecionado] = useState<any>(null)
   const [memedAberto, setMemedAberto] = useState(false)
@@ -310,7 +313,7 @@ const handleCopiar = () => {
                   </svg>
                   {modoPerfeita ? 'Modo perfeita ativo' : 'Modo perfeita'}
                 </button>
-                <BotaoMemed onClick={() => setMemedAberto(true)} variant="primary" disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" />
+                <BotaoMemed onClick={() => { if (pacienteSelecionado) { setMemedAberto(true) } else { setModalAvulso(true) } }} variant="primary" />
                 {estado === 'pronto' && (
                   <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#6b7280', background: 'white', border: '1px solid #e5e7eb', padding: '7px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
                     + Nova
@@ -565,10 +568,29 @@ const handleCopiar = () => {
           </div>
         </div>
       </div>
-      {memedAberto && medico && pacienteSelecionado && (
+      {modalAvulso && (
+        <ModalDadosPacienteAvulso
+          onFechar={() => setModalAvulso(false)}
+          onConfirmar={(dados) => {
+            setPacienteAvulso({
+              id: 'avulso-' + Date.now(),
+              nome: dados.nome,
+              cpf: dados.cpf,
+              data_nascimento: dados.data_nascimento,
+              sexo: dados.sexo,
+              telefone: null,
+              email: null,
+              endereco: null,
+            })
+            setModalAvulso(false)
+            setMemedAberto(true)
+          }}
+        />
+      )}
+      {memedAberto && medico && (pacienteSelecionado || pacienteAvulso) && (
         <MemedPrescricao
           medicoId={medico.id}
-          paciente={{
+          paciente={pacienteSelecionado ? {
             id: pacienteSelecionado.id,
             nome: pacienteSelecionado.nome,
             cpf: pacienteSelecionado.cpf,
@@ -577,7 +599,7 @@ const handleCopiar = () => {
             telefone: pacienteSelecionado.telefone,
             email: pacienteSelecionado.email,
             endereco: pacienteSelecionado.endereco,
-          }}
+          } : pacienteAvulso}
           onClose={() => setMemedAberto(false)}
           onPrescricaoGerada={(dados) => {
             console.log('Prescricao gerada:', dados)
