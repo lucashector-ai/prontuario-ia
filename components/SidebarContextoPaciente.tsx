@@ -80,13 +80,6 @@ export function SidebarContextoPaciente({ pacienteId, medicoId }: Props) {
         </div>
       )}
 
-      {paciente?.observacoes && (
-        <div style={{ background: 'white', borderRadius: 10, padding: '11px 13px', border: '1px solid #e5e7eb' }}>
-          <p style={{ fontSize: 9, color: '#6b7280', letterSpacing: '0.05em', fontWeight: 700, margin: '0 0 6px', textTransform: 'uppercase' as const }}>Observações</p>
-          <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap' as const }}>{paciente.observacoes}</p>
-        </div>
-      )}
-
       <div style={{ background: 'white', borderRadius: 10, padding: '11px 13px', border: '1px solid #e5e7eb' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <p style={{ fontSize: 9, color: '#6b7280', letterSpacing: '0.05em', fontWeight: 700, margin: 0, textTransform: 'uppercase' as const }}>Últimas consultas</p>

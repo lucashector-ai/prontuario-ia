@@ -321,16 +321,21 @@ const handleCopiar = () => {
         </div>
 
         {/* Content */}
-          <div className="grid-consulta">
+        <div style={{ display: 'grid', gridTemplateColumns: pacienteSelecionado ? '240px 1fr' : '1fr', gap: 12, flex: 1, minHeight: 0 }}>
+
+          {/* SIDEBAR - Contexto do paciente (isolado) */}
+          {pacienteSelecionado && medico && (
+            <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f0f0f0', padding: '14px 14px 16px', overflow: 'auto', minHeight: 0 }}>
+              <p style={{ fontSize: 9, color: '#9ca3af', letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 10px', textTransform: 'uppercase' as const }}>Contexto do paciente</p>
+              <SidebarContextoPaciente pacienteId={pacienteSelecionado.id} medicoId={medico.id} />
+            </div>
+          )}
+
+          {/* AREA PRINCIPAL - grid-consulta original (gravacao + tabs) */}
+          <div className="grid-consulta" style={{ minHeight: 0 }}>
 
           {/* Left  -  Gravação + Transcrição */}
           <div style={{ borderRight: 'none', borderRadius: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white', border: '1px solid #f0f0f0' }}>
-            {pacienteSelecionado && medico && (
-              <div style={{ padding: '14px 16px 0', borderBottom: '1px solid #f3f4f6', paddingBottom: 14 }}>
-                <p style={{ fontSize: 9, color: '#9ca3af', letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 8px', textTransform: 'uppercase' as const }}>Contexto do paciente</p>
-                <SidebarContextoPaciente pacienteId={pacienteSelecionado.id} medicoId={medico.id} />
-              </div>
-            )}
 
             {/* Gravação section */}
             <div style={{ padding: '28px 32px', borderBottom: '1px solid #f3f4f6' }}>
@@ -516,12 +521,7 @@ const handleCopiar = () => {
 
                 <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
                   {aba === 'prontuario' && (
-                    <>
-                      <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} insights={copiloto?.insights} padroes={copiloto?.padroes} totalConsultas={copiloto?.total_consultas} />
-                      <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
-                        <BotaoMemed onClick={() => setMemedAberto(true)} disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" variant="primary" />
-                      </div>
-                                    </>
+                    <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} insights={copiloto?.insights} padroes={copiloto?.padroes} totalConsultas={copiloto?.total_consultas} />
                   )}
                   {aba === 'receita' && (
                     <div style={{ textAlign: 'center', padding: '60px 24px' }}>
@@ -629,7 +629,7 @@ const handleCopiar = () => {
               </div>
             )}
 
-            {(estado === 'idle' || estado === 'gravando') && !prontuario && (
+            {estado === 'idle' && !prontuario && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 48, background: 'white' }}>
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
@@ -639,7 +639,7 @@ const handleCopiar = () => {
                 <div style={{ textAlign: 'center', maxWidth: 300 }}>
                   <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 8px' }}>Prontuário estruturado por IA</p>
                   <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
-                    Grave a consulta ao lado. O prontuário SOAP, CIDs sugeridos e receita médica serao gerados automaticamente.
+                    Grave a consulta ao lado. O prontuário SOAP, CIDs sugeridos e receita médica serão gerados automaticamente.
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -649,7 +649,53 @@ const handleCopiar = () => {
                 </div>
               </div>
             )}
+
+            {estado === 'gravando' && !prontuario && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>
+                <div style={{ padding: '20px 28px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', animation: 'pulse 1.5s ease-in-out infinite' as const }}/>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', margin: 0, letterSpacing: '0.04em' as const }}>TRANSCRIÇÃO AO VIVO</p>
+                  </div>
+                  {transcricao && (
+                    <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '3px 9px', borderRadius: 12, fontVariantNumeric: 'tabular-nums' as const }}>
+                      {transcricao.split(' ').filter(Boolean).length} palavras
+                    </span>
+                  )}
+                </div>
+                <div style={{ flex: 1, overflow: 'auto', padding: '20px 28px', background: '#fafafa' }}>
+                  {transcricao ? (
+                    <p style={{ fontSize: 14, color: '#1f2937', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' as const }}>{transcricao}</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, opacity: 0.5 }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5">
+                        <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                        <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
+                      </svg>
+                      <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Aguardando fala do paciente...</p>
+                    </div>
+                  )}
+                </div>
+                {modoPerfeita && (sugestoes.length > 0 || focoConsulta) && (
+                  <div style={{ padding: '14px 22px', background: '#f0ebff', borderTop: '1px solid #e0d4ff', flexShrink: 0, maxHeight: 200, overflow: 'auto' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Sugestão IA</span>
+                    </div>
+                    {focoConsulta && (
+                      <p style={{ fontSize: 12, color: '#3C3489', margin: '0 0 6px', lineHeight: 1.5 }}>
+                        <strong style={{ fontWeight: 600 }}>Foco:</strong> {focoConsulta}
+                      </p>
+                    )}
+                    {sugestoes.slice(0, 3).map((sug, i) => (
+                      <p key={i} style={{ fontSize: 12, color: '#3C3489', margin: i === 0 ? 0 : '6px 0 0', lineHeight: 1.5 }}>{sug}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+        </div>
         </div>
       </div>
       {memedAberto && medico && pacienteSelecionado && (

@@ -33,7 +33,7 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar }: Props) {
 
   if (!pacienteId) {
     return (
-      <div style={{ padding: '14px 24px', background: '#fffbeb', borderBottom: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ padding: '14px 18px', background: '#fffbeb', borderRadius: 12, border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: 10 }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <p style={{ margin: 0, fontSize: 12, color: '#92400e', fontWeight: 500 }}>
           Consulta avulsa — não vinculada a um paciente. {onTrocar && <button onClick={onTrocar} style={{ background: 'none', border: 'none', color: '#6043C1', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', fontSize: 12, padding: 0 }}>Vincular paciente</button>}
@@ -44,7 +44,7 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar }: Props) {
 
   if (loading) {
     return (
-      <div style={{ padding: '16px 24px', background: 'white', borderBottom: '1px solid #f3f4f6', height: 68, display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '16px 18px', background: 'white', borderRadius: 12, border: '1px solid #f0f0f0', height: 68, display: 'flex', alignItems: 'center' }}>
         <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#f3f4f6' }}/>
         <div style={{ marginLeft: 12, flex: 1 }}>
           <div style={{ height: 12, width: 140, background: '#f3f4f6', borderRadius: 4, marginBottom: 6 }}/>
@@ -72,7 +72,7 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar }: Props) {
   const iniciais = paciente.nome?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || '?'
 
   return (
-    <div style={{ padding: '14px 24px', background: 'white', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 14 }}>
+    <div style={{ padding: '14px 18px', background: 'white', borderRadius: 12, border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: 14 }}>
       {/* Avatar */}
       <div style={{
         width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
