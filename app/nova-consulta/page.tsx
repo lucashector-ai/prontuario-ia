@@ -11,7 +11,7 @@ import { PreConsultaCard } from '@/components/PreConsultaCard'
 import { HistoricoRapido } from '@/components/HistoricoRapido'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
 import { BotaoMemed } from '@/components/BotaoMemed'
-import { HeaderPacienteAtivo } from '@/components/HeaderPacienteAtivo'
+import { SidebarContextoPaciente } from '@/components/SidebarContextoPaciente'
 import { ModalSelecionarPaciente } from '@/components/ModalSelecionarPaciente'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
@@ -311,10 +311,10 @@ const handleCopiar = () => {
               )}
             </div>
           </div>
-          <HeaderPacienteAtivo
-            paciente={pacienteSelecionado}
+          <PacienteBanner
+            pacienteId={pacienteSelecionado?.id || null}
+            medicoId={medico?.id || ''}
             onTrocar={() => setModalPaciente(true)}
-            onSelecionarPrimeiroPaciente={() => setModalPaciente(true)}
           />
         </div>
 
@@ -323,6 +323,11 @@ const handleCopiar = () => {
 
           {/* Left  -  Gravação + Transcrição */}
           <div style={{ borderRight: 'none', borderRadius: 16, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>
+            {pacienteSelecionado && medico && (
+              <div style={{ padding: '14px 18px 0' }}>
+                <SidebarContextoPaciente pacienteId={pacienteSelecionado.id} medicoId={medico.id} />
+              </div>
+            )}
 
             {/* Gravação section */}
             <div style={{ padding: '28px 32px', borderBottom: '1px solid #f3f4f6' }}>
