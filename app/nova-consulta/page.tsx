@@ -331,188 +331,142 @@ const handleCopiar = () => {
             </div>
           )}
 
-          {/* AREA PRINCIPAL - grid-consulta original (gravacao + tabs) */}
-          <div className="grid-consulta" style={{ minHeight: 0 }}>
+          {/* AREA PRINCIPAL - card unico que muda por estado */}
+          <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', minHeight: 0 }}>
 
-          {/* Left  -  Gravação + Transcrição */}
-          <div style={{ borderRight: 'none', borderRadius: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white', border: '1px solid #f0f0f0' }}>
-
-            {/* Gravação section */}
-            <div style={{ padding: '28px 32px', borderBottom: '1px solid #f3f4f6' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>Gravação da consulta</p>
-                  <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Fale normalmente. A transcrição é gerada em tempo real.</p>
-                </div>
-                {gravando && (
-                  <span className="pulse-record" style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
-                     REC
-                  </span>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                {!gravando ? (
-                  <button onClick={handleIniciar} style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    background: '#dc2626', color: 'white', fontSize: 13, fontWeight: 600,
-                  }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-                      <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
-                    </svg>
-                    Iniciar gravação
-                  </button>
-                ) : (
-                  <>
-                  <button onClick={pausarGravacao} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 8, border: '1.5px solid ' + (gravandoPausado ? '#d97706' : '#475569'), background: gravandoPausado ? '#451a03' : '#1e293b', color: gravandoPausado ? '#fbbf24' : '#94a3b8', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{gravandoPausado ? 'RETOMAR' : 'PAUSAR'}</button>
-                  <button onClick={handleParar} style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '9px 20px', borderRadius: 8,
-                    border: '1.5px solid #dc2626', cursor: 'pointer',
-                    background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 600,
-                  }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <rect x="4" y="4" width="16" height="16" rx="2"/>
-                    </svg>
-                    Parar
-                  </button>
-                  </>
-                )}
-
-                {transcrevendo && (
-                  <span style={{ fontSize: 12, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg className="spinner" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5">
-                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M2 12h4M18 12h4"/>
-                    </svg>
-                    Transcrevendo...
-                  </span>
-                )}
-
-                {transcricao && (estado === 'idle' || estado === 'processando') && (
-                  <button onClick={handleEstruturar} style={{
-                    marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7,
-                    padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600,
-                  }}>
-                    {estado === 'processando' ? (
-                      <>
-                        <svg className="spinner" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M2 12h4M18 12h4"/></svg>
-                        Gerando...
-                      </>
-                    ) : (
-                      <>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        Gerar prontuário
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-
-              {erro && (
-                <div style={{ marginTop: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 12px' }}>
-                  <p style={{ fontSize: 12, color: '#dc2626', margin: 0 }}>{erro}</p>
-                </div>
-              )}
-              {estado === 'erro' && erroMsg && (
-                <div style={{ marginTop: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 12px' }}>
-                  <p style={{ fontSize: 12, color: '#dc2626', margin: 0 }}>Erro: {erroMsg}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Transcrição section */}
-            <div style={{ flex: 1, padding: '24px 32px', overflow: 'auto' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>Transcrição</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {transcricao && (
-                    <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5 }}>
-                      {transcricao.split(' ').length} palavras
-                    </span>
-                  )}
-                  {transcricao && (
-                    <button onClick={handleNovo} style={{ fontSize: 11, color: '#6b7280', background: 'none', padding: '2px 8px', borderRadius: 5, cursor: 'pointer' }}>
-                      Limpar
-                    </button>
-                  )}
-                </div>
-              </div>
-              {modoPerfeita && estado === 'gravando' && (
-                <div style={{ marginBottom: 16, background: '#f0ebff', borderRadius: 10, padding: '12px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
-                      Copiloto em tempo real {carregandoSugestoes ? '...' : ''}
-                    </span>
-                  </div>
-                  {focoConsulta && (
-                    <p style={{ fontSize: 12, color: '#4c1d95', margin: '0 0 10px', fontStyle: 'italic', lineHeight: 1.5 }}>
-                      Foco: {focoConsulta}
-                    </p>
-                  )}
-                  {alertasRT.length > 0 && alertasRT.map((a, i) => (
-                    <div key={i} style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, padding: '6px 10px', marginBottom: 6, fontSize: 12, color: '#b91c1c', display: 'flex', gap: 6 }}>
-                      <span>⚠</span>{a}
-                    </div>
-                  ))}
-                  {sugestoes.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
-                      {sugestoes.map((s, i) => (
-                        <div key={i} style={{ background: 'white', borderRadius: 6, padding: '7px 10px', fontSize: 12, color: '#3C3489', display: 'flex', alignItems: 'center', gap: 7, cursor: 'default' }}>
-                          <span style={{ width: 16, height: 16, borderRadius: '50%', background: '#6043C1', color: 'white', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
-                          {s}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {sugestoes.length === 0 && !carregandoSugestoes && (
-                    <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Aguardando transcrição para gerar sugestões...</p>
-                  )}
-                </div>
-              )}
-              {transcricao ? (
-                <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.8, margin: 0 }}>{transcricao}</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 160, gap: 10 }}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">
+            {estado === 'idle' && !prontuario && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 18, padding: 48 }}>
+                <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fef2f2', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.8">
                     <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
                     <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
                   </svg>
-                  <p style={{ fontSize: 13, color: '#9ca3af', margin: 0, textAlign: 'center' }}>
-                    {gravando ? 'Aguardando fala...' : 'Inicie a gravação para comecar'}
+                </div>
+                <div style={{ textAlign: 'center' as const, maxWidth: 380 }}>
+                  <p style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Pronto para iniciar a consulta?</p>
+                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+                    Fale normalmente durante a consulta. A IA vai transcrever em tempo real e gerar prontuário SOAP, CIDs, receita e mais ao final.
                   </p>
                 </div>
-              )}
-            </div>
-          </div>
+                <button onClick={handleIniciar} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 9,
+                  padding: '12px 28px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                  background: '#dc2626', color: 'white', fontSize: 14, fontWeight: 600
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                    <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
+                  </svg>
+                  Iniciar gravação
+                </button>
+                {transcricao && (
+                  <button onClick={handleEstruturar} style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid #6043C1', background: 'white', color: '#6043C1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                    Tenho transcrição salva — gerar prontuário
+                  </button>
+                )}
+              </div>
+            )}
 
-          {/* Right  -  Prontuario / Receita */}
-          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F5F5F5' }}>
+            {estado === 'gravando' && !prontuario && (
+              <>
+                <div style={{ padding: '16px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', animation: 'pulse 1.5s ease-in-out infinite' as const }}/>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', margin: 0, letterSpacing: '0.04em' as const }}>GRAVANDO</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {transcrevendo && (
+                      <span style={{ fontSize: 11, color: '#9ca3af' }}>Transcrevendo...</span>
+                    )}
+                    {transcricao && (
+                      <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '3px 9px', borderRadius: 12, fontVariantNumeric: 'tabular-nums' as const }}>
+                        {transcricao.split(' ').filter(Boolean).length} palavras
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', background: '#fafafa' }}>
+                  {transcricao ? (
+                    <p style={{ fontSize: 14, color: '#1f2937', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' as const }}>{transcricao}</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, opacity: 0.5 }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5">
+                        <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                        <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
+                      </svg>
+                      <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Aguardando fala do paciente...</p>
+                    </div>
+                  )}
+                </div>
+
+                {modoPerfeita && (sugestoes.length > 0 || focoConsulta || alertasRT.length > 0) && (
+                  <div style={{ padding: '14px 22px', background: '#f0ebff', borderTop: '1px solid #e0d4ff', flexShrink: 0, maxHeight: 200, overflow: 'auto' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Sugestão IA</span>
+                    </div>
+                    {focoConsulta && (
+                      <p style={{ fontSize: 12, color: '#3C3489', margin: '0 0 6px', lineHeight: 1.5 }}>
+                        <strong style={{ fontWeight: 600 }}>Foco:</strong> {focoConsulta}
+                      </p>
+                    )}
+                    {alertasRT.map((a, i) => (
+                      <p key={i} style={{ fontSize: 12, color: '#b91c1c', margin: i === 0 ? 0 : '6px 0 0', lineHeight: 1.5 }}>⚠ {a}</p>
+                    ))}
+                    {sugestoes.slice(0, 3).map((sug, i) => (
+                      <p key={i} style={{ fontSize: 12, color: '#3C3489', margin: '6px 0 0', lineHeight: 1.5 }}>{sug}</p>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ padding: '14px 24px', borderTop: '1px solid #f3f4f6', display: 'flex', gap: 10, flexShrink: 0 }}>
+                  <button onClick={pausarGravacao} style={{ flex: 1, padding: '11px', borderRadius: 9, border: '1px solid ' + (gravandoPausado ? '#d97706' : '#fecaca'), background: gravandoPausado ? '#fffbeb' : 'white', color: gravandoPausado ? '#d97706' : '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    {gravandoPausado ? 'Retomar' : 'Pausar'}
+                  </button>
+                  <button onClick={handleParar} style={{ flex: 2, padding: '11px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                    Encerrar e gerar prontuário
+                  </button>
+                </div>
+              </>
+            )}
 
             {estado === 'processando' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: 'white' }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #ede9fb', borderTopColor: '#6043C1', animation: 'spin 0.8s linear infinite' }}/>
-                <div style={{ textAlign: 'center' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 48 }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #ede9fb', borderTopColor: '#6043C1', animation: 'spin 0.8s linear infinite' as const }}/>
+                <div style={{ textAlign: 'center' as const }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>Analisando consulta</p>
                   <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Estruturando prontuário SOAP com IA...</p>
                 </div>
               </div>
             )}
 
+            {estado === 'erro' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 48 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fef2f2', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <div style={{ textAlign: 'center' as const }}>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>Erro ao processar</p>
+                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{erroMsg || 'Tente novamente.'}</p>
+                </div>
+                <button onClick={handleNovo} style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#374151', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                  Recomeçar
+                </button>
+              </div>
+            )}
+
             {estado === 'pronto' && prontuario && (
-              <div className="fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white', borderLeft: '1px solid #e5e7eb' }}>
-                {/* Tab bar */}
-                <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', padding: '0 20px', background: 'white', flexShrink: 0 }}>
+              <>
+                <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', padding: '0 20px', flexShrink: 0 }}>
                   {(['prontuario', 'receita', 'resumo', 'documentos'] as Aba[]).map(tab => (
                     <button key={tab} onClick={() => setAba(tab)} style={{
                       padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
                       fontSize: 13, fontWeight: aba === tab ? 600 : 400,
                       color: aba === tab ? '#111827' : '#6b7280',
                       borderBottom: aba === tab ? '2px solid #6043C1' : '2px solid transparent',
-                      marginBottom: -1,
+                      marginBottom: -1
                     }}>
                       {tab === 'prontuario' ? 'Prontuário' : tab === 'receita' ? 'Receita' : tab === 'resumo' ? 'Resumo' : 'Documentos'}
                     </button>
@@ -524,7 +478,7 @@ const handleCopiar = () => {
                     <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} insights={copiloto?.insights} padroes={copiloto?.padroes} totalConsultas={copiloto?.total_consultas} />
                   )}
                   {aba === 'receita' && (
-                    <div style={{ textAlign: 'center', padding: '60px 24px' }}>
+                    <div style={{ textAlign: 'center' as const, padding: '60px 24px' }}>
                       <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdfa', border: '1px solid #99f6e4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                         <img src="/memed-logo.svg" alt="Memed" width={28} height={28} />
                       </div>
@@ -536,7 +490,7 @@ const handleCopiar = () => {
                   {aba === 'resumo' && (
                     <div>
                       {!resumoPaciente ? (
-                        <div style={{ textAlign: 'center', padding: '60px 24px' }}>
+                        <div style={{ textAlign: 'center' as const, padding: '60px 24px' }}>
                           <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.5"><path d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
                           </div>
@@ -553,26 +507,22 @@ const handleCopiar = () => {
                             <div style={{ display: 'flex', gap: 8 }}>
                               <button onClick={() => { navigator.clipboard.writeText(resumoPaciente) }} style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Copiar</button>
                               <button onClick={() => setResumoPaciente('')} style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Regenerar</button>
-                              <button onClick={() => enviarWhatsApp('resumo', resumoPaciente)} style={{ fontSize: 11, color: 'white', background: '#25d366', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <svg width="11" height="11" viewBox="0 0 175 176" fill="white"><path d="M87.2 25.2c-33.7 0-61.2 27.4-61.2 61.1a60.9 60.9 0 009.4 32.5l1.4 2.3-6.2 22.6 23.1-6.1 2.2 1.3c9.4 5.6 20.2 8.5 31.1 8.5h.1c33.7 0 61.1-27.4 61.2-61.1a60.8 60.8 0 00-17.9-43.3 60.8 60.8 0 00-43.2-17.9z"/><path fill="#25d366" d="M68.8 55.6c-1.4-3.1-2.8-3.1-4.1-3.2l-3.5-.1c-1.2 0-3.2.5-4.9 2.3s-6.4 6.3-6.4 15.3 6.6 17.8 7.5 19 12.7 20.4 31.4 27.8c15.5 6.1 18.7 4.9 22.1 4.6s10.9-4.4 12.4-8.7 1.5-8 1.1-8.7-1.7-1.2-3.5-2.1-10.9-5.4-12.6-6-2.9-.9-4.1.9-4.7 6-5.8 7.2-2.1 1.4-4 .5-7.8-2.9-14.8-9.1c-5.5-4.9-9.2-10.9-10.2-12.7s-.1-2.8.8-3.8c.8-.8 1.8-2.1 2.8-3.2s1.2-1.8 1.8-3.1.3-2.3-.2-3.2-4-10-5.7-13.6z"/></svg>
-                                Enviar WA
-                              </button>
+                              <button onClick={() => enviarWhatsApp('resumo', resumoPaciente)} style={{ fontSize: 11, color: 'white', background: '#25d366', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Enviar WA</button>
                             </div>
                           </div>
                           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '16px 18px' }}>
-                            <p style={{ fontSize: 13, color: '#166534', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{resumoPaciente}</p>
+                            <p style={{ fontSize: 13, color: '#166534', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' as const }}>{resumoPaciente}</p>
                           </div>
                         </div>
                       )}
                     </div>
                   )}
                   {aba === 'documentos' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      <div style={{ background: 'white', borderRadius: 12, padding: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
+                      <div style={{ background: 'white', borderRadius: 12, padding: '16px', border: '1px solid #f0f0f0' }}>
                         <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Pedido de exames</p>
                         {!exames ? (
-                          <button onClick={handleGerarExames} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#F5F5F5', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                          <button onClick={handleGerarExames} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#F5F5F5', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>
                             {gerandoDoc ? 'Gerando...' : 'Gerar pedido de exames'}
                           </button>
                         ) : (
@@ -583,119 +533,35 @@ const handleCopiar = () => {
                                   <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{e.nome}</p>
                                   <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{e.indicacao}</p>
                                 </div>
-                                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: e.urgencia === 'urgente' ? '#fef2f2' : '#f0fdf4', color: e.urgencia === 'urgente' ? '#dc2626' : '#16a34a', border: `1px solid ${e.urgencia === 'urgente' ? '#fecaca' : '#bbf7d0'}` }}>{e.urgencia}</span>
+                                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: e.urgencia === 'urgente' ? '#fef2f2' : '#f0fdf4', color: e.urgencia === 'urgente' ? '#dc2626' : '#16a34a' }}>{e.urgencia}</span>
                               </div>
                             ))}
-                            {exames.observacoes && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 10, fontStyle: 'italic' }}>{exames.observacoes}</p>}
-                            <button onClick={()=>{
-                              const linhas = (exames.exames||[]).map((e:any) => '• ' + e.nome + ' (' + e.urgencia + '): ' + e.indicacao).join('\n')
-                              const txt = 'Pedido de Exames:\n\n' + linhas + (exames.observacoes ? '\n\n' + exames.observacoes : '')
-                              enviarWhatsApp('exames', txt)
-                            }} style={{marginTop:10,padding:'7px 14px',borderRadius:7,border:'none',background:'#25d366',color:'white',fontSize:12,fontWeight:600,cursor:'pointer'}}>
-                              📱 Enviar pelo WhatsApp
-                            </button>
                           </div>
                         )}
                       </div>
-                      <div style={{ background: 'white', borderRadius: 12, padding: '16px' }}>
+                      <div style={{ background: 'white', borderRadius: 12, padding: '16px', border: '1px solid #f0f0f0' }}>
                         <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Atestado médico</p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                          <label style={{ fontSize: 12, color: '#6b7280' }}>Dias de afastamento:</label>
-                          <input type="number" min={1} max={30} value={diasAtestado} onChange={e => setDiasAtestado(Number(e.target.value))}
-                            style={{ width: 60, padding: '5px 8px', borderRadius: 6, fontSize: 13, textAlign: 'center' }} />
+                          <label style={{ fontSize: 12, color: '#6b7280' }}>Dias:</label>
+                          <input type="number" min={1} max={30} value={diasAtestado} onChange={e => setDiasAtestado(Number(e.target.value))} style={{ width: 60, padding: '5px 8px', borderRadius: 6, fontSize: 13, textAlign: 'center' as const }} />
                         </div>
                         {!atestado ? (
-                          <button onClick={handleGerarAtestado} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#F5F5F5', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                          <button onClick={handleGerarAtestado} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#F5F5F5', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>
                             {gerandoDoc ? 'Gerando...' : 'Gerar atestado'}
                           </button>
                         ) : (
-                          <div>
-                            <div style={{ background: '#F5F5F5', borderRadius: 8, padding: '12px', marginBottom: 12, fontSize: 13, color: '#374151', lineHeight: 1.7 }}>
-                              <p><strong>Paciente:</strong> {atestado.cid ? `CID ${atestado.cid}` : 'conforme avaliação médica'}</p>
-                              <p><strong>Afastamento:</strong> {atestado.dias} dia{atestado.dias > 1 ? 's' : ''}</p>
-                              {atestado.motivo && <p><strong>Motivo:</strong> {atestado.motivo}</p>}
-                            </div>
-                            <button onClick={imprimirAtestado} style={{ width: '100%', padding: '9px', borderRadius: 8, background: '#6043C1', color: 'white', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/></svg>
-                              Imprimir atestado
-                            </button>
-                          </div>
+                          <button onClick={imprimirAtestado} style={{ width: '100%', padding: '9px', borderRadius: 8, background: '#6043C1', color: 'white', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                            Imprimir atestado
+                          </button>
                         )}
                       </div>
                     </div>
                   )}
                 </div>
-              </div>
+              </>
             )}
 
-            {estado === 'idle' && !prontuario && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 48, background: 'white' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="1.5">
-                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                  </svg>
-                </div>
-                <div style={{ textAlign: 'center', maxWidth: 300 }}>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 8px' }}>Prontuário estruturado por IA</p>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
-                    Grave a consulta ao lado. O prontuário SOAP, CIDs sugeridos e receita médica serão gerados automaticamente.
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {['Prontuário SOAP', 'CID-10 automático', 'Receita médica', 'Salvo no banco'].map(f => (
-                    <span key={f} style={{ fontSize: 11, color: '#6043C1', background: '#f0fdf4', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{f}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {estado === 'gravando' && !prontuario && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white' }}>
-                <div style={{ padding: '20px 28px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', animation: 'pulse 1.5s ease-in-out infinite' as const }}/>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', margin: 0, letterSpacing: '0.04em' as const }}>TRANSCRIÇÃO AO VIVO</p>
-                  </div>
-                  {transcricao && (
-                    <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '3px 9px', borderRadius: 12, fontVariantNumeric: 'tabular-nums' as const }}>
-                      {transcricao.split(' ').filter(Boolean).length} palavras
-                    </span>
-                  )}
-                </div>
-                <div style={{ flex: 1, overflow: 'auto', padding: '20px 28px', background: '#fafafa' }}>
-                  {transcricao ? (
-                    <p style={{ fontSize: 14, color: '#1f2937', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' as const }}>{transcricao}</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, opacity: 0.5 }}>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5">
-                        <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-                        <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
-                      </svg>
-                      <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Aguardando fala do paciente...</p>
-                    </div>
-                  )}
-                </div>
-                {modoPerfeita && (sugestoes.length > 0 || focoConsulta) && (
-                  <div style={{ padding: '14px 22px', background: '#f0ebff', borderTop: '1px solid #e0d4ff', flexShrink: 0, maxHeight: 200, overflow: 'auto' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Sugestão IA</span>
-                    </div>
-                    {focoConsulta && (
-                      <p style={{ fontSize: 12, color: '#3C3489', margin: '0 0 6px', lineHeight: 1.5 }}>
-                        <strong style={{ fontWeight: 600 }}>Foco:</strong> {focoConsulta}
-                      </p>
-                    )}
-                    {sugestoes.slice(0, 3).map((sug, i) => (
-                      <p key={i} style={{ fontSize: 12, color: '#3C3489', margin: i === 0 ? 0 : '6px 0 0', lineHeight: 1.5 }}>{sug}</p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
-        </div>
         </div>
       </div>
       {memedAberto && medico && pacienteSelecionado && (
