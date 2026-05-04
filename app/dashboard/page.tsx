@@ -204,7 +204,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', background: 'white', borderRadius: 8, border: '1px solid #e5e7eb', padding: 2 }}>
               {(['semana', 'mes', 'ano'] as Periodo[]).map(p => (
                 <button key={p} onClick={() => setPeriodo(p)} style={{
-                  padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  padding: '6px 14px', borderRadius: 6, cursor: 'pointer',
                   background: periodo === p ? '#6043C1' : 'transparent',
                   color: periodo === p ? 'white' : '#6b7280',
                   fontSize: 12, fontWeight: 500
@@ -246,7 +246,7 @@ export default function Dashboard() {
           {/* ESQUERDA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* Consultas por dia */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #ececec' }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Consultas por dia</p>
@@ -283,7 +283,7 @@ export default function Dashboard() {
             </div>
 
             {/* Top CIDs */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #ececec' }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>CIDs mais frequentes</p>
               {topCIDs.length === 0 ? (
                 <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem dados no período</p>
@@ -314,10 +314,10 @@ export default function Dashboard() {
           {/* DIREITA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* Próximos agendamentos */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #ececec' }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Próximos agendamentos</p>
-                <button onClick={() => router.push('/agenda')} style={{ fontSize: 11, color: '#6043C1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver todos →</button>
+                <button onClick={() => router.push('/agenda')} style={{ fontSize: 11, color: '#6043C1', background: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver todos →</button>
               </div>
               {proximosAgendamentos.length === 0 ? (
                 <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem agendamentos</p>
@@ -349,7 +349,7 @@ export default function Dashboard() {
 
             {/* Confirmações pendentes */}
             {confirmacoesPendentes.length > 0 && (
-              <div style={{ background: '#fffbeb', borderRadius: 14, padding: 20, border: '1px solid #fde68a' }}>
+              <div style={{ background: '#fffbeb', borderRadius: 14, padding: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#92400e', margin: 0 }}>Confirmações pendentes ({confirmacoesPendentes.length})</p>
@@ -368,7 +368,7 @@ export default function Dashboard() {
 
         {/* LINHA 3: Comparativo médicos (só admin) */}
         {comparativoMedicos.length > 0 && (
-          <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #ececec', marginBottom: 16 }}>
+          <div style={{ background: 'white', borderRadius: 14, padding: 20, marginBottom: 16 }}>
             <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Comparativo entre médicos</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
               {comparativoMedicos.map((m, i) => (
@@ -391,10 +391,10 @@ export default function Dashboard() {
         )}
 
         {/* LINHA 4: Últimas consultas */}
-        <div style={{ background: 'white', borderRadius: 14, padding: 20, border: '1px solid #ececec' }}>
+        <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Últimas consultas</p>
-            <button onClick={() => router.push('/historico')} style={{ fontSize: 11, color: '#6043C1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver histórico →</button>
+            <button onClick={() => router.push('/historico')} style={{ fontSize: 11, color: '#6043C1', background: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver histórico →</button>
           </div>
           {ultimasConsultas.length === 0 ? (
             <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem consultas registradas</p>
@@ -428,7 +428,7 @@ export default function Dashboard() {
 
 function Card({ titulo, valor, subtitulo, cor }: { titulo: string; valor: any; subtitulo: string; cor: string }) {
   return (
-    <div style={{ background: 'white', borderRadius: 14, padding: 18, border: '1px solid #ececec' }}>
+    <div style={{ background: 'white', borderRadius: 14, padding: 18 }}>
       <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 6px' }}>{titulo}</p>
       <p style={{ fontSize: 28, fontWeight: 700, color: '#111827', margin: '0 0 4px', letterSpacing: '-0.02em', lineHeight: 1 }}>{valor}</p>
       <p style={{ fontSize: 11, color: cor, margin: 0, fontWeight: 500 }}>{subtitulo}</p>
