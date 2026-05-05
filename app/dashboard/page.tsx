@@ -326,7 +326,7 @@ export default function Dashboard() {
                   {proximosAgendamentos.slice(0, 5).map((a, i) => {
                     const ehOnline = !!a.meet_link
                     return (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < 4 ? '1px solid #f3f4f6' : 'none' }}>
+                      <div key={i} onClick={() => router.push('/agenda?ag=' + a.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < 4 ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', borderRadius: 6, transition: 'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = '#fafafa'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                         <div style={{ width: 38, height: 38, borderRadius: 8, background: '#f0ebff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <span style={{ fontSize: 13, fontWeight: 700, color: '#6043C1', lineHeight: 1 }}>{new Date(a.data_hora).getDate()}</span>
                           <span style={{ fontSize: 8, color: '#6043C1', textTransform: 'uppercase', fontWeight: 600, marginTop: 1 }}>{new Date(a.data_hora).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</span>
@@ -356,7 +356,7 @@ export default function Dashboard() {
                 </div>
                 <p style={{ fontSize: 11, color: '#92400e', margin: '0 0 12px', opacity: 0.8 }}>Pacientes que ainda não confirmaram consulta nas próximas 48h</p>
                 {confirmacoesPendentes.map((p, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < confirmacoesPendentes.length - 1 ? '1px solid #fde68a' : 'none' }}>
+                  <div key={i} onClick={() => router.push('/agenda?ag=' + p.id)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < confirmacoesPendentes.length - 1 ? '1px solid #fde68a' : 'none', cursor: 'pointer', borderRadius: 6, transition: 'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(217,119,6,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                     <span style={{ fontSize: 12, color: '#78350f', fontWeight: 500 }}>{p.pacientes?.nome || 'Paciente'}</span>
                     <span style={{ fontSize: 11, color: '#92400e' }}>{fmtData(p.data_hora)} {fmtHora(p.data_hora)}</span>
                   </div>
