@@ -68,64 +68,70 @@ export default function Dashboard() {
 
     const seisMesesAtras = new Date(); seisMesesAtras.setMonth(seisMesesAtras.getMonth() - 6)
     const noventaDiasAtras = new Date(); noventaDiasAtras.setDate(noventaDiasAtras.getDate() - 90)
-
-    // KPI 1: Consultas hoje + ontem
-    const { count: hojeCount } = await supabase.from('consultas').select('*', { count: 'exact', head: true })
-      .in('medico_id', medicoIds).gte('criado_em', hoje.toISOString()).lt('criado_em', amanha.toISOString())
-    const { count: ontemCount } = await supabase.from('consultas').select('*', { count: 'exact', head: true })
-      .in('medico_id', medicoIds).gte('criado_em', ontem.toISOString()).lt('criado_em', hoje.toISOString())
-    setConsultasHoje(hojeCount || 0)
-    setConsultasOntem(ontemCount || 0)
-
-    // KPI 2: No-show rate (fallback: agendados passados que ainda estão "agendado")
     const trintaDiasAtras = new Date(); trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30)
-    const { data: agPassados } = await supabase.from('agendamentos').select('status, data_hora')
-      .in('medico_id', medicoIds).gte('data_hora', trintaDiasAtras.toISOString()).lt('data_hora', new Date().toISOString())
-    if (agPassados && agPassados.length > 0) {
-      const noShow = agPassados.filter(a => a.status === 'agendado').length
-      setNoShowRate(Math.round((noShow / agPassados.length) * 100))
-    } else {
-      setNoShowRate(null)
-    }
+    const em48h = new Date(); em48h.setHours(em48h.getHours() + 48)
+    const agora = new Date()
 
-    // KPI 3: Pacientes ativos (com consulta nos últimos 6m)
-    const { data: ativos } = await supabase.from('consultas').select('paciente_id')
-      .in('medico_id', medicoIds).gte('criado_em', seisMesesAtras.toISOString())
-    const idsAtivos = new Set((ativos || []).map((c: any) => c.paciente_id).filter(Boolean))
+    // OTIMIZADO: 11 queries em 1 round-trip (Promise.all)
+    const [
+      hojeR, ontemR, agPassadosR, ativosR, pacClinR, recentes90R,
+      cons14R, consCidR, proxR, pendentesR, ultimasR
+    ] = await Promise.all([
+      supabase.from('consultas').select('*', { count: 'exact', head: true })
+        .in('medico_id', medicoIds).gte('criado_em', hoje.toISOString()).lt('criado_em', amanha.toISOString()),
+      supabase.from('consultas').select('*', { count: 'exact', head: true })
+        .in('medico_id', medicoIds).gte('criado_em', ontem.toISOString()).lt('criado_em', hoje.toISOString()),
+      supabase.from('agendamentos').select('status, data_hora')
+        .in('medico_id', medicoIds).gte('data_hora', trintaDiasAtras.toISOString()).lt('data_hora', agora.toISOString()),
+      supabase.from('consultas').select('paciente_id')
+        .in('medico_id', medicoIds).gte('criado_em', seisMesesAtras.toISOString()),
+      supabase.from('pacientes').select('id, nome, comorbidades').in('medico_id', medicoIds),
+      supabase.from('consultas').select('paciente_id')
+        .in('medico_id', medicoIds).gte('criado_em', noventaDiasAtras.toISOString()),
+      supabase.from('consultas').select('criado_em')
+        .in('medico_id', medicoIds).gte('criado_em', new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()),
+      supabase.from('consultas').select('cids')
+        .in('medico_id', medicoIds).gte('criado_em', desde.toISOString()),
+      supabase.from('agendamentos').select('*, pacientes:paciente_id(nome)')
+        .in('medico_id', medicoIds).gte('data_hora', agora.toISOString())
+        .order('data_hora').limit(8),
+      supabase.from('agendamentos').select('*, pacientes:paciente_id(nome)')
+        .in('medico_id', medicoIds).eq('status', 'agendado')
+        .gte('data_hora', agora.toISOString()).lt('data_hora', em48h.toISOString())
+        .order('data_hora').limit(5),
+      supabase.from('consultas').select('id, criado_em, avaliacao, cids, paciente_id, pacientes:paciente_id(nome)')
+        .in('medico_id', medicoIds).order('criado_em', { ascending: false }).limit(6),
+    ])
+
+    setConsultasHoje(hojeR.count || 0)
+    setConsultasOntem(ontemR.count || 0)
+
+    const agPassados = agPassadosR.data || []
+    if (agPassados.length > 0) {
+      const noShow = agPassados.filter((a: any) => a.status === 'agendado').length
+      setNoShowRate(Math.round((noShow / agPassados.length) * 100))
+    } else { setNoShowRate(null) }
+
+    const idsAtivos = new Set((ativosR.data || []).map((c: any) => c.paciente_id).filter(Boolean))
     setPacientesAtivos(idsAtivos.size)
 
-    // KPI 4: Pacientes em risco (com comorbidade crônica e sem consulta há 90+ dias)
-    const { data: pacientesClinica } = await supabase.from('pacientes').select('id, nome, comorbidades')
-      .in('medico_id', medicoIds)
-    const cronicos = (pacientesClinica || []).filter((p: any) => 
-      p.comorbidades && p.comorbidades.length > 5
-    )
-    const { data: consultasRecentes90 } = await supabase.from('consultas').select('paciente_id')
-      .in('medico_id', medicoIds).gte('criado_em', noventaDiasAtras.toISOString())
-    const idsRecentes = new Set((consultasRecentes90 || []).map((c: any) => c.paciente_id).filter(Boolean))
-    const emRisco = cronicos.filter((p: any) => !idsRecentes.has(p.id))
-    setPacientesRisco(emRisco.length)
+    const cronicos = (pacClinR.data || []).filter((p: any) => p.comorbidades && p.comorbidades.length > 5)
+    const idsRecentes = new Set((recentes90R.data || []).map((c: any) => c.paciente_id).filter(Boolean))
+    setPacientesRisco(cronicos.filter((p: any) => !idsRecentes.has(p.id)).length)
 
-    // Consultas por dia (últimos 14 dias)
-    const { data: cons14 } = await supabase.from('consultas').select('criado_em')
-      .in('medico_id', medicoIds).gte('criado_em', new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString())
     const porDia: Record<string, number> = {}
     for (let i = 13; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0)
-      const k = d.toISOString().substring(0, 10)
-      porDia[k] = 0
+      porDia[d.toISOString().substring(0, 10)] = 0
     }
-    ;(cons14 || []).forEach((c: any) => {
+    ;(cons14R.data || []).forEach((c: any) => {
       const k = new Date(c.criado_em).toISOString().substring(0, 10)
       if (k in porDia) porDia[k]++
     })
     setConsultasPorDia(Object.entries(porDia).map(([data, total]) => ({ data, total })))
 
-    // Top CIDs (últimos 30 dias)
-    const { data: consComCid } = await supabase.from('consultas').select('cids')
-      .in('medico_id', medicoIds).gte('criado_em', desde.toISOString())
     const cidMap: Record<string, { codigo: string; descricao: string; total: number }> = {}
-    ;(consComCid || []).forEach((c: any) => {
+    ;(consCidR.data || []).forEach((c: any) => {
       ;(c.cids || []).forEach((cid: any) => {
         const k = cid.codigo
         if (!k) return
@@ -135,36 +141,20 @@ export default function Dashboard() {
     })
     setTopCIDs(Object.values(cidMap).sort((a, b) => b.total - a.total).slice(0, 5))
 
-    // Próximos agendamentos
-    const { data: prox } = await supabase.from('agendamentos').select('*, pacientes:paciente_id(nome)')
-      .in('medico_id', medicoIds).gte('data_hora', new Date().toISOString())
-      .order('data_hora').limit(8)
-    setProximosAgendamentos(prox || [])
+    setProximosAgendamentos(proxR.data || [])
+    setConfirmacoesPendentes(pendentesR.data || [])
+    setUltimasConsultas(ultimasR.data || [])
 
-    // Confirmações pendentes (próximas 48h, status agendado)
-    const em48h = new Date(); em48h.setHours(em48h.getHours() + 48)
-    const { data: pendentes } = await supabase.from('agendamentos').select('*, pacientes:paciente_id(nome)')
-      .in('medico_id', medicoIds).eq('status', 'agendado')
-      .gte('data_hora', new Date().toISOString()).lt('data_hora', em48h.toISOString())
-      .order('data_hora').limit(5)
-    setConfirmacoesPendentes(pendentes || [])
-
-    // Últimas consultas
-    const { data: ultimas } = await supabase.from('consultas').select('id, criado_em, avaliacao, cids, paciente_id, pacientes:paciente_id(nome)')
-      .in('medico_id', medicoIds).order('criado_em', { ascending: false }).limit(6)
-    setUltimasConsultas(ultimas || [])
-
-    // Comparativo médicos (só admin com 2+ médicos)
     if (ehAdmin && medicoIds.length > 1) {
       const { data: medsInfo } = await supabase.from('medicos').select('id, nome').in('id', medicoIds)
       const stats = await Promise.all((medsInfo || []).map(async (m: any) => {
-        const { count: nConsultas } = await supabase.from('consultas').select('*', { count: 'exact', head: true })
-          .eq('medico_id', m.id).gte('criado_em', desde.toISOString())
-        const { count: nPacientes } = await supabase.from('pacientes').select('*', { count: 'exact', head: true })
-          .eq('medico_id', m.id)
-        return { id: m.id, nome: m.nome, consultas: nConsultas || 0, pacientes: nPacientes || 0 }
+        const [c, p] = await Promise.all([
+          supabase.from('consultas').select('*', { count: 'exact', head: true }).eq('medico_id', m.id).gte('criado_em', desde.toISOString()),
+          supabase.from('pacientes').select('*', { count: 'exact', head: true }).eq('medico_id', m.id),
+        ])
+        return { id: m.id, nome: m.nome, consultas: c.count || 0, pacientes: p.count || 0 }
       }))
-      setComparativoMedicos(stats.sort((a, b) => b.consultas - a.consultas))
+      setComparativoMedicos(stats.sort((a: any, b: any) => b.consultas - a.consultas))
     } else {
       setComparativoMedicos([])
     }
@@ -223,22 +213,30 @@ export default function Dashboard() {
 
         {/* LINHA 1: KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 16 }}>
-          <Card titulo="Consultas hoje" valor={consultasHoje} subtitulo={
-            consultasHoje > consultasOntem ? `+${consultasHoje - consultasOntem} vs ontem` :
-            consultasHoje < consultasOntem ? `${consultasHoje - consultasOntem} vs ontem` :
-            'Igual a ontem'
-          } cor={consultasHoje >= consultasOntem ? '#16a34a' : '#dc2626'} />
+          {carregando ? (
+            <>
+              <CardSkeleton/><CardSkeleton/><CardSkeleton/><CardSkeleton/>
+            </>
+          ) : (
+            <>
+              <Card titulo="Consultas hoje" valor={consultasHoje} subtitulo={
+                consultasHoje > consultasOntem ? `+${consultasHoje - consultasOntem} vs ontem` :
+                consultasHoje < consultasOntem ? `${consultasHoje - consultasOntem} vs ontem` :
+                'Igual a ontem'
+              } cor={consultasHoje >= consultasOntem ? '#16a34a' : '#dc2626'} />
 
-          <Card titulo="Taxa de no-show" valor={noShowRate === null ? '--' : noShowRate + '%'}
-            subtitulo={noShowRate === null ? 'sem dados últimos 30 dias' : noShowRate > 20 ? 'acima do esperado' : 'dentro do esperado'}
-            cor={noShowRate === null ? '#9ca3af' : noShowRate > 20 ? '#dc2626' : '#16a34a'} />
+              <Card titulo="Taxa de no-show" valor={noShowRate === null ? '--' : noShowRate + '%'}
+                subtitulo={noShowRate === null ? 'sem dados últimos 30 dias' : noShowRate > 20 ? 'acima do esperado' : 'dentro do esperado'}
+                cor={noShowRate === null ? '#9ca3af' : noShowRate > 20 ? '#dc2626' : '#16a34a'} />
 
-          <Card titulo="Pacientes ativos" valor={pacientesAtivos}
-            subtitulo="com consulta últimos 6 meses" cor="#6043C1" />
+              <Card titulo="Pacientes ativos" valor={pacientesAtivos}
+                subtitulo="com consulta últimos 6 meses" cor="#6043C1" />
 
-          <Card titulo="Pacientes em risco" valor={pacientesRisco}
-            subtitulo={pacientesRisco > 0 ? 'crônicos sem retorno >90d' : 'todos acompanhados'}
-            cor={pacientesRisco > 0 ? '#d97706' : '#16a34a'} />
+              <Card titulo="Pacientes em risco" valor={pacientesRisco}
+                subtitulo={pacientesRisco > 0 ? 'crônicos sem retorno >90d' : 'todos acompanhados'}
+                cor={pacientesRisco > 0 ? '#d97706' : '#16a34a'} />
+            </>
+          )}
         </div>
 
         {/* LINHA 2: Gráficos e listas */}
@@ -285,7 +283,16 @@ export default function Dashboard() {
             {/* Top CIDs */}
             <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>CIDs mais frequentes</p>
-              {topCIDs.length === 0 ? (
+              {carregando ? (
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12 }}>
+                  {[0,1,2].map(i => (
+                    <div key={i}>
+                      <div style={{ marginBottom: 6 }}><Skeleton width={'70%'} height={11} radius={3}/></div>
+                      <Skeleton width={'100%'} height={6} radius={3}/>
+                    </div>
+                  ))}
+                </div>
+              ) : topCIDs.length === 0 ? (
                 <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem dados no período</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -319,7 +326,9 @@ export default function Dashboard() {
                 <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Próximos agendamentos</p>
                 <button onClick={() => router.push('/agenda')} style={{ fontSize: 11, color: '#6043C1', background: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver todos →</button>
               </div>
-              {proximosAgendamentos.length === 0 ? (
+              {carregando ? (
+                <div>{[0,1,2].map(i => <ListaItemSkeleton key={i}/>)}</div>
+              ) : proximosAgendamentos.length === 0 ? (
                 <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem agendamentos</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -396,7 +405,9 @@ export default function Dashboard() {
             <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Últimas consultas</p>
             <button onClick={() => router.push('/historico')} style={{ fontSize: 11, color: '#6043C1', background: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver histórico →</button>
           </div>
-          {ultimasConsultas.length === 0 ? (
+          {carregando ? (
+            <div>{[0,1,2,3].map(i => <ListaItemSkeleton key={i}/>)}</div>
+          ) : ultimasConsultas.length === 0 ? (
             <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem consultas registradas</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -423,6 +434,41 @@ export default function Dashboard() {
           )}
         </div>
     </div>
+  )
+}
+
+function CardSkeleton() {
+  return (
+    <div style={{ background: 'white', borderRadius: 14, padding: 18 }}>
+      <Skeleton width={90} height={11} radius={3}/>
+      <div style={{ marginTop: 8 }}><Skeleton width={70} height={28} radius={4}/></div>
+      <div style={{ marginTop: 6 }}><Skeleton width={120} height={10} radius={3}/></div>
+    </div>
+  )
+}
+
+function ListaItemSkeleton() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0' }}>
+      <Skeleton width={38} height={38} radius={8}/>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
+        <Skeleton width={'60%'} height={11} radius={3}/>
+        <Skeleton width={'40%'} height={9} radius={3}/>
+      </div>
+      <Skeleton width={60} height={16} radius={10}/>
+    </div>
+  )
+}
+
+function Skeleton({ width, height, radius = 4 }: { width: number | string; height: number; radius?: number }) {
+  return (
+    <div style={{
+      width, height, borderRadius: radius,
+      background: 'linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%)',
+      backgroundSize: '200% 100%',
+      animation: 'shimmer 1.4s ease-in-out infinite' as const,
+      display: 'inline-block'
+    }}/>
   )
 }
 

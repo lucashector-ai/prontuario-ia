@@ -166,3 +166,9 @@ input:focus, textarea:focus, select:focus {
     grid-template-columns: 1fr 1fr !important;
   }
 }
+
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
