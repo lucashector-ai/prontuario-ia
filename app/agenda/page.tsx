@@ -227,8 +227,8 @@ function AgendaContent() {
     setAgendamentos(agsR.data || [])
     setMedicosClinica(medsR.data || [])
 
-    // Carregar procedimentos da clínica (se houver clinica_id)
-    const cidLoad = medico?.clinica_id
+    // Carregar procedimentos da clínica (cobre admin + medico)
+    const cidLoad = clinicaIdLocal || medico?.clinica_id
     if (cidLoad) {
       const procR = await fetch('/api/procedimentos?clinica_id=' + cidLoad)
       const procD = await procR.json()
