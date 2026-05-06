@@ -84,14 +84,14 @@ function LoginForm() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100vw' }}>
       <style>{`
-        @media (max-width: 900px) {
+        @media (max-width: 1024px) {
           .login-image-pane { display: none !important; }
           .login-form-pane { flex: 1 !important; }
         }
       `}</style>
 
       {/* Painel esquerdo - SÓ imagem */}
-      <div className="login-image-pane" style={{ flex: '0 0 45%', position: 'relative' as const, overflow: 'hidden', background: '#0a0a0a' }}>
+      <div className="login-image-pane" style={{ flex: '0 0 38%', position: 'relative' as const, overflow: 'hidden', background: '#fafafa' }}>
         <img
           src="/doctor.png"
           alt="Médico em consulta"
@@ -100,7 +100,7 @@ function LoginForm() {
       </div>
 
       {/* Painel direito - form centralizado */}
-      <div className="login-form-pane" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', background: 'white' }}>
+      <div className="login-form-pane" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 60px', background: 'white' }}>
         <div style={{ width: '100%', maxWidth: 380 }}>
 
           {/* Logo MedIA */}
