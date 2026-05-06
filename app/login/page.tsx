@@ -91,7 +91,7 @@ function LoginForm() {
       `}</style>
 
       {/* Painel esquerdo - SÓ imagem */}
-      <div className="login-image-pane" style={{ flex: '0 0 38%', position: 'relative' as const, overflow: 'hidden', background: '#fafafa' }}>
+      <div className="login-image-pane" style={{ flex: '0 0 25%', position: 'relative' as const, overflow: 'hidden', background: '#fafafa' }}>
         <img
           src="/doctor.png"
           alt="Médico em consulta"
