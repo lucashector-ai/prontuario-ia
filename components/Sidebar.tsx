@@ -79,7 +79,7 @@ export function Sidebar() {
             <path d='M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18'/>
           </svg>
         )}] : []),
-        { href: '/whatsapp-app', label: 'WhatsApp', icon: (
+        { href: '/whatsapp-app', label: 'WhatsApp', emBreve: true, icon: (
           <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
             <path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/>
           </svg>
@@ -164,6 +164,8 @@ export function Sidebar() {
                   <button
                     key={item.href}
                     onClick={() => {
+                      // EM BREVE: bloqueia clique
+                      if ((item as any).emBreve) { return }
                       // WhatsApp abre em nova aba (atendimento como ferramenta separada)
                       if (item.href === '/whatsapp-app') {
                         window.open(item.href, '_blank')
@@ -174,10 +176,11 @@ export function Sidebar() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 11,
                       padding: '9px 12px', borderRadius: 9,
-                      marginBottom: 2, cursor: 'pointer',
+                      marginBottom: 2, cursor: (item as any).emBreve ? 'not-allowed' : 'pointer',
                       width: '100%', textAlign: 'left' as const,
                       background: active ? '#F3F4F6' : 'transparent',
-                      color: active ? '#111827' : TEXT_DEFAULT,
+                      color: (item as any).emBreve ? '#9ca3af' : (active ? '#111827' : TEXT_DEFAULT),
+                      opacity: (item as any).emBreve ? 0.7 : 1,
                       fontSize: 13, fontWeight: active ? 600 : 500,
                       border: 'none',
                       transition: 'background 0.12s',
@@ -187,6 +190,14 @@ export function Sidebar() {
                   >
                     <span style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }}>{item.icon}</span>
                     {item.label}
+                    {(item as any).emBreve && (
+                      <span style={{
+                        marginLeft: 'auto', fontSize: 9, fontWeight: 700,
+                        background: '#fef3c7', color: '#92400e',
+                        padding: '2px 7px', borderRadius: 10,
+                        textTransform: 'uppercase', letterSpacing: '0.05em'
+                      }}>Em breve</span>
+                    )}
                   </button>
                 )
               })}

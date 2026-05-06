@@ -296,18 +296,6 @@ export function Topbar() {
       {/* Chat e Notificações — só pra médico */}
       {(modo === 'medico' || modo === 'clinica') && (
         <>
-          <button
-            onClick={() => router.push('/whatsapp-app')}
-            title='Chat'
-            style={iconBtnStyle(pathname.startsWith('/whatsapp'))}
-            onMouseEnter={e => { if (!pathname.startsWith('/whatsapp')) e.currentTarget.style.background = '#F5F5F5' }}
-            onMouseLeave={e => { if (!pathname.startsWith('/whatsapp')) e.currentTarget.style.background = 'transparent' }}
-          >
-            <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke={TEXT_DEFAULT} strokeWidth='2'>
-              <path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/>
-            </svg>
-          </button>
-
           <div ref={notifRef} style={{ position: 'relative' }}>
             <button
               onClick={() => setNotifOpen(!notifOpen)}
