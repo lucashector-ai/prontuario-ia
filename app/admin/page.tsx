@@ -25,7 +25,7 @@ export default function Admin() {
   const [kpis, setKpis] = useState({ totalPacientes: 0, consultasMes: 0, consultasTotal: 0 })
   const [carregando, setCarregando] = useState(true)
 
-  const [aba, setAba] = useState<'medicos' | 'recepcionistas'>('medicos')
+  const [aba, setAba] = useState<'medicos' | 'recepcionistas' | 'comissoes'>('medicos')
   const [novoDropdownOpen, setNovoDropdownOpen] = useState(false)
   const [modalNovoTipo, setModalNovoTipo] = useState<'medico' | 'recepcionista' | null>(null)
   const [modalEditar, setModalEditar] = useState<any>(null)
@@ -36,7 +36,21 @@ export default function Admin() {
   const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1' })
   const [formEditar, setFormEditar] = useState({ nome: '', email: '', crm: '', especialidade: '', cargo: 'medico' })
   const [salvando, setSalvando] = useState(false)
+  const [comissoes, setComissoes] = useState<any[]>([])
+  const [modalComissao, setModalComissao] = useState<any>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  // Carrega configuracoes de comissao quando lista de medicos atualiza
+  useEffect(() => {
+    if (medicos.length === 0) return
+    const clinicaId = medicos[0]?.clinica_id
+    if (!clinicaId) return
+    supabase.from('financeiro_comissoes_config')
+      .select('*')
+      .eq('clinica_id', clinicaId)
+      .eq('ativo', true)
+      .then(({ data }) => setComissoes(data || []))
+  }, [medicos])
+
 
   useEffect(() => {
     const ca = localStorage.getItem('clinica_admin')
@@ -297,7 +311,7 @@ export default function Admin() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #e5e7eb' }}>
-        {([{ key: 'medicos', label: `Médicos (${listaMedicos.length})` }, { key: 'recepcionistas', label: `Recepcionistas (${listaRecepcionistas.length})` }] as const).map(t => (
+        {([{ key: 'medicos', label: `Médicos (${listaMedicos.length})` }, { key: 'recepcionistas', label: `Recepcionistas (${listaRecepcionistas.length})` }, { key: 'comissoes', label: 'Comissões' }] as const).map(t => (
           <button key={t.key} onClick={() => setAba(t.key)} style={{
             padding: '10px 18px', border: 'none', cursor: 'pointer',
             background: 'transparent', color: aba === t.key ? ACCENT : '#6b7280',
@@ -584,6 +598,223 @@ export default function Admin() {
       )}
 
       <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
-    </main>
+          {aba === 'comissoes' && (
+        <div>
+          <div style={{ background: '#f0ebff', border: '1px solid #ddd3f7', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <p style={{ fontSize: 13, color: '#404040', margin: 0, lineHeight: 1.5 }}>
+              Configure valor da consulta e comissão de cada médico. As receitas geradas pelas consultas usarão o valor configurado como sugestão automática.
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 14 }}>
+            {listaMedicos.map(m => {
+              const config = comissoes.find(c => c.medico_id === m.id)
+              let labelComissao = 'Sem comissão configurada'
+              if (config) {
+                if (config.tipo === 'percentual') labelComissao = `${config.valor}% sobre ${config.observacoes === 'lucro' ? 'lucro' : 'receita'}`
+                else if (config.tipo === 'fixo_consulta') labelComissao = `R$ ${Number(config.valor).toFixed(2).replace('.', ',')} por consulta`
+                else if (config.tipo === 'fixo_mensal') labelComissao = `R$ ${Number(config.valor).toFixed(2).replace('.', ',')} fixo/mês`
+              }
+              const inicial = (m.nome || '?').split(' ').slice(0, 2).map((n: string) => n[0] || '').join('').toUpperCase()
+              return (
+                <div key={m.id} style={{ background: 'white', borderRadius: 14, padding: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: m.cor || '#6043C1', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700 }}>{inicial}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{m.nome}</p>
+                      <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{m.especialidade || 'Sem especialidade'}</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                    <div style={{ padding: 12, background: '#fafafa', borderRadius: 10 }}>
+                      <p style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: '0 0 4px', fontWeight: 600 }}>Valor consulta</p>
+                      <p style={{ fontSize: 15, fontWeight: 700, color: '#0a0a0a', margin: 0 }}>{m.valor_consulta ? 'R$ ' + Number(m.valor_consulta).toFixed(2).replace('.', ',') : <span style={{ color: '#9ca3af', fontWeight: 500, fontSize: 13 }}>Não configurado</span>}</p>
+                    </div>
+                    <div style={{ padding: 12, background: '#fafafa', borderRadius: 10 }}>
+                      <p style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: '0 0 4px', fontWeight: 600 }}>Comissão</p>
+                      <p style={{ fontSize: 12, fontWeight: 600, color: config ? '#6043C1' : '#9ca3af', margin: 0, lineHeight: 1.3 }}>{labelComissao}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setModalComissao({ medico: m, config })} style={{
+                    width: '100%', padding: '9px', borderRadius: 9, border: '1px solid #e5e5e5', background: 'white',
+                    color: '#404040', fontSize: 13, fontWeight: 600, cursor: 'pointer'
+                  }}>Configurar</button>
+                </div>
+              )
+            })}
+          </div>
+          {listaMedicos.length === 0 && (
+            <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const }}>
+              <p style={{ fontSize: 14, color: '#525252', fontWeight: 600 }}>Nenhum médico cadastrado</p>
+              <p style={{ fontSize: 13, color: '#9ca3af' }}>Adicione médicos na aba "Médicos" primeiro.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {modalComissao && (
+        <ModalConfigComissao
+          medico={modalComissao.medico}
+          config={modalComissao.config}
+          onClose={() => setModalComissao(null)}
+          onSaved={() => {
+            setModalComissao(null)
+            // Recarrega comissoes
+            const clinicaId = medicos[0]?.clinica_id
+            if (clinicaId) {
+              supabase.from('financeiro_comissoes_config')
+                .select('*').eq('clinica_id', clinicaId).eq('ativo', true)
+                .then(({ data }) => setComissoes(data || []))
+            }
+            // Recarrega medicos pra pegar valor_consulta atualizado
+            window.location.reload()
+          }}
+        />
+      )}
+
+</main>
+  )
+}
+
+
+// ============================================
+// MODAL: Configurar Comissao do Medico
+// ============================================
+
+function ModalConfigComissao({ medico, config, onClose, onSaved }: any) {
+  const [valorConsulta, setValorConsulta] = useState(medico.valor_consulta ? String(medico.valor_consulta).replace('.', ',') : '')
+  const [tipo, setTipo] = useState<'percentual' | 'fixo_consulta' | 'fixo_mensal' | 'sem'>(config?.tipo || 'sem')
+  const [valor, setValor] = useState(config?.valor ? String(config.valor).replace('.', ',') : '')
+  const [base, setBase] = useState<'receita' | 'lucro'>(config?.observacoes === 'lucro' ? 'lucro' : 'receita')
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  const salvar = async () => {
+    setErro('')
+    setSalvando(true)
+
+    // 1. Atualiza valor_consulta no medico
+    const valorConsultaNum = valorConsulta ? parseFloat(valorConsulta.replace(',', '.')) : null
+    const { error: errMed } = await supabase.from('medicos')
+      .update({ valor_consulta: valorConsultaNum })
+      .eq('id', medico.id)
+    if (errMed) { setErro('Erro ao salvar valor: ' + errMed.message); setSalvando(false); return }
+
+    // 2. Atualiza/cria/desativa configuracao de comissao
+    if (tipo === 'sem') {
+      // Desativa configs existentes
+      if (config) {
+        await supabase.from('financeiro_comissoes_config')
+          .update({ ativo: false }).eq('id', config.id)
+      }
+    } else {
+      const valorNum = parseFloat((valor || '0').replace(',', '.'))
+      if (isNaN(valorNum) || valorNum < 0) { setErro('Valor da comissão inválido'); setSalvando(false); return }
+      if (tipo === 'percentual' && valorNum > 100) { setErro('Percentual não pode ser maior que 100'); setSalvando(false); return }
+
+      // Desativa configs antigas
+      if (config) {
+        await supabase.from('financeiro_comissoes_config').update({ ativo: false }).eq('id', config.id)
+      }
+      // Cria nova
+      const { error: errCom } = await supabase.from('financeiro_comissoes_config').insert({
+        clinica_id: medico.clinica_id,
+        medico_id: medico.id,
+        tipo,
+        valor: valorNum,
+        observacoes: tipo === 'percentual' ? base : null,
+        ativo: true,
+      })
+      if (errCom) { setErro('Erro ao salvar comissão: ' + errCom.message); setSalvando(false); return }
+    }
+
+    setSalvando(false)
+    onSaved()
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '90vh', overflow: 'auto' as const, padding: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Configurar {medico.nome}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <p style={{ fontSize: 12, color: '#737373', margin: '0 0 22px' }}>{medico.especialidade || 'Médico'}</p>
+
+        {/* Valor da consulta */}
+        <div style={{ marginBottom: 18, padding: 14, background: '#fafafa', borderRadius: 10 }}>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 6 }}>Valor padrão da consulta</label>
+          <div style={{ position: 'relative' as const }}>
+            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+            <input type="text" value={valorConsulta} onChange={e => setValorConsulta(e.target.value.replace(/[^0-9,]/g, ''))} placeholder="0,00"
+              style={{ width: '100%', padding: '10px 12px 10px 38px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const, background: 'white', fontWeight: 600 }}/>
+          </div>
+          <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0' }}>Será sugerido automaticamente ao marcar consulta como realizada.</p>
+        </div>
+
+        {/* Comissao */}
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 8 }}>Tipo de comissão</label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginBottom: 14 }}>
+          {[
+            { v: 'sem', l: 'Sem comissão' },
+            { v: 'percentual', l: '% Percentual' },
+            { v: 'fixo_consulta', l: 'R$ por consulta' },
+            { v: 'fixo_mensal', l: 'R$ fixo mensal' },
+          ].map(o => (
+            <button key={o.v} type="button" onClick={() => setTipo(o.v as any)} style={{
+              padding: '10px', borderRadius: 8, border: 'none',
+              background: tipo === o.v ? '#0a0a0a' : '#f5f5f5',
+              color: tipo === o.v ? 'white' : '#525252',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer'
+            }}>{o.l}</button>
+          ))}
+        </div>
+
+        {tipo !== 'sem' && (
+          <>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>
+              {tipo === 'percentual' ? 'Percentual (%)' : 'Valor (R$)'}
+            </label>
+            <div style={{ position: 'relative' as const, marginBottom: 14 }}>
+              <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>{tipo === 'percentual' ? '%' : 'R$'}</span>
+              <input type="text" value={valor} onChange={e => setValor(e.target.value.replace(/[^0-9,]/g, ''))} placeholder="0,00"
+                style={{ width: '100%', padding: '10px 12px 10px 38px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const, fontWeight: 600 }} autoFocus/>
+            </div>
+
+            {tipo === 'percentual' && (
+              <>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>Base de cálculo</label>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                  <button type="button" onClick={() => setBase('receita')} style={{
+                    flex: 1, padding: '10px', borderRadius: 8, border: 'none',
+                    background: base === 'receita' ? '#0a0a0a' : '#f5f5f5',
+                    color: base === 'receita' ? 'white' : '#525252',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer'
+                  }}>Sobre receita</button>
+                  <button type="button" onClick={() => setBase('lucro')} style={{
+                    flex: 1, padding: '10px', borderRadius: 8, border: 'none',
+                    background: base === 'lucro' ? '#0a0a0a' : '#f5f5f5',
+                    color: base === 'lucro' ? 'white' : '#525252',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer'
+                  }}>Sobre lucro</button>
+                </div>
+                <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 14px', lineHeight: 1.5 }}>
+                  {base === 'receita' ? 'Calculado sobre o total recebido pelas consultas do médico.' : 'Calculado sobre receita menos despesas atribuídas ao médico.'}
+                </p>
+              </>
+            )}
+          </>
+        )}
+
+        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 12 }}>{erro}</div>}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
+          <button onClick={onClose} disabled={salvando} style={{ padding: '10px 16px', borderRadius: 9, border: '1px solid #e5e5e5', background: 'white', color: '#404040', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+          <button onClick={salvar} disabled={salvando} style={{ padding: '10px 18px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}>{salvando ? 'Salvando...' : 'Salvar'}</button>
+        </div>
+      </div>
+    </div>
   )
 }
