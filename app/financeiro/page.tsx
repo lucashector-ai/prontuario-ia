@@ -55,12 +55,15 @@ export default function FinanceiroPage() {
   const [filtroCobAtraso, setFiltroCobAtraso] = useState<'todos' | '0-7' | '8-30' | '30+'>('todos')
 
   // Configuracoes (tab)
-  const [configSubtab, setConfigSubtab] = useState<'categorias' | 'recorrentes'>('categorias')
+  const [configSubtab, setConfigSubtab] = useState<'categorias' | 'contas' | 'recorrentes'>('categorias')
   const [todasCategorias, setTodasCategorias] = useState<any[]>([])
   const [modalCatOpen, setModalCatOpen] = useState(false)
   const [editandoCat, setEditandoCat] = useState<any>(null)
   const [recorrentes, setRecorrentes] = useState<any[]>([])
   const [modalRecOpen, setModalRecOpen] = useState(false)
+  const [todasContas, setTodasContas] = useState<any[]>([])
+  const [modalContaOpen, setModalContaOpen] = useState(false)
+  const [editandoConta, setEditandoConta] = useState<any>(null)
   const [filtroBusca, setFiltroBusca] = useState('')
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'receita' | 'despesa'>('todos')
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
@@ -115,6 +118,7 @@ export default function FinanceiroPage() {
     if (tab === 'configuracoes' && clinicaId) {
       carregarTodasCategorias()
       carregarRecorrentes()
+      carregarTodasContas()
     }
   }, [tab, clinicaId])
 
@@ -186,6 +190,38 @@ export default function FinanceiroPage() {
     if (!confirm('Desativar categoria "' + cat.nome + '"? Movimentações antigas continuam vinculadas.')) return
     await supabase.from('financeiro_categorias').update({ ativo: false }).eq('id', cat.id)
     carregarTodasCategorias()
+    carregarListas()
+  }
+
+  const carregarTodasContas = async () => {
+    if (!clinicaId) return
+    const { data } = await supabase.from('financeiro_contas')
+      .select('*').eq('clinica_id', clinicaId).order('tipo').order('nome')
+
+    // Calcula saldo atual de cada conta (saldo_inicial + receitas - despesas)
+    const ids = (data || []).map((c: any) => c.id)
+    if (ids.length === 0) { setTodasContas([]); return }
+
+    const { data: movs } = await supabase.from('financeiro_movimentacoes')
+      .select('conta_id, tipo, valor, status')
+      .eq('clinica_id', clinicaId)
+      .in('conta_id', ids)
+      .neq('status', 'cancelado')
+
+    const enriched = (data || []).map((c: any) => {
+      const movsConta = (movs || []).filter((m: any) => m.conta_id === c.id)
+      const receitas = movsConta.filter((m: any) => m.tipo === 'receita' && (m.status === 'recebido' || m.status === 'pago')).reduce((s: number, m: any) => s + Number(m.valor), 0)
+      const despesas = movsConta.filter((m: any) => m.tipo === 'despesa' && (m.status === 'pago')).reduce((s: number, m: any) => s + Number(m.valor), 0)
+      const saldo = Number(c.saldo_inicial || 0) + receitas - despesas
+      return { ...c, saldoAtual: saldo, totalReceitas: receitas, totalDespesas: despesas }
+    })
+    setTodasContas(enriched)
+  }
+
+  const desativarConta = async (conta: any) => {
+    if (!confirm('Desativar conta "' + conta.nome + '"? Movimentações antigas continuam vinculadas.')) return
+    await supabase.from('financeiro_contas').update({ ativo: false }).eq('id', conta.id)
+    carregarTodasContas()
     carregarListas()
   }
 
@@ -1068,7 +1104,7 @@ export default function FinanceiroPage() {
           <>
             {/* Subtabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'white', padding: 4, borderRadius: 9, width: 'fit-content' }}>
-              {([['categorias', 'Categorias'], ['recorrentes', 'Despesas recorrentes']] as const).map(([k, label]) => (
+              {([['categorias', 'Categorias'], ['contas', 'Contas'], ['recorrentes', 'Despesas recorrentes']] as const).map(([k, label]) => (
                 <button key={k} onClick={() => setConfigSubtab(k as any)} style={{
                   padding: '7px 14px', borderRadius: 7, border: 'none',
                   background: configSubtab === k ? '#0a0a0a' : 'transparent',
@@ -1125,6 +1161,66 @@ export default function FinanceiroPage() {
               </div>
             )}
 
+            {configSubtab === 'contas' && (
+              <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <div>
+                    <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Contas bancárias</p>
+                    <p style={{ fontSize: 12, color: '#737373', margin: 0 }}>Caixa, bancos e cartões. Saldo de cada um separado.</p>
+                  </div>
+                  <button onClick={() => { setEditandoConta(null); setModalContaOpen(true) }} style={btnPrimary}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Nova conta
+                  </button>
+                </div>
+
+                {todasContas.length === 0 ? (
+                  <div style={{ textAlign: 'center' as const, padding: 60 }}>
+                    <p style={{ fontSize: 14, color: '#525252', fontWeight: 600, margin: '0 0 6px' }}>Nenhuma conta cadastrada</p>
+                    <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Crie contas para separar caixa, bancos e cartões.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+                    {todasContas.map((c: any) => {
+                      const tipoIcon: any = { caixa: '💵', banco: '🏦', cartao_credito: '💳', outras: '📁' }
+                      const tipoLabel: any = { caixa: 'Caixa', banco: 'Banco', cartao_credito: 'Cartão', outras: 'Outras' }
+                      return (
+                        <div key={c.id} style={{ background: c.ativo ? '#fafafa' : '#f5f5f5', borderRadius: 12, padding: 16, opacity: c.ativo ? 1 : 0.5 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: 20 }}>{tipoIcon[c.tipo] || '📁'}</span>
+                              <div>
+                                <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{c.nome}</p>
+                                <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{tipoLabel[c.tipo]}</p>
+                              </div>
+                            </div>
+                            {c.ativo && (
+                              <div style={{ display: 'flex', gap: 4 }}>
+                                <button onClick={() => { setEditandoConta(c); setModalContaOpen(true) }} title="Editar" style={iconBtn}>
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#525252" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button onClick={() => desativarConta(c)} title="Desativar" style={iconBtn}>
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ borderTop: '1px solid #eee', paddingTop: 10, marginTop: 4 }}>
+                            <p style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: 0, fontWeight: 600 }}>Saldo atual</p>
+                            <p style={{ fontSize: 22, fontWeight: 700, color: c.saldoAtual >= 0 ? '#0a0a0a' : '#dc2626', margin: '2px 0 8px', letterSpacing: '-0.02em' }}>{fmt(c.saldoAtual)}</p>
+                            <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#737373' }}>
+                              <span>↗ <span style={{ color: '#16a34a', fontWeight: 600 }}>{fmt(c.totalReceitas)}</span></span>
+                              <span>↙ <span style={{ color: '#dc2626', fontWeight: 600 }}>{fmt(c.totalDespesas)}</span></span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {configSubtab === 'recorrentes' && (
               <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -1169,6 +1265,18 @@ export default function FinanceiroPage() {
               </div>
             )}
           </>
+        )}
+
+        {modalContaOpen && clinicaId && (
+          <ModalConta
+            clinicaId={clinicaId}
+            conta={editandoConta}
+            onClose={() => { setModalContaOpen(false); setEditandoConta(null) }}
+            onSaved={() => {
+              setModalContaOpen(false); setEditandoConta(null)
+              carregarTodasContas(); carregarListas()
+            }}
+          />
         )}
 
         {modalCatOpen && clinicaId && (
@@ -2076,6 +2184,92 @@ function ModalRecorrente({ clinicaId, categorias, onClose, onSaved }: any) {
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
           <button onClick={onClose} disabled={salvando} style={btnSecondary}>Cancelar</button>
           <button onClick={salvar} disabled={salvando} style={btnPrimary}>{salvando ? 'Criando...' : 'Criar recorrente'}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+// ============================================
+// MODAL: Nova/Editar Conta Bancária
+// ============================================
+
+function ModalConta({ clinicaId, conta, onClose, onSaved }: any) {
+  const editando = !!conta
+  const [nome, setNome] = useState(conta?.nome || '')
+  const [tipo, setTipo] = useState<'caixa' | 'banco' | 'cartao_credito' | 'outras'>(conta?.tipo || 'banco')
+  const [saldoInicial, setSaldoInicial] = useState(conta?.saldo_inicial ? String(conta.saldo_inicial).replace('.', ',') : '0,00')
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  const salvar = async () => {
+    setErro('')
+    if (!nome.trim()) { setErro('Nome é obrigatório'); return }
+    const saldoNum = parseFloat(saldoInicial.replace(',', '.')) || 0
+    setSalvando(true)
+    let res
+    if (editando) {
+      res = await supabase.from('financeiro_contas').update({ nome: nome.trim(), tipo, saldo_inicial: saldoNum }).eq('id', conta.id)
+    } else {
+      res = await supabase.from('financeiro_contas').insert({ clinica_id: clinicaId, nome: nome.trim(), tipo, saldo_inicial: saldoNum, ativo: true })
+    }
+    setSalvando(false)
+    if (res.error) { setErro('Erro: ' + res.error.message); return }
+    onSaved()
+  }
+
+  const tipos: any[] = [
+    { v: 'caixa', l: '💵 Caixa', d: 'Dinheiro físico' },
+    { v: 'banco', l: '🏦 Banco', d: 'Conta corrente' },
+    { v: 'cartao_credito', l: '💳 Cartão crédito', d: 'Faturas' },
+    { v: 'outras', l: '📁 Outras', d: 'Outros tipos' },
+  ]
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 460, padding: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>{editando ? 'Editar conta' : 'Nova conta'}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <FormField label="Nome">
+          <input type="text" value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Itaú Conta Corrente" style={inputStyle} autoFocus/>
+        </FormField>
+
+        <FormField label="Tipo">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+            {tipos.map(o => (
+              <button key={o.v} type="button" onClick={() => setTipo(o.v)} style={{
+                padding: '10px 12px', borderRadius: 8, border: 'none',
+                background: tipo === o.v ? '#0a0a0a' : '#f5f5f5',
+                color: tipo === o.v ? 'white' : '#525252',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                textAlign: 'left' as const
+              }}>
+                <div>{o.l}</div>
+                <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>{o.d}</div>
+              </button>
+            ))}
+          </div>
+        </FormField>
+
+        <FormField label="Saldo inicial">
+          <div style={{ position: 'relative' as const }}>
+            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+            <input type="text" value={saldoInicial} onChange={e => setSaldoInicial(e.target.value.replace(/[^0-9,-]/g, ''))} style={{ ...inputStyle, paddingLeft: 38 }}/>
+          </div>
+          <p style={{ fontSize: 11, color: '#9ca3af', margin: '5px 0 0' }}>Saldo no momento de cadastro. Pode ser negativo (ex: cartão).</p>
+        </FormField>
+
+        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 8 }}>{erro}</div>}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
+          <button onClick={onClose} disabled={salvando} style={btnSecondary}>Cancelar</button>
+          <button onClick={salvar} disabled={salvando} style={btnPrimary}>{salvando ? 'Salvando...' : (editando ? 'Salvar' : 'Criar')}</button>
         </div>
       </div>
     </div>
