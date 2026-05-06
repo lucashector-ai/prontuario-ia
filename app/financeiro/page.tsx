@@ -39,6 +39,10 @@ export default function FinanceiroPage() {
   const [carregandoPac, setCarregandoPac] = useState(false)
   const [filtroPacStatus, setFiltroPacStatus] = useState<'ativo' | 'concluido' | 'cancelado' | 'todos'>('ativo')
   const [modalPacOpen, setModalPacOpen] = useState(false)
+
+  // Comissoes (tab)
+  const [comissoesData, setComissoesData] = useState<any[]>([])
+  const [carregandoCom, setCarregandoCom] = useState(false)
   const [filtroBusca, setFiltroBusca] = useState('')
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'receita' | 'despesa'>('todos')
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
@@ -76,6 +80,90 @@ export default function FinanceiroPage() {
   useEffect(() => {
     if (tab === 'pacotes' && clinicaId) carregarPacotes()
   }, [tab, clinicaId, filtroPacStatus])
+
+  useEffect(() => {
+    if (tab === 'comissoes' && clinicaId) carregarComissoes()
+  }, [tab, clinicaId, periodo])
+
+  const carregarComissoes = async () => {
+    if (!clinicaId) return
+    setCarregandoCom(true)
+
+    const dias = parseInt(periodo)
+    const dataInicio = new Date()
+    dataInicio.setDate(dataInicio.getDate() - dias)
+    const dataInicioStr = dataInicio.toISOString().substring(0, 10)
+    const hoje = new Date().toISOString().substring(0, 10)
+
+    // Busca medicos da clinica + configs de comissao + receitas do periodo
+    const [medsR, configsR, receitasR] = await Promise.all([
+      supabase.from('medicos').select('id, nome').eq('clinica_id', clinicaId).eq('cargo', 'medico').eq('ativo', true).order('nome'),
+      supabase.from('financeiro_comissoes_config').select('*').eq('clinica_id', clinicaId).eq('ativo', true),
+      supabase.from('financeiro_movimentacoes')
+        .select('medico_id, valor, status')
+        .eq('clinica_id', clinicaId).eq('tipo', 'receita')
+        .gte('data_movimentacao', dataInicioStr).lte('data_movimentacao', hoje)
+        .neq('status', 'cancelado'),
+    ])
+
+    const meds = medsR.data || []
+    const configs = configsR.data || []
+    const receitas = receitasR.data || []
+
+    // Conta consultas realizadas (movimentacoes vinculadas a agendamento)
+    // Pra simplificar agora, conta por medico_id
+    const dados = meds.map((m: any) => {
+      const config = configs.find((c: any) => c.medico_id === m.id)
+      const recebidas = receitas.filter((r: any) => r.medico_id === m.id && (r.status === 'recebido' || r.status === 'pago'))
+      const totalRecebido = recebidas.reduce((s: number, r: any) => s + Number(r.valor), 0)
+      const consultas = recebidas.length
+
+      let comissao = 0
+      let label = 'Sem configuração'
+      if (config) {
+        if (config.tipo === 'percentual') {
+          comissao = (totalRecebido * Number(config.valor)) / 100
+          label = `${config.valor}% sobre receita`
+        } else if (config.tipo === 'fixo_consulta') {
+          comissao = consultas * Number(config.valor)
+          label = `${fmt(Number(config.valor))} por consulta`
+        } else if (config.tipo === 'fixo_mensal') {
+          comissao = Number(config.valor)
+          label = `${fmt(Number(config.valor))} fixo/mês`
+        }
+      }
+      return { medico: m, config, consultas, totalRecebido, comissao, label }
+    }).sort((a: any, b: any) => b.comissao - a.comissao)
+
+    setComissoesData(dados)
+    setCarregandoCom(false)
+  }
+
+  const marcarComissaoPaga = async (medico: any, valor: number, label: string) => {
+    if (!clinicaId) return
+    if (!confirm(`Confirmar pagamento de ${fmt(valor)} de comissão para ${medico.nome}?`)) return
+
+    // Busca categoria "Comissao"
+    const { data: cat } = await supabase.from('financeiro_categorias')
+      .select('id').eq('clinica_id', clinicaId).eq('tipo', 'despesa').eq('ativo', true).ilike('nome', '%Comiss%').maybeSingle()
+
+    const { error } = await supabase.from('financeiro_movimentacoes').insert({
+      clinica_id: clinicaId,
+      tipo: 'despesa',
+      valor,
+      descricao: `Comissão ${medico.nome} (${label})`,
+      data_movimentacao: new Date().toISOString().substring(0, 10),
+      categoria_id: cat?.id || null,
+      status: 'pago',
+      medico_id: medico.id,
+      metodo_pagamento: 'pix',
+    })
+
+    if (error) { alert('Erro: ' + error.message); return }
+    alert('Comissão registrada como paga.')
+    carregarComissoes()
+    carregar()
+  }
 
   const carregarPacotes = async () => {
     if (!clinicaId) return
@@ -546,7 +634,87 @@ export default function FinanceiroPage() {
           </>
         )}
 
-        {(tab === 'comissoes' || tab === 'relatorios') && (
+        {tab === 'comissoes' && (
+          <>
+            <div style={{ background: '#f0ebff', border: '1px solid #ddd3f7', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <p style={{ fontSize: 13, color: '#404040', margin: 0, lineHeight: 1.5 }}>
+                Comissões são calculadas com base nas receitas <strong>recebidas</strong> do período.
+                Configure tipo e valor em <a href="/admin" style={{ color: '#6043C1', textDecoration: 'underline', fontWeight: 600 }}>Painel admin → Comissões</a>.
+              </p>
+            </div>
+
+            {carregandoCom ? (
+              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: '#9ca3af', fontSize: 13 }}>Carregando...</div>
+            ) : comissoesData.length === 0 ? (
+              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const }}>
+                <p style={{ fontSize: 14, color: '#525252', fontWeight: 600 }}>Nenhum médico cadastrado</p>
+                <p style={{ fontSize: 13, color: '#9ca3af' }}>Adicione médicos no Painel admin.</p>
+              </div>
+            ) : (
+              <>
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: '#fafafa' }}>
+                        <th style={th}>Médico</th>
+                        <th style={th}>Configuração</th>
+                        <th style={{ ...th, textAlign: 'center' as const }}>Consultas</th>
+                        <th style={{ ...th, textAlign: 'right' as const }}>Receita gerada</th>
+                        <th style={{ ...th, textAlign: 'right' as const }}>Comissão</th>
+                        <th style={th}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {comissoesData.map((d: any) => (
+                        <tr key={d.medico.id}>
+                          <td style={td}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f0ebff', color: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
+                                {d.medico.nome.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase()}
+                              </div>
+                              <strong>{d.medico.nome}</strong>
+                            </div>
+                          </td>
+                          <td style={td}>
+                            {d.config ? (
+                              <span style={{ fontSize: 12, color: '#525252' }}>{d.label}</span>
+                            ) : (
+                              <span style={{ fontSize: 11, color: '#a16207', background: '#fef3c7', padding: '3px 9px', borderRadius: 100, fontWeight: 600 }}>Sem configuração</span>
+                            )}
+                          </td>
+                          <td style={{ ...td, textAlign: 'center' as const }}>{d.consultas}</td>
+                          <td style={{ ...td, textAlign: 'right' as const, fontWeight: 600 }}>{fmt(d.totalRecebido)}</td>
+                          <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: '#6043C1' }}>
+                            {d.comissao > 0 ? fmt(d.comissao) : '-'}
+                          </td>
+                          <td style={{ ...td, textAlign: 'right' as const }}>
+                            {d.comissao > 0 && d.config && (
+                              <button onClick={() => marcarComissaoPaga(d.medico, d.comissao, d.label)} style={{ ...btnSecondary, padding: '5px 10px', fontSize: 11 }}>
+                                Marcar pago
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colSpan={4} style={{ ...td, fontWeight: 700, fontSize: 13, color: '#525252', textAlign: 'right' as const, borderTop: '2px solid #e5e5e5' }}>Total a pagar:</td>
+                        <td style={{ ...td, fontWeight: 700, fontSize: 16, color: '#6043C1', textAlign: 'right' as const, borderTop: '2px solid #e5e5e5' }}>
+                          {fmt(comissoesData.reduce((s: number, d: any) => s + d.comissao, 0))}
+                        </td>
+                        <td style={{ ...td, borderTop: '2px solid #e5e5e5' }}></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {tab === 'relatorios' && (
           <div style={{ background: 'white', borderRadius: 14, padding: 80, textAlign: 'center' as const }}>
             <p style={{ fontSize: 14, color: '#9ca3af' }}>Em breve no próximo patch.</p>
           </div>
