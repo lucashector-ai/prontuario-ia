@@ -79,6 +79,12 @@ export function Sidebar() {
             <path d='M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18'/>
           </svg>
         )}] : []),
+        { href: '/financeiro', label: 'Financeiro', icon: (
+          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+            <line x1='12' y1='1' x2='12' y2='23'/>
+            <path d='M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'/>
+          </svg>
+        )},
         { href: '/whatsapp-app', label: 'WhatsApp', emBreve: true, icon: (
           <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
             <path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/>
