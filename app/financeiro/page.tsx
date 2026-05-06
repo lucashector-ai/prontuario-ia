@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo, useRef } from 'react'
+import * as XLSX from 'xlsx'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
@@ -43,6 +44,10 @@ export default function FinanceiroPage() {
   // Comissoes (tab)
   const [comissoesData, setComissoesData] = useState<any[]>([])
   const [carregandoCom, setCarregandoCom] = useState(false)
+
+  // Relatorios (tab)
+  const [relatoriosData, setRelatoriosData] = useState<any>(null)
+  const [carregandoRel, setCarregandoRel] = useState(false)
   const [filtroBusca, setFiltroBusca] = useState('')
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'receita' | 'despesa'>('todos')
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
@@ -84,6 +89,166 @@ export default function FinanceiroPage() {
   useEffect(() => {
     if (tab === 'comissoes' && clinicaId) carregarComissoes()
   }, [tab, clinicaId, periodo])
+
+  useEffect(() => {
+    if (tab === 'relatorios' && clinicaId) carregarRelatorios()
+  }, [tab, clinicaId, periodo])
+
+  const carregarRelatorios = async () => {
+    if (!clinicaId) return
+    setCarregandoRel(true)
+
+    const dias = parseInt(periodo)
+    const dataInicio = new Date()
+    dataInicio.setDate(dataInicio.getDate() - dias)
+    const dataInicioStr = dataInicio.toISOString().substring(0, 10)
+    const hoje = new Date().toISOString().substring(0, 10)
+
+    const dataInicioAnterior = new Date()
+    dataInicioAnterior.setDate(dataInicioAnterior.getDate() - (dias * 2))
+    const dataInicioAntStr = dataInicioAnterior.toISOString().substring(0, 10)
+
+    // Busca medicos pra resolver IDs
+    const { data: meds } = await supabase.from('medicos').select('id, nome').eq('clinica_id', clinicaId)
+    const medicoIds = (meds || []).map((m: any) => m.id)
+
+    // Busca categorias e movimentacoes do periodo
+    const [movR, movAntR, catR, agendR] = await Promise.all([
+      supabase.from('financeiro_movimentacoes')
+        .select('tipo, valor, status, categoria_id, medico_id')
+        .eq('clinica_id', clinicaId)
+        .gte('data_movimentacao', dataInicioStr)
+        .lte('data_movimentacao', hoje)
+        .neq('status', 'cancelado'),
+      supabase.from('financeiro_movimentacoes')
+        .select('tipo, valor')
+        .eq('clinica_id', clinicaId)
+        .gte('data_movimentacao', dataInicioAntStr)
+        .lt('data_movimentacao', dataInicioStr)
+        .neq('status', 'cancelado'),
+      supabase.from('financeiro_categorias').select('id, nome, tipo, cor').eq('clinica_id', clinicaId).eq('ativo', true),
+      // Procedimentos top: busca via agendamentos vinculados a movimentacoes (simplificacao: agrupa por descricao da mov)
+      medicoIds.length > 0
+        ? supabase.from('agendamentos').select('procedimento_id, status, procedimentos:procedimento_id(nome, valor)')
+            .in('medico_id', medicoIds).eq('status', 'realizado')
+            .gte('data_hora', dataInicioStr).lte('data_hora', hoje + 'T23:59:59')
+        : Promise.resolve({ data: [] }),
+    ])
+
+    const mov = movR.data || []
+    const movAnt = movAntR.data || []
+    const cats = catR.data || []
+    const agend = agendR.data || []
+
+    // 1. DRE
+    const receita = mov.filter((m: any) => m.tipo === 'receita').reduce((s: number, m: any) => s + Number(m.valor), 0)
+    const despesa = mov.filter((m: any) => m.tipo === 'despesa').reduce((s: number, m: any) => s + Number(m.valor), 0)
+    const lucro = receita - despesa
+    const margem = receita > 0 ? (lucro / receita) * 100 : 0
+
+    const recAnt = movAnt.filter((m: any) => m.tipo === 'receita').reduce((s: number, m: any) => s + Number(m.valor), 0)
+    const despAnt = movAnt.filter((m: any) => m.tipo === 'despesa').reduce((s: number, m: any) => s + Number(m.valor), 0)
+    const lucroAnt = recAnt - despAnt
+    const pctLucro = lucroAnt !== 0 ? Math.round(((lucro - lucroAnt) / Math.abs(lucroAnt)) * 100) : null
+
+    // 2. Receitas por categoria
+    const receitasCat: any = {}
+    mov.filter((m: any) => m.tipo === 'receita').forEach((m: any) => {
+      const cat = cats.find((c: any) => c.id === m.categoria_id)
+      const key = cat?.nome || 'Sem categoria'
+      if (!receitasCat[key]) receitasCat[key] = { total: 0, qtd: 0, cor: cat?.cor || '#9ca3af' }
+      receitasCat[key].total += Number(m.valor)
+      receitasCat[key].qtd += 1
+    })
+    const receitasPorCat = Object.entries(receitasCat).map(([nome, v]: any) => ({ nome, total: v.total, qtd: v.qtd, cor: v.cor }))
+      .sort((a: any, b: any) => b.total - a.total)
+
+    // 3. Despesas por categoria
+    const despesasCat: any = {}
+    mov.filter((m: any) => m.tipo === 'despesa').forEach((m: any) => {
+      const cat = cats.find((c: any) => c.id === m.categoria_id)
+      const key = cat?.nome || 'Sem categoria'
+      if (!despesasCat[key]) despesasCat[key] = { total: 0, qtd: 0, cor: cat?.cor || '#9ca3af' }
+      despesasCat[key].total += Number(m.valor)
+      despesasCat[key].qtd += 1
+    })
+    const despesasPorCat = Object.entries(despesasCat).map(([nome, v]: any) => ({ nome, total: v.total, qtd: v.qtd, cor: v.cor }))
+      .sort((a: any, b: any) => b.total - a.total)
+
+    // 4. Receitas por medico
+    const recPorMed: any = {}
+    mov.filter((m: any) => m.tipo === 'receita' && m.medico_id).forEach((m: any) => {
+      const med = meds?.find((x: any) => x.id === m.medico_id)
+      const key = med?.nome || 'Sem médico'
+      if (!recPorMed[key]) recPorMed[key] = { total: 0, qtd: 0 }
+      recPorMed[key].total += Number(m.valor)
+      recPorMed[key].qtd += 1
+    })
+    const receitasPorMed = Object.entries(recPorMed).map(([nome, v]: any) => ({ nome, total: v.total, qtd: v.qtd }))
+      .sort((a: any, b: any) => b.total - a.total)
+
+    // 5. Top procedimentos (via agendamentos realizados)
+    const topProc: any = {}
+    agend.forEach((a: any) => {
+      const proc = a.procedimentos
+      if (!proc?.nome) return
+      if (!topProc[proc.nome]) topProc[proc.nome] = { qtd: 0, total: 0 }
+      topProc[proc.nome].qtd += 1
+      topProc[proc.nome].total += Number(proc.valor || 0)
+    })
+    const topProcedimentos = Object.entries(topProc).map(([nome, v]: any) => ({
+      nome, qtd: v.qtd, total: v.total, ticket: v.qtd > 0 ? v.total / v.qtd : 0
+    })).sort((a: any, b: any) => b.qtd - a.qtd)
+
+    setRelatoriosData({
+      dre: { receita, despesa, lucro, margem, pctLucro },
+      receitasPorCat,
+      despesasPorCat,
+      receitasPorMed,
+      topProcedimentos,
+      periodo: { inicio: dataInicioStr, fim: hoje, dias }
+    })
+    setCarregandoRel(false)
+  }
+
+  const exportarRelatoriosExcel = () => {
+    if (!relatoriosData) return
+    const wb = XLSX.utils.book_new()
+
+    // Aba 1: DRE
+    const dreData = [
+      ['DRE Simplificado'],
+      ['Período', `${relatoriosData.periodo.dias} dias`],
+      [],
+      ['Receita Total', relatoriosData.dre.receita],
+      ['Despesa Total', relatoriosData.dre.despesa],
+      ['Lucro Líquido', relatoriosData.dre.lucro],
+      ['Margem (%)', relatoriosData.dre.margem.toFixed(2)],
+    ]
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dreData), 'DRE')
+
+    // Aba 2: Receitas por Categoria
+    const recCatData = [['Categoria', 'Quantidade', 'Total (R$)']]
+    relatoriosData.receitasPorCat.forEach((r: any) => recCatData.push([r.nome, r.qtd, r.total]))
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(recCatData), 'Receitas por Categoria')
+
+    // Aba 3: Despesas por Categoria
+    const despCatData = [['Categoria', 'Quantidade', 'Total (R$)']]
+    relatoriosData.despesasPorCat.forEach((r: any) => despCatData.push([r.nome, r.qtd, r.total]))
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(despCatData), 'Despesas por Categoria')
+
+    // Aba 4: Receitas por Medico
+    const recMedData = [['Médico', 'Consultas', 'Receita Gerada (R$)']]
+    relatoriosData.receitasPorMed.forEach((r: any) => recMedData.push([r.nome, r.qtd, r.total]))
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(recMedData), 'Receitas por Médico')
+
+    // Aba 5: Top Procedimentos
+    const procData = [['Procedimento', 'Quantidade', 'Receita (R$)', 'Ticket Médio (R$)']]
+    relatoriosData.topProcedimentos.forEach((p: any) => procData.push([p.nome, p.qtd, p.total, p.ticket]))
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(procData), 'Top Procedimentos')
+
+    XLSX.writeFile(wb, `relatorios-financeiro-${new Date().toISOString().substring(0, 10)}.xlsx`)
+  }
 
   const carregarComissoes = async () => {
     if (!clinicaId) return
@@ -715,9 +880,137 @@ export default function FinanceiroPage() {
         )}
 
         {tab === 'relatorios' && (
-          <div style={{ background: 'white', borderRadius: 14, padding: 80, textAlign: 'center' as const }}>
-            <p style={{ fontSize: 14, color: '#9ca3af' }}>Em breve no próximo patch.</p>
-          </div>
+          <>
+            {/* Header com botao exportar tudo */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: '#737373', margin: 0 }}>5 relatórios essenciais — período: últimos {periodo} dias</p>
+              <button onClick={exportarRelatoriosExcel} disabled={!relatoriosData} style={btnPrimary}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Exportar Excel (5 abas)
+              </button>
+            </div>
+
+            {carregandoRel ? (
+              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: '#9ca3af', fontSize: 13 }}>Carregando relatórios...</div>
+            ) : !relatoriosData ? null : (
+              <>
+                {/* 1. DRE Simplificado */}
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div>
+                      <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>1. DRE Simplificado</p>
+                      <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 0', letterSpacing: '-0.01em' }}>Demonstrativo de resultados</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+                    <div style={{ padding: 16, background: '#fafafa', borderRadius: 10 }}>
+                      <p style={{ fontSize: 11, color: '#737373', margin: '0 0 4px' }}>Receita</p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: '#16a34a', margin: 0, letterSpacing: '-0.02em' }}>{fmt(relatoriosData.dre.receita)}</p>
+                    </div>
+                    <div style={{ padding: 16, background: '#fafafa', borderRadius: 10 }}>
+                      <p style={{ fontSize: 11, color: '#737373', margin: '0 0 4px' }}>Despesa</p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: '#dc2626', margin: 0, letterSpacing: '-0.02em' }}>{fmt(relatoriosData.dre.despesa)}</p>
+                    </div>
+                    <div style={{ padding: 16, background: '#fafafa', borderRadius: 10 }}>
+                      <p style={{ fontSize: 11, color: '#737373', margin: '0 0 4px' }}>Lucro líquido</p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: relatoriosData.dre.lucro >= 0 ? '#0a0a0a' : '#dc2626', margin: 0, letterSpacing: '-0.02em' }}>{fmt(relatoriosData.dre.lucro)}</p>
+                      {relatoriosData.dre.pctLucro !== null && (
+                        <p style={{ fontSize: 11, color: relatoriosData.dre.pctLucro >= 0 ? '#16a34a' : '#dc2626', margin: '4px 0 0', fontWeight: 600 }}>
+                          {relatoriosData.dre.pctLucro >= 0 ? '+' : ''}{relatoriosData.dre.pctLucro}% vs período anterior
+                        </p>
+                      )}
+                    </div>
+                    <div style={{ padding: 16, background: '#f0ebff', borderRadius: 10 }}>
+                      <p style={{ fontSize: 11, color: '#737373', margin: '0 0 4px' }}>Margem de lucro</p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: '#6043C1', margin: 0, letterSpacing: '-0.02em' }}>{relatoriosData.dre.margem.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Receitas por Categoria */}
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                  <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>2. Receitas por Categoria</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>De onde vem o dinheiro</p>
+                  {relatoriosData.receitasPorCat.length === 0 ? (
+                    <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 20 }}>Sem receitas no período</p>
+                  ) : (
+                    <BarChart data={relatoriosData.receitasPorCat} total={relatoriosData.dre.receita}/>
+                  )}
+                </div>
+
+                {/* 3. Receitas por Médico */}
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                  <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>3. Receitas por Médico</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>Performance da equipe</p>
+                  {relatoriosData.receitasPorMed.length === 0 ? (
+                    <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 20 }}>Sem receitas vinculadas a médicos no período</p>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ background: '#fafafa' }}>
+                          <th style={th}>Médico</th>
+                          <th style={{ ...th, textAlign: 'center' as const }}>Consultas</th>
+                          <th style={{ ...th, textAlign: 'right' as const }}>Receita gerada</th>
+                          <th style={{ ...th, textAlign: 'right' as const }}>Ticket médio</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {relatoriosData.receitasPorMed.map((r: any, i: number) => (
+                          <tr key={i}>
+                            <td style={td}><strong>{r.nome}</strong></td>
+                            <td style={{ ...td, textAlign: 'center' as const }}>{r.qtd}</td>
+                            <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: '#16a34a' }}>{fmt(r.total)}</td>
+                            <td style={{ ...td, textAlign: 'right' as const, color: '#525252' }}>{fmt(r.qtd > 0 ? r.total / r.qtd : 0)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                {/* 4. Despesas por Categoria */}
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                  <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>4. Despesas por Categoria</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>Pra onde vai o dinheiro</p>
+                  {relatoriosData.despesasPorCat.length === 0 ? (
+                    <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 20 }}>Sem despesas no período</p>
+                  ) : (
+                    <BarChart data={relatoriosData.despesasPorCat} total={relatoriosData.dre.despesa} corBase="#dc2626"/>
+                  )}
+                </div>
+
+                {/* 5. Top Procedimentos */}
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                  <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>5. Top Procedimentos</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>Mais realizados no período</p>
+                  {relatoriosData.topProcedimentos.length === 0 ? (
+                    <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 20 }}>Sem agendamentos com procedimento vinculado realizados no período</p>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ background: '#fafafa' }}>
+                          <th style={th}>Procedimento</th>
+                          <th style={{ ...th, textAlign: 'center' as const }}>Vezes realizado</th>
+                          <th style={{ ...th, textAlign: 'right' as const }}>Receita total</th>
+                          <th style={{ ...th, textAlign: 'right' as const }}>Ticket médio</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {relatoriosData.topProcedimentos.map((p: any, i: number) => (
+                          <tr key={i}>
+                            <td style={td}><strong>{p.nome}</strong></td>
+                            <td style={{ ...td, textAlign: 'center' as const, fontWeight: 700 }}>{p.qtd}</td>
+                            <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: '#16a34a' }}>{fmt(p.total)}</td>
+                            <td style={{ ...td, textAlign: 'right' as const, color: '#525252' }}>{fmt(p.ticket)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </>
+            )}
+          </>
         )}
 
         {modalPacOpen && (
@@ -1247,3 +1540,34 @@ const pillBtn = (ativo: boolean) => ({
   color: ativo ? 'white' : '#525252',
   fontSize: 12, fontWeight: 600 as const, cursor: 'pointer'
 })
+
+
+// ============================================
+// COMPONENTE: BarChart simples horizontal
+// ============================================
+
+function BarChart({ data, total, corBase = '#6043C1' }: { data: any[]; total: number; corBase?: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+      {data.map((d: any, i: number) => {
+        const pct = total > 0 ? (d.total / total) * 100 : 0
+        const cor = d.cor || corBase
+        return (
+          <div key={i}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#404040' }}>{d.nome}</span>
+              <span style={{ fontSize: 12, color: '#737373', fontWeight: 500 }}>
+                <strong style={{ color: '#0a0a0a' }}>{'R$ ' + d.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                <span style={{ marginLeft: 8, color: '#9ca3af' }}>{d.qtd} {d.qtd === 1 ? 'transação' : 'transações'}</span>
+                <span style={{ marginLeft: 8, color: cor, fontWeight: 700 }}>{pct.toFixed(0)}%</span>
+              </span>
+            </div>
+            <div style={{ height: 8, background: '#f3f4f6', borderRadius: 100, overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: cor, borderRadius: 100, width: pct + '%', transition: 'width 0.4s' as const }}/>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
