@@ -1637,6 +1637,23 @@ function SubModalRealizado({ ag, onClose, onSaved }: { ag: any; onClose: () => v
     const { error: errAg } = await supabase.from('agendamentos').update({ status: 'realizado' }).eq('id', ag.id)
     if (errAg) { setErro('Erro ao atualizar agendamento: ' + errAg.message); setSalvando(false); return }
 
+    // 1.5 Verifica se paciente tem pacote ativo - se tiver, consome 1 sessao automaticamente
+    let pacoteConsumido = null
+    if (ag.paciente_id) {
+      const { data: pacotes } = await supabase.from('financeiro_pacotes')
+        .select('*').eq('paciente_id', ag.paciente_id).eq('status', 'ativo')
+        .order('criado_em', { ascending: true }).limit(1)
+      const pacote = pacotes?.[0]
+      if (pacote && pacote.sessoes_usadas < pacote.total_sessoes) {
+        const novasSessoes = pacote.sessoes_usadas + 1
+        const novoStatus = novasSessoes >= pacote.total_sessoes ? 'concluido' : 'ativo'
+        await supabase.from('financeiro_pacotes')
+          .update({ sessoes_usadas: novasSessoes, status: novoStatus, atualizado_em: new Date().toISOString() })
+          .eq('id', pacote.id)
+        pacoteConsumido = pacote
+      }
+    }
+
     // 2. Cria movimentacao financeira (se valor > 0)
     if (valorNum > 0) {
       // Busca categoria "Consulta" da clinica (ou primeira receita)

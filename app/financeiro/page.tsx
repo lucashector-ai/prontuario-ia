@@ -33,6 +33,12 @@ export default function FinanceiroPage() {
   // Movimentacoes (tab completa)
   const [todasMov, setTodasMov] = useState<any[]>([])
   const [carregandoMov, setCarregandoMov] = useState(false)
+
+  // Pacotes (tab completa)
+  const [todosPacotes, setTodosPacotes] = useState<any[]>([])
+  const [carregandoPac, setCarregandoPac] = useState(false)
+  const [filtroPacStatus, setFiltroPacStatus] = useState<'ativo' | 'concluido' | 'cancelado' | 'todos'>('ativo')
+  const [modalPacOpen, setModalPacOpen] = useState(false)
   const [filtroBusca, setFiltroBusca] = useState('')
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'receita' | 'despesa'>('todos')
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
@@ -66,6 +72,24 @@ export default function FinanceiroPage() {
   useEffect(() => {
     if (tab === 'movimentacoes' && clinicaId) carregarMovimentacoes()
   }, [tab, clinicaId, filtroTipo, filtroStatus])
+
+  useEffect(() => {
+    if (tab === 'pacotes' && clinicaId) carregarPacotes()
+  }, [tab, clinicaId, filtroPacStatus])
+
+  const carregarPacotes = async () => {
+    if (!clinicaId) return
+    setCarregandoPac(true)
+    let q = supabase.from('financeiro_pacotes')
+      .select('*, pacientes:paciente_id(nome), medicos:medico_id(nome)')
+      .eq('clinica_id', clinicaId)
+      .order('criado_em', { ascending: false })
+      .limit(100)
+    if (filtroPacStatus !== 'todos') q = q.eq('status', filtroPacStatus)
+    const { data } = await q
+    setTodosPacotes(data || [])
+    setCarregandoPac(false)
+  }
 
   const carregarListas = async () => {
     if (!clinicaId) return
@@ -434,10 +458,102 @@ export default function FinanceiroPage() {
           </>
         )}
 
-        {(tab === 'pacotes' || tab === 'comissoes' || tab === 'relatorios') && (
+        {tab === 'pacotes' && (
+          <>
+            {/* Filtros + Botao Novo */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' as const }}>
+              <div style={{ display: 'flex', gap: 4, background: 'white', padding: 4, borderRadius: 9 }}>
+                {([['ativo', 'Ativos'], ['concluido', 'Concluídos'], ['cancelado', 'Cancelados'], ['todos', 'Todos']] as const).map(([k, label]) => (
+                  <button key={k} onClick={() => setFiltroPacStatus(k as any)} style={{
+                    padding: '6px 12px', borderRadius: 7, border: 'none',
+                    background: filtroPacStatus === k ? '#f0ebff' : 'transparent',
+                    color: filtroPacStatus === k ? '#6043C1' : '#525252',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer'
+                  }}>{label}</button>
+                ))}
+              </div>
+              <button onClick={() => setModalPacOpen(true)} style={{ ...btnPrimary, marginLeft: 'auto' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Novo pacote
+              </button>
+            </div>
+
+            {/* Lista pacotes */}
+            {carregandoPac ? (
+              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: '#9ca3af', fontSize: 13 }}>Carregando...</div>
+            ) : todosPacotes.length === 0 ? (
+              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const }}>
+                <p style={{ fontSize: 14, color: '#525252', margin: '0 0 6px', fontWeight: 600 }}>Nenhum pacote {filtroPacStatus === 'ativo' ? 'ativo' : filtroPacStatus === 'concluido' ? 'concluído' : 'encontrado'}</p>
+                <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 16px' }}>Crie pacotes de sessões para fisioterapia, nutrição, psicoterapia.</p>
+                <button onClick={() => setModalPacOpen(true)} style={btnPrimary}>+ Novo pacote</button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14 }}>
+                {todosPacotes.map((p: any) => {
+                  const pct = p.total_sessoes > 0 ? (p.sessoes_usadas / p.total_sessoes) * 100 : 0
+                  const statusCor = p.status === 'ativo' ? '#16a34a' : p.status === 'concluido' ? '#6043C1' : '#9ca3af'
+                  return (
+                    <div key={p.id} style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                        <div>
+                          <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px', letterSpacing: '-0.01em' }}>{p.pacientes?.nome || 'Paciente'}</p>
+                          <p style={{ fontSize: 12, color: '#737373', margin: 0 }}>{p.descricao}</p>
+                        </div>
+                        <span style={{ fontSize: 10, fontWeight: 700, background: statusCor + '22', color: statusCor, padding: '3px 9px', borderRadius: 100, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{p.status}</span>
+                      </div>
+
+                      {/* Progresso */}
+                      <div style={{ height: 8, background: '#f3f4f6', borderRadius: 100, overflow: 'hidden', marginBottom: 6 }}>
+                        <div style={{ height: '100%', background: '#6043C1', borderRadius: 100, width: `${pct}%`, transition: 'width 0.3s' as const }}/>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#525252', marginBottom: 14 }}>
+                        <span style={{ fontWeight: 600 }}>{p.sessoes_usadas} de {p.total_sessoes} sessões</span>
+                        <span>{Math.round(pct)}%</span>
+                      </div>
+
+                      {/* Valores */}
+                      <div style={{ borderTop: '1px solid #f5f5f5', paddingTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <div>
+                          <p style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: '0 0 2px' }}>Total</p>
+                          <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{fmt(Number(p.valor_total))}</p>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: '0 0 2px' }}>Recebido</p>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: '#16a34a', margin: 0 }}>{fmt(Number(p.valor_pago))}</p>
+                        </div>
+                      </div>
+
+                      {p.status === 'ativo' && p.valor_pago < p.valor_total && (
+                        <div style={{ marginTop: 10, padding: '8px 10px', background: '#fef3c7', borderRadius: 8, fontSize: 11, color: '#a16207', fontWeight: 600 }}>
+                          ⏳ Falta receber {fmt(Number(p.valor_total) - Number(p.valor_pago))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {(tab === 'comissoes' || tab === 'relatorios') && (
           <div style={{ background: 'white', borderRadius: 14, padding: 80, textAlign: 'center' as const }}>
             <p style={{ fontSize: 14, color: '#9ca3af' }}>Em breve no próximo patch.</p>
           </div>
+        )}
+
+        {modalPacOpen && (
+          <ModalNovoPacote
+            clinicaId={clinicaId!}
+            pacientes={pacientesLista}
+            medicos={medicosLista}
+            onClose={() => setModalPacOpen(false)}
+            onSaved={() => {
+              setModalPacOpen(false)
+              carregarPacotes()
+              carregar()
+            }}
+          />
         )}
 
         {modalOpen && (
@@ -740,3 +856,216 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
 }
 
 const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, background: 'white' } as const
+
+
+// ============================================
+// MODAL: Novo Pacote de Sessoes
+// ============================================
+
+function ModalNovoPacote({ clinicaId, pacientes, medicos, onClose, onSaved }: any) {
+  const [pacienteId, setPacienteId] = useState('')
+  const [medicoId, setMedicoId] = useState('')
+  const [descricao, setDescricao] = useState('')
+  const [totalSessoes, setTotalSessoes] = useState('10')
+  const [valorTotal, setValorTotal] = useState('')
+  const [formaPag, setFormaPag] = useState<'a_vista' | 'parcelado' | 'por_sessao'>('a_vista')
+  const [parcelas, setParcelas] = useState('3')
+  const [primeiroVencimento, setPrimeiroVencimento] = useState(new Date().toISOString().substring(0, 10))
+  const [observacoes, setObservacoes] = useState('')
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  const valorNum = parseFloat(valorTotal.replace(',', '.')) || 0
+  const sessoesNum = parseInt(totalSessoes) || 0
+  const valorPorSessao = sessoesNum > 0 ? valorNum / sessoesNum : 0
+  const parcelasNum = parseInt(parcelas) || 1
+  const valorParcela = parcelasNum > 0 ? valorNum / parcelasNum : 0
+
+  const salvar = async () => {
+    setErro('')
+    if (!pacienteId) { setErro('Selecione um paciente'); return }
+    if (!descricao.trim()) { setErro('Descrição é obrigatória'); return }
+    if (sessoesNum <= 0) { setErro('Total de sessões deve ser maior que zero'); return }
+    if (valorNum <= 0) { setErro('Valor deve ser maior que zero'); return }
+
+    setSalvando(true)
+
+    // 1. Cria pacote
+    const { data: pacote, error: errP } = await supabase.from('financeiro_pacotes').insert({
+      clinica_id: clinicaId,
+      paciente_id: pacienteId,
+      medico_id: medicoId || null,
+      descricao: descricao.trim(),
+      total_sessoes: sessoesNum,
+      sessoes_usadas: 0,
+      valor_total: valorNum,
+      valor_pago: formaPag === 'a_vista' ? valorNum : 0,
+      forma_pagamento: formaPag,
+      parcelas_total: formaPag === 'parcelado' ? parcelasNum : 1,
+      observacoes: observacoes.trim() || null,
+      status: 'ativo',
+    }).select().single()
+
+    if (errP) { setErro('Erro ao criar pacote: ' + errP.message); setSalvando(false); return }
+
+    // 2. Busca categoria "Pacote de sessões" (ou primeira receita)
+    const { data: catC } = await supabase.from('financeiro_categorias')
+      .select('id').eq('clinica_id', clinicaId).eq('tipo', 'receita').eq('ativo', true).ilike('nome', '%Pacote%').maybeSingle()
+    const { data: cats } = await supabase.from('financeiro_categorias')
+      .select('id').eq('clinica_id', clinicaId).eq('tipo', 'receita').eq('ativo', true).limit(1)
+    const categoriaId = catC?.id || cats?.[0]?.id || null
+
+    const pacNome = pacientes.find((p: any) => p.id === pacienteId)?.nome || ''
+    const descBase = `${descricao.trim()} - ${pacNome}`
+
+    // 3. Cria movimentações conforme forma pagamento
+    if (formaPag === 'a_vista') {
+      // 1 movimentação recebida
+      await supabase.from('financeiro_movimentacoes').insert({
+        clinica_id: clinicaId,
+        tipo: 'receita',
+        valor: valorNum,
+        descricao: descBase,
+        data_movimentacao: primeiroVencimento,
+        categoria_id: categoriaId,
+        status: 'recebido',
+        paciente_id: pacienteId,
+        medico_id: medicoId || null,
+        pacote_id: pacote.id,
+      })
+    } else if (formaPag === 'parcelado') {
+      // N movimentações pendentes
+      const inserts = []
+      const dataInicial = new Date(primeiroVencimento + 'T00:00:00')
+      for (let i = 0; i < parcelasNum; i++) {
+        const dataParcela = new Date(dataInicial)
+        dataParcela.setMonth(dataParcela.getMonth() + i)
+        inserts.push({
+          clinica_id: clinicaId,
+          tipo: 'receita',
+          valor: valorParcela,
+          descricao: `${descBase} (${i + 1}/${parcelasNum})`,
+          data_movimentacao: dataParcela.toISOString().substring(0, 10),
+          data_vencimento: dataParcela.toISOString().substring(0, 10),
+          categoria_id: categoriaId,
+          status: 'pendente',
+          paciente_id: pacienteId,
+          medico_id: medicoId || null,
+          pacote_id: pacote.id,
+          parcelas_total: parcelasNum,
+          parcela_atual: i + 1,
+        })
+      }
+      await supabase.from('financeiro_movimentacoes').insert(inserts)
+    }
+    // 'por_sessao' não cria movimentação ainda; vai criar a cada consulta realizada
+
+    setSalvando(false)
+    onSaved()
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 540, maxHeight: '90vh', overflow: 'auto' as const, padding: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Novo pacote de sessões</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <FormField label="Paciente *">
+          <select value={pacienteId} onChange={e => setPacienteId(e.target.value)} style={inputStyle}>
+            <option value="">Selecione...</option>
+            {pacientes.map((p: any) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+          </select>
+        </FormField>
+
+        <FormField label="Descrição *">
+          <input type="text" value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Ex: 10 sessões de fisioterapia" style={inputStyle}/>
+        </FormField>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <FormField label="Total de sessões *">
+            <input type="number" min="1" value={totalSessoes} onChange={e => setTotalSessoes(e.target.value)} style={inputStyle}/>
+          </FormField>
+          <FormField label="Valor total *">
+            <div style={{ position: 'relative' as const }}>
+              <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+              <input type="text" value={valorTotal} onChange={e => setValorTotal(e.target.value.replace(/[^0-9,]/g, ''))} placeholder="0,00" style={{ ...inputStyle, paddingLeft: 38 }}/>
+            </div>
+          </FormField>
+        </div>
+
+        {valorNum > 0 && sessoesNum > 0 && (
+          <p style={{ fontSize: 11, color: '#6043C1', margin: '-8px 0 12px', fontWeight: 500 }}>
+            💡 Valor por sessão: {fmt(valorPorSessao)}
+          </p>
+        )}
+
+        <FormField label="Médico responsável">
+          <select value={medicoId} onChange={e => setMedicoId(e.target.value)} style={inputStyle}>
+            <option value="">Sem médico específico</option>
+            {medicos.map((m: any) => <option key={m.id} value={m.id}>{m.nome}</option>)}
+          </select>
+        </FormField>
+
+        {/* Forma pagamento */}
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>Forma de pagamento *</label>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+          <button type="button" onClick={() => setFormaPag('a_vista')} style={pillBtn(formaPag === 'a_vista')}>À vista</button>
+          <button type="button" onClick={() => setFormaPag('parcelado')} style={pillBtn(formaPag === 'parcelado')}>Parcelado</button>
+          <button type="button" onClick={() => setFormaPag('por_sessao')} style={pillBtn(formaPag === 'por_sessao')}>Por sessão</button>
+        </div>
+
+        {formaPag === 'parcelado' && (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+              <FormField label="Número de parcelas">
+                <input type="number" min="2" max="24" value={parcelas} onChange={e => setParcelas(e.target.value)} style={inputStyle}/>
+              </FormField>
+              <FormField label="Primeiro vencimento">
+                <input type="date" value={primeiroVencimento} onChange={e => setPrimeiroVencimento(e.target.value)} style={inputStyle}/>
+              </FormField>
+            </div>
+            {valorNum > 0 && parcelasNum > 0 && (
+              <p style={{ fontSize: 11, color: '#6043C1', margin: '-8px 0 12px', fontWeight: 500 }}>
+                💡 {parcelasNum}x de {fmt(valorParcela)} (mensal)
+              </p>
+            )}
+          </>
+        )}
+
+        {formaPag === 'a_vista' && (
+          <FormField label="Data do recebimento">
+            <input type="date" value={primeiroVencimento} onChange={e => setPrimeiroVencimento(e.target.value)} style={inputStyle}/>
+          </FormField>
+        )}
+
+        {formaPag === 'por_sessao' && (
+          <p style={{ fontSize: 12, color: '#737373', margin: '0 0 14px', padding: 10, background: '#f5f5f5', borderRadius: 8 }}>
+            ℹ️ A cada sessão realizada, será cobrado {valorNum > 0 && sessoesNum > 0 ? fmt(valorPorSessao) : 'o valor por sessão'}.
+          </p>
+        )}
+
+        <FormField label="Observações">
+          <textarea value={observacoes} onChange={e => setObservacoes(e.target.value)} rows={2} style={{ ...inputStyle, resize: 'vertical' as const, fontFamily: 'inherit' }}/>
+        </FormField>
+
+        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginTop: 8, marginBottom: 8 }}>{erro}</div>}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 18, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} disabled={salvando} style={btnSecondary}>Cancelar</button>
+          <button onClick={salvar} disabled={salvando} style={btnPrimary}>{salvando ? 'Criando...' : 'Criar pacote'}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const pillBtn = (ativo: boolean) => ({
+  flex: 1, padding: '9px', borderRadius: 7, border: 'none',
+  background: ativo ? '#0a0a0a' : '#f5f5f5',
+  color: ativo ? 'white' : '#525252',
+  fontSize: 12, fontWeight: 600 as const, cursor: 'pointer'
+})
