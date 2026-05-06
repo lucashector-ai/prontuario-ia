@@ -1656,9 +1656,12 @@ function SubModalRealizado({ ag, onClose, onSaved }: { ag: any; onClose: () => v
 
     // 2. Cria movimentacao financeira (se valor > 0)
     if (valorNum > 0) {
-      // Busca categoria "Consulta" da clinica (ou primeira receita)
-      const { data: clin } = await supabase.from('agendamentos').select('clinica_id').eq('id', ag.id).single()
-      const clinicaId = clin?.clinica_id
+      // Busca clinica_id via medico (agendamentos nao tem clinica_id direto)
+      let clinicaId: string | null = null
+      if (ag.medico_id) {
+        const { data: med } = await supabase.from('medicos').select('clinica_id').eq('id', ag.medico_id).maybeSingle()
+        clinicaId = med?.clinica_id || null
+      }
 
       if (clinicaId) {
         const { data: cats } = await supabase.from('financeiro_categorias')
