@@ -14,7 +14,7 @@ export default function HomePage() {
       if (rawAdmin) {
         const admin = JSON.parse(rawAdmin)
         if (!admin.onboarding_concluido) router.replace('/onboarding')
-        else router.replace('/admin')
+        else router.replace('/dashboard')
         return
       }
       const rawMedico = localStorage.getItem('medico')

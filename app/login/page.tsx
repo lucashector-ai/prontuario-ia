@@ -58,7 +58,7 @@ function LoginForm() {
         localStorage.setItem('clinica_admin', JSON.stringify(data.admin))
         localStorage.setItem('clinica', JSON.stringify(data.clinica))
         localStorage.removeItem('medico')
-        router.push('/admin')
+        router.push('/dashboard')
         return
       }
 
