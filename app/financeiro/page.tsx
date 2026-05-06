@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-type TabKey = 'visao' | 'movimentacoes' | 'pacotes' | 'comissoes' | 'relatorios'
+type TabKey = 'visao' | 'movimentacoes' | 'pacotes' | 'cobrancas' | 'comissoes' | 'relatorios' | 'configuracoes'
 
 export default function FinanceiroPage() {
   const router = useRouter()
@@ -48,6 +48,19 @@ export default function FinanceiroPage() {
   // Relatorios (tab)
   const [relatoriosData, setRelatoriosData] = useState<any>(null)
   const [carregandoRel, setCarregandoRel] = useState(false)
+
+  // Cobrancas (tab)
+  const [cobrancasData, setCobrancasData] = useState<any[]>([])
+  const [carregandoCob, setCarregandoCob] = useState(false)
+  const [filtroCobAtraso, setFiltroCobAtraso] = useState<'todos' | '0-7' | '8-30' | '30+'>('todos')
+
+  // Configuracoes (tab)
+  const [configSubtab, setConfigSubtab] = useState<'categorias' | 'recorrentes'>('categorias')
+  const [todasCategorias, setTodasCategorias] = useState<any[]>([])
+  const [modalCatOpen, setModalCatOpen] = useState(false)
+  const [editandoCat, setEditandoCat] = useState<any>(null)
+  const [recorrentes, setRecorrentes] = useState<any[]>([])
+  const [modalRecOpen, setModalRecOpen] = useState(false)
   const [filtroBusca, setFiltroBusca] = useState('')
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'receita' | 'despesa'>('todos')
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
@@ -93,6 +106,88 @@ export default function FinanceiroPage() {
   useEffect(() => {
     if (tab === 'relatorios' && clinicaId) carregarRelatorios()
   }, [tab, clinicaId, periodo])
+
+  useEffect(() => {
+    if (tab === 'cobrancas' && clinicaId) carregarCobrancas()
+  }, [tab, clinicaId, filtroCobAtraso])
+
+  useEffect(() => {
+    if (tab === 'configuracoes' && clinicaId) {
+      carregarTodasCategorias()
+      carregarRecorrentes()
+    }
+  }, [tab, clinicaId])
+
+  const carregarCobrancas = async () => {
+    if (!clinicaId) return
+    setCarregandoCob(true)
+    const { data } = await supabase.from('financeiro_movimentacoes')
+      .select('*, pacientes:paciente_id(nome, telefone), medicos:medico_id(nome), categoria:categoria_id(nome)')
+      .eq('clinica_id', clinicaId)
+      .eq('tipo', 'receita')
+      .in('status', ['pendente', 'atrasado', 'parcial'])
+      .order('data_movimentacao', { ascending: true })
+      .limit(200)
+    
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    const enriched = (data || []).map((m: any) => {
+      const dataMov = new Date((m.data_vencimento || m.data_movimentacao) + 'T00:00:00')
+      const diasAtraso = Math.floor((hoje.getTime() - dataMov.getTime()) / (1000 * 60 * 60 * 24))
+      return { ...m, diasAtraso }
+    }).filter((m: any) => {
+      if (filtroCobAtraso === 'todos') return true
+      if (filtroCobAtraso === '0-7') return m.diasAtraso >= 0 && m.diasAtraso <= 7
+      if (filtroCobAtraso === '8-30') return m.diasAtraso >= 8 && m.diasAtraso <= 30
+      if (filtroCobAtraso === '30+') return m.diasAtraso > 30
+      return true
+    })
+    setCobrancasData(enriched)
+    setCarregandoCob(false)
+  }
+
+  const marcarRecebido = async (movId: string) => {
+    if (!confirm('Marcar como recebido?')) return
+    await supabase.from('financeiro_movimentacoes')
+      .update({ status: 'recebido', data_pagamento: new Date().toISOString().substring(0, 10) })
+      .eq('id', movId)
+    carregarCobrancas()
+    carregar()
+  }
+
+  const cobrarViaWA = (mov: any) => {
+    const tel = mov.pacientes?.telefone?.replace(/\D/g, '')
+    if (!tel) { alert('Paciente sem telefone cadastrado'); return }
+    const valor = Number(mov.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+    const desc = mov.descricao || 'consulta'
+    const msg = `Olá ${mov.pacientes?.nome?.split(' ')[0] || ''}, tudo bem? Identificamos que sua ${desc} (R$ ${valor}) ainda está pendente de pagamento. Você poderia regularizar quando puder? Qualquer dúvida estou à disposição. Obrigado!`
+    const url = 'https://wa.me/55' + tel + '?text=' + encodeURIComponent(msg)
+    window.open(url, '_blank')
+  }
+
+  const carregarTodasCategorias = async () => {
+    if (!clinicaId) return
+    const { data } = await supabase.from('financeiro_categorias')
+      .select('*').eq('clinica_id', clinicaId).order('tipo').order('nome')
+    setTodasCategorias(data || [])
+  }
+
+  const carregarRecorrentes = async () => {
+    if (!clinicaId) return
+    const { data } = await supabase.from('financeiro_movimentacoes')
+      .select('*, categoria:categoria_id(nome, cor)')
+      .eq('clinica_id', clinicaId).eq('recorrente', true)
+      .is('recorrencia_origem_id', null)
+      .order('criado_em', { ascending: false }).limit(100)
+    setRecorrentes(data || [])
+  }
+
+  const desativarCategoria = async (cat: any) => {
+    if (!confirm('Desativar categoria "' + cat.nome + '"? Movimentações antigas continuam vinculadas.')) return
+    await supabase.from('financeiro_categorias').update({ ativo: false }).eq('id', cat.id)
+    carregarTodasCategorias()
+    carregarListas()
+  }
 
   const carregarRelatorios = async () => {
     if (!clinicaId) return
@@ -523,14 +618,14 @@ export default function FinanceiroPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'white', padding: 4, borderRadius: 11, width: 'fit-content' }}>
-          {(['visao','movimentacoes','pacotes','comissoes','relatorios'] as TabKey[]).map(k => (
+          {(['visao','movimentacoes','pacotes','cobrancas','comissoes','relatorios','configuracoes'] as TabKey[]).map(k => (
             <button key={k} onClick={() => setTab(k)} style={{
               padding: '8px 16px', borderRadius: 8, border: 'none',
               background: tab === k ? '#0a0a0a' : 'transparent',
               color: tab === k ? 'white' : '#525252',
               fontSize: 13, fontWeight: 600, cursor: 'pointer'
             }}>
-              {k === 'visao' ? 'Visão geral' : k === 'movimentacoes' ? 'Movimentações' : k === 'pacotes' ? 'Pacotes' : k === 'comissoes' ? 'Comissões' : 'Relatórios'}
+              {k === 'visao' ? 'Visão geral' : k === 'movimentacoes' ? 'Movimentações' : k === 'pacotes' ? 'Pacotes' : k === 'cobrancas' ? 'Cobranças' : k === 'comissoes' ? 'Comissões' : k === 'relatorios' ? 'Relatórios' : 'Configurações'}
             </button>
           ))}
         </div>
@@ -879,6 +974,224 @@ export default function FinanceiroPage() {
           </>
         )}
 
+        {tab === 'cobrancas' && (
+          <>
+            {/* Header com filtros */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' as const }}>
+              <div style={{ display: 'flex', gap: 4, background: 'white', padding: 4, borderRadius: 9 }}>
+                {([['todos', 'Todos'], ['0-7', 'Vence em 7d'], ['8-30', '8-30 dias atraso'], ['30+', 'Mais de 30d']] as const).map(([k, label]) => (
+                  <button key={k} onClick={() => setFiltroCobAtraso(k as any)} style={{
+                    padding: '6px 12px', borderRadius: 7, border: 'none',
+                    background: filtroCobAtraso === k ? '#f0ebff' : 'transparent',
+                    color: filtroCobAtraso === k ? '#6043C1' : '#525252',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer'
+                  }}>{label}</button>
+                ))}
+              </div>
+              <div style={{ marginLeft: 'auto', fontSize: 13, color: '#525252' }}>
+                <strong style={{ color: '#dc2626' }}>{cobrancasData.length}</strong> {cobrancasData.length === 1 ? 'cobrança' : 'cobranças'} · 
+                Total: <strong>{fmt(cobrancasData.reduce((s: number, m: any) => s + Number(m.valor), 0))}</strong>
+              </div>
+            </div>
+
+            {/* Tabela de cobrancas */}
+            <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+              {carregandoCob ? (
+                <div style={{ textAlign: 'center' as const, padding: 40, color: '#9ca3af', fontSize: 13 }}>Carregando...</div>
+              ) : cobrancasData.length === 0 ? (
+                <div style={{ textAlign: 'center' as const, padding: 60 }}>
+                  <p style={{ fontSize: 14, color: '#525252', fontWeight: 600, margin: '0 0 6px' }}>Nenhuma cobrança pendente</p>
+                  <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Tudo em dia!</p>
+                </div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: '#fafafa' }}>
+                      <th style={th}>Paciente</th>
+                      <th style={th}>Descrição</th>
+                      <th style={th}>Vencimento</th>
+                      <th style={{ ...th, textAlign: 'center' as const }}>Atraso</th>
+                      <th style={{ ...th, textAlign: 'right' as const }}>Valor</th>
+                      <th style={{ ...th, textAlign: 'right' as const, width: 240 }}>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cobrancasData.map((m: any) => (
+                      <tr key={m.id}>
+                        <td style={td}>
+                          <strong>{m.pacientes?.nome || 'Sem paciente'}</strong>
+                          {m.pacientes?.telefone && <div style={{ fontSize: 11, color: '#9ca3af' }}>{m.pacientes.telefone}</div>}
+                        </td>
+                        <td style={td}>
+                          <div>{m.descricao}</div>
+                          {m.medicos?.nome && <div style={{ fontSize: 11, color: '#9ca3af' }}>{m.medicos.nome}</div>}
+                        </td>
+                        <td style={td}>{fmtData(m.data_vencimento || m.data_movimentacao)}</td>
+                        <td style={{ ...td, textAlign: 'center' as const }}>
+                          {m.diasAtraso > 0 ? (
+                            <span style={{ fontSize: 11, fontWeight: 700, color: m.diasAtraso > 30 ? '#dc2626' : '#a16207', background: m.diasAtraso > 30 ? '#fee2e2' : '#fef3c7', padding: '3px 9px', borderRadius: 100 }}>
+                              {m.diasAtraso}d
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: 11, color: '#9ca3af' }}>{m.diasAtraso === 0 ? 'Hoje' : Math.abs(m.diasAtraso) + 'd'}</span>
+                          )}
+                        </td>
+                        <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: '#0a0a0a' }}>{fmt(Number(m.valor))}</td>
+                        <td style={{ ...td, textAlign: 'right' as const }}>
+                          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                            {m.pacientes?.telefone && (
+                              <button onClick={() => cobrarViaWA(m)} title="Cobrar via WhatsApp" style={{
+                                padding: '6px 10px', borderRadius: 7, border: 'none', background: '#25d366',
+                                color: 'white', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                                display: 'inline-flex', alignItems: 'center', gap: 5
+                              }}>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                                WA
+                              </button>
+                            )}
+                            <button onClick={() => marcarRecebido(m.id)} style={{
+                              padding: '6px 10px', borderRadius: 7, border: '1px solid #e5e5e5', background: 'white',
+                              color: '#15803d', fontSize: 11, fontWeight: 600, cursor: 'pointer'
+                            }}>✓ Recebido</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </>
+        )}
+
+        {tab === 'configuracoes' && (
+          <>
+            {/* Subtabs */}
+            <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'white', padding: 4, borderRadius: 9, width: 'fit-content' }}>
+              {([['categorias', 'Categorias'], ['recorrentes', 'Despesas recorrentes']] as const).map(([k, label]) => (
+                <button key={k} onClick={() => setConfigSubtab(k as any)} style={{
+                  padding: '7px 14px', borderRadius: 7, border: 'none',
+                  background: configSubtab === k ? '#0a0a0a' : 'transparent',
+                  color: configSubtab === k ? 'white' : '#525252',
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer'
+                }}>{label}</button>
+              ))}
+            </div>
+
+            {configSubtab === 'categorias' && (
+              <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <div>
+                    <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Categorias financeiras</p>
+                    <p style={{ fontSize: 12, color: '#737373', margin: 0 }}>Personalize as categorias usadas em receitas e despesas</p>
+                  </div>
+                  <button onClick={() => { setEditandoCat(null); setModalCatOpen(true) }} style={btnPrimary}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Nova categoria
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+                  {(['receita', 'despesa'] as const).map(tipo => {
+                    const cats = todasCategorias.filter((c: any) => c.tipo === tipo)
+                    return (
+                      <div key={tipo}>
+                        <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', fontWeight: 700, marginBottom: 10 }}>
+                          {tipo === 'receita' ? '↗ Receitas' : '↙ Despesas'} ({cats.length})
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
+                          {cats.map((c: any) => (
+                            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: c.ativo ? '#fafafa' : '#f5f5f5', borderRadius: 9, opacity: c.ativo ? 1 : 0.5 }}>
+                              <span style={{ width: 10, height: 10, borderRadius: '50%', background: c.cor, flexShrink: 0 }}/>
+                              <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{c.nome}</span>
+                              {c.ativo && (
+                                <>
+                                  <button onClick={() => { setEditandoCat(c); setModalCatOpen(true) }} title="Editar" style={iconBtn}>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#525252" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                  </button>
+                                  <button onClick={() => desativarCategoria(c)} title="Desativar" style={iconBtn}>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                  </button>
+                                </>
+                              )}
+                              {!c.ativo && <span style={{ fontSize: 10, color: '#9ca3af' }}>desativada</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {configSubtab === 'recorrentes' && (
+              <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <div>
+                    <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Despesas recorrentes</p>
+                    <p style={{ fontSize: 12, color: '#737373', margin: 0 }}>Crie 1 vez e o sistema gera as próximas automaticamente</p>
+                  </div>
+                  <button onClick={() => setModalRecOpen(true)} style={btnPrimary}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Nova recorrente
+                  </button>
+                </div>
+
+                {recorrentes.length === 0 ? (
+                  <div style={{ textAlign: 'center' as const, padding: 60 }}>
+                    <p style={{ fontSize: 14, color: '#525252', fontWeight: 600, margin: '0 0 6px' }}>Nenhuma despesa recorrente</p>
+                    <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 16px' }}>Cadastre aluguel, internet, salários e outras despesas mensais.</p>
+                    <button onClick={() => setModalRecOpen(true)} style={btnPrimary}>+ Nova recorrente</button>
+                  </div>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: '#fafafa' }}>
+                        <th style={th}>Descrição</th>
+                        <th style={th}>Categoria</th>
+                        <th style={{ ...th, textAlign: 'right' as const }}>Valor</th>
+                        <th style={th}>Início</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recorrentes.map((r: any) => (
+                        <tr key={r.id}>
+                          <td style={td}><strong>{r.descricao}</strong></td>
+                          <td style={td}>{r.categoria?.nome || '-'}</td>
+                          <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: '#dc2626' }}>{fmt(Number(r.valor))}</td>
+                          <td style={td}>{fmtData(r.data_movimentacao)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {modalCatOpen && clinicaId && (
+          <ModalCategoria
+            clinicaId={clinicaId}
+            categoria={editandoCat}
+            onClose={() => { setModalCatOpen(false); setEditandoCat(null) }}
+            onSaved={() => {
+              setModalCatOpen(false); setEditandoCat(null)
+              carregarTodasCategorias(); carregarListas()
+            }}
+          />
+        )}
+
+        {modalRecOpen && clinicaId && (
+          <ModalRecorrente
+            clinicaId={clinicaId}
+            categorias={todasCategorias.filter((c: any) => c.tipo === 'despesa' && c.ativo)}
+            onClose={() => setModalRecOpen(false)}
+            onSaved={() => { setModalRecOpen(false); carregarRecorrentes(); carregar() }}
+          />
+        )}
+
         {tab === 'relatorios' && (
           <>
             {/* Header com botao exportar tudo */}
@@ -1142,6 +1455,7 @@ const btnPrimary = { padding: '9px 16px', borderRadius: 9, border: 'none', backg
 const btnSecondary = { padding: '9px 16px', borderRadius: 9, border: '1px solid #e5e5e5', background: 'white', color: '#404040', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 } as const
 const th = { textAlign: 'left' as const, padding: '10px 12px', fontSize: 11, fontWeight: 700, color: '#737373', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }
 const td = { padding: '12px', borderTop: '1px solid #f5f5f5', color: '#404040' }
+const iconBtn = { background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' } as const
 const selectStyle = { padding: '9px 12px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 13, outline: 'none', background: 'white', cursor: 'pointer' } as const
 
 // ============================================
@@ -1568,6 +1882,202 @@ function BarChart({ data, total, corBase = '#6043C1' }: { data: any[]; total: nu
           </div>
         )
       })}
+    </div>
+  )
+}
+
+
+// ============================================
+// MODAL: Nova/Editar Categoria
+// ============================================
+
+function ModalCategoria({ clinicaId, categoria, onClose, onSaved }: any) {
+  const editando = !!categoria
+  const [nome, setNome] = useState(categoria?.nome || '')
+  const [tipo, setTipo] = useState<'receita' | 'despesa'>(categoria?.tipo || 'receita')
+  const [cor, setCor] = useState(categoria?.cor || '#6043C1')
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  const cores = ['#6043C1', '#0d9488', '#dc2626', '#f59e0b', '#71717a', '#0891b2', '#7c3aed', '#84cc16', '#ec4899', '#525252']
+
+  const salvar = async () => {
+    setErro('')
+    if (!nome.trim()) { setErro('Nome é obrigatório'); return }
+    setSalvando(true)
+    let res
+    if (editando) {
+      res = await supabase.from('financeiro_categorias').update({ nome: nome.trim(), tipo, cor }).eq('id', categoria.id)
+    } else {
+      res = await supabase.from('financeiro_categorias').insert({ clinica_id: clinicaId, nome: nome.trim(), tipo, cor, ativo: true })
+    }
+    setSalvando(false)
+    if (res.error) { setErro('Erro: ' + res.error.message); return }
+    onSaved()
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 440, padding: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>{editando ? 'Editar categoria' : 'Nova categoria'}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <FormField label="Nome">
+          <input type="text" value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Materiais cirúrgicos" style={inputStyle} autoFocus/>
+        </FormField>
+
+        <FormField label="Tipo">
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button type="button" onClick={() => setTipo('receita')} style={{
+              flex: 1, padding: '9px', borderRadius: 8, border: 'none',
+              background: tipo === 'receita' ? '#dcfce7' : '#f5f5f5',
+              color: tipo === 'receita' ? '#15803d' : '#525252',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer'
+            }}>↗ Receita</button>
+            <button type="button" onClick={() => setTipo('despesa')} style={{
+              flex: 1, padding: '9px', borderRadius: 8, border: 'none',
+              background: tipo === 'despesa' ? '#fee2e2' : '#f5f5f5',
+              color: tipo === 'despesa' ? '#b91c1c' : '#525252',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer'
+            }}>↙ Despesa</button>
+          </div>
+        </FormField>
+
+        <FormField label="Cor">
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
+            {cores.map(c => (
+              <button key={c} type="button" onClick={() => setCor(c)} style={{
+                width: 32, height: 32, borderRadius: 8, background: c, cursor: 'pointer',
+                border: cor === c ? '3px solid #0a0a0a' : '1px solid transparent'
+              }}/>
+            ))}
+          </div>
+        </FormField>
+
+        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 8 }}>{erro}</div>}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
+          <button onClick={onClose} disabled={salvando} style={btnSecondary}>Cancelar</button>
+          <button onClick={salvar} disabled={salvando} style={btnPrimary}>{salvando ? 'Salvando...' : (editando ? 'Salvar' : 'Criar')}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+// ============================================
+// MODAL: Nova Despesa Recorrente
+// ============================================
+
+function ModalRecorrente({ clinicaId, categorias, onClose, onSaved }: any) {
+  const [descricao, setDescricao] = useState('')
+  const [valor, setValor] = useState('')
+  const [categoriaId, setCategoriaId] = useState('')
+  const [primeiroVencimento, setPrimeiroVencimento] = useState(new Date().toISOString().substring(0, 10))
+  const [meses, setMeses] = useState('12')
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  const valorNum = parseFloat(valor.replace(',', '.')) || 0
+  const mesesNum = parseInt(meses) || 0
+  const totalAcumulado = valorNum * mesesNum
+
+  const salvar = async () => {
+    setErro('')
+    if (!descricao.trim()) { setErro('Descrição é obrigatória'); return }
+    if (valorNum <= 0) { setErro('Valor deve ser maior que zero'); return }
+    if (mesesNum < 1 || mesesNum > 60) { setErro('Meses deve ser entre 1 e 60'); return }
+
+    setSalvando(true)
+
+    // Cria primeira movimentacao com flag recorrente
+    const { data: origem, error: errOrigem } = await supabase.from('financeiro_movimentacoes').insert({
+      clinica_id: clinicaId, tipo: 'despesa', valor: valorNum, descricao: descricao.trim(),
+      data_movimentacao: primeiroVencimento, data_vencimento: primeiroVencimento,
+      categoria_id: categoriaId || null, status: 'pendente', recorrente: true,
+    }).select().single()
+
+    if (errOrigem) { setErro('Erro: ' + errOrigem.message); setSalvando(false); return }
+
+    // Cria N-1 movimentacoes futuras vinculadas a origem
+    if (mesesNum > 1) {
+      const inserts = []
+      const dataInicial = new Date(primeiroVencimento + 'T00:00:00')
+      for (let i = 1; i < mesesNum; i++) {
+        const dataParcela = new Date(dataInicial)
+        dataParcela.setMonth(dataParcela.getMonth() + i)
+        inserts.push({
+          clinica_id: clinicaId, tipo: 'despesa', valor: valorNum,
+          descricao: descricao.trim() + ' (' + (i + 1) + '/' + mesesNum + ')',
+          data_movimentacao: dataParcela.toISOString().substring(0, 10),
+          data_vencimento: dataParcela.toISOString().substring(0, 10),
+          categoria_id: categoriaId || null, status: 'pendente', recorrente: true,
+          recorrencia_origem_id: origem.id,
+        })
+      }
+      await supabase.from('financeiro_movimentacoes').insert(inserts)
+    }
+
+    setSalvando(false)
+    onSaved()
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '90vh', overflow: 'auto' as const, padding: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Nova despesa recorrente</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <p style={{ fontSize: 12, color: '#737373', margin: '-12px 0 18px' }}>Cadastre 1 vez. O sistema gera as próximas N parcelas automaticamente.</p>
+
+        <FormField label="Descrição">
+          <input type="text" value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Ex: Aluguel sala 2" style={inputStyle} autoFocus/>
+        </FormField>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <FormField label="Valor mensal">
+            <div style={{ position: 'relative' as const }}>
+              <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+              <input type="text" value={valor} onChange={e => setValor(e.target.value.replace(/[^0-9,]/g, ''))} placeholder="0,00" style={{ ...inputStyle, paddingLeft: 38 }}/>
+            </div>
+          </FormField>
+          <FormField label="Repetir por (meses)">
+            <input type="number" min="1" max="60" value={meses} onChange={e => setMeses(e.target.value)} style={inputStyle}/>
+          </FormField>
+        </div>
+
+        <FormField label="Categoria">
+          <select value={categoriaId} onChange={e => setCategoriaId(e.target.value)} style={inputStyle}>
+            <option value="">Sem categoria</option>
+            {categorias.map((c: any) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+        </FormField>
+
+        <FormField label="Primeiro vencimento">
+          <input type="date" value={primeiroVencimento} onChange={e => setPrimeiroVencimento(e.target.value)} style={inputStyle}/>
+        </FormField>
+
+        {valorNum > 0 && mesesNum > 0 && (
+          <div style={{ background: '#fef3c7', color: '#92400e', padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, fontWeight: 500 }}>
+            ℹ Total acumulado: <strong>R$ {totalAcumulado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> em {mesesNum} {mesesNum === 1 ? 'mês' : 'meses'}
+          </div>
+        )}
+
+        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 8 }}>{erro}</div>}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
+          <button onClick={onClose} disabled={salvando} style={btnSecondary}>Cancelar</button>
+          <button onClick={salvar} disabled={salvando} style={btnPrimary}>{salvando ? 'Criando...' : 'Criar recorrente'}</button>
+        </div>
+      </div>
     </div>
   )
 }
