@@ -46,9 +46,48 @@ function Landing({ periodo, setPeriodo, router }: any) {
   const titulo = { fontWeight: 500 as const, letterSpacing: '-0.03em' as const, lineHeight: 1.05 }
   return (
     <div style={{ minHeight: '100vh', background: 'white', color: '#0a0a0a' }}>
+      <style>{`
+        .lp-nav-links { display: flex; gap: 22px; }
+        .lp-hero-h1 { font-size: 60px; }
+        .lp-hero-sub { font-size: 18px; }
+        .lp-section-h2 { font-size: 38px; }
+        .lp-cta-final-h2 { font-size: 44px; }
+        .lp-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+        .lp-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .lp-grid-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+        .lp-footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+        .lp-section { padding: 80px 24px; }
+        .lp-hero { padding: 80px 24px 60px; }
+        .lp-banner-text { display: inline; }
+        .lp-logo-cloud { gap: 32px; }
+        .lp-pricing-toggle { font-size: 13px; }
+
+        @media (max-width: 768px) {
+          .lp-nav-links { display: none; }
+          .lp-hero-h1 { font-size: 36px !important; line-height: 1.1; }
+          .lp-hero-sub { font-size: 15px; }
+          .lp-section-h2 { font-size: 26px !important; line-height: 1.15; }
+          .lp-cta-final-h2 { font-size: 28px !important; line-height: 1.15; }
+          .lp-grid-2 { grid-template-columns: 1fr !important; }
+          .lp-grid-3 { grid-template-columns: 1fr !important; }
+          .lp-grid-features { grid-template-columns: 1fr !important; }
+          .lp-footer-grid { grid-template-columns: 1fr 1fr !important; gap: 24px !important; }
+          .lp-section { padding: 56px 20px !important; }
+          .lp-hero { padding: 48px 20px 40px !important; }
+          .lp-logo-cloud { gap: 20px !important; row-gap: 12px !important; }
+          .lp-banner-text { display: block; font-size: 12px; line-height: 1.4; }
+          .lp-pricing-cta-row { flex-direction: column; }
+          .lp-plano-destaque { transform: none !important; }
+        }
+
+        @media (max-width: 480px) {
+          .lp-hero-h1 { font-size: 32px !important; }
+          .lp-section-h2 { font-size: 24px !important; }
+        }
+      `}</style>
       {/* BANNER URGENCIA */}
       <div style={{ background: '#0a0a0a', color: 'white', padding: '10px 24px', textAlign: 'center' as const, fontSize: 13 }}>
-        🎉 Primeiras 50 clínicas: 30% OFF no primeiro ano. <a href="#planos" style={{ color: '#a78bfa', fontWeight: 600, textDecoration: 'underline' }}>Garantir minha vaga →</a>
+        <span className="lp-banner-text">🎉 Primeiras 50 clínicas: 30% OFF no primeiro ano. </span><a href="#planos" style={{ color: '#a78bfa', fontWeight: 600, textDecoration: 'underline' }}>Garantir minha vaga →</a>
       </div>
 
       {/* NAV */}
@@ -61,7 +100,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
               </div>
               <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em' as const }}>MedIA</span>
             </div>
-            <div style={{ display: 'flex', gap: 22 }}>
+            <div className="lp-nav-links">
               <a href="#features" style={navLink}>Recursos</a>
               <a href="#paraquem" style={navLink}>Para quem</a>
               <a href="#planos" style={navLink}>Planos</a>
@@ -76,17 +115,17 @@ function Landing({ periodo, setPeriodo, router }: any) {
       </nav>
 
       {/* HERO */}
-      <section style={{ padding: '80px 24px 60px', textAlign: 'center' as const }}>
+      <section className="lp-hero" style={{ textAlign: 'center' as const }}>
         <div style={{ maxWidth: 820, margin: '0 auto' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', background: '#f0ebff', borderRadius: 20, marginBottom: 24, fontSize: 12, fontWeight: 600, color: '#6043C1' }}>
             <span style={{ width: 5, height: 5, background: '#6043C1', borderRadius: '50%' }}/>
             AI-First · Plataforma médica que pensa por você
           </div>
-          <h1 style={{ fontSize: 60, ...titulo, margin: '0 0 22px' }}>
+          <h1 className="lp-hero-h1" style={{ ...titulo, margin: '0 0 22px' }}>
             Prontuário com IA<br/>
             <span style={{ color: '#6043C1' }}>que devolve seu tempo.</span>
           </h1>
-          <p style={{ fontSize: 18, color: '#525252', lineHeight: 1.55, margin: '0 0 36px', maxWidth: 600, marginLeft: 'auto', marginRight: 'auto' }}>
+          <p className="lp-hero-sub" style={{ color: '#525252', lineHeight: 1.55, margin: '0 0 36px', maxWidth: 600, marginLeft: 'auto', marginRight: 'auto' }}>
             Grava a consulta, gera prontuário SOAP, prescreve via Memed e atende paciente no WhatsApp — tudo automático. Você só atende.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' as const }}>
@@ -116,7 +155,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
       <section style={{ padding: '40px 24px', borderTop: '1px solid #f5f5f5', borderBottom: '1px solid #f5f5f5' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' as const }}>
           <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em' as const, fontWeight: 600, margin: '0 0 20px' }}>Construído com tecnologia de ponta</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 32, justifyContent: 'center', alignItems: 'center', opacity: 0.6 }}>
+          <div className="lp-logo-cloud" style={{ display: 'flex', flexWrap: 'wrap' as const, justifyContent: 'center', alignItems: 'center', opacity: 0.6 }}>
             <span style={{ fontSize: 16, fontWeight: 600, color: '#525252' }}>Anthropic</span>
             <img src="/memed-logo.svg" alt="Memed" style={{ height: 22 }}/>
             <span style={{ fontSize: 16, fontWeight: 600, color: '#525252' }}>Supabase</span>
@@ -127,13 +166,13 @@ function Landing({ periodo, setPeriodo, router }: any) {
       </section>
 
       {/* ANTES vs COM MedIA */}
-      <section style={{ padding: '80px 24px', background: '#fafafa' }}>
+      <section className="lp-section" style={{ background: '#fafafa' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 48 }}>
             <p style={selo}>Por que MedIA</p>
-            <h2 style={{ fontSize: 38, ...titulo, margin: '0 0 12px' }}>Antes você atendia papelada.<br/>Agora você atende pacientes.</h2>
+            <h2 className="lp-section-h2" style={{ ...titulo, margin: '0 0 12px' }}>Antes você atendia papelada.<br/>Agora você atende pacientes.</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 18 }}>
+          <div className="lp-grid-2">
             <div style={{ background: 'white', borderRadius: 16, padding: 32, border: '1px solid #f0f0f0' }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 16px' }}>Antes</p>
               <ul style={{ listStyle: 'none' as const, padding: 0, margin: 0 }}>
@@ -159,17 +198,17 @@ function Landing({ periodo, setPeriodo, router }: any) {
       </section>
 
       {/* FEATURES */}
-      <section id="features" style={{ padding: '80px 24px' }}>
+      <section id="features" className="lp-section" style={{ }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 48 }}>
             <p style={selo}>Recursos</p>
-            <h2 style={{ fontSize: 38, ...titulo, margin: '0 0 12px' }}>Tudo que sua clínica precisa.<br/>E IA em cada canto.</h2>
+            <h2 className="lp-section-h2" style={{ ...titulo, margin: '0 0 12px' }}>Tudo que sua clínica precisa.<br/>E IA em cada canto.</h2>
             <p style={{ fontSize: 15, color: '#525252', maxWidth: 540, margin: '0 auto' }}>
               Os concorrentes vendem IA como módulo extra. No MedIA, IA é o ponto de partida.
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+          <div className="lp-grid-features">
             <FeatureCard
               icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>}
               titulo="IA na consulta"
@@ -205,11 +244,11 @@ function Landing({ periodo, setPeriodo, router }: any) {
       </section>
 
       {/* DIFERENCIAIS */}
-      <section style={{ padding: '80px 24px', background: '#fafafa' }}>
+      <section className="lp-section" style={{ background: '#fafafa' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 48 }}>
             <p style={selo}>Diferenciais</p>
-            <h2 style={{ fontSize: 38, ...titulo, margin: '0 0 12px' }}>O que só o MedIA tem.</h2>
+            <h2 className="lp-section-h2" style={{ ...titulo, margin: '0 0 12px' }}>O que só o MedIA tem.</h2>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
@@ -239,14 +278,14 @@ function Landing({ periodo, setPeriodo, router }: any) {
       </section>
 
       {/* PARA QUEM */}
-      <section id="paraquem" style={{ padding: '80px 24px' }}>
+      <section id="paraquem" className="lp-section" style={{ }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 48 }}>
             <p style={selo}>Para quem</p>
-            <h2 style={{ fontSize: 38, ...titulo, margin: '0 0 12px' }}>Funciona pra todo tamanho de clínica.</h2>
+            <h2 className="lp-section-h2" style={{ ...titulo, margin: '0 0 12px' }}>Funciona pra todo tamanho de clínica.</h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          <div className="lp-grid-3">
             <ParaQuem icon="👨‍⚕️" titulo="Médico solo" descricao="Consultório próprio, atende sozinho ou com 1 secretária. Quer parar de gastar 20min escrevendo prontuário."/>
             <ParaQuem icon="🏥" titulo="Clínica média" descricao="2 a 10 médicos, recepção, gestão profissional. Precisa de visão consolidada e produtividade da equipe."/>
             <ParaQuem icon="🏨" titulo="Rede / Grande clínica" descricao="Múltiplas unidades, dezenas de médicos, gestão centralizada. Precisa API, multi-clínica, suporte dedicado."/>
@@ -255,11 +294,11 @@ function Landing({ periodo, setPeriodo, router }: any) {
       </section>
 
       {/* PRICING */}
-      <section id="planos" style={{ padding: '80px 24px', background: '#fafafa' }}>
+      <section id="planos" className="lp-section" style={{ background: '#fafafa' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 36 }}>
             <p style={selo}>Planos</p>
-            <h2 style={{ fontSize: 38, ...titulo, margin: '0 0 12px' }}>Escolha o plano da sua operação.</h2>
+            <h2 className="lp-section-h2" style={{ ...titulo, margin: '0 0 12px' }}>Escolha o plano da sua operação.</h2>
             <p style={{ fontSize: 15, color: '#525252' }}>Sem fidelidade. Cancele quando quiser.</p>
           </div>
 
@@ -272,7 +311,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          <div className="lp-grid-3">
             <Plano nome="Solo" descricao="Para médicos autônomos" precoMensal={297} precoAnual={237} periodo={periodo} cta="Assinar" onCta={() => router.push('/cadastro')} features={[
               '1 médico',
               'IA na consulta ilimitada',
@@ -309,11 +348,11 @@ function Landing({ periodo, setPeriodo, router }: any) {
       </section>
 
       {/* FAQ */}
-      <section id="faq" style={{ padding: '80px 24px' }}>
+      <section id="faq" className="lp-section" style={{ }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 36 }}>
             <p style={selo}>FAQ</p>
-            <h2 style={{ fontSize: 38, ...titulo, margin: 0 }}>Perguntas frequentes</h2>
+            <h2 className="lp-section-h2" style={{ ...titulo, margin: 0 }}>Perguntas frequentes</h2>
           </div>
 
           <FAQItem pergunta="O MedIA está em conformidade com a LGPD?" resposta="Sim. Tratamos dados de saúde como categoria especial conforme exige a LGPD. Temos DPO designado, política de privacidade, consentimento expresso do paciente e backup com PITR no Supabase."/>
@@ -326,9 +365,9 @@ function Landing({ periodo, setPeriodo, router }: any) {
       </section>
 
       {/* CTA FINAL */}
-      <section style={{ padding: '80px 24px', background: 'linear-gradient(135deg, #6043C1 0%, #8b5cf6 100%)', color: 'white', textAlign: 'center' as const }}>
+      <section className="lp-section" style={{ background: 'linear-gradient(135deg, #6043C1 0%, #8b5cf6 100%)', color: 'white', textAlign: 'center' as const }}>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 44, ...titulo, fontWeight: 600, margin: '0 0 16px', color: 'white' }}>Pare de perder tempo com prontuário.</h2>
+          <h2 className="lp-cta-final-h2" style={{ ...titulo, fontWeight: 600, margin: '0 0 16px', color: 'white' }}>Pare de perder tempo com prontuário.</h2>
           <p style={{ fontSize: 17, opacity: 0.9, margin: '0 0 32px', lineHeight: 1.5 }}>
             Comece grátis hoje. Sem cartão de crédito.
           </p>
@@ -340,7 +379,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
 
       {/* FOOTER */}
       <footer style={{ padding: '40px 24px', background: '#0a0a0a', color: '#a3a3a3', fontSize: 13 }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 32 }}>
+        <div className="lp-footer-grid" style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <div style={{ width: 24, height: 24, background: '#6043C1', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -431,7 +470,7 @@ function ItemLista({ texto, negativo, positivo, dark }: any) {
 function Plano({ nome, descricao, precoMensal, precoAnual, periodo, cta, onCta, features, destaque, badge }: any) {
   const preco = periodo === 'mensal' ? precoMensal : precoAnual
   return (
-    <div style={{ background: 'white', borderRadius: 16, padding: 28, position: 'relative' as const, transform: destaque ? 'scale(1.02)' as const : 'none', boxShadow: destaque ? '0 8px 30px rgba(96,67,193,0.15)' : 'none', border: destaque ? '2px solid #6043C1' : '1px solid #e5e5e5' }}>
+    <div className={destaque ? 'lp-plano-destaque' : ''} style={{ background: 'white', borderRadius: 16, padding: 28, position: 'relative' as const, transform: destaque ? 'scale(1.02)' as const : 'none', boxShadow: destaque ? '0 8px 30px rgba(96,67,193,0.15)' : 'none', border: destaque ? '2px solid #6043C1' : '1px solid #e5e5e5' }}>
       {badge && (
         <div style={{ position: 'absolute' as const, top: -10, left: '50%', transform: 'translateX(-50%)', background: '#6043C1', color: 'white', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>{badge}</div>
       )}
