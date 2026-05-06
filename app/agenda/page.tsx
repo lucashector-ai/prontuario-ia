@@ -145,6 +145,7 @@ function AgendaContent() {
   const [listaEspera] = useState<any[]>([])
 
   const [modal, setModal] = useState<{ open: boolean; date?: Date; ag?: any }>({ open: false })
+  const [submodalRealizado, setSubmodalRealizado] = useState(false)
   const [form, setForm] = useState({ paciente_id: '', medico_id: '', procedimento_id: '', data_hora: '', tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
   const [salvando, setSalvando] = useState(false)
 
@@ -1160,6 +1161,17 @@ function AgendaContent() {
         </div>
       )}
 
+      {submodalRealizado && modal.ag && (
+        <SubModalRealizado
+          ag={modal.ag}
+          onClose={() => setSubmodalRealizado(false)}
+          onSaved={() => {
+            setSubmodalRealizado(false)
+            setModal({ open: false })
+            carregarAgendamentos()
+          }}
+        />
+      )}
       {modalBloqueio && (
         <div onClick={e => { if (e.target === e.currentTarget) setModalBloqueio(false) }}
           style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -1474,9 +1486,17 @@ function AgendaContent() {
                       <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'confirmado'); setModal(m => ({...m, ag: {...m.ag, status: 'confirmado'}})) }}
                         style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Confirmar</button>
                     )}
-                    {modal.ag.status !== 'cancelado' && (
+                    {modal.ag.status !== 'cancelado' && modal.ag.status !== 'realizado' && (
                       <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'cancelado'); setModal({ open: false }) }}
                         style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Cancelar</button>
+                    )}
+                    {modal.ag.status !== 'realizado' && modal.ag.status !== 'faltou' && (
+                      <button type="button" onClick={() => setSubmodalRealizado(true)}
+                        style={{ fontSize: 11, color: '#15803d', background: '#dcfce7', border: '1px solid #86efac', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Realizado</button>
+                    )}
+                    {modal.ag.status !== 'realizado' && modal.ag.status !== 'faltou' && modal.ag.status !== 'cancelado' && (
+                      <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'faltou'); setModal({ open: false }) }}
+                        style={{ fontSize: 11, color: '#a16207', background: '#fef3c7', border: '1px solid #fcd34d', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Faltou</button>
                     )}
                   </div>
                 </div>
@@ -1575,5 +1595,154 @@ export default function Agenda() {
     <Suspense fallback={<div style={{ padding: 24 }}>Carregando agenda...</div>}>
       <AgendaContent />
     </Suspense>
+  )
+}
+
+
+// ============================================
+// SUBMODAL: Marcar como realizado (gera receita)
+// ============================================
+
+function SubModalRealizado({ ag, onClose, onSaved }: { ag: any; onClose: () => void; onSaved: () => void }) {
+  const [valor, setValor] = useState('')
+  const [valorSugestao, setValorSugestao] = useState<number | null>(null)
+  const [metodoPag, setMetodoPag] = useState('pix')
+  const [statusPag, setStatusPag] = useState<'recebido' | 'pendente'>('recebido')
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+  const [carregandoSugestao, setCarregandoSugestao] = useState(true)
+
+  useEffect(() => {
+    (async () => {
+      // Busca valor_consulta do medico pra sugerir
+      if (ag.medico_id) {
+        const { data: m } = await supabase.from('medicos').select('valor_consulta').eq('id', ag.medico_id).maybeSingle()
+        if (m?.valor_consulta) {
+          setValorSugestao(Number(m.valor_consulta))
+          setValor(String(m.valor_consulta).replace('.', ','))
+        }
+      }
+      setCarregandoSugestao(false)
+    })()
+  }, [ag])
+
+  const salvar = async () => {
+    setErro('')
+    const valorNum = parseFloat(valor.replace(',', '.'))
+    if (isNaN(valorNum) || valorNum < 0) { setErro('Valor inválido'); return }
+
+    setSalvando(true)
+
+    // 1. Atualiza agendamento pra status realizado
+    const { error: errAg } = await supabase.from('agendamentos').update({ status: 'realizado' }).eq('id', ag.id)
+    if (errAg) { setErro('Erro ao atualizar agendamento: ' + errAg.message); setSalvando(false); return }
+
+    // 2. Cria movimentacao financeira (se valor > 0)
+    if (valorNum > 0) {
+      // Busca categoria "Consulta" da clinica (ou primeira receita)
+      const { data: clin } = await supabase.from('agendamentos').select('clinica_id').eq('id', ag.id).single()
+      const clinicaId = clin?.clinica_id
+
+      if (clinicaId) {
+        const { data: cats } = await supabase.from('financeiro_categorias')
+          .select('id').eq('clinica_id', clinicaId).eq('tipo', 'receita').eq('ativo', true).order('nome').limit(20)
+        const catConsulta = cats?.find((c: any) => false) // placeholder, vai ser sobrescrito abaixo
+        // Procurar categoria "Consulta" pelo nome
+        const { data: catC } = await supabase.from('financeiro_categorias')
+          .select('id').eq('clinica_id', clinicaId).eq('tipo', 'receita').eq('ativo', true).ilike('nome', 'Consulta').maybeSingle()
+
+        const descricaoBase = ag.titulo || ag.tipo || 'Consulta'
+        const pacNome = ag.pacientes?.nome || ''
+
+        const { error: errMov } = await supabase.from('financeiro_movimentacoes').insert({
+          clinica_id: clinicaId,
+          tipo: 'receita',
+          valor: valorNum,
+          descricao: pacNome ? `${descricaoBase} - ${pacNome}` : descricaoBase,
+          data_movimentacao: ag.data_hora ? ag.data_hora.substring(0, 10) : new Date().toISOString().substring(0, 10),
+          categoria_id: catC?.id || (cats?.[0]?.id ?? null),
+          metodo_pagamento: metodoPag,
+          status: statusPag,
+          paciente_id: ag.paciente_id || null,
+          medico_id: ag.medico_id || null,
+          agendamento_id: ag.id,
+        })
+        if (errMov) { setErro('Erro ao criar movimentação financeira: ' + errMov.message); setSalvando(false); return }
+      }
+    }
+
+    setSalvando(false)
+    onSaved()
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 440, padding: 26 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>Marcar como realizada</h2>
+        </div>
+        <p style={{ fontSize: 13, color: '#737373', margin: '0 0 18px' }}>Quanto foi cobrado nessa consulta? Vamos lançar no financeiro.</p>
+
+        {/* Valor */}
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>Valor cobrado</label>
+        <div style={{ position: 'relative' as const, marginBottom: 4 }}>
+          <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+          <input type="text" value={valor} onChange={e => setValor(e.target.value.replace(/[^0-9,]/g, ''))} placeholder={carregandoSugestao ? 'Carregando sugestão...' : '0,00'}
+            style={{ width: '100%', padding: '10px 12px 10px 38px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const, fontWeight: 600 }} autoFocus/>
+        </div>
+        {valorSugestao !== null ? (
+          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 14px' }}>💡 Sugestão automática do médico ({valorSugestao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</p>
+        ) : (
+          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 14px' }}>Configure valor padrão no perfil do médico para sugestão automática</p>
+        )}
+
+        {/* Forma pagamento */}
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>Forma de pagamento</label>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' as const }}>
+          {[
+            { v: 'pix', l: 'PIX' },
+            { v: 'cartao_credito', l: 'Cartão crédito' },
+            { v: 'cartao_debito', l: 'Cartão débito' },
+            { v: 'dinheiro', l: 'Dinheiro' },
+            { v: 'transferencia', l: 'Transferência' },
+            { v: 'boleto', l: 'Boleto' },
+          ].map(o => (
+            <button key={o.v} type="button" onClick={() => setMetodoPag(o.v)} style={{
+              padding: '7px 12px', borderRadius: 7, border: 'none',
+              background: metodoPag === o.v ? '#0a0a0a' : '#f5f5f5',
+              color: metodoPag === o.v ? 'white' : '#525252',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer'
+            }}>{o.l}</button>
+          ))}
+        </div>
+
+        {/* Status */}
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>Status do pagamento</label>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+          <button type="button" onClick={() => setStatusPag('recebido')} style={{
+            flex: 1, padding: '9px', borderRadius: 7, border: 'none',
+            background: statusPag === 'recebido' ? '#dcfce7' : '#f5f5f5',
+            color: statusPag === 'recebido' ? '#15803d' : '#525252',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer'
+          }}>✓ Já recebido</button>
+          <button type="button" onClick={() => setStatusPag('pendente')} style={{
+            flex: 1, padding: '9px', borderRadius: 7, border: 'none',
+            background: statusPag === 'pendente' ? '#fef3c7' : '#f5f5f5',
+            color: statusPag === 'pendente' ? '#a16207' : '#525252',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer'
+          }}>⏳ Aguardando</button>
+        </div>
+
+        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{erro}</div>}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} disabled={salvando} style={{ padding: '10px 16px', borderRadius: 9, border: '1px solid #e5e5e5', background: 'white', color: '#404040', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+          <button onClick={salvar} disabled={salvando} style={{ padding: '10px 18px', borderRadius: 9, border: 'none', background: '#15803d', color: 'white', fontSize: 13, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}>{salvando ? 'Salvando...' : 'Confirmar e gerar receita'}</button>
+        </div>
+      </div>
+    </div>
   )
 }
