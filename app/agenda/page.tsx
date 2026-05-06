@@ -1168,7 +1168,7 @@ function AgendaContent() {
           onSaved={() => {
             setSubmodalRealizado(false)
             setModal({ open: false })
-            carregarAgendamentos()
+            window.location.reload()
           }}
         />
       )}
