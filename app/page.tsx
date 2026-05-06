@@ -63,6 +63,9 @@ function Landing({ periodo, setPeriodo, router }: any) {
         .lp-pricing-toggle { font-size: 13px; }
 
         @media (max-width: 768px) {
+          .lp-hamburger { display: block !important; }
+          .lp-nav-entrar { display: none !important; }
+          .lp-nav-actions button[style*="background: rgb(10, 10, 10)"]:not(.lp-hamburger) { display: none !important; }
           .lp-nav-links { display: none; }
           .lp-hero-h1 { font-size: 36px !important; line-height: 1.1; }
           .lp-hero-sub { font-size: 15px; }
@@ -91,28 +94,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
       </div>
 
       {/* NAV */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)' as const, borderBottom: '1px solid #f0f0f0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 28, height: 28, background: '#6043C1', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              </div>
-              <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em' as const }}>MedIA</span>
-            </div>
-            <div className="lp-nav-links">
-              <a href="#features" style={navLink}>Recursos</a>
-              <a href="#paraquem" style={navLink}>Para quem</a>
-              <a href="#planos" style={navLink}>Planos</a>
-              <a href="#faq" style={navLink}>FAQ</a>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={() => router.push('/login')} style={{ fontSize: 13, color: '#525252', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Entrar</button>
-            <button onClick={() => router.push('/cadastro')} style={{ fontSize: 13, color: 'white', background: '#0a0a0a', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Assinar</button>
-          </div>
-        </div>
-      </nav>
+      <NavBar router={router}/>
 
       {/* HERO */}
       <section className="lp-hero" style={{ textAlign: 'center' as const }}>
@@ -147,20 +129,6 @@ function Landing({ periodo, setPeriodo, router }: any) {
             <div style={{ background: '#F5F5F5', borderRadius: 14, padding: '80px 30px', textAlign: 'center' as const, fontSize: 13, color: '#6b7280' }}>
               [Screenshot da plataforma — em produção será imagem real da nova-consulta]
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* LOGO CLOUD - Tecnologias */}
-      <section style={{ padding: '40px 24px', borderTop: '1px solid #f5f5f5', borderBottom: '1px solid #f5f5f5' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' as const }}>
-          <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em' as const, fontWeight: 600, margin: '0 0 20px' }}>Construído com tecnologia de ponta</p>
-          <div className="lp-logo-cloud" style={{ display: 'flex', flexWrap: 'wrap' as const, justifyContent: 'center', alignItems: 'center', opacity: 0.6 }}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#525252' }}>Anthropic</span>
-            <img src="/memed-logo.svg" alt="Memed" style={{ height: 22 }}/>
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#525252' }}>Supabase</span>
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#525252' }}>Vercel</span>
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#525252' }}>WhatsApp Business</span>
           </div>
         </div>
       </section>
@@ -251,7 +219,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
             <h2 className="lp-section-h2" style={{ ...titulo, margin: '0 0 12px' }}>O que só o MedIA tem.</h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+          <div className="lp-grid-2">
             <Diferencial
               icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>}
               titulo="Teleconsulta com seu domínio"
@@ -421,6 +389,62 @@ const selo = { fontSize: 13, fontWeight: 600 as const, color: '#6043C1', textTra
 const togglePeriodo = (ativo: boolean) => ({ padding: '8px 18px', borderRadius: 7, border: 'none', background: ativo ? '#0a0a0a' : 'transparent', color: ativo ? 'white' : '#525252', fontSize: 13, fontWeight: 600 as const, cursor: 'pointer' })
 const footerTitle = { fontSize: 11, color: 'white', fontWeight: 700 as const, textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 12px' }
 const footerLink = { display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }
+
+
+function NavBar({ router }: { router: any }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)' as const, borderBottom: '1px solid #f0f0f0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 28, height: 28, background: '#6043C1', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </div>
+              <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em' as const }}>MedIA</span>
+            </div>
+            <div className="lp-nav-links">
+              <a href="#features" style={navLink}>Recursos</a>
+              <a href="#paraquem" style={navLink}>Para quem</a>
+              <a href="#planos" style={navLink}>Planos</a>
+              <a href="#faq" style={navLink}>FAQ</a>
+            </div>
+          </div>
+          <div className="lp-nav-actions" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button onClick={() => router.push('/login')} className="lp-nav-entrar" style={{ fontSize: 13, color: '#525252', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Entrar</button>
+            <button onClick={() => router.push('/cadastro')} style={{ fontSize: 13, color: 'white', background: '#0a0a0a', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Assinar</button>
+            <button className="lp-hamburger" onClick={() => setOpen(true)} aria-label="Abrir menu" style={{ display: 'none', background: 'none', border: 'none', padding: 6, cursor: 'pointer' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {open && (
+        <div style={{ position: 'fixed' as const, inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.4)' }} onClick={() => setOpen(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ position: 'absolute' as const, top: 0, right: 0, bottom: 0, width: 280, background: 'white', padding: '20px 24px', display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <span style={{ fontSize: 16, fontWeight: 700 }}>Menu</span>
+              <button onClick={() => setOpen(false)} aria-label="Fechar" style={{ background: 'none', border: 'none', padding: 6, cursor: 'pointer' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <a href="#features" onClick={() => setOpen(false)} style={mobileLink}>Recursos</a>
+            <a href="#paraquem" onClick={() => setOpen(false)} style={mobileLink}>Para quem</a>
+            <a href="#planos" onClick={() => setOpen(false)} style={mobileLink}>Planos</a>
+            <a href="#faq" onClick={() => setOpen(false)} style={mobileLink}>FAQ</a>
+            <div style={{ height: 1, background: '#f0f0f0', margin: '12px 0' }}/>
+            <button onClick={() => { setOpen(false); router.push('/login') }} style={{ ...mobileLink, background: 'none', border: 'none', textAlign: 'left' as const, cursor: 'pointer', width: '100%' }}>Entrar</button>
+            <button onClick={() => { setOpen(false); router.push('/cadastro') }} style={{ marginTop: 12, padding: '12px', borderRadius: 10, background: '#0a0a0a', color: 'white', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Assinar</button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+const mobileLink = { display: 'block', padding: '12px 0', fontSize: 15, color: '#0a0a0a', fontWeight: 500 as const, textDecoration: 'none' }
 
 function FeatureCard({ icon, logo, titulo, descricao }: any) {
   return (
