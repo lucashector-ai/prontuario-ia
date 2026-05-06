@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { AppShell } from '@/components/AppShell'
 
 type TabKey = 'visao' | 'movimentacoes' | 'pacotes' | 'comissoes' | 'relatorios'
 
@@ -215,7 +214,6 @@ export default function FinanceiroPage() {
   const pctLucro = lucroAnterior > 0 ? Math.round(((lucro - lucroAnterior) / lucroAnterior) * 100) : null
 
   return (
-    <AppShell>
       <div style={{ padding: '28px 32px', minHeight: '100%' }}>
 
         {/* Header */}
@@ -456,7 +454,6 @@ export default function FinanceiroPage() {
         )}
 
       </div>
-    </AppShell>
   )
 }
 
