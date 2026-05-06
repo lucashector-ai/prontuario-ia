@@ -28,7 +28,7 @@ function gerarSenhaProvisoria(): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { nome, crm, especialidade, email, senha, nome_clinica, clinica_id, cargo: cargoBody, cor } = body
+    const { nome, crm, especialidade, email, senha, nome_clinica, clinica_id, cargo: cargoBody, cor, comissao_tipo, comissao_valor, comissao_base } = body
     const cargoFinal = cargoBody === 'recepcionista' ? 'recepcionista' : 'medico'
 
     if (!nome || !email) {
@@ -62,6 +62,9 @@ export async function POST(req: NextRequest) {
           cargo: cargoFinal,
           verificado: true,
           cor: cor || '#6043C1',
+          comissao_tipo: comissao_tipo || 'sem',
+          comissao_valor: comissao_valor || null,
+          comissao_base: comissao_base || 'receita',
         })
         .select()
         .single()

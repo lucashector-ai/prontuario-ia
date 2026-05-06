@@ -125,6 +125,9 @@ export default function Admin() {
         payload.crm = form.crm
         payload.especialidade = form.especialidade
         payload.cor = form.cor
+        payload.comissao_tipo = form.comissao_tipo || 'sem'
+        payload.comissao_valor = form.comissao_valor ? parseFloat(form.comissao_valor.replace(',', '.')) : null
+        payload.comissao_base = form.comissao_base || 'receita'
       }
 
       const res = await fetch('/api/medicos', {
@@ -466,6 +469,7 @@ export default function Admin() {
                 ℹ Uma senha provisória será gerada. No primeiro login, {modalNovoTipo === 'medico' ? 'o médico' : 'a pessoa'} precisa criar uma senha própria.
               </div>
             </div>
+            {modalNovoTipo === 'medico' && <CamposComissao form={form} setForm={setForm}/>}
             <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
               <button onClick={() => setModalNovoTipo(null)} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
               <button onClick={handleCriar} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? '#9ca3af' : ACCENT, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
@@ -512,6 +516,7 @@ export default function Admin() {
                 </select>
               </div>
             </div>
+            {modalEditar?.cargo === 'medico' && <CamposComissao form={formEditar} setForm={setFormEditar}/>}
             <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
               <button onClick={() => setModalEditar(null)} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
               <button onClick={handleEditar} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? '#9ca3af' : ACCENT, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
@@ -589,5 +594,69 @@ export default function Admin() {
       <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
 
 </main>
+  )
+}
+
+// ============================================
+// COMPONENTE: Campos de Comissao (reutilizavel)
+// ============================================
+
+function CamposComissao({ form, setForm }: any) {
+  const tipo = form.comissao_tipo || 'sem'
+  return (
+    <div style={{ marginTop: 18, padding: 16, background: '#fafafa', borderRadius: 10, border: '1px solid #f0f0f0' }}>
+      <p style={{ fontSize: 12, fontWeight: 700, color: '#525252', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: '0 0 12px' }}>Comissão</p>
+
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#374151', marginBottom: 6 }}>Tipo</label>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginBottom: 12 }}>
+        {[
+          { v: 'sem', l: 'Sem comissão' },
+          { v: 'percentual', l: 'Percentual %' },
+          { v: 'fixo_consulta', l: 'R$ por consulta' },
+          { v: 'fixo_mensal', l: 'R$ fixo/mês' },
+        ].map(o => (
+          <button key={o.v} type="button" onClick={() => setForm((f: any) => ({ ...f, comissao_tipo: o.v }))} style={{
+            padding: '9px', borderRadius: 8, border: 'none',
+            background: tipo === o.v ? '#0a0a0a' : 'white',
+            color: tipo === o.v ? 'white' : '#525252',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            ...(tipo === o.v ? {} : { border: '1px solid #e5e7eb' })
+          }}>{o.l}</button>
+        ))}
+      </div>
+
+      {tipo !== 'sem' && (
+        <>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#374151', marginBottom: 6 }}>
+            {tipo === 'percentual' ? 'Percentual (%)' : 'Valor (R$)'}
+          </label>
+          <div style={{ position: 'relative' as const, marginBottom: 12 }}>
+            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>{tipo === 'percentual' ? '%' : 'R$'}</span>
+            <input type="text" value={form.comissao_valor || ''} onChange={e => setForm((f: any) => ({ ...f, comissao_valor: e.target.value.replace(/[^0-9,]/g, '') }))} placeholder="0,00"
+              style={{ width: '100%', padding: '9px 12px 9px 36px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, fontWeight: 600 }}/>
+          </div>
+
+          {tipo === 'percentual' && (
+            <>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#374151', marginBottom: 6 }}>Base de cálculo</label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[
+                  { v: 'receita', l: 'Sobre receita' },
+                  { v: 'lucro', l: 'Sobre lucro' },
+                ].map(o => (
+                  <button key={o.v} type="button" onClick={() => setForm((f: any) => ({ ...f, comissao_base: o.v }))} style={{
+                    flex: 1, padding: '9px', borderRadius: 8, border: 'none',
+                    background: (form.comissao_base || 'receita') === o.v ? '#0a0a0a' : 'white',
+                    color: (form.comissao_base || 'receita') === o.v ? 'white' : '#525252',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    ...((form.comissao_base || 'receita') === o.v ? {} : { border: '1px solid #e5e7eb' })
+                  }}>{o.l}</button>
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </div>
   )
 }
