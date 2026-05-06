@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { AppShell } from '@/components/AppShell'
@@ -31,6 +31,21 @@ export default function FinanceiroPage() {
   // Pacotes ativos
   const [pacotesAtivos, setPacotesAtivos] = useState<any[]>([])
 
+  // Movimentacoes (tab completa)
+  const [todasMov, setTodasMov] = useState<any[]>([])
+  const [carregandoMov, setCarregandoMov] = useState(false)
+  const [filtroBusca, setFiltroBusca] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState<'todos' | 'receita' | 'despesa'>('todos')
+  const [filtroStatus, setFiltroStatus] = useState<string>('todos')
+
+  // Modal nova movimentacao
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editandoMov, setEditandoMov] = useState<any>(null)
+  const [categorias, setCategorias] = useState<any[]>([])
+  const [contas, setContas] = useState<any[]>([])
+  const [pacientesLista, setPacientesLista] = useState<any[]>([])
+  const [medicosLista, setMedicosLista] = useState<any[]>([])
+
   useEffect(() => {
     try {
       const ca = localStorage.getItem('clinica_admin')
@@ -46,7 +61,62 @@ export default function FinanceiroPage() {
   useEffect(() => {
     if (!clinicaId) return
     carregar()
+    carregarListas()
   }, [clinicaId, periodo])
+
+  useEffect(() => {
+    if (tab === 'movimentacoes' && clinicaId) carregarMovimentacoes()
+  }, [tab, clinicaId, filtroTipo, filtroStatus])
+
+  const carregarListas = async () => {
+    if (!clinicaId) return
+    const [catR, contR, pacR, medR] = await Promise.all([
+      supabase.from('financeiro_categorias').select('*').eq('clinica_id', clinicaId).eq('ativo', true).order('nome'),
+      supabase.from('financeiro_contas').select('*').eq('clinica_id', clinicaId).eq('ativo', true).order('nome'),
+      supabase.from('pacientes').select('id, nome').order('nome'),
+      supabase.from('medicos').select('id, nome').eq('clinica_id', clinicaId).eq('cargo', 'medico').eq('ativo', true).order('nome'),
+    ])
+    setCategorias(catR.data || [])
+    setContas(contR.data || [])
+    setPacientesLista(pacR.data || [])
+    setMedicosLista(medR.data || [])
+  }
+
+  const carregarMovimentacoes = async () => {
+    if (!clinicaId) return
+    setCarregandoMov(true)
+    let q = supabase.from('financeiro_movimentacoes')
+      .select('*, pacientes:paciente_id(nome), medicos:medico_id(nome), categoria:categoria_id(nome, cor)')
+      .eq('clinica_id', clinicaId)
+      .order('data_movimentacao', { ascending: false })
+      .order('criado_em', { ascending: false })
+      .limit(100)
+    if (filtroTipo !== 'todos') q = q.eq('tipo', filtroTipo)
+    if (filtroStatus !== 'todos') q = q.eq('status', filtroStatus)
+    const { data } = await q
+    setTodasMov(data || [])
+    setCarregandoMov(false)
+  }
+
+  const movFiltradas = useMemo(() => {
+    if (!filtroBusca) return todasMov
+    const q = filtroBusca.toLowerCase()
+    return todasMov.filter((m: any) =>
+      m.descricao?.toLowerCase().includes(q) ||
+      m.pacientes?.nome?.toLowerCase().includes(q) ||
+      m.medicos?.nome?.toLowerCase().includes(q)
+    )
+  }, [todasMov, filtroBusca])
+
+  const abrirNovaMov = () => { setEditandoMov(null); setModalOpen(true) }
+  const editarMov = (m: any) => { setEditandoMov(m); setModalOpen(true) }
+  const fecharModal = () => { setModalOpen(false); setEditandoMov(null) }
+
+  const onSalvouMov = () => {
+    fecharModal()
+    carregar()
+    carregarMovimentacoes()
+  }
 
   const carregar = async () => {
     if (!clinicaId) return
@@ -159,7 +229,7 @@ export default function FinanceiroPage() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Exportar
             </button>
-            <button style={btnPrimary} onClick={() => alert('Em breve no Patch 3')}>
+            <button style={btnPrimary} onClick={abrirNovaMov}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Nova movimentação
             </button>
@@ -289,10 +359,100 @@ export default function FinanceiroPage() {
           </>
         )}
 
-        {tab !== 'visao' && (
+        {tab === 'movimentacoes' && (
+          <>
+            {/* Filtros */}
+            <div style={{ background: 'white', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+              <div style={{ flex: '1 1 240px', position: 'relative' as const }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input
+                  type="text" placeholder="Buscar por descrição, paciente ou médico..."
+                  value={filtroBusca} onChange={e => setFiltroBusca(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 13, outline: 'none' }}
+                />
+              </div>
+              <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value as any)} style={selectStyle}>
+                <option value="todos">Todos os tipos</option>
+                <option value="receita">Receitas</option>
+                <option value="despesa">Despesas</option>
+              </select>
+              <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={selectStyle}>
+                <option value="todos">Todos os status</option>
+                <option value="recebido">Recebido</option>
+                <option value="pago">Pago</option>
+                <option value="pendente">Pendente</option>
+                <option value="atrasado">Atrasado</option>
+                <option value="parcial">Parcial</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
+
+            {/* Tabela */}
+            <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+              {carregandoMov ? (
+                <div style={{ textAlign: 'center' as const, padding: 40, color: '#9ca3af', fontSize: 13 }}>Carregando...</div>
+              ) : movFiltradas.length === 0 ? (
+                <div style={{ textAlign: 'center' as const, padding: 60 }}>
+                  <p style={{ fontSize: 14, color: '#525252', margin: '0 0 6px', fontWeight: 600 }}>Nenhuma movimentação encontrada</p>
+                  <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 16px' }}>Comece adicionando uma receita ou despesa.</p>
+                  <button style={btnPrimary} onClick={abrirNovaMov}>+ Nova movimentação</button>
+                </div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: '#fafafa' }}>
+                      <th style={th}>Data</th>
+                      <th style={th}>Descrição</th>
+                      <th style={th}>Categoria</th>
+                      <th style={th}>Pagamento</th>
+                      <th style={th}>Status</th>
+                      <th style={{ ...th, textAlign: 'right' as const }}>Valor</th>
+                      <th style={{ ...th, width: 50 }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movFiltradas.map((m: any) => (
+                      <tr key={m.id} style={{ cursor: 'pointer' }} onClick={() => editarMov(m)}>
+                        <td style={td}>{fmtData(m.data_movimentacao)}</td>
+                        <td style={td}>
+                          <strong>{m.descricao}</strong>
+                          {m.pacientes?.nome && <div style={{ fontSize: 11, color: '#9ca3af' }}>{m.pacientes.nome}{m.medicos?.nome ? ` · ${m.medicos.nome}` : ''}</div>}
+                        </td>
+                        <td style={td}>{m.categoria?.nome ? <Pill cor={m.categoria.cor}>{m.categoria.nome}</Pill> : '-'}</td>
+                        <td style={td}>{m.metodo_pagamento ? <span style={{ fontSize: 11, color: '#525252', textTransform: 'capitalize' as const }}>{m.metodo_pagamento.replace('_', ' ')}</span> : '-'}</td>
+                        <td style={td}><PillStatus status={m.status}/></td>
+                        <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: m.tipo === 'receita' ? '#16a34a' : '#dc2626' }}>
+                          {m.tipo === 'receita' ? '+' : '-'} {fmt(Number(m.valor))}
+                        </td>
+                        <td style={td}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </>
+        )}
+
+        {(tab === 'pacotes' || tab === 'comissoes' || tab === 'relatorios') && (
           <div style={{ background: 'white', borderRadius: 14, padding: 80, textAlign: 'center' as const }}>
             <p style={{ fontSize: 14, color: '#9ca3af' }}>Em breve no próximo patch.</p>
           </div>
+        )}
+
+        {modalOpen && (
+          <ModalMovimentacao
+            clinicaId={clinicaId!}
+            mov={editandoMov}
+            categorias={categorias}
+            contas={contas}
+            pacientes={pacientesLista}
+            medicos={medicosLista}
+            onClose={fecharModal}
+            onSaved={onSalvouMov}
+          />
         )}
 
       </div>
@@ -398,3 +558,188 @@ const btnPrimary = { padding: '9px 16px', borderRadius: 9, border: 'none', backg
 const btnSecondary = { padding: '9px 16px', borderRadius: 9, border: '1px solid #e5e5e5', background: 'white', color: '#404040', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 } as const
 const th = { textAlign: 'left' as const, padding: '10px 12px', fontSize: 11, fontWeight: 700, color: '#737373', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }
 const td = { padding: '12px', borderTop: '1px solid #f5f5f5', color: '#404040' }
+const selectStyle = { padding: '9px 12px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 13, outline: 'none', background: 'white', cursor: 'pointer' } as const
+
+// ============================================
+// MODAL: Nova/Editar Movimentacao
+// ============================================
+
+function ModalMovimentacao({ clinicaId, mov, categorias, contas, pacientes, medicos, onClose, onSaved }: any) {
+  const editando = !!mov
+  const [tipo, setTipo] = useState<'receita' | 'despesa'>(mov?.tipo || 'receita')
+  const [descricao, setDescricao] = useState(mov?.descricao || '')
+  const [valor, setValor] = useState(mov?.valor ? String(mov.valor).replace('.', ',') : '')
+  const [data, setData] = useState(mov?.data_movimentacao || new Date().toISOString().substring(0, 10))
+  const [categoriaId, setCategoriaId] = useState(mov?.categoria_id || '')
+  const [contaId, setContaId] = useState(mov?.conta_id || '')
+  const [metodoPag, setMetodoPag] = useState(mov?.metodo_pagamento || '')
+  const [status, setStatus] = useState(mov?.status || 'recebido')
+  const [pacienteId, setPacienteId] = useState(mov?.paciente_id || '')
+  const [medicoId, setMedicoId] = useState(mov?.medico_id || '')
+  const [observacoes, setObservacoes] = useState(mov?.observacoes || '')
+  const [maisOpcoes, setMaisOpcoes] = useState(false)
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  const categoriasFiltradas = categorias.filter((c: any) => c.tipo === tipo)
+
+  const salvar = async () => {
+    setErro('')
+    if (!descricao.trim()) { setErro('Descrição é obrigatória'); return }
+    const valorNum = parseFloat(valor.replace(',', '.'))
+    if (isNaN(valorNum) || valorNum <= 0) { setErro('Valor deve ser maior que zero'); return }
+
+    setSalvando(true)
+    const payload: any = {
+      clinica_id: clinicaId,
+      tipo, descricao: descricao.trim(), valor: valorNum,
+      data_movimentacao: data,
+      categoria_id: categoriaId || null,
+      conta_id: contaId || null,
+      metodo_pagamento: metodoPag || null,
+      status,
+      paciente_id: pacienteId || null,
+      medico_id: medicoId || null,
+      observacoes: observacoes.trim() || null,
+    }
+
+    let res
+    if (editando) {
+      res = await supabase.from('financeiro_movimentacoes').update({ ...payload, atualizado_em: new Date().toISOString() }).eq('id', mov.id)
+    } else {
+      res = await supabase.from('financeiro_movimentacoes').insert(payload)
+    }
+    setSalvando(false)
+    if (res.error) { setErro('Erro ao salvar: ' + res.error.message); return }
+    onSaved()
+  }
+
+  const cancelar = async () => {
+    if (!confirm('Cancelar essa movimentação? Ela ficará marcada como cancelada mas não será deletada.')) return
+    setSalvando(true)
+    await supabase.from('financeiro_movimentacoes').update({ status: 'cancelado' }).eq('id', mov.id)
+    setSalvando(false)
+    onSaved()
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 540, maxHeight: '90vh', overflow: 'auto' as const, padding: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>{editando ? 'Editar movimentação' : 'Nova movimentação'}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        {/* Tipo */}
+        <div style={{ display: 'flex', gap: 4, background: '#f5f5f5', padding: 4, borderRadius: 9, marginBottom: 16 }}>
+          <button onClick={() => setTipo('receita')} style={{ flex: 1, padding: '8px', borderRadius: 7, border: 'none', background: tipo === 'receita' ? 'white' : 'transparent', color: tipo === 'receita' ? '#16a34a' : '#525252', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: tipo === 'receita' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none' }}>↗ Receita</button>
+          <button onClick={() => setTipo('despesa')} style={{ flex: 1, padding: '8px', borderRadius: 7, border: 'none', background: tipo === 'despesa' ? 'white' : 'transparent', color: tipo === 'despesa' ? '#dc2626' : '#525252', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: tipo === 'despesa' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none' }}>↙ Despesa</button>
+        </div>
+
+        {/* Descrição */}
+        <FormField label="Descrição *">
+          <input type="text" value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Ex: Consulta Maria Silva" style={inputStyle} autoFocus/>
+        </FormField>
+
+        {/* Valor */}
+        <FormField label="Valor *">
+          <div style={{ position: 'relative' as const }}>
+            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+            <input type="text" value={valor} onChange={e => setValor(e.target.value.replace(/[^0-9,]/g, ''))} placeholder="0,00" style={{ ...inputStyle, paddingLeft: 38 }}/>
+          </div>
+        </FormField>
+
+        {/* Categoria + Data */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <FormField label="Categoria">
+            <select value={categoriaId} onChange={e => setCategoriaId(e.target.value)} style={inputStyle}>
+              <option value="">Sem categoria</option>
+              {categoriasFiltradas.map((c: any) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+          </FormField>
+          <FormField label="Data">
+            <input type="date" value={data} onChange={e => setData(e.target.value)} style={inputStyle}/>
+          </FormField>
+        </div>
+
+        {/* Mais opcoes */}
+        <button onClick={() => setMaisOpcoes(!maisOpcoes)} style={{ background: 'none', border: 'none', color: '#6043C1', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '8px 0', marginTop: 8, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+          {maisOpcoes ? '▼' : '▶'} Mais opções
+        </button>
+
+        {maisOpcoes && (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <FormField label="Forma de pagamento">
+                <select value={metodoPag} onChange={e => setMetodoPag(e.target.value)} style={inputStyle}>
+                  <option value="">Não informado</option>
+                  <option value="pix">PIX</option>
+                  <option value="cartao_credito">Cartão de crédito</option>
+                  <option value="cartao_debito">Cartão de débito</option>
+                  <option value="dinheiro">Dinheiro</option>
+                  <option value="transferencia">Transferência</option>
+                  <option value="boleto">Boleto</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </FormField>
+              <FormField label="Status">
+                <select value={status} onChange={e => setStatus(e.target.value)} style={inputStyle}>
+                  <option value="recebido">{tipo === 'receita' ? 'Recebido' : 'Pago'}</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="atrasado">Atrasado</option>
+                  <option value="parcial">Parcial</option>
+                </select>
+              </FormField>
+            </div>
+
+            {tipo === 'receita' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <FormField label="Paciente">
+                  <select value={pacienteId} onChange={e => setPacienteId(e.target.value)} style={inputStyle}>
+                    <option value="">Nenhum</option>
+                    {pacientes.map((p: any) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Médico">
+                  <select value={medicoId} onChange={e => setMedicoId(e.target.value)} style={inputStyle}>
+                    <option value="">Nenhum</option>
+                    {medicos.map((m: any) => <option key={m.id} value={m.id}>{m.nome}</option>)}
+                  </select>
+                </FormField>
+              </div>
+            )}
+
+            <FormField label="Observações">
+              <textarea value={observacoes} onChange={e => setObservacoes(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' as const, fontFamily: 'inherit' }}/>
+            </FormField>
+          </>
+        )}
+
+        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginTop: 8, marginBottom: 8 }}>{erro}</div>}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 18, justifyContent: editando ? 'space-between' : 'flex-end' }}>
+          {editando && status !== 'cancelado' && (
+            <button onClick={cancelar} disabled={salvando} style={{ ...btnSecondary, color: '#dc2626', borderColor: '#fecaca' }}>Cancelar movimentação</button>
+          )}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={onClose} disabled={salvando} style={btnSecondary}>Fechar</button>
+            <button onClick={salvar} disabled={salvando} style={btnPrimary}>{salvando ? 'Salvando...' : (editando ? 'Salvar alterações' : 'Adicionar')}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>{label}</label>
+      {children}
+    </div>
+  )
+}
+
+const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, background: 'white' } as const
