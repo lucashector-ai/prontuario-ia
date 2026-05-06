@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import AppShell from '@/components/AppShell'
+import { AppShell } from '@/components/AppShell'
 
 type TabKey = 'visao' | 'movimentacoes' | 'pacotes' | 'comissoes' | 'relatorios'
 
