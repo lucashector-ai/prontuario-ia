@@ -119,11 +119,11 @@ export default function WhatsAppApp() {
 
   useEffect(()=>{
     (async () => {
-      // Cenario 1: clinica admin logada - usa primeiro medico da clinica
+      // Cenario 1: clinica admin logada - usa primeiro medico da clinica (se houver)
       const ca = localStorage.getItem('clinica_admin')
       if (ca) {
         const admin = JSON.parse(ca)
-        if (!admin.clinica_id) { router.push('/admin'); return }
+        if (!admin.clinica_id) { router.push('/login'); return }
         const { data: primeiroMedico } = await supabase
           .from('medicos')
           .select('*')
@@ -133,15 +133,15 @@ export default function WhatsAppApp() {
           .order('criado_em', { ascending: true })
           .limit(1)
           .maybeSingle()
-        if (!primeiroMedico) {
-          // Sem medicos ainda - manda pro admin pra cadastrar
-          router.push('/admin')
-          return
-        }
-        setMedico(primeiroMedico)
         setUsuario(admin)
-        supabase.from('whatsapp_config').select('*').eq('medico_id', primeiroMedico.id).single().then(({data})=>setConfig(data))
-        carregarAtendentes(primeiroMedico.id)
+        if (primeiroMedico) {
+          setMedico(primeiroMedico)
+          supabase.from('whatsapp_config').select('*').eq('medico_id', primeiroMedico.id).single().then(({data})=>setConfig(data))
+          carregarAtendentes(primeiroMedico.id)
+        } else {
+          // Sem medicos: cria placeholder usando clinica_id pra UI nao quebrar
+          setMedico({ id: admin.clinica_id, nome: admin.nome || 'Clinica', clinica_id: admin.clinica_id, _placeholder: true })
+        }
         return
       }
 
@@ -150,9 +150,9 @@ export default function WhatsAppApp() {
       if (!m) { router.push('/login'); return }
       const med = JSON.parse(m)
 
-      // Recepcionista: usa primeiro medico da clinica (paliativo)
+      // Recepcionista: usa primeiro medico da clinica (se houver)
       if (med.cargo === 'recepcionista') {
-        if (!med.clinica_id) { router.push('/dashboard'); return }
+        if (!med.clinica_id) { router.push('/login'); return }
         const { data: primeiroMedico } = await supabase
           .from('medicos')
           .select('*')
@@ -162,11 +162,14 @@ export default function WhatsAppApp() {
           .order('criado_em', { ascending: true })
           .limit(1)
           .maybeSingle()
-        if (!primeiroMedico) { router.push('/agenda'); return }
-        setMedico(primeiroMedico)
         setUsuario(med)
-        supabase.from('whatsapp_config').select('*').eq('medico_id', primeiroMedico.id).single().then(({data})=>setConfig(data))
-        carregarAtendentes(primeiroMedico.id)
+        if (primeiroMedico) {
+          setMedico(primeiroMedico)
+          supabase.from('whatsapp_config').select('*').eq('medico_id', primeiroMedico.id).single().then(({data})=>setConfig(data))
+          carregarAtendentes(primeiroMedico.id)
+        } else {
+          setMedico({ id: med.clinica_id, nome: med.nome || 'Clinica', clinica_id: med.clinica_id, _placeholder: true })
+        }
         return
       }
 
