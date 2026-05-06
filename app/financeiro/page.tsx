@@ -31,6 +31,9 @@ export default function FinanceiroPage() {
   // Pacotes ativos
   const [pacotesAtivos, setPacotesAtivos] = useState<any[]>([])
 
+  // Saldos por conta (visao geral)
+  const [saldosContas, setSaldosContas] = useState<any[]>([])
+
   // Movimentacoes (tab completa)
   const [todasMov, setTodasMov] = useState<any[]>([])
   const [carregandoMov, setCarregandoMov] = useState(false)
@@ -622,6 +625,29 @@ export default function FinanceiroPage() {
     setMovRecentes(recentesR.data || [])
     setPacotesAtivos(pacotesR.data || [])
 
+    // Saldos por conta (somente se tem contas ativas)
+    const { data: contasAtivas } = await supabase.from('financeiro_contas')
+      .select('*').eq('clinica_id', clinicaId).eq('ativo', true).order('nome')
+
+    if (contasAtivas && contasAtivas.length > 0) {
+      const idsContas = contasAtivas.map((c: any) => c.id)
+      const { data: movsAll } = await supabase.from('financeiro_movimentacoes')
+        .select('conta_id, tipo, valor, status')
+        .eq('clinica_id', clinicaId)
+        .in('conta_id', idsContas)
+        .neq('status', 'cancelado')
+
+      const enriched = contasAtivas.map((c: any) => {
+        const movsConta = (movsAll || []).filter((m: any) => m.conta_id === c.id)
+        const rec = movsConta.filter((m: any) => m.tipo === 'receita' && (m.status === 'recebido' || m.status === 'pago')).reduce((s: number, m: any) => s + Number(m.valor), 0)
+        const desp = movsConta.filter((m: any) => m.tipo === 'despesa' && m.status === 'pago').reduce((s: number, m: any) => s + Number(m.valor), 0)
+        return { ...c, saldoAtual: Number(c.saldo_inicial || 0) + rec - desp }
+      })
+      setSaldosContas(enriched)
+    } else {
+      setSaldosContas([])
+    }
+
     setCarregando(false)
   }
 
@@ -641,6 +667,9 @@ export default function FinanceiroPage() {
             <p style={{ fontSize: 13, color: '#737373', margin: 0 }}>Fluxo de caixa, pacotes e comissões</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setTab('configuracoes')} title="Configurações" style={{ ...btnSecondary, padding: '9px 11px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            </button>
             <button style={btnSecondary}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Exportar
@@ -654,7 +683,7 @@ export default function FinanceiroPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'white', padding: 4, borderRadius: 11, width: 'fit-content' }}>
-          {(['visao','movimentacoes','pacotes','cobrancas','comissoes','relatorios','configuracoes'] as TabKey[]).map(k => (
+          {(['visao','movimentacoes','pacotes','cobrancas','comissoes','relatorios'] as TabKey[]).map(k => (
             <button key={k} onClick={() => setTab(k)} style={{
               padding: '8px 16px', borderRadius: 8, border: 'none',
               background: tab === k ? '#0a0a0a' : 'transparent',
@@ -689,6 +718,30 @@ export default function FinanceiroPage() {
               <KPI label="Lucro líquido" valor={fmt(lucro)} cor="#0a0a0a" sub={pctLucro !== null ? `${pctLucro >= 0 ? '+' : ''}${pctLucro}% vs período anterior` : 'sem comparativo'} subCor={pctLucro !== null && pctLucro >= 0 ? '#16a34a' : '#dc2626'} carregando={carregando}/>
               <KPI label="Pendente recebimento" valor={fmt(pendente)} cor="#d97706" sub={`${pendenteCount} ${pendenteCount === 1 ? 'transação' : 'transações'}`} carregando={carregando}/>
             </div>
+
+            {/* Saldo por conta */}
+            {saldosContas.length > 0 && (
+              <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <div>
+                    <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Saldo por conta</p>
+                    <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Total: {fmt(saldosContas.reduce((s: number, c: any) => s + c.saldoAtual, 0))}</p>
+                  </div>
+                  <button onClick={() => setTab('configuracoes')} style={{ background: 'none', border: 'none', color: '#6043C1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Gerenciar →</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+                  {saldosContas.map((c: any) => (
+                    <div key={c.id} style={{ padding: 14, background: '#fafafa', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <IconeContaTipo tipo={c.tipo}/>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 11, color: '#737373', margin: 0, overflow: 'hidden' as const, textOverflow: 'ellipsis' as const, whiteSpace: 'nowrap' as const }}>{c.nome}</p>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: c.saldoAtual >= 0 ? '#0a0a0a' : '#dc2626', margin: '2px 0 0', letterSpacing: '-0.01em' }}>{fmt(c.saldoAtual)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Chart fluxo */}
             <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 16 }}>
@@ -1182,13 +1235,12 @@ export default function FinanceiroPage() {
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
                     {todasContas.map((c: any) => {
-                      const tipoIcon: any = { caixa: '💵', banco: '🏦', cartao_credito: '💳', outras: '📁' }
                       const tipoLabel: any = { caixa: 'Caixa', banco: 'Banco', cartao_credito: 'Cartão', outras: 'Outras' }
                       return (
                         <div key={c.id} style={{ background: c.ativo ? '#fafafa' : '#f5f5f5', borderRadius: 12, padding: 16, opacity: c.ativo ? 1 : 0.5 }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 20 }}>{tipoIcon[c.tipo] || '📁'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <IconeContaTipo tipo={c.tipo}/>
                               <div>
                                 <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{c.nome}</p>
                                 <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{tipoLabel[c.tipo]}</p>
@@ -2199,6 +2251,7 @@ function ModalConta({ clinicaId, conta, onClose, onSaved }: any) {
   const editando = !!conta
   const [nome, setNome] = useState(conta?.nome || '')
   const [tipo, setTipo] = useState<'caixa' | 'banco' | 'cartao_credito' | 'outras'>(conta?.tipo || 'banco')
+  const [bancoSelecionado, setBancoSelecionado] = useState('')
   const [saldoInicial, setSaldoInicial] = useState(conta?.saldo_inicial ? String(conta.saldo_inicial).replace('.', ',') : '0,00')
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
@@ -2236,10 +2289,6 @@ function ModalConta({ clinicaId, conta, onClose, onSaved }: any) {
           </button>
         </div>
 
-        <FormField label="Nome">
-          <input type="text" value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Itaú Conta Corrente" style={inputStyle} autoFocus/>
-        </FormField>
-
         <FormField label="Tipo">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
             {tipos.map(o => (
@@ -2255,6 +2304,23 @@ function ModalConta({ clinicaId, conta, onClose, onSaved }: any) {
               </button>
             ))}
           </div>
+        </FormField>
+
+        {(tipo === 'banco' || tipo === 'cartao_credito') && (
+          <FormField label={tipo === 'banco' ? 'Banco' : 'Bandeira/Banco emissor'}>
+            <select value={bancoSelecionado} onChange={e => {
+              const v = e.target.value
+              setBancoSelecionado(v)
+              if (v && v !== 'Outro' && !nome) setNome(v)
+            }} style={inputStyle}>
+              <option value="">Selecione...</option>
+              {BANCOS_BR.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </FormField>
+        )}
+
+        <FormField label="Nome da conta">
+          <input type="text" value={nome} onChange={e => setNome(e.target.value)} placeholder={tipo === 'caixa' ? 'Ex: Caixa principal' : tipo === 'banco' ? 'Ex: Itaú Corrente PJ' : tipo === 'cartao_credito' ? 'Ex: Nubank empresarial' : 'Ex: Carteira'} style={inputStyle}/>
         </FormField>
 
         <FormField label="Saldo inicial">
@@ -2275,3 +2341,38 @@ function ModalConta({ clinicaId, conta, onClose, onSaved }: any) {
     </div>
   )
 }
+
+
+// ============================================
+// COMPONENTE: Icone do tipo de conta
+// ============================================
+
+function IconeContaTipo({ tipo }: { tipo: string }) {
+  const cor = tipo === 'caixa' ? '#16a34a' : tipo === 'banco' ? '#0891b2' : tipo === 'cartao_credito' ? '#6043C1' : '#737373'
+  const bg = tipo === 'caixa' ? '#dcfce7' : tipo === 'banco' ? '#cffafe' : tipo === 'cartao_credito' ? '#f0ebff' : '#f3f4f6'
+
+  let svg = null
+  if (tipo === 'caixa') {
+    svg = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg>
+  } else if (tipo === 'banco') {
+    svg = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth="2"><line x1="3" y1="21" x2="21" y2="21"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="5 6 12 3 19 6"/><line x1="4" y1="10" x2="4" y2="21"/><line x1="20" y1="10" x2="20" y2="21"/><line x1="8" y1="14" x2="8" y2="17"/><line x1="12" y1="14" x2="12" y2="17"/><line x1="16" y1="14" x2="16" y2="17"/></svg>
+  } else if (tipo === 'cartao_credito') {
+    svg = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+  } else {
+    svg = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+  }
+
+  return (
+    <div style={{ width: 36, height: 36, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      {svg}
+    </div>
+  )
+}
+
+// Lista de bancos brasileiros (top 25)
+const BANCOS_BR = [
+  'Itaú', 'Bradesco', 'Santander', 'Banco do Brasil', 'Caixa Econômica',
+  'Nubank', 'Inter', 'C6 Bank', 'BTG Pactual', 'Sicredi', 'Sicoob',
+  'Banrisul', 'Original', 'Safra', 'Pan', 'Will Bank', 'Mercado Pago',
+  'PicPay', 'Next', 'Neon', 'Modal', 'BRB', 'Daycoval', 'XP Investimentos', 'Outro'
+]
