@@ -93,16 +93,26 @@ export default function FinanceiroPage() {
 
   const carregarListas = async () => {
     if (!clinicaId) return
-    const [catR, contR, pacR, medR] = await Promise.all([
+
+    // Primeiro busca medicos da clinica
+    const { data: meds } = await supabase.from('medicos')
+      .select('id, nome').eq('clinica_id', clinicaId).eq('cargo', 'medico').eq('ativo', true).order('nome')
+
+    const medicoIds = (meds || []).map((m: any) => m.id)
+
+    // Depois pacientes filtrados pelos medicos da clinica
+    const [catR, contR, pacR] = await Promise.all([
       supabase.from('financeiro_categorias').select('*').eq('clinica_id', clinicaId).eq('ativo', true).order('nome'),
       supabase.from('financeiro_contas').select('*').eq('clinica_id', clinicaId).eq('ativo', true).order('nome'),
-      supabase.from('pacientes').select('id, nome').order('nome'),
-      supabase.from('medicos').select('id, nome').eq('clinica_id', clinicaId).eq('cargo', 'medico').eq('ativo', true).order('nome'),
+      medicoIds.length > 0
+        ? supabase.from('pacientes').select('id, nome').in('medico_id', medicoIds).order('nome')
+        : Promise.resolve({ data: [] }),
     ])
+
     setCategorias(catR.data || [])
     setContas(contR.data || [])
     setPacientesLista(pacR.data || [])
-    setMedicosLista(medR.data || [])
+    setMedicosLista(meds || [])
   }
 
   const carregarMovimentacoes = async () => {
