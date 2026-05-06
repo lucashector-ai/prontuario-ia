@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 export default function HomePage() {
   const router = useRouter()
   const [verificado, setVerificado] = useState(false)
-  const [periodo, setPeriodo] = useState<'mensal' | 'anual'>('mensal')
+  const [periodo, setPeriodo] = useState<'mensal' | 'anual'>('anual')
 
   useEffect(() => {
     try {
@@ -43,8 +43,14 @@ export default function HomePage() {
 }
 
 function Landing({ periodo, setPeriodo, router }: any) {
+  const titulo = { fontWeight: 500 as const, letterSpacing: '-0.03em' as const, lineHeight: 1.05 }
   return (
     <div style={{ minHeight: '100vh', background: 'white', color: '#0a0a0a' }}>
+      {/* BANNER URGENCIA */}
+      <div style={{ background: '#0a0a0a', color: 'white', padding: '10px 24px', textAlign: 'center' as const, fontSize: 13 }}>
+        🎉 Primeiras 50 clínicas: 30% OFF no primeiro ano. <a href="#planos" style={{ color: '#a78bfa', fontWeight: 600, textDecoration: 'underline' }}>Garantir minha vaga →</a>
+      </div>
+
       {/* NAV */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)' as const, borderBottom: '1px solid #f0f0f0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -56,27 +62,27 @@ function Landing({ periodo, setPeriodo, router }: any) {
               <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em' as const }}>MedIA</span>
             </div>
             <div style={{ display: 'flex', gap: 22 }}>
-              <a href="#features" style={{ fontSize: 13, color: '#525252', textDecoration: 'none', fontWeight: 500 }}>Recursos</a>
-              <a href="#planos" style={{ fontSize: 13, color: '#525252', textDecoration: 'none', fontWeight: 500 }}>Planos</a>
-              <a href="#como" style={{ fontSize: 13, color: '#525252', textDecoration: 'none', fontWeight: 500 }}>Como funciona</a>
-              <a href="#faq" style={{ fontSize: 13, color: '#525252', textDecoration: 'none', fontWeight: 500 }}>FAQ</a>
+              <a href="#features" style={navLink}>Recursos</a>
+              <a href="#paraquem" style={navLink}>Para quem</a>
+              <a href="#planos" style={navLink}>Planos</a>
+              <a href="#faq" style={navLink}>FAQ</a>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button onClick={() => router.push('/login')} style={{ fontSize: 13, color: '#525252', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Entrar</button>
-            <button onClick={() => router.push('/cadastro')} style={{ fontSize: 13, color: 'white', background: '#0a0a0a', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Testar grátis</button>
+            <button onClick={() => router.push('/cadastro')} style={{ fontSize: 13, color: 'white', background: '#0a0a0a', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Assinar</button>
           </div>
         </div>
       </nav>
 
       {/* HERO */}
       <section style={{ padding: '80px 24px 60px', textAlign: 'center' as const }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+        <div style={{ maxWidth: 820, margin: '0 auto' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', background: '#f0ebff', borderRadius: 20, marginBottom: 24, fontSize: 12, fontWeight: 600, color: '#6043C1' }}>
             <span style={{ width: 5, height: 5, background: '#6043C1', borderRadius: '50%' }}/>
-            Novo: Sofia, sua secretária com IA no WhatsApp
+            AI-First · Plataforma médica que pensa por você
           </div>
-          <h1 style={{ fontSize: 56, fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.03em' as const, margin: '0 0 22px' }}>
+          <h1 style={{ fontSize: 60, ...titulo, margin: '0 0 22px' }}>
             Prontuário com IA<br/>
             <span style={{ color: '#6043C1' }}>que devolve seu tempo.</span>
           </h1>
@@ -85,61 +91,165 @@ function Landing({ periodo, setPeriodo, router }: any) {
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' as const }}>
             <button onClick={() => router.push('/cadastro')} style={{ padding: '14px 26px', borderRadius: 10, background: '#0a0a0a', color: 'white', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-              Testar grátis 7 dias →
+              Assinar agora →
             </button>
             <button onClick={() => document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '14px 26px', borderRadius: 10, background: 'white', color: '#0a0a0a', border: '1px solid #e5e5e5', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
               Ver planos
             </button>
           </div>
           <p style={{ fontSize: 12, color: '#9ca3af', margin: '18px 0 0' }}>
-            Sem cartão de crédito · Cancele quando quiser
+            Trial de 7 dias no plano Solo · Sem fidelidade · Cancele quando quiser
           </p>
         </div>
 
         {/* Mockup */}
         <div style={{ maxWidth: 1100, margin: '60px auto 0', padding: '0 24px' }}>
           <div style={{ background: 'linear-gradient(135deg, #6043C1 0%, #8b5cf6 100%)', borderRadius: 20, padding: 8, boxShadow: '0 30px 80px -20px rgba(96,67,193,0.4)' }}>
-            <div style={{ background: '#F5F5F5', borderRadius: 14, padding: '40px 30px', textAlign: 'center' as const, fontSize: 13, color: '#6b7280' }}>
+            <div style={{ background: '#F5F5F5', borderRadius: 14, padding: '80px 30px', textAlign: 'center' as const, fontSize: 13, color: '#6b7280' }}>
               [Screenshot da plataforma — em produção será imagem real da nova-consulta]
             </div>
           </div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section id="features" style={{ padding: '80px 24px', background: '#fafafa' }}>
+      {/* LOGO CLOUD - Tecnologias */}
+      <section style={{ padding: '40px 24px', borderTop: '1px solid #f5f5f5', borderBottom: '1px solid #f5f5f5' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' as const }}>
+          <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em' as const, fontWeight: 600, margin: '0 0 20px' }}>Construído com tecnologia de ponta</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 32, justifyContent: 'center', alignItems: 'center', opacity: 0.6 }}>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#525252' }}>Anthropic</span>
+            <img src="/memed-logo.svg" alt="Memed" style={{ height: 22 }}/>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#525252' }}>Supabase</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#525252' }}>Vercel</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#525252' }}>WhatsApp Business</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ANTES vs COM MedIA */}
+      <section style={{ padding: '80px 24px', background: '#fafafa' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 48 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 10px' }}>Recursos</p>
-            <h2 style={{ fontSize: 38, fontWeight: 700, letterSpacing: '-0.02em' as const, margin: '0 0 12px' }}>Tudo que sua clínica precisa.<br/>E IA em cada canto.</h2>
+            <p style={selo}>Por que MedIA</p>
+            <h2 style={{ fontSize: 38, ...titulo, margin: '0 0 12px' }}>Antes você atendia papelada.<br/>Agora você atende pacientes.</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 18 }}>
+            <div style={{ background: 'white', borderRadius: 16, padding: 32, border: '1px solid #f0f0f0' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 16px' }}>Antes</p>
+              <ul style={{ listStyle: 'none' as const, padding: 0, margin: 0 }}>
+                <ItemLista negativo texto="20-30 minutos digitando prontuário após cada consulta"/>
+                <ItemLista negativo texto="Receita em papel ou sistema separado"/>
+                <ItemLista negativo texto="Paciente liga no telefone pra confirmar consulta"/>
+                <ItemLista negativo texto="Sem visão das métricas da clínica"/>
+                <ItemLista negativo texto="Múltiplas plataformas pra agenda, prontuário e teleconsulta"/>
+              </ul>
+            </div>
+            <div style={{ background: '#0a0a0a', borderRadius: 16, padding: 32, color: 'white' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 16px' }}>Com MedIA</p>
+              <ul style={{ listStyle: 'none' as const, padding: 0, margin: 0 }}>
+                <ItemLista positivo dark texto="Prontuário SOAP gerado pela IA em 30 segundos"/>
+                <ItemLista positivo dark texto="Receita digital Memed com validade legal ICP-Brasil"/>
+                <ItemLista positivo dark texto="Sofia (IA no WhatsApp) confirma e remarca sozinha"/>
+                <ItemLista positivo dark texto="Dashboard com no-show rate e pacientes em risco"/>
+                <ItemLista positivo dark texto="Tudo em um lugar — agenda, prontuário, teleconsulta, IA"/>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section id="features" style={{ padding: '80px 24px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center' as const, marginBottom: 48 }}>
+            <p style={selo}>Recursos</p>
+            <h2 style={{ fontSize: 38, ...titulo, margin: '0 0 12px' }}>Tudo que sua clínica precisa.<br/>E IA em cada canto.</h2>
             <p style={{ fontSize: 15, color: '#525252', maxWidth: 540, margin: '0 auto' }}>
               Os concorrentes vendem IA como módulo extra. No MedIA, IA é o ponto de partida.
             </p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
-            <FeatureCard icon="🎙️" titulo="IA na consulta" descricao="Grava a conversa médico-paciente e gera prontuário SOAP automático com CIDs sugeridos. Você revisa em 30 segundos."/>
-            <FeatureCard icon="💊" titulo="Prescrição Memed" descricao="Receita com validade legal ICP-Brasil. Envio direto pra farmácia. Integrado nativamente."/>
-            <FeatureCard icon="💬" titulo="Sofia no WhatsApp" descricao="IA que atende seus pacientes 24/7. Marca consultas, tira dúvidas, lembra exames. Reduz no-show em 40%."/>
-            <FeatureCard icon="🔬" titulo="Análise de exames" descricao="IA lê o exame, destaca alterações relevantes e sugere conduta. Tempo de análise: 2 minutos."/>
-            <FeatureCard icon="📊" titulo="Dashboard inteligente" descricao="No-show rate, pacientes em risco, CIDs frequentes, comparativo entre médicos. Métricas que importam."/>
-            <FeatureCard icon="📅" titulo="Agenda + teleconsulta" descricao="Calendário visual com drag-and-drop. Vídeo nativo, sem instalar nada. Lembretes automáticos."/>
+            <FeatureCard
+              icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>}
+              titulo="IA na consulta"
+              descricao="Grava a conversa médico-paciente e gera prontuário SOAP automático com CIDs sugeridos. Você revisa em 30 segundos."
+            />
+            <FeatureCard
+              logo="/memed-logo.svg"
+              titulo="Prescrição via Memed"
+              descricao="Receita com validade legal ICP-Brasil. Envio direto pra farmácia. Integração nativa com a maior plataforma de prescrição do Brasil."
+            />
+            <FeatureCard
+              icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>}
+              titulo="Sofia no WhatsApp"
+              descricao="IA que atende seus pacientes 24/7. Marca consultas, tira dúvidas, confirma horários, lembra exames. Reduz no-show em até 40%."
+            />
+            <FeatureCard
+              icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>}
+              titulo="Análise de exames com IA"
+              descricao="IA lê o exame, destaca alterações relevantes e sugere conduta clínica. Tempo de análise: 2 minutos por exame."
+            />
+            <FeatureCard
+              icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M3 3v18h18"/><path d="M7 12l4-4 4 4 5-5"/></svg>}
+              titulo="Dashboard inteligente"
+              descricao="No-show rate, pacientes em risco, CIDs frequentes, comparativo entre médicos. Métricas que importam pra gestão."
+            />
+            <FeatureCard
+              icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
+              titulo="Agenda + teleconsulta nativa"
+              descricao="Calendário visual com drag-and-drop. Vídeo nativo no seu domínio próprio. Sem instalar nada. Lembretes automáticos."
+            />
           </div>
         </div>
       </section>
 
-      {/* COMO FUNCIONA */}
-      <section id="como" style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+      {/* DIFERENCIAIS */}
+      <section style={{ padding: '80px 24px', background: '#fafafa' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 48 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 10px' }}>Como funciona</p>
-            <h2 style={{ fontSize: 38, fontWeight: 700, letterSpacing: '-0.02em' as const, margin: 0 }}>3 passos. Zero burocracia.</h2>
+            <p style={selo}>Diferenciais</p>
+            <h2 style={{ fontSize: 38, ...titulo, margin: '0 0 12px' }}>O que só o MedIA tem.</h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+            <Diferencial
+              icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>}
+              titulo="Teleconsulta com seu domínio"
+              descricao="Sala de vídeo personalizada com sua marca. Logo da clínica, cores, URL própria (consulta.suaclinica.com.br). Diferente do Google Meet genérico."
+              destaque="Único no mercado"
+            />
+            <Diferencial
+              icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>}
+              titulo="Modo Perfeita (copiloto)"
+              descricao="IA acompanha a consulta em tempo real e sugere perguntas, alerta sobre alergias do paciente e indica possíveis diagnósticos enquanto você atende."
+            />
+            <Diferencial
+              icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
+              titulo="Memed nativo (não plugin)"
+              descricao="Prescrição digital integrada na nova consulta. Médico não sai da plataforma, paciente recebe a receita por SMS, validade ICP-Brasil garantida."
+            />
+            <Diferencial
+              icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M9 11H1l8-8 8 8h-8v8H1z" transform="rotate(180 9 11)"/></svg>}
+              titulo="LGPD-first desde o dia 1"
+              descricao="Dados de saúde tratados como categoria especial. DPO designado, consentimento expresso, criptografia em repouso, backup PITR. Sem letras miúdas."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* PARA QUEM */}
+      <section id="paraquem" style={{ padding: '80px 24px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center' as const, marginBottom: 48 }}>
+            <p style={selo}>Para quem</p>
+            <h2 style={{ fontSize: 38, ...titulo, margin: '0 0 12px' }}>Funciona pra todo tamanho de clínica.</h2>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            <Passo numero="1" titulo="Cadastra sua clínica" descricao="Conta criada em 2 minutos. Adiciona médicos, pacientes (ou importa CSV)."/>
-            <Passo numero="2" titulo="Atende como sempre" descricao="Inicia gravação no início da consulta. Conversa naturalmente com seu paciente."/>
-            <Passo numero="3" titulo="IA gera tudo" descricao="Prontuário SOAP, CIDs, receita, resumo pro paciente. Você revisa e assina."/>
+            <ParaQuem icon="👨‍⚕️" titulo="Médico solo" descricao="Consultório próprio, atende sozinho ou com 1 secretária. Quer parar de gastar 20min escrevendo prontuário."/>
+            <ParaQuem icon="🏥" titulo="Clínica média" descricao="2 a 10 médicos, recepção, gestão profissional. Precisa de visão consolidada e produtividade da equipe."/>
+            <ParaQuem icon="🏨" titulo="Rede / Grande clínica" descricao="Múltiplas unidades, dezenas de médicos, gestão centralizada. Precisa API, multi-clínica, suporte dedicado."/>
           </div>
         </div>
       </section>
@@ -148,31 +258,31 @@ function Landing({ periodo, setPeriodo, router }: any) {
       <section id="planos" style={{ padding: '80px 24px', background: '#fafafa' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 36 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 10px' }}>Planos</p>
-            <h2 style={{ fontSize: 38, fontWeight: 700, letterSpacing: '-0.02em' as const, margin: '0 0 12px' }}>Escolha o plano da sua operação.</h2>
+            <p style={selo}>Planos</p>
+            <h2 style={{ fontSize: 38, ...titulo, margin: '0 0 12px' }}>Escolha o plano da sua operação.</h2>
             <p style={{ fontSize: 15, color: '#525252' }}>Sem fidelidade. Cancele quando quiser.</p>
           </div>
 
-          {/* Toggle mensal/anual */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
             <div style={{ display: 'flex', background: 'white', borderRadius: 10, padding: 4, border: '1px solid #e5e5e5' }}>
-              <button onClick={() => setPeriodo('mensal')} style={{ padding: '8px 18px', borderRadius: 7, border: 'none', background: periodo === 'mensal' ? '#0a0a0a' : 'transparent', color: periodo === 'mensal' ? 'white' : '#525252', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Mensal</button>
-              <button onClick={() => setPeriodo('anual')} style={{ padding: '8px 18px', borderRadius: 7, border: 'none', background: periodo === 'anual' ? '#0a0a0a' : 'transparent', color: periodo === 'anual' ? 'white' : '#525252', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                Anual <span style={{ fontSize: 10, background: '#10b981', color: 'white', padding: '2px 6px', borderRadius: 10, fontWeight: 700 }}>-17%</span>
+              <button onClick={() => setPeriodo('mensal')} style={togglePeriodo(periodo === 'mensal')}>Mensal</button>
+              <button onClick={() => setPeriodo('anual')} style={{ ...togglePeriodo(periodo === 'anual'), display: 'flex', alignItems: 'center', gap: 6 }}>
+                Anual <span style={{ fontSize: 10, background: '#10b981', color: 'white', padding: '2px 6px', borderRadius: 10, fontWeight: 700 }}>-20%</span>
               </button>
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            <Plano nome="Solo" descricao="Para médicos autônomos" precoMensal={297} precoAnual={247} periodo={periodo} cta="Testar grátis 7 dias" onCta={() => router.push('/cadastro')} features={[
+            <Plano nome="Solo" descricao="Para médicos autônomos" precoMensal={297} precoAnual={237} periodo={periodo} cta="Assinar" onCta={() => router.push('/cadastro')} features={[
               '1 médico',
               'IA na consulta ilimitada',
               'Prescrição Memed',
               'Agenda + teleconsulta',
               '200 mensagens WhatsApp/mês',
               'Suporte por e-mail',
+              'Trial de 7 dias',
             ]}/>
-            <Plano destaque nome="Clínica" badge="Mais vendido" descricao="Para clínicas 2 a 10 médicos" precoMensal={597} precoAnual={497} periodo={periodo} cta="Agendar demo" onCta={() => router.push('/cadastro')} features={[
+            <Plano destaque nome="Clínica" badge="Mais vendido" descricao="Para clínicas 2 a 10 médicos" precoMensal={597} precoAnual={477} periodo={periodo} cta="Assinar" onCta={() => router.push('/cadastro')} features={[
               'Até 10 usuários',
               '1.000 consultas IA/mês',
               'Sofia no WhatsApp',
@@ -181,7 +291,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
               'Multi-perfil (médico, recepção)',
               'Suporte WhatsApp comercial',
             ]}/>
-            <Plano nome="Pro" descricao="Para clínicas grandes e redes" precoMensal={1197} precoAnual={997} periodo={periodo} cta="Agendar demo" onCta={() => router.push('/cadastro')} features={[
+            <Plano nome="Pro" descricao="Para clínicas grandes e redes" precoMensal={1197} precoAnual={957} periodo={periodo} cta="Assinar" onCta={() => router.push('/cadastro')} features={[
               'Usuários ilimitados',
               'Consultas IA ilimitadas',
               'Análise de exames com IA',
@@ -202,8 +312,8 @@ function Landing({ periodo, setPeriodo, router }: any) {
       <section id="faq" style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 36 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 10px' }}>FAQ</p>
-            <h2 style={{ fontSize: 38, fontWeight: 700, letterSpacing: '-0.02em' as const, margin: 0 }}>Perguntas frequentes</h2>
+            <p style={selo}>FAQ</p>
+            <h2 style={{ fontSize: 38, ...titulo, margin: 0 }}>Perguntas frequentes</h2>
           </div>
 
           <FAQItem pergunta="O MedIA está em conformidade com a LGPD?" resposta="Sim. Tratamos dados de saúde como categoria especial conforme exige a LGPD. Temos DPO designado, política de privacidade, consentimento expresso do paciente e backup com PITR no Supabase."/>
@@ -218,12 +328,12 @@ function Landing({ periodo, setPeriodo, router }: any) {
       {/* CTA FINAL */}
       <section style={{ padding: '80px 24px', background: 'linear-gradient(135deg, #6043C1 0%, #8b5cf6 100%)', color: 'white', textAlign: 'center' as const }}>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 42, fontWeight: 700, letterSpacing: '-0.02em' as const, margin: '0 0 16px', lineHeight: 1.1 }}>Pare de perder tempo com prontuário.</h2>
+          <h2 style={{ fontSize: 44, ...titulo, fontWeight: 600, margin: '0 0 16px', color: 'white' }}>Pare de perder tempo com prontuário.</h2>
           <p style={{ fontSize: 17, opacity: 0.9, margin: '0 0 32px', lineHeight: 1.5 }}>
             Comece grátis hoje. Sem cartão de crédito.
           </p>
           <button onClick={() => router.push('/cadastro')} style={{ padding: '14px 32px', borderRadius: 10, background: 'white', color: '#6043C1', border: 'none', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            Começar agora →
+            Assinar agora →
           </button>
         </div>
       </section>
@@ -241,22 +351,22 @@ function Landing({ periodo, setPeriodo, router }: any) {
             <p style={{ margin: 0, lineHeight: 1.6 }}>Prontuário com IA para clínicas modernas. Feito no Brasil, com 💜.</p>
           </div>
           <div>
-            <p style={{ fontSize: 11, color: 'white', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 12px' }}>Produto</p>
-            <a href="#features" style={{ display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }}>Recursos</a>
-            <a href="#planos" style={{ display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }}>Planos</a>
-            <a href="#faq" style={{ display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }}>FAQ</a>
+            <p style={footerTitle}>Produto</p>
+            <a href="#features" style={footerLink}>Recursos</a>
+            <a href="#planos" style={footerLink}>Planos</a>
+            <a href="#faq" style={footerLink}>FAQ</a>
           </div>
           <div>
-            <p style={{ fontSize: 11, color: 'white', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 12px' }}>Empresa</p>
-            <a href="/sobre" style={{ display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }}>Sobre</a>
-            <a href="/contato" style={{ display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }}>Contato</a>
-            <a href="/blog" style={{ display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }}>Blog</a>
+            <p style={footerTitle}>Empresa</p>
+            <a href="/sobre" style={footerLink}>Sobre</a>
+            <a href="/contato" style={footerLink}>Contato</a>
+            <a href="/blog" style={footerLink}>Blog</a>
           </div>
           <div>
-            <p style={{ fontSize: 11, color: 'white', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 12px' }}>Legal</p>
-            <a href="/privacidade" style={{ display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }}>Privacidade</a>
-            <a href="/termos" style={{ display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }}>Termos de uso</a>
-            <a href="/lgpd" style={{ display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }}>LGPD</a>
+            <p style={footerTitle}>Legal</p>
+            <a href="/privacidade" style={footerLink}>Privacidade</a>
+            <a href="/termos" style={footerLink}>Termos de uso</a>
+            <a href="/lgpd" style={footerLink}>LGPD</a>
           </div>
         </div>
         <div style={{ maxWidth: 1100, margin: '32px auto 0', paddingTop: 24, borderTop: '1px solid #262626', fontSize: 12 }}>
@@ -267,23 +377,54 @@ function Landing({ periodo, setPeriodo, router }: any) {
   )
 }
 
-function FeatureCard({ icon, titulo, descricao }: any) {
+const navLink = { fontSize: 13, color: '#525252', textDecoration: 'none', fontWeight: 500 } as const
+const selo = { fontSize: 13, fontWeight: 600 as const, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 10px' }
+const togglePeriodo = (ativo: boolean) => ({ padding: '8px 18px', borderRadius: 7, border: 'none', background: ativo ? '#0a0a0a' : 'transparent', color: ativo ? 'white' : '#525252', fontSize: 13, fontWeight: 600 as const, cursor: 'pointer' })
+const footerTitle = { fontSize: 11, color: 'white', fontWeight: 700 as const, textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 12px' }
+const footerLink = { display: 'block', color: '#a3a3a3', textDecoration: 'none', marginBottom: 8 }
+
+function FeatureCard({ icon, logo, titulo, descricao }: any) {
   return (
-    <div style={{ background: 'white', borderRadius: 14, padding: 24, transition: 'all 0.2s' as const }}>
-      <div style={{ fontSize: 28, marginBottom: 14 }}>{icon}</div>
-      <p style={{ fontSize: 16, fontWeight: 700, color: '#0a0a0a', margin: '0 0 8px' }}>{titulo}</p>
+    <div style={{ background: 'white', borderRadius: 14, padding: 24, transition: 'all 0.2s' as const, border: '1px solid #f0f0f0' }}>
+      <div style={{ width: 44, height: 44, borderRadius: 10, background: '#f0ebff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+        {logo ? <img src={logo} alt="" style={{ height: 18 }}/> : icon}
+      </div>
+      <p style={{ fontSize: 16, fontWeight: 600, color: '#0a0a0a', margin: '0 0 8px' }}>{titulo}</p>
       <p style={{ fontSize: 13, color: '#525252', margin: 0, lineHeight: 1.6 }}>{descricao}</p>
     </div>
   )
 }
 
-function Passo({ numero, titulo, descricao }: any) {
+function Diferencial({ icon, titulo, descricao, destaque }: any) {
   return (
-    <div style={{ textAlign: 'center' as const }}>
-      <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0ebff', color: '#6043C1', fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>{numero}</div>
-      <p style={{ fontSize: 17, fontWeight: 700, color: '#0a0a0a', margin: '0 0 8px' }}>{titulo}</p>
+    <div style={{ background: 'white', borderRadius: 14, padding: 28, border: '1px solid #f0f0f0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 10, background: '#f0ebff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
+        {destaque && <span style={{ fontSize: 10, fontWeight: 700, color: '#6043C1', background: '#f0ebff', padding: '4px 9px', borderRadius: 12, textTransform: 'uppercase' as const, letterSpacing: '0.06em' as const }}>{destaque}</span>}
+      </div>
+      <p style={{ fontSize: 17, fontWeight: 600, color: '#0a0a0a', margin: '0 0 8px' }}>{titulo}</p>
       <p style={{ fontSize: 13, color: '#525252', margin: 0, lineHeight: 1.6 }}>{descricao}</p>
     </div>
+  )
+}
+
+function ParaQuem({ icon, titulo, descricao }: any) {
+  return (
+    <div style={{ background: 'white', borderRadius: 14, padding: 28, textAlign: 'center' as const, border: '1px solid #f0f0f0' }}>
+      <div style={{ fontSize: 36, marginBottom: 14 }}>{icon}</div>
+      <p style={{ fontSize: 17, fontWeight: 600, color: '#0a0a0a', margin: '0 0 8px' }}>{titulo}</p>
+      <p style={{ fontSize: 13, color: '#525252', margin: 0, lineHeight: 1.6 }}>{descricao}</p>
+    </div>
+  )
+}
+
+function ItemLista({ texto, negativo, positivo, dark }: any) {
+  return (
+    <li style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', fontSize: 14, color: dark ? 'rgba(255,255,255,0.85)' : '#404040', lineHeight: 1.5 }}>
+      {negativo && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: 2 }}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+      {positivo && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: 2 }}><polyline points="20 6 9 17 4 12"/></svg>}
+      {texto}
+    </li>
   )
 }
 
@@ -302,7 +443,7 @@ function Plano({ nome, descricao, precoMensal, precoAnual, periodo, cta, onCta, 
         <span style={{ fontSize: 14, color: '#9ca3af' }}>/mês</span>
       </div>
       {periodo === 'anual' && (
-        <p style={{ fontSize: 11, color: '#10b981', margin: '-12px 0 16px', fontWeight: 600 }}>cobrado anualmente · economia de R$ {(precoMensal - precoAnual) * 12}</p>
+        <p style={{ fontSize: 11, color: '#10b981', margin: '-12px 0 16px', fontWeight: 600 }}>cobrado anualmente · economia de R$ {(precoMensal - precoAnual) * 12}/ano</p>
       )}
       <button onClick={onCta} style={{ width: '100%', padding: '12px', borderRadius: 10, background: destaque ? '#0a0a0a' : 'white', color: destaque ? 'white' : '#0a0a0a', border: destaque ? 'none' : '1px solid #e5e5e5', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 24 }}>{cta}</button>
       <ul style={{ listStyle: 'none' as const, padding: 0, margin: 0 }}>
