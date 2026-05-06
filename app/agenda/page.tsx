@@ -1614,12 +1614,12 @@ function SubModalRealizado({ ag, onClose, onSaved }: { ag: any; onClose: () => v
 
   useEffect(() => {
     (async () => {
-      // Busca valor_consulta do medico pra sugerir
-      if (ag.medico_id) {
-        const { data: m } = await supabase.from('medicos').select('valor_consulta').eq('id', ag.medico_id).maybeSingle()
-        if (m?.valor_consulta) {
-          setValorSugestao(Number(m.valor_consulta))
-          setValor(String(m.valor_consulta).replace('.', ','))
+      // Busca valor do procedimento vinculado ao agendamento (se tiver)
+      if (ag.procedimento_id) {
+        const { data: proc } = await supabase.from('procedimentos').select('valor, nome').eq('id', ag.procedimento_id).maybeSingle()
+        if (proc?.valor) {
+          setValorSugestao(Number(proc.valor))
+          setValor(String(proc.valor).replace('.', ','))
         }
       }
       setCarregandoSugestao(false)
@@ -1714,9 +1714,9 @@ function SubModalRealizado({ ag, onClose, onSaved }: { ag: any; onClose: () => v
             style={{ width: '100%', padding: '10px 12px 10px 38px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const, fontWeight: 600 }} autoFocus/>
         </div>
         {valorSugestao !== null ? (
-          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 14px' }}>💡 Sugestão automática do médico ({valorSugestao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</p>
+          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 14px' }}>💡 Valor sugerido pelo procedimento ({valorSugestao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</p>
         ) : (
-          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 14px' }}>Configure valor padrão no perfil do médico para sugestão automática</p>
+          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 14px' }}>Vincule um procedimento ao agendamento para sugestão automática</p>
         )}
 
         {/* Forma pagamento */}
