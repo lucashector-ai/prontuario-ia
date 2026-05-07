@@ -350,10 +350,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
         <div className="lp-footer-grid" style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <div style={{ width: 24, height: 24, background: '#6043C1', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              </div>
-              <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>Clinical 360</span>
+              <img src="/logo-clinical-360.svg" alt="Clinical 360" style={{ height: 26, width: 'auto', objectFit: 'contain' as const, filter: 'brightness(0) invert(1)' }}/>
             </div>
             <p style={{ margin: 0, lineHeight: 1.6 }}>Prontuário com IA para clínicas modernas. Feito no Brasil, com 💜.</p>
           </div>
@@ -399,10 +396,7 @@ function NavBar({ router }: { router: any }) {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 28, height: 28, background: '#6043C1', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              </div>
-              <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em' as const }}>Clinical 360</span>
+              <img src="/logo-clinical-360.svg" alt="Clinical 360" style={{ height: 30, width: 'auto', objectFit: 'contain' as const }}/>
             </div>
             <div className="lp-nav-links">
               <a href="#features" style={navLink}>Recursos</a>
