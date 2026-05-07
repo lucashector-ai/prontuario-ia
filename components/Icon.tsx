@@ -1,4 +1,4 @@
-// Biblioteca de ícones SVG usados no MedIA
+// Biblioteca de ícones SVG usados no Clinical 360
 // Substitui emojis por ícones consistentes
 
 type IconProps = {

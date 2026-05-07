@@ -122,7 +122,7 @@ table{width:100%;border-collapse:collapse}
 <div class="header">
   <div class="header-top">
     <div>
-      <div class="clinic">${m?.clinica || "MedIA"}</div>
+      <div class="clinic">${m?.clinica || "Clinical 360"}</div>
       <div class="periodo">Relatório mensal · ${nomeMes}</div>
     </div>
     <div class="medico-info">
@@ -183,7 +183,7 @@ ${proxAgendamentos.length > 0 ? `
 </div>` : ""}
 
 <div class="footer">
-  <div class="footer-text">MedIA · Relatório gerado automaticamente · ${hoje}</div>
+  <div class="footer-text">Clinical 360 · Relatório gerado automaticamente · ${hoje}</div>
   <div class="assinatura">
     <div class="assinatura-linha"></div>
     <div style="font-size:12px;font-weight:700">${m?.nome || ""}</div>

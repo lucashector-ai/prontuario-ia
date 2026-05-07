@@ -45,10 +45,10 @@ export default function WhatsAppApp() {
   const piscarTitulo = (naoLidas: number) => {
     if (typeof document === 'undefined') return
     if (titleInterval.current) clearInterval(titleInterval.current)
-    if (naoLidas === 0) { document.title = 'MedIA — WhatsApp'; return }
+    if (naoLidas === 0) { document.title = 'Clinical 360 — WhatsApp'; return }
     let toggle = false
     titleInterval.current = setInterval(() => {
-      document.title = toggle ? `(${naoLidas}) MedIA — WhatsApp` : '🔔 Nova mensagem!'
+      document.title = toggle ? `(${naoLidas}) Clinical 360 — WhatsApp` : '🔔 Nova mensagem!'
       toggle = !toggle
     }, 1200)
   }
@@ -253,7 +253,7 @@ export default function WhatsAppApp() {
     if (prevConvCount.current > 0 && novasNaoLidas > prevConvCount.current) {
       tocarSom()
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        new Notification('Nova mensagem — MedIA WhatsApp', { body: 'Você tem novas mensagens', icon: '/favicon.ico' })
+        new Notification('Nova mensagem — Clinical 360 WhatsApp', { body: 'Você tem novas mensagens', icon: '/favicon.ico' })
       }
     }
     prevConvCount.current = novasNaoLidas
@@ -971,7 +971,7 @@ export default function WhatsAppApp() {
             </svg>
           </div>
           <div style={{textAlign:'center'}}>
-            <p style={{fontSize:28,fontWeight:300,color:'#41525d',margin:'0 0 8px'}}>MedIA WhatsApp</p>
+            <p style={{fontSize:28,fontWeight:300,color:'#41525d',margin:'0 0 8px'}}>Clinical 360 WhatsApp</p>
             <p style={{fontSize:14,color:'#667781',margin:'0 0 4px'}}>Selecione uma conversa para começar</p>
             <p style={{fontSize:12,color:'#aebac1',margin:0}}>{config?`Conectado · ${config.phone_number||config.phone_number_id}`:'⚠ WhatsApp não configurado'}</p>
           </div>

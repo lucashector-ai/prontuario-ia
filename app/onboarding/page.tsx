@@ -7,7 +7,7 @@ type TipoConta = 'clinica' | 'medico' | null
 
 const passosMedico = [
   {
-    titulo: "Bem-vindo ao MedIA",
+    titulo: "Bem-vindo ao Clinical 360",
     subtitulo: "Seu assistente médico inteligente",
     desc: "Em poucos minutos você estará pronto para fazer sua primeira consulta com transcrição automática e prontuário gerado por IA.",
     cta: "Começar",
@@ -39,7 +39,7 @@ const passosMedico = [
 
 const passosClinica = [
   {
-    titulo: "Bem-vindo ao MedIA",
+    titulo: "Bem-vindo ao Clinical 360",
     subtitulo: "Prontuário com IA pra toda sua equipe",
     desc: "Você acabou de criar a conta da sua clínica. Vamos configurar tudo em poucos minutos para começar a atender.",
     cta: "Começar",
@@ -166,7 +166,7 @@ export default function OnboardingPage() {
             <div style={{ width: 28, height: 28, borderRadius: 8, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>MedIA</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>Clinical 360</span>
           </div>
           <span style={{ fontSize: 12, color: '#9ca3af' }}>Passo {passo + 1} de {passos.length}</span>
         </div>

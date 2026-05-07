@@ -142,7 +142,7 @@ export default function CadastroPage() {
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
             </svg>
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>MedIA</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Clinical 360</h1>
           <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Prontuário inteligente com IA</p>
         </div>
 

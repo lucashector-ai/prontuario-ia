@@ -64,7 +64,7 @@ body{font-family:Arial,sans-serif;color:#111;padding:50px;max-width:780px;margin
 <button class="btn no-print" onclick="window.print()">Imprimir / Salvar PDF</button>
 
 <div class="header">
-  <div class="clinica">${medico?.clinica || "Clínica MedIA"}</div>
+  <div class="clinica">${medico?.clinica || "Clínica Clinical 360"}</div>
   <div class="title">Análise de Exame</div>
   <div class="subtitle">Gerado em ${hoje} ${medico?.nome ? "• Dr(a). " + medico.nome : ""} ${medico?.crm ? "• CRM " + medico.crm : ""}</div>
 </div>
@@ -100,7 +100,7 @@ ${renderRecomendacoes}
 
 <div class="footer">
   <div>${hoje}</div>
-  <div>MedIA — Análise assistida por IA</div>
+  <div>Clinical 360 — Análise assistida por IA</div>
 </div>
 </body></html>`
     return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } })

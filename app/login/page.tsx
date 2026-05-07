@@ -103,14 +103,14 @@ function LoginForm() {
       <div className="login-form-pane" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 60px', background: 'white' }}>
         <div style={{ width: '100%', maxWidth: 380 }}>
 
-          {/* Logo MedIA */}
+          {/* Logo Clinical 360 */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 32 }}>
             <div style={{ width: 40, height: 40, background: '#6043C1', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
               </svg>
             </div>
-            <span style={{ fontSize: 22, fontWeight: 700, color: '#0a0a0a', letterSpacing: '-0.02em' as const }}>MedIA</span>
+            <span style={{ fontSize: 22, fontWeight: 700, color: '#0a0a0a', letterSpacing: '-0.02em' as const }}>Clinical 360</span>
           </div>
 
           {/* Título */}

@@ -140,16 +140,7 @@ export function Sidebar() {
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '4px 10px', marginBottom: 24,
       }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 9,
-          background: ACCENT,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'>
-            <path d='M4 18 L4 6 L10 6 L12 9 L20 9 L20 18 Z'/>
-          </svg>
-        </div>
-        <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>MedIA</span>
+        <img src="/logo-clinical-360.svg" alt="Clinical 360" style={{ height: 28, width: 'auto', objectFit: 'contain' as const }}/>
       </div>
 
       {/* Grupos de navegação */}

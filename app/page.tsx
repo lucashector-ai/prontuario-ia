@@ -133,11 +133,11 @@ function Landing({ periodo, setPeriodo, router }: any) {
         </div>
       </section>
 
-      {/* ANTES vs COM MedIA */}
+      {/* ANTES vs COM Clinical 360 */}
       <section className="lp-section" style={{ background: '#fafafa' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 48 }}>
-            <p style={selo}>Por que MedIA</p>
+            <p style={selo}>Por que Clinical 360</p>
             <h2 className="lp-section-h2" style={{ ...titulo, margin: '0 0 12px' }}>Antes você atendia papelada.<br/>Agora você atende pacientes.</h2>
           </div>
           <div className="lp-grid-2">
@@ -152,7 +152,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
               </ul>
             </div>
             <div style={{ background: '#0a0a0a', borderRadius: 16, padding: 32, color: 'white' }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 16px' }}>Com MedIA</p>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase' as const, letterSpacing: '0.08em' as const, margin: '0 0 16px' }}>Com Clinical 360</p>
               <ul style={{ listStyle: 'none' as const, padding: 0, margin: 0 }}>
                 <ItemLista positivo dark texto="Prontuário SOAP gerado pela IA em 30 segundos"/>
                 <ItemLista positivo dark texto="Receita digital Memed com validade legal ICP-Brasil"/>
@@ -172,7 +172,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
             <p style={selo}>Recursos</p>
             <h2 className="lp-section-h2" style={{ ...titulo, margin: '0 0 12px' }}>Tudo que sua clínica precisa.<br/>E IA em cada canto.</h2>
             <p style={{ fontSize: 15, color: '#525252', maxWidth: 540, margin: '0 auto' }}>
-              Os concorrentes vendem IA como módulo extra. No MedIA, IA é o ponto de partida.
+              Os concorrentes vendem IA como módulo extra. No Clinical 360, IA é o ponto de partida.
             </p>
           </div>
 
@@ -216,7 +216,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' as const, marginBottom: 48 }}>
             <p style={selo}>Diferenciais</p>
-            <h2 className="lp-section-h2" style={{ ...titulo, margin: '0 0 12px' }}>O que só o MedIA tem.</h2>
+            <h2 className="lp-section-h2" style={{ ...titulo, margin: '0 0 12px' }}>O que só o Clinical 360 tem.</h2>
           </div>
 
           <div className="lp-grid-2">
@@ -323,10 +323,10 @@ function Landing({ periodo, setPeriodo, router }: any) {
             <h2 className="lp-section-h2" style={{ ...titulo, margin: 0 }}>Perguntas frequentes</h2>
           </div>
 
-          <FAQItem pergunta="O MedIA está em conformidade com a LGPD?" resposta="Sim. Tratamos dados de saúde como categoria especial conforme exige a LGPD. Temos DPO designado, política de privacidade, consentimento expresso do paciente e backup com PITR no Supabase."/>
+          <FAQItem pergunta="O Clinical 360 está em conformidade com a LGPD?" resposta="Sim. Tratamos dados de saúde como categoria especial conforme exige a LGPD. Temos DPO designado, política de privacidade, consentimento expresso do paciente e backup com PITR no Supabase."/>
           <FAQItem pergunta="Como funciona a gravação da consulta?" resposta="O paciente é informado antes e dá consentimento. A gravação fica criptografada, é processada pela IA para gerar SOAP, e você decide se quer manter ou apagar o áudio."/>
           <FAQItem pergunta="A IA pode errar no prontuário?" resposta="Pode. Por isso TODO prontuário gerado é apenas um rascunho — você revisa, edita e assina. A IA acerta ~90% dos casos, ganhando 70% do seu tempo. Os 10% você ajusta em segundos."/>
-          <FAQItem pergunta="Preciso instalar algo?" resposta="Não. MedIA roda no navegador. Funciona em qualquer computador, tablet ou celular. A teleconsulta também é nativa, sem precisar Google Meet ou Zoom."/>
+          <FAQItem pergunta="Preciso instalar algo?" resposta="Não. Clinical 360 roda no navegador. Funciona em qualquer computador, tablet ou celular. A teleconsulta também é nativa, sem precisar Google Meet ou Zoom."/>
           <FAQItem pergunta="Posso migrar de outro sistema?" resposta="Sim. Importamos pacientes via CSV. Para clínicas com sistemas grandes (iClinic, Doctoralia), nossa equipe ajuda na migração — incluído no plano Pro, opcional nos demais."/>
           <FAQItem pergunta="Quanto custa um médico extra?" resposta="No plano Clínica, até 10 usuários inclusos (médicos + recepção). Acima disso, recomendamos o Pro com usuários ilimitados."/>
         </div>
@@ -353,7 +353,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
               <div style={{ width: 24, height: 24, background: '#6043C1', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
               </div>
-              <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>MedIA</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>Clinical 360</span>
             </div>
             <p style={{ margin: 0, lineHeight: 1.6 }}>Prontuário com IA para clínicas modernas. Feito no Brasil, com 💜.</p>
           </div>
@@ -377,7 +377,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
           </div>
         </div>
         <div style={{ maxWidth: 1100, margin: '32px auto 0', paddingTop: 24, borderTop: '1px solid #262626', fontSize: 12 }}>
-          © 2026 MedIA. Todos os direitos reservados.
+          © 2026 Clinical 360. Todos os direitos reservados.
         </div>
       </footer>
     </div>
@@ -402,7 +402,7 @@ function NavBar({ router }: { router: any }) {
               <div style={{ width: 28, height: 28, background: '#6043C1', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
               </div>
-              <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em' as const }}>MedIA</span>
+              <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em' as const }}>Clinical 360</span>
             </div>
             <div className="lp-nav-links">
               <a href="#features" style={navLink}>Recursos</a>

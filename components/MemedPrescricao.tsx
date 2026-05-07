@@ -13,7 +13,7 @@ declare global {
 }
 
 interface PacienteMemed {
-  /** ID externo do paciente (UUID do MedIA) */
+  /** ID externo do paciente (UUID do Clinical 360) */
   id: string
   nome: string
   cpf?: string | null

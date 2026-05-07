@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     if (!conversas?.length) return NextResponse.json({ enviados: 0, mensagem: 'Nenhum paciente inativo' })
 
-    const clinica = config.nome_exibicao || 'Clinica MedIA'
+    const clinica = config.nome_exibicao || 'Clinica Clinical 360'
     let enviados = 0
 
     for (const conv of conversas) {

@@ -91,7 +91,7 @@ export default function SuperAdmin() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
           <div>
-            <p style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>MedIA SuperAdmin</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>Clinical 360 SuperAdmin</p>
             <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>Acesso restrito</p>
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function SuperAdmin() {
           <div style={{ width: 28, height: 28, borderRadius: 7, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>MedIA SuperAdmin</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>Clinical 360 SuperAdmin</span>
           <span style={{ fontSize: 11, color: '#64748b', background: '#334155', padding: '2px 8px', borderRadius: 10 }}>v1.0</span>
         </div>
         <div style={{ display: 'flex', gap: 4 }}>

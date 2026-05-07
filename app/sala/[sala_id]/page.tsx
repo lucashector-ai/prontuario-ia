@@ -966,13 +966,13 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
     if (tela === 'precall') return (
     <div style={{ minHeight: '100dvh', background: '#F5F5F5', display: 'flex', flexDirection: 'column' }}>
-      {/* Header MedIA */}
+      {/* Header Clinical 360 */}
       <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 34, height: 34, borderRadius: 8, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>
         </div>
         <div>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>MedIA</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Clinical 360</p>
           <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}{pacienteSala?.nome ? ' · ' + pacienteSala.nome : ''}</p>
         </div>
       </div>

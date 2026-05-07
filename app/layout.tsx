@@ -4,8 +4,8 @@ import { ToastProvider } from '@/components/Toast'
 import { AppShell } from '@/components/AppShell'
 
 export const metadata: Metadata = {
-  title: 'MedIA — Prontuário Inteligente',
-  description: 'Plataforma de documentação clínica com inteligência artificial',
+  title: 'Clinical 360 — Gestão Inteligente da Clínica',
+  description: 'Plataforma completa de gestão clínica com inteligência artificial — agenda, prontuário, financeiro e teleconsulta em um só lugar.',
   icons: { icon: '/favicon.svg' },
 }
 

@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     if (!consultas?.length) return NextResponse.json({ enviados: 0 })
 
     let enviados = 0
-    const clinica = config.nome_exibicao || 'Clinica MedIA'
+    const clinica = config.nome_exibicao || 'Clinica Clinical 360'
 
     for (const c of consultas) {
       const paciente = c.pacientes as any

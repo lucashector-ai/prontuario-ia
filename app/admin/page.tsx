@@ -207,7 +207,7 @@ export default function Admin() {
   const copiarCredenciais = () => {
     if (!senhaGerada) return
     const label = senhaGerada.tipo === 'recepcionista' ? 'Recepcionista' : 'Médico'
-    const texto = `Acesso MedIA — ${label} ${senhaGerada.pessoa.nome}\nEmail: ${senhaGerada.pessoa.email}\nSenha provisória: ${senhaGerada.senha}\n\nNo primeiro login você vai precisar trocar a senha.`
+    const texto = `Acesso Clinical 360 — ${label} ${senhaGerada.pessoa.nome}\nEmail: ${senhaGerada.pessoa.email}\nSenha provisória: ${senhaGerada.senha}\n\nNo primeiro login você vai precisar trocar a senha.`
     navigator.clipboard.writeText(texto)
     setSenhaCopiada(true)
     setTimeout(() => setSenhaCopiada(false), 2000)

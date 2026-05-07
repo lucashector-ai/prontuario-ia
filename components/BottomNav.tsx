@@ -186,7 +186,7 @@ export function BottomNav() {
                 </svg>
               </div>
               <div>
-                <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0 }}>MedIA</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0 }}>Clinical 360</p>
                 <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>
                   {clinicaAdmin?.nome || medico?.nome || 'Menu'}
                 </p>
