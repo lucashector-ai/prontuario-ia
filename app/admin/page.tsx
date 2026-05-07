@@ -437,10 +437,16 @@ export default function Admin() {
                   placeholder="email@clinica.com.br" style={inputStyle}/>
               </div>
               {modalNovoTipo === 'medico' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label style={labelStyle}>CRM</label>
-                    <input value={form.crm} onChange={e => setForm(p => ({ ...p, crm: e.target.value }))} placeholder="CRM/SP 123456" style={inputStyle}/>
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={labelStyle}>CRM</label>
+                      <input value={form.crm} onChange={e => setForm(p => ({ ...p, crm: e.target.value }))} placeholder="CRM/SP 123456" style={inputStyle}/>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Especialidade</label>
+                      <EspecialidadeSelect value={form.especialidade} onChange={v => setForm(p => ({ ...p, especialidade: v }))} />
+                    </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div>
@@ -452,11 +458,7 @@ export default function Admin() {
                       <input type="date" value={form.data_nascimento} onChange={e => setForm(p => ({ ...p, data_nascimento: e.target.value }))} style={inputStyle}/>
                     </div>
                   </div>
-                  <div>
-                    <label style={labelStyle}>Especialidade</label>
-                    <EspecialidadeSelect value={form.especialidade} onChange={v => setForm(p => ({ ...p, especialidade: v }))} />
-                  </div>
-                </div>
+                </>
               )}
               {modalNovoTipo === 'medico' && (
                 <div>
@@ -529,19 +531,19 @@ export default function Admin() {
                     <label style={labelStyle}>CRM</label>
                     <input value={formEditar.crm} onChange={e => setFormEditar(p => ({ ...p, crm: e.target.value }))} style={inputStyle}/>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div>
-                      <label style={labelStyle}>CPF *</label>
-                      <input value={formEditar.cpf} onChange={e => setFormEditar(p => ({ ...p, cpf: formatarCPF(e.target.value) }))} placeholder="123.456.789-10" maxLength={14} style={inputStyle}/>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Data de nascimento *</label>
-                      <input type="date" value={formEditar.data_nascimento} onChange={e => setFormEditar(p => ({ ...p, data_nascimento: e.target.value }))} style={inputStyle}/>
-                    </div>
-                  </div>
                   <div>
                     <label style={labelStyle}>Especialidade</label>
                     <EspecialidadeSelect value={formEditar.especialidade} onChange={v => setFormEditar(p => ({ ...p, especialidade: v }))} />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={labelStyle}>CPF *</label>
+                    <input value={formEditar.cpf} onChange={e => setFormEditar(p => ({ ...p, cpf: formatarCPF(e.target.value) }))} placeholder="123.456.789-10" maxLength={14} style={inputStyle}/>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Data de nascimento *</label>
+                    <input type="date" value={formEditar.data_nascimento} onChange={e => setFormEditar(p => ({ ...p, data_nascimento: e.target.value }))} style={inputStyle}/>
                   </div>
                 </div>
               )}
