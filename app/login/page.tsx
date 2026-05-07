@@ -100,13 +100,14 @@ function LoginForm() {
       </div>
 
       {/* Painel direito - form centralizado */}
-      <div className="login-form-pane" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 60px', background: 'white' }}>
-        <div style={{ width: '100%', maxWidth: 380 }}>
+      <div className="login-form-pane" style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', padding: '40px 60px', background: 'white', position: 'relative' as const }}>
 
-          {/* Logo Clinical 360 */}
-          <div style={{ marginBottom: 32 }}>
-            <img src="/logo-clinical-360.svg" alt="Clinical 360" style={{ height: 38, width: 'auto', objectFit: 'contain' as const }}/>
-          </div>
+        {/* Logo Clinical 360 - topo */}
+        <div style={{ marginTop: 8, marginBottom: 'auto', paddingTop: 24 }}>
+          <img src="/logo-clinical-360.svg" alt="Clinical 360" style={{ height: 36, width: 'auto', objectFit: 'contain' as const }}/>
+        </div>
+
+        <div style={{ width: '100%', maxWidth: 380, marginBottom: 'auto' }}>
 
           {/* Título */}
           <div style={{ textAlign: 'center' as const, marginBottom: 28 }}>
