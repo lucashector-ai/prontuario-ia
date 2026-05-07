@@ -10,7 +10,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   try {
     const body = await req.json()
     const allowedFields: any = {}
-    const fields = ['nome', 'email', 'crm', 'especialidade', 'cargo', 'ativo', 'telefone', 'cor', 'comissao_tipo', 'comissao_valor', 'comissao_base', 'cpf', 'data_nascimento']
+    const fields = ['nome', 'email', 'crm', 'especialidade', 'cargo', 'ativo', 'telefone', 'cor', 'comissao_tipo', 'comissao_valor', 'comissao_base']
     for (const f of fields) {
       if (body[f] !== undefined) allowedFields[f] = body[f]
     }

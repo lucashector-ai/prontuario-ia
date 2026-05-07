@@ -6,15 +6,6 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
 
-
-function formatarCPF(v: string): string {
-  const d = v.replace(/\D/g, '').slice(0, 11)
-  if (d.length <= 3) return d
-  if (d.length <= 6) return d.slice(0, 3) + '.' + d.slice(3)
-  if (d.length <= 9) return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6)
-  return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9)
-}
-
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
 const BG = '#F5F5F5'
@@ -42,8 +33,8 @@ export default function Admin() {
   const [senhaGerada, setSenhaGerada] = useState<{ pessoa: any; senha: string; tipo: 'medico' | 'recepcionista' } | null>(null)
   const [senhaCopiada, setSenhaCopiada] = useState(false)
 
-  const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
-  const [formEditar, setFormEditar] = useState({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cargo: 'medico', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
+  const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
+  const [formEditar, setFormEditar] = useState({ nome: '', email: '', crm: '', especialidade: '', cargo: 'medico', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
   const [salvando, setSalvando] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -122,11 +113,6 @@ export default function Admin() {
 
   const handleCriar = async () => {
     if (!form.nome || !form.email) { toast('Preencha nome e email', 'error'); return }
-    if (modalNovoTipo === 'medico') {
-      const cpfDigits = form.cpf.replace(/\D/g, '')
-      if (cpfDigits.length !== 11) { toast('CPF é obrigatório (11 dígitos) para médicos', 'error'); return }
-      if (!form.data_nascimento) { toast('Data de nascimento é obrigatória para médicos', 'error'); return }
-    }
     setSalvando(true)
     try {
       const payload: any = {
@@ -138,8 +124,6 @@ export default function Admin() {
       if (modalNovoTipo === 'medico') {
         payload.crm = form.crm
         payload.especialidade = form.especialidade
-        payload.cpf = form.cpf.replace(/\D/g, '')
-        payload.data_nascimento = form.data_nascimento
         payload.cor = form.cor
         payload.comissao_tipo = form.comissao_tipo || 'sem'
         payload.comissao_valor = form.comissao_valor ? parseFloat(form.comissao_valor.replace(',', '.')) : null
@@ -154,7 +138,7 @@ export default function Admin() {
       if (data.medico && data.senha_provisoria_gerada) {
         const tipoSalvo = modalNovoTipo!
         setModalNovoTipo(null)
-        setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' })
+        setForm({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' })
         setSenhaGerada({ pessoa: data.medico, senha: data.senha_provisoria_gerada, tipo: tipoSalvo })
         await carregarDados(medico.clinica_id)
       } else throw new Error(data.error || 'Erro ao criar')
@@ -168,7 +152,7 @@ export default function Admin() {
     try {
       const res = await fetch(`/api/medicos/${modalEditar.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formEditar, cpf: formEditar.cpf ? formEditar.cpf.replace(/\D/g, '') : '' }),
+        body: JSON.stringify(formEditar),
       })
       const data = await res.json()
       if (data.medico) {
@@ -205,8 +189,6 @@ export default function Admin() {
     setFormEditar({
       nome: m.nome || '', email: m.email || '',
       crm: m.crm || '', especialidade: m.especialidade || '',
-      cpf: m.cpf ? formatarCPF(m.cpf) : '',
-      data_nascimento: m.data_nascimento || '',
       cargo: m.cargo || 'medico',
       comissao_tipo: m.comissao_tipo || 'sem',
       comissao_valor: m.comissao_valor ? String(m.comissao_valor).replace('.', ',') : '',
@@ -285,14 +267,14 @@ export default function Admin() {
               padding: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
             }}>
               <button
-                onClick={() => { setModalNovoTipo('medico'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
+                onClick={() => { setModalNovoTipo('medico'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
                 style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: '#374151', background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
                 onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 + Médico
               </button>
               <button
-                onClick={() => { setModalNovoTipo('recepcionista'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
+                onClick={() => { setModalNovoTipo('recepcionista'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
                 style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: '#374151', background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
                 onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
@@ -442,16 +424,6 @@ export default function Admin() {
                     <label style={labelStyle}>CRM</label>
                     <input value={form.crm} onChange={e => setForm(p => ({ ...p, crm: e.target.value }))} placeholder="CRM/SP 123456" style={inputStyle}/>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div>
-                      <label style={labelStyle}>CPF *</label>
-                      <input value={form.cpf} onChange={e => setForm(p => ({ ...p, cpf: formatarCPF(e.target.value) }))} placeholder="123.456.789-10" maxLength={14} style={inputStyle}/>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Data de nascimento *</label>
-                      <input type="date" value={form.data_nascimento} onChange={e => setForm(p => ({ ...p, data_nascimento: e.target.value }))} style={inputStyle}/>
-                    </div>
-                  </div>
                   <div>
                     <label style={labelStyle}>Especialidade</label>
                     <EspecialidadeSelect value={form.especialidade} onChange={v => setForm(p => ({ ...p, especialidade: v }))} />
@@ -528,16 +500,6 @@ export default function Admin() {
                   <div>
                     <label style={labelStyle}>CRM</label>
                     <input value={formEditar.crm} onChange={e => setFormEditar(p => ({ ...p, crm: e.target.value }))} style={inputStyle}/>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div>
-                      <label style={labelStyle}>CPF *</label>
-                      <input value={formEditar.cpf} onChange={e => setFormEditar(p => ({ ...p, cpf: formatarCPF(e.target.value) }))} placeholder="123.456.789-10" maxLength={14} style={inputStyle}/>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Data de nascimento *</label>
-                      <input type="date" value={formEditar.data_nascimento} onChange={e => setFormEditar(p => ({ ...p, data_nascimento: e.target.value }))} style={inputStyle}/>
-                    </div>
                   </div>
                   <div>
                     <label style={labelStyle}>Especialidade</label>
