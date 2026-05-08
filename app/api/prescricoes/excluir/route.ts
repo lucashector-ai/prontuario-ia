@@ -10,11 +10,16 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { prescricao_id_memed, dados_memed } = body
+    const { prescricao_id_memed, prescricao_id_numerico, dados_memed } = body
 
-    if (!prescricao_id_memed) {
-      return NextResponse.json({ error: 'prescricao_id_memed obrigatorio' }, { status: 400 })
+    if (!prescricao_id_memed && !prescricao_id_numerico) {
+      return NextResponse.json({ error: 'prescricao_id_memed ou prescricao_id_numerico obrigatorio' }, { status: 400 })
     }
+
+    // Tenta buscar primeiro pelo id numerico (vem do evento prescricaoExcluida)
+    // depois pelo UUID (caso seja outro fluxo)
+    const idParaBuscar = prescricao_id_numerico || prescricao_id_memed
+    const colunaParaBuscar = prescricao_id_numerico ? 'prescricao_id_numerico' : 'prescricao_id_memed'
 
     const { data, error } = await supabase
       .from('prescricoes')
@@ -23,7 +28,7 @@ export async function POST(req: NextRequest) {
         excluida_em: new Date().toISOString(),
         dados_exclusao: dados_memed || null,
       })
-      .eq('prescricao_id_memed', prescricao_id_memed)
+      .eq(colunaParaBuscar, String(idParaBuscar))
       .select()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

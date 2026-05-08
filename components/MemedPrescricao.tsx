@@ -148,15 +148,30 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
             })
 
             // Listener pra prescricao excluida (Memed compliance)
+            // Memed envia: numero (id numerico) OU objeto { prescricao: { id, prescriptionUuid } }
             window.MdHub.event.add('prescricaoExcluida', (dados: any) => {
               console.log('[Memed] Prescrição excluída:', dados)
-              // Marca como excluida no nosso banco
-              const uuid = dados?.prescricao?.prescriptionUuid || dados?.prescriptionUuid || dados?.id
-              if (uuid) {
+              
+              // Detecta se é numero ou objeto
+              let idNumerico: string | null = null
+              let uuid: string | null = null
+              
+              if (typeof dados === 'number' || typeof dados === 'string') {
+                idNumerico = String(dados)
+              } else if (typeof dados === 'object' && dados !== null) {
+                idNumerico = dados?.prescricao?.id ? String(dados.prescricao.id) : (dados?.id ? String(dados.id) : null)
+                uuid = dados?.prescricao?.prescriptionUuid || dados?.prescriptionUuid || null
+              }
+              
+              if (idNumerico || uuid) {
                 fetch('/api/prescricoes/excluir', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ prescricao_id_memed: String(uuid), dados_memed: dados }),
+                  body: JSON.stringify({
+                    prescricao_id_memed: uuid,
+                    prescricao_id_numerico: idNumerico,
+                    dados_memed: dados,
+                  }),
                 }).catch(err => console.error('Erro ao marcar prescricao como excluida:', err))
               }
             })
