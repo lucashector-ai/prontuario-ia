@@ -16,9 +16,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'paciente_id e medico_id sao obrigatorios' }, { status: 400 })
     }
 
-    // Extrai ID Memed e PDF URL dos dados (estrutura pode variar)
-    const prescricao_id_memed = dados_memed?.id || dados_memed?.prescricao_id || null
-    const pdf_url = dados_memed?.url_pdf || dados_memed?.pdf || dados_memed?.url || null
+    // Extrai ID Memed e PDF URL dos dados (estrutura: { alterada, prescricao: {...}, reimpressao })
+    const presc = dados_memed?.prescricao || dados_memed || {}
+    const prescricao_id_memed = 
+      presc.id || 
+      presc.prescricao_id || 
+      presc.idPrescricao || 
+      dados_memed?.id || 
+      null
+    const pdf_url = 
+      presc.url_pdf || 
+      presc.pdf || 
+      presc.url || 
+      presc.url_paciente ||
+      dados_memed?.url_pdf || 
+      null
 
     const { data, error } = await supabase
       .from('prescricoes')
