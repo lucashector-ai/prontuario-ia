@@ -16,21 +16,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'paciente_id e medico_id sao obrigatorios' }, { status: 400 })
     }
 
-    // Extrai ID Memed e PDF URL dos dados (estrutura: { alterada, prescricao: {...}, reimpressao })
+    // Extrai ID Memed e UUID da prescricao
+    // Estrutura: { alterada, prescricao: { id, prescriptionUuid, documents[], medicamentos[], ... }, reimpressao }
     const presc = dados_memed?.prescricao || dados_memed || {}
-    const prescricao_id_memed = 
-      presc.id || 
-      presc.prescricao_id || 
-      presc.idPrescricao || 
-      dados_memed?.id || 
-      null
-    const pdf_url = 
-      presc.url_pdf || 
-      presc.pdf || 
-      presc.url || 
-      presc.url_paciente ||
-      dados_memed?.url_pdf || 
-      null
+    const prescricao_id_memed = presc.prescriptionUuid || (presc.id ? String(presc.id) : null)
+    
+    // Memed nao retorna URL publica do PDF no evento. 
+    // O PDF precisa ser obtido via API server-side da Memed usando o prescriptionUuid.
+    // Por enquanto salvamos null - lista mostra "PDF nao disponivel" e usuario pode reabrir Memed pra ver/imprimir.
+    const pdf_url = presc.url_pdf || presc.pdf_url || null
 
     const { data, error } = await supabase
       .from('prescricoes')
