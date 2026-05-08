@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
+import { CamposPessoaisMedico } from '@/components/CamposPessoaisMedico'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
@@ -33,8 +34,8 @@ export default function Admin() {
   const [senhaGerada, setSenhaGerada] = useState<{ pessoa: any; senha: string; tipo: 'medico' | 'recepcionista' } | null>(null)
   const [senhaCopiada, setSenhaCopiada] = useState(false)
 
-  const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
-  const [formEditar, setFormEditar] = useState({ nome: '', email: '', crm: '', especialidade: '', cargo: 'medico', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
+  const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
+  const [formEditar, setFormEditar] = useState({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cargo: 'medico', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
   const [salvando, setSalvando] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -113,6 +114,11 @@ export default function Admin() {
 
   const handleCriar = async () => {
     if (!form.nome || !form.email) { toast('Preencha nome e email', 'error'); return }
+    if (modalNovoTipo === 'medico') {
+      const cpfDigits = form.cpf.replace(/\D/g, '')
+      if (cpfDigits.length !== 11) { toast('CPF é obrigatório (11 dígitos)', 'error'); return }
+      if (!form.data_nascimento) { toast('Data de nascimento é obrigatória', 'error'); return }
+    }
     setSalvando(true)
     try {
       const payload: any = {
@@ -124,6 +130,8 @@ export default function Admin() {
       if (modalNovoTipo === 'medico') {
         payload.crm = form.crm
         payload.especialidade = form.especialidade
+        payload.cpf = form.cpf.replace(/\D/g, '')
+        payload.data_nascimento = form.data_nascimento
         payload.cor = form.cor
         payload.comissao_tipo = form.comissao_tipo || 'sem'
         payload.comissao_valor = form.comissao_valor ? parseFloat(form.comissao_valor.replace(',', '.')) : null
@@ -138,7 +146,7 @@ export default function Admin() {
       if (data.medico && data.senha_provisoria_gerada) {
         const tipoSalvo = modalNovoTipo!
         setModalNovoTipo(null)
-        setForm({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' })
+        setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' })
         setSenhaGerada({ pessoa: data.medico, senha: data.senha_provisoria_gerada, tipo: tipoSalvo })
         await carregarDados(medico.clinica_id)
       } else throw new Error(data.error || 'Erro ao criar')
@@ -152,7 +160,7 @@ export default function Admin() {
     try {
       const res = await fetch(`/api/medicos/${modalEditar.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formEditar),
+        body: JSON.stringify({ ...formEditar, cpf: formEditar.cpf ? formEditar.cpf.replace(/\D/g, '') : '' }),
       })
       const data = await res.json()
       if (data.medico) {
@@ -189,6 +197,8 @@ export default function Admin() {
     setFormEditar({
       nome: m.nome || '', email: m.email || '',
       crm: m.crm || '', especialidade: m.especialidade || '',
+      cpf: m.cpf || '',
+      data_nascimento: m.data_nascimento || '',
       cargo: m.cargo || 'medico',
       comissao_tipo: m.comissao_tipo || 'sem',
       comissao_valor: m.comissao_valor ? String(m.comissao_valor).replace('.', ',') : '',
@@ -267,14 +277,14 @@ export default function Admin() {
               padding: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
             }}>
               <button
-                onClick={() => { setModalNovoTipo('medico'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
+                onClick={() => { setModalNovoTipo('medico'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
                 style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: '#374151', background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
                 onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 + Médico
               </button>
               <button
-                onClick={() => { setModalNovoTipo('recepcionista'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
+                onClick={() => { setModalNovoTipo('recepcionista'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
                 style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: '#374151', background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
                 onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
@@ -431,6 +441,13 @@ export default function Admin() {
                 </div>
               )}
               {modalNovoTipo === 'medico' && (
+                <CamposPessoaisMedico
+                  cpf={form.cpf}
+                  data_nascimento={form.data_nascimento}
+                  onChange={(campo, valor) => setForm(p => ({ ...p, [campo]: valor }))}
+                />
+              )}
+              {modalNovoTipo === 'medico' && (
                 <div>
                   <label style={labelStyle}>Cor na agenda</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
@@ -516,6 +533,15 @@ export default function Admin() {
                 </select>
               </div>
             </div>
+            {modalEditar?.cargo === 'medico' && (
+              <div style={{ marginTop: 12 }}>
+                <CamposPessoaisMedico
+                  cpf={formEditar.cpf}
+                  data_nascimento={formEditar.data_nascimento}
+                  onChange={(campo, valor) => setFormEditar(p => ({ ...p, [campo]: valor }))}
+                />
+              </div>
+            )}
             {modalEditar?.cargo === 'medico' && <CamposComissao form={formEditar} setForm={setFormEditar}/>}
             <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
               <button onClick={() => setModalEditar(null)} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
