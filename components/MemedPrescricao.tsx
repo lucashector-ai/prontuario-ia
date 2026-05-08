@@ -146,6 +146,20 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
               console.log('[Memed] Prescrição gerada:', dados)
               if (onPrescricaoGerada) onPrescricaoGerada(dados)
             })
+
+            // Listener pra prescricao excluida (Memed compliance)
+            window.MdHub.event.add('prescricaoExcluida', (dados: any) => {
+              console.log('[Memed] Prescrição excluída:', dados)
+              // Marca como excluida no nosso banco
+              const uuid = dados?.prescricao?.prescriptionUuid || dados?.prescriptionUuid || dados?.id
+              if (uuid) {
+                fetch('/api/prescricoes/excluir', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ prescricao_id_memed: String(uuid), dados_memed: dados }),
+                }).catch(err => console.error('Erro ao marcar prescricao como excluida:', err))
+              }
+            })
           }
 
           setEstado('pronto')

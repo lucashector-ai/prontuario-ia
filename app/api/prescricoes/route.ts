@@ -58,6 +58,7 @@ export async function GET(req: NextRequest) {
       .from('prescricoes')
       .select('*, medicos:medico_id(nome, crm, especialidade)')
       .eq('paciente_id', pacienteId)
+      .or('excluida.is.null,excluida.eq.false')
       .order('criado_em', { ascending: false })
       .limit(100)
 
