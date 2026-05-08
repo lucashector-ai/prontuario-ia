@@ -11,8 +11,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const body = await req.json()
     const allowedFields: any = {}
     const fields = ['nome', 'email', 'crm', 'especialidade', 'cargo', 'ativo', 'telefone', 'cor', 'comissao_tipo', 'comissao_valor', 'comissao_base', 'cpf', 'data_nascimento']
+    const numericFields = ['comissao_valor']
+    const dateFields = ['data_nascimento']
     for (const f of fields) {
-      if (body[f] !== undefined) allowedFields[f] = body[f]
+      if (body[f] !== undefined) {
+        let v = body[f]
+        // Converte string vazia em null pra campos numericos e de data
+        if ((numericFields.includes(f) || dateFields.includes(f)) && (v === '' || v === undefined)) {
+          v = null
+        }
+        allowedFields[f] = v
+      }
     }
 
     const { data, error } = await supabase

@@ -160,7 +160,12 @@ export default function Admin() {
     try {
       const res = await fetch(`/api/medicos/${modalEditar.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formEditar, cpf: formEditar.cpf ? formEditar.cpf.replace(/\D/g, '') : '' }),
+        body: JSON.stringify({
+        ...formEditar,
+        cpf: formEditar.cpf ? formEditar.cpf.replace(/\D/g, '') : null,
+        comissao_valor: formEditar.comissao_valor ? parseFloat(formEditar.comissao_valor.replace(',', '.')) : null,
+        data_nascimento: formEditar.data_nascimento || null,
+      }),
       })
       const data = await res.json()
       if (data.medico) {
