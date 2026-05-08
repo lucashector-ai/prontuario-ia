@@ -1468,7 +1468,20 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             endereco: pacienteSala.endereco,
           }}
           onClose={() => setMemedAberto(false)}
-          onPrescricaoGerada={() => setMemedAberto(false)}
+          onPrescricaoGerada={(dados: any) => {
+            // Salva prescricao no banco (Memed compliance)
+            fetch('/api/prescricoes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                paciente_id: pacienteSala?.id,
+                medico_id: medicoSala?.id,
+                clinica_id: medicoSala?.clinica_id || null,
+                dados_memed: dados,
+              }),
+            }).catch((err: any) => console.error('Erro ao salvar prescricao:', err))
+            setMemedAberto(false)
+          }}
         />
       )}
 

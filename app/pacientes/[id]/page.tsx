@@ -29,6 +29,7 @@ export default function PacienteDetalhe() {
   const id = params.id as string
   const [medico, setMedico] = useState<any>(null)
   const [paciente, setPaciente] = useState<any>(null)
+  const [prescricoes, setPrescricoes] = useState<any[]>([])
   const [memedAberto, setMemedAberto] = useState(false)
   const [medicoLogado, setMedicoLogado] = useState<any>(null)
 
@@ -642,7 +643,17 @@ export default function PacienteDetalhe() {
           }}
           onClose={() => setMemedAberto(false)}
           onPrescricaoGerada={(dados) => {
-            console.log('Prescricao gerada:', dados)
+            // Salva prescricao no banco
+            fetch('/api/prescricoes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                paciente_id: paciente.id,
+                medico_id: paciente.medico_id,
+                clinica_id: paciente.clinica_id || null,
+                dados_memed: dados,
+              }),
+            }).catch(err => console.error('Erro ao salvar prescricao:', err))
             setMemedAberto(false)
           }}
         />

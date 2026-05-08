@@ -602,7 +602,17 @@ const handleCopiar = () => {
           } : pacienteAvulso}
           onClose={() => setMemedAberto(false)}
           onPrescricaoGerada={(dados) => {
-            console.log('Prescricao gerada:', dados)
+            // Salva prescricao no banco (Memed compliance)
+            fetch('/api/prescricoes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                paciente_id: pacienteSelecionado?.id,
+                medico_id: medico?.id,
+                clinica_id: medico?.clinica_id || null,
+                dados_memed: dados,
+              }),
+            }).catch(err => console.error('Erro ao salvar prescricao:', err))
             setMemedAberto(false)
           }}
         />
