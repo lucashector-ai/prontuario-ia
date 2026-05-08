@@ -312,6 +312,43 @@ export default function PacienteDetalhe() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Prescricoes Memed */}
+                  {prescricoes.length > 0 && (
+                    <div style={{background:'white',borderRadius:16,overflow:'hidden',marginTop:12}}>
+                      <div style={{padding:'14px 20px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                        <p style={{fontSize:13,fontWeight:700,color:'#111827',margin:0}}>Prescrições Memed</p>
+                        <span style={{fontSize:11,color:'#9ca3af'}}>{prescricoes.length} {prescricoes.length === 1 ? 'prescrição' : 'prescrições'}</span>
+                      </div>
+                      {prescricoes.slice(0, 5).map((p: any) => {
+                        const data = new Date(p.criado_em)
+                        const dataFmt = data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                        const handleClick = () => {
+                          if (p.pdf_url) {
+                            window.open(p.pdf_url, '_blank')
+                          } else {
+                            alert('PDF ainda não disponibilizado pela Memed. Geralmente fica pronto em alguns minutos.')
+                          }
+                        }
+                        return (
+                          <div key={p.id} onClick={handleClick} style={{padding:'12px 20px',borderTop:'1px solid #F5F5F5',cursor:'pointer',display:'flex',alignItems:'center',gap:12}}>
+                            <div style={{width:32,height:32,borderRadius:8,background:'#f0ebff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+                            </div>
+                            <div style={{flex:1,minWidth:0}}>
+                              <p style={{fontSize:12,fontWeight:600,color:'#111827',margin:'0 0 2px'}}>Prescrição #{p.prescricao_id_memed || p.id.substring(0, 8)}</p>
+                              <p style={{fontSize:11,color:'#9ca3af',margin:0}}>{dataFmt}{p.medicos?.nome ? ' · ' + p.medicos.nome : ''}</p>
+                            </div>
+                            {p.pdf_url ? (
+                              <span style={{fontSize:11,color:'#6043C1',fontWeight:600}}>Ver PDF →</span>
+                            ) : (
+                              <span style={{fontSize:10,color:'#9ca3af',fontStyle:'italic' as const}}>aguardando PDF</span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -646,51 +683,6 @@ export default function PacienteDetalhe() {
         </div>
       )}
       {/* Modal/overlay Memed */}
-      {/* Histórico de prescrições Memed */}
-      {paciente && prescricoes.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <div>
-              <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Prescrições Memed</p>
-              <p style={{ fontSize: 12, color: '#737373', margin: 0 }}>{prescricoes.length} {prescricoes.length === 1 ? 'prescrição salva' : 'prescrições salvas'}</p>
-            </div>
-            {carregandoPresc && <span style={{ fontSize: 11, color: '#9ca3af' }}>Carregando...</span>}
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
-            {prescricoes.map((p: any) => {
-              const data = new Date(p.criado_em)
-              const dataFmt = data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-              return (
-                <div key={p.id} style={{ padding: 14, background: '#fafafa', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 9, background: '#f0ebff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0a0a0a', margin: 0 }}>
-                      Prescrição #{p.prescricao_id_memed || p.id.substring(0, 8)}
-                    </p>
-                    <p style={{ fontSize: 11, color: '#737373', margin: '2px 0 0' }}>
-                      {dataFmt}{p.medicos?.nome ? ' · ' + p.medicos.nome : ''}
-                    </p>
-                  </div>
-                  {p.pdf_url && (
-                    <a href={p.pdf_url} target="_blank" rel="noopener noreferrer" style={{
-                      padding: '6px 12px', borderRadius: 8, background: 'white', border: '1px solid #e5e5e5',
-                      color: '#525252', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'none' as const,
-                      display: 'inline-flex', alignItems: 'center', gap: 5
-                    }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                      Ver PDF
-                    </a>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
       {memedAberto && medicoLogado && paciente && (
         <MemedPrescricao
           medicoId={medicoLogado.id}
