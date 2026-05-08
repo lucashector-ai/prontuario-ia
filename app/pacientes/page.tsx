@@ -58,19 +58,26 @@ export default function Pacientes() {
     setMedico(med)
     carregarPacientes(med.id)
 
-    // Se for clinica admin, carrega lista de medicos
-    if (ca_ && med.clinica_id) {
+    // Se for clinica admin, carrega lista de medicos da clinica
+    const clinicaIdAdmin = ca_ ? med.clinica_id : null
+    if (clinicaIdAdmin) {
       setEhClinicaAdmin(true)
       import('@/lib/supabase').then(({ supabase }) => {
         supabase
           .from('medicos')
           .select('id, nome')
-          .eq('clinica_id', med.clinica_id)
+          .eq('clinica_id', clinicaIdAdmin)
           .eq('ativo', true)
           .neq('cargo', 'recepcionista')
           .order('nome')
-          .then(({ data }) => setMedicosClinica(data || []))
+          .then(({ data, error }) => {
+            if (error) console.error('Erro carregando medicos:', error)
+            console.log('Medicos da clinica:', data?.length, data)
+            setMedicosClinica(data || [])
+          })
       })
+    } else {
+      console.log('Nao eh admin OU sem clinica_id', { temCa: !!ca_, clinicaId: med.clinica_id })
     }
   }, [router])
 
