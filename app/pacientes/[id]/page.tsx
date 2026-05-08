@@ -323,26 +323,40 @@ export default function PacienteDetalhe() {
                       {prescricoes.slice(0, 5).map((p: any) => {
                         const data = new Date(p.criado_em)
                         const dataFmt = data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                        const handleClick = () => {
-                          if (p.pdf_url) {
-                            window.open(p.pdf_url, '_blank')
-                          } else {
-                            alert('PDF ainda não disponibilizado pela Memed. Geralmente fica pronto em alguns minutos.')
-                          }
-                        }
+                        const meds = p.dados_memed?.prescricao?.medicamentos || []
+                        const idCurto = p.prescricao_id_memed ? String(p.prescricao_id_memed).substring(0, 8) : p.id.substring(0, 8)
+                        const medicoNome = p.dados_memed?.prescricao?.medico?.nome_medico || p.medicos?.nome || ''
+                        const crm = p.dados_memed?.prescricao?.medico?.board?.board_number
+                        const uf = p.dados_memed?.prescricao?.medico?.board?.board_state
+                        const crmFmt = crm && uf ? `CRM/${uf} ${crm}` : ''
                         return (
-                          <div key={p.id} onClick={handleClick} style={{padding:'12px 20px',borderTop:'1px solid #F5F5F5',cursor:'pointer',display:'flex',alignItems:'center',gap:12}}>
-                            <div style={{width:32,height:32,borderRadius:8,background:'#f0ebff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+                          <div key={p.id} style={{padding:'14px 20px',borderTop:'1px solid #F5F5F5'}}>
+                            <div style={{display:'flex',alignItems:'flex-start',gap:12,marginBottom:meds.length>0?10:0}}>
+                              <div style={{width:32,height:32,borderRadius:8,background:'#f0ebff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:2}}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+                              </div>
+                              <div style={{flex:1,minWidth:0}}>
+                                <p style={{fontSize:12,fontWeight:600,color:'#111827',margin:'0 0 3px'}}>Prescrição #{idCurto}</p>
+                                <p style={{fontSize:11,color:'#9ca3af',margin:0}}>{dataFmt}{medicoNome ? ' · ' + medicoNome : ''}{crmFmt ? ' · ' + crmFmt : ''}</p>
+                              </div>
+                              <span style={{fontSize:10,fontWeight:600,color:'#6043C1',background:'#f0ebff',padding:'3px 8px',borderRadius:100,flexShrink:0}}>
+                                {meds.length} {meds.length === 1 ? 'item' : 'itens'}
+                              </span>
                             </div>
-                            <div style={{flex:1,minWidth:0}}>
-                              <p style={{fontSize:12,fontWeight:600,color:'#111827',margin:'0 0 2px'}}>Prescrição #{p.prescricao_id_memed || p.id.substring(0, 8)}</p>
-                              <p style={{fontSize:11,color:'#9ca3af',margin:0}}>{dataFmt}{p.medicos?.nome ? ' · ' + p.medicos.nome : ''}</p>
-                            </div>
-                            {p.pdf_url ? (
-                              <span style={{fontSize:11,color:'#6043C1',fontWeight:600}}>Ver PDF →</span>
-                            ) : (
-                              <span style={{fontSize:10,color:'#9ca3af',fontStyle:'italic' as const}}>aguardando PDF</span>
+                            {meds.length > 0 && (
+                              <div style={{paddingLeft:44,display:'flex',flexDirection:'column' as const,gap:6}}>
+                                {meds.slice(0, 4).map((m: any, idx: number) => (
+                                  <div key={idx} style={{padding:'8px 12px',background:'#fafafa',borderRadius:8,fontSize:12}}>
+                                    <p style={{margin:0,fontWeight:600,color:'#404040'}}>{m.nome || m.descricao || 'Medicamento'}</p>
+                                    {m.sanitized_posology && (
+                                      <p style={{margin:'2px 0 0',fontSize:11,color:'#737373',lineHeight:1.4}}>{m.sanitized_posology}</p>
+                                    )}
+                                  </div>
+                                ))}
+                                {meds.length > 4 && (
+                                  <p style={{fontSize:11,color:'#9ca3af',margin:'2px 0 0',paddingLeft:4}}>+ {meds.length - 4} {meds.length - 4 === 1 ? 'medicamento' : 'medicamentos'}</p>
+                                )}
+                              </div>
                             )}
                           </div>
                         )
