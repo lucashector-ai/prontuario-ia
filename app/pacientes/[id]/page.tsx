@@ -699,7 +699,7 @@ export default function PacienteDetalhe() {
                 clinica_id: paciente.clinica_id || null,
                 dados_memed: dados,
               }),
-            }).then(() => carregarPrescricoes()).catch(err => console.error('Erro ao salvar prescricao:', err))
+            }).catch(err => console.error('Erro ao salvar prescricao:', err))
             setMemedAberto(false)
           }}
         />
