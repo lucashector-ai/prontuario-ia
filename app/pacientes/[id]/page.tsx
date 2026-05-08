@@ -52,6 +52,23 @@ export default function PacienteDetalhe() {
       if (m) setMedicoLogado(JSON.parse(m))
     })()
   }, [])
+
+  useEffect(() => {
+    if (paciente?.id) carregarPrescricoes()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paciente?.id])
+
+  const carregarPrescricoes = async () => {
+    if (!paciente?.id) return
+    setCarregandoPresc(true)
+    try {
+      const r = await fetch('/api/prescricoes?paciente_id=' + paciente.id)
+      const d = await r.json()
+      setPrescricoes(d.prescricoes || [])
+    } catch (e) { console.error(e) }
+    finally { setCarregandoPresc(false) }
+  }
+
   const [consultas, setConsultas] = useState<any[]>([])
   const [transcricoesAbertas, setTranscricoesAbertas] = useState<Set<string>>(new Set())
   const [agendamentos, setAgendamentos] = useState<any[]>([])
@@ -699,7 +716,7 @@ export default function PacienteDetalhe() {
                 clinica_id: paciente.clinica_id || null,
                 dados_memed: dados,
               }),
-            }).catch(err => console.error('Erro ao salvar prescricao:', err))
+            }).then(() => carregarPrescricoes()).catch(err => console.error('Erro ao salvar prescricao:', err))
             setMemedAberto(false)
           }}
         />
