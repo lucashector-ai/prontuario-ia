@@ -10,9 +10,9 @@
 export const tokens = {
   // ── Backgrounds ────────────────────────────────────────────────────────
   bg: {
-    page: '#FAFAFA',           // fundo da plataforma e páginas
+    page: '#F2F2F2',           // fundo da plataforma e páginas
     card: '#FFFFFF',           // fundo de cards / superfícies elevadas
-    cardSubtle: '#FAFAFA',     // cards aninhados / itens em listas
+    cardSubtle: '#F2F2F2',     // cards aninhados / itens em listas
     hover: '#F5F5F5',          // hover de items clicáveis
     hoverStrong: '#F3F4F6',    // hover mais marcante
     overlay: 'rgba(0,0,0,0.4)',// modais / overlays
@@ -198,7 +198,7 @@ export const tokens = {
 
   // ── Neutros (escala neutral / zinc) ────────────────────────────────────
   neutral: {
-    50: '#FAFAFA',
+    50: '#F2F2F2',
     100: '#F5F5F5',
     150: '#F0F0F0',
     200: '#E5E5E5',
