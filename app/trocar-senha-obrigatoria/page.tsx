@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { SenhaStrength, senhaEhForte } from '@/components/SenhaStrength'
 
 const ACCENT = '#6043C1'
-const BG = '#FDFDFF'
+const BG = '#FAFAFA'
 
 export default function TrocarSenhaObrigatoria() {
   const router = useRouter()

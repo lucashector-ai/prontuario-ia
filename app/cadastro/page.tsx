@@ -6,7 +6,7 @@ import { SenhaStrength, senhaEhForte } from '@/components/SenhaStrength'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FDFDFF'
+const BG = '#FAFAFA'
 
 function ToggleSenha({ show, onToggle }: { show: boolean; onToggle: () => void }) {
   return (

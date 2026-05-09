@@ -120,7 +120,7 @@ export default function ProcedimentosPage() {
   const inativos = procedimentos.filter(p => !p.ativo)
 
   return (
-    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: '#FDFDFF' }}>
+    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: '#FAFAFA' }}>
       {msg && (
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 200,

@@ -6,7 +6,7 @@ import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FDFDFF'
+const BG = '#FAFAFA'
 const CARD_RADIUS = 16
 
 export default function PerfilPage() {

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 
 const ACCENT = "#6043C1"
 const ACCENT_LIGHT = "#ede9fb"
-const BG = '#FDFDFF'
+const BG = '#FAFAFA'
 const CARD_RADIUS = 16
 
 type Tab = "followup" | "confirmacao" | "nps" | "relatorio" | "pdf"
