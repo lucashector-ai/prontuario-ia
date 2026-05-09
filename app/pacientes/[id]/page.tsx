@@ -8,7 +8,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
 import { BotaoMemed } from '@/components/BotaoMemed'
 
-type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario' | 'timeline'
+type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario' | 'timeline' | 'financeiro'
 
 const TIPO_CORES: Record<string, {bg:string;text:string;border:string}> = {
   consulta: {bg:'#F5F5F5',text:'#6043C1',border:'#b9a9ef'},
@@ -58,6 +58,11 @@ export default function PacienteDetalhe() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paciente?.id])
 
+  useEffect(() => {
+    if (paciente?.id) carregarComandas()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paciente?.id])
+
   const carregarPrescricoes = async () => {
     if (!paciente?.id) return
     setCarregandoPresc(true)
@@ -69,10 +74,45 @@ export default function PacienteDetalhe() {
     finally { setCarregandoPresc(false) }
   }
 
+  const carregarComandas = async () => {
+    if (!paciente?.id) return
+    setCarregandoComandas(true)
+    try {
+      const r = await fetch('/api/comandas?paciente_id=' + paciente.id)
+      const d = await r.json()
+      setComandasPaciente(d.comandas || [])
+    } catch (e) { console.error(e) }
+    finally { setCarregandoComandas(false) }
+  }
+
+  async function criarNovaComanda() {
+    if (!paciente?.id) return
+    try {
+      const r = await fetch('/api/comandas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paciente_id: paciente.id,
+          medico_id: paciente.medico_id || null,
+          clinica_id: paciente.clinica_id || null,
+        }),
+      })
+      const d = await r.json()
+      if (d.error) { alert('Erro: ' + d.error); return }
+      if (d.comanda?.id) {
+        router.push('/comandas/' + d.comanda.id)
+      }
+    } catch (e: any) {
+      alert('Erro ao criar comanda: ' + (e?.message || ''))
+    }
+  }
+
   const [consultas, setConsultas] = useState<any[]>([])
   const [transcricoesAbertas, setTranscricoesAbertas] = useState<Set<string>>(new Set())
   const [agendamentos, setAgendamentos] = useState<any[]>([])
   const [aba, setAba] = useState<Aba>('overview')
+  const [comandasPaciente, setComandasPaciente] = useState<any[]>([])
+  const [carregandoComandas, setCarregandoComandas] = useState(false)
   const [carregando, setCarregando] = useState(true)
   const [mapaMedicos, setMapaMedicos] = useState<Record<string, { nome: string; cor: string }>>({})
   const [editando, setEditando] = useState(false)
@@ -696,6 +736,95 @@ export default function PacienteDetalhe() {
           </div>
         </div>
       )}
+      {aba==='financeiro' && (
+        <div style={{display:'flex',flexDirection:'column' as const,gap:16}}>
+          {/* Header com KPIs */}
+          <div style={{background:'white',borderRadius:14,padding:22}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
+              <div>
+                <p style={{fontSize:15,fontWeight:700,color:'#111827',margin:0}}>Financeiro do paciente</p>
+                <p style={{fontSize:12,color:'#6b7280',margin:'2px 0 0'}}>Histórico de comandas e pagamentos</p>
+              </div>
+              <button onClick={criarNovaComanda} style={{padding:'10px 16px',borderRadius:10,border:'none',background:'#6043C1',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>
+                + Nova comanda
+              </button>
+            </div>
+
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
+              {(() => {
+                const fechadas = comandasPaciente.filter((c:any) => c.status === 'fechada')
+                const abertas = comandasPaciente.filter((c:any) => c.status === 'aberta')
+                const totalPago = fechadas.reduce((acc:number, c:any) => acc + Number(c.total_liquido || c.total || 0), 0)
+                const totalAberto = abertas.reduce((acc:number, c:any) => acc + Number(c.total_liquido || c.total || 0), 0)
+                const ticketMedio = fechadas.length > 0 ? totalPago / fechadas.length : 0
+                return (
+                  <>
+                    <div style={{padding:14,background:'#f0fdf4',borderRadius:10}}>
+                      <p style={{fontSize:10,color:'#16a34a',margin:'0 0 4px',fontWeight:600,textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>Total pago</p>
+                      <p style={{fontSize:18,fontWeight:700,color:'#16a34a',margin:0}}>R$ {totalPago.toFixed(2).replace('.', ',')}</p>
+                    </div>
+                    <div style={{padding:14,background:'#fff7ed',borderRadius:10}}>
+                      <p style={{fontSize:10,color:'#ea580c',margin:'0 0 4px',fontWeight:600,textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>Em aberto</p>
+                      <p style={{fontSize:18,fontWeight:700,color:'#ea580c',margin:0}}>R$ {totalAberto.toFixed(2).replace('.', ',')}</p>
+                    </div>
+                    <div style={{padding:14,background:'#fafafa',borderRadius:10}}>
+                      <p style={{fontSize:10,color:'#6b7280',margin:'0 0 4px',fontWeight:600,textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>Comandas</p>
+                      <p style={{fontSize:18,fontWeight:700,color:'#111827',margin:0}}>{comandasPaciente.length}</p>
+                    </div>
+                    <div style={{padding:14,background:'#fafafa',borderRadius:10}}>
+                      <p style={{fontSize:10,color:'#6b7280',margin:'0 0 4px',fontWeight:600,textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>Ticket médio</p>
+                      <p style={{fontSize:18,fontWeight:700,color:'#111827',margin:0}}>R$ {ticketMedio.toFixed(2).replace('.', ',')}</p>
+                    </div>
+                  </>
+                )
+              })()}
+            </div>
+          </div>
+
+          {/* Lista de comandas */}
+          <div style={{background:'white',borderRadius:14,padding:22}}>
+            <p style={{fontSize:14,fontWeight:700,color:'#111827',margin:'0 0 14px'}}>Histórico de comandas</p>
+            {carregandoComandas ? (
+              <p style={{fontSize:13,color:'#9ca3af',textAlign:'center' as const,padding:30,margin:0}}>Carregando...</p>
+            ) : comandasPaciente.length === 0 ? (
+              <p style={{fontSize:13,color:'#9ca3af',textAlign:'center' as const,padding:30,margin:0}}>Nenhuma comanda ainda. Clique em "Nova comanda" pra criar.</p>
+            ) : (
+              <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
+                {comandasPaciente.map((c:any) => {
+                  const data = new Date(c.criada_em)
+                  const dataFmt = data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                  const total = Number(c.total_liquido || c.total || 0)
+                  const fechada = c.status === 'fechada'
+                  const cancelada = c.status === 'cancelada'
+                  return (
+                    <div key={c.id} onClick={() => router.push('/comandas/' + c.id)} style={{
+                      padding:14,background:'#fafafa',borderRadius:10,cursor:'pointer',
+                      display:'flex',alignItems:'center',gap:12
+                    }}>
+                      <div style={{width:36,height:36,borderRadius:9,background:fechada?'#dcfce7':cancelada?'#fef2f2':'#fff7ed',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={fechada?'#16a34a':cancelada?'#dc2626':'#ea580c'} strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 10 12 15 7 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <p style={{fontSize:13,fontWeight:600,color:'#111827',margin:'0 0 2px'}}>Comanda #{c.id.substring(0,8)}</p>
+                        <p style={{fontSize:11,color:'#9ca3af',margin:0}}>{dataFmt}{c.medicos?.nome ? ' · ' + c.medicos.nome : ''}{c.forma_pagamento ? ' · ' + c.forma_pagamento : ''}</p>
+                      </div>
+                      <div style={{textAlign:'right' as const}}>
+                        <p style={{fontSize:14,fontWeight:700,color:'#111827',margin:'0 0 2px'}}>R$ {total.toFixed(2).replace('.', ',')}</p>
+                        <span style={{
+                          fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:100,
+                          background:fechada?'#dcfce7':cancelada?'#fef2f2':'#fff7ed',
+                          color:fechada?'#16a34a':cancelada?'#dc2626':'#ea580c',
+                        }}>{fechada?'PAGO':cancelada?'CANCELADO':'EM ABERTO'}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Modal/overlay Memed */}
       {memedAberto && medicoLogado && paciente && (
         <MemedPrescricao

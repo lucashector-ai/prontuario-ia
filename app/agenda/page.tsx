@@ -314,6 +314,29 @@ function AgendaContent() {
     }
   }, [searchParams, agendamentos])
 
+  const gerarComandaDoAgendamento = async (ag: any) => {
+    if (!ag?.id) return
+    try {
+      const r = await fetch('/api/comandas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paciente_id: ag.paciente_id,
+          medico_id: ag.medico_id || null,
+          clinica_id: medico?.clinica_id || null,
+          agendamento_id: ag.id,
+        }),
+      })
+      const d = await r.json()
+      if (d.error) { alert('Erro ao gerar comanda: ' + d.error); return }
+      if (d.comanda?.id) {
+        router.push('/comandas/' + d.comanda.id)
+      }
+    } catch (e: any) {
+      alert('Erro: ' + (e?.message || 'desconhecido'))
+    }
+  }
+
   const abrirModal = (date?: Date, ag?: any) => {
     setPreConsultaEnviada(false); setComVideo(false); setSalaLink(''); setSalaId('')
     if (ag) {
@@ -1369,6 +1392,21 @@ function AgendaContent() {
                   {modal.date && <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{fmtDia(modal.date)}</p>}
                 </div>
               </div>
+              {modal.ag && (
+                <button
+                  type="button"
+                  onClick={() => { gerarComandaDoAgendamento(modal.ag); setModal({ open: false }) }}
+                  style={{
+                    padding: '7px 12px', borderRadius: 8, border: '1px solid #ddd6fe',
+                    background: '#f5f3ff', color: '#6043C1', fontSize: 12, fontWeight: 600,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, marginRight: 8
+                  }}
+                  title="Gerar comanda financeira a partir deste agendamento"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 10 12 15 7 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Gerar comanda
+                </button>
+              )}
               <button onClick={() => setModal({ open: false })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
             </div>
             <form onSubmit={salvar} style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
