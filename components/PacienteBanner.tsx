@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { tokens } from '@/lib/design-tokens'
 
 type Props = {
   pacienteId: string | null
@@ -34,14 +35,14 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar, acoes }: Props)
 
   if (!pacienteId) {
     return (
-      <div style={{ padding: '14px 18px', background: 'white', borderRadius: 12, border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div style={{ padding: '14px 18px', background: 'white', borderRadius: 12, border: `1px solid ${tokens.status.warningLightAlt}`, display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: tokens.status.warningLightSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={tokens.status.warningStrong} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 600, color: '#111827' }}>Consulta avulsa</p>
-          <p style={{ margin: 0, fontSize: 12, color: '#92400e' }}>
-            Não vinculada a um paciente. {onTrocar && <button onClick={onTrocar} style={{ background: 'none', border: 'none', color: '#6043C1', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontSize: 12, padding: 0 }}>Vincular paciente</button>}
+          <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 600, color: tokens.text.primary }}>Consulta avulsa</p>
+          <p style={{ margin: 0, fontSize: 12, color: tokens.status.warningText }}>
+            Não vinculada a um paciente. {onTrocar && <button onClick={onTrocar} style={{ background: 'none', border: 'none', color: tokens.brand.primary, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontSize: 12, padding: 0 }}>Vincular paciente</button>}
           </p>
         </div>
         {acoes && <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>{acoes}</div>}
@@ -51,11 +52,11 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar, acoes }: Props)
 
   if (loading) {
     return (
-      <div style={{ padding: '16px 18px', background: 'white', borderRadius: 12, border: '1px solid #f0f0f0', height: 68, display: 'flex', alignItems: 'center' }}>
-        <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#f3f4f6' }}/>
+      <div style={{ padding: '16px 18px', background: 'white', borderRadius: 12, border: `1px solid ${tokens.neutral[150]}`, height: 68, display: 'flex', alignItems: 'center' }}>
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: tokens.bg.hoverStrong }}/>
         <div style={{ marginLeft: 12, flex: 1 }}>
-          <div style={{ height: 12, width: 140, background: '#f3f4f6', borderRadius: 4, marginBottom: 6 }}/>
-          <div style={{ height: 10, width: 200, background: '#f3f4f6', borderRadius: 4 }}/>
+          <div style={{ height: 12, width: 140, background: tokens.bg.hoverStrong, borderRadius: 4, marginBottom: 6 }}/>
+          <div style={{ height: 10, width: 200, background: tokens.bg.hoverStrong, borderRadius: 4 }}/>
         </div>
       </div>
     )
@@ -79,14 +80,14 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar, acoes }: Props)
   const iniciais = paciente.nome?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || '?'
 
   return (
-    <div style={{ padding: '14px 18px', background: 'white', borderRadius: 12, border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: 14 }}>
+    <div style={{ padding: '14px 18px', background: 'white', borderRadius: 12, border: `1px solid ${tokens.neutral[150]}`, display: 'flex', alignItems: 'center', gap: 14 }}>
       {/* Avatar */}
       <div style={{
         width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
-        background: paciente.foto_url ? `url(${paciente.foto_url}) center/cover` : '#ede9fb',
-        border: '2px solid #b9a9ef',
+        background: paciente.foto_url ? `url(${paciente.foto_url}) center/cover` : tokens.brand.primaryLighter,
+        border: `2px solid ${tokens.brand.primaryAccent}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 15, fontWeight: 700, color: '#6043C1',
+        fontSize: 15, fontWeight: 700, color: tokens.brand.primary,
       }}>
         {!paciente.foto_url && iniciais}
       </div>
@@ -94,16 +95,16 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar, acoes }: Props)
       {/* Nome + dados básicos */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3 }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: tokens.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {paciente.nome}
           </h2>
           {paciente.genero && (
-            <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '1px 7px', borderRadius: 10, fontWeight: 500 }}>
+            <span style={{ fontSize: 11, color: tokens.text.secondary, background: tokens.bg.hoverStrong, padding: '1px 7px', borderRadius: 10, fontWeight: 500 }}>
               {paciente.genero}
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: '#6b7280', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: tokens.text.secondary, flexWrap: 'wrap' }}>
           {idade !== null && <span>{idade} anos</span>}
           {paciente.telefone && <><span>·</span><span>{paciente.telefone}</span></>}
           {paciente.convenio && <><span>·</span><span>{paciente.convenio}</span></>}
@@ -116,17 +117,17 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar, acoes }: Props)
         <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
           {cidsCronicos.slice(0, 3).map((c: any, i: number) => (
             <span key={i} title={c.descricao || c.codigo || c}
-              style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, background: '#ede9fb', color: '#6043C1', padding: '3px 7px', borderRadius: 5 }}>
+              style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, background: tokens.brand.primaryLighter, color: tokens.brand.primary, padding: '3px 7px', borderRadius: 5 }}>
               {c.codigo || c}
             </span>
           ))}
-          {cidsCronicos.length > 3 && <span style={{ fontSize: 10, color: '#9ca3af', alignSelf: 'center' }}>+{cidsCronicos.length - 3}</span>}
+          {cidsCronicos.length > 3 && <span style={{ fontSize: 10, color: tokens.text.tertiary, alignSelf: 'center' }}>+{cidsCronicos.length - 3}</span>}
         </div>
       )}
 
       {onTrocar && (
         <button onClick={onTrocar}
-          style={{ height: 32, padding: '0 12px', borderRadius: 8, background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, fontSize: 12, fontWeight: 500 }}>
+          style={{ height: 32, padding: '0 12px', borderRadius: 8, background: 'transparent', border: 'none', color: tokens.text.secondary, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, fontSize: 12, fontWeight: 500 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
           Trocar paciente
         </button>

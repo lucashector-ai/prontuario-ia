@@ -7,12 +7,13 @@ import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 import { IconGift } from '@/components/Icon'
+import { tokens } from '@/lib/design-tokens'
 
 const TIPOS = {
-  consulta: { label: 'Consulta', bg: '#ede9fb', text: '#4c1d95', border: '#b9a9ef', dot: '#6043C1' },
-  retorno:  { label: 'Retorno',  bg: '#f3effd', text: '#5b42b0', border: '#dfd3f5', dot: '#7c3aed' },
-  exame:    { label: 'Exame',    bg: '#f5f3ff', text: '#6d28d9', border: '#ddd6fe', dot: '#8b5cf6' },
-  urgencia: { label: 'Urgência', bg: '#fee2e2', text: '#991b1b', border: '#fca5a5', dot: '#dc2626' },
+  consulta: { label: 'Consulta', bg: tokens.brand.primaryLighter, text: tokens.brand.primaryDark, border: tokens.brand.primaryAccent, dot: tokens.brand.primary },
+  retorno:  { label: 'Retorno',  bg: tokens.appointment.retorno.bg, text: tokens.brand.primaryDarkText, border: tokens.appointment.retorno.border, dot: tokens.appointment.retorno.dot },
+  exame:    { label: 'Exame',    bg: tokens.appointment.exame.bg, text: tokens.appointment.exame.text, border: tokens.appointment.exame.border, dot: tokens.appointment.exame.dot },
+  urgencia: { label: 'Urgência', bg: tokens.status.dangerBgAlt, text: tokens.status.dangerDark, border: tokens.status.dangerLightAlt, dot: tokens.status.danger },
 }
 
 const STATUS_OPTS = [
@@ -67,7 +68,7 @@ const fmtDia = (d: Date) =>
   d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
 
 function coresDerivadas(hex: string) {
-  const base = hex || '#6043C1'
+  const base = hex || tokens.brand.primary
   // Remove # e converte pra RGB
   const h = base.replace('#', '')
   const r = parseInt(h.substring(0, 2), 16)
@@ -203,14 +204,14 @@ function AgendaContent() {
           .from('medicos').select('id, cor').eq('clinica_id', admin.clinica_id).eq('cargo', 'medico').eq('ativo', true)
         medicoIds = (meds || []).map((m: any) => m.id)
         const mapa: Record<string, string> = {}
-        ;(meds || []).forEach((m: any) => { mapa[m.id] = m.cor || '#6043C1' })
+        ;(meds || []).forEach((m: any) => { mapa[m.id] = m.cor || tokens.brand.primary })
         setMapaCoresMedicos(mapa)
         if (medicoIds.length === 0) medicoIds = [medicoId]
       }
     } else {
       // Medico logado sozinho: busca sua propria cor
       const { data: med } = await supabase.from('medicos').select('id, cor').eq('id', medicoId).maybeSingle()
-      if (med) setMapaCoresMedicos({ [med.id]: (med as any).cor || '#6043C1' })
+      if (med) setMapaCoresMedicos({ [med.id]: (med as any).cor || tokens.brand.primary })
     }
 
     const clinicaIdLocal = JSON.parse(localStorage.getItem('clinica_admin') || 'null')?.clinica_id
@@ -608,11 +609,11 @@ function AgendaContent() {
   }
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6,
+    fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6,
     textTransform: 'uppercase', letterSpacing: '0.06em',
   }
   const selectStyle: React.CSSProperties = {
-    width: '100%', padding: '8px 10px', fontSize: 12, borderRadius: 7, background: 'white', color: '#111827', cursor: 'pointer',
+    width: '100%', padding: '8px 10px', fontSize: 12, borderRadius: 7, background: 'white', color: tokens.text.primary, cursor: 'pointer',
   }
 
   const renderHeader = () => {
@@ -626,27 +627,27 @@ function AgendaContent() {
       <div style={{ padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => { setSemana(new Date()); setDiaSelecionado(new Date()); setMesVisualizado(new Date()) }}
-            style={{ fontSize: 12, fontWeight: 600, color: '#374151', background: 'white', padding: '5px 14px', borderRadius: 7, cursor: 'pointer' }}>
+            style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, background: 'white', padding: '5px 14px', borderRadius: 7, cursor: 'pointer' }}>
             Hoje
           </button>
           <div style={{ display: 'flex', gap: 1 }}>
             <button onClick={() => viewMode === 'mes' ? navegarMes(-1) : navegarSemana(-1)}
-              style={{ width: 28, height: 28, background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              style={{ width: 28, height: 28, background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: tokens.text.strong, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
             <button onClick={() => viewMode === 'mes' ? navegarMes(1) : navegarSemana(1)}
-              style={{ width: 28, height: 28, background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', borderLeft: 'none' }}>
+              style={{ width: 28, height: 28, background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: tokens.text.strong, display: 'flex', alignItems: 'center', justifyContent: 'center', borderLeft: 'none' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
             </button>
           </div>
-          <h1 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0, textTransform: 'capitalize' }}>{labelData}</h1>
+          <h1 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0, textTransform: 'capitalize' }}>{labelData}</h1>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button onClick={() => setListaEsperaOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: 'white', fontSize: 12, color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: 'white', fontSize: 12, color: tokens.text.strong, fontWeight: 600, cursor: 'pointer' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Lista de espera
-            {listaEspera.length > 0 && <span style={{ background: '#6043C1', color: 'white', borderRadius: 10, padding: '0 6px', fontSize: 10 }}>{listaEspera.length}</span>}
+            {listaEspera.length > 0 && <span style={{ background: tokens.brand.primary, color: 'white', borderRadius: 10, padding: '0 6px', fontSize: 10 }}>{listaEspera.length}</span>}
           </button>
           {isMobile && (
             <button
@@ -654,8 +655,8 @@ function AgendaContent() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 5,
                 padding: '6px 10px', fontSize: 12, fontWeight: 600,
-                background: 'white', color: '#374151',
-                border: '1px solid #e5e7eb', borderRadius: 7, cursor: 'pointer',
+                background: 'white', color: tokens.text.strong,
+                border: `1px solid ${tokens.border.default}`, borderRadius: 7, cursor: 'pointer',
               }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="4" y1="6" x2="20" y2="6"/>
@@ -668,14 +669,14 @@ function AgendaContent() {
           <div className="agenda-view-modes" style={{ display: 'flex', borderRadius: 7, overflow: 'hidden', background: 'white' }}>
             {(['dia', 'semana', 'mes'] as const).map((v, i) => (
               <button key={v} onClick={() => setViewMode(v)}
-                style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: viewMode === v ? '#6043C1' : 'white', color: viewMode === v ? 'white' : '#6b7280', border: 'none', borderLeft: i > 0 ? '1px solid #e5e7eb' : 'none' }}>
+                style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: viewMode === v ? tokens.brand.primary : 'white', color: viewMode === v ? 'white' : tokens.text.secondary, border: 'none', borderLeft: i > 0 ? `1px solid ${tokens.border.default}` : 'none' }}>
                 {v === 'dia' ? 'Dia' : v === 'semana' ? 'Semana' : 'Mês'}
               </button>
             ))}
           </div>
           <button onClick={abrirModalBloqueio}
             title="Bloquear horario"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
@@ -683,7 +684,7 @@ function AgendaContent() {
             Bloquear
           </button>
           <button onClick={() => abrirModal()}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Novo
           </button>
@@ -696,22 +697,22 @@ function AgendaContent() {
     const monthGrid = getMonthGrid(mesVisualizado)
     const mesAtual = mesVisualizado.getMonth()
     return (
-      <aside style={{ width: 260, background: 'white', borderRight: '1px solid #f3f4f6', padding: 16, overflow: 'auto', flexShrink: 0, display: isMobile ? 'none' : 'block' }}>
+      <aside style={{ width: 260, background: 'white', borderRight: `1px solid ${tokens.bg.hoverStrong}`, padding: 16, overflow: 'auto', flexShrink: 0, display: isMobile ? 'none' : 'block' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0, textTransform: 'capitalize' }}>{fmtMesAno(mesVisualizado)}</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0, textTransform: 'capitalize' }}>{fmtMesAno(mesVisualizado)}</h3>
             <div style={{ display: 'flex', gap: 2 }}>
-              <button onClick={() => navegarMes(-1)} style={{ width: 22, height: 22, border: 'none', background: 'transparent', cursor: 'pointer', color: '#6b7280', borderRadius: 4 }}>
+              <button onClick={() => navegarMes(-1)} style={{ width: 22, height: 22, border: 'none', background: 'transparent', cursor: 'pointer', color: tokens.text.secondary, borderRadius: 4 }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
               </button>
-              <button onClick={() => navegarMes(1)} style={{ width: 22, height: 22, border: 'none', background: 'transparent', cursor: 'pointer', color: '#6b7280', borderRadius: 4 }}>
+              <button onClick={() => navegarMes(1)} style={{ width: 22, height: 22, border: 'none', background: 'transparent', cursor: 'pointer', color: tokens.text.secondary, borderRadius: 4 }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
               </button>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
             {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((l, i) => (
-              <div key={i} style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', fontWeight: 700, padding: '4px 0' }}>{l}</div>
+              <div key={i} style={{ fontSize: 10, color: tokens.text.tertiary, textAlign: 'center', fontWeight: 700, padding: '4px 0' }}>{l}</div>
             ))}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
@@ -722,9 +723,9 @@ function AgendaContent() {
               const temAgs = agendamentosFiltrados.some(a => new Date(a.data_hora).toDateString() === d.toDateString())
               return (
                 <button key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
-                  style={{ aspectRatio: '1', border: 'none', background: selecionado ? '#6043C1' : (hoje ? '#ede9fb' : 'transparent'), color: selecionado ? 'white' : (!noMes ? '#d1d5db' : (hoje ? '#6043C1' : '#374151')), fontSize: 11, fontWeight: hoje || selecionado ? 700 : 500, borderRadius: 6, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  style={{ aspectRatio: '1', border: 'none', background: selecionado ? tokens.brand.primary : (hoje ? tokens.brand.primaryLighter : 'transparent'), color: selecionado ? 'white' : (!noMes ? tokens.border.strong : (hoje ? tokens.brand.primary : tokens.text.strong)), fontSize: 11, fontWeight: hoje || selecionado ? 700 : 500, borderRadius: 6, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {d.getDate()}
-                  {temAgs && !selecionado && <span style={{ position: 'absolute', bottom: 2, width: 3, height: 3, borderRadius: '50%', background: hoje ? '#6043C1' : '#9ca3af' }}/>}
+                  {temAgs && !selecionado && <span style={{ position: 'absolute', bottom: 2, width: 3, height: 3, borderRadius: '50%', background: hoje ? tokens.brand.primary : tokens.text.tertiary }}/>}
                 </button>
               )
             })}
@@ -732,41 +733,41 @@ function AgendaContent() {
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Filtros</h3>
-            {filtrosAtivos > 0 && <button onClick={limparFiltros} style={{ fontSize: 11, color: '#6043C1', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Limpar ({filtrosAtivos})</button>}
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Filtros</h3>
+            {filtrosAtivos > 0 && <button onClick={limparFiltros} style={{ fontSize: 11, color: tokens.brand.primary, background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Limpar ({filtrosAtivos})</button>}
           </div>
           <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Status</label>
+            <label style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Status</label>
             <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={selectStyle}>
               <option value="todos">Todos</option>
               {STATUS_OPTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
           <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Tipo</label>
+            <label style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Tipo</label>
             <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} style={selectStyle}>
               <option value="todos">Todos</option>
               {Object.entries(TIPOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
           </div>
           <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Paciente</label>
+            <label style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Paciente</label>
             <input type="text" value={filtroPaciente} onChange={e => setFiltroPaciente(e.target.value)} placeholder="Buscar por nome..." style={{ ...selectStyle, padding: '8px 10px' }}/>
           </div>
           <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Profissional</label>
+            <label style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Profissional</label>
             <select value={filtroProfissional} onChange={e => setFiltroProfissional(e.target.value)} style={selectStyle}>
               <option value="todos">Todos</option>
               {medico && <option value={medico.id}>{medico.nome || 'Eu'}</option>}
             </select>
           </div>
         </div>
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #f3f4f6' }}>
-          <h3 style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Legenda</h3>
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${tokens.bg.hoverStrong}` }}>
+          <h3 style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Legenda</h3>
           {Object.entries(TIPOS).map(([k, v]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <div style={{ width: 10, height: 10, borderRadius: 3, background: v.bg, border: `1.5px solid ${v.border}`, borderLeft: `3px solid ${v.dot}` }}/>
-              <span style={{ fontSize: 12, color: '#6b7280' }}>{v.label}</span>
+              <span style={{ fontSize: 12, color: tokens.text.secondary }}>{v.label}</span>
             </div>
           ))}
         </div>
@@ -779,29 +780,29 @@ function AgendaContent() {
     const mostrarLinhaAgora = agora !== null && agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
     return (
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', borderBottom: `1px solid ${tokens.bg.hoverStrong}`, flexShrink: 0 }}>
           <div/>
           {diasSemana.map((dia, i) => {
             const ags = getAgsDia(dia)
             const aniversariantes = pacientes.filter(p => ehAniversario(p.data_nascimento, dia)).length
             return (
               <div key={i} onClick={() => { setDiaSelecionado(dia); setViewMode('dia') }}
-                style={{ padding: '10px 8px', textAlign: 'center', borderLeft: '1px solid #f3f4f6', cursor: 'pointer', background: isHoje(dia) ? '#faf8ff' : 'white' }}>
-                <p style={{ fontSize: 10, color: isHoje(dia) ? '#6043C1' : '#9ca3af', fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                style={{ padding: '10px 8px', textAlign: 'center', borderLeft: `1px solid ${tokens.bg.hoverStrong}`, cursor: 'pointer', background: isHoje(dia) ? tokens.brand.primarySoftBg : 'white' }}>
+                <p style={{ fontSize: 10, color: isHoje(dia) ? tokens.brand.primary : tokens.text.tertiary, fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   {dia.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: isHoje(dia) ? '#6043C1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: isHoje(dia) ? 'white' : '#111827', margin: 0 }}>{dia.getDate()}</p>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: isHoje(dia) ? tokens.brand.primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: isHoje(dia) ? 'white' : tokens.text.primary, margin: 0 }}>{dia.getDate()}</p>
                   </div>
                   {aniversariantes > 0 && <span title={`${aniversariantes} aniversariante(s)`} style={{ fontSize: 12 }}><IconGift size={14} /></span>}
                 </div>
                 {ags.length > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 3 }}>
                     {ags.slice(0, 4).map((ag, ai) => (
-                      <div key={ai} style={{ width: 4, height: 4, borderRadius: '50%', background: TIPOS[ag.tipo as keyof typeof TIPOS]?.dot || '#6043C1' }}/>
+                      <div key={ai} style={{ width: 4, height: 4, borderRadius: '50%', background: TIPOS[ag.tipo as keyof typeof TIPOS]?.dot || tokens.brand.primary }}/>
                     ))}
-                    {ags.length > 4 && <span style={{ fontSize: 9, color: '#6b7280' }}>+{ags.length - 4}</span>}
+                    {ags.length > 4 && <span style={{ fontSize: 9, color: tokens.text.secondary }}>+{ags.length - 4}</span>}
                   </div>
                 )}
               </div>
@@ -812,15 +813,15 @@ function AgendaContent() {
           <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', minHeight: `${TOTAL_SLOTS * SLOT_PX}px`, position: 'relative' }}>
             <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5, paddingTop: 12, paddingBottom: 12 }}>
               {Array.from({ length: HORA_FIM - HORA_INI }, (_, i) => (
-                <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: '1px solid #f3f4f6' }}>
-                  <span style={{ position: 'absolute', top: -7, right: 8, fontSize: 10, color: '#9ca3af', fontWeight: 600, background: 'white', padding: '0 2px' }}>
+                <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
+                  <span style={{ position: 'absolute', top: -7, right: 8, fontSize: 10, color: tokens.text.tertiary, fontWeight: 600, background: 'white', padding: '0 2px' }}>
                     {(HORA_INI + i).toString().padStart(2, '0')}:00
                   </span>
                 </div>
               ))}
             </div>
             {diasSemana.map((dia, di) => (
-              <div key={di} style={{ borderLeft: '1px solid #f3f4f6', background: isHoje(dia) ? '#faf8ff' : 'white', position: 'relative', paddingTop: 12, paddingBottom: 12 }}>
+              <div key={di} style={{ borderLeft: `1px solid ${tokens.bg.hoverStrong}`, background: isHoje(dia) ? tokens.brand.primarySoftBg : 'white', position: 'relative', paddingTop: 12, paddingBottom: 12 }}>
                 {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
                   const isHoraCheia = i % 4 === 0
                   const isMeia = i % 4 === 2
@@ -828,14 +829,14 @@ function AgendaContent() {
                   return (
                     <div key={i}
                       onClick={() => { const d = new Date(dia); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
-                      style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : 'none', borderBottom: isUltimo ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
+                      style={{ height: SLOT_PX, borderTop: isHoraCheia ? `1px solid ${tokens.bg.hoverStrong}` : 'none', borderBottom: isUltimo ? `1px solid ${tokens.bg.hoverStrong}` : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
                       onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
                       onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
                   )
                 })}
                 {getAgsDia(dia).map(ag => {
                   const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
-                  const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || '#6043C1')
+                  const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || tokens.brand.primary)
                   const d = new Date(ag.data_hora)
                   const idx = toSlotIdx(d)
                   const dur = Number(ag.duracao) || 30
@@ -843,22 +844,22 @@ function AgendaContent() {
                   const cancelado = ag.status === 'cancelado'
                   return (
                     <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
-                      style={{ position: 'absolute', left: 3, right: 3, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: cancelado ? '#f3f4f6' : corMed.bg, border: `1px solid ${cancelado ? '#d1d5db' : corMed.border}`, borderLeft: `3px solid ${cancelado ? '#9ca3af' : corMed.dot}`, borderRadius: 6, padding: '3px 6px', cursor: 'pointer', zIndex: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', opacity: cancelado ? 0.6 : 1, textDecoration: cancelado ? 'line-through' : 'none' }}>
+                      style={{ position: 'absolute', left: 3, right: 3, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: cancelado ? tokens.bg.hoverStrong : corMed.bg, border: `1px solid ${cancelado ? tokens.border.strong : corMed.border}`, borderLeft: `3px solid ${cancelado ? tokens.text.tertiary : corMed.dot}`, borderRadius: 6, padding: '3px 6px', cursor: 'pointer', zIndex: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', opacity: cancelado ? 0.6 : 1, textDecoration: cancelado ? 'line-through' : 'none' }}>
                       {/* Indicadores no canto superior direito */}
                       {(ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) && (
                         <div style={{ position: 'absolute', top: 3, right: 3, display: 'flex', flexDirection: 'column' as const, gap: 2, zIndex: 2 }}>
                           {ag.pre_consulta_enviada && (
-                            <span title="Pré-consulta enviada" style={{ width: 12, height: 12, borderRadius: '50%', background: '#25d366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span title="Pré-consulta enviada" style={{ width: 12, height: 12, borderRadius: '50%', background: tokens.whatsapp.greenLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <svg width="7" height="7" viewBox="0 0 24 24" fill="white"><path d="M20.52 3.45C18.38 1.34 15.48 0 12.4 0 6.37 0 1.45 4.92 1.45 11c0 1.95.5 3.85 1.45 5.55L1 23l6.6-1.73c1.6.9 3.5 1.36 5.4 1.36 6.03 0 10.95-4.92 10.95-11 0-2.96-1.14-5.76-3.43-8.18z"/></svg>
                             </span>
                           )}
                           {ag.confirmacao_24h_status === 'confirmado' && (
-                            <span title="Paciente confirmou" style={{ width: 12, height: 12, borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span title="Paciente confirmou" style={{ width: 12, height: 12, borderRadius: '50%', background: tokens.status.success, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5"><polyline points="20 6 9 17 4 12"/></svg>
                             </span>
                           )}
                           {ag.confirmacao_24h_enviada && ag.confirmacao_24h_status !== 'confirmado' && (
-                            <span title="Aguardando confirmação" style={{ width: 12, height: 12, borderRadius: '50%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span title="Aguardando confirmação" style={{ width: 12, height: 12, borderRadius: '50%', background: tokens.status.warningAmber, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                             </span>
                           )}
@@ -893,20 +894,20 @@ function AgendaContent() {
                       style={{
                         position: 'absolute' as const, left: 0, right: 0,
                         top: slotToPx(idx), height: altura,
-                        background: 'repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 6px, #e5e7eb 6px, #e5e7eb 12px)',
-                        borderTop: '1px solid #d1d5db', borderBottom: '1px solid #d1d5db',
+                        background: `repeating-linear-gradient(45deg, ${tokens.bg.hoverStrong}, ${tokens.bg.hoverStrong} 6px, ${tokens.border.default} 6px, ${tokens.border.default} 12px)`,
+                        borderTop: `1px solid ${tokens.border.strong}`, borderBottom: `1px solid ${tokens.border.strong}`,
                         zIndex: 5, cursor: 'pointer', overflow: 'hidden' as const,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4,
                       }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em', background: 'white', padding: '2px 8px', borderRadius: 12 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em', background: 'white', padding: '2px 8px', borderRadius: 12 }}>
                         🚫 {b.motivo || 'Bloqueado'}
                       </span>
                     </div>
                   )
                 })}
                 {isHoje(dia) && mostrarLinhaAgora && (
-                  <div style={{ position: 'absolute', top: slotToPx(agoraIdx) + (agora.getMinutes() % SLOT_MIN) * (SLOT_PX / SLOT_MIN), left: 0, right: 0, height: 2, background: '#dc2626', zIndex: 20, pointerEvents: 'none' }}>
-                    <div style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: '50%', background: '#dc2626' }}/>
+                  <div style={{ position: 'absolute', top: slotToPx(agoraIdx) + (agora.getMinutes() % SLOT_MIN) * (SLOT_PX / SLOT_MIN), left: 0, right: 0, height: 2, background: tokens.status.danger, zIndex: 20, pointerEvents: 'none' }}>
+                    <div style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: '50%', background: tokens.status.danger }}/>
                   </div>
                 )}
               </div>
@@ -922,9 +923,9 @@ function AgendaContent() {
     const mesAtual = mesVisualizado.getMonth()
     return (
       <div style={{ flex: 1, background: 'white', borderRadius: 12, margin: '0 16px 16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #f3f4f6' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
           {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((l, i) => (
-            <div key={i} style={{ padding: '12px 8px', fontSize: 11, fontWeight: 700, color: i === 0 || i === 6 ? '#6043C1' : '#374151', textAlign: 'center' as const, textTransform: 'uppercase' as const, letterSpacing: '0.08em', background: '#F9FAFB' }}>{l}</div>
+            <div key={i} style={{ padding: '12px 8px', fontSize: 11, fontWeight: 700, color: i === 0 || i === 6 ? tokens.brand.primary : tokens.text.strong, textAlign: 'center' as const, textTransform: 'uppercase' as const, letterSpacing: '0.08em', background: tokens.bg.muted }}>{l}</div>
           ))}
         </div>
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: '1fr' }}>
@@ -934,14 +935,14 @@ function AgendaContent() {
             const hoje = isHoje(d)
             return (
               <div key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
-                style={{ borderTop: '1px solid #f3f4f6', borderLeft: i % 7 !== 0 ? '1px solid #f3f4f6' : 'none', padding: 8, cursor: 'pointer', background: noMes ? 'white' : '#F5F5F5', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 4, minHeight: 90, transition: 'background 0.12s' }}>
+                style={{ borderTop: `1px solid ${tokens.bg.hoverStrong}`, borderLeft: i % 7 !== 0 ? `1px solid ${tokens.bg.hoverStrong}` : 'none', padding: 8, cursor: 'pointer', background: noMes ? 'white' : tokens.bg.hover, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 4, minHeight: 90, transition: 'background 0.12s' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 12, fontWeight: hoje ? 800 : 600, color: noMes ? (hoje ? 'white' : '#111827') : '#d1d5db', background: hoje ? '#6043C1' : 'transparent', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{d.getDate()}</span>
-                  {ags.length > 2 && <span style={{ fontSize: 9, color: '#9ca3af', fontWeight: 600 }}>+{ags.length - 2}</span>}
+                  <span style={{ fontSize: 12, fontWeight: hoje ? 800 : 600, color: noMes ? (hoje ? 'white' : tokens.text.primary) : tokens.border.strong, background: hoje ? tokens.brand.primary : 'transparent', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{d.getDate()}</span>
+                  {ags.length > 2 && <span style={{ fontSize: 9, color: tokens.text.tertiary, fontWeight: 600 }}>+{ags.length - 2}</span>}
                 </div>
                 {ags.slice(0, 2).map(ag => {
                   const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
-                  const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || '#6043C1')
+                  const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || tokens.brand.primary)
                   return (
                     <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
                       style={{ fontSize: 10, padding: '2px 5px', borderRadius: 4, background: corMed.bg, color: corMed.text, borderLeft: `2px solid ${corMed.dot}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
@@ -963,25 +964,25 @@ function AgendaContent() {
     const ags = getAgsDia(diaSelecionado)
     return (
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px' }}>
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', background: isHoje(diaSelecionado) ? '#6043C1' : '#ede9fb', color: isHoje(diaSelecionado) ? 'white' : '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700 }}>
+        <div style={{ padding: '14px 20px', borderBottom: `1px solid ${tokens.bg.hoverStrong}`, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 44, height: 44, borderRadius: '50%', background: isHoje(diaSelecionado) ? tokens.brand.primary : tokens.brand.primaryLighter, color: isHoje(diaSelecionado) ? 'white' : tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700 }}>
             {diaSelecionado.getDate()}
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827', textTransform: 'capitalize' }}>{diaSelecionado.toLocaleDateString('pt-BR', { weekday: 'long' })}</p>
-            <p style={{ margin: 0, fontSize: 12, color: '#6b7280', textTransform: 'capitalize' }}>{fmtMesAno(diaSelecionado)} · {ags.length} agendamento{ags.length !== 1 ? 's' : ''}</p>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: tokens.text.primary, textTransform: 'capitalize' }}>{diaSelecionado.toLocaleDateString('pt-BR', { weekday: 'long' })}</p>
+            <p style={{ margin: 0, fontSize: 12, color: tokens.text.secondary, textTransform: 'capitalize' }}>{fmtMesAno(diaSelecionado)} · {ags.length} agendamento{ags.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
         <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '72px 1fr', minHeight: `${TOTAL_SLOTS * SLOT_PX}px`, position: 'relative' }}>
             <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5 }}>
               {Array.from({ length: HORA_FIM - HORA_INI }, (_, i) => (
-                <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: '1px solid #f3f4f6' }}>
-                  <span style={{ position: 'absolute', top: -7, right: 10, fontSize: 11, color: '#9ca3af', fontWeight: 600, background: 'white', padding: '0 4px' }}>{(HORA_INI + i).toString().padStart(2, '0')}:00</span>
+                <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
+                  <span style={{ position: 'absolute', top: -7, right: 10, fontSize: 11, color: tokens.text.tertiary, fontWeight: 600, background: 'white', padding: '0 4px' }}>{(HORA_INI + i).toString().padStart(2, '0')}:00</span>
                 </div>
               ))}
             </div>
-            <div style={{ borderLeft: '1px solid #f3f4f6', position: 'relative', paddingTop: 12, paddingBottom: 12 }}>
+            <div style={{ borderLeft: `1px solid ${tokens.bg.hoverStrong}`, position: 'relative', paddingTop: 12, paddingBottom: 12 }}>
               {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
                 const isHoraCheia = i % 4 === 0
                 const isMeia = i % 4 === 2
@@ -989,14 +990,14 @@ function AgendaContent() {
                 return (
                   <div key={i}
                     onClick={() => { const d = new Date(diaSelecionado); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
-                    style={{ height: SLOT_PX, borderTop: isHoraCheia ? '1px solid #f3f4f6' : 'none', borderBottom: isUltimo ? '1px solid #f3f4f6' : 'none', cursor: 'pointer' }}
+                    style={{ height: SLOT_PX, borderTop: isHoraCheia ? `1px solid ${tokens.bg.hoverStrong}` : 'none', borderBottom: isUltimo ? `1px solid ${tokens.bg.hoverStrong}` : 'none', cursor: 'pointer' }}
                     onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
                     onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
                 )
               })}
               {ags.map(ag => {
                 const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
-                const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || '#6043C1')
+                const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || tokens.brand.primary)
                 const d = new Date(ag.data_hora)
                 const idx = toSlotIdx(d)
                 const dur = Number(ag.duracao) || 30
@@ -1008,16 +1009,16 @@ function AgendaContent() {
                     {(ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) && (
                       <div style={{ position: 'absolute', top: 6, right: 8, display: 'flex', gap: 4, zIndex: 2 }}>
                         {ag.pre_consulta_enviada && (
-                          <span title="Pré-consulta enviada no WhatsApp" style={{ width: 18, height: 18, borderRadius: '50%', background: '#25d366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span title="Pré-consulta enviada no WhatsApp" style={{ width: 18, height: 18, borderRadius: '50%', background: tokens.whatsapp.greenLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M20.52 3.45C18.38 1.34 15.48 0 12.4 0 6.37 0 1.45 4.92 1.45 11c0 1.95.5 3.85 1.45 5.55L1 23l6.6-1.73c1.6.9 3.5 1.36 5.4 1.36 6.03 0 10.95-4.92 10.95-11 0-2.96-1.14-5.76-3.43-8.18z"/></svg>
                           </span>
                         )}
                         {ag.confirmacao_24h_status === 'confirmado' ? (
-                          <span title="Paciente confirmou a consulta" style={{ width: 18, height: 18, borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span title="Paciente confirmou a consulta" style={{ width: 18, height: 18, borderRadius: '50%', background: tokens.status.success, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5"><polyline points="20 6 9 17 4 12"/></svg>
                           </span>
                         ) : ag.confirmacao_24h_enviada ? (
-                          <span title="Aguardando confirmação do paciente" style={{ width: 18, height: 18, borderRadius: '50%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span title="Aguardando confirmação do paciente" style={{ width: 18, height: 18, borderRadius: '50%', background: tokens.status.warningAmber, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                           </span>
                         ) : null}
@@ -1046,20 +1047,20 @@ function AgendaContent() {
                     style={{
                       position: 'absolute' as const, left: 0, right: 0,
                       top: slotToPx(idx), height: altura,
-                      background: 'repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 8px, #e5e7eb 8px, #e5e7eb 16px)',
-                      borderTop: '1px solid #d1d5db', borderBottom: '1px solid #d1d5db',
+                      background: `repeating-linear-gradient(45deg, ${tokens.bg.hoverStrong}, ${tokens.bg.hoverStrong} 8px, ${tokens.border.default} 8px, ${tokens.border.default} 16px)`,
+                      borderTop: `1px solid ${tokens.border.strong}`, borderBottom: `1px solid ${tokens.border.strong}`,
                       zIndex: 5, cursor: 'pointer', overflow: 'hidden' as const,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8,
                     }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em', background: 'white', padding: '4px 14px', borderRadius: 20, border: '1px solid #e5e7eb' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em', background: 'white', padding: '4px 14px', borderRadius: 20, border: `1px solid ${tokens.border.default}` }}>
                       🚫 {b.motivo || 'Horário bloqueado'}
                     </span>
                   </div>
                 )
               })}
               {mostrarLinhaAgora && (
-                <div style={{ position: 'absolute', top: slotToPx(agoraIdx) + (agora.getMinutes() % SLOT_MIN) * (SLOT_PX / SLOT_MIN), left: 0, right: 0, height: 2, background: '#dc2626', zIndex: 20, pointerEvents: 'none' }}>
-                  <div style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: '50%', background: '#dc2626' }}/>
+                <div style={{ position: 'absolute', top: slotToPx(agoraIdx) + (agora.getMinutes() % SLOT_MIN) * (SLOT_PX / SLOT_MIN), left: 0, right: 0, height: 2, background: tokens.status.danger, zIndex: 20, pointerEvents: 'none' }}>
+                  <div style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: '50%', background: tokens.status.danger }}/>
                 </div>
               )}
             </div>
@@ -1070,7 +1071,7 @@ function AgendaContent() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: tokens.bg.hover, overflow: 'hidden' }}>
       {renderPainel()}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderHeader()}
@@ -1092,25 +1093,25 @@ function AgendaContent() {
           }}>
             {/* Drag handle */}
             <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: '#e5e7eb' }}/>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: tokens.border.default }}/>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 20px 12px' }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Filtros & calendário</h3>
-              <button onClick={() => setFiltrosMobileOpen(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: '#9ca3af', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Filtros & calendário</h3>
+              <button onClick={() => setFiltrosMobileOpen(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: tokens.text.tertiary, cursor: 'pointer', lineHeight: 1 }}>✕</button>
             </div>
             <div style={{ padding: '0 20px' }}>
               {/* Mini-calendário */}
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <h4 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0, textTransform: 'capitalize' }}>{fmtMesAno(mesVisualizado)}</h4>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0, textTransform: 'capitalize' }}>{fmtMesAno(mesVisualizado)}</h4>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <button onClick={() => navegarMes(-1)} style={{ width: 28, height: 28, border: 'none', background: '#f3f4f6', cursor: 'pointer', color: '#6b7280', borderRadius: 6 }}>‹</button>
-                    <button onClick={() => navegarMes(1)} style={{ width: 28, height: 28, border: 'none', background: '#f3f4f6', cursor: 'pointer', color: '#6b7280', borderRadius: 6 }}>›</button>
+                    <button onClick={() => navegarMes(-1)} style={{ width: 28, height: 28, border: 'none', background: tokens.bg.hoverStrong, cursor: 'pointer', color: tokens.text.secondary, borderRadius: 6 }}>‹</button>
+                    <button onClick={() => navegarMes(1)} style={{ width: 28, height: 28, border: 'none', background: tokens.bg.hoverStrong, cursor: 'pointer', color: tokens.text.secondary, borderRadius: 6 }}>›</button>
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
                   {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((l, i) => (
-                    <div key={i} style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', fontWeight: 700, padding: '4px 0' }}>{l}</div>
+                    <div key={i} style={{ fontSize: 10, color: tokens.text.tertiary, textAlign: 'center', fontWeight: 700, padding: '4px 0' }}>{l}</div>
                   ))}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
@@ -1121,9 +1122,9 @@ function AgendaContent() {
                     const temAgs = agendamentosFiltrados.some(a => new Date(a.data_hora).toDateString() === d.toDateString())
                     return (
                       <button key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setFiltrosMobileOpen(false) }}
-                        style={{ aspectRatio: '1', border: 'none', background: selecionado ? '#6043C1' : (hoje ? '#ede9fb' : 'transparent'), color: selecionado ? 'white' : (!noMes ? '#d1d5db' : (hoje ? '#6043C1' : '#374151')), fontSize: 13, fontWeight: hoje || selecionado ? 700 : 500, borderRadius: 8, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        style={{ aspectRatio: '1', border: 'none', background: selecionado ? tokens.brand.primary : (hoje ? tokens.brand.primaryLighter : 'transparent'), color: selecionado ? 'white' : (!noMes ? tokens.border.strong : (hoje ? tokens.brand.primary : tokens.text.strong)), fontSize: 13, fontWeight: hoje || selecionado ? 700 : 500, borderRadius: 8, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {d.getDate()}
-                        {temAgs && !selecionado && <span style={{ position: 'absolute', bottom: 3, width: 4, height: 4, borderRadius: '50%', background: hoje ? '#6043C1' : '#9ca3af' }}/>}
+                        {temAgs && !selecionado && <span style={{ position: 'absolute', bottom: 3, width: 4, height: 4, borderRadius: '50%', background: hoje ? tokens.brand.primary : tokens.text.tertiary }}/>}
                       </button>
                     )
                   })}
@@ -1132,29 +1133,29 @@ function AgendaContent() {
 
               {/* Filtros */}
               <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h4 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Filtros</h4>
-                {filtrosAtivos > 0 && <button onClick={limparFiltros} style={{ fontSize: 12, color: '#6043C1', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Limpar ({filtrosAtivos})</button>}
+                <h4 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Filtros</h4>
+                {filtrosAtivos > 0 && <button onClick={limparFiltros} style={{ fontSize: 12, color: tokens.brand.primary, background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Limpar ({filtrosAtivos})</button>}
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Status</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Status</label>
                 <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={{ ...selectStyle, padding: '10px 12px', fontSize: 14 }}>
                   <option value="todos">Todos</option>
                   {STATUS_OPTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Tipo</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Tipo</label>
                 <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} style={{ ...selectStyle, padding: '10px 12px', fontSize: 14 }}>
                   <option value="todos">Todos</option>
                   {Object.entries(TIPOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Paciente</label>
-                <input type="text" value={filtroPaciente} onChange={e => setFiltroPaciente(e.target.value)} placeholder="Buscar por nome..." style={{ width: '100%', padding: '10px 12px', fontSize: 14, borderRadius: 8, border: '1px solid #e5e7eb', outline: 'none' }}/>
+                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Paciente</label>
+                <input type="text" value={filtroPaciente} onChange={e => setFiltroPaciente(e.target.value)} placeholder="Buscar por nome..." style={{ width: '100%', padding: '10px 12px', fontSize: 14, borderRadius: 8, border: `1px solid ${tokens.border.default}`, outline: 'none' }}/>
               </div>
               <div style={{ marginBottom: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Profissional</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Profissional</label>
                 <select value={filtroProfissional} onChange={e => setFiltroProfissional(e.target.value)} style={{ ...selectStyle, padding: '10px 12px', fontSize: 14 }}>
                   <option value="todos">Todos</option>
                   {medico && <option value={medico.id}>{medico.nome || 'Eu'}</option>}
@@ -1170,10 +1171,10 @@ function AgendaContent() {
         <div onClick={() => setListaEsperaOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)', zIndex: 90 }}>
           <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 360, background: 'white', boxShadow: '-8px 0 24px rgba(0,0,0,0.08)', padding: 20, overflow: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Lista de espera</h3>
-              <button onClick={() => setListaEsperaOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, color: '#9ca3af' }}>✕</button>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: tokens.text.primary }}>Lista de espera</h3>
+              <button onClick={() => setListaEsperaOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, color: tokens.text.tertiary }}>✕</button>
             </div>
-            <div style={{ padding: '40px 0', textAlign: 'center', color: '#9ca3af' }}>
+            <div style={{ padding: '40px 0', textAlign: 'center', color: tokens.text.tertiary }}>
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 12px', display: 'block' }}>
                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
               </svg>
@@ -1199,19 +1200,19 @@ function AgendaContent() {
         <div onClick={e => { if (e.target === e.currentTarget) setModalBloqueio(false) }}
           style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 520, maxHeight: '90vh', overflow: 'auto' }}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${tokens.bg.hoverStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: tokens.status.dangerBg, color: tokens.status.danger, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
                   </svg>
                 </div>
                 <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Bloquear horário</h3>
-                  <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Impede agendamentos nesse período</p>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Bloquear horário</h3>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>Impede agendamentos nesse período</p>
                 </div>
               </div>
-              <button onClick={() => setModalBloqueio(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 20, padding: 4 }}>✕</button>
+              <button onClick={() => setModalBloqueio(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.text.tertiary, fontSize: 20, padding: 4 }}>✕</button>
             </div>
 
             <div style={{ padding: 24, display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
@@ -1220,7 +1221,7 @@ function AgendaContent() {
                 <label style={labelStyle}>Médico</label>
                 <select value={formBloqueio.medico_id}
                   onChange={e => setFormBloqueio(p => ({ ...p, medico_id: e.target.value }))}
-                  style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#111827', cursor: 'pointer' }}>
+                  style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.primary, cursor: 'pointer' }}>
                   <option value="">Selecionar médico</option>
                   {medicosClinica.map(m => (
                     <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
@@ -1241,12 +1242,12 @@ function AgendaContent() {
                       onClick={() => setFormBloqueio(p => ({ ...p, tipo: t.v }))}
                       style={{
                         padding: '10px 8px', borderRadius: 10, textAlign: 'left' as const,
-                        border: formBloqueio.tipo === t.v ? '1.5px solid #dc2626' : '1.5px solid #e5e7eb',
-                        background: formBloqueio.tipo === t.v ? '#fef2f2' : 'white',
+                        border: formBloqueio.tipo === t.v ? `1.5px solid ${tokens.status.danger}` : `1.5px solid ${tokens.border.default}`,
+                        background: formBloqueio.tipo === t.v ? tokens.status.dangerBg : 'white',
                         cursor: 'pointer',
                       }}>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: formBloqueio.tipo === t.v ? '#dc2626' : '#111827', margin: 0 }}>{t.label}</p>
-                      <p style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 0' }}>{t.sub}</p>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: formBloqueio.tipo === t.v ? tokens.status.danger : tokens.text.primary, margin: 0 }}>{t.label}</p>
+                      <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: '2px 0 0' }}>{t.sub}</p>
                     </button>
                   ))}
                 </div>
@@ -1259,20 +1260,20 @@ function AgendaContent() {
                     <label style={labelStyle}>Data</label>
                     <input type="date" value={formBloqueio.data}
                       onChange={e => setFormBloqueio(p => ({ ...p, data: e.target.value }))}
-                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
                       <label style={labelStyle}>Das</label>
                       <input type="time" value={formBloqueio.hora_inicio}
                         onChange={e => setFormBloqueio(p => ({ ...p, hora_inicio: e.target.value }))}
-                        style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                        style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
                     </div>
                     <div>
                       <label style={labelStyle}>Até</label>
                       <input type="time" value={formBloqueio.hora_fim}
                         onChange={e => setFormBloqueio(p => ({ ...p, hora_fim: e.target.value }))}
-                        style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                        style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
                     </div>
                   </div>
                 </>
@@ -1283,8 +1284,8 @@ function AgendaContent() {
                   <label style={labelStyle}>Data</label>
                   <input type="date" value={formBloqueio.data}
                     onChange={e => setFormBloqueio(p => ({ ...p, data: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
-                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0' }}>Dia inteiro indisponível</p>
+                    style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '6px 0 0' }}>Dia inteiro indisponível</p>
                 </div>
               )}
 
@@ -1294,13 +1295,13 @@ function AgendaContent() {
                     <label style={labelStyle}>De</label>
                     <input type="date" value={formBloqueio.data_inicio}
                       onChange={e => setFormBloqueio(p => ({ ...p, data_inicio: e.target.value }))}
-                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
                   </div>
                   <div>
                     <label style={labelStyle}>Até</label>
                     <input type="date" value={formBloqueio.data_fim}
                       onChange={e => setFormBloqueio(p => ({ ...p, data_fim: e.target.value }))}
-                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
                   </div>
                 </div>
               )}
@@ -1311,25 +1312,25 @@ function AgendaContent() {
                 <input value={formBloqueio.motivo}
                   onChange={e => setFormBloqueio(p => ({ ...p, motivo: e.target.value }))}
                   placeholder="Ex: Almoço, Reunião, Férias..."
-                  style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}/>
+                  style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
               </div>
 
               {/* Recorrência (só pra tipo horário/dia) */}
               {(formBloqueio.tipo === 'horario' || formBloqueio.tipo === 'dia') && (
-                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: 14 }}>
+                <div style={{ background: tokens.bg.muted, borderRadius: 10, padding: 14 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                     <input type="checkbox" checked={formBloqueio.recorrente}
                       onChange={e => setFormBloqueio(p => ({ ...p, recorrente: e.target.checked }))}
                       style={{ width: 18, height: 18, cursor: 'pointer' }}/>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>Repetir semanalmente</p>
-                      <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>Bloqueio toda semana nos dias escolhidos</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>Repetir semanalmente</p>
+                      <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '2px 0 0' }}>Bloqueio toda semana nos dias escolhidos</p>
                     </div>
                   </label>
 
                   {formBloqueio.recorrente && (
                     <div style={{ marginTop: 12 }}>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 8 }}>Dias da semana</p>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 8 }}>Dias da semana</p>
                       <div style={{ display: 'flex', gap: 6 }}>
                         {([
                           { v: '0', label: 'D' },
@@ -1349,9 +1350,9 @@ function AgendaContent() {
                               }))}
                               style={{
                                 width: 36, height: 36, borderRadius: 8,
-                                border: ativo ? '1.5px solid #dc2626' : '1.5px solid #e5e7eb',
-                                background: ativo ? '#dc2626' : 'white',
-                                color: ativo ? 'white' : '#6b7280',
+                                border: ativo ? `1.5px solid ${tokens.status.danger}` : `1.5px solid ${tokens.border.default}`,
+                                background: ativo ? tokens.status.danger : 'white',
+                                color: ativo ? 'white' : tokens.text.secondary,
                                 fontSize: 13, fontWeight: 700, cursor: 'pointer',
                               }}>{d.label}</button>
                           )
@@ -1365,11 +1366,11 @@ function AgendaContent() {
               {/* Botões */}
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                 <button onClick={() => setModalBloqueio(false)}
-                  style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>
+                  style={{ padding: '11px 18px', borderRadius: 10, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 13, cursor: 'pointer' }}>
                   Cancelar
                 </button>
                 <button onClick={salvarBloqueio} disabled={salvandoBloqueio}
-                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: salvandoBloqueio ? '#9ca3af' : '#dc2626', color: 'white', fontSize: 14, fontWeight: 700, cursor: salvandoBloqueio ? 'not-allowed' : 'pointer' }}>
+                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: salvandoBloqueio ? tokens.text.tertiary : tokens.status.danger, color: 'white', fontSize: 14, fontWeight: 700, cursor: salvandoBloqueio ? 'not-allowed' : 'pointer' }}>
                   {salvandoBloqueio ? 'Bloqueando...' : 'Bloquear'}
                 </button>
               </div>
@@ -1384,12 +1385,12 @@ function AgendaContent() {
           <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, overflow: 'hidden' }}>
             <div style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: tokens.brand.primaryLighter, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 </div>
                 <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>{modal.ag ? 'Editar agendamento' : 'Novo agendamento'}</h3>
-                  {modal.date && <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{fmtDia(modal.date)}</p>}
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{modal.ag ? 'Editar agendamento' : 'Novo agendamento'}</h3>
+                  {modal.date && <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{fmtDia(modal.date)}</p>}
                 </div>
               </div>
               {modal.ag && (
@@ -1397,8 +1398,8 @@ function AgendaContent() {
                   type="button"
                   onClick={() => { gerarComandaDoAgendamento(modal.ag); setModal({ open: false }) }}
                   style={{
-                    padding: '7px 12px', borderRadius: 8, border: '1px solid #ddd6fe',
-                    background: '#f5f3ff', color: '#6043C1', fontSize: 12, fontWeight: 600,
+                    padding: '7px 12px', borderRadius: 8, border: `1px solid ${tokens.appointment.exame.border}`,
+                    background: tokens.appointment.exame.bg, color: tokens.brand.primary, fontSize: 12, fontWeight: 600,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, marginRight: 8
                   }}
                   title="Gerar comanda financeira a partir deste agendamento"
@@ -1407,7 +1408,7 @@ function AgendaContent() {
                   Gerar comanda
                 </button>
               )}
-              <button onClick={() => setModal({ open: false })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
+              <button onClick={() => setModal({ open: false })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.text.tertiary, fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
             </div>
             <form onSubmit={salvar} style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
@@ -1415,7 +1416,7 @@ function AgendaContent() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
                   {Object.entries(TIPOS).map(([k, v]) => (
                     <button key={k} type="button" onClick={() => setForm(f => ({...f, tipo: k}))}
-                      style={{ padding: '7px 4px', borderRadius: 8, border: `1.5px solid ${form.tipo === k ? v.dot : '#e5e7eb'}`, background: form.tipo === k ? v.bg : 'white', color: form.tipo === k ? v.text : '#6b7280', fontSize: 12, fontWeight: form.tipo === k ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+                      style={{ padding: '7px 4px', borderRadius: 8, border: `1.5px solid ${form.tipo === k ? v.dot : tokens.border.default}`, background: form.tipo === k ? v.bg : 'white', color: form.tipo === k ? v.text : tokens.text.secondary, fontSize: 12, fontWeight: form.tipo === k ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}>
                       {v.label}
                     </button>
                   ))}
@@ -1428,8 +1429,8 @@ function AgendaContent() {
                   return (
                     <div>
                       <label style={labelStyle}>Profissional</label>
-                      <div style={{ padding: '9px 12px', fontSize: 13, borderRadius: 8, background: '#f9fafb', color: '#111827', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: medico?.cor || '#6043C1' }}/>
+                      <div style={{ padding: '9px 12px', fontSize: 13, borderRadius: 8, background: tokens.bg.muted, color: tokens.text.primary, border: `1px solid ${tokens.border.default}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: medico?.cor || tokens.brand.primary }}/>
                         Dr(a). {medico?.nome || '...'}
                       </div>
                     </div>
@@ -1439,7 +1440,7 @@ function AgendaContent() {
                   <div>
                     <label style={labelStyle}>Profissional</label>
                     <select value={form.medico_id} onChange={e => setForm(f => ({...f, medico_id: e.target.value}))}
-                      style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: '#111827' }}>
+                      style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: tokens.text.primary }}>
                       <option value="">Selecionar médico</option>
                       {medicosClinica.filter((m: any) => (m.cargo === 'medico' || m.cargo === 'admin' || !m.cargo) && m.ativo !== false).map((m: any) => (
                         <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
@@ -1463,7 +1464,7 @@ function AgendaContent() {
                         duracao: proc?.duracao ? String(proc.duracao) : f.duracao,
                       }))
                     }}
-                    style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: '#111827' }}>
+                    style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: tokens.text.primary }}>
                     <option value="">Nenhum (consulta padrão)</option>
                     {procedimentos.map((p: any) => (
                       <option key={p.id} value={p.id}>
@@ -1476,12 +1477,12 @@ function AgendaContent() {
               <div>
                 <label style={labelStyle}>Paciente</label>
                 <select value={form.paciente_id} onChange={e => setForm(f => ({...f, paciente_id: e.target.value}))}
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: '#111827' }}>
+                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: tokens.text.primary }}>
                   <option value="">Selecionar paciente (opcional)</option>
                   {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
                 {!form.paciente_id && (
-                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '5px 2px 0', fontStyle: 'italic' }}>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '5px 2px 0', fontStyle: 'italic' }}>
                     Deixe em branco para criar um encaixe rápido
                   </p>
                 )}
@@ -1518,59 +1519,59 @@ function AgendaContent() {
               </div>
               {modal.ag && (
                 <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>Status atual: <strong style={{ color: '#111827' }}>{modal.ag.status}</strong></span>
+                  <span style={{ fontSize: 12, color: tokens.text.secondary, fontWeight: 500 }}>Status atual: <strong style={{ color: tokens.text.primary }}>{modal.ag.status}</strong></span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     {modal.ag.status !== 'confirmado' && (
                       <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'confirmado'); setModal(m => ({...m, ag: {...m.ag, status: 'confirmado'}})) }}
-                        style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Confirmar</button>
+                        style={{ fontSize: 11, color: tokens.status.success, background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Confirmar</button>
                     )}
                     {modal.ag.status !== 'cancelado' && modal.ag.status !== 'realizado' && (
                       <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'cancelado'); setModal({ open: false }) }}
-                        style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Cancelar</button>
+                        style={{ fontSize: 11, color: tokens.status.danger, background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Cancelar</button>
                     )}
                     {modal.ag.status !== 'realizado' && modal.ag.status !== 'faltou' && (
                       <button type="button" onClick={() => setSubmodalRealizado(true)}
-                        style={{ fontSize: 11, color: '#15803d', background: '#dcfce7', border: '1px solid #86efac', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Realizado</button>
+                        style={{ fontSize: 11, color: tokens.status.successHover, background: tokens.status.successBgAlt, border: `1px solid ${tokens.whatsapp.bubbleBorder}`, padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Realizado</button>
                     )}
                     {modal.ag.status !== 'realizado' && modal.ag.status !== 'faltou' && modal.ag.status !== 'cancelado' && (
                       <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'faltou'); setModal({ open: false }) }}
-                        style={{ fontSize: 11, color: '#a16207', background: '#fef3c7', border: '1px solid #fcd34d', padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Faltou</button>
+                        style={{ fontSize: 11, color: tokens.status.warningAmberStrong, background: tokens.status.warningLightSoft, border: `1px solid ${tokens.status.warningLightSofter}`, padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Faltou</button>
                     )}
                   </div>
                 </div>
               )}
               {!modal.ag && !salaLink && (
                 <button type="button" onClick={criarSalaAgora}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, cursor: 'pointer', textAlign: 'left' as const }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', background: 'white', border: `1px solid ${tokens.border.default}`, borderRadius: 10, cursor: 'pointer', textAlign: 'left' as const }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: tokens.brand.primaryLighter, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#6043C1' }}>Adicionar videoconferência</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: tokens.brand.primary }}>Adicionar videoconferência</span>
                 </button>
               )}
               {!modal.ag && salaLink && (
-                <div style={{ background: '#faf8ff', border: '1px solid #ddd3f7', borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ background: tokens.brand.primarySoftBg, border: `1px solid ${tokens.brand.primaryAccentLight}`, borderRadius: 10, padding: '10px 12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 8, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: tokens.brand.primaryLighter, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#6043C1', margin: '0 0 2px' }}>Entrar na sala</p>
-                      <p style={{ fontSize: 11, color: '#6b7280', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salaLink}</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, margin: '0 0 2px' }}>Entrar na sala</p>
+                      <p style={{ fontSize: 11, color: tokens.text.secondary, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salaLink}</p>
                     </div>
                     <button type="button" onClick={removerSala} title="Remover sala"
-                      style={{ padding: 6, background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      style={{ padding: 6, background: 'transparent', border: 'none', color: tokens.text.tertiary, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button type="button" onClick={copiarLinkSala}
-                      style={{ flex: 1, padding: '7px 10px', borderRadius: 8, background: 'white', border: '1px solid #e5e7eb', fontSize: 12, color: '#374151', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                      style={{ flex: 1, padding: '7px 10px', borderRadius: 8, background: 'white', border: `1px solid ${tokens.border.default}`, fontSize: 12, color: tokens.text.strong, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                       Copiar link
                     </button>
                     <button type="button" onClick={enviarSalaWhatsApp}
-                      style={{ flex: 1, padding: '7px 10px', borderRadius: 8, background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                      style={{ flex: 1, padding: '7px 10px', borderRadius: 8, background: tokens.status.successBgSoft, color: tokens.status.successHover, border: `1px solid ${tokens.status.successLightAlt}`, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                       WhatsApp
                     </button>
@@ -1578,17 +1579,17 @@ function AgendaContent() {
                 </div>
               )}
               {modal.ag && modal.ag.paciente_id && (
-                <div style={{ background: preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#f0fdf4' : '#f0ebff', border: '1px solid ' + (preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#bbf7d0' : '#b9a9ef'), borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: preConsultaEnviada || modal.ag.pre_consulta_enviada ? tokens.status.successBg : tokens.brand.primaryLight, border: '1px solid ' + (preConsultaEnviada || modal.ag.pre_consulta_enviada ? tokens.status.successLight : tokens.brand.primaryAccent), borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#16a34a' : '#6043C1'} strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={preConsultaEnviada || modal.ag.pre_consulta_enviada ? tokens.status.success : tokens.brand.primary} strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: preConsultaEnviada || modal.ag.pre_consulta_enviada ? '#16a34a' : '#6043C1', margin: 0 }}>Pré-consulta WhatsApp</p>
-                      <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{preConsultaEnviada || modal.ag.pre_consulta_enviada ? 'Perguntas enviadas ao paciente' : 'Enviar perguntas antes da consulta'}</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: preConsultaEnviada || modal.ag.pre_consulta_enviada ? tokens.status.success : tokens.brand.primary, margin: 0 }}>Pré-consulta WhatsApp</p>
+                      <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{preConsultaEnviada || modal.ag.pre_consulta_enviada ? 'Perguntas enviadas ao paciente' : 'Enviar perguntas antes da consulta'}</p>
                     </div>
                   </div>
                   {!(preConsultaEnviada || modal.ag.pre_consulta_enviada) && (
                     <button type="button" onClick={() => enviarPreConsulta(modal.ag.id)} disabled={enviandoPreConsulta}
-                      style={{ fontSize: 12, color: '#6043C1', background: 'white', padding: '5px 12px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
+                      style={{ fontSize: 12, color: tokens.brand.primary, background: 'white', padding: '5px 12px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
                       {enviandoPreConsulta ? 'Enviando...' : 'Enviar'}
                     </button>
                   )}
@@ -1596,7 +1597,7 @@ function AgendaContent() {
               )}
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
                 <button type="submit" disabled={salvando}
-                  style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                  style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   {salvando ? 'Salvando...' : modal.ag ? 'Salvar alterações' : 'Criar agendamento'}
                 </button>
                 {modal.ag && (
@@ -1609,12 +1610,12 @@ function AgendaContent() {
                       if (ag.pacientes?.telefone) params.set('paciente_tel', ag.pacientes.telefone || '')
                       router.push('/nova-consulta?' + params.toString())
                     }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#059669', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', background: tokens.status.successHover, color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
                       Iniciar consulta
                     </button>
                     <button type="button" onClick={() => deletar(modal.ag.id)}
-                      style={{ padding: '11px 16px', borderRadius: 9, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      style={{ padding: '11px 16px', borderRadius: 9, border: `1px solid ${tokens.status.dangerLight}`, background: tokens.status.dangerBg, color: tokens.status.danger, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
                     </button>
                   </>
@@ -1737,28 +1738,28 @@ function SubModalRealizado({ ag, onClose, onSaved }: { ag: any; onClose: () => v
     <div onClick={onClose} style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 440, padding: 26 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: tokens.status.successBgAlt, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.status.successHover} strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>Marcar como realizada</h2>
         </div>
-        <p style={{ fontSize: 13, color: '#737373', margin: '0 0 18px' }}>Quanto foi cobrado nessa consulta? Vamos lançar no financeiro.</p>
+        <p style={{ fontSize: 13, color: tokens.text.quaternary, margin: '0 0 18px' }}>Quanto foi cobrado nessa consulta? Vamos lançar no financeiro.</p>
 
         {/* Valor */}
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>Valor cobrado</label>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: tokens.text.muted, marginBottom: 5 }}>Valor cobrado</label>
         <div style={{ position: 'relative' as const, marginBottom: 4 }}>
-          <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+          <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: tokens.text.tertiary, fontSize: 13 }}>R$</span>
           <input type="text" value={valor} onChange={e => setValor(e.target.value.replace(/[^0-9,]/g, ''))} placeholder={carregandoSugestao ? 'Carregando sugestão...' : '0,00'}
-            style={{ width: '100%', padding: '10px 12px 10px 38px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const, fontWeight: 600 }} autoFocus/>
+            style={{ width: '100%', padding: '10px 12px 10px 38px', borderRadius: 8, border: `1px solid ${tokens.neutral[200]}`, fontSize: 14, outline: 'none', boxSizing: 'border-box' as const, fontWeight: 600 }} autoFocus/>
         </div>
         {valorSugestao !== null ? (
-          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 14px' }}>💡 Valor sugerido pelo procedimento ({valorSugestao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</p>
+          <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '0 0 14px' }}>💡 Valor sugerido pelo procedimento ({valorSugestao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</p>
         ) : (
-          <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 14px' }}>Vincule um procedimento ao agendamento para sugestão automática</p>
+          <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '0 0 14px' }}>Vincule um procedimento ao agendamento para sugestão automática</p>
         )}
 
         {/* Forma pagamento */}
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>Forma de pagamento</label>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: tokens.text.muted, marginBottom: 5 }}>Forma de pagamento</label>
         <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' as const }}>
           {[
             { v: 'pix', l: 'PIX' },
@@ -1770,35 +1771,35 @@ function SubModalRealizado({ ag, onClose, onSaved }: { ag: any; onClose: () => v
           ].map(o => (
             <button key={o.v} type="button" onClick={() => setMetodoPag(o.v)} style={{
               padding: '7px 12px', borderRadius: 7, border: 'none',
-              background: metodoPag === o.v ? '#0a0a0a' : '#f5f5f5',
-              color: metodoPag === o.v ? 'white' : '#525252',
+              background: metodoPag === o.v ? tokens.neutral[900] : tokens.bg.hover,
+              color: metodoPag === o.v ? 'white' : tokens.text.muted,
               fontSize: 12, fontWeight: 600, cursor: 'pointer'
             }}>{o.l}</button>
           ))}
         </div>
 
         {/* Status */}
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>Status do pagamento</label>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: tokens.text.muted, marginBottom: 5 }}>Status do pagamento</label>
         <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
           <button type="button" onClick={() => setStatusPag('recebido')} style={{
             flex: 1, padding: '9px', borderRadius: 7, border: 'none',
-            background: statusPag === 'recebido' ? '#dcfce7' : '#f5f5f5',
-            color: statusPag === 'recebido' ? '#15803d' : '#525252',
+            background: statusPag === 'recebido' ? tokens.status.successBgAlt : tokens.bg.hover,
+            color: statusPag === 'recebido' ? tokens.status.successHover : tokens.text.muted,
             fontSize: 12, fontWeight: 600, cursor: 'pointer'
           }}>✓ Já recebido</button>
           <button type="button" onClick={() => setStatusPag('pendente')} style={{
             flex: 1, padding: '9px', borderRadius: 7, border: 'none',
-            background: statusPag === 'pendente' ? '#fef3c7' : '#f5f5f5',
-            color: statusPag === 'pendente' ? '#a16207' : '#525252',
+            background: statusPag === 'pendente' ? tokens.status.warningLightSoft : tokens.bg.hover,
+            color: statusPag === 'pendente' ? tokens.status.warningAmberStrong : tokens.text.muted,
             fontSize: 12, fontWeight: 600, cursor: 'pointer'
           }}>⏳ Aguardando</button>
         </div>
 
-        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{erro}</div>}
+        {erro && <div style={{ background: tokens.status.dangerBgAlt, color: tokens.status.dangerHover, padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{erro}</div>}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} disabled={salvando} style={{ padding: '10px 16px', borderRadius: 9, border: '1px solid #e5e5e5', background: 'white', color: '#404040', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
-          <button onClick={salvar} disabled={salvando} style={{ padding: '10px 18px', borderRadius: 9, border: 'none', background: '#15803d', color: 'white', fontSize: 13, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}>{salvando ? 'Salvando...' : 'Confirmar e gerar receita'}</button>
+          <button onClick={onClose} disabled={salvando} style={{ padding: '10px 16px', borderRadius: 9, border: `1px solid ${tokens.neutral[200]}`, background: 'white', color: tokens.neutral[700], fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+          <button onClick={salvar} disabled={salvando} style={{ padding: '10px 18px', borderRadius: 9, border: 'none', background: tokens.status.successHover, color: 'white', fontSize: 13, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}>{salvando ? 'Salvando...' : 'Confirmar e gerar receita'}</button>
         </div>
       </div>
     </div>

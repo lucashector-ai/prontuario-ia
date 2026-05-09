@@ -3,10 +3,11 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 const CARD_RADIUS = 16
 
 export default function Exames() {
@@ -190,17 +191,17 @@ export default function Exames() {
   }
 
   const statusCor = (s: string) => {
-    if (s === 'critico') return { badge: '#dc2626', badgeBg: '#fef2f2', border: '#fecaca' }
-    if (s === 'alterado') return { badge: '#d97706', badgeBg: '#fffbeb', border: '#fde68a' }
-    return { badge: ACCENT, badgeBg: ACCENT_LIGHT, border: '#d4c9f7' }
+    if (s === 'critico') return { badge: tokens.status.danger, badgeBg: tokens.status.dangerBg, border: tokens.status.dangerLight }
+    if (s === 'alterado') return { badge: tokens.status.warningAlt, badgeBg: tokens.status.warningBgAlt, border: tokens.status.warningLightAlt }
+    return { badge: ACCENT, badgeBg: ACCENT_LIGHT, border: tokens.brand.primaryAccentSoft }
   }
 
   return (
     <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Análise de exames</h1>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Envie um exame ou laudo e a IA interpreta pra você em segundos</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Análise de exames</h1>
+        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Envie um exame ou laudo e a IA interpreta pra você em segundos</p>
       </div>
 
       {/* Grid 2 colunas quando tem análise, 1 coluna caso contrário */}
@@ -221,7 +222,7 @@ export default function Exames() {
             onClick={() => !preview && inputRef.current?.click()}
             style={{
               background: 'white',
-              border: `2px dashed ${preview ? ACCENT : '#e5e7eb'}`,
+              border: `2px dashed ${preview ? ACCENT : tokens.border.default}`,
               borderRadius: CARD_RADIUS,
               overflow: 'hidden',
               cursor: preview ? 'default' : 'pointer',
@@ -231,19 +232,19 @@ export default function Exames() {
               transition: 'border-color 0.15s',
             }}
             onMouseEnter={e => { if (!preview) e.currentTarget.style.borderColor = ACCENT }}
-            onMouseLeave={e => { if (!preview) e.currentTarget.style.borderColor = '#e5e7eb' }}
+            onMouseLeave={e => { if (!preview) e.currentTarget.style.borderColor = tokens.border.default }}
           >
             {preview ? (
               <div style={{ position: 'relative', width: '100%' }}>
                 {imagem?.type === 'application/pdf' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, background: '#FEF2F2', borderRadius: 12, border: '1px solid #FECACA' }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="1.5">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, background: tokens.status.dangerBg, borderRadius: 12, border: `1px solid ${tokens.status.dangerLight}` }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="1.5">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>
                 </svg>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#991B1B', margin: '0 0 2px' }}>PDF carregado</p>
-                  <p style={{ fontSize: 12, color: '#7F1D1D', margin: 0 }}>{imagem.name}</p>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: tokens.status.dangerDark, margin: '0 0 2px' }}>PDF carregado</p>
+                  <p style={{ fontSize: 12, color: tokens.status.dangerDarker, margin: 0 }}>{imagem.name}</p>
                 </div>
               </div>
             ) : (
@@ -252,9 +253,9 @@ export default function Exames() {
                 <button onClick={e => { e.stopPropagation(); setImagem(null); setPreview(null); setAnalise(null) }}
                   style={{
                     position: 'absolute', top: 12, right: 12,
-                    background: 'white', border: '1px solid #e5e7eb',
+                    background: 'white', border: `1px solid ${tokens.border.default}`,
                     borderRadius: 10, padding: '6px 12px',
-                    fontSize: 12, fontWeight: 600, color: '#374151',
+                    fontSize: 12, fontWeight: 600, color: tokens.text.strong,
                     cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                   }}>
                   Trocar imagem
@@ -272,11 +273,11 @@ export default function Exames() {
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                   </svg>
                 </div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Enviar exame ou laudo</p>
-                <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 14px' }}>Arraste a imagem aqui ou clique pra selecionar</p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Enviar exame ou laudo</p>
+                <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 14px' }}>Arraste a imagem aqui ou clique pra selecionar</p>
                 <span style={{
-                  fontSize: 11, fontWeight: 500, color: '#6b7280',
-                  background: '#f3f4f6', padding: '4px 12px', borderRadius: 20,
+                  fontSize: 11, fontWeight: 500, color: tokens.text.secondary,
+                  background: tokens.bg.hoverStrong, padding: '4px 12px', borderRadius: 20,
                 }}>
                   JPG, PNG, PDF · Máx. 10MB
                 </span>
@@ -289,7 +290,7 @@ export default function Exames() {
           {/* Contexto clínico */}
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
             <label style={{
-              fontSize: 11, fontWeight: 600, color: '#6b7280',
+              fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
               display: 'block', marginBottom: 8,
               textTransform: 'uppercase' as const, letterSpacing: '0.04em',
             }}>
@@ -302,22 +303,22 @@ export default function Exames() {
               style={{
                 width: '100%', minHeight: 90, fontSize: 13,
                 borderRadius: 10, padding: '10px 14px',
-                border: '1px solid #e5e7eb', outline: 'none',
-                resize: 'vertical' as const, color: '#374151',
+                border: `1px solid ${tokens.border.default}`, outline: 'none',
+                resize: 'vertical' as const, color: tokens.text.strong,
                 lineHeight: 1.6, fontFamily: 'inherit', boxSizing: 'border-box' as const,
               }}
             />
-            <p style={{ margin: '8px 0 0', fontSize: 11, color: '#9ca3af', lineHeight: 1.5 }}>
+            <p style={{ margin: '8px 0 0', fontSize: 11, color: tokens.text.tertiary, lineHeight: 1.5 }}>
               Quanto mais contexto, melhor a análise. A IA usa pra comparar valores com o histórico do paciente.
             </p>
           </div>
 
           {erro && (
             <div style={{
-              background: '#fef2f2', border: '1px solid #fecaca',
+              background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`,
               borderRadius: 10, padding: '12px 14px',
             }}>
-              <p style={{ fontSize: 13, color: '#991b1b', margin: 0, fontWeight: 500 }}>{erro}</p>
+              <p style={{ fontSize: 13, color: tokens.status.dangerDark, margin: 0, fontWeight: 500 }}>{erro}</p>
             </div>
           )}
 
@@ -327,8 +328,8 @@ export default function Exames() {
             style={{
               padding: 14, borderRadius: 10, border: 'none',
               cursor: imagem && !analisando ? 'pointer' : 'not-allowed',
-              background: !imagem ? '#f3f4f6' : analisando ? '#9ca3af' : ACCENT,
-              color: !imagem ? '#9ca3af' : 'white',
+              background: !imagem ? tokens.bg.hoverStrong : analisando ? tokens.text.tertiary : ACCENT,
+              color: !imagem ? tokens.text.tertiary : 'white',
               fontSize: 14, fontWeight: 700,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}
@@ -374,8 +375,8 @@ export default function Exames() {
             {/* Barra de ações: Exportar PDF + Adicionar ao prontuário */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
               <button onClick={exportarPDF} style={{
-                flex: 1, padding: '10px 14px', borderRadius: 9, border: '1px solid #e5e7eb',
-                background: 'white', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                flex: 1, padding: '10px 14px', borderRadius: 9, border: `1px solid ${tokens.border.default}`,
+                background: 'white', color: tokens.text.strong, fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
               }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -399,9 +400,9 @@ export default function Exames() {
 
             {salvouMsg && (
               <div style={{
-                background: salvouMsg.startsWith('Erro') ? '#fef2f2' : '#ecfdf5',
-                border: '1px solid ' + (salvouMsg.startsWith('Erro') ? '#fecaca' : '#a7f3d0'),
-                color: salvouMsg.startsWith('Erro') ? '#991b1b' : '#065f46',
+                background: salvouMsg.startsWith('Erro') ? tokens.status.dangerBg : tokens.status.successBgSoft,
+                border: '1px solid ' + (salvouMsg.startsWith('Erro') ? tokens.status.dangerLight : tokens.status.successLightAlt),
+                color: salvouMsg.startsWith('Erro') ? tokens.status.dangerDark : tokens.status.successText,
                 padding: '10px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
               }}>{salvouMsg}</div>
             )}
@@ -411,9 +412,9 @@ export default function Exames() {
             <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 3px' }}>{analise.tipo_exame}</p>
+                  <p style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 3px' }}>{analise.tipo_exame}</p>
                   {analise.data_exame && (
-                    <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Data do exame: {analise.data_exame}</p>
+                    <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0 }}>Data do exame: {analise.data_exame}</p>
                   )}
                 </div>
                 <span style={{
@@ -427,22 +428,22 @@ export default function Exames() {
                   Analisado pela IA
                 </span>
               </div>
-              <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '12px 14px' }}>
-                <p style={{ fontSize: 13, color: '#374151', margin: 0, lineHeight: 1.6 }}>{analise.resumo}</p>
+              <div style={{ background: tokens.bg.muted, borderRadius: 10, padding: '12px 14px' }}>
+                <p style={{ fontSize: 13, color: tokens.text.strong, margin: 0, lineHeight: 1.6 }}>{analise.resumo}</p>
               </div>
             </div>
 
             {/* Card: alertas críticos */}
             {analise.alertas?.length > 0 && (
               <div style={{
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
-                borderLeft: '4px solid #dc2626',
+                background: tokens.status.dangerBg,
+                border: `1px solid ${tokens.status.dangerLight}`,
+                borderLeft: `4px solid ${tokens.status.danger}`,
                 borderRadius: CARD_RADIUS,
                 padding: 20,
               }}>
                 <p style={{
-                  fontSize: 11, fontWeight: 700, color: '#dc2626',
+                  fontSize: 11, fontWeight: 700, color: tokens.status.danger,
                   margin: '0 0 10px',
                   textTransform: 'uppercase' as const, letterSpacing: '0.06em',
                   display: 'flex', alignItems: 'center', gap: 6,
@@ -456,7 +457,7 @@ export default function Exames() {
                 </p>
                 {analise.alertas.map((a: string, i: number) => (
                   <p key={i} style={{
-                    fontSize: 13, color: '#991b1b', margin: '4px 0',
+                    fontSize: 13, color: tokens.status.dangerDark, margin: '4px 0',
                     display: 'flex', gap: 8, lineHeight: 1.5,
                   }}>
                     <span style={{ fontWeight: 700 }}>•</span>
@@ -469,9 +470,9 @@ export default function Exames() {
             {/* Card: valores */}
             {analise.valores?.length > 0 && (
               <div style={{ background: 'white', borderRadius: CARD_RADIUS, overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                <div style={{ padding: '14px 20px', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
                   <p style={{
-                    fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: 0,
+                    fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, margin: 0,
                     textTransform: 'uppercase' as const, letterSpacing: '0.06em',
                   }}>
                     Valores encontrados
@@ -482,12 +483,12 @@ export default function Exames() {
                   return (
                     <div key={i} style={{
                       padding: '14px 20px',
-                      borderBottom: i < analise.valores.length - 1 ? '1px solid #f3f4f6' : 'none',
+                      borderBottom: i < analise.valores.length - 1 ? `1px solid ${tokens.bg.hoverStrong}` : 'none',
                       display: 'flex', alignItems: 'flex-start', gap: 12,
                     }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' as const }}>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>{v.nome}</p>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{v.nome}</p>
                           <span style={{
                             fontSize: 10, fontWeight: 700,
                             color: c.badge, background: c.badgeBg,
@@ -498,11 +499,11 @@ export default function Exames() {
                             {v.status}
                           </span>
                         </div>
-                        <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>{v.interpretacao}</p>
+                        <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>{v.interpretacao}</p>
                       </div>
                       <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
                         <p style={{ fontSize: 16, fontWeight: 800, color: c.badge, margin: '0 0 2px' }}>{v.valor}</p>
-                        <p style={{ fontSize: 10, color: '#9ca3af', margin: 0 }}>Ref: {v.referencia}</p>
+                        <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: 0 }}>Ref: {v.referencia}</p>
                       </div>
                     </div>
                   )
@@ -513,12 +514,12 @@ export default function Exames() {
             {/* Card: conclusão */}
             <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
               <p style={{
-                fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: '0 0 10px',
+                fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, margin: '0 0 10px',
                 textTransform: 'uppercase' as const, letterSpacing: '0.06em',
               }}>
                 Conclusão clínica
               </p>
-              <p style={{ fontSize: 14, color: '#374151', margin: 0, lineHeight: 1.7 }}>{analise.conclusao}</p>
+              <p style={{ fontSize: 14, color: tokens.text.strong, margin: 0, lineHeight: 1.7 }}>{analise.conclusao}</p>
             </div>
 
             {/* Card: recomendações */}
@@ -543,7 +544,7 @@ export default function Exames() {
                           <path d="M20 6L9 17l-5-5"/>
                         </svg>
                       </div>
-                      <p style={{ fontSize: 13, color: '#4c2f9f', margin: 0, lineHeight: 1.6, flex: 1 }}>{r}</p>
+                      <p style={{ fontSize: 13, color: tokens.brand.primaryHover, margin: 0, lineHeight: 1.6, flex: 1 }}>{r}</p>
                     </div>
                   ))}
                 </div>
@@ -564,26 +565,26 @@ export default function Exames() {
             background: 'white', borderRadius: 14, width: '100%', maxWidth: 420,
             display: 'flex', flexDirection: 'column', maxHeight: '80vh',
           }}>
-            <div style={{ padding: '18px 22px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '18px 22px', borderBottom: `1px solid ${tokens.bg.hoverStrong}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Selecionar paciente</h3>
-                <p style={{ fontSize: 12, color: '#6b7280', margin: '3px 0 0' }}>A análise será adicionada ao histórico</p>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Selecionar paciente</h3>
+                <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '3px 0 0' }}>A análise será adicionada ao histórico</p>
               </div>
-              <button onClick={() => setModalPaciente(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: '#9ca3af', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+              <button onClick={() => setModalPaciente(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: tokens.text.tertiary, cursor: 'pointer', lineHeight: 1 }}>✕</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
               {pacientesList.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 24 }}>Nenhum paciente cadastrado</p>
+                <p style={{ fontSize: 13, color: tokens.text.tertiary, textAlign: 'center' as const, padding: 24 }}>Nenhum paciente cadastrado</p>
               ) : (
                 <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Paciente</label>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Paciente</label>
                     <select
                       value={pacienteSelecionadoId}
                       onChange={e => setPacienteSelecionadoId(e.target.value)}
                       style={{
                         width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8,
-                        border: '1px solid #e5e7eb', outline: 'none', background: 'white', color: '#111827',
+                        border: `1px solid ${tokens.border.default}`, outline: 'none', background: 'white', color: tokens.text.primary,
                       }}
                     >
                       <option value="">Selecionar paciente...</option>

@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const TEXT_DEFAULT = '#111827'
-const TEXT_MUTED = '#6B7280'
-const BUSCA_BG = '#F5F5F5'
+const ACCENT = tokens.brand.primary
+const TEXT_DEFAULT = tokens.text.primary
+const TEXT_MUTED = tokens.text.secondary
+const BUSCA_BG = tokens.bg.hover
 
 export function Topbar() {
   const router = useRouter()
@@ -196,7 +197,7 @@ export function Topbar() {
 
   const iconBtnStyle = (active: boolean) => ({
     width: 40, height: 40, borderRadius: 11,
-    background: active ? '#F3F4F6' : 'transparent',
+    background: active ? tokens.bg.hoverStrong : 'transparent',
     border: 'none', cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     position: 'relative' as const,
@@ -258,7 +259,7 @@ export function Topbar() {
                     <button key={p.id}
                       onClick={() => { router.push(`/pacientes/${p.id}`); setBusca(''); setResultadosOpen(false) }}
                       style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                      onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
                       {p.nome}
@@ -274,7 +275,7 @@ export function Topbar() {
                     <button key={a.id}
                       onClick={() => { router.push('/agenda'); setBusca(''); setResultadosOpen(false) }}
                       style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                      onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
                       {a.motivo || 'Consulta'}
@@ -300,7 +301,7 @@ export function Topbar() {
             <button
               onClick={() => setNotifOpen(!notifOpen)}
               style={iconBtnStyle(notifOpen)}
-              onMouseEnter={e => { if (!notifOpen) e.currentTarget.style.background = '#F5F5F5' }}
+              onMouseEnter={e => { if (!notifOpen) e.currentTarget.style.background = tokens.bg.hover }}
               onMouseLeave={e => { if (!notifOpen) e.currentTarget.style.background = 'transparent' }}
             >
               <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke={TEXT_DEFAULT} strokeWidth='2'>
@@ -310,7 +311,7 @@ export function Topbar() {
               {notifsNaoLidas > 0 && (
                 <span style={{
                   position: 'absolute', top: 9, right: 10,
-                  width: 8, height: 8, borderRadius: '50%', background: '#DC2626',
+                  width: 8, height: 8, borderRadius: '50%', background: tokens.status.danger,
                 }}/>
               )}
             </button>
@@ -353,9 +354,9 @@ export function Topbar() {
                         }
                         setNotifOpen(false)
                       }}
-                      style={{ padding: '12px 16px', cursor: 'pointer', background: n.lida ? 'white' : '#F8FAFC' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
-                      onMouseLeave={e => e.currentTarget.style.background = n.lida ? 'white' : '#F8FAFC'}
+                      style={{ padding: '12px 16px', cursor: 'pointer', background: n.lida ? 'white' : tokens.neutral.grayMist }}
+                      onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hoverStrong}
+                      onMouseLeave={e => e.currentTarget.style.background = n.lida ? 'white' : tokens.neutral.grayMist}
                     >
                       <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: TEXT_DEFAULT }}>{n.titulo}</p>
                       {n.descricao && <p style={{ margin: '2px 0 0', fontSize: 11, color: TEXT_MUTED }}>{n.descricao}</p>}
@@ -381,7 +382,7 @@ export function Topbar() {
           ) : (
             <div style={{
               width: 28, height: 28, borderRadius: '50%',
-              background: '#F3F4F6', color: TEXT_MUTED,
+              background: tokens.bg.hoverStrong, color: TEXT_MUTED,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 11, fontWeight: 700,
             }}>{inicialClinica}</div>
@@ -397,11 +398,11 @@ export function Topbar() {
           style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '6px 12px 6px 6px', borderRadius: 22,
-            background: menuOpen ? '#F3F4F6' : 'transparent',
+            background: menuOpen ? tokens.bg.hoverStrong : 'transparent',
             border: 'none', cursor: 'pointer',
             transition: 'background 0.12s',
           }}
-          onMouseEnter={e => { if (!menuOpen) e.currentTarget.style.background = '#F5F5F5' }}
+          onMouseEnter={e => { if (!menuOpen) e.currentTarget.style.background = tokens.bg.hover }}
           onMouseLeave={e => { if (!menuOpen) e.currentTarget.style.background = 'transparent' }}
         >
           {medico?.foto_url ? (
@@ -427,7 +428,7 @@ export function Topbar() {
               <button
                 onClick={() => { router.push('/perfil'); setMenuOpen(false) }}
                 style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >Meu perfil</button>
             )}
@@ -436,21 +437,21 @@ export function Topbar() {
                 <button
                   onClick={() => { router.push('/admin'); setMenuOpen(false) }}
                   style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                  onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >Painel administrativo</button>
                 <button
                   onClick={() => { router.push('/minha-clinica'); setMenuOpen(false) }}
                   style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                  onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >Dados da clínica</button>
               </>
             )}
             <button
               onClick={sair}
-              style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: '#DC2626' }}
-              onMouseEnter={e => e.currentTarget.style.background = '#FEF2F2'}
+              style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: tokens.status.danger }}
+              onMouseEnter={e => e.currentTarget.style.background = tokens.status.dangerBg}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >Sair</button>
           </div>

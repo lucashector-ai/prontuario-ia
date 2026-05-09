@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
 
 interface Props {
   medicoId: string
@@ -57,7 +58,7 @@ export function WhatsAppConnect({ medicoId, onConnected }: Props) {
         width: '100%', maxWidth: 480,
         background: 'white',
         borderRadius: 16,
-        border: '1px solid #e5e7eb',
+        border: `1px solid ${tokens.border.default}`,
         boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
         padding: 32,
         display: 'flex', flexDirection: 'column', gap: 20,
@@ -80,7 +81,7 @@ export function WhatsAppConnect({ medicoId, onConnected }: Props) {
             <div style={{
               position: 'absolute', top: 0, right: 0,
               width: 44, height: 44, borderRadius: 12,
-              background: '#25d366', color: 'white',
+              background: tokens.whatsapp.greenLight, color: 'white',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 12px rgba(37,211,102,0.3)',
               transform: 'rotate(8deg)',
@@ -91,26 +92,26 @@ export function WhatsAppConnect({ medicoId, onConnected }: Props) {
             </div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: 19, fontWeight: 700, color: '#111827', margin: '0 0 6px', lineHeight: 1.3 }}>
+            <h1 style={{ fontSize: 19, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px', lineHeight: 1.3 }}>
               Conecte seu WhatsApp Business
             </h1>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>
               Atenda pacientes e use a Sofia IA dentro da plataforma
             </p>
           </div>
         </div>
 
-        <div style={{ height: 1, background: '#f3f4f6', margin: '4px 0' }}/>
+        <div style={{ height: 1, background: tokens.bg.hoverStrong, margin: '4px 0' }}/>
 
         {/* Passos compactos */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <Step n={1} titulo="Acesse o Meta for Developers">
-            <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>
               Abra <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener noreferrer" style={{ color: ACCENT, fontWeight: 600 }}>developers.facebook.com/apps</a> e selecione seu app.
             </p>
           </Step>
           <Step n={2} titulo="Copie suas credenciais">
-            <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>
               No menu <strong>WhatsApp → Configuração da API</strong>: Phone Number ID e Access Token (do System User).
             </p>
           </Step>
@@ -140,7 +141,7 @@ export function WhatsAppConnect({ medicoId, onConnected }: Props) {
         </div>
 
         {erro && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '9px 12px', fontSize: 12, color: '#991b1b' }}>
+          <div style={{ background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, borderRadius: 8, padding: '9px 12px', fontSize: 12, color: tokens.status.dangerDark }}>
             {erro}
           </div>
         )}
@@ -170,7 +171,7 @@ export function WhatsAppConnect({ medicoId, onConnected }: Props) {
           )}
         </button>
 
-        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0, lineHeight: 1.5, textAlign: 'center' }}>
+        <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0, lineHeight: 1.5, textAlign: 'center' }}>
           Suas credenciais ficam armazenadas com segurança. Você pode desconectar a qualquer momento nas configurações.
         </p>
 
@@ -190,7 +191,7 @@ function Step({ n, titulo, children }: { n: number; titulo: string; children: Re
         fontSize: 12, fontWeight: 700, flexShrink: 0,
       }}>{n}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '2px 0 4px' }}>{titulo}</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '2px 0 4px' }}>{titulo}</p>
         {children}
       </div>
     </div>
@@ -198,11 +199,11 @@ function Step({ n, titulo, children }: { n: number; titulo: string; children: Re
 }
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 10, fontWeight: 700, color: '#6b7280',
+  display: 'block', fontSize: 10, fontWeight: 700, color: tokens.text.secondary,
   marginBottom: 4, letterSpacing: '0.06em', textTransform: 'uppercase' as const,
 }
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8,
-  border: '1px solid #e5e7eb', outline: 'none', background: 'white', color: '#111827',
+  border: `1px solid ${tokens.border.default}`, outline: 'none', background: 'white', color: tokens.text.primary,
 }

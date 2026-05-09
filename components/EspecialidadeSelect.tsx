@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ESPECIALIDADES_CFM } from '@/lib/especialidades'
+import { tokens } from '@/lib/design-tokens'
 
 interface Props {
   value: string
@@ -56,13 +57,13 @@ export function EspecialidadeSelect({ value, onChange, placeholder = 'Ex: Cardio
         autoComplete="off"
         style={{
           width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8,
-          border: '1px solid #e5e7eb', outline: 'none', background: 'white',
+          border: `1px solid ${tokens.border.default}`, outline: 'none', background: 'white',
         }}
       />
       {open && sugestoes.length > 0 && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-          background: 'white', border: '1px solid #e5e7eb', borderRadius: 8,
+          background: 'white', border: `1px solid ${tokens.border.default}`, borderRadius: 8,
           boxShadow: '0 8px 24px rgba(0,0,0,0.08)', zIndex: 20,
           maxHeight: 280, overflowY: 'auto',
         }}>
@@ -73,8 +74,8 @@ export function EspecialidadeSelect({ value, onChange, placeholder = 'Ex: Cardio
               onMouseEnter={() => setHover(i)}
               style={{
                 padding: '8px 12px', fontSize: 13, cursor: 'pointer',
-                background: hover === i ? '#f5f3ff' : 'transparent',
-                color: hover === i ? '#6043C1' : '#111827',
+                background: hover === i ? tokens.appointment.exame.bg : 'transparent',
+                color: hover === i ? tokens.brand.primary : tokens.text.primary,
               }}
             >
               {esp}
@@ -82,8 +83,8 @@ export function EspecialidadeSelect({ value, onChange, placeholder = 'Ex: Cardio
           ))}
           {ehCustom && (
             <div style={{
-              padding: '8px 12px', fontSize: 12, color: '#6b7280',
-              borderTop: '1px solid #f3f4f6', background: '#fafafa',
+              padding: '8px 12px', fontSize: 12, color: tokens.text.secondary,
+              borderTop: `1px solid ${tokens.bg.hoverStrong}`, background: tokens.bg.page,
               display: 'flex', alignItems: 'center', gap: 6,
             }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

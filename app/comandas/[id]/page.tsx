@@ -3,10 +3,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#f0ebff'
-const BG = '#fafafa'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLight
+const BG = tokens.bg.page
 const CARD_RADIUS = 14
 
 export default function ComandaDetalhe() {
@@ -147,23 +148,23 @@ export default function ComandaDetalhe() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
-            <button onClick={() => router.back()} style={{ background:'none',border:'none',color:'#6b7280',fontSize:13,cursor:'pointer',marginBottom:8,padding:0 }}>← Voltar</button>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>
+            <button onClick={() => router.back()} style={{ background:'none',border:'none',color:tokens.text.secondary,fontSize:13,cursor:'pointer',marginBottom:8,padding:0 }}>← Voltar</button>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
               Comanda #{comanda.id.substring(0, 8)}
             </h1>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '4px 0 0' }}>
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 0' }}>
               {comanda.pacientes?.nome} · {new Date(comanda.criada_em).toLocaleDateString('pt-BR')}
             </p>
           </div>
           {fechada ? (
-            <span style={{ padding: '6px 14px', borderRadius: 100, background: '#dcfce7', color: '#16a34a', fontSize: 12, fontWeight: 700 }}>
+            <span style={{ padding: '6px 14px', borderRadius: 100, background: tokens.status.successBgAlt, color: tokens.status.success, fontSize: 12, fontWeight: 700 }}>
               FECHADA
             </span>
           ) : (
             <button onClick={() => setModalFechar(true)} disabled={total === 0} style={{
               padding: '10px 20px', borderRadius: 10, border: 'none',
-              background: total === 0 ? '#e5e7eb' : ACCENT,
-              color: total === 0 ? '#9ca3af' : 'white',
+              background: total === 0 ? tokens.border.default : ACCENT,
+              color: total === 0 ? tokens.text.tertiary : 'white',
               fontSize: 13, fontWeight: 600, cursor: total === 0 ? 'not-allowed' : 'pointer',
             }}>
               Receber pagamento
@@ -174,12 +175,12 @@ export default function ComandaDetalhe() {
         {/* KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 18 }}>
-            <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 6px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Subtotal</p>
-            <p style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>R$ {total.toFixed(2).replace('.', ',')}</p>
+            <p style={{ fontSize: 11, color: tokens.text.secondary, margin: '0 0 6px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Subtotal</p>
+            <p style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>R$ {total.toFixed(2).replace('.', ',')}</p>
           </div>
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 18 }}>
-            <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 6px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Desconto</p>
-            <p style={{ fontSize: 22, fontWeight: 700, color: '#dc2626', margin: 0 }}>- R$ {desc.toFixed(2).replace('.', ',')}</p>
+            <p style={{ fontSize: 11, color: tokens.text.secondary, margin: '0 0 6px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Desconto</p>
+            <p style={{ fontSize: 22, fontWeight: 700, color: tokens.status.danger, margin: 0 }}>- R$ {desc.toFixed(2).replace('.', ',')}</p>
           </div>
           <div style={{ background: ACCENT, borderRadius: CARD_RADIUS, padding: 18 }}>
             <p style={{ fontSize: 11, color: 'white', opacity: 0.8, margin: '0 0 6px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Total a pagar</p>
@@ -189,23 +190,23 @@ export default function ComandaDetalhe() {
 
         {/* Itens da comanda */}
         <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 22, marginBottom: 16 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Itens da comanda</h2>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 14px' }}>Itens da comanda</h2>
 
           {itens.length === 0 ? (
-            <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', padding: 30, margin: 0 }}>Nenhum item adicionado ainda</p>
+            <p style={{ fontSize: 13, color: tokens.text.tertiary, textAlign: 'center', padding: 30, margin: 0 }}>Nenhum item adicionado ainda</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
               {itens.map((it: any) => (
-                <div key={it.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: '#fafafa', borderRadius: 10 }}>
+                <div key={it.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: tokens.bg.page, borderRadius: 10 }}>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>{it.descricao}</p>
-                    <p style={{ fontSize: 11, color: '#6b7280', margin: 0 }}>{it.quantidade}x · R$ {Number(it.valor_unitario).toFixed(2).replace('.', ',')}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, margin: '0 0 2px' }}>{it.descricao}</p>
+                    <p style={{ fontSize: 11, color: tokens.text.secondary, margin: 0 }}>{it.quantidade}x · R$ {Number(it.valor_unitario).toFixed(2).replace('.', ',')}</p>
                   </div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>R$ {Number(it.valor_total).toFixed(2).replace('.', ',')}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>R$ {Number(it.valor_total).toFixed(2).replace('.', ',')}</p>
                   {!fechada && (
                     <button onClick={() => removerItem(it.id)} style={{
-                      padding: '6px 8px', borderRadius: 8, border: '1px solid #fecaca',
-                      background: '#fef2f2', color: '#dc2626', cursor: 'pointer',
+                      padding: '6px 8px', borderRadius: 8, border: `1px solid ${tokens.status.dangerLight}`,
+                      background: tokens.status.dangerBg, color: tokens.status.danger, cursor: 'pointer',
                       display: 'flex', alignItems: 'center'
                     }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
@@ -218,14 +219,14 @@ export default function ComandaDetalhe() {
 
           {/* Adicionar item */}
           {!fechada && (
-            <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f3f4f6' }}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', margin: '0 0 10px', textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Adicionar item</p>
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${tokens.bg.hoverStrong}` }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: tokens.text.secondary, margin: '0 0 10px', textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Adicionar item</p>
 
               {procedimentos.length > 0 && (
                 <select
                   value={novoItem.procedimento_id}
                   onChange={e => selecionarProcedimento(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, marginBottom: 10, background: 'white' }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${tokens.border.default}`, fontSize: 13, marginBottom: 10, background: 'white' }}
                 >
                   <option value="">Selecionar procedimento... (ou preencher manualmente)</option>
                   {procedimentos.map(p => <option key={p.id} value={p.id}>{p.nome} — R$ {Number(p.preco || 0).toFixed(2).replace('.', ',')}</option>)}
@@ -249,11 +250,11 @@ export default function ComandaDetalhe() {
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 22, marginBottom: 16 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>Desconto (R$)</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.secondary, display: 'block', marginBottom: 6 }}>Desconto (R$)</label>
                 <input type="text" value={desconto} onChange={e => setDesconto(e.target.value)} onBlur={salvarDesconto} placeholder="0,00" style={inp} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>Observação</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.secondary, display: 'block', marginBottom: 6 }}>Observação</label>
                 <input type="text" value={observacao} onChange={e => setObservacao(e.target.value)} onBlur={salvarDesconto} placeholder="Ex: paciente irá pagar em 2 vezes" style={inp} />
               </div>
             </div>
@@ -266,9 +267,9 @@ export default function ComandaDetalhe() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalFechar(false) }}>
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 28, width: 'min(440px, 90vw)' }}>
             <h2 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>Receber pagamento</h2>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 18px' }}>Total: R$ {totalLiquido.toFixed(2).replace('.', ',')}</p>
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 18px' }}>Total: R$ {totalLiquido.toFixed(2).replace('.', ',')}</p>
 
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>Forma de pagamento</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.secondary, display: 'block', marginBottom: 6 }}>Forma de pagamento</label>
             <select value={formaPagamento} onChange={e => setFormaPagamento(e.target.value)} style={{ ...inp, marginBottom: 14 }}>
               <option value="pix">PIX</option>
               <option value="dinheiro">Dinheiro</option>
@@ -280,7 +281,7 @@ export default function ComandaDetalhe() {
 
             {contas.length > 0 && (
               <>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>Conta de destino</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.secondary, display: 'block', marginBottom: 6 }}>Conta de destino</label>
                 <select value={contaId} onChange={e => setContaId(e.target.value)} style={{ ...inp, marginBottom: 14 }}>
                   <option value="">Padrão (não vincular conta)</option>
                   {contas.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
@@ -301,16 +302,16 @@ export default function ComandaDetalhe() {
 
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 8,
-  border: '1px solid #e5e7eb', fontSize: 13, outline: 'none',
+  border: `1px solid ${tokens.border.default}`, fontSize: 13, outline: 'none',
   boxSizing: 'border-box' as const, background: 'white',
 }
 
 const btnCancelar: React.CSSProperties = {
-  padding: '10px 18px', borderRadius: 8, border: '1px solid #e5e7eb',
-  background: 'white', color: '#374151', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+  padding: '10px 18px', borderRadius: 8, border: `1px solid ${tokens.border.default}`,
+  background: 'white', color: tokens.text.strong, fontSize: 13, fontWeight: 500, cursor: 'pointer',
 }
 
 const btnPrincipal: React.CSSProperties = {
   padding: '10px 18px', borderRadius: 8, border: 'none',
-  background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+  background: tokens.brand.primary, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }

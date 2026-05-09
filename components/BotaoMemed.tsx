@@ -1,5 +1,7 @@
 'use client'
 
+
+import { tokens } from '@/lib/design-tokens'
 type Props = {
   onClick: () => void
   variant?: 'primary' | 'compact' | 'floating'
@@ -23,9 +25,9 @@ export function BotaoMemed({ onClick, variant = 'primary', disabled, disabledRea
         padding: cfg.padding,
         fontSize: cfg.fontSize,
         gap: cfg.gap,
-        background: '#FFFFFF',
-        color: '#6b7280',
-        border: '1px solid #e5e7eb',
+        background: tokens.bg.card,
+        color: tokens.text.secondary,
+        border: `1px solid ${tokens.border.default}`,
         borderRadius: 9,
         fontWeight: 500,
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -36,8 +38,8 @@ export function BotaoMemed({ onClick, variant = 'primary', disabled, disabledRea
         transition: 'all 0.15s',
         whiteSpace: 'nowrap',
       }}
-      onMouseEnter={(e) => { if (!disabled) { e.currentTarget.style.borderColor = '#6161FF'; e.currentTarget.style.color = '#1f2937' } }}
-      onMouseLeave={(e) => { if (!disabled) { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#6b7280' } }}
+      onMouseEnter={(e) => { if (!disabled) { e.currentTarget.style.borderColor = tokens.external.blueElectric; e.currentTarget.style.color = tokens.neutral.gray800 } }}
+      onMouseLeave={(e) => { if (!disabled) { e.currentTarget.style.borderColor = tokens.border.default; e.currentTarget.style.color = tokens.text.secondary } }}
     >
       <span>{cfg.label}</span>
       <img src="/memed-logo.svg" alt="Memed" height={cfg.logoH} style={{ height: cfg.logoH, width: 'auto', display: 'block', opacity: disabled ? 0.5 : 1 }}/>

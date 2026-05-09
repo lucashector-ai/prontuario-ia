@@ -4,6 +4,7 @@ import { useToast } from '@/components/Toast'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
+import { tokens } from '@/lib/design-tokens'
 
 type Aba = 'conversas' | 'sofia' | 'equipe' | 'dashboard' | 'alertas' | 'campanha' | 'relatorio' | 'aderencia' | 'agenda' | 'nps' | 'configuracao' | 'transmissao'
 
@@ -351,33 +352,33 @@ REGRAS:
 
   const tabStyle = (t: Aba) => ({
     padding: '8px 14px', fontSize: 12, fontWeight: aba === t ? 700 : 500,
-    color: aba === t ? '#6043C1' : '#6b7280', background: 'none', border: 'none',
-    borderBottom: aba === t ? '2px solid #6043C1' : '2px solid transparent',
+    color: aba === t ? tokens.brand.primary : tokens.text.secondary, background: 'none', border: 'none',
+    borderBottom: aba === t ? `2px solid ${tokens.brand.primary}` : '2px solid transparent',
     cursor: 'pointer', whiteSpace: 'nowrap' as const, transition: 'all 0.15s'
   })
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F5F5F5', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: tokens.bg.hover, overflow: 'hidden' }}>
       <main style={{ flex: 1, display: 'flex', overflow: 'hidden', flexDirection: 'column', padding: '16px 16px 16px 0' }}>
 
         {/* Header */}
         <div style={{ background: 'transparent', borderBottom: 'none', padding: '0 24px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, paddingTop: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#6043C1"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: tokens.brand.primaryLighter, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill={tokens.brand.primary}><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
               </div>
               <div>
-                <h1 style={{ fontSize: 14, fontWeight: 800, color: '#111827', margin: 0 }}>WhatsApp IA</h1>
-                <p style={{ fontSize: 10, color: config ? '#6043C1' : '#9ca3af', margin: 0 }}> {config ? config.phone_number || config.phone_number_id : 'Desconectado'}</p>
+                <h1 style={{ fontSize: 14, fontWeight: 800, color: tokens.text.primary, margin: 0 }}>WhatsApp IA</h1>
+                <p style={{ fontSize: 10, color: config ? tokens.brand.primary : tokens.text.tertiary, margin: 0 }}> {config ? config.phone_number || config.phone_number_id : 'Desconectado'}</p>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {totalNaoLidas > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: '#6043C1', padding: '2px 8px', borderRadius: 20 }}>{totalNaoLidas} novas</span>}
-              {usuario && <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '3px 10px', borderRadius: 20 }}> {usuario.nome}</span>}
+              {totalNaoLidas > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: tokens.brand.primary, padding: '2px 8px', borderRadius: 20 }}>{totalNaoLidas} novas</span>}
+              {usuario && <span style={{ fontSize: 11, color: tokens.text.secondary, background: tokens.bg.hoverStrong, padding: '3px 10px', borderRadius: 20 }}> {usuario.nome}</span>}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 0, marginTop: 8, overflowX: 'auto', borderBottom: '1px solid #e9edef', paddingBottom: 0 }}>
+          <div style={{ display: 'flex', gap: 0, marginTop: 8, overflowX: 'auto', borderBottom: `1px solid ${tokens.whatsapp.inputBorder}`, paddingBottom: 0 }}>
             {([
               { id: 'conversas', label: `Conversas${totalNaoLidas > 0 ? ` (${totalNaoLidas})` : ''}` },
               { id: 'dashboard', label: 'Dashboard' },
@@ -395,9 +396,9 @@ REGRAS:
               <button key={t.id} style={{
                 padding: '10px 14px', fontSize: 12,
                 fontWeight: aba === t.id ? 700 : 500,
-                color: t.id === 'configuracao' && !config ? '#d97706' : aba === t.id ? '#16a34a' : '#6b7280',
+                color: t.id === 'configuracao' && !config ? tokens.status.warningAlt : aba === t.id ? tokens.status.success : tokens.text.secondary,
                 background: 'none', border: 'none',
-                borderBottom: aba === t.id ? '2px solid #16a34a' : '2px solid transparent',
+                borderBottom: aba === t.id ? `2px solid ${tokens.status.success}` : '2px solid transparent',
                 cursor: 'pointer', whiteSpace: 'nowrap' as const,
                 flexShrink: 0,
               }} onClick={() => setAba(t.id)}>
@@ -414,17 +415,17 @@ REGRAS:
             <div style={{ width: 300, background: 'white', borderRight: 'none', borderRadius: 12, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
               <div style={{ padding: '10px 12px', borderBottom: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, padding: '7px 10px', fontSize: 12, borderRadius: 7, background: '#F5F5F5', outline: 'none' }} placeholder="Pesquisar"/>
-                  <button onClick={() => setNovaConversa(true)} title="Nova conversa" style={{ width: 34, height: 34, borderRadius: 7, border: 'none', background: '#6043C1', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <input value={busca} onChange={e => setBusca(e.target.value)} style={{ flex: 1, padding: '7px 10px', fontSize: 12, borderRadius: 7, background: tokens.bg.hover, outline: 'none' }} placeholder="Pesquisar"/>
+                  <button onClick={() => setNovaConversa(true)} title="Nova conversa" style={{ width: 34, height: 34, borderRadius: 7, border: 'none', background: tokens.brand.primary, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                   </button>
                 </div>
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' as const }}>
-                  <button onClick={() => setFiltroNaoLidas(!filtroNaoLidas)} style={{ padding: '3px 10px', fontSize: 10, fontWeight: filtroNaoLidas ? 700 : 400, borderRadius: 20, border: '1px solid ' + (filtroNaoLidas ? '#22c55e' : '#e5e7eb'), background: filtroNaoLidas ? '#f0fdf4' : 'white', color: filtroNaoLidas ? '#16a34a' : '#9ca3af', cursor: 'pointer' }}>
+                  <button onClick={() => setFiltroNaoLidas(!filtroNaoLidas)} style={{ padding: '3px 10px', fontSize: 10, fontWeight: filtroNaoLidas ? 700 : 400, borderRadius: 20, border: '1px solid ' + (filtroNaoLidas ? tokens.accent.emerald : tokens.border.default), background: filtroNaoLidas ? tokens.status.successBg : 'white', color: filtroNaoLidas ? tokens.status.success : tokens.text.tertiary, cursor: 'pointer' }}>
                     Não lidas
                   </button>
                   {(['todas','ia','humano'] as const).map(f => (
-                    <button key={f} onClick={() => setFiltroModo(f)} style={{ padding: '3px 10px', fontSize: 10, fontWeight: filtroModo === f ? 700 : 400, borderRadius: 20, border: '1px solid ' + (filtroModo === f ? '#22c55e' : '#e5e7eb'), background: filtroModo === f ? '#f0fdf4' : 'white', color: filtroModo === f ? '#16a34a' : '#9ca3af', cursor: 'pointer' }}>
+                    <button key={f} onClick={() => setFiltroModo(f)} style={{ padding: '3px 10px', fontSize: 10, fontWeight: filtroModo === f ? 700 : 400, borderRadius: 20, border: '1px solid ' + (filtroModo === f ? tokens.accent.emerald : tokens.border.default), background: filtroModo === f ? tokens.status.successBg : 'white', color: filtroModo === f ? tokens.status.success : tokens.text.tertiary, cursor: 'pointer' }}>
                       {f === 'todas' ? 'Tudo' : f === 'ia' ? 'IA' : 'Humano'}
                     </button>
                   ))}
@@ -433,13 +434,13 @@ REGRAS:
 
               {/* Modal nova conversa */}
               {novaConversa && (
-                <div style={{ padding: '12px', borderBottom: 'none', background: '#F5F5F5' }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: '#6043C1', margin: '0 0 8px' }}>Nova conversa</p>
-                  <input value={novoTel} onChange={e => setNovoTel(e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 12, borderRadius: 7, border: '1px solid #b9a9ef', marginBottom: 6, outline: 'none' }} placeholder="Numero (ex: 5511999887766)"/>
-                  <input value={novaMsgTexto} onChange={e => setNovaMsgTexto(e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 12, borderRadius: 7, border: '1px solid #b9a9ef', marginBottom: 8, outline: 'none' }} placeholder="Primeira mensagem..."/>
+                <div style={{ padding: '12px', borderBottom: 'none', background: tokens.bg.hover }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: tokens.brand.primary, margin: '0 0 8px' }}>Nova conversa</p>
+                  <input value={novoTel} onChange={e => setNovoTel(e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 12, borderRadius: 7, border: `1px solid ${tokens.brand.primaryAccent}`, marginBottom: 6, outline: 'none' }} placeholder="Numero (ex: 5511999887766)"/>
+                  <input value={novaMsgTexto} onChange={e => setNovaMsgTexto(e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 12, borderRadius: 7, border: `1px solid ${tokens.brand.primaryAccent}`, marginBottom: 8, outline: 'none' }} placeholder="Primeira mensagem..."/>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={iniciarConversa} disabled={iniciando || !novoTel || !novaMsgTexto} style={{ flex: 1, padding: '7px', fontSize: 11, fontWeight: 700, borderRadius: 7, border: 'none', background: '#6043C1', color: 'white', cursor: 'pointer' }}>{iniciando ? 'Enviando...' : 'Iniciar'}</button>
-                    <button onClick={() => { setNovaConversa(false); setNovoTel(''); setNovaMsgTexto('') }} style={{ padding: '7px 12px', fontSize: 11, borderRadius: 7, background: 'white', cursor: 'pointer', color: '#6b7280' }}>Cancelar</button>
+                    <button onClick={iniciarConversa} disabled={iniciando || !novoTel || !novaMsgTexto} style={{ flex: 1, padding: '7px', fontSize: 11, fontWeight: 700, borderRadius: 7, border: 'none', background: tokens.brand.primary, color: 'white', cursor: 'pointer' }}>{iniciando ? 'Enviando...' : 'Iniciar'}</button>
+                    <button onClick={() => { setNovaConversa(false); setNovoTel(''); setNovaMsgTexto('') }} style={{ padding: '7px 12px', fontSize: 11, borderRadius: 7, background: 'white', cursor: 'pointer', color: tokens.text.secondary }}>Cancelar</button>
                   </div>
                 </div>
               )}
@@ -447,30 +448,30 @@ REGRAS:
               <div style={{ flex: 1, overflow: 'auto' }}>
                 {conversasFiltradas.length === 0 ? (
                   <div style={{ padding: '28px 16px', textAlign: 'center' }}>
-                    <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 4px' }}>Nenhuma conversa</p>
-                    <p style={{ fontSize: 11, color: '#d1d5db', margin: 0 }}>Use + para iniciar uma nova</p>
+                    <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 4px' }}>Nenhuma conversa</p>
+                    <p style={{ fontSize: 11, color: tokens.border.strong, margin: 0 }}>Use + para iniciar uma nova</p>
                   </div>
                 ) : conversasFiltradas.map(cv => (
                   <div key={cv.id} onClick={() => setAtiva(cv)}
-                    style={{ padding: '10px 14px', borderBottom: '1px solid #e9edef', cursor: 'pointer', background: ativa?.id === cv.id ? '#f0f2f5' : 'white', transition: 'background 0.1s' }}
-                    onMouseEnter={e => { if (ativa?.id !== cv.id) e.currentTarget.style.background = '#F5F5F5' }}
+                    style={{ padding: '10px 14px', borderBottom: `1px solid ${tokens.whatsapp.inputBorder}`, cursor: 'pointer', background: ativa?.id === cv.id ? tokens.bg.chatBg : 'white', transition: 'background 0.1s' }}
+                    onMouseEnter={e => { if (ativa?.id !== cv.id) e.currentTarget.style.background = tokens.bg.hover }}
                     onMouseLeave={e => { if (ativa?.id !== cv.id) e.currentTarget.style.background = 'white' }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                       <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 400, color: 'white' }}>{ini(nomeCv(cv))}</div>
-                        <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: cv.modo === 'humano' ? '#f59e0b' : '#22c55e', border: '2px solid white' }}/>
+                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: tokens.whatsapp.dfe, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 400, color: 'white' }}>{ini(nomeCv(cv))}</div>
+                        <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: cv.modo === 'humano' ? tokens.status.warningAmber : tokens.accent.emerald, border: '2px solid white' }}/>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                          <p style={{ fontSize: 13, fontWeight: cv.naoLidas > 0 ? 700 : 500, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>{nomeCv(cv)}</p>
-                          <span style={{ fontSize: 10, color: cv.naoLidas > 0 ? '#16a34a' : '#9ca3af', flexShrink: 0, fontWeight: cv.naoLidas > 0 ? 600 : 400 }}>{cv.ultima ? fmt(cv.ultima.criado_em) : ''}</span>
+                          <p style={{ fontSize: 13, fontWeight: cv.naoLidas > 0 ? 700 : 500, color: tokens.text.primary, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>{nomeCv(cv)}</p>
+                          <span style={{ fontSize: 10, color: cv.naoLidas > 0 ? tokens.status.success : tokens.text.tertiary, flexShrink: 0, fontWeight: cv.naoLidas > 0 ? 600 : 400 }}>{cv.ultima ? fmt(cv.ultima.criado_em) : ''}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <p style={{ fontSize: 12, color: cv.naoLidas > 0 ? '#374151' : '#9ca3af', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontWeight: cv.naoLidas > 0 ? 500 : 400 }}>
-                            {cv.ultima?.tipo === 'enviada' ? <span style={{ color: '#22c55e', fontSize: 11 }}>✓✓ </span> : null}{cv.ultima?.conteudo?.substring(0, 35) || 'Iniciar conversa...'}
+                          <p style={{ fontSize: 12, color: cv.naoLidas > 0 ? tokens.text.strong : tokens.text.tertiary, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontWeight: cv.naoLidas > 0 ? 500 : 400 }}>
+                            {cv.ultima?.tipo === 'enviada' ? <span style={{ color: tokens.accent.emerald, fontSize: 11 }}>✓✓ </span> : null}{cv.ultima?.conteudo?.substring(0, 35) || 'Iniciar conversa...'}
                           </p>
                           {cv.naoLidas > 0 && (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: 'white', background: '#22c55e', minWidth: 18, height: 18, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', marginLeft: 6, flexShrink: 0 }}>{cv.naoLidas}</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: 'white', background: tokens.accent.emerald, minWidth: 18, height: 18, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', marginLeft: 6, flexShrink: 0 }}>{cv.naoLidas}</span>
                           )}
                         </div>
                       </div>
@@ -482,16 +483,16 @@ REGRAS:
 
             {/* Area de chat */}
             {ativa ? (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#f0f2f5' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: tokens.bg.chatBg }}>
                 {/* Header conversa — estilo WhatsApp */}
-                <div style={{ background: 'white', borderBottom: '1px solid #e9edef', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                <div style={{ background: 'white', borderBottom: `1px solid ${tokens.whatsapp.inputBorder}`, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                   <div style={{ position: 'relative' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 400, color: 'white' }}>{ini(nomeCv(ativa))}</div>
-                    <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #075e54' }}/>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: tokens.whatsapp.dfe, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 400, color: 'white' }}>{ini(nomeCv(ativa))}</div>
+                    <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: tokens.accent.emerald, border: `2px solid ${tokens.whatsapp.greenDark}` }}/>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{nomeCv(ativa)}</p>
-                    <p style={{ fontSize: 12, color: '#667781', margin: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{nomeCv(ativa)}</p>
+                    <p style={{ fontSize: 12, color: tokens.text.chatSecondary, margin: 0 }}>
                       {ativa.telefone} · {ativa.modo === 'humano' ? 'Atendimento humano' + (ativa.atendente_nome ? ' · ' + ativa.atendente_nome : '') : 'Sofia IA'}
                     </p>
                   </div>
@@ -500,20 +501,20 @@ REGRAS:
                       <a href={'/pacientes/' + ativa.paciente_id} style={{ fontSize: 11, color: 'white', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', padding: '5px 12px', borderRadius: 20, textDecoration: 'none', fontWeight: 600 }}>Ver ficha</a>
                     )}
                     {ativa.modo === 'ia' ? (
-                      <button onClick={assumirAtendimento} disabled={assumindo} style={{ fontSize: 11, fontWeight: 700, color: '#54656f', background: '#f0f2f5', border: 'none', padding: '6px 14px', borderRadius: 20, cursor: 'pointer' }}>
+                      <button onClick={assumirAtendimento} disabled={assumindo} style={{ fontSize: 11, fontWeight: 700, color: tokens.border.chatStrong, background: tokens.bg.chatBg, border: 'none', padding: '6px 14px', borderRadius: 20, cursor: 'pointer' }}>
                         {assumindo ? 'Assumindo...' : 'Assumir'}
                       </button>
                     ) : (
-                      <button onClick={devolverParaIA} style={{ fontSize: 11, fontWeight: 700, color: '#54656f', background: '#f0f2f5', border: 'none', padding: '6px 14px', borderRadius: 20, cursor: 'pointer' }}>
+                      <button onClick={devolverParaIA} style={{ fontSize: 11, fontWeight: 700, color: tokens.border.chatStrong, background: tokens.bg.chatBg, border: 'none', padding: '6px 14px', borderRadius: 20, cursor: 'pointer' }}>
                         🤖 Devolver à IA
                       </button>
                     )}
                     {/* Busca */}
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#54656f', padding: 8, display: 'flex', borderRadius: '50%' }}>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.border.chatStrong, padding: 8, display: 'flex', borderRadius: '50%' }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                     </button>
                     {/* Menu */}
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#54656f', padding: 8, display: 'flex', borderRadius: '50%' }}>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.border.chatStrong, padding: 8, display: 'flex', borderRadius: '50%' }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                     </button>
                   </div>
@@ -521,14 +522,14 @@ REGRAS:
 
                 {/* Banner modo humano */}
                 {ativa.modo === 'humano' && (
-                  <div style={{ background: '#fffbeb', borderBottom: '1px solid #fde68a', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ background: tokens.status.warningBgAlt, borderBottom: `1px solid ${tokens.status.warningLightAlt}`, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 14 }}></span>
-                    <p style={{ fontSize: 12, color: '#92400e', margin: 0 }}>Atendimento humano ativo{ativa.atendente_nome ? '  ' + ativa.atendente_nome : ''}. A Sofia IA esta pausada nesta conversa.</p>
+                    <p style={{ fontSize: 12, color: tokens.status.warningText, margin: 0 }}>Atendimento humano ativo{ativa.atendente_nome ? '  ' + ativa.atendente_nome : ''}. A Sofia IA esta pausada nesta conversa.</p>
                   </div>
                 )}
 
                 {/* Mensagens */}
-                <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4, background: '#e5ddd5', backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}>
+                <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4, background: tokens.bg.chatPattern, backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}>
                   {mensagens.map((m, idx) => {
                     const rec = m.tipo === 'recebida'
                     const dataAtual = new Date(m.criado_em).toDateString()
@@ -547,30 +548,30 @@ REGRAS:
                     const isSistema = m.metadata?.sistema
                     if (isSistema) return (
                       <div key={m.id} style={{ textAlign: 'center', margin: '4px 0' }}>
-                        <span style={{ fontSize: 10, color: '#9ca3af', background: '#f3f4f6', padding: '3px 10px', borderRadius: 20 }}>{m.conteudo}</span>
+                        <span style={{ fontSize: 10, color: tokens.text.tertiary, background: tokens.bg.hoverStrong, padding: '3px 10px', borderRadius: 20 }}>{m.conteudo}</span>
                       </div>
                     )
                     return (
                       <div key={m.id + '_wrapper'}>
                         {mostraData && (
                           <div style={{ textAlign: 'center', margin: '12px 0 8px' }}>
-                            <span style={{ fontSize: 11, color: '#667781', background: 'rgba(255,255,255,0.85)', padding: '4px 12px', borderRadius: 8 }}>{fmtData(m.criado_em)}</span>
+                            <span style={{ fontSize: 11, color: tokens.text.chatSecondary, background: 'rgba(255,255,255,0.85)', padding: '4px 12px', borderRadius: 8 }}>{fmtData(m.criado_em)}</span>
                           </div>
                         )}
                       <div key={m.id}
                         style={{ display: 'flex', justifyContent: rec ? 'flex-start' : 'flex-end', marginBottom: 2, position: 'relative' as const }}
                         onMouseEnter={() => setMsgHover(String(m.id))}
                         onMouseLeave={() => { setMsgHover(null); setMsgMenu(null) }}>
-                        <div style={{ maxWidth: '65%', padding: '7px 10px 6px 10px', borderRadius: rec ? '0px 10px 10px 10px' : '10px 10px 0px 10px', background: rec ? 'white' : (isIA ? '#d9fdd3' : '#d1e7ff'), position: 'relative' as const }}>
-                          {!rec && isIA && <p style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sofia IA</p>}
-                          {!rec && !isIA && remetente && <p style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', margin: '0 0 3px' }}>{remetente}</p>}
-                          <p style={{ fontSize: 13, color: '#111827', margin: 0, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: m.conteudo
+                        <div style={{ maxWidth: '65%', padding: '7px 10px 6px 10px', borderRadius: rec ? '0px 10px 10px 10px' : '10px 10px 0px 10px', background: rec ? 'white' : (isIA ? tokens.status.successBgChat : tokens.status.infoBluePastel), position: 'relative' as const }}>
+                          {!rec && isIA && <p style={{ fontSize: 10, fontWeight: 700, color: tokens.status.success, margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sofia IA</p>}
+                          {!rec && !isIA && remetente && <p style={{ fontSize: 10, fontWeight: 700, color: tokens.status.infoStrong, margin: '0 0 3px' }}>{remetente}</p>}
+                          <p style={{ fontSize: 13, color: tokens.text.primary, margin: 0, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: m.conteudo
                             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                             .replace(/\*(.*?)\*/g, '<em>$1</em>')
                             .replace(/---+/g, '<hr style="border:none;border-top:1px solid rgba(0,0,0,0.15);margin:4px 0"/>')
                             .split('\n').join('<br/>')
                           }} />
-                          <p style={{ fontSize: 9, color: '#9ca3af', margin: '3px 0 0', textAlign: rec ? 'left' : 'right' }}>{fmtH(m.criado_em)}</p>
+                          <p style={{ fontSize: 9, color: tokens.text.tertiary, margin: '3px 0 0', textAlign: rec ? 'left' : 'right' }}>{fmtH(m.criado_em)}</p>
                         </div>
                         {/* Ações hover */}
                         {msgHover === String(m.id) && (
@@ -588,8 +589,8 @@ REGRAS:
                               { label: '📋 Copiar', fn: () => { navigator.clipboard.writeText(m.conteudo); setMsgMenu(null) } },
                               { label: '⭐ Favoritar', fn: () => setMsgMenu(null) },
                             ].map(item => (
-                              <button key={item.label} onClick={item.fn} style={{ display: 'block', width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left' as const, fontSize: 13, color: '#111827', cursor: 'pointer' }}
-                                onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+                              <button key={item.label} onClick={item.fn} style={{ display: 'block', width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left' as const, fontSize: 13, color: tokens.text.primary, cursor: 'pointer' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = tokens.bg.hoverStrong)}
                                 onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
                                 {item.label}
                               </button>
@@ -605,52 +606,52 @@ REGRAS:
 
                 {/* Banner respondendo */}
                 {respondendoMsg && (
-                  <div style={{ background: '#f0f2f5', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb' }}>
+                  <div style={{ background: tokens.bg.chatBg, padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${tokens.border.default}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 3, height: 36, background: '#25d366', borderRadius: 2, flexShrink: 0 }}/>
+                      <div style={{ width: 3, height: 36, background: tokens.whatsapp.greenLight, borderRadius: 2, flexShrink: 0 }}/>
                       <div>
-                        <p style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', margin: 0 }}>Respondendo</p>
-                        <p style={{ fontSize: 12, color: '#667781', margin: 0, maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{respondendoMsg.conteudo?.substring(0, 60)}</p>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: tokens.status.success, margin: 0 }}>Respondendo</p>
+                        <p style={{ fontSize: 12, color: tokens.text.chatSecondary, margin: 0, maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{respondendoMsg.conteudo?.substring(0, 60)}</p>
                       </div>
                     </div>
-                    <button onClick={() => setRespondendoMsg(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#667781', fontSize: 18, padding: 4 }}>✕</button>
+                    <button onClick={() => setRespondendoMsg(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.text.chatSecondary, fontSize: 18, padding: 4 }}>✕</button>
                   </div>
                 )}
 
                 {/* Menu anexos */}
                 {menuAnexo && (
-                  <div style={{ background: '#f0f2f5', padding: '8px 16px 4px', display: 'flex', gap: 8 }}>
+                  <div style={{ background: tokens.bg.chatBg, padding: '8px 16px 4px', display: 'flex', gap: 8 }}>
                     {[
-                      { icon: '📄', label: 'Documento', color: '#7c3aed' },
-                      { icon: '🖼️', label: 'Fotos', color: '#16a34a' },
-                      { icon: '📷', label: 'Câmera', color: '#dc2626' },
-                      { icon: '🎵', label: 'Áudio', color: '#d97706' },
-                      { icon: '📊', label: 'Enquete', color: '#0891b2' },
+                      { icon: '📄', label: 'Documento', color: tokens.appointment.retorno.dot },
+                      { icon: '🖼️', label: 'Fotos', color: tokens.status.success },
+                      { icon: '📷', label: 'Câmera', color: tokens.status.danger },
+                      { icon: '🎵', label: 'Áudio', color: tokens.status.warningAlt },
+                      { icon: '📊', label: 'Enquete', color: tokens.status.infoCyan },
                     ].map(item => (
                       <div key={item.label} style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4 }}>
                         <button style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: item.color, cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</button>
-                        <span style={{ fontSize: 10, color: '#667781' }}>{item.label}</span>
+                        <span style={{ fontSize: 10, color: tokens.text.chatSecondary }}>{item.label}</span>
                       </div>
                     ))}
                   </div>
                 )}
 
                 {/* Input — estilo WhatsApp */}
-                <div style={{ background: '#f0f2f5', borderTop: 'none', padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'flex-end', flexShrink: 0 }}>
+                <div style={{ background: tokens.bg.chatBg, borderTop: 'none', padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'flex-end', flexShrink: 0 }}>
                   {/* Anexo */}
-                  <button onClick={() => setMenuAnexo(!menuAnexo)} style={{ background: menuAnexo ? '#e9fbe9' : 'none', border: 'none', cursor: 'pointer', color: menuAnexo ? '#25d366' : '#54656f', padding: '8px 4px', display: 'flex', flexShrink: 0, borderRadius: '50%', transition: 'all 0.2s' }}>
+                  <button onClick={() => setMenuAnexo(!menuAnexo)} style={{ background: menuAnexo ? tokens.status.successBgSoft : 'none', border: 'none', cursor: 'pointer', color: menuAnexo ? tokens.whatsapp.greenLight : tokens.border.chatStrong, padding: '8px 4px', display: 'flex', flexShrink: 0, borderRadius: '50%', transition: 'all 0.2s' }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   </button>
                   {/* Emoji */}
-                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#54656f', padding: '8px 4px', display: 'flex', flexShrink: 0 }}>
+                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.border.chatStrong, padding: '8px 4px', display: 'flex', flexShrink: 0 }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-5H6.5C6.78 9.5 9.13 8 12 8s5.22 1.5 5.5 3.5z"/></svg>
                   </button>
                   {/* Campo de texto */}
                   <div style={{ flex: 1, background: 'white', borderRadius: 24, padding: '8px 16px', display: 'flex', alignItems: 'flex-end', minHeight: 42 }}>
                     {gravandoAudio ? (
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', animation: 'pulse 1s infinite' }}/>
-                        <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 500 }}>Gravando... clique no botão para parar</span>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.status.danger, animation: 'pulse 1s infinite' }}/>
+                        <span style={{ fontSize: 13, color: tokens.status.danger, fontWeight: 500 }}>Gravando... clique no botão para parar</span>
                       </div>
                     ) : (
                       <textarea
@@ -666,38 +667,38 @@ REGRAS:
                   {/* Enviar ou mic */}
                   {msg.trim() ? (
                     <button onClick={enviar} disabled={enviando}
-                      style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#25d366', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: tokens.whatsapp.greenLight, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                     </button>
                   ) : gravandoAudio ? (
                     <button onClick={pararAudio}
-                      style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, animation: 'pulse 1s infinite' }}>
+                      style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, animation: 'pulse 1s infinite' }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
                     </button>
                   ) : (
                     <button onClick={iniciarAudio}
-                      style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#54656f', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: tokens.border.chatStrong, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
                     </button>
                   )}
                 </div>
               </div>
             ) : (
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', flexDirection: 'column', gap: 16 }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.bg.chatBg, flexDirection: 'column', gap: 16 }}>
                 <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 175.216 175.552">
-                    <path fill="#25D366" d="M87.184 25.227c-33.733 0-61.166 27.423-61.178 61.13a60.98 60.98 0 0 0 9.349 32.535l1.455 2.313-6.179 22.558 23.146-6.069 2.235 1.324c9.387 5.571 20.15 8.517 31.126 8.523h.023c33.707 0 61.14-27.426 61.153-61.135a60.75 60.75 0 0 0-17.895-43.251 60.75 60.75 0 0 0-43.235-17.928z"/>
+                    <path fill={tokens.whatsapp.greenLight} d="M87.184 25.227c-33.733 0-61.166 27.423-61.178 61.13a60.98 60.98 0 0 0 9.349 32.535l1.455 2.313-6.179 22.558 23.146-6.069 2.235 1.324c9.387 5.571 20.15 8.517 31.126 8.523h.023c33.707 0 61.14-27.426 61.153-61.135a60.75 60.75 0 0 0-17.895-43.251 60.75 60.75 0 0 0-43.235-17.928z"/>
                     <path fill="#fff" fillRule="evenodd" d="M68.772 55.603c-1.378-3.061-2.828-3.123-4.137-3.176l-3.524-.043c-1.226 0-3.218.46-4.902 2.3s-6.435 6.287-6.435 15.332 6.588 17.785 7.506 19.013 12.718 20.381 31.405 27.75c15.529 6.124 18.689 4.906 22.061 4.6s10.877-4.447 12.408-8.74 1.532-7.971 1.073-8.74-1.685-1.226-3.525-2.146-10.877-5.367-12.562-5.981-2.91-.919-4.137.921-4.746 5.979-5.819 7.206-2.144 1.381-3.984.462-7.76-2.861-14.784-9.124c-5.465-4.873-9.154-10.891-10.228-12.73s-.114-2.835.808-3.751c.825-.824 1.838-2.147 2.759-3.22s1.224-1.84 1.836-3.065.307-2.301-.153-3.22-4.032-10.011-5.666-13.647"/>
                   </svg>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 20, fontWeight: 300, color: '#41525d', margin: '0 0 8px', letterSpacing: '-0.3px' }}>WhatsApp da Clínica</p>
-                  <p style={{ fontSize: 13, color: '#667781', margin: '0 0 20px', maxWidth: 320, lineHeight: 1.5 }}>Selecione uma conversa para ler as mensagens ou inicie uma nova</p>
-                  <button onClick={() => setNovaConversa(true)} style={{ fontSize: 13, color: '#075e54', background: 'rgba(255,255,255,0.8)', border: '1px solid #25d366', padding: '8px 20px', borderRadius: 20, cursor: 'pointer', fontWeight: 600 }}>+ Nova conversa</button>
+                  <p style={{ fontSize: 20, fontWeight: 300, color: tokens.text.chatHeader, margin: '0 0 8px', letterSpacing: '-0.3px' }}>WhatsApp da Clínica</p>
+                  <p style={{ fontSize: 13, color: tokens.text.chatSecondary, margin: '0 0 20px', maxWidth: 320, lineHeight: 1.5 }}>Selecione uma conversa para ler as mensagens ou inicie uma nova</p>
+                  <button onClick={() => setNovaConversa(true)} style={{ fontSize: 13, color: tokens.whatsapp.greenDark, background: 'rgba(255,255,255,0.8)', border: `1px solid ${tokens.whatsapp.greenLight}`, padding: '8px 20px', borderRadius: 20, cursor: 'pointer', fontWeight: 600 }}>+ Nova conversa</button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aebac1" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  <p style={{ fontSize: 11, color: '#aebac1', margin: 0 }}>Suas mensagens são criptografadas</p>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={tokens.whatsapp.metadata} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <p style={{ fontSize: 11, color: tokens.whatsapp.metadata, margin: 0 }}>Suas mensagens são criptografadas</p>
                 </div>
               </div>
             )}
@@ -711,31 +712,31 @@ REGRAS:
               <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Sofia IA  Assistente Virtual</h2>
-                    <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Configure como a IA se comporta em todas as conversas</p>
+                    <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Sofia IA  Assistente Virtual</h2>
+                    <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>Configure como a IA se comporta em todas as conversas</p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 12, color: sofiaAtivo ? '#6043C1' : '#9ca3af', fontWeight: 600 }}>{sofiaAtivo ? 'Ativa' : 'Pausada'}</span>
-                    <button onClick={() => setSofiaAtivo(!sofiaAtivo)} style={{ width: 40, height: 22, borderRadius: 11, border: 'none', background: sofiaAtivo ? '#6043C1' : '#d1d5db', cursor: 'pointer', position: 'relative' }}>
+                    <span style={{ fontSize: 12, color: sofiaAtivo ? tokens.brand.primary : tokens.text.tertiary, fontWeight: 600 }}>{sofiaAtivo ? 'Ativa' : 'Pausada'}</span>
+                    <button onClick={() => setSofiaAtivo(!sofiaAtivo)} style={{ width: 40, height: 22, borderRadius: 11, border: 'none', background: sofiaAtivo ? tokens.brand.primary : tokens.border.strong, cursor: 'pointer', position: 'relative' }}>
                       <span style={{ position: 'absolute', top: 2, left: sofiaAtivo ? 18 : 2, width: 18, height: 18, borderRadius: '50%', background: 'white', transition: 'left .2s' }}/>
                     </button>
                   </div>
                 </div>
                 <div style={{ padding: '18px 20px' }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Instrucoes da Sofia</label>
-                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 10px' }}>Define personalidade, fluxo e regras. Quanto mais detalhado, melhor.</p>
-                  <textarea value={sofiaPrompt || PROMPT_DEFAULT} onChange={e => setSofiaPrompt(e.target.value)} style={{ width: '100%', minHeight: 360, padding: '12px', fontSize: 12, borderRadius: 9, border: '1.5px solid #e5e7eb', resize: 'vertical', lineHeight: 1.7, fontFamily: 'monospace' }}/>
-                  <div style={{ background: '#F5F5F5', border: '1px solid #b9a9ef', borderRadius: 9, padding: '10px 14px', margin: '14px 0' }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 6 }}>Instrucoes da Sofia</label>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '0 0 10px' }}>Define personalidade, fluxo e regras. Quanto mais detalhado, melhor.</p>
+                  <textarea value={sofiaPrompt || PROMPT_DEFAULT} onChange={e => setSofiaPrompt(e.target.value)} style={{ width: '100%', minHeight: 360, padding: '12px', fontSize: 12, borderRadius: 9, border: `1.5px solid ${tokens.border.default}`, resize: 'vertical', lineHeight: 1.7, fontFamily: 'monospace' }}/>
+                  <div style={{ background: tokens.bg.hover, border: `1px solid ${tokens.brand.primaryAccent}`, borderRadius: 9, padding: '10px 14px', margin: '14px 0' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                       {['Responde 24h automaticamente','Agenda consultas no sistema','Envia horarios disponiveis','Reconhece pacientes cadastrados','Escalona para humano quando pedido','Segue fluxo de menu configurado'].map(c => (
-                        <div key={c} style={{ display: 'flex', gap: 6 }}><span style={{ color: '#6043C1' }}></span><span style={{ fontSize: 11, color: '#374151' }}>{c}</span></div>
+                        <div key={c} style={{ display: 'flex', gap: 6 }}><span style={{ color: tokens.brand.primary }}></span><span style={{ fontSize: 11, color: tokens.text.strong }}>{c}</span></div>
                       ))}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={salvarSofia} disabled={salvandoSofia} style={{ padding: '9px 20px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvandoSofia ? 'Salvando...' : 'Salvar'}</button>
-                    <button onClick={() => setSofiaPrompt(PROMPT_DEFAULT)} style={{ padding: '9px 14px', borderRadius: 9, background: 'white', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>Restaurar padrao</button>
-                    {sofiaMsg && <span style={{ fontSize: 12, color: '#6043C1', fontWeight: 600, alignSelf: 'center' }}>{sofiaMsg}</span>}
+                    <button onClick={salvarSofia} disabled={salvandoSofia} style={{ padding: '9px 20px', borderRadius: 9, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvandoSofia ? 'Salvando...' : 'Salvar'}</button>
+                    <button onClick={() => setSofiaPrompt(PROMPT_DEFAULT)} style={{ padding: '9px 14px', borderRadius: 9, background: 'white', color: tokens.text.secondary, fontSize: 12, cursor: 'pointer' }}>Restaurar padrao</button>
+                    {sofiaMsg && <span style={{ fontSize: 12, color: tokens.brand.primary, fontWeight: 600, alignSelf: 'center' }}>{sofiaMsg}</span>}
                   </div>
                 </div>
               </div>
@@ -749,49 +750,49 @@ REGRAS:
             <div style={{ maxWidth: 680 }}>
               <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
-                  <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Equipe de atendimento</h2>
-                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Atendentes podem acessar a plataforma e responder conversas com o proprio nome</p>
+                  <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Equipe de atendimento</h2>
+                  <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>Atendentes podem acessar a plataforma e responder conversas com o proprio nome</p>
                 </div>
                 <div style={{ padding: '16px 20px' }}>
                   {atendentes.length === 0 ? (
-                    <p style={{ fontSize: 13, color: '#9ca3af', margin: '8px 0' }}>Nenhum atendente cadastrado ainda</p>
+                    <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: '8px 0' }}>Nenhum atendente cadastrado ainda</p>
                   ) : atendentes.map(a => (
-                    <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #F5F5F5' }}>
-                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#2563eb' }}>{ini(a.nome)}</div>
+                    <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: `1px solid ${tokens.bg.hover}` }}>
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: tokens.status.infoBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: tokens.status.infoStrong }}>{ini(a.nome)}</div>
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{a.nome}</p>
-                        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{a.email}  {a.cargo}</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>{a.nome}</p>
+                        <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{a.email}  {a.cargo}</p>
                       </div>
-                      <button onClick={() => removerAtendente(a.id)} style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: 6, cursor: 'pointer' }}>Remover</button>
+                      <button onClick={() => removerAtendente(a.id)} style={{ fontSize: 11, color: tokens.status.danger, background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, padding: '4px 10px', borderRadius: 6, cursor: 'pointer' }}>Remover</button>
                     </div>
                   ))}
                 </div>
               </div>
               <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
-                  <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Adicionar atendente</h2>
+                  <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Adicionar atendente</h2>
                 </div>
                 <form onSubmit={adicionarAtendente} style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Nome *</label>
-                      <input required value={novoAtendente.nome} onChange={e => setNovoAtendente(a => ({ ...a, nome: e.target.value }))} style={{ width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 7, border: '1.5px solid #e5e7eb' }} placeholder="Maria Silva"/>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 4 }}>Nome *</label>
+                      <input required value={novoAtendente.nome} onChange={e => setNovoAtendente(a => ({ ...a, nome: e.target.value }))} style={{ width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 7, border: `1.5px solid ${tokens.border.default}` }} placeholder="Maria Silva"/>
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Cargo</label>
-                      <input value={novoAtendente.cargo} onChange={e => setNovoAtendente(a => ({ ...a, cargo: e.target.value }))} style={{ width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 7, border: '1.5px solid #e5e7eb' }} placeholder="Atendente"/>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 4 }}>Cargo</label>
+                      <input value={novoAtendente.cargo} onChange={e => setNovoAtendente(a => ({ ...a, cargo: e.target.value }))} style={{ width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 7, border: `1.5px solid ${tokens.border.default}` }} placeholder="Atendente"/>
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Email *</label>
-                    <input required type="email" value={novoAtendente.email} onChange={e => setNovoAtendente(a => ({ ...a, email: e.target.value }))} style={{ width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 7, border: '1.5px solid #e5e7eb' }} placeholder="maria@clinica.com"/>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 4 }}>Email *</label>
+                    <input required type="email" value={novoAtendente.email} onChange={e => setNovoAtendente(a => ({ ...a, email: e.target.value }))} style={{ width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 7, border: `1.5px solid ${tokens.border.default}` }} placeholder="maria@clinica.com"/>
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Senha *</label>
-                    <input required type="password" value={novoAtendente.senha} onChange={e => setNovoAtendente(a => ({ ...a, senha: e.target.value }))} style={{ width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 7, border: '1.5px solid #e5e7eb' }} placeholder="Senha de acesso"/>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 4 }}>Senha *</label>
+                    <input required type="password" value={novoAtendente.senha} onChange={e => setNovoAtendente(a => ({ ...a, senha: e.target.value }))} style={{ width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 7, border: `1.5px solid ${tokens.border.default}` }} placeholder="Senha de acesso"/>
                   </div>
-                  {atMsg && <div style={{ background: atMsg.tipo === 'ok' ? '#F5F5F5' : '#fef2f2', border: '1px solid ' + (atMsg.tipo === 'ok' ? '#b9a9ef' : '#fecaca'), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: atMsg.tipo === 'ok' ? '#6043C1' : '#dc2626', margin: 0 }}>{atMsg.texto}</p></div>}
-                  <button type="submit" disabled={salvandoAt} style={{ padding: '10px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvandoAt ? 'Adicionando...' : 'Adicionar atendente'}</button>
+                  {atMsg && <div style={{ background: atMsg.tipo === 'ok' ? tokens.bg.hover : tokens.status.dangerBg, border: '1px solid ' + (atMsg.tipo === 'ok' ? tokens.brand.primaryAccent : tokens.status.dangerLight), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: atMsg.tipo === 'ok' ? tokens.brand.primary : tokens.status.danger, margin: 0 }}>{atMsg.texto}</p></div>}
+                  <button type="submit" disabled={salvandoAt} style={{ padding: '10px', borderRadius: 9, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvandoAt ? 'Adicionando...' : 'Adicionar atendente'}</button>
                 </form>
               </div>
             </div>
@@ -801,13 +802,13 @@ REGRAS:
         {/* ABA CONFIGURACAO */}
 
           {aba === 'alertas' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: tokens.bg.hover }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Alertas e riscos</h2>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Pacientes que precisam de atencao</p>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Alertas e riscos</h2>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Pacientes que precisam de atencao</p>
                 </div>
-                <button onClick={() => carregarAlertas()} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                <button onClick={() => carregarAlertas()} style={{ fontSize: 12, color: tokens.brand.primary, background: tokens.brand.primaryLighter, border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
                   Atualizar
                 </button>
               </div>
@@ -815,31 +816,31 @@ REGRAS:
               {/* Alertas de risco */}
               {alertas.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: tokens.text.strong, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
                     Mensagens de risco ({alertas.length})
                   </p>
                   {alertas.map((a: any) => (
-                    <div key={a.id} style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 10, borderLeft: '4px solid #dc2626' }}>
+                    <div key={a.id} style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 10, borderLeft: `4px solid ${tokens.status.danger}` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                         <div>
-                          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 2px' }}>
                             {a.pacientes?.nome || a.whatsapp_conversas?.nome_contato || 'Paciente'}
                           </p>
-                          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                          <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>
                             {new Date(a.criado_em).toLocaleString('pt-BR')}
                           </p>
                         </div>
-                        <span style={{ fontSize: 11, fontWeight: 600, background: '#fef2f2', color: '#dc2626', padding: '3px 10px', borderRadius: 20 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, background: tokens.status.dangerBg, color: tokens.status.danger, padding: '3px 10px', borderRadius: 20 }}>
                           {a.nivel}
                         </span>
                       </div>
-                      <p style={{ fontSize: 13, color: '#374151', margin: '0 0 10px', background: '#fef2f2', padding: '8px 12px', borderRadius: 8 }}>
+                      <p style={{ fontSize: 13, color: tokens.text.strong, margin: '0 0 10px', background: tokens.status.dangerBg, padding: '8px 12px', borderRadius: 8 }}>
                         "{a.mensagem}"
                       </p>
                       <button onClick={async () => {
                         await fetch('/api/whatsapp-alertas', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: a.id, lido: true }) })
                         carregarAlertas()
-                      }} style={{ fontSize: 12, color: '#6043C1', background: 'transparent', border: '1px solid #b9a9ef', padding: '4px 12px', borderRadius: 6, cursor: 'pointer' }}>
+                      }} style={{ fontSize: 12, color: tokens.brand.primary, background: 'transparent', border: `1px solid ${tokens.brand.primaryAccent}`, padding: '4px 12px', borderRadius: 6, cursor: 'pointer' }}>
                         Marcar como lido
                       </button>
                     </div>
@@ -850,7 +851,7 @@ REGRAS:
               {/* Pacientes inativos */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: tokens.text.strong, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
                     Sem contato ha +7 dias ({inativos.length})
                   </p>
                   {inativos.length > 0 && (
@@ -864,14 +865,14 @@ REGRAS:
                         setCheckinEnviando(false)
                         carregarAlertas()
                       }}
-                      style={{ fontSize: 12, fontWeight: 600, color: 'white', background: checkinEnviando ? '#9ca3af' : '#6043C1', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: checkinEnviando ? 'not-allowed' : 'pointer' }}>
+                      style={{ fontSize: 12, fontWeight: 600, color: 'white', background: checkinEnviando ? tokens.text.tertiary : tokens.brand.primary, border: 'none', padding: '6px 14px', borderRadius: 8, cursor: checkinEnviando ? 'not-allowed' : 'pointer' }}>
                       {checkinEnviando ? 'Enviando...' : 'Enviar check-in para todos'}
                     </button>
                   )}
                 </div>
                 {inativos.length === 0 ? (
                   <div style={{ background: 'white', borderRadius: 12, padding: 24, textAlign: 'center' }}>
-                    <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>Nenhum paciente inativo nos ultimos 7 dias</p>
+                    <p style={{ color: tokens.text.secondary, fontSize: 14, margin: 0 }}>Nenhum paciente inativo nos ultimos 7 dias</p>
                   </div>
                 ) : (
                   inativos.map((p: any) => {
@@ -879,10 +880,10 @@ REGRAS:
                     return (
                       <div key={p.id} style={{ background: 'white', borderRadius: 12, padding: 14, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div>
-                          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>{p.nome_contato}</p>
-                          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{p.telefone} - Ultimo contato: {dias} dias atras</p>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 2px' }}>{p.nome_contato}</p>
+                          <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>{p.telefone} - Ultimo contato: {dias} dias atras</p>
                         </div>
-                        <span style={{ fontSize: 11, background: '#fffbeb', color: '#d97706', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
+                        <span style={{ fontSize: 11, background: tokens.status.warningBgAlt, color: tokens.status.warningAlt, padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
                           {dias}d sem contato
                         </span>
                       </div>
@@ -895,22 +896,22 @@ REGRAS:
 
 
           {aba === 'campanha' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Campanhas</h2>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px' }}>Envie mensagens personalizadas para seus pacientes</p>
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: tokens.bg.hover }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Campanhas</h2>
+              <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 24px' }}>Envie mensagens personalizadas para seus pacientes</p>
 
               <div style={{ background: 'white', borderRadius: 12, padding: 20, marginBottom: 24 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', margin: '0 0 12px' }}>Nova campanha</p>
-                <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px' }}>Use {"{{nome}}"} para personalizar com o nome do paciente</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.strong, margin: '0 0 12px' }}>Nova campanha</p>
+                <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 8px' }}>Use {"{{nome}}"} para personalizar com o nome do paciente</p>
                 <textarea
                   value={campanhaMsg}
                   onChange={e => setCampanhaMsg(e.target.value)}
                   placeholder={"Oi {{nome}}! Temos uma novidade especial para voce..."}
                   rows={4}
-                  style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: 12, borderRadius: 8, border: `1px solid ${tokens.border.default}`, fontSize: 13, resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-                  <span style={{ fontSize: 12, color: '#9ca3af' }}>{campanhaMsg.length} caracteres</span>
+                  <span style={{ fontSize: 12, color: tokens.text.tertiary }}>{campanhaMsg.length} caracteres</span>
                   <button
                     disabled={!campanhaMsg.trim() || campanhaEnviando}
                     onClick={async () => {
@@ -923,7 +924,7 @@ REGRAS:
                       setCampanhaEnviando(false)
                       fetch('/api/whatsapp-campanha?medico_id=' + medico?.id).then(r => r.json()).then(d => setCampanhas(d.campanhas || []))
                     }}
-                    style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: !campanhaMsg.trim() || campanhaEnviando ? '#9ca3af' : '#6043C1', color: 'white', fontWeight: 600, fontSize: 13, cursor: !campanhaMsg.trim() || campanhaEnviando ? 'not-allowed' : 'pointer' }}>
+                    style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: !campanhaMsg.trim() || campanhaEnviando ? tokens.text.tertiary : tokens.brand.primary, color: 'white', fontWeight: 600, fontSize: 13, cursor: !campanhaMsg.trim() || campanhaEnviando ? 'not-allowed' : 'pointer' }}>
                     {campanhaEnviando ? 'Enviando...' : 'Enviar campanha'}
                   </button>
                 </div>
@@ -931,14 +932,14 @@ REGRAS:
 
               {campanhas.length > 0 && (
                 <div>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Campanhas anteriores</p>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: tokens.text.strong, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Campanhas anteriores</p>
                   {campanhas.map((c: any) => (
                     <div key={c.id} style={{ background: 'white', borderRadius: 12, padding: 14, marginBottom: 8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ fontSize: 12, color: '#6b7280' }}>{new Date(c.criado_em).toLocaleDateString('pt-BR')}</span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: '#6043C1' }}>{c.total_enviado}/{c.total_destino} enviados</span>
+                        <span style={{ fontSize: 12, color: tokens.text.secondary }}>{new Date(c.criado_em).toLocaleDateString('pt-BR')}</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: tokens.brand.primary }}>{c.total_enviado}/{c.total_destino} enviados</span>
                       </div>
-                      <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>{c.mensagem.substring(0, 100)}{c.mensagem.length > 100 ? '...' : ''}</p>
+                      <p style={{ fontSize: 13, color: tokens.text.strong, margin: 0 }}>{c.mensagem.substring(0, 100)}{c.mensagem.length > 100 ? '...' : ''}</p>
                     </div>
                   ))}
                 </div>
@@ -947,11 +948,11 @@ REGRAS:
           )}
 
           {aba === 'relatorio' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: tokens.bg.hover }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
                 <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Relatorio semanal</h2>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Resumo da semana gerado por IA</p>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Relatorio semanal</h2>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Resumo da semana gerado por IA</p>
                 </div>
                 <button
                   disabled={relatorioCarregando}
@@ -962,7 +963,7 @@ REGRAS:
                     setRelatorio(d.relatorio)
                     setRelatorioCarregando(false)
                   }}
-                  style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: relatorioCarregando ? '#9ca3af' : '#6043C1', color: 'white', fontWeight: 600, fontSize: 13, cursor: relatorioCarregando ? 'not-allowed' : 'pointer' }}>
+                  style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: relatorioCarregando ? tokens.text.tertiary : tokens.brand.primary, color: 'white', fontWeight: 600, fontSize: 13, cursor: relatorioCarregando ? 'not-allowed' : 'pointer' }}>
                   {relatorioCarregando ? 'Gerando...' : 'Gerar relatorio'}
                 </button>
               </div>
@@ -971,29 +972,29 @@ REGRAS:
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
                     {[
-                      { label: 'Consultas na semana', valor: relatorio.consultas_semana, cor: '#6043C1' },
-                      { label: 'Novos pacientes WPP', valor: relatorio.novos_pacientes_wpp, cor: '#0891b2' },
-                      { label: 'Alertas pendentes', valor: relatorio.alertas_pendentes?.length || 0, cor: '#dc2626' },
+                      { label: 'Consultas na semana', valor: relatorio.consultas_semana, cor: tokens.brand.primary },
+                      { label: 'Novos pacientes WPP', valor: relatorio.novos_pacientes_wpp, cor: tokens.status.infoCyan },
+                      { label: 'Alertas pendentes', valor: relatorio.alertas_pendentes?.length || 0, cor: tokens.status.danger },
                     ].map((item: any) => (
                       <div key={item.label} style={{ background: 'white', borderRadius: 12, padding: 16, textAlign: 'center' }}>
                         <p style={{ fontSize: 28, fontWeight: 800, color: item.cor, margin: '0 0 4px' }}>{item.valor}</p>
-                        <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{item.label}</p>
+                        <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>{item.label}</p>
                       </div>
                     ))}
                   </div>
 
                   <div style={{ background: 'white', borderRadius: 12, padding: 20, marginBottom: 16 }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Resumo IA</p>
-                    <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-line' }}>{relatorio.resumo_ia}</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.strong, margin: '0 0 12px' }}>Resumo IA</p>
+                    <p style={{ fontSize: 14, color: tokens.text.strong, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-line' }}>{relatorio.resumo_ia}</p>
                   </div>
 
                   {relatorio.proximos_agendamentos?.length > 0 && (
                     <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Próximos agendamentos</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.strong, margin: '0 0 12px' }}>Próximos agendamentos</p>
                       {relatorio.proximos_agendamentos.slice(0, 5).map((a: any, i: number) => (
-                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < 4 ? '1px solid #f3f4f6' : 'none' }}>
-                          <span style={{ fontSize: 13, color: '#111827' }}>{a.pacientes?.nome || 'Paciente'}</span>
-                          <span style={{ fontSize: 12, color: '#6b7280' }}>{new Date(a.data_hora).toLocaleString('pt-BR')}</span>
+                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < 4 ? `1px solid ${tokens.bg.hoverStrong}` : 'none' }}>
+                          <span style={{ fontSize: 13, color: tokens.text.primary }}>{a.pacientes?.nome || 'Paciente'}</span>
+                          <span style={{ fontSize: 12, color: tokens.text.secondary }}>{new Date(a.data_hora).toLocaleString('pt-BR')}</span>
                         </div>
                       ))}
                     </div>
@@ -1004,8 +1005,8 @@ REGRAS:
               {!relatorio && !relatorioCarregando && (
                 <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Relatorio semanal com IA</p>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Clique em "Gerar relatorio" para ver o resumo da semana</p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>Relatorio semanal com IA</p>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Clique em "Gerar relatorio" para ver o resumo da semana</p>
                 </div>
               )}
             </div>
@@ -1013,11 +1014,11 @@ REGRAS:
 
 
           {aba === 'aderencia' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: tokens.bg.hover }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Score de Aderencia</h2>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Acompanhamento do protocolo por paciente</p>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Score de Aderencia</h2>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Acompanhamento do protocolo por paciente</p>
                 </div>
                 <button onClick={async () => {
                   setAderenciaCarregando(true)
@@ -1025,7 +1026,7 @@ REGRAS:
                   const d = await r.json()
                   setAderencias(d.aderencia || [])
                   setAderenciaCarregando(false)
-                }} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                }} style={{ fontSize: 12, color: tokens.brand.primary, background: tokens.brand.primaryLighter, border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
                   {aderenciaCarregando ? 'Carregando...' : 'Carregar scores'}
                 </button>
               </div>
@@ -1033,30 +1034,30 @@ REGRAS:
               {aderencias.length === 0 ? (
                 <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Score de aderencia</p>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Clique em "Carregar scores" para ver o ranking de aderencia dos pacientes</p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>Score de aderencia</p>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Clique em "Carregar scores" para ver o ranking de aderencia dos pacientes</p>
                 </div>
               ) : (
                 aderencias.map((a: any) => {
-                  const cor = a.nivel === 'alto' ? '#16a34a' : a.nivel === 'medio' ? '#d97706' : '#dc2626'
-                  const bgCor = a.nivel === 'alto' ? '#f0fdf4' : a.nivel === 'medio' ? '#fffbeb' : '#fef2f2'
+                  const cor = a.nivel === 'alto' ? tokens.status.success : a.nivel === 'medio' ? tokens.status.warningAlt : tokens.status.danger
+                  const bgCor = a.nivel === 'alto' ? tokens.status.successBg : a.nivel === 'medio' ? tokens.status.warningBgAlt : tokens.status.dangerBg
                   return (
                     <div key={a.paciente_id} style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 10 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                         <div>
-                          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>{a.pacientes?.nome || a.paciente}</p>
-                          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Presenca: {a.taxa_presenca}% | Ultimo contato: {a.dias_ultimo_contato}d atras</p>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 2px' }}>{a.pacientes?.nome || a.paciente}</p>
+                          <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>Presenca: {a.taxa_presenca}% | Ultimo contato: {a.dias_ultimo_contato}d atras</p>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                           <p style={{ fontSize: 24, fontWeight: 800, color: cor, margin: '0 0 2px' }}>{a.score}</p>
                           <span style={{ fontSize: 11, fontWeight: 600, background: bgCor, color: cor, padding: '2px 8px', borderRadius: 20 }}>{a.nivel}</span>
                         </div>
                       </div>
-                      <div style={{ background: '#f3f4f6', borderRadius: 4, height: 6, marginBottom: 10 }}>
+                      <div style={{ background: tokens.bg.hoverStrong, borderRadius: 4, height: 6, marginBottom: 10 }}>
                         <div style={{ background: cor, borderRadius: 4, height: 6, width: a.score + '%', transition: 'width 0.5s' }} />
                       </div>
                       {a.recomendacao && (
-                        <p style={{ fontSize: 12, color: '#374151', background: '#F5F5F5', padding: '8px 12px', borderRadius: 8, margin: 0 }}>{a.recomendacao}</p>
+                        <p style={{ fontSize: 12, color: tokens.text.strong, background: tokens.bg.hover, padding: '8px 12px', borderRadius: 8, margin: 0 }}>{a.recomendacao}</p>
                       )}
                     </div>
                   )
@@ -1066,18 +1067,18 @@ REGRAS:
           )}
 
           {aba === 'agenda' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: tokens.bg.hover }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Confirmacoes pendentes</h2>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Consultas nas proximas 48h aguardando confirmacao</p>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Confirmacoes pendentes</h2>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Consultas nas proximas 48h aguardando confirmacao</p>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={async () => {
                     const r = await fetch('/api/whatsapp-confirmacao?medico_id=' + medico?.id)
                     const d = await r.json()
                     setAgenda24h(d.agendamentos || [])
-                  }} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                  }} style={{ fontSize: 12, color: tokens.brand.primary, background: tokens.brand.primaryLighter, border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
                     Ver pendentes
                   </button>
                   <button
@@ -1089,7 +1090,7 @@ REGRAS:
                       toast('Confirmações enviadas para ' + d.enviados + ' pacientes!')
                       setConfirmacaoEnviando(false)
                     }}
-                    style={{ fontSize: 12, fontWeight: 600, color: 'white', background: confirmacaoEnviando ? '#9ca3af' : '#6043C1', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: confirmacaoEnviando ? 'not-allowed' : 'pointer' }}>
+                    style={{ fontSize: 12, fontWeight: 600, color: 'white', background: confirmacaoEnviando ? tokens.text.tertiary : tokens.brand.primary, border: 'none', padding: '6px 14px', borderRadius: 8, cursor: confirmacaoEnviando ? 'not-allowed' : 'pointer' }}>
                     {confirmacaoEnviando ? 'Enviando...' : 'Enviar confirmacoes'}
                   </button>
                 </div>
@@ -1098,20 +1099,20 @@ REGRAS:
               {agenda24h.length === 0 ? (
                 <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Nenhuma consulta pendente</p>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Clique em "Ver pendentes" para carregar os agendamentos</p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>Nenhuma consulta pendente</p>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Clique em "Ver pendentes" para carregar os agendamentos</p>
                 </div>
               ) : (
                 agenda24h.map((a: any) => {
-                  const statusCor = a.status === 'confirmacao_enviada' ? '#d97706' : '#6043C1'
-                  const statusBg = a.status === 'confirmacao_enviada' ? '#fffbeb' : '#ede9fb'
+                  const statusCor = a.status === 'confirmacao_enviada' ? tokens.status.warningAlt : tokens.brand.primary
+                  const statusBg = a.status === 'confirmacao_enviada' ? tokens.status.warningBgAlt : tokens.brand.primaryLighter
                   return (
                     <div key={a.id} style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 10 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>{(a.pacientes as any)?.nome || 'Paciente'}</p>
-                          <p style={{ fontSize: 13, color: '#374151', margin: '0 0 2px' }}>{a.motivo}</p>
-                          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{new Date(a.data_hora).toLocaleString('pt-BR')}</p>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 4px' }}>{(a.pacientes as any)?.nome || 'Paciente'}</p>
+                          <p style={{ fontSize: 13, color: tokens.text.strong, margin: '0 0 2px' }}>{a.motivo}</p>
+                          <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>{new Date(a.data_hora).toLocaleString('pt-BR')}</p>
                         </div>
                         <span style={{ fontSize: 11, fontWeight: 600, background: statusBg, color: statusCor, padding: '4px 12px', borderRadius: 20 }}>
                           {a.status === 'confirmacao_enviada' ? 'Aguardando' : 'Nao enviado'}
@@ -1126,13 +1127,13 @@ REGRAS:
 
 
           {aba === 'dashboard' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: tokens.bg.hover }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dashboard WhatsApp</h2>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Visão geral do atendimento via WhatsApp</p>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Dashboard WhatsApp</h2>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Visão geral do atendimento via WhatsApp</p>
                 </div>
-                <button onClick={carregarMetricas} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                <button onClick={carregarMetricas} style={{ fontSize: 12, color: tokens.brand.primary, background: tokens.brand.primaryLighter, border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
                   Atualizar
                 </button>
               </div>
@@ -1141,46 +1142,46 @@ REGRAS:
                 <>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
                     {[
-                      { label: 'Total de conversas', valor: metricas.total_conversas, cor: '#6043C1', sub: metricas.novas_semana + ' novas esta semana' },
-                      { label: 'Conversas ativas', valor: metricas.conversas_ativas, cor: '#0891b2', sub: 'Pacientes respondendo' },
-                      { label: 'Alertas pendentes', valor: metricas.alertas_pendentes, cor: '#dc2626', sub: 'Precisam de atencao' },
-                      { label: 'Pacientes inativos', valor: metricas.pacientes_inativos, cor: '#d97706', sub: 'Sem contato +7 dias' },
-                      { label: 'Msgs enviadas/semana', valor: metricas.mensagens_semana?.enviadas || 0, cor: '#059669', sub: metricas.mensagens_semana?.recebidas + ' recebidas' },
-                      { label: 'Taxa de resposta', valor: metricas.taxa_resposta + '%', cor: '#7c3aed', sub: 'Ultimos 7 dias' },
+                      { label: 'Total de conversas', valor: metricas.total_conversas, cor: tokens.brand.primary, sub: metricas.novas_semana + ' novas esta semana' },
+                      { label: 'Conversas ativas', valor: metricas.conversas_ativas, cor: tokens.status.infoCyan, sub: 'Pacientes respondendo' },
+                      { label: 'Alertas pendentes', valor: metricas.alertas_pendentes, cor: tokens.status.danger, sub: 'Precisam de atencao' },
+                      { label: 'Pacientes inativos', valor: metricas.pacientes_inativos, cor: tokens.status.warningAlt, sub: 'Sem contato +7 dias' },
+                      { label: 'Msgs enviadas/semana', valor: metricas.mensagens_semana?.enviadas || 0, cor: tokens.status.successHover, sub: metricas.mensagens_semana?.recebidas + ' recebidas' },
+                      { label: 'Taxa de resposta', valor: metricas.taxa_resposta + '%', cor: tokens.appointment.retorno.dot, sub: 'Ultimos 7 dias' },
                     ].map((item: any) => (
                       <div key={item.label} style={{ background: 'white', borderRadius: 12, padding: 16 }}>
                         <p style={{ fontSize: 26, fontWeight: 800, color: item.cor, margin: '0 0 4px' }}>{item.valor}</p>
-                        <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 2px' }}>{item.label}</p>
-                        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{item.sub}</p>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, margin: '0 0 2px' }}>{item.label}</p>
+                        <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{item.sub}</p>
                       </div>
                     ))}
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 16px' }}>Acoes rapidas</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.strong, margin: '0 0 16px' }}>Acoes rapidas</p>
                       {[
-                        { label: 'Ver alertas de risco', aba: 'alertas', cor: '#dc2626' },
-                        { label: 'Enviar check-in', aba: 'alertas', cor: '#d97706' },
-                        { label: 'Nova campanha', aba: 'campanha', cor: '#6043C1' },
-                        { label: 'Gerar relatorio', aba: 'relatorio', cor: '#0891b2' },
+                        { label: 'Ver alertas de risco', aba: 'alertas', cor: tokens.status.danger },
+                        { label: 'Enviar check-in', aba: 'alertas', cor: tokens.status.warningAlt },
+                        { label: 'Nova campanha', aba: 'campanha', cor: tokens.brand.primary },
+                        { label: 'Gerar relatorio', aba: 'relatorio', cor: tokens.status.infoCyan },
                       ].map((item: any) => (
-                        <button key={item.label} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 8, border: 'none', background: '#F5F5F5', cursor: 'pointer', fontSize: 13, color: item.cor, fontWeight: 600, marginBottom: 8 }}>
+                        <button key={item.label} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 8, border: 'none', background: tokens.bg.hover, cursor: 'pointer', fontSize: 13, color: item.cor, fontWeight: 600, marginBottom: 8 }}>
                           {item.label} 
                         </button>
                       ))}
                     </div>
 
                     <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 16px' }}>Status do sistema</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.strong, margin: '0 0 16px' }}>Status do sistema</p>
                       {[
-                        { label: 'Sofia IA', status: 'Ativa', cor: '#059669' },
-                        { label: 'Onboarding', status: 'Ativo', cor: '#059669' },
-                        { label: 'Audio (Whisper)', status: 'Ativo', cor: '#059669' },
-                        { label: 'Alertas de risco', status: 'Monitorando', cor: '#6043C1' },
+                        { label: 'Sofia IA', status: 'Ativa', cor: tokens.status.successHover },
+                        { label: 'Onboarding', status: 'Ativo', cor: tokens.status.successHover },
+                        { label: 'Audio (Whisper)', status: 'Ativo', cor: tokens.status.successHover },
+                        { label: 'Alertas de risco', status: 'Monitorando', cor: tokens.brand.primary },
                       ].map((item: any) => (
-                        <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e9edef' }}>
-                          <span style={{ fontSize: 13, color: '#374151' }}>{item.label}</span>
+                        <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${tokens.whatsapp.inputBorder}` }}>
+                          <span style={{ fontSize: 13, color: tokens.text.strong }}>{item.label}</span>
                           <span style={{ fontSize: 11, fontWeight: 600, color: item.cor, background: item.cor + '20', padding: '2px 8px', borderRadius: 20 }}>{item.status}</span>
                         </div>
                       ))}
@@ -1192,21 +1193,21 @@ REGRAS:
               {!metricas && (
                 <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
-                  <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Clique em "Atualizar" para carregar as metricas</p>
+                  <p style={{ fontSize: 14, color: tokens.text.secondary, margin: 0 }}>Clique em "Atualizar" para carregar as metricas</p>
                 </div>
               )}
             </div>
           )}
 
           {aba === 'nps' && (
-            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+            <div style={{ flex: 1, overflow: 'auto', padding: 24, background: tokens.bg.hover }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>NPS - Satisfacao</h2>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Pesquisa de satisfacao automatica pos-consulta</p>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>NPS - Satisfacao</h2>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Pesquisa de satisfacao automatica pos-consulta</p>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={carregarNps} style={{ fontSize: 12, color: '#6043C1', background: '#ede9fb', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                  <button onClick={carregarNps} style={{ fontSize: 12, color: tokens.brand.primary, background: tokens.brand.primaryLighter, border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
                     Ver resultados
                   </button>
                   <button
@@ -1219,7 +1220,7 @@ REGRAS:
                       setNpsEnviando(false)
                       carregarNps()
                     }}
-                    style={{ fontSize: 12, fontWeight: 600, color: 'white', background: npsEnviando ? '#9ca3af' : '#6043C1', border: 'none', padding: '6px 14px', borderRadius: 8, cursor: npsEnviando ? 'not-allowed' : 'pointer' }}>
+                    style={{ fontSize: 12, fontWeight: 600, color: 'white', background: npsEnviando ? tokens.text.tertiary : tokens.brand.primary, border: 'none', padding: '6px 14px', borderRadius: 8, cursor: npsEnviando ? 'not-allowed' : 'pointer' }}>
                     {npsEnviando ? 'Enviando...' : 'Enviar NPS hoje'}
                   </button>
                 </div>
@@ -1229,28 +1230,28 @@ REGRAS:
                 <>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
                     {[
-                      { label: 'NPS Score', valor: npsData.nps, cor: npsData.nps >= 50 ? '#059669' : npsData.nps >= 0 ? '#d97706' : '#dc2626' },
-                      { label: 'Nota media', valor: npsData.media, cor: '#6043C1' },
-                      { label: 'Promotores', valor: npsData.promotores, cor: '#059669' },
-                      { label: 'Detratores', valor: npsData.detratores, cor: '#dc2626' },
+                      { label: 'NPS Score', valor: npsData.nps, cor: npsData.nps >= 50 ? tokens.status.successHover : npsData.nps >= 0 ? tokens.status.warningAlt : tokens.status.danger },
+                      { label: 'Nota media', valor: npsData.media, cor: tokens.brand.primary },
+                      { label: 'Promotores', valor: npsData.promotores, cor: tokens.status.successHover },
+                      { label: 'Detratores', valor: npsData.detratores, cor: tokens.status.danger },
                     ].map((item: any) => (
                       <div key={item.label} style={{ background: 'white', borderRadius: 12, padding: 16, textAlign: 'center' }}>
                         <p style={{ fontSize: 28, fontWeight: 800, color: item.cor, margin: '0 0 4px' }}>{item.valor}</p>
-                        <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{item.label}</p>
+                        <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>{item.label}</p>
                       </div>
                     ))}
                   </div>
 
                   {npsData.respostas?.length > 0 && (
                     <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>Ultimas respostas</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.strong, margin: '0 0 12px' }}>Ultimas respostas</p>
                       {npsData.respostas.map((r: any, i: number) => {
-                        const cor = r.nota >= 9 ? '#059669' : r.nota >= 7 ? '#d97706' : '#dc2626'
+                        const cor = r.nota >= 9 ? tokens.status.successHover : r.nota >= 7 ? tokens.status.warningAlt : tokens.status.danger
                         return (
-                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < npsData.respostas.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                            <span style={{ fontSize: 13, color: '#374151' }}>{r.pacientes?.nome || 'Paciente'}</span>
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < npsData.respostas.length - 1 ? `1px solid ${tokens.bg.hoverStrong}` : 'none' }}>
+                            <span style={{ fontSize: 13, color: tokens.text.strong }}>{r.pacientes?.nome || 'Paciente'}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 12, color: '#9ca3af' }}>{new Date(r.criado_em).toLocaleDateString('pt-BR')}</span>
+                              <span style={{ fontSize: 12, color: tokens.text.tertiary }}>{new Date(r.criado_em).toLocaleDateString('pt-BR')}</span>
                               <span style={{ fontSize: 18, fontWeight: 800, color: cor }}>{r.nota}</span>
                             </div>
                           </div>
@@ -1264,31 +1265,31 @@ REGRAS:
               {!npsData && (
                 <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Pesquisa de satisfacao</p>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Envie NPS automaticamente apos cada consulta</p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>Pesquisa de satisfacao</p>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Envie NPS automaticamente apos cada consulta</p>
                 </div>
               )}
             </div>
           )}
 
         {aba === 'transmissao' && (
-          <div style={{ flex: 1, overflow: 'auto', padding: 24, background: '#F5F5F5' }}>
+          <div style={{ flex: 1, overflow: 'auto', padding: 24, background: tokens.bg.hover }}>
             <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20, height: '100%', alignContent: 'start' }}>
 
               {/* Lista de grupos */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ background: 'white', borderRadius: 12, padding: 16 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Nova lista</p>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 12px' }}>Nova lista</p>
                   <input value={novaLista.nome} onChange={e => setNovaLista(l => ({ ...l, nome: e.target.value }))}
-                    placeholder="Nome da lista (ex: Pós-cirúrgico)" style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, marginBottom: 8, boxSizing: 'border-box' as const, outline: 'none' }} />
+                    placeholder="Nome da lista (ex: Pós-cirúrgico)" style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: `1.5px solid ${tokens.border.default}`, borderRadius: 8, marginBottom: 8, boxSizing: 'border-box' as const, outline: 'none' }} />
                   <input value={novaLista.descricao} onChange={e => setNovaLista(l => ({ ...l, descricao: e.target.value }))}
-                    placeholder="Descrição opcional" style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 8, marginBottom: 8, boxSizing: 'border-box' as const, outline: 'none' }} />
+                    placeholder="Descrição opcional" style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: `1.5px solid ${tokens.border.default}`, borderRadius: 8, marginBottom: 8, boxSizing: 'border-box' as const, outline: 'none' }} />
                   <button onClick={async () => {
                     if (!novaLista.nome.trim() || !medico) return
                     const { data } = await (await import('@/lib/supabase')).supabase
                       .from('listas_transmissao').insert({ medico_id: medico.id, nome: novaLista.nome, descricao: novaLista.descricao }).select().single()
                     if (data) { setListas(l => [...l, { ...data, total: 0 }]); setNovaLista({ nome: '', descricao: '' }); toast('Lista criada!') }
-                  }} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  }} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: tokens.status.success, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                     + Criar lista
                   </button>
                 </div>
@@ -1296,16 +1297,16 @@ REGRAS:
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {listas.length === 0 ? (
                     <div style={{ background: 'white', borderRadius: 12, padding: '24px', textAlign: 'center' }}>
-                      <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Nenhuma lista criada</p>
+                      <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Nenhuma lista criada</p>
                     </div>
                   ) : listas.map((l: any) => (
                     <div key={l.id} onClick={() => setListaSelecionada(l)}
-                      style={{ background: listaSelecionada?.id === l.id ? '#f0fdf4' : 'white', border: `1px solid ${listaSelecionada?.id === l.id ? '#86efac' : '#e5e7eb'}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer' }}>
+                      style={{ background: listaSelecionada?.id === l.id ? tokens.status.successBg : 'white', border: `1px solid ${listaSelecionada?.id === l.id ? tokens.whatsapp.bubbleBorder : tokens.border.default}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{l.nome}</p>
-                        <span style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>{l.total || 0} contatos</span>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>{l.nome}</p>
+                        <span style={{ fontSize: 11, color: tokens.status.success, background: tokens.status.successBg, padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>{l.total || 0} contatos</span>
                       </div>
-                      {l.descricao && <p style={{ fontSize: 12, color: '#6b7280', margin: '3px 0 0' }}>{l.descricao}</p>}
+                      {l.descricao && <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '3px 0 0' }}>{l.descricao}</p>}
                     </div>
                   ))}
                 </div>
@@ -1316,16 +1317,16 @@ REGRAS:
                 {!listaSelecionada ? (
                   <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                     <p style={{ fontSize: 32, margin: '0 0 12px' }}>📢</p>
-                    <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Listas de transmissão</p>
-                    <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Crie listas para enviar mensagens em massa para grupos de pacientes específicos — pós-cirúrgico, diabéticos, retorno, etc.</p>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>Listas de transmissão</p>
+                    <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Crie listas para enviar mensagens em massa para grupos de pacientes específicos — pós-cirúrgico, diabéticos, retorno, etc.</p>
                   </div>
                 ) : (
                   <>
                     <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                         <div>
-                          <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>{listaSelecionada.nome}</p>
-                          <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 0' }}>{listaSelecionada.total || 0} contatos</p>
+                          <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{listaSelecionada.nome}</p>
+                          <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '2px 0 0' }}>{listaSelecionada.total || 0} contatos</p>
                         </div>
                         <button onClick={async () => {
                           if (!confirm('Excluir esta lista?')) return
@@ -1333,14 +1334,14 @@ REGRAS:
                           setListas(l => l.filter(x => x.id !== listaSelecionada.id))
                           setListaSelecionada(null)
                           toast('Lista removida', 'info')
-                        }} style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: 6, cursor: 'pointer' }}>
+                        }} style={{ fontSize: 11, color: tokens.status.danger, background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, padding: '4px 10px', borderRadius: 6, cursor: 'pointer' }}>
                           Excluir lista
                         </button>
                       </div>
-                      <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px' }}>Use {'{{nome}}'} para personalizar</p>
+                      <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 8px' }}>Use {'{{nome}}'} para personalizar</p>
                       <textarea value={msgTransmissao} onChange={e => setMsgTransmissao(e.target.value)}
                         placeholder="Olá {{nome}}, sua consulta de retorno está disponível..."
-                        rows={4} style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' as const }} />
+                        rows={4} style={{ width: '100%', padding: 12, borderRadius: 8, border: `1px solid ${tokens.border.default}`, fontSize: 13, resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' as const }} />
                       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
                         <button disabled={!msgTransmissao.trim() || enviandoTransmissao} onClick={async () => {
                           if (!msgTransmissao.trim() || !listaSelecionada) return
@@ -1350,7 +1351,7 @@ REGRAS:
                           toast(`Transmissão enviada para ${d.enviados} contatos!`)
                           setMsgTransmissao('')
                           setEnviandoTransmissao(false)
-                        }} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: !msgTransmissao.trim() || enviandoTransmissao ? '#9ca3af' : '#16a34a', color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                        }} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: !msgTransmissao.trim() || enviandoTransmissao ? tokens.text.tertiary : tokens.status.success, color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                           {enviandoTransmissao ? 'Enviando...' : '📢 Enviar transmissão'}
                         </button>
                       </div>
@@ -1366,36 +1367,36 @@ REGRAS:
           <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
             <div style={{ maxWidth: 680 }}>
               {config && (
-                <div style={{ background: '#F5F5F5', border: '1px solid #b9a9ef', borderRadius: 12, padding: '12px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: tokens.bg.hover, border: `1px solid ${tokens.brand.primaryAccent}`, borderRadius: 12, padding: '12px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 7, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 7, background: tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                     </div>
                     <div>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: '#6043C1', margin: 0 }}>WhatsApp conectado</p>
-                      <p style={{ fontSize: 11, color: '#6043C1', margin: 0 }}>{config.phone_number}  {config.nome_exibicao}</p>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: tokens.brand.primary, margin: 0 }}>WhatsApp conectado</p>
+                      <p style={{ fontSize: 11, color: tokens.brand.primary, margin: 0 }}>{config.phone_number}  {config.nome_exibicao}</p>
                     </div>
                   </div>
-                  <button onClick={async () => { await fetch('/api/whatsapp-config?medico_id=' + medico.id, { method: 'DELETE' }); setConfig(null) }} style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Desconectar</button>
+                  <button onClick={async () => { await fetch('/api/whatsapp-config?medico_id=' + medico.id, { method: 'DELETE' }); setConfig(null) }} style={{ fontSize: 11, color: tokens.status.danger, background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Desconectar</button>
                 </div>
               )}
               {!config && (
                 <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
-                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #e9edef' }}>
-                    <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Conectar WhatsApp Business</h2>
-                    <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Siga os passos abaixo para conectar o número da clínica</p>
+                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${tokens.whatsapp.inputBorder}` }}>
+                    <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Conectar WhatsApp Business</h2>
+                    <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>Siga os passos abaixo para conectar o número da clínica</p>
                   </div>
 
                   {/* Steps indicator */}
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #e9edef', gap: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: `1px solid ${tokens.whatsapp.inputBorder}`, gap: 0 }}>
                     {[1,2,3].map((s, i) => (
                       <div key={s} style={{ display: 'flex', alignItems: 'center', flex: i < 2 ? 1 : 0 }}>
                         <div style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0,
-                          background: wizardPasso > s ? '#16a34a' : wizardPasso === s ? '#16a34a' : '#f3f4f6',
-                          color: wizardPasso >= s ? 'white' : '#9ca3af' }}>
+                          background: wizardPasso > s ? tokens.status.success : wizardPasso === s ? tokens.status.success : tokens.bg.hoverStrong,
+                          color: wizardPasso >= s ? 'white' : tokens.text.tertiary }}>
                           {wizardPasso > s ? '✓' : s}
                         </div>
-                        {i < 2 && <div style={{ flex: 1, height: 2, background: wizardPasso > s ? '#16a34a' : '#f3f4f6', margin: '0 6px' }} />}
+                        {i < 2 && <div style={{ flex: 1, height: 2, background: wizardPasso > s ? tokens.status.success : tokens.bg.hoverStrong, margin: '0 6px' }} />}
                       </div>
                     ))}
                   </div>
@@ -1403,26 +1404,26 @@ REGRAS:
                   <div style={{ padding: '20px' }}>
                     {wizardPasso === 1 && (
                       <div>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Passo 1 — Acesse o painel da Meta</p>
-                        <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px', lineHeight: 1.6 }}>
-                          Acesse <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" style={{ color: '#16a34a', fontWeight: 600 }}>developers.facebook.com</a> e faça login com a conta que gerencia o número do WhatsApp Business.
+                        <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px' }}>Passo 1 — Acesse o painel da Meta</p>
+                        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 16px', lineHeight: 1.6 }}>
+                          Acesse <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" style={{ color: tokens.status.success, fontWeight: 600 }}>developers.facebook.com</a> e faça login com a conta que gerencia o número do WhatsApp Business.
                         </p>
-                        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                          <p style={{ fontSize: 12, fontWeight: 700, color: '#166534', margin: '0 0 6px' }}>📌 Onde encontrar</p>
-                          <p style={{ fontSize: 12, color: '#166534', margin: 0, lineHeight: 1.6 }}>
+                        <div style={{ background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: tokens.status.successDark, margin: '0 0 6px' }}>📌 Onde encontrar</p>
+                          <p style={{ fontSize: 12, color: tokens.status.successDark, margin: 0, lineHeight: 1.6 }}>
                             Meu Aplicativo → WhatsApp → Configuração da API → <strong>Identificação do número de telefone</strong>
                           </p>
                         </div>
-                        <div style={{ background: '#F5F5F5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontFamily: 'monospace', fontSize: 12, color: '#374151' }}>
+                        <div style={{ background: tokens.bg.hover, borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontFamily: 'monospace', fontSize: 12, color: tokens.text.strong }}>
                           Ex: <strong>1030374870164992</strong>
                         </div>
-                        <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Phone Number ID *</label>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 6 }}>Phone Number ID *</label>
                         <input required value={form.phone_number_id} onChange={e => setForm(f => ({ ...f, phone_number_id: e.target.value }))}
-                          style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace', boxSizing: 'border-box' as const, outline: 'none' }}
+                          style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: `1.5px solid ${tokens.border.default}`, fontFamily: 'monospace', boxSizing: 'border-box' as const, outline: 'none' }}
                           placeholder="Cole o Phone Number ID aqui" />
                         <button onClick={() => { if (form.phone_number_id.trim()) setWizardPasso(2) }}
                           disabled={!form.phone_number_id.trim()}
-                          style={{ width: '100%', marginTop: 16, padding: '10px', borderRadius: 9, border: 'none', background: form.phone_number_id.trim() ? '#16a34a' : '#e5e7eb', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                          style={{ width: '100%', marginTop: 16, padding: '10px', borderRadius: 9, border: 'none', background: form.phone_number_id.trim() ? tokens.status.success : tokens.border.default, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                           Próximo →
                         </button>
                       </div>
@@ -1430,30 +1431,30 @@ REGRAS:
 
                     {wizardPasso === 2 && (
                       <div>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Passo 2 — Token de acesso permanente</p>
-                        <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px', lineHeight: 1.6 }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px' }}>Passo 2 — Token de acesso permanente</p>
+                        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 16px', lineHeight: 1.6 }}>
                           Gere um token de acesso <strong>permanente</strong> (não o temporário de 24h).
                         </p>
-                        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                          <p style={{ fontSize: 12, fontWeight: 700, color: '#92400e', margin: '0 0 6px' }}>⚠ Atenção</p>
-                          <p style={{ fontSize: 12, color: '#92400e', margin: 0, lineHeight: 1.6 }}>
+                        <div style={{ background: tokens.status.warningBgAlt, border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: tokens.status.warningText, margin: '0 0 6px' }}>⚠ Atenção</p>
+                          <p style={{ fontSize: 12, color: tokens.status.warningText, margin: 0, lineHeight: 1.6 }}>
                             Use <strong>Sistema de Usuário</strong> no Business Manager para gerar um token que não expira. Tokens de usuário expiram e quebram a integração.
                           </p>
                         </div>
-                        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                          <p style={{ fontSize: 12, fontWeight: 700, color: '#166534', margin: '0 0 6px' }}>📌 Onde encontrar</p>
-                          <p style={{ fontSize: 12, color: '#166534', margin: 0, lineHeight: 1.6 }}>
+                        <div style={{ background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: tokens.status.successDark, margin: '0 0 6px' }}>📌 Onde encontrar</p>
+                          <p style={{ fontSize: 12, color: tokens.status.successDark, margin: 0, lineHeight: 1.6 }}>
                             Business Manager → Configurações → Usuários do sistema → Gerar token → Selecione seu app → <strong>whatsapp_business_messaging</strong>
                           </p>
                         </div>
-                        <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Token permanente *</label>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 6 }}>Token permanente *</label>
                         <input required type="password" value={form.access_token} onChange={e => setForm(f => ({ ...f, access_token: e.target.value }))}
-                          style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace', boxSizing: 'border-box' as const, outline: 'none' }}
+                          style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: `1.5px solid ${tokens.border.default}`, fontFamily: 'monospace', boxSizing: 'border-box' as const, outline: 'none' }}
                           placeholder="EAANoj..." />
                         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-                          <button onClick={() => setWizardPasso(1)} style={{ flex: 1, padding: '10px', borderRadius: 9, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>← Voltar</button>
+                          <button onClick={() => setWizardPasso(1)} style={{ flex: 1, padding: '10px', borderRadius: 9, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>← Voltar</button>
                           <button onClick={() => { if (form.access_token.trim()) setWizardPasso(3) }} disabled={!form.access_token.trim()}
-                            style={{ flex: 2, padding: '10px', borderRadius: 9, border: 'none', background: form.access_token.trim() ? '#16a34a' : '#e5e7eb', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                            style={{ flex: 2, padding: '10px', borderRadius: 9, border: 'none', background: form.access_token.trim() ? tokens.status.success : tokens.border.default, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                             Próximo →
                           </button>
                         </div>
@@ -1462,21 +1463,21 @@ REGRAS:
 
                     {wizardPasso === 3 && (
                       <div>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Passo 3 — Finalizar conexão</p>
-                        <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px', lineHeight: 1.6 }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px' }}>Passo 3 — Finalizar conexão</p>
+                        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 16px', lineHeight: 1.6 }}>
                           Dê um nome para identificar este número na plataforma e clique em conectar.
                         </p>
-                        <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Nome da clínica</label>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 6 }}>Nome da clínica</label>
                         <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))}
-                          style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', boxSizing: 'border-box' as const, outline: 'none', marginBottom: 16 }}
+                          style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: `1.5px solid ${tokens.border.default}`, boxSizing: 'border-box' as const, outline: 'none', marginBottom: 16 }}
                           placeholder="Clínica Dr. Silva" />
-                        {cfgMsg && <div style={{ background: cfgMsg.tipo === 'ok' ? '#f0fdf4' : '#fef2f2', border: '1px solid ' + (cfgMsg.tipo === 'ok' ? '#bbf7d0' : '#fecaca'), borderRadius: 8, padding: '8px 12px', marginBottom: 12 }}>
-                          <p style={{ fontSize: 12, color: cfgMsg.tipo === 'ok' ? '#16a34a' : '#dc2626', margin: 0 }}>{cfgMsg.texto}</p>
+                        {cfgMsg && <div style={{ background: cfgMsg.tipo === 'ok' ? tokens.status.successBg : tokens.status.dangerBg, border: '1px solid ' + (cfgMsg.tipo === 'ok' ? tokens.status.successLight : tokens.status.dangerLight), borderRadius: 8, padding: '8px 12px', marginBottom: 12 }}>
+                          <p style={{ fontSize: 12, color: cfgMsg.tipo === 'ok' ? tokens.status.success : tokens.status.danger, margin: 0 }}>{cfgMsg.texto}</p>
                         </div>}
                         <div style={{ display: 'flex', gap: 10 }}>
-                          <button onClick={() => setWizardPasso(2)} style={{ flex: 1, padding: '10px', borderRadius: 9, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>← Voltar</button>
+                          <button onClick={() => setWizardPasso(2)} style={{ flex: 1, padding: '10px', borderRadius: 9, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>← Voltar</button>
                           <button onClick={(e: any) => { e.preventDefault(); salvarConfig(e) }} disabled={salvando}
-                            style={{ flex: 2, padding: '10px', borderRadius: 9, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                            style={{ flex: 2, padding: '10px', borderRadius: 9, border: 'none', background: tokens.status.success, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                             {salvando ? 'Conectando...' : '✓ Conectar WhatsApp'}
                           </button>
                         </div>
@@ -1488,38 +1489,38 @@ REGRAS:
 
               {config && (
                 <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', marginBottom: 18 }}>
-                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #e9edef' }}>
-                    <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Atualizar credenciais</h2>
+                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${tokens.whatsapp.inputBorder}` }}>
+                    <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Atualizar credenciais</h2>
                   </div>
                   <form onSubmit={salvarConfig} style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Phone Number ID</label>
-                      <input required value={form.phone_number_id} onChange={e => setForm(f => ({ ...f, phone_number_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace', boxSizing: 'border-box' as const }} placeholder="1030374870164992"/>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 4 }}>Phone Number ID</label>
+                      <input required value={form.phone_number_id} onChange={e => setForm(f => ({ ...f, phone_number_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1.5px solid ${tokens.border.default}`, fontFamily: 'monospace', boxSizing: 'border-box' as const }} placeholder="1030374870164992"/>
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Token permanente</label>
-                      <input required type="password" value={form.access_token} onChange={e => setForm(f => ({ ...f, access_token: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'monospace', boxSizing: 'border-box' as const }} placeholder="EAANoj..."/>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 4 }}>Token permanente</label>
+                      <input required type="password" value={form.access_token} onChange={e => setForm(f => ({ ...f, access_token: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1.5px solid ${tokens.border.default}`, fontFamily: 'monospace', boxSizing: 'border-box' as const }} placeholder="EAANoj..."/>
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Nome da clínica</label>
-                      <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1.5px solid #e5e7eb', boxSizing: 'border-box' as const }} placeholder="Clínica Dr. Silva"/>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 4 }}>Nome da clínica</label>
+                      <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))} style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1.5px solid ${tokens.border.default}`, boxSizing: 'border-box' as const }} placeholder="Clínica Dr. Silva"/>
                     </div>
-                    {cfgMsg && <div style={{ background: cfgMsg.tipo === 'ok' ? '#f0fdf4' : '#fef2f2', border: '1px solid ' + (cfgMsg.tipo === 'ok' ? '#bbf7d0' : '#fecaca'), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: cfgMsg.tipo === 'ok' ? '#16a34a' : '#dc2626', margin: 0 }}>{cfgMsg.texto}</p></div>}
-                    <button type="submit" disabled={salvando} style={{ padding: '10px', borderRadius: 9, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvando ? 'Salvando...' : 'Salvar alterações'}</button>
+                    {cfgMsg && <div style={{ background: cfgMsg.tipo === 'ok' ? tokens.status.successBg : tokens.status.dangerBg, border: '1px solid ' + (cfgMsg.tipo === 'ok' ? tokens.status.successLight : tokens.status.dangerLight), borderRadius: 8, padding: '8px 12px' }}><p style={{ fontSize: 12, color: cfgMsg.tipo === 'ok' ? tokens.status.success : tokens.status.danger, margin: 0 }}>{cfgMsg.texto}</p></div>}
+                    <button type="submit" disabled={salvando} style={{ padding: '10px', borderRadius: 9, border: 'none', background: tokens.status.success, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{salvando ? 'Salvando...' : 'Salvar alterações'}</button>
                   </form>
                 </div>
               )}
               <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
-                  <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Webhook Meta</h2>
+                  <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Webhook Meta</h2>
                 </div>
                 <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[{ label: 'URL do callback', valor: WEBHOOK_URL }, { label: 'Token de verificacao', valor: VERIFY_TOKEN }].map(item => (
                     <div key={item.label}>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</p>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: tokens.text.secondary, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</p>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <code style={{ flex: 1, padding: '7px 10px', background: '#F5F5F5', borderRadius: 6, fontSize: 12, fontFamily: 'monospace', color: '#374151' }}>{item.valor}</code>
-                        <button onClick={() => navigator.clipboard.writeText(item.valor)} style={{ padding: '6px 10px', background: 'white', borderRadius: 6, fontSize: 11, color: '#6b7280', cursor: 'pointer' }}>Copiar</button>
+                        <code style={{ flex: 1, padding: '7px 10px', background: tokens.bg.hover, borderRadius: 6, fontSize: 12, fontFamily: 'monospace', color: tokens.text.strong }}>{item.valor}</code>
+                        <button onClick={() => navigator.clipboard.writeText(item.valor)} style={{ padding: '6px 10px', background: 'white', borderRadius: 6, fontSize: 11, color: tokens.text.secondary, cursor: 'pointer' }}>Copiar</button>
                       </div>
                     </div>
                   ))}

@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
 
 interface MenuItem {
   href: string
@@ -127,7 +128,7 @@ export function BottomNav() {
       {/* Bottom Nav fixo */}
       <nav style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-        background: 'white', borderTop: '1px solid #e5e7eb',
+        background: 'white', borderTop: `1px solid ${tokens.border.default}`,
         display: 'flex', alignItems: 'stretch',
         height: 64, paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         boxShadow: '0 -2px 12px rgba(0,0,0,0.04)',
@@ -139,7 +140,7 @@ export function BottomNav() {
               style={{
                 flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 gap: 3, background: 'transparent', border: 'none', cursor: 'pointer',
-                color: ativo ? ACCENT : '#9ca3af',
+                color: ativo ? ACCENT : tokens.text.tertiary,
               }}>
               {t.icon}
               <span style={{ fontSize: 10, fontWeight: ativo ? 700 : 500 }}>{t.label}</span>
@@ -150,7 +151,7 @@ export function BottomNav() {
           style={{
             flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             gap: 3, background: 'transparent', border: 'none', cursor: 'pointer',
-            color: sheetOpen ? ACCENT : '#9ca3af',
+            color: sheetOpen ? ACCENT : tokens.text.tertiary,
           }}>
           {ICON_MENU}
           <span style={{ fontSize: 10, fontWeight: sheetOpen ? 700 : 500 }}>Menu</span>
@@ -172,7 +173,7 @@ export function BottomNav() {
           }}>
             {/* Drag handle */}
             <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: '#e5e7eb' }}/>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: tokens.border.default }}/>
             </div>
 
             {/* Logo + Header */}
@@ -186,14 +187,14 @@ export function BottomNav() {
                 </svg>
               </div>
               <div>
-                <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0 }}>Clinical 360</p>
-                <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>
+                <p style={{ fontSize: 16, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Clinical 360</p>
+                <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>
                   {clinicaAdmin?.nome || medico?.nome || 'Menu'}
                 </p>
               </div>
             </div>
 
-            <div style={{ height: 1, background: '#f3f4f6', margin: '0 20px' }}/>
+            <div style={{ height: 1, background: tokens.bg.hoverStrong, margin: '0 20px' }}/>
 
             {/* Lista de itens */}
             <div style={{ padding: '8px 12px' }}>
@@ -204,26 +205,26 @@ export function BottomNav() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 14, width: '100%',
                       padding: '13px 14px', borderRadius: 10, marginBottom: 2,
-                      background: ativo ? '#F3F4F6' : 'transparent', border: 'none',
-                      color: ativo ? '#111827' : '#374151',
+                      background: ativo ? tokens.bg.hoverStrong : 'transparent', border: 'none',
+                      color: ativo ? tokens.text.primary : tokens.text.strong,
                       fontSize: 15, fontWeight: ativo ? 600 : 500,
                       textAlign: 'left', cursor: 'pointer',
                     }}>
-                    <span style={{ flexShrink: 0, opacity: ativo ? 1 : 0.7, color: ativo ? ACCENT : '#6b7280' }}>{item.icon}</span>
+                    <span style={{ flexShrink: 0, opacity: ativo ? 1 : 0.7, color: ativo ? ACCENT : tokens.text.secondary }}>{item.icon}</span>
                     {item.label}
                   </button>
                 )
               })}
             </div>
 
-            <div style={{ height: 1, background: '#f3f4f6', margin: '4px 20px 8px' }}/>
+            <div style={{ height: 1, background: tokens.bg.hoverStrong, margin: '4px 20px 8px' }}/>
 
             {/* Sair */}
             <div style={{ padding: '0 12px 8px' }}>
               <button onClick={sair} style={{
                 display: 'flex', alignItems: 'center', gap: 14, width: '100%',
                 padding: '13px 14px', borderRadius: 10,
-                background: 'transparent', border: 'none', color: '#dc2626',
+                background: 'transparent', border: 'none', color: tokens.status.danger,
                 fontSize: 15, fontWeight: 500, textAlign: 'left', cursor: 'pointer',
               }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

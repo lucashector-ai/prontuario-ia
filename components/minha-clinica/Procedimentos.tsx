@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
 
 export function Procedimentos() {
   const router = useRouter()
@@ -125,16 +126,16 @@ export function Procedimentos() {
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 200,
           padding: '12px 20px', borderRadius: 10,
-          background: msg.tipo === 'ok' ? '#ecfdf5' : '#fef2f2',
-          color: msg.tipo === 'ok' ? '#065f46' : '#991b1b',
-          fontSize: 13, fontWeight: 600, border: `1px solid ${msg.tipo === 'ok' ? '#a7f3d0' : '#fecaca'}`,
+          background: msg.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
+          color: msg.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
+          fontSize: 13, fontWeight: 600, border: `1px solid ${msg.tipo === 'ok' ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
         }}>{msg.texto}</div>
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Procedimentos</h1>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Cadastre os procedimentos que sua clínica oferece</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Procedimentos</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Cadastre os procedimentos que sua clínica oferece</p>
         </div>
         <button onClick={abrirNovo} style={{
           padding: '10px 18px', borderRadius: 9, background: ACCENT, color: 'white',
@@ -147,11 +148,11 @@ export function Procedimentos() {
       </div>
 
       {carregando ? (
-        <p style={{ color: '#9ca3af', fontSize: 14 }}>Carregando...</p>
+        <p style={{ color: tokens.text.tertiary, fontSize: 14 }}>Carregando...</p>
       ) : ativos.length === 0 && inativos.length === 0 ? (
         <div style={{ background: 'white', borderRadius: 16, padding: 48, textAlign: 'center' }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Nenhum procedimento cadastrado</p>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Clique em "Novo procedimento" pra começar</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Nenhum procedimento cadastrado</p>
+          <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Clique em "Novo procedimento" pra começar</p>
         </div>
       ) : (
         <>
@@ -166,7 +167,7 @@ export function Procedimentos() {
 
           {inativos.length > 0 && (
             <>
-              <h2 style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', marginTop: 28, marginBottom: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              <h2 style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, marginTop: 28, marginBottom: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                 Inativos ({inativos.length})
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: 0.6 }}>
@@ -193,25 +194,25 @@ export function Procedimentos() {
             display: 'flex', flexDirection: 'column', gap: 14,
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
                 {editando ? 'Editar procedimento' : 'Novo procedimento'}
               </h2>
               <button type="button" onClick={() => setModalAberto(false)}
-                style={{ background: 'none', border: 'none', fontSize: 22, color: '#9ca3af', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+                style={{ background: 'none', border: 'none', fontSize: 22, color: tokens.text.tertiary, cursor: 'pointer', lineHeight: 1 }}>✕</button>
             </div>
 
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nome *</label>
+              <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nome *</label>
               <input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
                 placeholder="Ex: Consulta clínica geral, ECG, Holter 24h..."
-                style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1px solid #e5e7eb', outline: 'none' }} />
+                style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1px solid ${tokens.border.default}`, outline: 'none' }} />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Duração padrão</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Duração padrão</label>
                 <select value={form.duracao} onChange={e => setForm(f => ({ ...f, duracao: e.target.value }))}
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1px solid #e5e7eb' }}>
+                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1px solid ${tokens.border.default}` }}>
                   <option value="15">15 min</option>
                   <option value="30">30 min</option>
                   <option value="45">45 min</option>
@@ -221,11 +222,11 @@ export function Procedimentos() {
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Valor (R$)</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Valor (R$)</label>
                 <input type="number" step="0.01" value={form.valor}
                   onChange={e => setForm(f => ({ ...f, valor: e.target.value }))}
                   placeholder="Opcional"
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: '1px solid #e5e7eb', outline: 'none' }} />
+                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1px solid ${tokens.border.default}`, outline: 'none' }} />
               </div>
             </div>
 
@@ -246,18 +247,18 @@ function ProcedimentoCard({ p, fmtValor, onEditar, onDesativar, desativarLabel =
   return (
     <div style={{ background: 'white', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16 }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>{p.nome}</p>
-        <p style={{ fontSize: 12, color: '#6b7280', margin: '3px 0 0' }}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{p.nome}</p>
+        <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '3px 0 0' }}>
           {p.duracao} min{p.valor != null ? ' · ' + fmtValor(p.valor) : ''}
         </p>
       </div>
       <button onClick={onEditar} style={{
-        padding: '6px 12px', borderRadius: 7, background: 'white', border: '1px solid #e5e7eb',
-        fontSize: 12, color: '#374151', fontWeight: 500, cursor: 'pointer',
+        padding: '6px 12px', borderRadius: 7, background: 'white', border: `1px solid ${tokens.border.default}`,
+        fontSize: 12, color: tokens.text.strong, fontWeight: 500, cursor: 'pointer',
       }}>Editar</button>
       <button onClick={onDesativar} style={{
-        padding: '6px 12px', borderRadius: 7, background: '#fef2f2', color: '#dc2626',
-        border: '1px solid #fecaca', fontSize: 12, cursor: 'pointer', fontWeight: 500,
+        padding: '6px 12px', borderRadius: 7, background: tokens.status.dangerBg, color: tokens.status.danger,
+        border: `1px solid ${tokens.status.dangerLight}`, fontSize: 12, cursor: 'pointer', fontWeight: 500,
       }}>{desativarLabel}</button>
     </div>
   )

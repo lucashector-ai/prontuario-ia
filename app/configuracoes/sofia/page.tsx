@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/Toast'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 const CARD_RADIUS = 16
 
 const DIAS = [
@@ -98,8 +99,8 @@ export default function SofiaConfig() {
   }
 
   const inputBase: React.CSSProperties = {
-    padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb',
-    fontSize: 14, fontFamily: 'inherit', color: '#111827',
+    padding: '10px 14px', borderRadius: 10, border: `1px solid ${tokens.border.default}`,
+    fontSize: 14, fontFamily: 'inherit', color: tokens.text.primary,
     background: 'white', outline: 'none', boxSizing: 'border-box',
   }
 
@@ -107,8 +108,8 @@ export default function SofiaConfig() {
     <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Sofia · Configurações</h1>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Personalize como a Sofia atende seus pacientes no WhatsApp</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Sofia · Configurações</h1>
+        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Personalize como a Sofia atende seus pacientes no WhatsApp</p>
       </div>
 
       {/* Grid horizontal 2 colunas */}
@@ -120,7 +121,7 @@ export default function SofiaConfig() {
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20, textAlign: 'center' as const }}>
             <div style={{
               width: 72, height: 72, borderRadius: 18,
-              background: config.ativa ? `linear-gradient(135deg, ${ACCENT}, #8b5cf6)` : '#9ca3af',
+              background: config.ativa ? `linear-gradient(135deg, ${ACCENT}, ${tokens.appointment.exame.dot})` : tokens.text.tertiary,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 12px',
             }}>
@@ -128,16 +129,16 @@ export default function SofiaConfig() {
                 <path d="M20.52 3.45c-2.14-2.11-5.04-3.45-8.12-3.45C6.37 0 1.45 4.92 1.45 11c0 1.95.5 3.85 1.45 5.55L1 23l6.6-1.73c1.6.9 3.5 1.36 5.4 1.36 6.03 0 10.95-4.92 10.95-11 0-2.96-1.14-5.76-3.43-8.18z"/>
               </svg>
             </div>
-            <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Sofia</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Sofia</p>
             <span style={{
               fontSize: 11, fontWeight: 700,
               padding: '3px 10px', borderRadius: 20,
-              background: config.ativa ? '#ecfdf5' : '#fef2f2',
-              color: config.ativa ? '#065f46' : '#991b1b',
+              background: config.ativa ? tokens.status.successBgSoft : tokens.status.dangerBg,
+              color: config.ativa ? tokens.status.successText : tokens.status.dangerDark,
             }}>
               {config.ativa ? '● Ativa' : '● Inativa'}
             </span>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: '10px 0 0' }}>
+            <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '10px 0 0' }}>
               {config.autonomia === 'auto' ? 'Modo automático' : 'Modo supervisionado'}
             </p>
           </div>
@@ -153,12 +154,12 @@ export default function SofiaConfig() {
                   width: '100%', padding: '10px 12px',
                   borderRadius: 10, border: 'none',
                   background: secaoAtiva === s.id ? ACCENT_LIGHT : 'transparent',
-                  color: secaoAtiva === s.id ? ACCENT : '#374151',
+                  color: secaoAtiva === s.id ? ACCENT : tokens.text.strong,
                   fontSize: 13, fontWeight: secaoAtiva === s.id ? 600 : 500,
                   cursor: 'pointer', textAlign: 'left' as const,
                   transition: 'background 0.12s',
                 }}
-                onMouseEnter={e => { if (secaoAtiva !== s.id) e.currentTarget.style.background = '#F9FAFB' }}
+                onMouseEnter={e => { if (secaoAtiva !== s.id) e.currentTarget.style.background = tokens.bg.muted }}
                 onMouseLeave={e => { if (secaoAtiva !== s.id) e.currentTarget.style.background = 'transparent' }}
               >
                 <span style={{ fontSize: 15 }}>{s.icon}</span>
@@ -171,7 +172,7 @@ export default function SofiaConfig() {
           <button onClick={salvar} disabled={salvando}
             style={{
               padding: '12px 20px', borderRadius: 12,
-              border: 'none', background: salvando ? '#9ca3af' : ACCENT,
+              border: 'none', background: salvando ? tokens.text.tertiary : ACCENT,
               color: 'white', fontSize: 13, fontWeight: 700,
               cursor: salvando ? 'not-allowed' : 'pointer',
             }}>
@@ -184,8 +185,8 @@ export default function SofiaConfig() {
 
           {/* Comportamento */}
           <div id="secao-comportamento" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Comportamento geral</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 20px' }}>Define se a Sofia está ativa e como ela age</p>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Comportamento geral</h2>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Define se a Sofia está ativa e como ela age</p>
 
             <ToggleRow
               label="Sofia ativa"
@@ -200,12 +201,12 @@ export default function SofiaConfig() {
                   <button key={v} onClick={() => setConfig({ ...config, autonomia: v })}
                     style={{
                       padding: '14px 16px', borderRadius: 12, textAlign: 'left' as const,
-                      border: `1.5px solid ${config.autonomia === v ? ACCENT : '#e5e7eb'}`,
+                      border: `1.5px solid ${config.autonomia === v ? ACCENT : tokens.border.default}`,
                       background: config.autonomia === v ? ACCENT_LIGHT : 'white',
                       cursor: 'pointer',
                     }}>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: config.autonomia === v ? ACCENT : '#111827' }}>{t}</p>
-                    <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6b7280' }}>{d}</p>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: config.autonomia === v ? ACCENT : tokens.text.primary }}>{t}</p>
+                    <p style={{ margin: '2px 0 0', fontSize: 11, color: tokens.text.secondary }}>{d}</p>
                   </button>
                 ))}
               </div>
@@ -214,8 +215,8 @@ export default function SofiaConfig() {
 
           {/* Pré-atendimento */}
           <div id="secao-pre-atendimento" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Pré-atendimento</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 20px' }}>Sofia coleta informações antes da consulta pra agilizar</p>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Pré-atendimento</h2>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia coleta informações antes da consulta pra agilizar</p>
 
             <ToggleRow
               label="Pré-atendimento ativo"
@@ -231,7 +232,7 @@ export default function SofiaConfig() {
             />
             <div style={{ marginTop: 20 }}>
               <Label>Instruções extras para a IA gerar perguntas</Label>
-              <p style={{ margin: '0 0 6px', fontSize: 11, color: '#9ca3af' }}>
+              <p style={{ margin: '0 0 6px', fontSize: 11, color: tokens.text.tertiary }}>
                 Ex: "sempre pergunte sobre ciclo menstrual para consultas ginecológicas"
               </p>
               <textarea
@@ -245,8 +246,8 @@ export default function SofiaConfig() {
 
           {/* Tipos de consulta */}
           <div id="secao-tipos" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Tipos de consulta oferecidos</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 20px' }}>Sofia pergunta ao paciente qual ele prefere</p>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Tipos de consulta oferecidos</h2>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia pergunta ao paciente qual ele prefere</p>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
               {(['presencial', 'online', 'hibrido'] as const).map(tipo => {
@@ -266,9 +267,9 @@ export default function SofiaConfig() {
                     }}
                     style={{
                       padding: '10px 18px', borderRadius: 10,
-                      border: `1.5px solid ${ativo ? ACCENT : '#e5e7eb'}`,
+                      border: `1.5px solid ${ativo ? ACCENT : tokens.border.default}`,
                       background: ativo ? ACCENT_LIGHT : 'white',
-                      color: ativo ? ACCENT : '#6b7280',
+                      color: ativo ? ACCENT : tokens.text.secondary,
                       fontSize: 13, fontWeight: 600, cursor: 'pointer',
                     }}>
                     {labels[tipo]}
@@ -278,26 +279,26 @@ export default function SofiaConfig() {
             </div>
             <div style={{ marginTop: 20 }}>
               <Label>Lembrete da teleconsulta (min antes)</Label>
-              <p style={{ margin: '0 0 8px', fontSize: 11, color: '#9ca3af' }}>
+              <p style={{ margin: '0 0 8px', fontSize: 11, color: tokens.text.tertiary }}>
                 Sofia envia link da sala esse tanto de minutos antes
               </p>
               <input type="number" min={5} max={60}
                 value={config.lembrete_teleconsulta_min || 10}
                 onChange={e => setConfig({ ...config, lembrete_teleconsulta_min: Number(e.target.value) })}
                 style={{ ...inputBase, width: 120 }}/>
-              <span style={{ marginLeft: 8, fontSize: 13, color: '#9ca3af' }}>minutos</span>
+              <span style={{ marginLeft: 8, fontSize: 13, color: tokens.text.tertiary }}>minutos</span>
             </div>
           </div>
 
           {/* Horários */}
           <div id="secao-horarios" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Horários de funcionamento</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 20px' }}>Sofia só oferece agendamento nesses horários. Deixe vazio pra fechado.</p>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Horários de funcionamento</h2>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia só oferece agendamento nesses horários. Deixe vazio pra fechado.</p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {DIAS.map(d => (
                 <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ width: 80, fontSize: 13, color: '#374151', fontWeight: 500 }}>{d.label}</span>
+                  <span style={{ width: 80, fontSize: 13, color: tokens.text.strong, fontWeight: 500 }}>{d.label}</span>
                   <input
                     value={config.horario_funcionamento?.[d.key] || ''}
                     onChange={e => setConfig({
@@ -323,13 +324,13 @@ export default function SofiaConfig() {
 
           {/* Preços */}
           <div id="secao-precos" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Valores de consulta</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 20px' }}>Sofia cita esses valores quando o paciente perguntar</p>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Valores de consulta</h2>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia cita esses valores quando o paciente perguntar</p>
 
             <div style={{ marginBottom: 20 }}>
               <Label>Consulta padrão</Label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 13, color: '#9ca3af' }}>R$</span>
+                <span style={{ fontSize: 13, color: tokens.text.tertiary }}>R$</span>
                 <input type="number" value={config.preco_consulta || ''}
                   onChange={e => setConfig({ ...config, preco_consulta: Number(e.target.value) || null })}
                   placeholder="250"
@@ -340,10 +341,10 @@ export default function SofiaConfig() {
             <Label>Valores por tipo (opcional)</Label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
               {Object.entries(config.precos_tipos || {}).map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#F9FAFB', borderRadius: 10 }}>
-                  <span style={{ flex: 1, fontSize: 13, color: '#374151', fontWeight: 500 }}>{k}</span>
-                  <span style={{ fontSize: 13, color: '#111827', fontWeight: 700 }}>R$ {v as number}</span>
-                  <button onClick={() => removePreco(k)} style={{ border: 'none', background: 'transparent', color: '#dc2626', fontSize: 18, cursor: 'pointer', padding: 0, width: 24, height: 24 }}>×</button>
+                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: tokens.bg.muted, borderRadius: 10 }}>
+                  <span style={{ flex: 1, fontSize: 13, color: tokens.text.strong, fontWeight: 500 }}>{k}</span>
+                  <span style={{ fontSize: 13, color: tokens.text.primary, fontWeight: 700 }}>R$ {v as number}</span>
+                  <button onClick={() => removePreco(k)} style={{ border: 'none', background: 'transparent', color: tokens.status.danger, fontSize: 18, cursor: 'pointer', padding: 0, width: 24, height: 24 }}>×</button>
                 </div>
               ))}
             </div>
@@ -363,8 +364,8 @@ export default function SofiaConfig() {
 
           {/* Saudação */}
           <div id="secao-saudacao" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Saudação personalizada</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 20px' }}>Mensagem inicial que a Sofia envia ao abrir conversa</p>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Saudação personalizada</h2>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Mensagem inicial que a Sofia envia ao abrir conversa</p>
 
             <textarea
               value={config.saudacao || ''}
@@ -373,15 +374,15 @@ export default function SofiaConfig() {
               placeholder="Ex: Olá! Sou a Sofia, assistente da Clínica São Luís. Como posso te ajudar hoje?"
               style={{ ...inputBase, width: '100%', resize: 'vertical' as const }}
             />
-            <p style={{ margin: '8px 0 0', fontSize: 11, color: '#9ca3af' }}>
+            <p style={{ margin: '8px 0 0', fontSize: 11, color: tokens.text.tertiary }}>
               Deixe em branco para a Sofia usar a saudação padrão.
             </p>
           </div>
 
           {/* Relatório diário */}
           <div id="secao-relatorio" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Relatório diário</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 20px' }}>Sofia envia resumo das consultas do dia toda manhã</p>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Relatório diário</h2>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia envia resumo das consultas do dia toda manhã</p>
 
             <ToggleRow
               label="Relatório diário ativo"
@@ -395,7 +396,7 @@ export default function SofiaConfig() {
                 <input type="time" value={config.relatorio_diario_horario || '07:00'}
                   onChange={e => setConfig({ ...config, relatorio_diario_horario: e.target.value })}
                   style={{ ...inputBase, width: '100%' }}/>
-                <p style={{ margin: '4px 0 0', fontSize: 11, color: '#9ca3af' }}>
+                <p style={{ margin: '4px 0 0', fontSize: 11, color: tokens.text.tertiary }}>
                   Envio aproximado (pode variar em até 30min)
                 </p>
               </div>
@@ -429,9 +430,9 @@ export default function SofiaConfig() {
                       }}
                       style={{
                         padding: '10px 18px', borderRadius: 10,
-                        border: `1.5px solid ${ativo ? ACCENT : '#e5e7eb'}`,
+                        border: `1.5px solid ${ativo ? ACCENT : tokens.border.default}`,
                         background: ativo ? ACCENT_LIGHT : 'white',
-                        color: ativo ? ACCENT : '#6b7280',
+                        color: ativo ? ACCENT : tokens.text.secondary,
                         fontSize: 13, fontWeight: 600, cursor: 'pointer',
                         textTransform: 'capitalize' as const,
                       }}>
@@ -453,7 +454,7 @@ export default function SofiaConfig() {
               if (d.error) toast('Erro: ' + d.error, 'error')
               else toast('Relatório de teste enviado!')
             }}
-              style={{ marginTop: 20, padding: '10px 18px', borderRadius: 10, background: 'white', color: '#374151', border: '1px solid #e5e7eb', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              style={{ marginTop: 20, padding: '10px 18px', borderRadius: 10, background: 'white', color: tokens.text.strong, border: `1px solid ${tokens.border.default}`, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
               📤 Enviar relatório de teste agora
             </button>
           </div>
@@ -467,7 +468,7 @@ export default function SofiaConfig() {
 function Label({ children }: { children: React.ReactNode }) {
   return (
     <label style={{
-      display: 'block', fontSize: 11, fontWeight: 600, color: '#6b7280',
+      display: 'block', fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
       textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6,
     }}>
       {children}
@@ -477,15 +478,15 @@ function Label({ children }: { children: React.ReactNode }) {
 
 function ToggleRow({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f3f4f6' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
       <div style={{ flex: 1, paddingRight: 16 }}>
-        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>{label}</p>
-        <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9ca3af' }}>{desc}</p>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: tokens.text.primary }}>{label}</p>
+        <p style={{ margin: '2px 0 0', fontSize: 12, color: tokens.text.tertiary }}>{desc}</p>
       </div>
       <button onClick={() => onChange(!value)}
         style={{
           width: 44, height: 24, borderRadius: 12, border: 'none',
-          background: value ? '#6043C1' : '#d1d5db',
+          background: value ? tokens.brand.primary : tokens.border.strong,
           cursor: 'pointer', position: 'relative' as const, flexShrink: 0,
         }}>
         <span style={{

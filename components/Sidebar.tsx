@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const TEXT_DEFAULT = '#374151'
-const TEXT_MUTED = '#9CA3AF'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const TEXT_DEFAULT = tokens.text.strong
+const TEXT_MUTED = tokens.text.tertiary
 
 export function Sidebar() {
   const router = useRouter()
@@ -151,7 +152,7 @@ export function Sidebar() {
             <div key={gi} style={{ marginBottom: 22 }}>
               {gi > 0 && (
                 <div style={{
-                  height: 1, background: '#F3F4F6',
+                  height: 1, background: tokens.bg.hoverStrong,
                   margin: '6px 10px 14px',
                 }} />
               )}
@@ -175,14 +176,14 @@ export function Sidebar() {
                       padding: '9px 12px', borderRadius: 9,
                       marginBottom: 2, cursor: (item as any).emBreve ? 'not-allowed' : 'pointer',
                       width: '100%', textAlign: 'left' as const,
-                      background: active ? '#F3F4F6' : 'transparent',
-                      color: (item as any).emBreve ? '#9ca3af' : (active ? '#111827' : TEXT_DEFAULT),
+                      background: active ? tokens.bg.hoverStrong : 'transparent',
+                      color: (item as any).emBreve ? tokens.text.tertiary : (active ? tokens.text.primary : TEXT_DEFAULT),
                       opacity: (item as any).emBreve ? 0.7 : 1,
                       fontSize: 13, fontWeight: active ? 600 : 500,
                       border: 'none',
                       transition: 'background 0.12s',
                     }}
-                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#F5F5F5' }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = tokens.bg.hover }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
                   >
                     <span style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }}>{item.icon}</span>
@@ -190,7 +191,7 @@ export function Sidebar() {
                     {(item as any).emBreve && (
                       <span style={{
                         marginLeft: 'auto', fontSize: 9, fontWeight: 700,
-                        background: '#fef3c7', color: '#92400e',
+                        background: tokens.status.warningLightSoft, color: tokens.status.warningText,
                         padding: '2px 7px', borderRadius: 10,
                         textTransform: 'uppercase', letterSpacing: '0.05em'
                       }}>Em breve</span>
@@ -204,17 +205,17 @@ export function Sidebar() {
       </nav>
 
       {/* Logout separado embaixo */}
-      <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: 14, marginTop: 'auto' }}>
+      <div style={{ borderTop: `1px solid ${tokens.bg.hoverStrong}`, paddingTop: 14, marginTop: 'auto' }}>
         <button
           onClick={sair}
           style={{
             display: 'flex', alignItems: 'center', gap: 11,
             padding: '9px 12px', borderRadius: 9,
             cursor: 'pointer', width: '100%', textAlign: 'left' as const,
-            background: 'transparent', color: '#DC2626',
+            background: 'transparent', color: tokens.status.danger,
             fontSize: 13, fontWeight: 500, border: 'none',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = '#FEF2F2'}
+          onMouseEnter={e => e.currentTarget.style.background = tokens.status.dangerBg}
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
           <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>

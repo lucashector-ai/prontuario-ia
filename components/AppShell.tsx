@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Topbar } from './Topbar'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
+import { tokens } from '@/lib/design-tokens'
 
 const ROTAS_PUBLICAS = ['/login', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/whatsapp-app']
 const PREFIXOS_PUBLICOS = ['/sala/', '/pre-consulta/', '/paciente-publico/']
@@ -32,7 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div style={{
         height: '100dvh',
-        background: '#FAFAFA',
+        background: tokens.bg.page,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -57,7 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       height: '100vh',
-      background: '#FAFAFA',
+      background: tokens.bg.page,
       padding: 12,
       display: 'flex',
       gap: 12,
@@ -65,11 +66,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }}>
       {/* Ilha 1 — Sidebar */}
       <div style={{
-        background: 'white',
+        background: tokens.bg.card,
         borderRadius: 20,
         overflow: 'hidden',
         flexShrink: 0,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        boxShadow: tokens.shadow.island,
       }}>
         <Sidebar />
       </div>
@@ -77,13 +78,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Ilha 2 — Topbar + Conteúdo */}
       <div style={{
         flex: 1,
-        background: 'white',
+        background: tokens.bg.card,
         borderRadius: 20,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         minWidth: 0,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        boxShadow: tokens.shadow.island,
       }}>
         <Topbar />
         <main className="appshell-main" style={{

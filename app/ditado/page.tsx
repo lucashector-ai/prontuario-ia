@@ -4,10 +4,11 @@ import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGravador } from '@/lib/useGravador'
 import { useToast } from '@/components/Toast'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 const CARD_RADIUS = 16
 
 export default function Ditado() {
@@ -84,10 +85,10 @@ export default function Ditado() {
   if (!medico) return null
 
   const campos = [
-    { key: 'subjetivo', label: 'Subjetivo', cor: '#2563eb', bg: '#eff6ff' },
+    { key: 'subjetivo', label: 'Subjetivo', cor: tokens.status.infoStrong, bg: tokens.status.infoBg },
     { key: 'objetivo', label: 'Objetivo', cor: ACCENT, bg: ACCENT_LIGHT },
-    { key: 'avaliacao', label: 'Avaliação', cor: '#d97706', bg: '#fffbeb' },
-    { key: 'plano', label: 'Plano', cor: '#059669', bg: '#f0fdf4' },
+    { key: 'avaliacao', label: 'Avaliação', cor: tokens.status.warningAlt, bg: tokens.status.warningBgAlt },
+    { key: 'plano', label: 'Plano', cor: tokens.status.successHover, bg: tokens.status.successBg },
   ]
 
   return (
@@ -95,8 +96,8 @@ export default function Ditado() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16, flexWrap: 'wrap' as const }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Ditado livre</h1>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Dite ou escreva livremente — a IA estrutura em SOAP com CIDs sugeridos</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Ditado livre</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Dite ou escreva livremente — a IA estrutura em SOAP com CIDs sugeridos</p>
         </div>
 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -107,7 +108,7 @@ export default function Ditado() {
                 padding: '8px 16px', borderRadius: 7, border: 'none', cursor: 'pointer',
                 fontSize: 12, fontWeight: 600,
                 background: modo === m ? ACCENT_LIGHT : 'transparent',
-                color: modo === m ? ACCENT : '#6b7280',
+                color: modo === m ? ACCENT : tokens.text.secondary,
                 display: 'inline-flex', alignItems: 'center', gap: 6,
               }}>
                 {m === 'gravar' ? (
@@ -147,7 +148,7 @@ export default function Ditado() {
               </button>
               <button onClick={reiniciar} style={{
                 padding: '8px 16px', borderRadius: 10,
-                background: 'white', color: '#374151', border: '1px solid #e5e7eb',
+                background: 'white', color: tokens.text.strong, border: `1px solid ${tokens.border.default}`,
                 fontSize: 12, fontWeight: 500, cursor: 'pointer',
               }}>
                 Novo ditado
@@ -178,7 +179,7 @@ export default function Ditado() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 10,
                         padding: '12px 24px', borderRadius: 12,
-                        border: 'none', background: '#dc2626', color: 'white',
+                        border: 'none', background: tokens.status.danger, color: 'white',
                         fontSize: 14, fontWeight: 700, cursor: 'pointer',
                         boxShadow: '0 2px 8px rgba(220,38,38,0.2)',
                       }}
@@ -195,8 +196,8 @@ export default function Ditado() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 10,
                         padding: '12px 24px', borderRadius: 12,
-                        border: '2px solid #dc2626', background: '#fef2f2',
-                        color: '#dc2626', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                        border: `2px solid ${tokens.status.danger}`, background: tokens.status.dangerBg,
+                        color: tokens.status.danger, fontSize: 14, fontWeight: 700, cursor: 'pointer',
                       }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -207,20 +208,20 @@ export default function Ditado() {
                   )}
                   {gravando && (
                     <span style={{
-                      fontSize: 12, fontWeight: 700, color: '#dc2626',
-                      background: '#fef2f2', border: '1px solid #fecaca',
+                      fontSize: 12, fontWeight: 700, color: tokens.status.danger,
+                      background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`,
                       padding: '4px 12px', borderRadius: 20,
                       display: 'inline-flex', alignItems: 'center', gap: 6,
                     }}>
                       <span style={{
                         width: 8, height: 8, borderRadius: '50%',
-                        background: '#dc2626', animation: 'pulse 1.2s infinite',
+                        background: tokens.status.danger, animation: 'pulse 1.2s infinite',
                       }}/>
                       GRAVANDO
                     </span>
                   )}
                   {transcrevendo && (
-                    <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>
+                    <span style={{ fontSize: 12, color: tokens.text.secondary, fontWeight: 500 }}>
                       Transcrevendo áudio...
                     </span>
                   )}
@@ -229,11 +230,11 @@ export default function Ditado() {
                 {/* Área do texto transcrito */}
                 {transcricao ? (
                   <div style={{
-                    padding: 20, background: '#F9FAFB', borderRadius: 12,
+                    padding: 20, background: tokens.bg.muted, borderRadius: 12,
                     minHeight: 200, maxHeight: 500, overflow: 'auto',
                   }}>
                     <p style={{
-                      fontSize: 14, color: '#111827', lineHeight: 1.8,
+                      fontSize: 14, color: tokens.text.primary, lineHeight: 1.8,
                       margin: 0, whiteSpace: 'pre-wrap' as const,
                     }}>
                       {transcricao}
@@ -241,13 +242,13 @@ export default function Ditado() {
                   </div>
                 ) : (
                   <div style={{
-                    padding: 40, background: '#F9FAFB', borderRadius: 12,
+                    padding: 40, background: tokens.bg.muted, borderRadius: 12,
                     minHeight: 200, display: 'flex', flexDirection: 'column',
                     alignItems: 'center', justifyContent: 'center', textAlign: 'center' as const,
                   }}>
                     <div style={{
                       width: 56, height: 56, borderRadius: 14,
-                      background: 'white', color: '#9ca3af',
+                      background: 'white', color: tokens.text.tertiary,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       marginBottom: 14,
                     }}>
@@ -256,10 +257,10 @@ export default function Ditado() {
                         <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
                       </svg>
                     </div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#374151', margin: '0 0 4px' }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.strong, margin: '0 0 4px' }}>
                       {gravando ? 'Aguardando fala...' : 'Pronto pra começar'}
                     </p>
-                    <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, maxWidth: 340 }}>
+                    <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0, maxWidth: 340 }}>
                       {gravando
                         ? 'Fale naturalmente. Sua fala aparece aqui conforme você grava.'
                         : 'Clique em "Iniciar gravação" e dite o prontuário livremente.'}
@@ -270,8 +271,8 @@ export default function Ditado() {
                 {erro && (
                   <div style={{
                     marginTop: 14, padding: '10px 14px',
-                    background: '#fef2f2', border: '1px solid #fecaca',
-                    borderRadius: 10, fontSize: 12, color: '#991b1b',
+                    background: tokens.status.dangerBg, border: '1px solid #fecaca',
+                    borderRadius: 10, fontSize: 12, color: tokens.status.dangerDark,
                   }}>
                     {erro}
                   </div>
@@ -285,7 +286,7 @@ export default function Ditado() {
                   placeholder="Digite o relato da consulta livremente...&#10;&#10;A IA vai estruturar em formato SOAP (Subjetivo, Objetivo, Avaliação, Plano) e sugerir CIDs."
                   style={{
                     width: '100%', minHeight: 340, padding: 28,
-                    fontSize: 14, color: '#111827', lineHeight: 1.8,
+                    fontSize: 14, color: tokens.text.primary, lineHeight: 1.8,
                     border: 'none', outline: 'none',
                     resize: 'vertical' as const,
                     fontFamily: 'inherit', boxSizing: 'border-box' as const,
@@ -303,7 +304,7 @@ export default function Ditado() {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                 padding: 14, borderRadius: 12, border: 'none',
-                background: processando ? '#9ca3af' : ACCENT,
+                background: processando ? tokens.text.tertiary : ACCENT,
                 color: 'white', fontSize: 14, fontWeight: 700,
                 cursor: processando ? 'not-allowed' : 'pointer',
               }}
@@ -349,7 +350,7 @@ export default function Ditado() {
                     onClick={() => copiar(campo.key, prontuario[campo.key])}
                     style={{
                       fontSize: 11, fontWeight: 600,
-                      color: copiado === campo.key ? '#059669' : campo.cor,
+                      color: copiado === campo.key ? tokens.status.successHover : campo.cor,
                       background: 'white',
                       padding: '5px 12px', borderRadius: 7,
                       border: 'none', cursor: 'pointer',
@@ -367,7 +368,7 @@ export default function Ditado() {
                   </button>
                 </div>
                 <p style={{
-                  fontSize: 14, color: '#111827', lineHeight: 1.8,
+                  fontSize: 14, color: tokens.text.primary, lineHeight: 1.8,
                   margin: 0, padding: 20, whiteSpace: 'pre-wrap' as const,
                 }}>
                   {prontuario[campo.key]}
@@ -379,7 +380,7 @@ export default function Ditado() {
               <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
                 <p style={{
                   fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const,
-                  letterSpacing: '0.06em', color: '#6b7280', margin: '0 0 12px',
+                  letterSpacing: '0.06em', color: tokens.text.secondary, margin: '0 0 12px',
                 }}>
                   CID-10 Sugeridos
                 </p>
@@ -387,7 +388,7 @@ export default function Ditado() {
                   {prontuario.cids.map((cid: any) => (
                     <div key={cid.codigo} style={{
                       display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '8px 12px', background: '#F9FAFB', borderRadius: 10,
+                      padding: '8px 12px', background: tokens.bg.muted, borderRadius: 10,
                     }}>
                       <span style={{
                         fontFamily: 'monospace', fontSize: 12, fontWeight: 700,
@@ -397,7 +398,7 @@ export default function Ditado() {
                       }}>
                         {cid.codigo}
                       </span>
-                      <span style={{ fontSize: 13, color: '#374151' }}>{cid.descricao}</span>
+                      <span style={{ fontSize: 13, color: tokens.text.strong }}>{cid.descricao}</span>
                     </div>
                   ))}
                 </div>

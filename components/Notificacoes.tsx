@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { IconBell } from '@/components/Icon'
+import { tokens } from '@/lib/design-tokens'
 
 export function Notificacoes({ medicoId }: { medicoId: string }) {
   const [notifs, setNotifs] = useState<any[]>([])
@@ -41,7 +42,7 @@ export function Notificacoes({ medicoId }: { medicoId: string }) {
     <div style={{ position: 'relative' }}>
       <button onClick={() => setAberto(!aberto)} style={{
         position: 'relative', background: 'none', border: 'none', cursor: 'pointer',
-        padding: 6, borderRadius: 8, color: '#6b7280',
+        padding: 6, borderRadius: 8, color: tokens.text.secondary,
         display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -50,7 +51,7 @@ export function Notificacoes({ medicoId }: { medicoId: string }) {
         {notifs.length > 0 && (
           <span style={{
             position: 'absolute', top: 2, right: 2,
-            width: 16, height: 16, background: '#ef4444',
+            width: 16, height: 16, background: tokens.status.dangerStrong,
             borderRadius: '50%', fontSize: 10, fontWeight: 700,
             color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
@@ -65,13 +66,13 @@ export function Notificacoes({ medicoId }: { medicoId: string }) {
           <div style={{
             position: 'absolute', right: 0, top: '100%', marginTop: 8,
             width: 340, background: 'white', borderRadius: 12,
-            border: '1px solid #f0f0f0',
+            border: `1px solid ${tokens.neutral[150]}`,
             zIndex: 50, overflow: 'hidden'
           }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #F5F5F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Notificações</span>
+            <div style={{ padding: '12px 16px', borderBottom: `1px solid ${tokens.bg.hover}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary }}>Notificações</span>
               {notifs.length > 0 && (
-                <button onClick={marcarTodasLidas} style={{ fontSize: 12, color: '#6043C1', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <button onClick={marcarTodasLidas} style={{ fontSize: 12, color: tokens.brand.primary, background: 'none', border: 'none', cursor: 'pointer' }}>
                   Marcar todas como lidas
                 </button>
               )}
@@ -80,19 +81,19 @@ export function Notificacoes({ medicoId }: { medicoId: string }) {
               {notifs.length === 0 ? (
                 <div style={{ padding: 24, textAlign: 'center' }}>
                   <div style={{ fontSize: 28, marginBottom: 8 }}><IconBell size={14} /></div>
-                  <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Sem notificações</p>
+                  <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Sem notificações</p>
                 </div>
               ) : notifs.map(n => (
-                <div key={n.id} style={{ padding: '12px 16px', borderBottom: '1px solid #F5F5F5', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6043C1', flexShrink: 0, marginTop: 4 }} />
+                <div key={n.id} style={{ padding: '12px 16px', borderBottom: `1px solid ${tokens.bg.hover}`, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.brand.primary, flexShrink: 0, marginTop: 4 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: '0 0 2px' }}>{n.titulo}</p>
-                    <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 6px', lineHeight: 1.4 }}>{n.mensagem}</p>
-                    <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, margin: '0 0 2px' }}>{n.titulo}</p>
+                    <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 6px', lineHeight: 1.4 }}>{n.mensagem}</p>
+                    <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>
                       {new Date(n.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                  <button onClick={() => marcarLida(n.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', flexShrink: 0, fontSize: 16, padding: 0 }}>×</button>
+                  <button onClick={() => marcarLida(n.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.text.tertiary, flexShrink: 0, fontSize: 16, padding: 0 }}>×</button>
                 </div>
               ))}
             </div>

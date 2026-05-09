@@ -1,10 +1,11 @@
 "use client"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = "#6043C1"
-const ACCENT_LIGHT = "#ede9fb"
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 const CARD_RADIUS = 16
 
 type Tab = "followup" | "confirmacao" | "nps" | "relatorio" | "pdf"
@@ -80,8 +81,8 @@ export default function AutomacoesPage() {
     )},
   ]
 
-  const h3Style: React.CSSProperties = { fontSize: 14, fontWeight: 700, color: "#111827", margin: "0 0 4px" }
-  const pDescStyle: React.CSSProperties = { fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.6 }
+  const h3Style: React.CSSProperties = { fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: "0 0 4px" }
+  const pDescStyle: React.CSSProperties = { fontSize: 13, color: tokens.text.secondary, margin: 0, lineHeight: 1.6 }
 
   const card = (titulo: string, desc: string, acao: string, body: any, extra?: React.ReactNode) => (
     <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24, display: "flex", flexDirection: "column" as const, gap: 16 }}>
@@ -93,7 +94,7 @@ export default function AutomacoesPage() {
       <button onClick={() => chamarAPI(acao, body)} disabled={carregando}
         style={{
           alignSelf: "flex-start" as const, padding: "10px 20px", borderRadius: 10, border: "none",
-          background: carregando ? "#9ca3af" : ACCENT, color: "white",
+          background: carregando ? tokens.text.tertiary : ACCENT, color: "white",
           fontSize: 13, fontWeight: 600, cursor: carregando ? "not-allowed" : "pointer",
         }}>
         {carregando ? "Enviando..." : "Enviar agora"}
@@ -106,12 +107,12 @@ export default function AutomacoesPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>Automações</h1>
-          <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>Mensagens e relatórios automáticos pra seus pacientes via WhatsApp</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: "0 0 4px" }}>Automações</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Mensagens e relatórios automáticos pra seus pacientes via WhatsApp</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: "white", borderRadius: 20 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#16a34a" }} />
-          <span style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>WhatsApp ativo</span>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: tokens.status.success }} />
+          <span style={{ fontSize: 12, color: tokens.text.strong, fontWeight: 500 }}>WhatsApp ativo</span>
         </div>
       </div>
 
@@ -120,10 +121,10 @@ export default function AutomacoesPage() {
         <div style={{
           position: "fixed", top: 24, right: 24, zIndex: 200,
           padding: "12px 20px", borderRadius: 10,
-          background: msg.tipo === "ok" ? "#ecfdf5" : "#fef2f2",
-          color: msg.tipo === "ok" ? "#065f46" : "#991b1b",
+          background: msg.tipo === "ok" ? tokens.status.successBgSoft : tokens.status.dangerBg,
+          color: msg.tipo === "ok" ? tokens.status.successText : tokens.status.dangerDark,
           fontSize: 13, fontWeight: 600,
-          border: `1px solid ${msg.tipo === "ok" ? "#a7f3d0" : "#fecaca"}`,
+          border: `1px solid ${msg.tipo === "ok" ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
           boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
           maxWidth: 400,
         }}>
@@ -139,7 +140,7 @@ export default function AutomacoesPage() {
               padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer",
               fontSize: 13, fontWeight: aba === a.id ? 600 : 500,
               background: aba === a.id ? ACCENT_LIGHT : "transparent",
-              color: aba === a.id ? ACCENT : "#6b7280",
+              color: aba === a.id ? ACCENT : tokens.text.secondary,
               display: "flex", alignItems: "center", gap: 8,
               transition: "all 0.12s",
             }}>
@@ -167,8 +168,8 @@ export default function AutomacoesPage() {
           )}
           {resultado?.enviados !== undefined && (
             <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 20 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 8px" }}>Resultado</p>
-              <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>Pacientes contatados: <strong style={{ color: ACCENT }}>{resultado.enviados}</strong> de {resultado.total || resultado.enviados}</p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: "0 0 8px" }}>Resultado</p>
+              <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Pacientes contatados: <strong style={{ color: ACCENT }}>{resultado.enviados}</strong> de {resultado.total || resultado.enviados}</p>
             </div>
           )}
         </>)}
@@ -181,10 +182,10 @@ export default function AutomacoesPage() {
             "/api/whatsapp-confirmacao",
             {}
           )}
-          <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: CARD_RADIUS, padding: 20 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#92400e", margin: "0 0 6px" }}>Dica — configure um cron job</p>
-            <p style={{ fontSize: 12, color: "#92400e", margin: 0, lineHeight: 1.6 }}>
-              Para enviar automaticamente todo dia às 18h, configure um cron job apontando para <code style={{ background: "#fef3c7", padding: "1px 6px", borderRadius: 4, fontSize: 11 }}>POST /api/whatsapp-confirmacao</code> com seu medico_id.
+          <div style={{ background: tokens.status.warningBgAlt, border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: CARD_RADIUS, padding: 20 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: tokens.status.warningText, margin: "0 0 6px" }}>Dica — configure um cron job</p>
+            <p style={{ fontSize: 12, color: tokens.status.warningText, margin: 0, lineHeight: 1.6 }}>
+              Para enviar automaticamente todo dia às 18h, configure um cron job apontando para <code style={{ background: tokens.status.warningLightSoft, padding: "1px 6px", borderRadius: 4, fontSize: 11 }}>POST /api/whatsapp-confirmacao</code> com seu medico_id.
             </p>
           </div>
         </>)}
@@ -199,8 +200,8 @@ export default function AutomacoesPage() {
           )}
           {resultado && (
             <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 20 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 8px" }}>Resultado</p>
-              <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>Pesquisas enviadas: <strong style={{ color: ACCENT }}>{resultado.enviados ?? 0}</strong></p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: "0 0 8px" }}>Resultado</p>
+              <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Pesquisas enviadas: <strong style={{ color: ACCENT }}>{resultado.enviados ?? 0}</strong></p>
             </div>
           )}
         </>)}
@@ -235,16 +236,16 @@ export default function AutomacoesPage() {
             }} disabled={carregando}
               style={{
                 padding: "10px 20px", borderRadius: 10, border: "none",
-                background: carregando ? "#9ca3af" : ACCENT, color: "white",
+                background: carregando ? tokens.text.tertiary : ACCENT, color: "white",
                 fontSize: 13, fontWeight: 600, cursor: carregando ? "not-allowed" : "pointer",
               }}>
               {carregando ? "Gerando..." : "Gerar relatório do mês"}
             </button>
           </div>
-          <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: CARD_RADIUS, padding: 20 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#92400e", margin: "0 0 6px" }}>Dica — relatório mensal automático</p>
-            <p style={{ fontSize: 12, color: "#92400e", margin: 0, lineHeight: 1.6 }}>
-              Configure um cron job para gerar e enviar o relatório automaticamente no primeiro dia de cada mês. Endpoint: <code style={{ background: "#fef3c7", padding: "1px 6px", borderRadius: 4, fontSize: 11 }}>POST /api/pdf-relatorio-mensal</code>
+          <div style={{ background: tokens.status.warningBgAlt, border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: CARD_RADIUS, padding: 20 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: tokens.status.warningText, margin: "0 0 6px" }}>Dica — relatório mensal automático</p>
+            <p style={{ fontSize: 12, color: tokens.status.warningText, margin: 0, lineHeight: 1.6 }}>
+              Configure um cron job para gerar e enviar o relatório automaticamente no primeiro dia de cada mês. Endpoint: <code style={{ background: tokens.status.warningLightSoft, padding: "1px 6px", borderRadius: 4, fontSize: 11 }}>POST /api/pdf-relatorio-mensal</code>
             </p>
           </div>
         </>)}
@@ -259,22 +260,22 @@ export default function AutomacoesPage() {
           )}
           {resultado?.periodo && (
             <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24, display: "flex", flexDirection: "column" as const, gap: 16 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: 0 }}>Período {resultado.periodo.inicio} — {resultado.periodo.fim}</p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Período {resultado.periodo.inicio} — {resultado.periodo.fim}</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                 {[
                   { label: "Consultas", valor: resultado.consultas_semana ?? 0, cor: ACCENT },
-                  { label: "Alertas pendentes", valor: resultado.alertas_pendentes?.length ?? 0, cor: "#dc2626" },
-                  { label: "Novos no WhatsApp", valor: resultado.novos_pacientes_wpp ?? 0, cor: "#16a34a" },
+                  { label: "Alertas pendentes", valor: resultado.alertas_pendentes?.length ?? 0, cor: tokens.status.danger },
+                  { label: "Novos no WhatsApp", valor: resultado.novos_pacientes_wpp ?? 0, cor: tokens.status.success },
                 ].map(m => (
-                  <div key={m.label} style={{ background: "#F5F5F5", borderRadius: 12, padding: "16px 14px", textAlign: "center" as const }}>
+                  <div key={m.label} style={{ background: tokens.bg.hover, borderRadius: 12, padding: "16px 14px", textAlign: "center" as const }}>
                     <p style={{ fontSize: 22, fontWeight: 800, color: m.cor, margin: "0 0 4px", lineHeight: 1 }}>{m.valor}</p>
-                    <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>{m.label}</p>
+                    <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{m.label}</p>
                   </div>
                 ))}
               </div>
               {resultado.resumo_ia && (
                 <div style={{ background: ACCENT_LIGHT, borderRadius: 12, padding: "14px 16px" }}>
-                  <p style={{ fontSize: 12, color: "#4c1d95", margin: 0, lineHeight: 1.6 }}>{resultado.resumo_ia}</p>
+                  <p style={{ fontSize: 12, color: tokens.brand.primaryDark, margin: 0, lineHeight: 1.6 }}>{resultado.resumo_ia}</p>
                 </div>
               )}
             </div>
