@@ -10,9 +10,9 @@
 export const tokens = {
   // ── Backgrounds ────────────────────────────────────────────────────────
   bg: {
-    page: '#F2F2F2',           // fundo da plataforma e páginas
+    page: '#FFFFFF',           // fundo das paginas (branco - cards usam border)
     card: '#FFFFFF',           // fundo de cards / superfícies elevadas
-    cardSubtle: '#F2F2F2',     // cards aninhados / itens em listas
+    cardSubtle: '#FAFAFA',     // cards aninhados / itens em listas (cinza muito leve)
     hover: '#F5F5F5',          // hover de items clicáveis
     hoverStrong: '#F3F4F6',    // hover mais marcante
     overlay: 'rgba(0,0,0,0.4)',// modais / overlays
