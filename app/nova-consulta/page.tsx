@@ -271,7 +271,7 @@ const handleCopiar = () => {
   if (!medico) return null
 
   return (
-    <div style={{ display: 'flex', height: '100%', minHeight: 0, overflow: 'hidden', background: '#F5F5F5' }}>
+    <div style={{ display: 'flex', height: '100%', minHeight: 0, overflow: 'hidden', background: '#FAFAFA' }}>
       <Suspense fallback={null}>
         <SearchParamsReader onParams={handleSearchParams} />
       </Suspense>

@@ -658,7 +658,7 @@ export default function FinanceiroPage() {
   const pctLucro = lucroAnterior > 0 ? Math.round(((lucro - lucroAnterior) / lucroAnterior) * 100) : null
 
   return (
-      <div style={{ padding: '28px 32px', minHeight: '100%', background: '#F5F5F5' }}>
+      <div style={{ padding: '28px 32px', minHeight: '100%', background: '#FAFAFA' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
