@@ -32,7 +32,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div style={{
         height: '100dvh',
-        background: '#F5F5F5',
+        background: '#FDFDFF',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',

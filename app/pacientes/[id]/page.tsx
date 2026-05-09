@@ -237,7 +237,7 @@ export default function PacienteDetalhe() {
   ]
 
   return (
-    <div style={{display:'flex',flexDirection:'column',height:'100vh',background:'#F5F5F5',overflow:'hidden'}}>
+    <div style={{display:'flex',flexDirection:'column',height:'100vh',background:'#FDFDFF',overflow:'hidden'}}>
       <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
         {carregando ? (
           <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center'}}>

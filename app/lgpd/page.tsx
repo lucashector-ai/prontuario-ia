@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 
 const ACCENT = '#6043C1'
 const ACCENT_LIGHT = '#ede9fb'
-const BG = '#F5F5F5'
+const BG = '#FDFDFF'
 
 export default function LGPD() {
   const router = useRouter()
