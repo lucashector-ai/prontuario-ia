@@ -225,21 +225,3 @@ input:focus, textarea:focus, select:focus {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-
-
-/* Border automatica em cards brancos (sistema de design tokens) */
-/* Aplica stroke leve em qualquer elemento que tenha border-radius E fundo branco */
-/* Detecta cards via inline style background:white/branco/FFFFFF */
-[style*="background: 'white'"][style*="border-radius"],
-[style*="background: '#FFFFFF'"][style*="border-radius"],
-[style*="background:'white'"][style*="border-radius"],
-[style*="background:'#FFFFFF'"][style*="border-radius"],
-[style*="background: white"][style*="border-radius"],
-[style*="background:white"][style*="border-radius"] {
-  border: 1px solid #E5E7EB;
-}
-
-/* Excecao: NAO aplica em sidebar e topbar (tem layout proprio) */
-[style*="border-radius: 20px"][style*="background: white"] {
-  border: 1px solid #ECECEE !important;
-}
