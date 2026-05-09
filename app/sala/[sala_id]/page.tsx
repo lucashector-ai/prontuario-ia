@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
 import { BotaoMemed } from '@/components/BotaoMemed'
+import { tokens } from '@/lib/design-tokens'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -829,73 +830,73 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   }, [tela])
 
   if (tela === 'carregando') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
-      <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid #6043C1', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.text.slate900 }}>
+      <div style={{ width: 48, height: 48, borderRadius: '50%', border: `3px solid ${tokens.brand.primary}`, borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
   if (tela === 'erro') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', flexDirection: 'column', gap: 16, padding: 24 }}>
-      <div style={{ width: 56, height: 56, borderRadius: 14, background: '#7f1d1d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.text.slate900, flexDirection: 'column', gap: 16, padding: 24 }}>
+      <div style={{ width: 56, height: 56, borderRadius: 14, background: tokens.status.dangerDarker, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={tokens.status.dangerLightAlt} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
       </div>
       <p style={{ fontSize: 16, color: 'white', fontWeight: 600, margin: 0, textAlign: 'center', maxWidth: 320 }}>{erro}</p>
     </div>
   )
 
   if (tela === 'encerrada_paciente') return (
-    <div style={{ minHeight:'100dvh', background:'#0f172a', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:24, gap:20 }}>
-      <div style={{ width:80, height:80, borderRadius:'50%', background:'linear-gradient(135deg,#6043C1,#8b5cf6)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 8px 32px rgba(96,67,193,0.4)' }}>
+    <div style={{ minHeight:'100dvh', background:tokens.text.slate900, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:24, gap:20 }}>
+      <div style={{ width:80, height:80, borderRadius:'50%', background:`linear-gradient(135deg,${tokens.brand.primary},${tokens.appointment.exame.dot})`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 8px 32px rgba(96,67,193,0.4)' }}>
         <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
       </div>
       <div style={{ textAlign:'center' as const, maxWidth: 340 }}>
         <h1 style={{ color:'white', fontSize:24, fontWeight:700, margin:'0 0 8px' }}>Consulta finalizada</h1>
-        <p style={{ color:'#94a3b8', fontSize:15, margin:'0 0 4px', lineHeight:1.5 }}>Obrigado por usar nossa plataforma.</p>
-        <p style={{ color:'#64748b', fontSize:13, margin:0, lineHeight:1.5 }}>O médico encerrou esta videoconsulta. Você já pode fechar esta janela com segurança.</p>
+        <p style={{ color:tokens.text.slate400, fontSize:15, margin:'0 0 4px', lineHeight:1.5 }}>Obrigado por usar nossa plataforma.</p>
+        <p style={{ color:tokens.text.slate500, fontSize:13, margin:0, lineHeight:1.5 }}>O médico encerrou esta videoconsulta. Você já pode fechar esta janela com segurança.</p>
       </div>
       <div style={{ display:'flex', gap:10, marginTop:8, flexWrap:'wrap' as const, justifyContent:'center' }}>
         <button onClick={() => { try { window.close() } catch {} }}
-          style={{ padding:'12px 24px', borderRadius:10, border:'none', background:'#6043C1', color:'white', fontSize:14, fontWeight:600, cursor:'pointer' }}>
+          style={{ padding:'12px 24px', borderRadius:10, border:'none', background:tokens.brand.primary, color:'white', fontSize:14, fontWeight:600, cursor:'pointer' }}>
           Fechar janela
         </button>
       </div>
-      <p style={{ color:'#475569', fontSize:11, margin:'24px 0 0', textAlign:'center' as const }}>Se tiver dúvidas, entre em contato com a clínica.</p>
+      <p style={{ color:tokens.text.slate600, fontSize:11, margin:'24px 0 0', textAlign:'center' as const }}>Se tiver dúvidas, entre em contato com a clínica.</p>
     </div>
   )
 
   if (tela === 'encerrado') return (
-    <div style={{ minHeight:'100dvh', background:'#0f172a', overflowY:'auto' }}>
+    <div style={{ minHeight:'100dvh', background:tokens.text.slate900, overflowY:'auto' }}>
       <div style={{ maxWidth:760, margin:'0 auto', padding:'32px 16px' }}>
         {/* Header */}
         <div style={{ textAlign:'center', marginBottom:28 }}>
-          <div style={{ width:56, height:56, borderRadius:'50%', background:'#6043C1', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+          <div style={{ width:56, height:56, borderRadius:'50%', background:tokens.brand.primary, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <h1 style={{ color:'white', fontSize:22, fontWeight:700, margin:'0 0 4px' }}>Consulta encerrada</h1>
-          <p style={{ color:'#64748b', fontSize:13, margin:0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}</p>
-          {timer > 0 && <p style={{ color:'#475569', fontSize:12, margin:'4px 0 0' }}>Duração: {fmtTimer(timer)}</p>}
+          <p style={{ color:tokens.text.slate500, fontSize:13, margin:0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}</p>
+          {timer > 0 && <p style={{ color:tokens.text.slate600, fontSize:12, margin:'4px 0 0' }}>Duração: {fmtTimer(timer)}</p>}
         </div>
 
         {/* Processando */}
         {processando && !prontuarioData && (
-          <div style={{ background:'#1e293b', borderRadius:12, padding:24, marginBottom:16, border:'1px solid #334155', textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:12 }}>
-            <div style={{ width:20, height:20, borderRadius:'50%', border:'2px solid rgba(234,179,8,0.4)', borderTopColor:'#eab308', animation:'spin 0.8s linear infinite' }}/>
-            <p style={{ color:'#fbbf24', fontSize:14, margin:0, fontWeight:600 }}>Gerando prontuário com IA...</p>
+          <div style={{ background:tokens.text.slate800, borderRadius:12, padding:24, marginBottom:16, border:`1px solid ${tokens.text.slate700}`, textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:12 }}>
+            <div style={{ width:20, height:20, borderRadius:'50%', border:'2px solid rgba(234,179,8,0.4)', borderTopColor:tokens.accent.yellow, animation:'spin 0.8s linear infinite' }}/>
+            <p style={{ color:tokens.status.warningOrange, fontSize:14, margin:0, fontWeight:600 }}>Gerando prontuário com IA...</p>
           </div>
         )}
 
         {/* Transcrição */}
         {transcricao ? (
-          <div style={{ background:'#1e293b', borderRadius:12, padding:20, marginBottom:16, border:'1px solid #334155' }}>
-            <h2 style={{ color:'#60a5fa', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.08em', margin:'0 0 12px' }}>Transcrição da consulta</h2>
-            <p style={{ color:'#e2e8f0', fontSize:14, lineHeight:1.7, margin:0, whiteSpace:'pre-wrap' as const, maxHeight:200, overflow:'auto' }}>{transcricao}</p>
+          <div style={{ background:tokens.text.slate800, borderRadius:12, padding:20, marginBottom:16, border:`1px solid ${tokens.text.slate700}` }}>
+            <h2 style={{ color:tokens.status.infoBlue, fontSize:11, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.08em', margin:'0 0 12px' }}>Transcrição da consulta</h2>
+            <p style={{ color:tokens.text.slate200, fontSize:14, lineHeight:1.7, margin:0, whiteSpace:'pre-wrap' as const, maxHeight:200, overflow:'auto' }}>{transcricao}</p>
           </div>
         ) : !processando && (
-          <div style={{ background:'#1e293b', borderRadius:12, padding:16, marginBottom:16, border:'1px solid #334155', textAlign:'center' }}>
-            <p style={{ color:'#64748b', fontSize:13, margin:0 }}>Nenhuma transcrição disponível (Modo Perfeita não foi ativado)</p>
+          <div style={{ background:tokens.text.slate800, borderRadius:12, padding:16, marginBottom:16, border:`1px solid ${tokens.text.slate700}`, textAlign:'center' }}>
+            <p style={{ color:tokens.text.slate500, fontSize:13, margin:0 }}>Nenhuma transcrição disponível (Modo Perfeita não foi ativado)</p>
           </div>
         )}
 
@@ -903,26 +904,26 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         {prontuarioData && (() => {
           const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
           return (
-            <div style={{ background:'#1e293b', borderRadius:12, padding:20, marginBottom:16, border:'1px solid #334155' }}>
-              <h2 style={{ color:'#34d399', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.08em', margin:'0 0 16px' }}>Prontuário gerado pela IA — edite antes de salvar</h2>
+            <div style={{ background:tokens.text.slate800, borderRadius:12, padding:20, marginBottom:16, border:`1px solid ${tokens.text.slate700}` }}>
+              <h2 style={{ color:tokens.accent.emeraldMid, fontSize:11, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.08em', margin:'0 0 16px' }}>Prontuário gerado pela IA — edite antes de salvar</h2>
               {(['subjetivo','objetivo','avaliacao','plano'] as const).map(campo => {
                 const val = pd[campo] ?? ''
                 if (!val) return null
                 const label = campo === 'subjetivo' ? 'S · Subjetivo' : campo === 'objetivo' ? 'O · Objetivo' : campo === 'avaliacao' ? 'A · Avaliação / CID' : 'P · Plano'
                 return (
                   <div key={campo} style={{ marginBottom:12 }}>
-                    <p style={{ color:'#94a3b8', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 4px', letterSpacing:'0.05em' }}>{label}</p>
+                    <p style={{ color:tokens.text.slate400, fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 4px', letterSpacing:'0.05em' }}>{label}</p>
                     <textarea defaultValue={val} rows={3} onChange={e => { camposRef.current[campo] = e.target.value }}
-                      style={{ width:'100%', padding:'10px 12px', fontSize:13, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
+                      style={{ width:'100%', padding:'10px 12px', fontSize:13, borderRadius:8, border:`1px solid ${tokens.text.slate700}`, background:tokens.text.slate900, color:tokens.text.slate200, resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
                   </div>
                 )
               })}
               {Array.isArray(pd.cids) && pd.cids.length > 0 && (
                 <div style={{ marginBottom:8 }}>
-                  <p style={{ color:'#94a3b8', fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 6px', letterSpacing:'0.05em' }}>CIDs sugeridos</p>
+                  <p style={{ color:tokens.text.slate400, fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 6px', letterSpacing:'0.05em' }}>CIDs sugeridos</p>
                   <div style={{ display:'flex', flexWrap:'wrap' as const, gap:6 }}>
                     {pd.cids.map((cid: any, i: number) => (
-                      <span key={i} style={{ fontSize:11, padding:'5px 10px', borderRadius:6, background:'#334155', color:'#e2e8f0', border:'1px solid #475569' }}>
+                      <span key={i} style={{ fontSize:11, padding:'5px 10px', borderRadius:6, background:tokens.text.slate700, color:tokens.text.slate200, border:`1px solid ${tokens.text.slate600}` }}>
                         {cid.codigo} — {cid.descricao}
                       </span>
                     ))}
@@ -937,7 +938,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         <div style={{ display:'flex', gap:10, flexWrap:'wrap' as const, justifyContent:'center', marginTop:8 }}>
           {prontuarioData && (
             <button onClick={salvarProntuario} disabled={salvando || salvado}
-              style={{ padding:'12px 24px', borderRadius:9, border:'none', background: salvado ? '#14532d' : '#6043C1', color:'white', fontSize:14, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', gap:8 }}>
+              style={{ padding:'12px 24px', borderRadius:9, border:'none', background: salvado ? tokens.status.successDarker : tokens.brand.primary, color:'white', fontSize:14, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', gap:8 }}>
               {salvado
                 ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Salvo! Abrindo histórico...</>
                 : salvando
@@ -947,15 +948,15 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             </button>
           )}
           <button onClick={() => window.location.href = '/agenda'}
-            style={{ padding:'10px 20px', borderRadius:8, border:'1px solid #334155', background:'transparent', color:'#94a3b8', fontSize:14, cursor:'pointer' }}>
+            style={{ padding:'10px 20px', borderRadius:8, border:`1px solid ${tokens.text.slate700}`, background:'transparent', color:tokens.text.slate400, fontSize:14, cursor:'pointer' }}>
             Agendar retorno
           </button>
           <button onClick={() => window.location.href = '/historico'}
-            style={{ padding:'10px 20px', borderRadius:8, border:'1px solid #334155', background:'transparent', color:'#94a3b8', fontSize:14, cursor:'pointer' }}>
+            style={{ padding:'10px 20px', borderRadius:8, border:`1px solid ${tokens.text.slate700}`, background:'transparent', color:tokens.text.slate400, fontSize:14, cursor:'pointer' }}>
             Ver histórico
           </button>
           <button onClick={() => window.location.href = '/teleconsulta'}
-            style={{ padding:'10px 20px', borderRadius:8, border:'1px solid #334155', background:'transparent', color:'#94a3b8', fontSize:14, cursor:'pointer' }}>
+            style={{ padding:'10px 20px', borderRadius:8, border:`1px solid ${tokens.text.slate700}`, background:'transparent', color:tokens.text.slate400, fontSize:14, cursor:'pointer' }}>
             Nova consulta
           </button>
         </div>
@@ -965,15 +966,15 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   )
 
     if (tela === 'precall') return (
-    <div style={{ minHeight: '100dvh', background: '#F5F5F5', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', background: tokens.bg.hover, display: 'flex', flexDirection: 'column' }}>
       {/* Header Clinical 360 */}
-      <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 8, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: 'white', borderBottom: `1px solid ${tokens.border.default}`, padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 8, background: tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>
         </div>
         <div>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Clinical 360</p>
-          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}{pacienteSala?.nome ? ' · ' + pacienteSala.nome : ''}</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Clinical 360</p>
+          <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}{pacienteSala?.nome ? ' · ' + pacienteSala.nome : ''}</p>
         </div>
       </div>
       {/* Conteudo */}
@@ -981,25 +982,25 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 900 }}>
           {/* Preview camera */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ width: 'min(460px,90vw)', aspectRatio: '4/3', borderRadius: 12, overflow: 'hidden', background: '#1f2937', position: 'relative' }}>
+            <div style={{ width: 'min(460px,90vw)', aspectRatio: '4/3', borderRadius: 12, overflow: 'hidden', background: tokens.neutral.gray800, position: 'relative' }}>
               <video ref={esperaRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
               {!camOn && (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1f2937' }}>
-                  <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#9ca3af' strokeWidth='1.5'><path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.neutral.gray800 }}>
+                  <div style={{ width: 72, height: 72, borderRadius: '50%', background: tokens.text.strong, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke={tokens.text.tertiary} strokeWidth='1.5'><path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>
                   </div>
                 </div>
               )}
               {/* Botoes mic/cam sobre o video */}
               <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
                 <button onClick={toggleMic}
-                  style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.2)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+                  style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.2)' : tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
                   <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
                     {micOn ? (<><path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/><path d='M19 10v2a7 7 0 01-14 0v-2'/><line x1='12' y1='19' x2='12' y2='23'/></>) : (<><line x1='1' y1='1' x2='23' y2='23'/><path d='M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6'/></>)}
                   </svg>
                 </button>
                 <button onClick={toggleCam}
-                  style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.2)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+                  style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.2)' : tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
                   <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
                     {camOn ? (<path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/>) : (<><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>)}
                   </svg>
@@ -1010,42 +1011,42 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           {/* Painel direito */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 260, maxWidth: 340 }}>
             <div>
-              <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Pronto para entrar?</h1>
-              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Verifique camera e microfone antes de iniciar</p>
+              <h1 style={{ fontSize: 24, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Pronto para entrar?</h1>
+              <p style={{ fontSize: 14, color: tokens.text.secondary, margin: 0 }}>Verifique camera e microfone antes de iniciar</p>
             </div>
             {/* Selecao de dispositivos */}
             {audioInputs.length > 0 && (
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Microfone</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Microfone</label>
                 <select onChange={e => setAudioInputId(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 13, color: '#111827', background: 'white', outline: 'none' }}>
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${tokens.border.strong}`, fontSize: 13, color: tokens.text.primary, background: 'white', outline: 'none' }}>
                   {audioInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Microfone ' + d.deviceId.slice(0,4)}</option>)}
                 </select>
               </div>
             )}
             {videoInputs.length > 0 && (
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Camera</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Camera</label>
                 <select onChange={e => setVideoInputId(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 13, color: '#111827', background: 'white', outline: 'none' }}>
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${tokens.border.strong}`, fontSize: 13, color: tokens.text.primary, background: 'white', outline: 'none' }}>
                   {videoInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Camera ' + d.deviceId.slice(0,4)}</option>)}
                 </select>
               </div>
             )}
             {/* Status */}
             <div style={{ display: 'flex', gap: 8 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: micOn ? '#6043C1' : '#dc2626', background: micOn ? '#ede9fb' : '#fef2f2', padding: '4px 10px', borderRadius: 20, border: '1px solid', borderColor: micOn ? '#b9a9ef' : '#fecaca' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: micOn ? tokens.brand.primary : tokens.status.danger, background: micOn ? tokens.brand.primaryLighter : tokens.status.dangerBg, padding: '4px 10px', borderRadius: 20, border: '1px solid', borderColor: micOn ? tokens.brand.primaryAccent : tokens.status.dangerLight }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }}/>
                 {micOn ? 'Mic ativo' : 'Mic desligado'}
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: camOn ? '#6043C1' : '#dc2626', background: camOn ? '#ede9fb' : '#fef2f2', padding: '4px 10px', borderRadius: 20, border: '1px solid', borderColor: camOn ? '#b9a9ef' : '#fecaca' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: camOn ? tokens.brand.primary : tokens.status.danger, background: camOn ? tokens.brand.primaryLighter : tokens.status.dangerBg, padding: '4px 10px', borderRadius: 20, border: '1px solid', borderColor: camOn ? tokens.brand.primaryAccent : tokens.status.dangerLight }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }}/>
                 {camOn ? 'Camera ativa' : 'Camera desligada'}
               </span>
             </div>
             {/* Botao entrar */}
             <button onClick={() => { pararEspera(); entrarNaChamada() }}
-              style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: '#6043C1', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer', width: '100%' }}>
+              style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer', width: '100%' }}>
               Entrar na consulta
             </button>
           </div>
@@ -1057,29 +1058,29 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
 
   if (tela === 'espera') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', gap: 20, padding: 24 }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: tokens.text.slate900, gap: 20, padding: 24 }}>
       {papelRef.current === 'paciente' ? (
         <>
-          <div style={{ width: 96, height: 96, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 96, height: 96, borderRadius: '50%', background: `linear-gradient(135deg,${tokens.status.infoDark},${tokens.appointment.retorno.dot})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width='44' height='44' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='1.5'><path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>
           </div>
           <div style={{ textAlign: 'center' }}>
             <p style={{ color: 'white', fontSize: 20, fontWeight: 700, margin: '0 0 8px' }}>Aguardando o medico</p>
-            <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>O medico entrara em breve. Por favor, aguarde.</p>
+            <p style={{ color: tokens.text.slate500, fontSize: 14, margin: 0 }}>O medico entrara em breve. Por favor, aguarde.</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }}/>
-            <span style={{ color: '#22c55e', fontSize: 13, fontWeight: 600 }}>Conectado</span>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.accent.emerald }}/>
+            <span style={{ color: tokens.accent.emerald, fontSize: 13, fontWeight: 600 }}>Conectado</span>
           </div>
         </>
       ) : (
         <>
-          <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#1e293b', border: '2px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#64748b' strokeWidth='1.5'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: tokens.text.slate800, border: `2px solid ${tokens.text.slate700}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke={tokens.text.slate500} strokeWidth='1.5'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>
           </div>
           <div style={{ textAlign: 'center' }}>
             <p style={{ color: 'white', fontSize: 20, fontWeight: 700, margin: '0 0 8px' }}>Sala de espera</p>
-            <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>Aguardando o paciente conectar...</p>
+            <p style={{ color: tokens.text.slate500, fontSize: 14, margin: 0 }}>Aguardando o paciente conectar...</p>
           </div>
         </>
       )}
@@ -1088,19 +1089,19 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   //  TELA DA CHAMADA 
   return (
-    <div style={{ width: '100vw', height: '100dvh', background: '#0f172a', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ width: '100vw', height: '100dvh', background: tokens.text.slate900, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
       {/* Header */}
-      <div style={{ background: '#1e293b', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: '1px solid #334155', minHeight: 48 }}>
+      <div style={{ background: tokens.text.slate800, padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: `1px solid ${tokens.text.slate700}`, minHeight: 48 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 26, height: 26, borderRadius: 6, background: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 26, height: 26, borderRadius: 6, background: tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
               Consulta - {String(sala_id).slice(-4).toUpperCase()}{pacienteSala?.nome ? ' · ' + pacienteSala.nome : ''}
             </p>
-            {sala?.titulo && <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{sala.titulo}</p>}
+            {sala?.titulo && <p style={{ fontSize: 11, color: tokens.text.slate400, margin: 0, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{sala.titulo}</p>}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -1108,17 +1109,17 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             <BotaoMemed onClick={() => setMemedAberto(true)} variant="compact" disabled={!medicoSala || !pacienteSala} disabledReason="Aguardando dados do paciente" />
           )}
           {tela === 'chamada' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#0f172a', padding: '3px 10px', borderRadius: 20, border: '1px solid #1e3a2f' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}/>
-              <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 700, fontFamily: 'monospace' }}>{fmtTimer(timer)}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: tokens.text.slate900, padding: '3px 10px', borderRadius: 20, border: `1px solid ${tokens.status.successDeep}` }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: tokens.accent.emerald, display: 'inline-block' }}/>
+              <span style={{ fontSize: 12, color: tokens.accent.emerald, fontWeight: 700, fontFamily: 'monospace' }}>{fmtTimer(timer)}</span>
             </div>
           )}
           {isMedico && tela === 'chamada' && (
             <button onClick={toggleGravação}
               style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer',
                 background: gravando ? 'rgba(220,38,38,0.15)' : 'rgba(22,163,74,0.15)',
-                color: gravando ? '#f87171' : '#86efac' }}>
-              <span style={{ width:7, height:7, borderRadius:'50%', background: gravando ? '#ef4444' : '#22c55e', display:'inline-block',
+                color: gravando ? tokens.status.dangerSoft : tokens.whatsapp.bubbleBorder }}>
+              <span style={{ width:7, height:7, borderRadius:'50%', background: gravando ? tokens.status.dangerStrong : tokens.accent.emerald, display:'inline-block',
                 animation: gravando ? 'pulse 1s infinite' : 'none' }}/>
               <span style={{ fontSize:11, fontWeight:600 }}>{gravando ? 'Gravando...' : 'Gravar'}</span>
             </button>
@@ -1127,7 +1128,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             <button onClick={() => setModoPerfeita(v => !v)}
               style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer',
                 background: modoPerfeita ? 'rgba(96,67,193,0.2)' : 'rgba(148,163,184,0.12)',
-                color: modoPerfeita ? '#c4b5fd' : '#94a3b8' }}>
+                color: modoPerfeita ? tokens.accent.violetSoft : tokens.text.slate400 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/>
               </svg>
@@ -1138,11 +1139,11 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           )}
           {isMedico && processando && (
             <div style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, background:'rgba(234,179,8,0.15)' }}>
-              <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid rgba(234,179,8,0.4)', borderTopColor:'#eab308', animation:'spin 0.8s linear infinite' }}/>
-              <span style={{ fontSize:11, color:'#fbbf24', fontWeight:600 }}>Gerando prontuario...</span>
+              <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid rgba(234,179,8,0.4)', borderTopColor:tokens.accent.yellow, animation:'spin 0.8s linear infinite' }}/>
+              <span style={{ fontSize:11, color:tokens.status.warningOrange, fontWeight:600 }}>Gerando prontuario...</span>
             </div>
           )}
-          <span style={{ fontSize: 10, color: '#475569', background: '#0f172a', border: '1px solid #1e293b', padding: '3px 8px', borderRadius: 6 }}>
+          <span style={{ fontSize: 10, color: tokens.text.slate600, background: tokens.text.slate900, border: `1px solid ${tokens.text.slate800}`, padding: '3px 8px', borderRadius: 6 }}>
             {isMedico ? ' Medico' : ' Paciente'}
           </span>
         </div>
@@ -1159,8 +1160,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
           {/* Overlay aguardando */}
           {!remoteConectado && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', flexDirection: 'column', gap: 16 }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', border: '3px solid #6043C1', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.text.slate900, flexDirection: 'column', gap: 16 }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', border: `3px solid ${tokens.brand.primary}`, borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
               <p style={{ fontSize: 15, color: 'white', fontWeight: 600, margin: 0 }}>
                 {isMedico ? 'Aguardando paciente entrar...' : 'Conectando...'}
               </p>
@@ -1169,12 +1170,12 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
           {/* Video local PiP  canto inferior direito */}
           {(tela === 'chamada' || entrando) && (
-            <div style={{ position: 'absolute', bottom: 72, right: 12, width: 'clamp(100px, 22vw, 160px)', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', border: '2px solid #1e293b', background: '#111', zIndex: 10 }}>
+            <div style={{ position: 'absolute', bottom: 72, right: 12, width: 'clamp(100px, 22vw, 160px)', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', border: `2px solid ${tokens.text.slate800}`, background: '#111', zIndex: 10 }}>
               <video ref={localRef} autoPlay playsInline muted
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
               {!camOn && (
-                <div style={{ position: 'absolute', inset: 0, background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8"/></svg>
+                <div style={{ position: 'absolute', inset: 0, background: tokens.text.slate800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={tokens.text.slate600} strokeWidth="1.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8"/></svg>
                 </div>
               )}
               <p style={{ position: 'absolute', bottom: 3, left: 0, right: 0, textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.7)', margin: 0 }}>Voce</p>
@@ -1208,7 +1209,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           {/* MODO PERFEITA: Botão de histórico flutuante (quando tem pelo menos 1 msg) */}
           {tela === 'chamada' && modoPerfeita && isMedico && mensagensIA.length > 0 && (
             <button onClick={() => setHistoricoIAAberto(true)}
-              style={{ position: 'fixed', top: 70, right: 16 + (toastsIA.length > 0 ? 308 : 0), background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(96,67,193,0.4)', color: '#c4b5fd', padding: '6px 10px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, zIndex: 46, backdropFilter: 'blur(8px)', transition: 'right 0.3s' }}>
+              style={{ position: 'fixed', top: 70, right: 16 + (toastsIA.length > 0 ? 308 : 0), background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(96,67,193,0.4)', color: tokens.accent.violetSoft, padding: '6px 10px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, zIndex: 46, backdropFilter: 'blur(8px)', transition: 'right 0.3s' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               {mensagensIA.length} insights
             </button>
@@ -1219,32 +1220,32 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             <div onClick={() => setHistoricoIAAberto(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
               <div onClick={e => e.stopPropagation()} style={{ background: 'rgba(15,23,42,0.98)', borderRadius: 16, border: '1px solid rgba(96,67,193,0.4)', width: 480, maxWidth: '100%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderBottom: '1px solid rgba(148,163,184,0.18)' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.accent.violetSoft} strokeWidth="2">
                     <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/>
                   </svg>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#c4b5fd', margin: 0 }}>Modo Perfeita — Histórico</p>
-                    <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0' }}>{mensagensIA.length} insights nesta consulta</p>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: tokens.accent.violetSoft, margin: 0 }}>Modo Perfeita — Histórico</p>
+                    <p style={{ fontSize: 11, color: tokens.text.slate500, margin: '2px 0 0' }}>{mensagensIA.length} insights nesta consulta</p>
                   </div>
-                  <button onClick={() => setHistoricoIAAberto(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4, display: 'flex' }}>
+                  <button onClick={() => setHistoricoIAAberto(false)} style={{ background: 'transparent', border: 'none', color: tokens.text.slate400, cursor: 'pointer', padding: 4, display: 'flex' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </div>
                 <div ref={chatIARef} style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {mensagensIA.map((m, i) => {
                     const cfg = m.tipo === 'foco'
-                      ? { icon: '🎯', label: 'Foco', bg: 'rgba(59,130,246,0.14)', border: 'rgba(59,130,246,0.3)', cor: '#93c5fd' }
+                      ? { icon: '🎯', label: 'Foco', bg: 'rgba(59,130,246,0.14)', border: 'rgba(59,130,246,0.3)', cor: tokens.status.infoBlueLight }
                       : m.tipo === 'alerta'
-                      ? { icon: '⚠️', label: 'Alerta', bg: 'rgba(220,38,38,0.14)', border: 'rgba(220,38,38,0.35)', cor: '#fca5a5' }
-                      : { icon: '💡', label: 'Sugestão', bg: 'rgba(96,67,193,0.14)', border: 'rgba(96,67,193,0.3)', cor: '#c4b5fd' }
+                      ? { icon: '⚠️', label: 'Alerta', bg: 'rgba(220,38,38,0.14)', border: 'rgba(220,38,38,0.35)', cor: tokens.status.dangerLightAlt }
+                      : { icon: '💡', label: 'Sugestão', bg: 'rgba(96,67,193,0.14)', border: 'rgba(96,67,193,0.3)', cor: tokens.accent.violetSoft }
                     return (
                       <div key={i} style={{ background: cfg.bg, border: '1px solid ' + cfg.border, borderRadius: 10, padding: '10px 12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                           <span style={{ fontSize: 11 }}>{cfg.icon}</span>
                           <span style={{ fontSize: 10, fontWeight: 700, color: cfg.cor, letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>{cfg.label}</span>
-                          <span style={{ fontSize: 9, color: '#64748b', marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' as const }}>{m.hora}</span>
+                          <span style={{ fontSize: 9, color: tokens.text.slate500, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' as const }}>{m.hora}</span>
                         </div>
-                        <p style={{ fontSize: 13, color: '#e2e8f0', margin: 0, lineHeight: 1.45 }}>{m.texto}</p>
+                        <p style={{ fontSize: 13, color: tokens.text.slate200, margin: 0, lineHeight: 1.45 }}>{m.texto}</p>
                       </div>
                     )
                   })}
@@ -1255,10 +1256,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
           {tela === 'chamada' && remoteConectado && (
             <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
-              style={{ position: 'absolute', bottom: 72, left: 12, width: 44, height: 44, borderRadius: '50%', border: 'none', background: chatAberto ? '#6043C1' : 'rgba(30,41,59,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+              style={{ position: 'absolute', bottom: 72, left: 12, width: 44, height: 44, borderRadius: '50%', border: 'none', background: chatAberto ? tokens.brand.primary : 'rgba(30,41,59,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
               {naoLidas > 0 && !chatAberto && (
-                <span style={{ position: 'absolute', top: -2, right: -2, width: 18, height: 18, borderRadius: '50%', background: '#ef4444', fontSize: 10, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{naoLidas}</span>
+                <span style={{ position: 'absolute', top: -2, right: -2, width: 18, height: 18, borderRadius: '50%', background: tokens.status.dangerStrong, fontSize: 10, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{naoLidas}</span>
               )}
             </button>
           )}
@@ -1268,48 +1269,48 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             {/* Centro: Mic | Cam | Config | Encerrar */}
             <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', display: 'flex', gap: 12 }}>
               <button onClick={toggleMic}
-                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.18)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.18)' : tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
                   {micOn ? <><path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/><path d='M19 10v2a7 7 0 01-14 0v-2'/><line x1='12' y1='19' x2='12' y2='23'/><line x1='8' y1='23' x2='16' y2='23'/></> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6'/><path d='M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23'/><line x1='12' y1='19' x2='12' y2='23'/><line x1='8' y1='23' x2='16' y2='23'/></> }
                 </svg>
               </button>
               <button onClick={toggleCam}
-                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.18)' : '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.18)' : tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
                   {camOn ? (<path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/>) : (<><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>)}
                 </svg>
               </button>
-              <button onClick={() => { if (papelRef.current === 'paciente') { streamRef.current?.getTracks().forEach(t => t.stop()); pcRef.current?.close(); channelRef.current?.unsubscribe(); try { window.close() } catch(e) {} window.location.href = '/login' } else { encerrar() } }} style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => { if (papelRef.current === 'paciente') { streamRef.current?.getTracks().forEach(t => t.stop()); pcRef.current?.close(); channelRef.current?.unsubscribe(); try { window.close() } catch(e) {} window.location.href = '/login' } else { encerrar() } }} style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>
               </button>
             </div>
             {/* Chat - direito */}
             <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)' }}>
               <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
-                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? '#6043C1' : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? tokens.brand.primary : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                 <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>
-                {naoLidas > 0 && <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }}/>}
+                {naoLidas > 0 && <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: tokens.status.dangerStrong }}/>}
               </button>
             </div>
             {/* Painel config */}
             {configAberto && (
-              <div style={{ position: 'absolute', bottom: 88, left: '50%', transform: 'translateX(-50%)', background: '#1e293b', borderRadius: 12, border: '1px solid #334155', padding: 16, minWidth: 260, zIndex: 30 }}>
+              <div style={{ position: 'absolute', bottom: 88, left: '50%', transform: 'translateX(-50%)', background: tokens.text.slate800, borderRadius: 12, border: `1px solid ${tokens.text.slate700}`, padding: 16, minWidth: 260, zIndex: 30 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <p style={{ color: 'white', fontWeight: 700, fontSize: 13, margin: 0 }}>Configuracoes</p>
-                  <button onClick={() => setConfigAberto(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>x</button>
+                  <button onClick={() => setConfigAberto(false)} style={{ background: 'none', border: 'none', color: tokens.text.slate500, cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>x</button>
                 </div>
                 {audioInputs.length > 0 && (
                   <div style={{ marginBottom: 10 }}>
-                    <p style={{ fontSize: 11, color: '#64748b', margin: '0 0 4px', textTransform: 'uppercase', fontWeight: 600 }}>Microfone</p>
-                    <select style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
+                    <p style={{ fontSize: 11, color: tokens.text.slate500, margin: '0 0 4px', textTransform: 'uppercase', fontWeight: 600 }}>Microfone</p>
+                    <select style={{ width: '100%', background: tokens.text.slate900, border: `1px solid ${tokens.text.slate700}`, borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
                       {audioInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Microfone'}</option>)}
                     </select>
                   </div>
                 )}
                 {videoInputs.length > 0 && (
                   <div>
-                    <p style={{ fontSize: 11, color: '#64748b', margin: '0 0 4px', textTransform: 'uppercase', fontWeight: 600 }}>Camera</p>
-                    <select style={{ width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
+                    <p style={{ fontSize: 11, color: tokens.text.slate500, margin: '0 0 4px', textTransform: 'uppercase', fontWeight: 600 }}>Camera</p>
+                    <select style={{ width: '100%', background: tokens.text.slate900, border: `1px solid ${tokens.text.slate700}`, borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
                       {videoInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Camera'}</option>)}
                     </select>
                   </div>
@@ -1325,57 +1326,57 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
       {/* Painel de chat  desliza da direita */}
         {chatAberto && (
-          <div style={{ width: 'clamp(260px, 30vw, 320px)', background: '#1e293b', display: 'flex', flexDirection: 'column', borderLeft: '1px solid #334155', flexShrink: 0, animation: 'slideIn 0.2s ease' }}>
-            <div style={{ padding: '10px 14px', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ width: 'clamp(260px, 30vw, 320px)', background: tokens.text.slate800, display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${tokens.text.slate700}`, flexShrink: 0, animation: 'slideIn 0.2s ease' }}>
+            <div style={{ padding: '10px 14px', borderBottom: `1px solid ${tokens.text.slate700}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0 }}>Chat</p>
-              <button onClick={() => setChatAberto(false)} style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', padding: 4 }}>
+              <button onClick={() => setChatAberto(false)} style={{ background: 'none', border: 'none', color: tokens.text.slate600, cursor: 'pointer', padding: 4 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {chat.length === 0 && anexos.length === 0 && <p style={{ fontSize: 12, color: '#475569', textAlign: 'center', marginTop: 20 }}>Nenhuma mensagem</p>}
+              {chat.length === 0 && anexos.length === 0 && <p style={{ fontSize: 12, color: tokens.text.slate600, textAlign: 'center', marginTop: 20 }}>Nenhuma mensagem</p>}
               {/* Mescla chat e anexos por hora */}
               {[...chat.map(m => ({...m, _tipo:'msg'})), ...anexos.map(a => ({...a, _tipo:'anexo'}))].map((item, i) => (
                 item._tipo === 'anexo' ? (
-                  <div key={'a'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
-                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#6043C1' : '#60a5fa', fontWeight: 700, margin: '0 0 5px' }}>{item.de}  {item.hora}</p>
+                  <div key={'a'+i} style={{ background: tokens.text.slate900, borderRadius: 8, padding: '8px 10px' }}>
+                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? tokens.brand.primary : tokens.status.infoBlue, fontWeight: 700, margin: '0 0 5px' }}>{item.de}  {item.hora}</p>
                     {(item as any).tipo?.startsWith('image/') ? (
                       <a href={(item as any).url} download={(item as any).nome || "imagem"} onClick={e => { e.preventDefault(); const link = document.createElement("a"); link.href = (item as any).url; link.download = (item as any).nome || "imagem"; document.body.appendChild(link); link.click(); document.body.removeChild(link) }}>
                         <img src={(item as any).url} alt={(item as any).nome} style={{ width: '100%', borderRadius: 6, cursor: 'pointer', maxHeight: 160, objectFit: 'cover' }}/>
-                        <p style={{ fontSize: 11, color: '#475569', margin: '4px 0 0' }}>{(item as any).nome}</p>
+                        <p style={{ fontSize: 11, color: tokens.text.slate600, margin: '4px 0 0' }}>{(item as any).nome}</p>
                       </a>
                     ) : (
-                      <a href={(item as any).url} download={(item as any).nome} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e293b', padding: '8px 10px', borderRadius: 6, textDecoration: 'none' }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      <a href={(item as any).url} download={(item as any).nome} style={{ display: 'flex', alignItems: 'center', gap: 8, background: tokens.text.slate800, padding: '8px 10px', borderRadius: 6, textDecoration: 'none' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.text.slate500} strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                         <div>
-                          <p style={{ fontSize: 11, color: '#cbd5e1', margin: 0, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(item as any).nome}</p>
-                          <p style={{ fontSize: 10, color: '#475569', margin: 0 }}>Clique para baixar</p>
+                          <p style={{ fontSize: 11, color: tokens.text.slate300, margin: 0, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(item as any).nome}</p>
+                          <p style={{ fontSize: 10, color: tokens.text.slate600, margin: 0 }}>Clique para baixar</p>
                         </div>
                       </a>
                     )}
                   </div>
                 ) : (
-                  <div key={'m'+i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 10px' }}>
-                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? '#6043C1' : '#60a5fa', fontWeight: 700, margin: '0 0 3px' }}>{item.de}  {item.hora}</p>
-                    <p style={{ fontSize: 12, color: '#cbd5e1', margin: 0, lineHeight: 1.5 }}>{(item as any).msg}</p>
+                  <div key={'m'+i} style={{ background: tokens.text.slate900, borderRadius: 8, padding: '8px 10px' }}>
+                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? tokens.brand.primary : tokens.status.infoBlue, fontWeight: 700, margin: '0 0 3px' }}>{item.de}  {item.hora}</p>
+                    <p style={{ fontSize: 12, color: tokens.text.slate300, margin: 0, lineHeight: 1.5 }}>{(item as any).msg}</p>
                   </div>
                 )
               ))}
 
               <div ref={endRef}/>
             </div>
-            <div style={{ padding: '10px', borderTop: '1px solid #334155', display: 'flex', gap: 6 }}>
+            <div style={{ padding: '10px', borderTop: `1px solid ${tokens.text.slate700}`, display: 'flex', gap: 6 }}>
               <button onClick={() => anexoInputRef.current?.click()} disabled={enviandoAnexo}
-                style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #334155', background: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${tokens.text.slate700}`, background: tokens.text.slate900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                 title="Enviar arquivo">
                 {enviandoAnexo
-                  ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid #475569', borderTopColor: '#6043C1', animation: 'spin 0.8s linear infinite' }}/>
-                  : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+                  ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: `2px solid ${tokens.text.slate600}`, borderTopColor: tokens.brand.primary, animation: 'spin 0.8s linear infinite' }}/>
+                  : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tokens.text.slate500} strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
                 }
               </button>
               <input value={msgInput} onChange={e => setMsgInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarChat()}
-                style={{ flex: 1, padding: '8px 10px', fontSize: 12, borderRadius: 8, border: '1px solid #334155', background: '#0f172a', color: 'white', outline: 'none' }} placeholder="Mensagem..."/>
-              <button onClick={enviarChat} style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: '#6043C1', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                style={{ flex: 1, padding: '8px 10px', fontSize: 12, borderRadius: 8, border: `1px solid ${tokens.text.slate700}`, background: tokens.text.slate900, color: 'white', outline: 'none' }} placeholder="Mensagem..."/>
+              <button onClick={enviarChat} style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: tokens.brand.primary, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
               </button>
             </div>
@@ -1386,18 +1387,18 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       {/* Modal prontuario pos-consulta */}
       {prontuarioModal && prontuarioData && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:999, padding:16 }}>
-          <div style={{ background:'#1e293b', borderRadius:16, width:'100%', maxWidth:600, maxHeight:'85vh', display:'flex', flexDirection:'column', border:'1px solid #334155' }}>
-            <div style={{ padding:'16px 20px', borderBottom:'1px solid #334155', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+          <div style={{ background:tokens.text.slate800, borderRadius:16, width:'100%', maxWidth:600, maxHeight:'85vh', display:'flex', flexDirection:'column', border:`1px solid ${tokens.text.slate700}` }}>
+            <div style={{ padding:'16px 20px', borderBottom:`1px solid ${tokens.text.slate700}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                <div style={{ width:32, height:32, borderRadius:8, background:'#14532d', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <div style={{ width:32, height:32, borderRadius:8, background:tokens.status.successDarker, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.whatsapp.bubbleBorder} strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 </div>
                 <div>
                   <p style={{ fontSize:14, fontWeight:700, color:'white', margin:0 }}>Prontuário gerado pela IA</p>
-                  <p style={{ fontSize:11, color:'#64748b', margin:0 }}>Baseado na transcricao da consulta  revise antes de salvar</p>
+                  <p style={{ fontSize:11, color:tokens.text.slate500, margin:0 }}>Baseado na transcricao da consulta  revise antes de salvar</p>
                 </div>
               </div>
-              <button onClick={() => setProntuarioModal(false)} style={{ background:'none', border:'none', color:'#475569', cursor:'pointer' }}>
+              <button onClick={() => setProntuarioModal(false)} style={{ background:'none', border:'none', color:tokens.text.slate600, cursor:'pointer' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
@@ -1405,8 +1406,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
               {/* Transcrio */}
               {transcricao && (
                 <div>
-                  <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>Transcrição</p>
-                  <div style={{ background:'#0f172a', borderRadius:8, padding:'10px 12px', fontSize:12, color:'#94a3b8', lineHeight:1.6, maxHeight:80, overflow:'auto' }}>
+                  <p style={{ fontSize:11, fontWeight:600, color:tokens.text.slate500, textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>Transcrição</p>
+                  <div style={{ background:tokens.text.slate900, borderRadius:8, padding:'10px 12px', fontSize:12, color:tokens.text.slate400, lineHeight:1.6, maxHeight:80, overflow:'auto' }}>
                     {transcricao}
                   </div>
                 </div>
@@ -1419,16 +1420,16 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                 const label = campo === 'subjetivo' ? 'S  Subjetivo' : campo === 'objetivo' ? 'O  Objetivo' : campo === 'avaliacao' ? 'A  Avaliacao / CID' : 'P  Plano'
                 return (
                   <div key={campo}>
-                    <p style={{ fontSize:11, fontWeight:600, color:'#64748b', textTransform:'uppercase' as const, letterSpacing:'0.05em', margin:'0 0 6px' }}>{label}</p>
+                    <p style={{ fontSize:11, fontWeight:600, color:tokens.text.slate500, textTransform:'uppercase' as const, letterSpacing:'0.05em', margin:'0 0 6px' }}>{label}</p>
                     <textarea defaultValue={val} rows={3} onChange={e => { camposRef.current[campo] = e.target.value }}
-                      style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:'1px solid #334155', background:'#0f172a', color:'#e2e8f0', resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
+                      style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:`1px solid ${tokens.text.slate700}`, background:tokens.text.slate900, color:tokens.text.slate200, resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
                   </div>
                 )
               })}
             </div>
-            <div style={{ padding:'14px 20px', borderTop:'1px solid #334155', display:'flex', gap:10, flexShrink:0 }}>
+            <div style={{ padding:'14px 20px', borderTop:`1px solid ${tokens.text.slate700}`, display:'flex', gap:10, flexShrink:0 }}>
               <button onClick={salvarProntuario} disabled={salvando || salvado}
-                style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background: salvado ? '#14532d' : '#6043C1', color:'white', fontSize:13, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background: salvado ? tokens.status.successDarker : tokens.brand.primary, color:'white', fontSize:13, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
                 {salvado
                   ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Salvo! Abrindo histórico...</>
                   : salvando
@@ -1436,7 +1437,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                   : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Salvar no histórico</>
                 }
               </button>
-              <button onClick={() => setProntuarioModal(false)} style={{ padding:'10px 18px', borderRadius:9, border:'1px solid #334155', background:'transparent', color:'#64748b', fontSize:13, cursor:'pointer' }}>
+              <button onClick={() => setProntuarioModal(false)} style={{ padding:'10px 18px', borderRadius:9, border:`1px solid ${tokens.text.slate700}`, background:'transparent', color:tokens.text.slate500, fontSize:13, cursor:'pointer' }}>
                 Fechar
               </button>
             </div>
@@ -1449,7 +1450,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         @keyframes slideInToast { from { opacity: 0; transform: translateX(30px) } to { opacity: 1; transform: translateX(0) } } @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; background: #0f172a; overflow: hidden; }
+        html, body { margin: 0; padding: 0; background: ${tokens.text.slate900}; overflow: hidden; }
         @media (max-width: 640px) {
           html, body { height: 100dvh; }
         }

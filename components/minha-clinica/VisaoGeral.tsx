@@ -2,10 +2,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#F5F5F5'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.hover
 
 function formatarTelefone(v: string) {
   const nums = v.replace(/\D/g, '').slice(0, 11)
@@ -131,20 +132,20 @@ export function VisaoGeral() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', fontSize: 14,
-    borderRadius: 10, border: '1px solid #e5e7eb',
-    outline: 'none', fontFamily: 'inherit', color: '#111827',
+    borderRadius: 10, border: `1px solid ${tokens.border.default}`,
+    outline: 'none', fontFamily: 'inherit', color: tokens.text.primary,
     background: 'white', boxSizing: 'border-box',
   }
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 600, color: '#6b7280',
+    fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
     display: 'block', marginBottom: 6,
     textTransform: 'uppercase' as const, letterSpacing: '0.04em',
   }
 
   const valorStyle: React.CSSProperties = {
-    fontSize: 14, color: '#111827', fontWeight: 500,
-    padding: '10px 14px', background: '#F9FAFB',
+    fontSize: 14, color: tokens.text.primary, fontWeight: 500,
+    padding: '10px 14px', background: tokens.bg.muted,
     borderRadius: 10, minHeight: 22,
   }
 
@@ -152,8 +153,8 @@ export function VisaoGeral() {
     <div style={{ padding: '0 4px' }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Minha Clínica</h1>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Configure as informações da sua clínica que aparecem nos prontuários e atendimentos</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Minha Clínica</h1>
+        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Configure as informações da sua clínica que aparecem nos prontuários e atendimentos</p>
       </div>
 
       {/* Toast */}
@@ -161,10 +162,10 @@ export function VisaoGeral() {
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 200,
           padding: '12px 20px', borderRadius: 10,
-          background: msg.tipo === 'ok' ? '#ecfdf5' : '#fef2f2',
-          color: msg.tipo === 'ok' ? '#065f46' : '#991b1b',
+          background: msg.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
+          color: msg.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
           fontSize: 13, fontWeight: 600,
-          border: `1px solid ${msg.tipo === 'ok' ? '#a7f3d0' : '#fecaca'}`,
+          border: `1px solid ${msg.tipo === 'ok' ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         }}>
           {msg.texto}
@@ -184,7 +185,7 @@ export function VisaoGeral() {
               {clinica?.logo_url ? (
                 <img src={clinica.logo_url} style={{ width: 120, height: 120, borderRadius: 20, objectFit: 'cover' }} />
               ) : (
-                <div style={{ width: 120, height: 120, borderRadius: 20, background: `linear-gradient(135deg, ${ACCENT}, #8b5cf6)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 700, color: 'white' }}>
+                <div style={{ width: 120, height: 120, borderRadius: 20, background: `linear-gradient(135deg, ${ACCENT}, ${tokens.appointment.exame.dot})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 700, color: 'white' }}>
                   {iniciais}
                 </div>
               )}
@@ -202,8 +203,8 @@ export function VisaoGeral() {
             </div>
             <input id="logo-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadLogo(e.target.files[0])}/>
 
-            <p style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>{clinica?.nome || 'Sua Clínica'}</p>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 12px' }}>Clique na logo para editar</p>
+            <p style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>{clinica?.nome || 'Sua Clínica'}</p>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 12px' }}>Clique na logo para editar</p>
 
             <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 20, background: ACCENT_LIGHT, color: ACCENT, fontWeight: 600 }}>
               Plano Starter
@@ -212,23 +213,23 @@ export function VisaoGeral() {
 
           {/* Card stats */}
           <div style={{ background: 'white', borderRadius: 16, padding: 24 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 16px' }}>Visão geral</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 16px' }}>Visão geral</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: '#6b7280' }}>Médicos ativos</span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>{stats.medicos}</span>
+                <span style={{ fontSize: 12, color: tokens.text.secondary }}>Médicos ativos</span>
+                <span style={{ fontSize: 16, fontWeight: 700, color: tokens.text.primary }}>{stats.medicos}</span>
               </div>
-              <div style={{ height: 1, background: '#f3f4f6' }}/>
+              <div style={{ height: 1, background: tokens.bg.hoverStrong }}/>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: '#6b7280' }}>Pacientes cadastrados</span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>{stats.pacientes}</span>
+                <span style={{ fontSize: 12, color: tokens.text.secondary }}>Pacientes cadastrados</span>
+                <span style={{ fontSize: 16, fontWeight: 700, color: tokens.text.primary }}>{stats.pacientes}</span>
               </div>
               {fmtData && (
                 <>
-                  <div style={{ height: 1, background: '#f3f4f6' }}/>
+                  <div style={{ height: 1, background: tokens.bg.hoverStrong }}/>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: '#6b7280' }}>Cadastrada em</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#374151', textTransform: 'capitalize' as const }}>{fmtData}</span>
+                    <span style={{ fontSize: 12, color: tokens.text.secondary }}>Cadastrada em</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: tokens.text.strong, textTransform: 'capitalize' as const }}>{fmtData}</span>
                   </div>
                 </>
               )}
@@ -238,8 +239,8 @@ export function VisaoGeral() {
 
         {/* COLUNA DIREITA — formulário */}
         <div style={{ background: 'white', borderRadius: 16, padding: 28 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Informações da clínica</h2>
-          <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 24px' }}>Clique no lápis ao lado de cada campo pra editar</p>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Informações da clínica</h2>
+          <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 24px' }}>Clique no lápis ao lado de cada campo pra editar</p>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {CAMPOS.map(campo => {
@@ -278,14 +279,14 @@ export function VisaoGeral() {
                           {salvando ? 'Salvando...' : 'Salvar'}
                         </button>
                         <button onClick={cancelarEdicao} disabled={salvando}
-                          style={{ padding: '6px 14px', borderRadius: 8, background: 'white', color: '#6b7280', border: '1px solid #e5e7eb', fontSize: 12, cursor: 'pointer' }}>
+                          style={{ padding: '6px 14px', borderRadius: 8, background: 'white', color: tokens.text.secondary, border: `1px solid ${tokens.border.default}`, fontSize: 12, cursor: 'pointer' }}>
                           Cancelar
                         </button>
                       </div>
                     </div>
                   ) : (
                     <div style={{ position: 'relative' }}>
-                      <div style={{ ...valorStyle, paddingRight: 44, color: valor ? '#111827' : '#9ca3af', whiteSpace: campo.textarea ? 'pre-wrap' as const : 'nowrap' as const, overflow: campo.textarea ? 'visible' as const : 'hidden' as const, textOverflow: 'ellipsis' }}>
+                      <div style={{ ...valorStyle, paddingRight: 44, color: valor ? tokens.text.primary : tokens.text.tertiary, whiteSpace: campo.textarea ? 'pre-wrap' as const : 'nowrap' as const, overflow: campo.textarea ? 'visible' as const : 'hidden' as const, textOverflow: 'ellipsis' }}>
                         {valor || campo.placeholder}
                       </div>
                       <button
@@ -294,9 +295,9 @@ export function VisaoGeral() {
                         style={{
                           position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
                           width: 30, height: 30, borderRadius: '50%',
-                          background: 'white', border: '1px solid #e5e7eb',
+                          background: 'white', border: `1px solid ${tokens.border.default}`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', color: '#6b7280',
+                          cursor: 'pointer', color: tokens.text.secondary,
                           transition: 'all 0.15s',
                         }}
                         onMouseEnter={e => {
@@ -306,8 +307,8 @@ export function VisaoGeral() {
                         }}
                         onMouseLeave={e => {
                           e.currentTarget.style.background = 'white'
-                          e.currentTarget.style.color = '#6b7280'
-                          e.currentTarget.style.borderColor = '#e5e7eb'
+                          e.currentTarget.style.color = tokens.text.secondary
+                          e.currentTarget.style.borderColor = tokens.border.default
                         }}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

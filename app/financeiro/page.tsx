@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { tokens } from '@/lib/design-tokens'
 
 type TabKey = 'visao' | 'movimentacoes' | 'pacotes' | 'cobrancas' | 'comissoes' | 'relatorios' | 'configuracoes'
 
@@ -290,7 +291,7 @@ export default function FinanceiroPage() {
     mov.filter((m: any) => m.tipo === 'receita').forEach((m: any) => {
       const cat = cats.find((c: any) => c.id === m.categoria_id)
       const key = cat?.nome || 'Sem categoria'
-      if (!receitasCat[key]) receitasCat[key] = { total: 0, qtd: 0, cor: cat?.cor || '#9ca3af' }
+      if (!receitasCat[key]) receitasCat[key] = { total: 0, qtd: 0, cor: cat?.cor || tokens.text.tertiary }
       receitasCat[key].total += Number(m.valor)
       receitasCat[key].qtd += 1
     })
@@ -302,7 +303,7 @@ export default function FinanceiroPage() {
     mov.filter((m: any) => m.tipo === 'despesa').forEach((m: any) => {
       const cat = cats.find((c: any) => c.id === m.categoria_id)
       const key = cat?.nome || 'Sem categoria'
-      if (!despesasCat[key]) despesasCat[key] = { total: 0, qtd: 0, cor: cat?.cor || '#9ca3af' }
+      if (!despesasCat[key]) despesasCat[key] = { total: 0, qtd: 0, cor: cat?.cor || tokens.text.tertiary }
       despesasCat[key].total += Number(m.valor)
       despesasCat[key].qtd += 1
     })
@@ -658,13 +659,13 @@ export default function FinanceiroPage() {
   const pctLucro = lucroAnterior > 0 ? Math.round(((lucro - lucroAnterior) / lucroAnterior) * 100) : null
 
   return (
-      <div style={{ padding: '28px 32px', minHeight: '100%', background: '#FAFAFA' }}>
+      <div style={{ padding: '28px 32px', minHeight: '100%', background: tokens.bg.page }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 4px' }}>Financeiro</h1>
-            <p style={{ fontSize: 13, color: '#737373', margin: 0 }}>Fluxo de caixa, pacotes e comissões</p>
+            <p style={{ fontSize: 13, color: tokens.text.quaternary, margin: 0 }}>Fluxo de caixa, pacotes e comissões</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setTab('configuracoes')} title="Configurações" style={{ ...btnSecondary, padding: '9px 11px' }}>
@@ -686,8 +687,8 @@ export default function FinanceiroPage() {
           {(['visao','movimentacoes','pacotes','cobrancas','comissoes','relatorios'] as TabKey[]).map(k => (
             <button key={k} onClick={() => setTab(k)} style={{
               padding: '8px 16px', borderRadius: 8, border: 'none',
-              background: tab === k ? '#0a0a0a' : 'transparent',
-              color: tab === k ? 'white' : '#525252',
+              background: tab === k ? tokens.neutral[900] : 'transparent',
+              color: tab === k ? 'white' : tokens.text.muted,
               fontSize: 13, fontWeight: 600, cursor: 'pointer'
             }}>
               {k === 'visao' ? 'Visão geral' : k === 'movimentacoes' ? 'Movimentações' : k === 'pacotes' ? 'Pacotes' : k === 'cobrancas' ? 'Cobranças' : k === 'comissoes' ? 'Comissões' : k === 'relatorios' ? 'Relatórios' : 'Configurações'}
@@ -701,8 +702,8 @@ export default function FinanceiroPage() {
             {([['7','7 dias'],['30','30 dias'],['90','3 meses'],['365','12 meses']] as [string,string][]).map(([k, label]) => (
               <button key={k} onClick={() => setPeriodo(k as any)} style={{
                 padding: '6px 12px', borderRadius: 7, border: 'none',
-                background: periodo === k ? '#f0ebff' : 'transparent',
-                color: periodo === k ? '#6043C1' : '#525252',
+                background: periodo === k ? tokens.brand.primaryLight : 'transparent',
+                color: periodo === k ? tokens.brand.primary : tokens.text.muted,
                 fontSize: 12, fontWeight: 600, cursor: 'pointer'
               }}>{label}</button>
             ))}
@@ -713,10 +714,10 @@ export default function FinanceiroPage() {
           <>
             {/* KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 16 }}>
-              <KPI label="Receita do período" valor={fmt(receita)} cor="#16a34a" sub={pctReceita !== null ? `${pctReceita >= 0 ? '+' : ''}${pctReceita}% vs período anterior` : 'sem comparativo'} subCor={pctReceita !== null && pctReceita >= 0 ? '#16a34a' : '#dc2626'} carregando={carregando}/>
-              <KPI label="Despesas do período" valor={fmt(despesa)} cor="#dc2626" sub={pctDespesa !== null ? `${pctDespesa >= 0 ? '+' : ''}${pctDespesa}% vs período anterior` : 'sem comparativo'} subCor={pctDespesa !== null && pctDespesa <= 0 ? '#16a34a' : '#dc2626'} carregando={carregando}/>
-              <KPI label="Lucro líquido" valor={fmt(lucro)} cor="#0a0a0a" sub={pctLucro !== null ? `${pctLucro >= 0 ? '+' : ''}${pctLucro}% vs período anterior` : 'sem comparativo'} subCor={pctLucro !== null && pctLucro >= 0 ? '#16a34a' : '#dc2626'} carregando={carregando}/>
-              <KPI label="Pendente recebimento" valor={fmt(pendente)} cor="#d97706" sub={`${pendenteCount} ${pendenteCount === 1 ? 'transação' : 'transações'}`} carregando={carregando}/>
+              <KPI label="Receita do período" valor={fmt(receita)} cor={tokens.status.success} sub={pctReceita !== null ? `${pctReceita >= 0 ? '+' : ''}${pctReceita}% vs período anterior` : 'sem comparativo'} subCor={pctReceita !== null && pctReceita >= 0 ? tokens.status.success : tokens.status.danger} carregando={carregando}/>
+              <KPI label="Despesas do período" valor={fmt(despesa)} cor={tokens.status.danger} sub={pctDespesa !== null ? `${pctDespesa >= 0 ? '+' : ''}${pctDespesa}% vs período anterior` : 'sem comparativo'} subCor={pctDespesa !== null && pctDespesa <= 0 ? tokens.status.success : tokens.status.danger} carregando={carregando}/>
+              <KPI label="Lucro líquido" valor={fmt(lucro)} cor={tokens.neutral[900]} sub={pctLucro !== null ? `${pctLucro >= 0 ? '+' : ''}${pctLucro}% vs período anterior` : 'sem comparativo'} subCor={pctLucro !== null && pctLucro >= 0 ? tokens.status.success : tokens.status.danger} carregando={carregando}/>
+              <KPI label="Pendente recebimento" valor={fmt(pendente)} cor={tokens.status.warningAlt} sub={`${pendenteCount} ${pendenteCount === 1 ? 'transação' : 'transações'}`} carregando={carregando}/>
             </div>
 
             {/* Saldo por conta */}
@@ -725,17 +726,17 @@ export default function FinanceiroPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                   <div>
                     <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Saldo por conta</p>
-                    <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Total: {fmt(saldosContas.reduce((s: number, c: any) => s + c.saldoAtual, 0))}</p>
+                    <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>Total: {fmt(saldosContas.reduce((s: number, c: any) => s + c.saldoAtual, 0))}</p>
                   </div>
-                  <button onClick={() => setTab('configuracoes')} style={{ background: 'none', border: 'none', color: '#6043C1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Gerenciar →</button>
+                  <button onClick={() => setTab('configuracoes')} style={{ background: 'none', border: 'none', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Gerenciar →</button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
                   {saldosContas.map((c: any) => (
-                    <div key={c.id} style={{ padding: 14, background: '#fafafa', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div key={c.id} style={{ padding: 14, background: tokens.bg.page, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
                       <IconeContaTipo tipo={c.tipo}/>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 11, color: '#737373', margin: 0, overflow: 'hidden' as const, textOverflow: 'ellipsis' as const, whiteSpace: 'nowrap' as const }}>{c.nome}</p>
-                        <p style={{ fontSize: 16, fontWeight: 700, color: c.saldoAtual >= 0 ? '#0a0a0a' : '#dc2626', margin: '2px 0 0', letterSpacing: '-0.01em' }}>{fmt(c.saldoAtual)}</p>
+                        <p style={{ fontSize: 11, color: tokens.text.quaternary, margin: 0, overflow: 'hidden' as const, textOverflow: 'ellipsis' as const, whiteSpace: 'nowrap' as const }}>{c.nome}</p>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: c.saldoAtual >= 0 ? tokens.neutral[900] : tokens.status.danger, margin: '2px 0 0', letterSpacing: '-0.01em' }}>{fmt(c.saldoAtual)}</p>
                       </div>
                     </div>
                   ))}
@@ -748,11 +749,11 @@ export default function FinanceiroPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
                 <div>
                   <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Fluxo de caixa</p>
-                  <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Últimos {periodo} dias</p>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>Últimos {periodo} dias</p>
                 </div>
                 <div style={{ display: 'flex', gap: 14, fontSize: 11 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 8, height: 8, background: '#16a34a', borderRadius: '50%' }}/>Receitas</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 8, height: 8, background: '#dc2626', borderRadius: '50%' }}/>Despesas</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 8, height: 8, background: tokens.status.success, borderRadius: '50%' }}/>Receitas</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 8, height: 8, background: tokens.status.danger, borderRadius: '50%' }}/>Despesas</span>
                 </div>
               </div>
               <ChartFluxo data={serieFluxo}/>
@@ -762,14 +763,14 @@ export default function FinanceiroPage() {
             <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <p style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Últimas movimentações</p>
-                <button onClick={() => setTab('movimentacoes')} style={{ background: 'none', border: 'none', color: '#6043C1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Ver todas →</button>
+                <button onClick={() => setTab('movimentacoes')} style={{ background: 'none', border: 'none', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Ver todas →</button>
               </div>
               {movRecentes.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', padding: '24px 0' }}>Nenhuma movimentação registrada ainda. Comece adicionando uma receita ou despesa.</p>
+                <p style={{ fontSize: 13, color: tokens.text.tertiary, textAlign: 'center', padding: '24px 0' }}>Nenhuma movimentação registrada ainda. Comece adicionando uma receita ou despesa.</p>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
-                    <tr style={{ background: '#fafafa' }}>
+                    <tr style={{ background: tokens.bg.page }}>
                       <th style={th}>Data</th>
                       <th style={th}>Descrição</th>
                       <th style={th}>Categoria</th>
@@ -783,11 +784,11 @@ export default function FinanceiroPage() {
                         <td style={td}>{fmtData(m.data_movimentacao)}</td>
                         <td style={td}>
                           <strong>{m.descricao}</strong>
-                          {m.pacientes?.nome && <div style={{ fontSize: 11, color: '#9ca3af' }}>{m.pacientes.nome}{m.medicos?.nome ? ` · ${m.medicos.nome}` : ''}</div>}
+                          {m.pacientes?.nome && <div style={{ fontSize: 11, color: tokens.text.tertiary }}>{m.pacientes.nome}{m.medicos?.nome ? ` · ${m.medicos.nome}` : ''}</div>}
                         </td>
                         <td style={td}>{m.categoria?.nome ? <Pill cor={m.categoria.cor}>{m.categoria.nome}</Pill> : '-'}</td>
                         <td style={td}><PillStatus status={m.status}/></td>
-                        <td style={{ ...td, textAlign: 'right', fontWeight: 700, color: m.tipo === 'receita' ? '#16a34a' : '#dc2626' }}>
+                        <td style={{ ...td, textAlign: 'right', fontWeight: 700, color: m.tipo === 'receita' ? tokens.status.success : tokens.status.danger }}>
                           {m.tipo === 'receita' ? '+' : '-'} {fmt(Number(m.valor))}
                         </td>
                       </tr>
@@ -802,23 +803,23 @@ export default function FinanceiroPage() {
               <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                   <p style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Pacotes ativos</p>
-                  <button onClick={() => setTab('pacotes')} style={{ background: 'none', border: 'none', color: '#6043C1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Gerenciar →</button>
+                  <button onClick={() => setTab('pacotes')} style={{ background: 'none', border: 'none', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Gerenciar →</button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
                   {pacotesAtivos.map((p: any) => {
                     const pct = p.total_sessoes > 0 ? (p.sessoes_usadas / p.total_sessoes) * 100 : 0
                     return (
-                      <div key={p.id} style={{ background: '#fafafa', borderRadius: 12, padding: 16, borderLeft: '3px solid #6043C1' }}>
+                      <div key={p.id} style={{ background: tokens.bg.page, borderRadius: 12, padding: 16, borderLeft: `3px solid ${tokens.brand.primary}` }}>
                         <p style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px' }}>{p.pacientes?.nome || 'Paciente'}</p>
-                        <p style={{ fontSize: 11, color: '#737373', margin: '0 0 10px' }}>{p.descricao}</p>
-                        <div style={{ height: 6, background: '#e5e5e5', borderRadius: 100, overflow: 'hidden', marginBottom: 6 }}>
-                          <div style={{ height: '100%', background: '#6043C1', borderRadius: 100, width: `${pct}%` }}/>
+                        <p style={{ fontSize: 11, color: tokens.text.quaternary, margin: '0 0 10px' }}>{p.descricao}</p>
+                        <div style={{ height: 6, background: tokens.neutral[200], borderRadius: 100, overflow: 'hidden', marginBottom: 6 }}>
+                          <div style={{ height: '100%', background: tokens.brand.primary, borderRadius: 100, width: `${pct}%` }}/>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#737373', marginBottom: 6 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: tokens.text.quaternary, marginBottom: 6 }}>
                           <span>{p.sessoes_usadas} de {p.total_sessoes} sessões</span>
                           <span>{Math.round(pct)}%</span>
                         </div>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: '#16a34a', margin: 0 }}>{fmt(Number(p.valor_total))}</p>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: tokens.status.success, margin: 0 }}>{fmt(Number(p.valor_total))}</p>
                       </div>
                     )
                   })}
@@ -833,11 +834,11 @@ export default function FinanceiroPage() {
             {/* Filtros */}
             <div style={{ background: 'white', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap' as const, alignItems: 'center' }}>
               <div style={{ flex: '1 1 240px', position: 'relative' as const }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2" style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input
                   type="text" placeholder="Buscar por descrição, paciente ou médico..."
                   value={filtroBusca} onChange={e => setFiltroBusca(e.target.value)}
-                  style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 13, outline: 'none' }}
+                  style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 8, border: `1px solid ${tokens.neutral[200]}`, fontSize: 13, outline: 'none' }}
                 />
               </div>
               <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value as any)} style={selectStyle}>
@@ -859,17 +860,17 @@ export default function FinanceiroPage() {
             {/* Tabela */}
             <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
               {carregandoMov ? (
-                <div style={{ textAlign: 'center' as const, padding: 40, color: '#9ca3af', fontSize: 13 }}>Carregando...</div>
+                <div style={{ textAlign: 'center' as const, padding: 40, color: tokens.text.tertiary, fontSize: 13 }}>Carregando...</div>
               ) : movFiltradas.length === 0 ? (
                 <div style={{ textAlign: 'center' as const, padding: 60 }}>
-                  <p style={{ fontSize: 14, color: '#525252', margin: '0 0 6px', fontWeight: 600 }}>Nenhuma movimentação encontrada</p>
-                  <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 16px' }}>Comece adicionando uma receita ou despesa.</p>
+                  <p style={{ fontSize: 14, color: tokens.text.muted, margin: '0 0 6px', fontWeight: 600 }}>Nenhuma movimentação encontrada</p>
+                  <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: '0 0 16px' }}>Comece adicionando uma receita ou despesa.</p>
                   <button style={btnPrimary} onClick={abrirNovaMov}>+ Nova movimentação</button>
                 </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
                   <thead>
-                    <tr style={{ background: '#fafafa' }}>
+                    <tr style={{ background: tokens.bg.page }}>
                       <th style={th}>Data</th>
                       <th style={th}>Descrição</th>
                       <th style={th}>Categoria</th>
@@ -885,16 +886,16 @@ export default function FinanceiroPage() {
                         <td style={td}>{fmtData(m.data_movimentacao)}</td>
                         <td style={td}>
                           <strong>{m.descricao}</strong>
-                          {m.pacientes?.nome && <div style={{ fontSize: 11, color: '#9ca3af' }}>{m.pacientes.nome}{m.medicos?.nome ? ` · ${m.medicos.nome}` : ''}</div>}
+                          {m.pacientes?.nome && <div style={{ fontSize: 11, color: tokens.text.tertiary }}>{m.pacientes.nome}{m.medicos?.nome ? ` · ${m.medicos.nome}` : ''}</div>}
                         </td>
                         <td style={td}>{m.categoria?.nome ? <Pill cor={m.categoria.cor}>{m.categoria.nome}</Pill> : '-'}</td>
-                        <td style={td}>{m.metodo_pagamento ? <span style={{ fontSize: 11, color: '#525252', textTransform: 'capitalize' as const }}>{m.metodo_pagamento.replace('_', ' ')}</span> : '-'}</td>
+                        <td style={td}>{m.metodo_pagamento ? <span style={{ fontSize: 11, color: tokens.text.muted, textTransform: 'capitalize' as const }}>{m.metodo_pagamento.replace('_', ' ')}</span> : '-'}</td>
                         <td style={td}><PillStatus status={m.status}/></td>
-                        <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: m.tipo === 'receita' ? '#16a34a' : '#dc2626' }}>
+                        <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: m.tipo === 'receita' ? tokens.status.success : tokens.status.danger }}>
                           {m.tipo === 'receita' ? '+' : '-'} {fmt(Number(m.valor))}
                         </td>
                         <td style={td}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
                         </td>
                       </tr>
                     ))}
@@ -913,8 +914,8 @@ export default function FinanceiroPage() {
                 {([['ativo', 'Ativos'], ['concluido', 'Concluídos'], ['cancelado', 'Cancelados'], ['todos', 'Todos']] as const).map(([k, label]) => (
                   <button key={k} onClick={() => setFiltroPacStatus(k as any)} style={{
                     padding: '6px 12px', borderRadius: 7, border: 'none',
-                    background: filtroPacStatus === k ? '#f0ebff' : 'transparent',
-                    color: filtroPacStatus === k ? '#6043C1' : '#525252',
+                    background: filtroPacStatus === k ? tokens.brand.primaryLight : 'transparent',
+                    color: filtroPacStatus === k ? tokens.brand.primary : tokens.text.muted,
                     fontSize: 12, fontWeight: 600, cursor: 'pointer'
                   }}>{label}</button>
                 ))}
@@ -927,51 +928,51 @@ export default function FinanceiroPage() {
 
             {/* Lista pacotes */}
             {carregandoPac ? (
-              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: '#9ca3af', fontSize: 13 }}>Carregando...</div>
+              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: tokens.text.tertiary, fontSize: 13 }}>Carregando...</div>
             ) : todosPacotes.length === 0 ? (
               <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const }}>
-                <p style={{ fontSize: 14, color: '#525252', margin: '0 0 6px', fontWeight: 600 }}>Nenhum pacote {filtroPacStatus === 'ativo' ? 'ativo' : filtroPacStatus === 'concluido' ? 'concluído' : 'encontrado'}</p>
-                <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 16px' }}>Crie pacotes de sessões para fisioterapia, nutrição, psicoterapia.</p>
+                <p style={{ fontSize: 14, color: tokens.text.muted, margin: '0 0 6px', fontWeight: 600 }}>Nenhum pacote {filtroPacStatus === 'ativo' ? 'ativo' : filtroPacStatus === 'concluido' ? 'concluído' : 'encontrado'}</p>
+                <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: '0 0 16px' }}>Crie pacotes de sessões para fisioterapia, nutrição, psicoterapia.</p>
                 <button onClick={() => setModalPacOpen(true)} style={btnPrimary}>+ Novo pacote</button>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14 }}>
                 {todosPacotes.map((p: any) => {
                   const pct = p.total_sessoes > 0 ? (p.sessoes_usadas / p.total_sessoes) * 100 : 0
-                  const statusCor = p.status === 'ativo' ? '#16a34a' : p.status === 'concluido' ? '#6043C1' : '#9ca3af'
+                  const statusCor = p.status === 'ativo' ? tokens.status.success : p.status === 'concluido' ? tokens.brand.primary : tokens.text.tertiary
                   return (
                     <div key={p.id} style={{ background: 'white', borderRadius: 14, padding: 22 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                         <div>
                           <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px', letterSpacing: '-0.01em' }}>{p.pacientes?.nome || 'Paciente'}</p>
-                          <p style={{ fontSize: 12, color: '#737373', margin: 0 }}>{p.descricao}</p>
+                          <p style={{ fontSize: 12, color: tokens.text.quaternary, margin: 0 }}>{p.descricao}</p>
                         </div>
                         <span style={{ fontSize: 10, fontWeight: 700, background: statusCor + '22', color: statusCor, padding: '3px 9px', borderRadius: 100, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{p.status}</span>
                       </div>
 
                       {/* Progresso */}
-                      <div style={{ height: 8, background: '#f3f4f6', borderRadius: 100, overflow: 'hidden', marginBottom: 6 }}>
-                        <div style={{ height: '100%', background: '#6043C1', borderRadius: 100, width: `${pct}%`, transition: 'width 0.3s' as const }}/>
+                      <div style={{ height: 8, background: tokens.bg.hoverStrong, borderRadius: 100, overflow: 'hidden', marginBottom: 6 }}>
+                        <div style={{ height: '100%', background: tokens.brand.primary, borderRadius: 100, width: `${pct}%`, transition: 'width 0.3s' as const }}/>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#525252', marginBottom: 14 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: tokens.text.muted, marginBottom: 14 }}>
                         <span style={{ fontWeight: 600 }}>{p.sessoes_usadas} de {p.total_sessoes} sessões</span>
                         <span>{Math.round(pct)}%</span>
                       </div>
 
                       {/* Valores */}
-                      <div style={{ borderTop: '1px solid #f5f5f5', paddingTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div style={{ borderTop: `1px solid ${tokens.bg.hover}`, paddingTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div>
-                          <p style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: '0 0 2px' }}>Total</p>
+                          <p style={{ fontSize: 10, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: '0 0 2px' }}>Total</p>
                           <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{fmt(Number(p.valor_total))}</p>
                         </div>
                         <div>
-                          <p style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: '0 0 2px' }}>Recebido</p>
-                          <p style={{ fontSize: 14, fontWeight: 700, color: '#16a34a', margin: 0 }}>{fmt(Number(p.valor_pago))}</p>
+                          <p style={{ fontSize: 10, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: '0 0 2px' }}>Recebido</p>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: tokens.status.success, margin: 0 }}>{fmt(Number(p.valor_pago))}</p>
                         </div>
                       </div>
 
                       {p.status === 'ativo' && p.valor_pago < p.valor_total && (
-                        <div style={{ marginTop: 10, padding: '8px 10px', background: '#fef3c7', borderRadius: 8, fontSize: 11, color: '#a16207', fontWeight: 600 }}>
+                        <div style={{ marginTop: 10, padding: '8px 10px', background: tokens.status.warningLightSoft, borderRadius: 8, fontSize: 11, color: tokens.status.warningAmberStrong, fontWeight: 600 }}>
                           ⏳ Falta receber {fmt(Number(p.valor_total) - Number(p.valor_pago))}
                         </div>
                       )}
@@ -985,27 +986,27 @@ export default function FinanceiroPage() {
 
         {tab === 'comissoes' && (
           <>
-            <div style={{ background: '#f0ebff', border: '1px solid #ddd3f7', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <p style={{ fontSize: 13, color: '#404040', margin: 0, lineHeight: 1.5 }}>
+            <div style={{ background: tokens.brand.primaryLight, border: `1px solid ${tokens.brand.primaryAccentLight}`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <p style={{ fontSize: 13, color: tokens.neutral[700], margin: 0, lineHeight: 1.5 }}>
                 Comissões são calculadas com base nas receitas <strong>recebidas</strong> do período.
-                Configure tipo e valor em <a href="/admin" style={{ color: '#6043C1', textDecoration: 'underline', fontWeight: 600 }}>Painel admin → Comissões</a>.
+                Configure tipo e valor em <a href="/admin" style={{ color: tokens.brand.primary, textDecoration: 'underline', fontWeight: 600 }}>Painel admin → Comissões</a>.
               </p>
             </div>
 
             {carregandoCom ? (
-              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: '#9ca3af', fontSize: 13 }}>Carregando...</div>
+              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: tokens.text.tertiary, fontSize: 13 }}>Carregando...</div>
             ) : comissoesData.length === 0 ? (
               <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const }}>
-                <p style={{ fontSize: 14, color: '#525252', fontWeight: 600 }}>Nenhum médico cadastrado</p>
-                <p style={{ fontSize: 13, color: '#9ca3af' }}>Adicione médicos no Painel admin.</p>
+                <p style={{ fontSize: 14, color: tokens.text.muted, fontWeight: 600 }}>Nenhum médico cadastrado</p>
+                <p style={{ fontSize: 13, color: tokens.text.tertiary }}>Adicione médicos no Painel admin.</p>
               </div>
             ) : (
               <>
                 <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
                     <thead>
-                      <tr style={{ background: '#fafafa' }}>
+                      <tr style={{ background: tokens.bg.page }}>
                         <th style={th}>Médico</th>
                         <th style={th}>Configuração</th>
                         <th style={{ ...th, textAlign: 'center' as const }}>Consultas</th>
@@ -1019,7 +1020,7 @@ export default function FinanceiroPage() {
                         <tr key={d.medico.id}>
                           <td style={td}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f0ebff', color: '#6043C1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
+                              <div style={{ width: 32, height: 32, borderRadius: '50%', background: tokens.brand.primaryLight, color: tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
                                 {d.medico.nome.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase()}
                               </div>
                               <strong>{d.medico.nome}</strong>
@@ -1027,14 +1028,14 @@ export default function FinanceiroPage() {
                           </td>
                           <td style={td}>
                             {d.config ? (
-                              <span style={{ fontSize: 12, color: '#525252' }}>{d.label}</span>
+                              <span style={{ fontSize: 12, color: tokens.text.muted }}>{d.label}</span>
                             ) : (
-                              <span style={{ fontSize: 11, color: '#a16207', background: '#fef3c7', padding: '3px 9px', borderRadius: 100, fontWeight: 600 }}>Sem configuração</span>
+                              <span style={{ fontSize: 11, color: tokens.status.warningAmberStrong, background: tokens.status.warningLightSoft, padding: '3px 9px', borderRadius: 100, fontWeight: 600 }}>Sem configuração</span>
                             )}
                           </td>
                           <td style={{ ...td, textAlign: 'center' as const }}>{d.consultas}</td>
                           <td style={{ ...td, textAlign: 'right' as const, fontWeight: 600 }}>{fmt(d.totalRecebido)}</td>
-                          <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: '#6043C1' }}>
+                          <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: tokens.brand.primary }}>
                             {d.comissao > 0 ? fmt(d.comissao) : '-'}
                           </td>
                           <td style={{ ...td, textAlign: 'right' as const }}>
@@ -1049,11 +1050,11 @@ export default function FinanceiroPage() {
                     </tbody>
                     <tfoot>
                       <tr>
-                        <td colSpan={4} style={{ ...td, fontWeight: 700, fontSize: 13, color: '#525252', textAlign: 'right' as const, borderTop: '2px solid #e5e5e5' }}>Total a pagar:</td>
-                        <td style={{ ...td, fontWeight: 700, fontSize: 16, color: '#6043C1', textAlign: 'right' as const, borderTop: '2px solid #e5e5e5' }}>
+                        <td colSpan={4} style={{ ...td, fontWeight: 700, fontSize: 13, color: tokens.text.muted, textAlign: 'right' as const, borderTop: `2px solid ${tokens.neutral[200]}` }}>Total a pagar:</td>
+                        <td style={{ ...td, fontWeight: 700, fontSize: 16, color: tokens.brand.primary, textAlign: 'right' as const, borderTop: `2px solid ${tokens.neutral[200]}` }}>
                           {fmt(comissoesData.reduce((s: number, d: any) => s + d.comissao, 0))}
                         </td>
-                        <td style={{ ...td, borderTop: '2px solid #e5e5e5' }}></td>
+                        <td style={{ ...td, borderTop: `2px solid ${tokens.neutral[200]}` }}></td>
                       </tr>
                     </tfoot>
                   </table>
@@ -1071,14 +1072,14 @@ export default function FinanceiroPage() {
                 {([['todos', 'Todos'], ['0-7', 'Vence em 7d'], ['8-30', '8-30 dias atraso'], ['30+', 'Mais de 30d']] as const).map(([k, label]) => (
                   <button key={k} onClick={() => setFiltroCobAtraso(k as any)} style={{
                     padding: '6px 12px', borderRadius: 7, border: 'none',
-                    background: filtroCobAtraso === k ? '#f0ebff' : 'transparent',
-                    color: filtroCobAtraso === k ? '#6043C1' : '#525252',
+                    background: filtroCobAtraso === k ? tokens.brand.primaryLight : 'transparent',
+                    color: filtroCobAtraso === k ? tokens.brand.primary : tokens.text.muted,
                     fontSize: 12, fontWeight: 600, cursor: 'pointer'
                   }}>{label}</button>
                 ))}
               </div>
-              <div style={{ marginLeft: 'auto', fontSize: 13, color: '#525252' }}>
-                <strong style={{ color: '#dc2626' }}>{cobrancasData.length}</strong> {cobrancasData.length === 1 ? 'cobrança' : 'cobranças'} · 
+              <div style={{ marginLeft: 'auto', fontSize: 13, color: tokens.text.muted }}>
+                <strong style={{ color: tokens.status.danger }}>{cobrancasData.length}</strong> {cobrancasData.length === 1 ? 'cobrança' : 'cobranças'} · 
                 Total: <strong>{fmt(cobrancasData.reduce((s: number, m: any) => s + Number(m.valor), 0))}</strong>
               </div>
             </div>
@@ -1086,16 +1087,16 @@ export default function FinanceiroPage() {
             {/* Tabela de cobrancas */}
             <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
               {carregandoCob ? (
-                <div style={{ textAlign: 'center' as const, padding: 40, color: '#9ca3af', fontSize: 13 }}>Carregando...</div>
+                <div style={{ textAlign: 'center' as const, padding: 40, color: tokens.text.tertiary, fontSize: 13 }}>Carregando...</div>
               ) : cobrancasData.length === 0 ? (
                 <div style={{ textAlign: 'center' as const, padding: 60 }}>
-                  <p style={{ fontSize: 14, color: '#525252', fontWeight: 600, margin: '0 0 6px' }}>Nenhuma cobrança pendente</p>
-                  <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Tudo em dia!</p>
+                  <p style={{ fontSize: 14, color: tokens.text.muted, fontWeight: 600, margin: '0 0 6px' }}>Nenhuma cobrança pendente</p>
+                  <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Tudo em dia!</p>
                 </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
                   <thead>
-                    <tr style={{ background: '#fafafa' }}>
+                    <tr style={{ background: tokens.bg.page }}>
                       <th style={th}>Paciente</th>
                       <th style={th}>Descrição</th>
                       <th style={th}>Vencimento</th>
@@ -1109,28 +1110,28 @@ export default function FinanceiroPage() {
                       <tr key={m.id}>
                         <td style={td}>
                           <strong>{m.pacientes?.nome || 'Sem paciente'}</strong>
-                          {m.pacientes?.telefone && <div style={{ fontSize: 11, color: '#9ca3af' }}>{m.pacientes.telefone}</div>}
+                          {m.pacientes?.telefone && <div style={{ fontSize: 11, color: tokens.text.tertiary }}>{m.pacientes.telefone}</div>}
                         </td>
                         <td style={td}>
                           <div>{m.descricao}</div>
-                          {m.medicos?.nome && <div style={{ fontSize: 11, color: '#9ca3af' }}>{m.medicos.nome}</div>}
+                          {m.medicos?.nome && <div style={{ fontSize: 11, color: tokens.text.tertiary }}>{m.medicos.nome}</div>}
                         </td>
                         <td style={td}>{fmtData(m.data_vencimento || m.data_movimentacao)}</td>
                         <td style={{ ...td, textAlign: 'center' as const }}>
                           {m.diasAtraso > 0 ? (
-                            <span style={{ fontSize: 11, fontWeight: 700, color: m.diasAtraso > 30 ? '#dc2626' : '#a16207', background: m.diasAtraso > 30 ? '#fee2e2' : '#fef3c7', padding: '3px 9px', borderRadius: 100 }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: m.diasAtraso > 30 ? tokens.status.danger : tokens.status.warningAmberStrong, background: m.diasAtraso > 30 ? tokens.status.dangerBgAlt : tokens.status.warningLightSoft, padding: '3px 9px', borderRadius: 100 }}>
                               {m.diasAtraso}d
                             </span>
                           ) : (
-                            <span style={{ fontSize: 11, color: '#9ca3af' }}>{m.diasAtraso === 0 ? 'Hoje' : Math.abs(m.diasAtraso) + 'd'}</span>
+                            <span style={{ fontSize: 11, color: tokens.text.tertiary }}>{m.diasAtraso === 0 ? 'Hoje' : Math.abs(m.diasAtraso) + 'd'}</span>
                           )}
                         </td>
-                        <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: '#0a0a0a' }}>{fmt(Number(m.valor))}</td>
+                        <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: tokens.neutral[900] }}>{fmt(Number(m.valor))}</td>
                         <td style={{ ...td, textAlign: 'right' as const }}>
                           <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                             {m.pacientes?.telefone && (
                               <button onClick={() => cobrarViaWA(m)} title="Cobrar via WhatsApp" style={{
-                                padding: '6px 10px', borderRadius: 7, border: 'none', background: '#25d366',
+                                padding: '6px 10px', borderRadius: 7, border: 'none', background: tokens.whatsapp.greenLight,
                                 color: 'white', fontSize: 11, fontWeight: 600, cursor: 'pointer',
                                 display: 'inline-flex', alignItems: 'center', gap: 5
                               }}>
@@ -1139,8 +1140,8 @@ export default function FinanceiroPage() {
                               </button>
                             )}
                             <button onClick={() => marcarRecebido(m.id)} style={{
-                              padding: '6px 10px', borderRadius: 7, border: '1px solid #e5e5e5', background: 'white',
-                              color: '#15803d', fontSize: 11, fontWeight: 600, cursor: 'pointer'
+                              padding: '6px 10px', borderRadius: 7, border: `1px solid ${tokens.neutral[200]}`, background: 'white',
+                              color: tokens.status.successHover, fontSize: 11, fontWeight: 600, cursor: 'pointer'
                             }}>✓ Recebido</button>
                           </div>
                         </td>
@@ -1160,8 +1161,8 @@ export default function FinanceiroPage() {
               {([['categorias', 'Categorias'], ['contas', 'Contas'], ['recorrentes', 'Despesas recorrentes']] as const).map(([k, label]) => (
                 <button key={k} onClick={() => setConfigSubtab(k as any)} style={{
                   padding: '7px 14px', borderRadius: 7, border: 'none',
-                  background: configSubtab === k ? '#0a0a0a' : 'transparent',
-                  color: configSubtab === k ? 'white' : '#525252',
+                  background: configSubtab === k ? tokens.neutral[900] : 'transparent',
+                  color: configSubtab === k ? 'white' : tokens.text.muted,
                   fontSize: 12, fontWeight: 600, cursor: 'pointer'
                 }}>{label}</button>
               ))}
@@ -1172,7 +1173,7 @@ export default function FinanceiroPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <div>
                     <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Categorias financeiras</p>
-                    <p style={{ fontSize: 12, color: '#737373', margin: 0 }}>Personalize as categorias usadas em receitas e despesas</p>
+                    <p style={{ fontSize: 12, color: tokens.text.quaternary, margin: 0 }}>Personalize as categorias usadas em receitas e despesas</p>
                   </div>
                   <button onClick={() => { setEditandoCat(null); setModalCatOpen(true) }} style={btnPrimary}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1185,25 +1186,25 @@ export default function FinanceiroPage() {
                     const cats = todasCategorias.filter((c: any) => c.tipo === tipo)
                     return (
                       <div key={tipo}>
-                        <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', fontWeight: 700, marginBottom: 10 }}>
+                        <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', fontWeight: 700, marginBottom: 10 }}>
                           {tipo === 'receita' ? '↗ Receitas' : '↙ Despesas'} ({cats.length})
                         </p>
                         <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
                           {cats.map((c: any) => (
-                            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: c.ativo ? '#fafafa' : '#f5f5f5', borderRadius: 9, opacity: c.ativo ? 1 : 0.5 }}>
+                            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: c.ativo ? tokens.bg.page : tokens.bg.hover, borderRadius: 9, opacity: c.ativo ? 1 : 0.5 }}>
                               <span style={{ width: 10, height: 10, borderRadius: '50%', background: c.cor, flexShrink: 0 }}/>
                               <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{c.nome}</span>
                               {c.ativo && (
                                 <>
                                   <button onClick={() => { setEditandoCat(c); setModalCatOpen(true) }} title="Editar" style={iconBtn}>
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#525252" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tokens.text.muted} strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                   </button>
                                   <button onClick={() => desativarCategoria(c)} title="Desativar" style={iconBtn}>
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                                   </button>
                                 </>
                               )}
-                              {!c.ativo && <span style={{ fontSize: 10, color: '#9ca3af' }}>desativada</span>}
+                              {!c.ativo && <span style={{ fontSize: 10, color: tokens.text.tertiary }}>desativada</span>}
                             </div>
                           ))}
                         </div>
@@ -1219,7 +1220,7 @@ export default function FinanceiroPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <div>
                     <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Contas bancárias</p>
-                    <p style={{ fontSize: 12, color: '#737373', margin: 0 }}>Caixa, bancos e cartões. Saldo de cada um separado.</p>
+                    <p style={{ fontSize: 12, color: tokens.text.quaternary, margin: 0 }}>Caixa, bancos e cartões. Saldo de cada um separado.</p>
                   </div>
                   <button onClick={() => { setEditandoConta(null); setModalContaOpen(true) }} style={btnPrimary}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1229,40 +1230,40 @@ export default function FinanceiroPage() {
 
                 {todasContas.length === 0 ? (
                   <div style={{ textAlign: 'center' as const, padding: 60 }}>
-                    <p style={{ fontSize: 14, color: '#525252', fontWeight: 600, margin: '0 0 6px' }}>Nenhuma conta cadastrada</p>
-                    <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Crie contas para separar caixa, bancos e cartões.</p>
+                    <p style={{ fontSize: 14, color: tokens.text.muted, fontWeight: 600, margin: '0 0 6px' }}>Nenhuma conta cadastrada</p>
+                    <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Crie contas para separar caixa, bancos e cartões.</p>
                   </div>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
                     {todasContas.map((c: any) => {
                       const tipoLabel: any = { caixa: 'Caixa', banco: 'Banco', cartao_credito: 'Cartão', outras: 'Outras' }
                       return (
-                        <div key={c.id} style={{ background: c.ativo ? '#fafafa' : '#f5f5f5', borderRadius: 12, padding: 16, opacity: c.ativo ? 1 : 0.5 }}>
+                        <div key={c.id} style={{ background: c.ativo ? tokens.bg.page : tokens.bg.hover, borderRadius: 12, padding: 16, opacity: c.ativo ? 1 : 0.5 }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                               <IconeContaTipo tipo={c.tipo}/>
                               <div>
                                 <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{c.nome}</p>
-                                <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{tipoLabel[c.tipo]}</p>
+                                <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{tipoLabel[c.tipo]}</p>
                               </div>
                             </div>
                             {c.ativo && (
                               <div style={{ display: 'flex', gap: 4 }}>
                                 <button onClick={() => { setEditandoConta(c); setModalContaOpen(true) }} title="Editar" style={iconBtn}>
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#525252" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tokens.text.muted} strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </button>
                                 <button onClick={() => desativarConta(c)} title="Desativar" style={iconBtn}>
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                                 </button>
                               </div>
                             )}
                           </div>
                           <div style={{ borderTop: '1px solid #eee', paddingTop: 10, marginTop: 4 }}>
-                            <p style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: 0, fontWeight: 600 }}>Saldo atual</p>
-                            <p style={{ fontSize: 22, fontWeight: 700, color: c.saldoAtual >= 0 ? '#0a0a0a' : '#dc2626', margin: '2px 0 8px', letterSpacing: '-0.02em' }}>{fmt(c.saldoAtual)}</p>
-                            <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#737373' }}>
-                              <span>↗ <span style={{ color: '#16a34a', fontWeight: 600 }}>{fmt(c.totalReceitas)}</span></span>
-                              <span>↙ <span style={{ color: '#dc2626', fontWeight: 600 }}>{fmt(c.totalDespesas)}</span></span>
+                            <p style={{ fontSize: 10, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: 0, fontWeight: 600 }}>Saldo atual</p>
+                            <p style={{ fontSize: 22, fontWeight: 700, color: c.saldoAtual >= 0 ? tokens.neutral[900] : tokens.status.danger, margin: '2px 0 8px', letterSpacing: '-0.02em' }}>{fmt(c.saldoAtual)}</p>
+                            <div style={{ display: 'flex', gap: 12, fontSize: 11, color: tokens.text.quaternary }}>
+                              <span>↗ <span style={{ color: tokens.status.success, fontWeight: 600 }}>{fmt(c.totalReceitas)}</span></span>
+                              <span>↙ <span style={{ color: tokens.status.danger, fontWeight: 600 }}>{fmt(c.totalDespesas)}</span></span>
                             </div>
                           </div>
                         </div>
@@ -1278,7 +1279,7 @@ export default function FinanceiroPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <div>
                     <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Despesas recorrentes</p>
-                    <p style={{ fontSize: 12, color: '#737373', margin: 0 }}>Crie 1 vez e o sistema gera as próximas automaticamente</p>
+                    <p style={{ fontSize: 12, color: tokens.text.quaternary, margin: 0 }}>Crie 1 vez e o sistema gera as próximas automaticamente</p>
                   </div>
                   <button onClick={() => setModalRecOpen(true)} style={btnPrimary}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1288,14 +1289,14 @@ export default function FinanceiroPage() {
 
                 {recorrentes.length === 0 ? (
                   <div style={{ textAlign: 'center' as const, padding: 60 }}>
-                    <p style={{ fontSize: 14, color: '#525252', fontWeight: 600, margin: '0 0 6px' }}>Nenhuma despesa recorrente</p>
-                    <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 16px' }}>Cadastre aluguel, internet, salários e outras despesas mensais.</p>
+                    <p style={{ fontSize: 14, color: tokens.text.muted, fontWeight: 600, margin: '0 0 6px' }}>Nenhuma despesa recorrente</p>
+                    <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: '0 0 16px' }}>Cadastre aluguel, internet, salários e outras despesas mensais.</p>
                     <button onClick={() => setModalRecOpen(true)} style={btnPrimary}>+ Nova recorrente</button>
                   </div>
                 ) : (
                   <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
                     <thead>
-                      <tr style={{ background: '#fafafa' }}>
+                      <tr style={{ background: tokens.bg.page }}>
                         <th style={th}>Descrição</th>
                         <th style={th}>Categoria</th>
                         <th style={{ ...th, textAlign: 'right' as const }}>Valor</th>
@@ -1307,7 +1308,7 @@ export default function FinanceiroPage() {
                         <tr key={r.id}>
                           <td style={td}><strong>{r.descricao}</strong></td>
                           <td style={td}>{r.categoria?.nome || '-'}</td>
-                          <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: '#dc2626' }}>{fmt(Number(r.valor))}</td>
+                          <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: tokens.status.danger }}>{fmt(Number(r.valor))}</td>
                           <td style={td}>{fmtData(r.data_movimentacao)}</td>
                         </tr>
                       ))}
@@ -1356,7 +1357,7 @@ export default function FinanceiroPage() {
           <>
             {/* Header com botao exportar tudo */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <p style={{ fontSize: 13, color: '#737373', margin: 0 }}>5 relatórios essenciais — período: últimos {periodo} dias</p>
+              <p style={{ fontSize: 13, color: tokens.text.quaternary, margin: 0 }}>5 relatórios essenciais — período: últimos {periodo} dias</p>
               <button onClick={exportarRelatoriosExcel} disabled={!relatoriosData} style={btnPrimary}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Exportar Excel (5 abas)
@@ -1364,48 +1365,48 @@ export default function FinanceiroPage() {
             </div>
 
             {carregandoRel ? (
-              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: '#9ca3af', fontSize: 13 }}>Carregando relatórios...</div>
+              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: tokens.text.tertiary, fontSize: 13 }}>Carregando relatórios...</div>
             ) : !relatoriosData ? null : (
               <>
                 {/* 1. DRE Simplificado */}
                 <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <div>
-                      <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>1. DRE Simplificado</p>
+                      <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>1. DRE Simplificado</p>
                       <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 0', letterSpacing: '-0.01em' }}>Demonstrativo de resultados</p>
                     </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-                    <div style={{ padding: 16, background: '#fafafa', borderRadius: 10 }}>
-                      <p style={{ fontSize: 11, color: '#737373', margin: '0 0 4px' }}>Receita</p>
-                      <p style={{ fontSize: 22, fontWeight: 700, color: '#16a34a', margin: 0, letterSpacing: '-0.02em' }}>{fmt(relatoriosData.dre.receita)}</p>
+                    <div style={{ padding: 16, background: tokens.bg.page, borderRadius: 10 }}>
+                      <p style={{ fontSize: 11, color: tokens.text.quaternary, margin: '0 0 4px' }}>Receita</p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: tokens.status.success, margin: 0, letterSpacing: '-0.02em' }}>{fmt(relatoriosData.dre.receita)}</p>
                     </div>
-                    <div style={{ padding: 16, background: '#fafafa', borderRadius: 10 }}>
-                      <p style={{ fontSize: 11, color: '#737373', margin: '0 0 4px' }}>Despesa</p>
-                      <p style={{ fontSize: 22, fontWeight: 700, color: '#dc2626', margin: 0, letterSpacing: '-0.02em' }}>{fmt(relatoriosData.dre.despesa)}</p>
+                    <div style={{ padding: 16, background: tokens.bg.page, borderRadius: 10 }}>
+                      <p style={{ fontSize: 11, color: tokens.text.quaternary, margin: '0 0 4px' }}>Despesa</p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: tokens.status.danger, margin: 0, letterSpacing: '-0.02em' }}>{fmt(relatoriosData.dre.despesa)}</p>
                     </div>
-                    <div style={{ padding: 16, background: '#fafafa', borderRadius: 10 }}>
-                      <p style={{ fontSize: 11, color: '#737373', margin: '0 0 4px' }}>Lucro líquido</p>
-                      <p style={{ fontSize: 22, fontWeight: 700, color: relatoriosData.dre.lucro >= 0 ? '#0a0a0a' : '#dc2626', margin: 0, letterSpacing: '-0.02em' }}>{fmt(relatoriosData.dre.lucro)}</p>
+                    <div style={{ padding: 16, background: tokens.bg.page, borderRadius: 10 }}>
+                      <p style={{ fontSize: 11, color: tokens.text.quaternary, margin: '0 0 4px' }}>Lucro líquido</p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: relatoriosData.dre.lucro >= 0 ? tokens.neutral[900] : tokens.status.danger, margin: 0, letterSpacing: '-0.02em' }}>{fmt(relatoriosData.dre.lucro)}</p>
                       {relatoriosData.dre.pctLucro !== null && (
-                        <p style={{ fontSize: 11, color: relatoriosData.dre.pctLucro >= 0 ? '#16a34a' : '#dc2626', margin: '4px 0 0', fontWeight: 600 }}>
+                        <p style={{ fontSize: 11, color: relatoriosData.dre.pctLucro >= 0 ? tokens.status.success : tokens.status.danger, margin: '4px 0 0', fontWeight: 600 }}>
                           {relatoriosData.dre.pctLucro >= 0 ? '+' : ''}{relatoriosData.dre.pctLucro}% vs período anterior
                         </p>
                       )}
                     </div>
-                    <div style={{ padding: 16, background: '#f0ebff', borderRadius: 10 }}>
-                      <p style={{ fontSize: 11, color: '#737373', margin: '0 0 4px' }}>Margem de lucro</p>
-                      <p style={{ fontSize: 22, fontWeight: 700, color: '#6043C1', margin: 0, letterSpacing: '-0.02em' }}>{relatoriosData.dre.margem.toFixed(1)}%</p>
+                    <div style={{ padding: 16, background: tokens.brand.primaryLight, borderRadius: 10 }}>
+                      <p style={{ fontSize: 11, color: tokens.text.quaternary, margin: '0 0 4px' }}>Margem de lucro</p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: tokens.brand.primary, margin: 0, letterSpacing: '-0.02em' }}>{relatoriosData.dre.margem.toFixed(1)}%</p>
                     </div>
                   </div>
                 </div>
 
                 {/* 2. Receitas por Categoria */}
                 <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
-                  <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>2. Receitas por Categoria</p>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>2. Receitas por Categoria</p>
                   <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>De onde vem o dinheiro</p>
                   {relatoriosData.receitasPorCat.length === 0 ? (
-                    <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 20 }}>Sem receitas no período</p>
+                    <p style={{ fontSize: 13, color: tokens.text.tertiary, textAlign: 'center' as const, padding: 20 }}>Sem receitas no período</p>
                   ) : (
                     <BarChart data={relatoriosData.receitasPorCat} total={relatoriosData.dre.receita}/>
                   )}
@@ -1413,14 +1414,14 @@ export default function FinanceiroPage() {
 
                 {/* 3. Receitas por Médico */}
                 <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
-                  <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>3. Receitas por Médico</p>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>3. Receitas por Médico</p>
                   <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>Performance da equipe</p>
                   {relatoriosData.receitasPorMed.length === 0 ? (
-                    <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 20 }}>Sem receitas vinculadas a médicos no período</p>
+                    <p style={{ fontSize: 13, color: tokens.text.tertiary, textAlign: 'center' as const, padding: 20 }}>Sem receitas vinculadas a médicos no período</p>
                   ) : (
                     <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
                       <thead>
-                        <tr style={{ background: '#fafafa' }}>
+                        <tr style={{ background: tokens.bg.page }}>
                           <th style={th}>Médico</th>
                           <th style={{ ...th, textAlign: 'center' as const }}>Consultas</th>
                           <th style={{ ...th, textAlign: 'right' as const }}>Receita gerada</th>
@@ -1432,8 +1433,8 @@ export default function FinanceiroPage() {
                           <tr key={i}>
                             <td style={td}><strong>{r.nome}</strong></td>
                             <td style={{ ...td, textAlign: 'center' as const }}>{r.qtd}</td>
-                            <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: '#16a34a' }}>{fmt(r.total)}</td>
-                            <td style={{ ...td, textAlign: 'right' as const, color: '#525252' }}>{fmt(r.qtd > 0 ? r.total / r.qtd : 0)}</td>
+                            <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: tokens.status.success }}>{fmt(r.total)}</td>
+                            <td style={{ ...td, textAlign: 'right' as const, color: tokens.text.muted }}>{fmt(r.qtd > 0 ? r.total / r.qtd : 0)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1443,25 +1444,25 @@ export default function FinanceiroPage() {
 
                 {/* 4. Despesas por Categoria */}
                 <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
-                  <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>4. Despesas por Categoria</p>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>4. Despesas por Categoria</p>
                   <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>Pra onde vai o dinheiro</p>
                   {relatoriosData.despesasPorCat.length === 0 ? (
-                    <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 20 }}>Sem despesas no período</p>
+                    <p style={{ fontSize: 13, color: tokens.text.tertiary, textAlign: 'center' as const, padding: 20 }}>Sem despesas no período</p>
                   ) : (
-                    <BarChart data={relatoriosData.despesasPorCat} total={relatoriosData.dre.despesa} corBase="#dc2626"/>
+                    <BarChart data={relatoriosData.despesasPorCat} total={relatoriosData.dre.despesa} corBase={tokens.status.danger}/>
                   )}
                 </div>
 
                 {/* 5. Top Procedimentos */}
                 <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
-                  <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>5. Top Procedimentos</p>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>5. Top Procedimentos</p>
                   <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>Mais realizados no período</p>
                   {relatoriosData.topProcedimentos.length === 0 ? (
-                    <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center' as const, padding: 20 }}>Sem agendamentos com procedimento vinculado realizados no período</p>
+                    <p style={{ fontSize: 13, color: tokens.text.tertiary, textAlign: 'center' as const, padding: 20 }}>Sem agendamentos com procedimento vinculado realizados no período</p>
                   ) : (
                     <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
                       <thead>
-                        <tr style={{ background: '#fafafa' }}>
+                        <tr style={{ background: tokens.bg.page }}>
                           <th style={th}>Procedimento</th>
                           <th style={{ ...th, textAlign: 'center' as const }}>Vezes realizado</th>
                           <th style={{ ...th, textAlign: 'right' as const }}>Receita total</th>
@@ -1473,8 +1474,8 @@ export default function FinanceiroPage() {
                           <tr key={i}>
                             <td style={td}><strong>{p.nome}</strong></td>
                             <td style={{ ...td, textAlign: 'center' as const, fontWeight: 700 }}>{p.qtd}</td>
-                            <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: '#16a34a' }}>{fmt(p.total)}</td>
-                            <td style={{ ...td, textAlign: 'right' as const, color: '#525252' }}>{fmt(p.ticket)}</td>
+                            <td style={{ ...td, textAlign: 'right' as const, fontWeight: 700, color: tokens.status.success }}>{fmt(p.total)}</td>
+                            <td style={{ ...td, textAlign: 'right' as const, color: tokens.text.muted }}>{fmt(p.ticket)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1530,7 +1531,7 @@ function fmtData(s: string) {
 }
 
 function ChartFluxo({ data }: { data: { data: string; receita: number; despesa: number }[] }) {
-  if (data.length === 0) return <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 13 }}>Sem dados no período</div>
+  if (data.length === 0) return <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: tokens.text.tertiary, fontSize: 13 }}>Sem dados no período</div>
 
   const maxVal = Math.max(...data.flatMap(d => [d.receita, d.despesa]), 100)
   const w = 1000
@@ -1556,13 +1557,13 @@ function ChartFluxo({ data }: { data: { data: string; receita: number; despesa: 
       <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block' }}>
         <defs>
           <linearGradient id="gradReceita" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#16a34a" stopOpacity="0.2"/>
-            <stop offset="100%" stopColor="#16a34a" stopOpacity="0"/>
+            <stop offset="0%" stopColor={tokens.status.success} stopOpacity="0.2"/>
+            <stop offset="100%" stopColor={tokens.status.success} stopOpacity="0"/>
           </linearGradient>
         </defs>
         <path d={areaReceita} fill="url(#gradReceita)"/>
-        <path d={pathReceita} stroke="#16a34a" strokeWidth="2" fill="none"/>
-        <path d={pathDespesa} stroke="#dc2626" strokeWidth="2" fill="none" strokeDasharray="4 3"/>
+        <path d={pathReceita} stroke={tokens.status.success} strokeWidth="2" fill="none"/>
+        <path d={pathDespesa} stroke={tokens.status.danger} strokeWidth="2" fill="none" strokeDasharray="4 3"/>
       </svg>
     </div>
   )
@@ -1572,17 +1573,17 @@ function KPI({ label, valor, cor, sub, subCor, carregando }: any) {
   if (carregando) {
     return (
       <div style={{ background: 'white', borderRadius: 14, padding: 18 }}>
-        <div style={{ height: 11, width: '50%', background: '#f3f4f6', borderRadius: 4, marginBottom: 8 }}/>
-        <div style={{ height: 28, width: '70%', background: '#e5e7eb', borderRadius: 4, marginBottom: 6 }}/>
-        <div style={{ height: 10, width: '60%', background: '#f3f4f6', borderRadius: 4 }}/>
+        <div style={{ height: 11, width: '50%', background: tokens.bg.hoverStrong, borderRadius: 4, marginBottom: 8 }}/>
+        <div style={{ height: 28, width: '70%', background: tokens.border.default, borderRadius: 4, marginBottom: 6 }}/>
+        <div style={{ height: 10, width: '60%', background: tokens.bg.hoverStrong, borderRadius: 4 }}/>
       </div>
     )
   }
   return (
     <div style={{ background: 'white', borderRadius: 14, padding: 18 }}>
-      <p style={{ fontSize: 12, color: '#737373', margin: '0 0 6px' }}>{label}</p>
+      <p style={{ fontSize: 12, color: tokens.text.quaternary, margin: '0 0 6px' }}>{label}</p>
       <p style={{ fontSize: 26, fontWeight: 700, color: cor, letterSpacing: '-0.02em', margin: '0 0 4px' }}>{valor}</p>
-      <p style={{ fontSize: 11, color: subCor || '#9ca3af', margin: 0 }}>{sub}</p>
+      <p style={{ fontSize: 11, color: subCor || tokens.text.tertiary, margin: 0 }}>{sub}</p>
     </div>
   )
 }
@@ -1592,31 +1593,31 @@ function Pill({ children, cor }: { children: React.ReactNode; cor?: string }) {
     <span style={{
       display: 'inline-flex', padding: '3px 10px', borderRadius: 100,
       fontSize: 11, fontWeight: 600,
-      background: cor ? cor + '22' : '#f3f4f6',
-      color: cor || '#525252'
+      background: cor ? cor + '22' : tokens.bg.hoverStrong,
+      color: cor || tokens.text.muted
     }}>{children}</span>
   )
 }
 
 function PillStatus({ status }: { status: string }) {
   const map: Record<string, { bg: string; cor: string; label: string }> = {
-    recebido: { bg: '#dcfce7', cor: '#15803d', label: 'Recebido' },
-    pago: { bg: '#dcfce7', cor: '#15803d', label: 'Pago' },
-    pendente: { bg: '#fef3c7', cor: '#a16207', label: 'Pendente' },
-    atrasado: { bg: '#fee2e2', cor: '#b91c1c', label: 'Atrasado' },
-    parcial: { bg: '#dbeafe', cor: '#1d4ed8', label: 'Parcial' },
-    cancelado: { bg: '#f3f4f6', cor: '#737373', label: 'Cancelado' },
+    recebido: { bg: tokens.status.successBgAlt, cor: tokens.status.successHover, label: 'Recebido' },
+    pago: { bg: tokens.status.successBgAlt, cor: tokens.status.successHover, label: 'Pago' },
+    pendente: { bg: tokens.status.warningLightSoft, cor: tokens.status.warningAmberStrong, label: 'Pendente' },
+    atrasado: { bg: tokens.status.dangerBgAlt, cor: tokens.status.dangerHover, label: 'Atrasado' },
+    parcial: { bg: tokens.status.infoLighter, cor: tokens.status.infoDark, label: 'Parcial' },
+    cancelado: { bg: tokens.bg.hoverStrong, cor: tokens.text.quaternary, label: 'Cancelado' },
   }
   const s = map[status] || map.pendente
   return <span style={{ display: 'inline-flex', padding: '3px 10px', borderRadius: 100, fontSize: 11, fontWeight: 600, background: s.bg, color: s.cor }}>{s.label}</span>
 }
 
-const btnPrimary = { padding: '9px 16px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 } as const
-const btnSecondary = { padding: '9px 16px', borderRadius: 9, border: '1px solid #e5e5e5', background: 'white', color: '#404040', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 } as const
-const th = { textAlign: 'left' as const, padding: '10px 12px', fontSize: 11, fontWeight: 700, color: '#737373', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }
-const td = { padding: '12px', borderTop: '1px solid #f5f5f5', color: '#404040' }
+const btnPrimary = { padding: '9px 16px', borderRadius: 9, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 } as const
+const btnSecondary = { padding: '9px 16px', borderRadius: 9, border: `1px solid ${tokens.neutral[200]}`, background: 'white', color: tokens.neutral[700], fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 } as const
+const th = { textAlign: 'left' as const, padding: '10px 12px', fontSize: 11, fontWeight: 700, color: tokens.text.quaternary, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }
+const td = { padding: '12px', borderTop: `1px solid ${tokens.bg.hover}`, color: tokens.neutral[700] }
 const iconBtn = { background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' } as const
-const selectStyle = { padding: '9px 12px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 13, outline: 'none', background: 'white', cursor: 'pointer' } as const
+const selectStyle = { padding: '9px 12px', borderRadius: 8, border: `1px solid ${tokens.neutral[200]}`, fontSize: 13, outline: 'none', background: 'white', cursor: 'pointer' } as const
 
 // ============================================
 // MODAL: Nova/Editar Movimentacao
@@ -1686,14 +1687,14 @@ function ModalMovimentacao({ clinicaId, mov, categorias, contas, pacientes, medi
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>{editando ? 'Editar movimentação' : 'Nova movimentação'}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={tokens.text.quaternary} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
         {/* Tipo */}
-        <div style={{ display: 'flex', gap: 4, background: '#f5f5f5', padding: 4, borderRadius: 9, marginBottom: 16 }}>
-          <button onClick={() => setTipo('receita')} style={{ flex: 1, padding: '8px', borderRadius: 7, border: 'none', background: tipo === 'receita' ? 'white' : 'transparent', color: tipo === 'receita' ? '#16a34a' : '#525252', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: tipo === 'receita' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none' }}>↗ Receita</button>
-          <button onClick={() => setTipo('despesa')} style={{ flex: 1, padding: '8px', borderRadius: 7, border: 'none', background: tipo === 'despesa' ? 'white' : 'transparent', color: tipo === 'despesa' ? '#dc2626' : '#525252', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: tipo === 'despesa' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none' }}>↙ Despesa</button>
+        <div style={{ display: 'flex', gap: 4, background: tokens.bg.hover, padding: 4, borderRadius: 9, marginBottom: 16 }}>
+          <button onClick={() => setTipo('receita')} style={{ flex: 1, padding: '8px', borderRadius: 7, border: 'none', background: tipo === 'receita' ? 'white' : 'transparent', color: tipo === 'receita' ? tokens.status.success : tokens.text.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: tipo === 'receita' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none' }}>↗ Receita</button>
+          <button onClick={() => setTipo('despesa')} style={{ flex: 1, padding: '8px', borderRadius: 7, border: 'none', background: tipo === 'despesa' ? 'white' : 'transparent', color: tipo === 'despesa' ? tokens.status.danger : tokens.text.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: tipo === 'despesa' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none' }}>↙ Despesa</button>
         </div>
 
         {/* Descrição */}
@@ -1704,7 +1705,7 @@ function ModalMovimentacao({ clinicaId, mov, categorias, contas, pacientes, medi
         {/* Valor */}
         <FormField label="Valor *">
           <div style={{ position: 'relative' as const }}>
-            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: tokens.text.tertiary, fontSize: 13 }}>R$</span>
             <input type="text" value={valor} onChange={e => setValor(e.target.value.replace(/[^0-9,]/g, ''))} placeholder="0,00" style={{ ...inputStyle, paddingLeft: 38 }}/>
           </div>
         </FormField>
@@ -1723,7 +1724,7 @@ function ModalMovimentacao({ clinicaId, mov, categorias, contas, pacientes, medi
         </div>
 
         {/* Mais opcoes */}
-        <button onClick={() => setMaisOpcoes(!maisOpcoes)} style={{ background: 'none', border: 'none', color: '#6043C1', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '8px 0', marginTop: 8, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button onClick={() => setMaisOpcoes(!maisOpcoes)} style={{ background: 'none', border: 'none', color: tokens.brand.primary, fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '8px 0', marginTop: 8, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
           {maisOpcoes ? '▼' : '▶'} Mais opções
         </button>
 
@@ -1775,11 +1776,11 @@ function ModalMovimentacao({ clinicaId, mov, categorias, contas, pacientes, medi
           </>
         )}
 
-        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginTop: 8, marginBottom: 8 }}>{erro}</div>}
+        {erro && <div style={{ background: tokens.status.dangerBgAlt, color: tokens.status.dangerHover, padding: '10px 12px', borderRadius: 8, fontSize: 13, marginTop: 8, marginBottom: 8 }}>{erro}</div>}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 18, justifyContent: editando ? 'space-between' : 'flex-end' }}>
           {editando && status !== 'cancelado' && (
-            <button onClick={cancelar} disabled={salvando} style={{ ...btnSecondary, color: '#dc2626', borderColor: '#fecaca' }}>Cancelar movimentação</button>
+            <button onClick={cancelar} disabled={salvando} style={{ ...btnSecondary, color: tokens.status.danger, borderColor: tokens.status.dangerLight }}>Cancelar movimentação</button>
           )}
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onClose} disabled={salvando} style={btnSecondary}>Fechar</button>
@@ -1794,13 +1795,13 @@ function ModalMovimentacao({ clinicaId, mov, categorias, contas, pacientes, medi
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 12 }}>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: tokens.text.muted, marginBottom: 5 }}>{label}</label>
       {children}
     </div>
   )
 }
 
-const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #e5e5e5', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, background: 'white' } as const
+const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: `1px solid ${tokens.neutral[200]}`, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, background: 'white' } as const
 
 
 // ============================================
@@ -1915,7 +1916,7 @@ function ModalNovoPacote({ clinicaId, pacientes, medicos, onClose, onSaved }: an
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Novo pacote de sessões</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={tokens.text.quaternary} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
@@ -1936,14 +1937,14 @@ function ModalNovoPacote({ clinicaId, pacientes, medicos, onClose, onSaved }: an
           </FormField>
           <FormField label="Valor total *">
             <div style={{ position: 'relative' as const }}>
-              <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+              <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: tokens.text.tertiary, fontSize: 13 }}>R$</span>
               <input type="text" value={valorTotal} onChange={e => setValorTotal(e.target.value.replace(/[^0-9,]/g, ''))} placeholder="0,00" style={{ ...inputStyle, paddingLeft: 38 }}/>
             </div>
           </FormField>
         </div>
 
         {valorNum > 0 && sessoesNum > 0 && (
-          <p style={{ fontSize: 11, color: '#6043C1', margin: '-8px 0 12px', fontWeight: 500 }}>
+          <p style={{ fontSize: 11, color: tokens.brand.primary, margin: '-8px 0 12px', fontWeight: 500 }}>
             💡 Valor por sessão: {fmt(valorPorSessao)}
           </p>
         )}
@@ -1956,7 +1957,7 @@ function ModalNovoPacote({ clinicaId, pacientes, medicos, onClose, onSaved }: an
         </FormField>
 
         {/* Forma pagamento */}
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#525252', marginBottom: 5 }}>Forma de pagamento *</label>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: tokens.text.muted, marginBottom: 5 }}>Forma de pagamento *</label>
         <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
           <button type="button" onClick={() => setFormaPag('a_vista')} style={pillBtn(formaPag === 'a_vista')}>À vista</button>
           <button type="button" onClick={() => setFormaPag('parcelado')} style={pillBtn(formaPag === 'parcelado')}>Parcelado</button>
@@ -1974,7 +1975,7 @@ function ModalNovoPacote({ clinicaId, pacientes, medicos, onClose, onSaved }: an
               </FormField>
             </div>
             {valorNum > 0 && parcelasNum > 0 && (
-              <p style={{ fontSize: 11, color: '#6043C1', margin: '-8px 0 12px', fontWeight: 500 }}>
+              <p style={{ fontSize: 11, color: tokens.brand.primary, margin: '-8px 0 12px', fontWeight: 500 }}>
                 💡 {parcelasNum}x de {fmt(valorParcela)} (mensal)
               </p>
             )}
@@ -1988,7 +1989,7 @@ function ModalNovoPacote({ clinicaId, pacientes, medicos, onClose, onSaved }: an
         )}
 
         {formaPag === 'por_sessao' && (
-          <p style={{ fontSize: 12, color: '#737373', margin: '0 0 14px', padding: 10, background: '#f5f5f5', borderRadius: 8 }}>
+          <p style={{ fontSize: 12, color: tokens.text.quaternary, margin: '0 0 14px', padding: 10, background: tokens.bg.hover, borderRadius: 8 }}>
             ℹ️ A cada sessão realizada, será cobrado {valorNum > 0 && sessoesNum > 0 ? fmt(valorPorSessao) : 'o valor por sessão'}.
           </p>
         )}
@@ -1997,7 +1998,7 @@ function ModalNovoPacote({ clinicaId, pacientes, medicos, onClose, onSaved }: an
           <textarea value={observacoes} onChange={e => setObservacoes(e.target.value)} rows={2} style={{ ...inputStyle, resize: 'vertical' as const, fontFamily: 'inherit' }}/>
         </FormField>
 
-        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginTop: 8, marginBottom: 8 }}>{erro}</div>}
+        {erro && <div style={{ background: tokens.status.dangerBgAlt, color: tokens.status.dangerHover, padding: '10px 12px', borderRadius: 8, fontSize: 13, marginTop: 8, marginBottom: 8 }}>{erro}</div>}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 18, justifyContent: 'flex-end' }}>
           <button onClick={onClose} disabled={salvando} style={btnSecondary}>Cancelar</button>
@@ -2010,8 +2011,8 @@ function ModalNovoPacote({ clinicaId, pacientes, medicos, onClose, onSaved }: an
 
 const pillBtn = (ativo: boolean) => ({
   flex: 1, padding: '9px', borderRadius: 7, border: 'none',
-  background: ativo ? '#0a0a0a' : '#f5f5f5',
-  color: ativo ? 'white' : '#525252',
+  background: ativo ? tokens.neutral[900] : tokens.bg.hover,
+  color: ativo ? 'white' : tokens.text.muted,
   fontSize: 12, fontWeight: 600 as const, cursor: 'pointer'
 })
 
@@ -2020,7 +2021,7 @@ const pillBtn = (ativo: boolean) => ({
 // COMPONENTE: BarChart simples horizontal
 // ============================================
 
-function BarChart({ data, total, corBase = '#6043C1' }: { data: any[]; total: number; corBase?: string }) {
+function BarChart({ data, total, corBase = tokens.brand.primary }: { data: any[]; total: number; corBase?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
       {data.map((d: any, i: number) => {
@@ -2029,14 +2030,14 @@ function BarChart({ data, total, corBase = '#6043C1' }: { data: any[]; total: nu
         return (
           <div key={i}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#404040' }}>{d.nome}</span>
-              <span style={{ fontSize: 12, color: '#737373', fontWeight: 500 }}>
-                <strong style={{ color: '#0a0a0a' }}>{'R$ ' + d.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                <span style={{ marginLeft: 8, color: '#9ca3af' }}>{d.qtd} {d.qtd === 1 ? 'transação' : 'transações'}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: tokens.neutral[700] }}>{d.nome}</span>
+              <span style={{ fontSize: 12, color: tokens.text.quaternary, fontWeight: 500 }}>
+                <strong style={{ color: tokens.neutral[900] }}>{'R$ ' + d.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                <span style={{ marginLeft: 8, color: tokens.text.tertiary }}>{d.qtd} {d.qtd === 1 ? 'transação' : 'transações'}</span>
                 <span style={{ marginLeft: 8, color: cor, fontWeight: 700 }}>{pct.toFixed(0)}%</span>
               </span>
             </div>
-            <div style={{ height: 8, background: '#f3f4f6', borderRadius: 100, overflow: 'hidden' }}>
+            <div style={{ height: 8, background: tokens.bg.hoverStrong, borderRadius: 100, overflow: 'hidden' }}>
               <div style={{ height: '100%', background: cor, borderRadius: 100, width: pct + '%', transition: 'width 0.4s' as const }}/>
             </div>
           </div>
@@ -2055,11 +2056,11 @@ function ModalCategoria({ clinicaId, categoria, onClose, onSaved }: any) {
   const editando = !!categoria
   const [nome, setNome] = useState(categoria?.nome || '')
   const [tipo, setTipo] = useState<'receita' | 'despesa'>(categoria?.tipo || 'receita')
-  const [cor, setCor] = useState(categoria?.cor || '#6043C1')
+  const [cor, setCor] = useState(categoria?.cor || tokens.brand.primary)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
 
-  const cores = ['#6043C1', '#0d9488', '#dc2626', '#f59e0b', '#71717a', '#0891b2', '#7c3aed', '#84cc16', '#ec4899', '#525252']
+  const cores = [tokens.brand.primary, tokens.status.infoTeal, tokens.status.danger, tokens.status.warningAmber, tokens.neutral.zinc500, tokens.status.infoCyan, tokens.appointment.retorno.dot, tokens.accent.lime, tokens.external.pinkAccent, tokens.text.muted]
 
   const salvar = async () => {
     setErro('')
@@ -2082,7 +2083,7 @@ function ModalCategoria({ clinicaId, categoria, onClose, onSaved }: any) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>{editando ? 'Editar categoria' : 'Nova categoria'}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.text.quaternary} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
@@ -2094,14 +2095,14 @@ function ModalCategoria({ clinicaId, categoria, onClose, onSaved }: any) {
           <div style={{ display: 'flex', gap: 6 }}>
             <button type="button" onClick={() => setTipo('receita')} style={{
               flex: 1, padding: '9px', borderRadius: 8, border: 'none',
-              background: tipo === 'receita' ? '#dcfce7' : '#f5f5f5',
-              color: tipo === 'receita' ? '#15803d' : '#525252',
+              background: tipo === 'receita' ? tokens.status.successBgAlt : tokens.bg.hover,
+              color: tipo === 'receita' ? tokens.status.successHover : tokens.text.muted,
               fontSize: 12, fontWeight: 600, cursor: 'pointer'
             }}>↗ Receita</button>
             <button type="button" onClick={() => setTipo('despesa')} style={{
               flex: 1, padding: '9px', borderRadius: 8, border: 'none',
-              background: tipo === 'despesa' ? '#fee2e2' : '#f5f5f5',
-              color: tipo === 'despesa' ? '#b91c1c' : '#525252',
+              background: tipo === 'despesa' ? tokens.status.dangerBgAlt : tokens.bg.hover,
+              color: tipo === 'despesa' ? tokens.status.dangerHover : tokens.text.muted,
               fontSize: 12, fontWeight: 600, cursor: 'pointer'
             }}>↙ Despesa</button>
           </div>
@@ -2112,13 +2113,13 @@ function ModalCategoria({ clinicaId, categoria, onClose, onSaved }: any) {
             {cores.map(c => (
               <button key={c} type="button" onClick={() => setCor(c)} style={{
                 width: 32, height: 32, borderRadius: 8, background: c, cursor: 'pointer',
-                border: cor === c ? '3px solid #0a0a0a' : '1px solid transparent'
+                border: cor === c ? `3px solid ${tokens.neutral[900]}` : '1px solid transparent'
               }}/>
             ))}
           </div>
         </FormField>
 
-        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 8 }}>{erro}</div>}
+        {erro && <div style={{ background: tokens.status.dangerBgAlt, color: tokens.status.dangerHover, padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 8 }}>{erro}</div>}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
           <button onClick={onClose} disabled={salvando} style={btnSecondary}>Cancelar</button>
@@ -2193,10 +2194,10 @@ function ModalRecorrente({ clinicaId, categorias, onClose, onSaved }: any) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Nova despesa recorrente</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.text.quaternary} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
-        <p style={{ fontSize: 12, color: '#737373', margin: '-12px 0 18px' }}>Cadastre 1 vez. O sistema gera as próximas N parcelas automaticamente.</p>
+        <p style={{ fontSize: 12, color: tokens.text.quaternary, margin: '-12px 0 18px' }}>Cadastre 1 vez. O sistema gera as próximas N parcelas automaticamente.</p>
 
         <FormField label="Descrição">
           <input type="text" value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Ex: Aluguel sala 2" style={inputStyle} autoFocus/>
@@ -2205,7 +2206,7 @@ function ModalRecorrente({ clinicaId, categorias, onClose, onSaved }: any) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <FormField label="Valor mensal">
             <div style={{ position: 'relative' as const }}>
-              <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+              <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: tokens.text.tertiary, fontSize: 13 }}>R$</span>
               <input type="text" value={valor} onChange={e => setValor(e.target.value.replace(/[^0-9,]/g, ''))} placeholder="0,00" style={{ ...inputStyle, paddingLeft: 38 }}/>
             </div>
           </FormField>
@@ -2226,12 +2227,12 @@ function ModalRecorrente({ clinicaId, categorias, onClose, onSaved }: any) {
         </FormField>
 
         {valorNum > 0 && mesesNum > 0 && (
-          <div style={{ background: '#fef3c7', color: '#92400e', padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, fontWeight: 500 }}>
+          <div style={{ background: tokens.status.warningLightSoft, color: tokens.status.warningText, padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, fontWeight: 500 }}>
             ℹ Total acumulado: <strong>R$ {totalAcumulado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> em {mesesNum} {mesesNum === 1 ? 'mês' : 'meses'}
           </div>
         )}
 
-        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 8 }}>{erro}</div>}
+        {erro && <div style={{ background: tokens.status.dangerBgAlt, color: tokens.status.dangerHover, padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 8 }}>{erro}</div>}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
           <button onClick={onClose} disabled={salvando} style={btnSecondary}>Cancelar</button>
@@ -2285,7 +2286,7 @@ function ModalConta({ clinicaId, conta, onClose, onSaved }: any) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>{editando ? 'Editar conta' : 'Nova conta'}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.text.quaternary} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
@@ -2294,8 +2295,8 @@ function ModalConta({ clinicaId, conta, onClose, onSaved }: any) {
             {tipos.map(o => (
               <button key={o.v} type="button" onClick={() => setTipo(o.v)} style={{
                 padding: '10px 12px', borderRadius: 8, border: 'none',
-                background: tipo === o.v ? '#0a0a0a' : '#f5f5f5',
-                color: tipo === o.v ? 'white' : '#525252',
+                background: tipo === o.v ? tokens.neutral[900] : tokens.bg.hover,
+                color: tipo === o.v ? 'white' : tokens.text.muted,
                 fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 textAlign: 'left' as const
               }}>
@@ -2325,13 +2326,13 @@ function ModalConta({ clinicaId, conta, onClose, onSaved }: any) {
 
         <FormField label="Saldo inicial">
           <div style={{ position: 'relative' as const }}>
-            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>R$</span>
+            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: tokens.text.tertiary, fontSize: 13 }}>R$</span>
             <input type="text" value={saldoInicial} onChange={e => setSaldoInicial(e.target.value.replace(/[^0-9,-]/g, ''))} style={{ ...inputStyle, paddingLeft: 38 }}/>
           </div>
-          <p style={{ fontSize: 11, color: '#9ca3af', margin: '5px 0 0' }}>Saldo no momento de cadastro. Pode ser negativo (ex: cartão).</p>
+          <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '5px 0 0' }}>Saldo no momento de cadastro. Pode ser negativo (ex: cartão).</p>
         </FormField>
 
-        {erro && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 8 }}>{erro}</div>}
+        {erro && <div style={{ background: tokens.status.dangerBgAlt, color: tokens.status.dangerHover, padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 8 }}>{erro}</div>}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
           <button onClick={onClose} disabled={salvando} style={btnSecondary}>Cancelar</button>
@@ -2348,8 +2349,8 @@ function ModalConta({ clinicaId, conta, onClose, onSaved }: any) {
 // ============================================
 
 function IconeContaTipo({ tipo }: { tipo: string }) {
-  const cor = tipo === 'caixa' ? '#16a34a' : tipo === 'banco' ? '#0891b2' : tipo === 'cartao_credito' ? '#6043C1' : '#737373'
-  const bg = tipo === 'caixa' ? '#dcfce7' : tipo === 'banco' ? '#cffafe' : tipo === 'cartao_credito' ? '#f0ebff' : '#f3f4f6'
+  const cor = tipo === 'caixa' ? tokens.status.success : tipo === 'banco' ? tokens.status.infoCyan : tipo === 'cartao_credito' ? tokens.brand.primary : tokens.text.quaternary
+  const bg = tipo === 'caixa' ? tokens.status.successBgAlt : tipo === 'banco' ? tokens.status.infoCyanBg : tipo === 'cartao_credito' ? tokens.brand.primaryLight : tokens.bg.hoverStrong
 
   let svg = null
   if (tipo === 'caixa') {

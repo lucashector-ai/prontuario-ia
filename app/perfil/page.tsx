@@ -3,10 +3,11 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 const CARD_RADIUS = 16
 
 export default function PerfilPage() {
@@ -108,17 +109,17 @@ export default function PerfilPage() {
     padding: '10px 14px',
     fontSize: 14,
     borderRadius: 10,
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${tokens.border.default}`,
     background: 'white',
     outline: 'none',
     boxSizing: 'border-box',
-    color: '#111827',
+    color: tokens.text.primary,
   }
 
   const labelStyle: React.CSSProperties = {
     fontSize: 12,
     fontWeight: 600,
-    color: '#6b7280',
+    color: tokens.text.secondary,
     display: 'block',
     marginBottom: 6,
     letterSpacing: '0.02em',
@@ -133,13 +134,13 @@ export default function PerfilPage() {
   const h3Style: React.CSSProperties = {
     fontSize: 14,
     fontWeight: 700,
-    color: '#111827',
+    color: tokens.text.primary,
     margin: '0 0 4px',
   }
 
   const pSubStyle: React.CSSProperties = {
     fontSize: 12,
-    color: '#9ca3af',
+    color: tokens.text.tertiary,
     margin: '0 0 20px',
   }
 
@@ -147,8 +148,8 @@ export default function PerfilPage() {
     <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Meu perfil</h1>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Gerencie suas informações pessoais e de acesso</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Meu perfil</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Gerencie suas informações pessoais e de acesso</p>
         </div>
 
         {/* Toast de mensagem */}
@@ -156,10 +157,10 @@ export default function PerfilPage() {
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 200,
             padding: '12px 20px', borderRadius: 10,
-            background: msg.tipo === 'ok' ? '#ecfdf5' : '#fef2f2',
-            color: msg.tipo === 'ok' ? '#065f46' : '#991b1b',
+            background: msg.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
+            color: msg.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
             fontSize: 13, fontWeight: 600,
-            border: `1px solid ${msg.tipo === 'ok' ? '#a7f3d0' : '#fecaca'}`,
+            border: `1px solid ${msg.tipo === 'ok' ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
             boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           }}>
             {msg.texto}
@@ -204,8 +205,8 @@ export default function PerfilPage() {
                 <input ref={fotoInputRef} type="file" accept="image/*" style={{ display: 'none' }}
                   onChange={e => e.target.files?.[0] && uploadFoto(e.target.files[0])}/>
                 
-                <p style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>{medico.nome || 'Sem nome'}</p>
-                <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 2px' }}>{medico.email}</p>
+                <p style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>{medico.nome || 'Sem nome'}</p>
+                <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 2px' }}>{medico.email}</p>
                 {medico.especialidade && (
                   <p style={{ fontSize: 12, color: ACCENT, background: ACCENT_LIGHT, padding: '4px 12px', borderRadius: 20, margin: '8px 0 0', fontWeight: 600 }}>
                     {medico.especialidade}
@@ -241,7 +242,7 @@ export default function PerfilPage() {
                 <button onClick={salvarSenha} disabled={salvandoSenha}
                   style={{
                     padding: '11px 20px',
-                    background: salvandoSenha ? '#9ca3af' : ACCENT,
+                    background: salvandoSenha ? tokens.text.tertiary : ACCENT,
                     color: 'white', border: 'none', borderRadius: 10,
                     fontSize: 13, fontWeight: 600, cursor: salvandoSenha ? 'not-allowed' : 'pointer',
                     marginTop: 4,
@@ -291,11 +292,11 @@ export default function PerfilPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20, paddingTop: 20, borderTop: '1px solid #f3f4f6' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20, paddingTop: 20, borderTop: `1px solid ${tokens.bg.hoverStrong}` }}>
               <button onClick={salvarPerfil} disabled={salvando}
                 style={{
                   padding: '11px 24px',
-                  background: salvando ? '#9ca3af' : ACCENT,
+                  background: salvando ? tokens.text.tertiary : ACCENT,
                   color: 'white', border: 'none', borderRadius: 10,
                   fontSize: 13, fontWeight: 600, cursor: salvando ? 'not-allowed' : 'pointer',
                 }}>

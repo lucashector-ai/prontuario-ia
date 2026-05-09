@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 const CARD_RADIUS = 16
 
 const CATEGORIAS = ['Medicamento', 'Patologia', 'Procedimento', 'Anatomia', 'Sigla', 'Outro']
@@ -76,12 +77,12 @@ export default function Dicionario() {
   })
 
   const corCategoria: Record<string, string> = {
-    'Medicamento': '#2563eb', 'Patologia': '#dc2626', 'Procedimento': ACCENT,
-    'Anatomia': '#059669', 'Sigla': '#d97706', 'Outro': '#6b7280'
+    'Medicamento': tokens.status.infoStrong, 'Patologia': tokens.status.danger, 'Procedimento': ACCENT,
+    'Anatomia': tokens.status.successHover, 'Sigla': tokens.status.warningAlt, 'Outro': tokens.text.secondary
   }
   const bgCategoria: Record<string, string> = {
-    'Medicamento': '#eff6ff', 'Patologia': '#fef2f2', 'Procedimento': ACCENT_LIGHT,
-    'Anatomia': '#f0fdf4', 'Sigla': '#fffbeb', 'Outro': '#F5F5F5'
+    'Medicamento': tokens.status.infoBg, 'Patologia': tokens.status.dangerBg, 'Procedimento': ACCENT_LIGHT,
+    'Anatomia': tokens.status.successBg, 'Sigla': tokens.status.warningBgAlt, 'Outro': tokens.bg.hover
   }
 
   // Contagem por categoria pra chips de filtro
@@ -90,13 +91,13 @@ export default function Dicionario() {
 
   const inputBase: React.CSSProperties = {
     width: '100%', padding: '10px 14px', fontSize: 14,
-    borderRadius: 10, border: '1px solid #e5e7eb',
-    outline: 'none', fontFamily: 'inherit', color: '#111827',
+    borderRadius: 10, border: `1px solid ${tokens.border.default}`,
+    outline: 'none', fontFamily: 'inherit', color: tokens.text.primary,
     background: 'white', boxSizing: 'border-box',
   }
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 600, color: '#6b7280',
+    fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
     display: 'block', marginBottom: 6,
     textTransform: 'uppercase' as const, letterSpacing: '0.04em',
   }
@@ -106,8 +107,8 @@ export default function Dicionario() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dicionário clínico</h1>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Termos personalizados pra melhorar a transcrição da IA e gerar prontuários mais precisos</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Dicionário clínico</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Termos personalizados pra melhorar a transcrição da IA e gerar prontuários mais precisos</p>
         </div>
         <span style={{
           fontSize: 12, color: ACCENT, background: ACCENT_LIGHT,
@@ -124,8 +125,8 @@ export default function Dicionario() {
         {/* COLUNA ESQUERDA — adicionar + info */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Adicionar termo</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 20px' }}>Amplie o vocabulário da IA</p>
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Adicionar termo</h2>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Amplie o vocabulário da IA</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
@@ -162,7 +163,7 @@ export default function Dicionario() {
                 disabled={salvando}
                 style={{
                   padding: 12, borderRadius: 10, border: 'none',
-                  background: salvando ? '#9ca3af' : ACCENT,
+                  background: salvando ? tokens.text.tertiary : ACCENT,
                   color: 'white', fontSize: 13, fontWeight: 700,
                   cursor: salvando ? 'not-allowed' : 'pointer',
                   marginTop: 4,
@@ -192,8 +193,8 @@ export default function Dicionario() {
                 </svg>
               </div>
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Como funciona</p>
-                <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Como funciona</p>
+                <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.6 }}>
                   Os termos aqui cadastrados são usados pela IA pra corrigir a transcrição da consulta e gerar prontuários mais precisos pra sua especialidade.
                 </p>
               </div>
@@ -209,7 +210,7 @@ export default function Dicionario() {
             background: 'white', borderRadius: 12,
             padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10,
           }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2">
               <circle cx="11" cy="11" r="8"/>
               <path d="M21 21l-4.35-4.35"/>
             </svg>
@@ -217,10 +218,10 @@ export default function Dicionario() {
               value={filtro}
               onChange={e => setFiltro(e.target.value)}
               placeholder="Buscar termo..."
-              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 14, outline: 'none', color: '#374151' }}
+              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 14, outline: 'none', color: tokens.text.strong }}
             />
             {filtro && (
-              <button onClick={() => setFiltro('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex' }}>
+              <button onClick={() => setFiltro('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: tokens.text.tertiary, padding: 0, display: 'flex' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18"/>
                   <line x1="6" y1="6" x2="18" y2="18"/>
@@ -242,9 +243,9 @@ export default function Dicionario() {
                   disabled={count === 0 && cat !== 'todas'}
                   style={{
                     padding: '6px 12px', borderRadius: 20,
-                    border: `1px solid ${ativo ? ACCENT : '#e5e7eb'}`,
+                    border: `1px solid ${ativo ? ACCENT : tokens.border.default}`,
                     background: ativo ? ACCENT : 'white',
-                    color: ativo ? 'white' : (count === 0 && cat !== 'todas' ? '#d1d5db' : '#374151'),
+                    color: ativo ? 'white' : (count === 0 && cat !== 'todas' ? tokens.border.strong : tokens.text.strong),
                     fontSize: 12, fontWeight: 600,
                     cursor: count === 0 && cat !== 'todas' ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
@@ -254,8 +255,8 @@ export default function Dicionario() {
                   <span style={{
                     fontSize: 10,
                     padding: '1px 6px', borderRadius: 10,
-                    background: ativo ? 'rgba(255,255,255,0.25)' : '#F5F5F5',
-                    color: ativo ? 'white' : '#9ca3af',
+                    background: ativo ? 'rgba(255,255,255,0.25)' : tokens.bg.hover,
+                    color: ativo ? 'white' : tokens.text.tertiary,
                     fontWeight: 700,
                   }}>{count}</span>
                 </button>
@@ -272,18 +273,18 @@ export default function Dicionario() {
             <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 48, textAlign: 'center' as const }}>
               <div style={{
                 width: 48, height: 48, borderRadius: 14,
-                background: '#F5F5F5', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 12px', color: '#9ca3af',
+                background: tokens.bg.hover, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 12px', color: tokens.text.tertiary,
               }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
                 </svg>
               </div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>
                 {termos.length === 0 ? 'Nenhum termo cadastrado' : 'Nenhum resultado'}
               </p>
-              <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
+              <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>
                 {termos.length === 0 ? 'Adicione termos específicos da sua especialidade no formulário ao lado' : 'Tente outro filtro ou busca'}
               </p>
             </div>
@@ -301,11 +302,11 @@ export default function Dicionario() {
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' as const }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{t.termo}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary }}>{t.termo}</span>
                       <span style={{
                         fontSize: 10, fontWeight: 700,
-                        color: corCategoria[t.categoria] || '#6b7280',
-                        background: bgCategoria[t.categoria] || '#F5F5F5',
+                        color: corCategoria[t.categoria] || tokens.text.secondary,
+                        background: bgCategoria[t.categoria] || tokens.bg.hover,
                         padding: '2px 8px', borderRadius: 10, flexShrink: 0,
                         textTransform: 'uppercase' as const, letterSpacing: '0.02em',
                       }}>
@@ -313,7 +314,7 @@ export default function Dicionario() {
                       </span>
                     </div>
                     {t.descricao && (
-                      <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>{t.descricao}</p>
+                      <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>{t.descricao}</p>
                     )}
                   </div>
                   <button
@@ -321,11 +322,11 @@ export default function Dicionario() {
                     title="Remover"
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer',
-                      color: '#d1d5db', padding: 4, flexShrink: 0,
+                      color: tokens.border.strong, padding: 4, flexShrink: 0,
                       display: 'flex', alignItems: 'center',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#dc2626')}
-                    onMouseLeave={e => (e.currentTarget.style.color = '#d1d5db')}
+                    onMouseEnter={e => (e.currentTarget.style.color = tokens.status.danger)}
+                    onMouseLeave={e => (e.currentTarget.style.color = tokens.border.strong)}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <polyline points="3 6 5 6 21 6"/>

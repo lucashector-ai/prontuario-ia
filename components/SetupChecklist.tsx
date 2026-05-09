@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
 
 type Passo = {
   key: string
@@ -144,7 +145,7 @@ export function SetupChecklist() {
           display: 'flex', alignItems: 'center', gap: 10,
           padding: tudoPronto ? '12px 16px' : '12px 18px 12px 14px',
           borderRadius: 999, border: 'none',
-          background: tudoPronto ? '#10b981' : ACCENT, color: 'white',
+          background: tudoPronto ? tokens.accent.emerald : ACCENT, color: 'white',
           fontSize: 13, fontWeight: 700, cursor: 'pointer',
           boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
           transition: 'transform 0.15s',
@@ -200,15 +201,15 @@ export function SetupChecklist() {
             {/* Header drawer */}
             <div style={{
               padding: '20px 24px',
-              borderBottom: '1px solid #f3f4f6',
+              borderBottom: `1px solid ${tokens.bg.hoverStrong}`,
               display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
               flexShrink: 0,
             }}>
               <div>
-                <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>
+                <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>
                   {tudoPronto ? 'Configuração completa' : 'Comece por aqui'}
                 </h2>
-                <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>
                   {tudoPronto
                     ? 'Sua clínica está 100% pronta pra operar'
                     : (completos + ' de ' + total + ' passos concluídos')
@@ -219,12 +220,12 @@ export function SetupChecklist() {
                 onClick={() => setAberto(false)}
                 style={{
                   width: 32, height: 32, borderRadius: 8,
-                  border: 'none', background: '#F5F5F5', color: '#6b7280',
+                  border: 'none', background: tokens.bg.hover, color: tokens.text.secondary,
                   cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = '#e5e7eb'}
-                onMouseLeave={e => e.currentTarget.style.background = '#F5F5F5'}
+                onMouseEnter={e => e.currentTarget.style.background = tokens.border.default}
+                onMouseLeave={e => e.currentTarget.style.background = tokens.bg.hover}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18"/>
@@ -236,12 +237,12 @@ export function SetupChecklist() {
             {/* Barra de progresso */}
             <div style={{ padding: '16px 24px 0' }}>
               <div style={{
-                height: 6, background: '#f3f4f6', borderRadius: 3,
+                height: 6, background: tokens.bg.hoverStrong, borderRadius: 3,
                 overflow: 'hidden' as const,
               }}>
                 <div style={{
                   width: progressoPct + '%', height: '100%',
-                  background: tudoPronto ? '#10b981' : ACCENT,
+                  background: tudoPronto ? tokens.accent.emerald : ACCENT,
                   borderRadius: 3,
                   transition: 'width 0.4s ease',
                 }}/>
@@ -256,14 +257,14 @@ export function SetupChecklist() {
                   style={{
                     display: 'flex', alignItems: 'flex-start', gap: 14,
                     padding: 16, borderRadius: 12,
-                    background: p.completo ? ACCENT_LIGHT : '#F9FAFB',
-                    border: p.completo ? '1px solid #d4c9f7' : '1px solid #f3f4f6',
+                    background: p.completo ? ACCENT_LIGHT : tokens.bg.muted,
+                    border: p.completo ? `1px solid ${tokens.brand.primaryAccentSoft}` : `1px solid ${tokens.bg.hoverStrong}`,
                   }}
                 >
                   <div style={{
                     width: 28, height: 28, borderRadius: '50%',
                     background: p.completo ? ACCENT : 'white',
-                    border: p.completo ? 'none' : '1.5px solid #d1d5db',
+                    border: p.completo ? 'none' : `1.5px solid ${tokens.border.strong}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
                   }}>
@@ -277,14 +278,14 @@ export function SetupChecklist() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
                       fontSize: 14, fontWeight: 700,
-                      color: p.completo ? ACCENT : '#111827',
+                      color: p.completo ? ACCENT : tokens.text.primary,
                       margin: '0 0 4px',
                     }}>
                       {p.label}
                     </p>
                     <p style={{
                       fontSize: 12,
-                      color: p.completo ? ACCENT : '#6b7280',
+                      color: p.completo ? ACCENT : tokens.text.secondary,
                       margin: '0 0 12px', lineHeight: 1.5,
                     }}>
                       {p.desc}

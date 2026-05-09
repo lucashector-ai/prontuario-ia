@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { tokens } from '@/lib/design-tokens'
 
 const MEMED_SCRIPT_URL = process.env.NEXT_PUBLIC_MEMED_SCRIPT_URL ||
   'https://integrations.memed.com.br/modulos/plataforma.sinapse-prescricao/build/sinapse-prescricao.min.js'
@@ -219,17 +220,17 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
           maxWidth: 420, width: '100%',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2">
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: tokens.status.dangerBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
             </div>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Não foi possível abrir a Memed</h3>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Não foi possível abrir a Memed</h3>
           </div>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px', lineHeight: 1.5 }}>{erro}</p>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 16px', lineHeight: 1.5 }}>{erro}</p>
           <button onClick={onClose} style={{
             padding: '9px 18px', borderRadius: 8, border: 'none',
-            background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600,
+            background: tokens.brand.primary, color: 'white', fontSize: 13, fontWeight: 600,
             cursor: 'pointer',
           }}>Fechar</button>
         </div>
@@ -246,7 +247,7 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
       {onClose && (
         <button onClick={onClose} style={{
           padding: '8px 14px', borderRadius: 8, border: 'none',
-          background: 'white', color: '#374151', fontSize: 13, fontWeight: 600,
+          background: 'white', color: tokens.text.strong, fontSize: 13, fontWeight: 600,
           cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
           display: 'flex', alignItems: 'center', gap: 6,
         }}>

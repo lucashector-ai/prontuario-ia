@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { tokens } from '@/lib/design-tokens'
 
 type Notificacao = {
   id: string
@@ -49,9 +50,9 @@ export function NotificacoesSofia({ medicoId }: { medicoId: string }) {
   }
 
   const corPorTipo: Record<string, string> = {
-    confirmacao_recusada: '#dc2626',
-    confirmacao_ignorada: '#d97706',
-    reagendamento_solicitado: '#6043C1',
+    confirmacao_recusada: tokens.status.danger,
+    confirmacao_ignorada: tokens.status.warningAlt,
+    reagendamento_solicitado: tokens.brand.primary,
   }
 
   return (
@@ -66,7 +67,7 @@ export function NotificacoesSofia({ medicoId }: { medicoId: string }) {
           cursor: 'pointer',
         }}
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.text.secondary} strokeWidth="2">
           <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 01-3.46 0"/>
         </svg>
@@ -74,7 +75,7 @@ export function NotificacoesSofia({ medicoId }: { medicoId: string }) {
           <span style={{
             position: 'absolute', top: 4, right: 4,
             minWidth: 16, height: 16, padding: '0 5px',
-            background: '#dc2626', color: 'white',
+            background: tokens.status.danger, color: 'white',
             borderRadius: 10, fontSize: 10, fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
@@ -95,17 +96,17 @@ export function NotificacoesSofia({ medicoId }: { medicoId: string }) {
             boxShadow: '0 10px 40px rgba(0,0,0,0.12)',
             zIndex: 100, overflow: 'hidden',
           }}>
-            <div style={{ padding: '14px 16px', borderBottom: '1px solid #f3f4f6' }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>
+            <div style={{ padding: '14px 16px', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: tokens.text.primary }}>
                 Notificações da Sofia
               </p>
-              <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9ca3af' }}>
+              <p style={{ margin: '2px 0 0', fontSize: 11, color: tokens.text.tertiary }}>
                 {notificacoes.length === 0 ? 'Tudo em dia 💜' : `${notificacoes.length} novas`}
               </p>
             </div>
             <div style={{ maxHeight: 400, overflow: 'auto' }}>
               {notificacoes.length === 0 ? (
-                <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>
+                <div style={{ padding: 24, textAlign: 'center', color: tokens.text.tertiary, fontSize: 12 }}>
                   Nenhuma notificação pendente
                 </div>
               ) : (
@@ -114,7 +115,7 @@ export function NotificacoesSofia({ medicoId }: { medicoId: string }) {
                     key={n.id}
                     style={{
                       padding: '12px 16px',
-                      borderBottom: '1px solid #F5F5F5',
+                      borderBottom: `1px solid ${tokens.bg.hover}`,
                       cursor: 'pointer',
                     }}
                     onClick={() => {
@@ -126,15 +127,15 @@ export function NotificacoesSofia({ medicoId }: { medicoId: string }) {
                     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                       <span style={{ fontSize: 16 }}>{iconePorTipo[n.tipo] || '🔔'}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: corPorTipo[n.tipo] || '#111827' }}>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: corPorTipo[n.tipo] || tokens.text.primary }}>
                           {n.titulo}
                         </p>
                         {n.descricao && (
-                          <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6b7280' }}>
+                          <p style={{ margin: '2px 0 0', fontSize: 11, color: tokens.text.secondary }}>
                             {n.descricao}
                           </p>
                         )}
-                        <p style={{ margin: '4px 0 0', fontSize: 10, color: '#9ca3af' }}>
+                        <p style={{ margin: '4px 0 0', fontSize: 10, color: tokens.text.tertiary }}>
                           {new Date(n.criada_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>

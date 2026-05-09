@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { SetupChecklist } from '@/components/SetupChecklist'
+import { tokens } from '@/lib/design-tokens'
 
 type Periodo = 'semana' | 'mes' | 'ano'
 
@@ -182,28 +183,28 @@ export default function Dashboard() {
   if (!medico) return null
 
   return (
-    <div style={{ padding: '24px 28px', background: '#FAFAFA', minHeight: '100%' }}>
+    <div style={{ padding: '24px 28px', background: tokens.bg.page, minHeight: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Dashboard</h1>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Dashboard</h1>
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>
               {ehAdmin ? `${medicoIds.length} médico${medicoIds.length > 1 ? 's' : ''} na clínica` : 'Visão pessoal'}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ display: 'flex', background: 'white', borderRadius: 8, border: '1px solid #e5e7eb', padding: 2 }}>
+            <div style={{ display: 'flex', background: 'white', borderRadius: 8, border: `1px solid ${tokens.border.default}`, padding: 2 }}>
               {(['semana', 'mes', 'ano'] as Periodo[]).map(p => (
                 <button key={p} onClick={() => setPeriodo(p)} style={{
                   padding: '6px 14px', borderRadius: 6, cursor: 'pointer',
-                  background: periodo === p ? '#6043C1' : 'transparent',
-                  color: periodo === p ? 'white' : '#6b7280',
+                  background: periodo === p ? tokens.brand.primary : 'transparent',
+                  color: periodo === p ? 'white' : tokens.text.secondary,
                   fontSize: 12, fontWeight: 500
                 }}>
                   {p === 'semana' ? '7 dias' : p === 'mes' ? '30 dias' : '12 meses'}
                 </button>
               ))}
             </div>
-            <button onClick={gerarRelatorio} disabled={gerandoRelatorio} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'white', border: '1px solid #e5e7eb', color: '#374151', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+            <button onClick={gerarRelatorio} disabled={gerandoRelatorio} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'white', border: `1px solid ${tokens.border.default}`, color: tokens.text.strong, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
               {gerandoRelatorio ? 'Gerando...' : 'Relatório mensal'}
             </button>
           </div>
@@ -223,18 +224,18 @@ export default function Dashboard() {
                 consultasHoje > consultasOntem ? `+${consultasHoje - consultasOntem} vs ontem` :
                 consultasHoje < consultasOntem ? `${consultasHoje - consultasOntem} vs ontem` :
                 'Igual a ontem'
-              } cor={consultasHoje >= consultasOntem ? '#16a34a' : '#dc2626'} />
+              } cor={consultasHoje >= consultasOntem ? tokens.status.success : tokens.status.danger} />
 
               <Card titulo="Taxa de no-show" valor={noShowRate === null ? '--' : noShowRate + '%'}
                 subtitulo={noShowRate === null ? 'sem dados últimos 30 dias' : noShowRate > 20 ? 'acima do esperado' : 'dentro do esperado'}
-                cor={noShowRate === null ? '#9ca3af' : noShowRate > 20 ? '#dc2626' : '#16a34a'} />
+                cor={noShowRate === null ? tokens.text.tertiary : noShowRate > 20 ? tokens.status.danger : tokens.status.success} />
 
               <Card titulo="Pacientes ativos" valor={pacientesAtivos}
-                subtitulo="com consulta últimos 6 meses" cor="#6043C1" />
+                subtitulo="com consulta últimos 6 meses" cor={tokens.brand.primary} />
 
               <Card titulo="Pacientes em risco" valor={pacientesRisco}
                 subtitulo={pacientesRisco > 0 ? 'crônicos sem retorno >90d' : 'todos acompanhados'}
-                cor={pacientesRisco > 0 ? '#d97706' : '#16a34a'} />
+                cor={pacientesRisco > 0 ? tokens.status.warningAlt : tokens.status.success} />
             </>
           )}
         </div>
@@ -247,10 +248,10 @@ export default function Dashboard() {
             <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Consultas por dia</p>
-                  <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Últimos 14 dias</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Consultas por dia</p>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>Últimos 14 dias</p>
                 </div>
-                <span style={{ fontSize: 11, color: '#6043C1', background: '#f0ebff', padding: '3px 9px', borderRadius: 12, fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: tokens.brand.primary, background: tokens.brand.primaryLight, padding: '3px 9px', borderRadius: 12, fontWeight: 600 }}>
                   {consultasPorDia.reduce((sum, c) => sum + c.total, 0)} total
                 </span>
               </div>
@@ -260,10 +261,10 @@ export default function Dashboard() {
                   const ehHoje = d.data === new Date().toISOString().substring(0, 10)
                   return (
                     <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      <span style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, height: 14 }}>
+                      <span style={{ fontSize: 10, color: tokens.text.secondary, fontWeight: 600, height: 14 }}>
                         {d.total > 0 ? d.total : ''}
                       </span>
-                      <div style={{ width: '100%', height: `${Math.max(altura, 4)}%`, background: ehHoje ? '#6043C1' : d.total > 0 ? '#c4b5fd' : '#f3f4f6', borderRadius: 4, transition: 'all 0.3s', minHeight: 4 }}/>
+                      <div style={{ width: '100%', height: `${Math.max(altura, 4)}%`, background: ehHoje ? tokens.brand.primary : d.total > 0 ? tokens.accent.violetSoft : tokens.bg.hoverStrong, borderRadius: 4, transition: 'all 0.3s', minHeight: 4 }}/>
                     </div>
                   )
                 })}
@@ -272,7 +273,7 @@ export default function Dashboard() {
                 {consultasPorDia.map((d, i) => {
                   const dt = new Date(d.data)
                   return (
-                    <div key={i} style={{ flex: 1, fontSize: 9, color: '#9ca3af', textAlign: 'center' }}>
+                    <div key={i} style={{ flex: 1, fontSize: 9, color: tokens.text.tertiary, textAlign: 'center' }}>
                       {i % 2 === 0 ? `${dt.getDate()}/${dt.getMonth() + 1}` : ''}
                     </div>
                   )
@@ -282,7 +283,7 @@ export default function Dashboard() {
 
             {/* Top CIDs */}
             <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>CIDs mais frequentes</p>
+              <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 14px' }}>CIDs mais frequentes</p>
               {carregando ? (
                 <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12 }}>
                   {[0,1,2].map(i => (
@@ -293,7 +294,7 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : topCIDs.length === 0 ? (
-                <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem dados no período</p>
+                <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem dados no período</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {topCIDs.map((c, i) => {
@@ -302,13 +303,13 @@ export default function Dashboard() {
                     return (
                       <div key={i}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, color: '#374151' }}>
-                            <strong style={{ color: '#6043C1', fontWeight: 700 }}>{c.codigo}</strong> {c.descricao && <span style={{ color: '#6b7280' }}>· {c.descricao}</span>}
+                          <span style={{ fontSize: 12, color: tokens.text.strong }}>
+                            <strong style={{ color: tokens.brand.primary, fontWeight: 700 }}>{c.codigo}</strong> {c.descricao && <span style={{ color: tokens.text.secondary }}>· {c.descricao}</span>}
                           </span>
-                          <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{c.total}</span>
+                          <span style={{ fontSize: 11, color: tokens.text.secondary, fontWeight: 600 }}>{c.total}</span>
                         </div>
-                        <div style={{ height: 6, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden' }}>
-                          <div style={{ width: `${pct}%`, height: '100%', background: '#6043C1', borderRadius: 3 }}/>
+                        <div style={{ height: 6, background: tokens.bg.hoverStrong, borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: tokens.brand.primary, borderRadius: 3 }}/>
                         </div>
                       </div>
                     )
@@ -323,32 +324,32 @@ export default function Dashboard() {
             {/* Próximos agendamentos */}
             <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Próximos agendamentos</p>
-                <button onClick={() => router.push('/agenda')} style={{ fontSize: 11, color: '#6043C1', background: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver todos →</button>
+                <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Próximos agendamentos</p>
+                <button onClick={() => router.push('/agenda')} style={{ fontSize: 11, color: tokens.brand.primary, background: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver todos →</button>
               </div>
               {carregando ? (
                 <div>{[0,1,2].map(i => <ListaItemSkeleton key={i}/>)}</div>
               ) : proximosAgendamentos.length === 0 ? (
-                <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem agendamentos</p>
+                <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem agendamentos</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {proximosAgendamentos.slice(0, 5).map((a, i) => {
                     const ehOnline = !!a.meet_link
                     return (
-                      <div key={i} onClick={() => router.push('/agenda?ag=' + a.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < 4 ? '1px solid #f3f4f6' : 'none', cursor: 'pointer', borderRadius: 6, transition: 'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = '#fafafa'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <div style={{ width: 38, height: 38, borderRadius: 8, background: '#f0ebff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: '#6043C1', lineHeight: 1 }}>{new Date(a.data_hora).getDate()}</span>
-                          <span style={{ fontSize: 8, color: '#6043C1', textTransform: 'uppercase', fontWeight: 600, marginTop: 1 }}>{new Date(a.data_hora).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</span>
+                      <div key={i} onClick={() => router.push('/agenda?ag=' + a.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < 4 ? `1px solid ${tokens.bg.hoverStrong}` : 'none', cursor: 'pointer', borderRadius: 6, transition: 'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = tokens.bg.page} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        <div style={{ width: 38, height: 38, borderRadius: 8, background: tokens.brand.primaryLight, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, lineHeight: 1 }}>{new Date(a.data_hora).getDate()}</span>
+                          <span style={{ fontSize: 8, color: tokens.brand.primary, textTransform: 'uppercase', fontWeight: 600, marginTop: 1 }}>{new Date(a.data_hora).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</span>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.pacientes?.nome || a.motivo || 'Consulta'}</p>
-                          <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: tokens.text.primary, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.pacientes?.nome || a.motivo || 'Consulta'}</p>
+                          <p style={{ fontSize: 11, color: tokens.text.secondary, margin: '2px 0 0' }}>
                             {fmtHora(a.data_hora)}
-                            {ehOnline && <span style={{ color: '#16a34a', marginLeft: 6 }}>● Online</span>}
-                            {!ehOnline && <span style={{ color: '#9ca3af', marginLeft: 6 }}>● Presencial</span>}
+                            {ehOnline && <span style={{ color: tokens.status.success, marginLeft: 6 }}>● Online</span>}
+                            {!ehOnline && <span style={{ color: tokens.text.tertiary, marginLeft: 6 }}>● Presencial</span>}
                           </p>
                         </div>
-                        <span style={{ fontSize: 10, color: a.status === 'confirmado' ? '#16a34a' : '#6b7280', background: a.status === 'confirmado' ? '#f0fdf4' : '#f3f4f6', padding: '3px 7px', borderRadius: 10, fontWeight: 600 }}>{a.status}</span>
+                        <span style={{ fontSize: 10, color: a.status === 'confirmado' ? tokens.status.success : tokens.text.secondary, background: a.status === 'confirmado' ? tokens.status.successBg : tokens.bg.hoverStrong, padding: '3px 7px', borderRadius: 10, fontWeight: 600 }}>{a.status}</span>
                       </div>
                     )
                   })}
@@ -358,16 +359,16 @@ export default function Dashboard() {
 
             {/* Confirmações pendentes */}
             {confirmacoesPendentes.length > 0 && (
-              <div style={{ background: '#fffbeb', borderRadius: 14, padding: 20 }}>
+              <div style={{ background: tokens.status.warningBgAlt, borderRadius: 14, padding: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#92400e', margin: 0 }}>Confirmações pendentes ({confirmacoesPendentes.length})</p>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.status.warningStrong} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: tokens.status.warningText, margin: 0 }}>Confirmações pendentes ({confirmacoesPendentes.length})</p>
                 </div>
-                <p style={{ fontSize: 11, color: '#92400e', margin: '0 0 12px', opacity: 0.8 }}>Pacientes que ainda não confirmaram consulta nas próximas 48h</p>
+                <p style={{ fontSize: 11, color: tokens.status.warningText, margin: '0 0 12px', opacity: 0.8 }}>Pacientes que ainda não confirmaram consulta nas próximas 48h</p>
                 {confirmacoesPendentes.map((p, i) => (
-                  <div key={i} onClick={() => router.push('/agenda?ag=' + p.id)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < confirmacoesPendentes.length - 1 ? '1px solid #fde68a' : 'none', cursor: 'pointer', borderRadius: 6, transition: 'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(217,119,6,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <span style={{ fontSize: 12, color: '#78350f', fontWeight: 500 }}>{p.pacientes?.nome || 'Paciente'}</span>
-                    <span style={{ fontSize: 11, color: '#92400e' }}>{fmtData(p.data_hora)} {fmtHora(p.data_hora)}</span>
+                  <div key={i} onClick={() => router.push('/agenda?ag=' + p.id)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < confirmacoesPendentes.length - 1 ? `1px solid ${tokens.status.warningLightAlt}` : 'none', cursor: 'pointer', borderRadius: 6, transition: 'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(217,119,6,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <span style={{ fontSize: 12, color: tokens.status.warningTextDark, fontWeight: 500 }}>{p.pacientes?.nome || 'Paciente'}</span>
+                    <span style={{ fontSize: 11, color: tokens.status.warningText }}>{fmtData(p.data_hora)} {fmtHora(p.data_hora)}</span>
                   </div>
                 ))}
               </div>
@@ -378,19 +379,19 @@ export default function Dashboard() {
         {/* LINHA 3: Comparativo médicos (só admin) */}
         {comparativoMedicos.length > 0 && (
           <div style={{ background: 'white', borderRadius: 14, padding: 20, marginBottom: 16 }}>
-            <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Comparativo entre médicos</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 14px' }}>Comparativo entre médicos</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
               {comparativoMedicos.map((m, i) => (
-                <div key={i} style={{ background: '#F5F5F5', borderRadius: 10, padding: 14 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: '0 0 8px' }}>{m.nome}</p>
+                <div key={i} style={{ background: tokens.bg.hover, borderRadius: 10, padding: 14 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: tokens.text.primary, margin: '0 0 8px' }}>{m.nome}</p>
                   <div style={{ display: 'flex', gap: 14 }}>
                     <div>
-                      <p style={{ fontSize: 18, fontWeight: 700, color: '#6043C1', margin: 0, lineHeight: 1 }}>{m.consultas}</p>
-                      <p style={{ fontSize: 10, color: '#6b7280', margin: '2px 0 0' }}>consultas</p>
+                      <p style={{ fontSize: 18, fontWeight: 700, color: tokens.brand.primary, margin: 0, lineHeight: 1 }}>{m.consultas}</p>
+                      <p style={{ fontSize: 10, color: tokens.text.secondary, margin: '2px 0 0' }}>consultas</p>
                     </div>
                     <div>
-                      <p style={{ fontSize: 18, fontWeight: 700, color: '#16a34a', margin: 0, lineHeight: 1 }}>{m.pacientes}</p>
-                      <p style={{ fontSize: 10, color: '#6b7280', margin: '2px 0 0' }}>pacientes</p>
+                      <p style={{ fontSize: 18, fontWeight: 700, color: tokens.status.success, margin: 0, lineHeight: 1 }}>{m.pacientes}</p>
+                      <p style={{ fontSize: 10, color: tokens.text.secondary, margin: '2px 0 0' }}>pacientes</p>
                     </div>
                   </div>
                 </div>
@@ -402,30 +403,30 @@ export default function Dashboard() {
         {/* LINHA 4: Últimas consultas */}
         <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Últimas consultas</p>
-            <button onClick={() => router.push('/historico')} style={{ fontSize: 11, color: '#6043C1', background: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver histórico →</button>
+            <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Últimas consultas</p>
+            <button onClick={() => router.push('/historico')} style={{ fontSize: 11, color: tokens.brand.primary, background: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver histórico →</button>
           </div>
           {carregando ? (
             <div>{[0,1,2,3].map(i => <ListaItemSkeleton key={i}/>)}</div>
           ) : ultimasConsultas.length === 0 ? (
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem consultas registradas</p>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0, textAlign: 'center', padding: '20px 0' }}>Sem consultas registradas</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {ultimasConsultas.map((c, i) => (
                 <div key={c.id} onClick={() => router.push('/pacientes/' + c.paciente_id)}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '12px 0', borderBottom: i < ultimasConsultas.length - 1 ? '1px solid #f3f4f6' : 'none', cursor: 'pointer' }}>
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '12px 0', borderBottom: i < ultimasConsultas.length - 1 ? `1px solid ${tokens.bg.hoverStrong}` : 'none', cursor: 'pointer' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{c.pacientes?.nome || 'Paciente'}</p>
-                      <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{fmtData(c.criado_em)} {fmtHora(c.criado_em)}</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>{c.pacientes?.nome || 'Paciente'}</p>
+                      <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{fmtData(c.criado_em)} {fmtHora(c.criado_em)}</p>
                     </div>
-                    <p style={{ fontSize: 12, color: '#6b7280', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 600 }}>
+                    <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 600 }}>
                       {c.avaliacao || 'Sem avaliação registrada'}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 12 }}>
                     {(c.cids || []).slice(0, 2).map((cid: any, j: number) => (
-                      <span key={j} style={{ fontSize: 10, color: '#6043C1', background: '#f0ebff', padding: '2px 7px', borderRadius: 10, fontWeight: 600 }}>{cid.codigo}</span>
+                      <span key={j} style={{ fontSize: 10, color: tokens.brand.primary, background: tokens.brand.primaryLight, padding: '2px 7px', borderRadius: 10, fontWeight: 600 }}>{cid.codigo}</span>
                     ))}
                   </div>
                 </div>
@@ -464,7 +465,7 @@ function Skeleton({ width, height, radius = 4 }: { width: number | string; heigh
   return (
     <div style={{
       width, height, borderRadius: radius,
-      background: 'linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%)',
+      background: `linear-gradient(90deg, ${tokens.bg.hoverStrong} 0%, ${tokens.border.default} 50%, ${tokens.bg.hoverStrong} 100%)`,
       backgroundSize: '200% 100%',
       animation: 'shimmer 1.4s ease-in-out infinite' as const,
       display: 'inline-block'
@@ -475,8 +476,8 @@ function Skeleton({ width, height, radius = 4 }: { width: number | string; heigh
 function Card({ titulo, valor, subtitulo, cor }: { titulo: string; valor: any; subtitulo: string; cor: string }) {
   return (
     <div style={{ background: 'white', borderRadius: 14, padding: 18 }}>
-      <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 6px' }}>{titulo}</p>
-      <p style={{ fontSize: 28, fontWeight: 700, color: '#111827', margin: '0 0 4px', letterSpacing: '-0.02em', lineHeight: 1 }}>{valor}</p>
+      <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 6px' }}>{titulo}</p>
+      <p style={{ fontSize: 28, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px', letterSpacing: '-0.02em', lineHeight: 1 }}>{valor}</p>
       <p style={{ fontSize: 11, color: cor, margin: 0, fontWeight: 500 }}>{subtitulo}</p>
     </div>
   )

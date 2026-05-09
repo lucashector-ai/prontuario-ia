@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SenhaStrength, senhaEhForte } from '@/components/SenhaStrength'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const BG = tokens.bg.page
 
 export default function TrocarSenhaObrigatoria() {
   const router = useRouter()
@@ -59,28 +60,28 @@ export default function TrocarSenhaObrigatoria() {
     <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 460 }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ede9fb', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: tokens.brand.primaryLighter, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <path d="M7 11V7a5 5 0 0110 0v4"/>
             </svg>
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Crie sua senha</h1>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px' }}>Crie sua senha</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0, lineHeight: 1.6 }}>
             Olá {medico.nome?.split(' ')[0]}! Defina uma senha forte pra substituir a provisória.
           </p>
         </div>
 
         <div style={{ background: 'white', borderRadius: 16, padding: 28 }}>
           {erro && (
-            <div style={{ background: '#fef2f2', color: '#991b1b', padding: '11px 14px', borderRadius: 10, fontSize: 13, marginBottom: 16, border: '1px solid #fecaca' }}>
+            <div style={{ background: tokens.status.dangerBg, color: tokens.status.dangerDark, padding: '11px 14px', borderRadius: 10, fontSize: 13, marginBottom: 16, border: `1px solid ${tokens.status.dangerLight}` }}>
               {erro}
             </div>
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>Nova senha</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.secondary, display: 'block', marginBottom: 6 }}>Nova senha</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type={showSenha ? 'text' : 'password'}
@@ -90,13 +91,13 @@ export default function TrocarSenhaObrigatoria() {
                   autoFocus
                   style={{
                     width: '100%', padding: '12px 40px 12px 14px', fontSize: 14,
-                    borderRadius: 10, border: '1px solid #e5e7eb',
-                    outline: 'none', boxSizing: 'border-box', color: '#111827',
+                    borderRadius: 10, border: `1px solid ${tokens.border.default}`,
+                    outline: 'none', boxSizing: 'border-box', color: tokens.text.primary,
                   }}
                 />
                 <button type="button" onClick={() => setShowSenha(s => !s)} style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af',
+                  background: 'none', border: 'none', cursor: 'pointer', color: tokens.text.tertiary,
                   padding: 0, display: 'flex', alignItems: 'center',
                 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -118,7 +119,7 @@ export default function TrocarSenhaObrigatoria() {
             </div>
 
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>Confirmar senha</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.secondary, display: 'block', marginBottom: 6 }}>Confirmar senha</label>
               <input
                 type={showSenha ? 'text' : 'password'}
                 value={confirma}
@@ -127,18 +128,18 @@ export default function TrocarSenhaObrigatoria() {
                 style={{
                   width: '100%', padding: '12px 14px', fontSize: 14,
                   borderRadius: 10,
-                  border: `1px solid ${confirma && senha !== confirma ? '#fca5a5' : '#e5e7eb'}`,
-                  outline: 'none', boxSizing: 'border-box', color: '#111827',
+                  border: `1px solid ${confirma && senha !== confirma ? tokens.status.dangerLightAlt : tokens.border.default}`,
+                  outline: 'none', boxSizing: 'border-box', color: tokens.text.primary,
                 }}
               />
               {confirma && senha !== confirma && (
-                <p style={{ fontSize: 11, color: '#dc2626', margin: '4px 0 0' }}>Senhas não coincidem</p>
+                <p style={{ fontSize: 11, color: tokens.status.danger, margin: '4px 0 0' }}>Senhas não coincidem</p>
               )}
             </div>
 
             <button onClick={salvar} disabled={salvando} style={{
               padding: 14,
-              background: salvando ? '#9ca3af' : ACCENT,
+              background: salvando ? tokens.text.tertiary : ACCENT,
               color: 'white', border: 'none', borderRadius: 10,
               fontSize: 14, fontWeight: 700, cursor: salvando ? 'not-allowed' : 'pointer',
             }}>

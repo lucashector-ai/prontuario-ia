@@ -2,9 +2,10 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
 
 function Content() {
   const router = useRouter()
@@ -34,7 +35,7 @@ function Content() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F5F5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ minHeight: '100vh', background: tokens.bg.hover, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ background: 'white', borderRadius: 16, padding: 40, maxWidth: 500, width: '100%', textAlign: 'center' }}>
         <div style={{ width: 64, height: 64, borderRadius: '50%', background: ACCENT_LIGHT, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2">
@@ -43,15 +44,15 @@ function Content() {
           </svg>
         </div>
 
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Conta criada!</h1>
-        <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 6px', lineHeight: 1.6 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px' }}>Conta criada!</h1>
+        <p style={{ fontSize: 14, color: tokens.text.secondary, margin: '0 0 6px', lineHeight: 1.6 }}>
           Enviamos um link de confirmação para
         </p>
-        <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 28px', wordBreak: 'break-all' }}>{email}</p>
+        <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 28px', wordBreak: 'break-all' }}>{email}</p>
 
-        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'left' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#92400e', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>⚡ Modo desenvolvimento</p>
-          <p style={{ fontSize: 12, color: '#92400e', margin: '0 0 12px', lineHeight: 1.6 }}>
+        <div style={{ background: tokens.status.warningBgAlt, border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'left' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: tokens.status.warningText, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>⚡ Modo desenvolvimento</p>
+          <p style={{ fontSize: 12, color: tokens.status.warningText, margin: '0 0 12px', lineHeight: 1.6 }}>
             Ainda estamos integrando o envio de email. Por enquanto, use o link abaixo para confirmar sua conta:
           </p>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -61,14 +62,14 @@ function Content() {
               style={{
                 flex: 1, padding: '8px 10px',
                 fontSize: 10, fontFamily: 'monospace',
-                border: '1px solid #fde68a', borderRadius: 6,
-                background: 'white', color: '#92400e',
+                border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: 6,
+                background: 'white', color: tokens.status.warningText,
                 outline: 'none', minWidth: 0,
               }}
             />
             <button onClick={copiarLink} style={{
               padding: '8px 12px', borderRadius: 6,
-              background: copiado ? '#16a34a' : '#92400e', color: 'white',
+              background: copiado ? tokens.status.success : tokens.status.warningText, color: 'white',
               border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer',
               flexShrink: 0,
             }}>
@@ -86,7 +87,7 @@ function Content() {
           Confirmar conta agora →
         </button>
 
-        <p style={{ fontSize: 12, color: '#9ca3af', margin: '20px 0 0' }}>
+        <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '20px 0 0' }}>
           O link expira em 48 horas
         </p>
       </div>

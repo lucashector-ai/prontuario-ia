@@ -6,10 +6,11 @@ import { Procedimentos } from '@/components/minha-clinica/Procedimentos'
 import { Lgpd } from '@/components/minha-clinica/Lgpd'
 import { Automacoes } from '@/components/minha-clinica/Automacoes'
 import { Sofia } from '@/components/minha-clinica/Sofia'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 
 type TabKey = 'visao' | 'procedimentos' | 'sofia' | 'automacoes' | 'lgpd'
 
@@ -57,12 +58,12 @@ export default function MinhaClinicaPage() {
     <div style={{ minHeight: '100%', background: BG, padding: 24 }}>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Minha Clínica</h1>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Configurações, equipe, automações e privacidade — tudo no mesmo lugar</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Minha Clínica</h1>
+        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Configurações, equipe, automações e privacidade — tudo no mesmo lugar</p>
       </div>
 
       {/* Tabs horizontais */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid #e5e7eb', overflowX: 'auto', flexWrap: 'nowrap' as const }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: `1px solid ${tokens.border.default}`, overflowX: 'auto', flexWrap: 'nowrap' as const }}>
         {TABS.map(t => {
           const ativo = tab === t.key
           return (
@@ -71,13 +72,13 @@ export default function MinhaClinicaPage() {
                 display: 'flex', alignItems: 'center', gap: 7,
                 padding: '10px 16px', border: 'none', background: 'transparent',
                 fontSize: 13, fontWeight: ativo ? 700 : 500,
-                color: ativo ? ACCENT : '#6b7280',
+                color: ativo ? ACCENT : tokens.text.secondary,
                 borderBottom: ativo ? `2px solid ${ACCENT}` : '2px solid transparent',
                 marginBottom: -1, cursor: 'pointer', whiteSpace: 'nowrap' as const,
                 transition: 'color 0.15s',
               }}
-              onMouseEnter={e => { if (!ativo) e.currentTarget.style.color = '#111827' }}
-              onMouseLeave={e => { if (!ativo) e.currentTarget.style.color = '#6b7280' }}>
+              onMouseEnter={e => { if (!ativo) e.currentTarget.style.color = tokens.text.primary }}
+              onMouseLeave={e => { if (!ativo) e.currentTarget.style.color = tokens.text.secondary }}>
               {t.icon}
               {t.label}
             </button>
@@ -105,9 +106,9 @@ function Placeholder({ titulo, descricao }: { titulo: string; descricao: string 
           <line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
       </div>
-      <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>{titulo}</p>
-      <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>{descricao}</p>
-      <p style={{ fontSize: 11, color: '#9ca3af', margin: '14px 0 0', fontStyle: 'italic' as const }}>Em breve nesta aba</p>
+      <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>{titulo}</p>
+      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>{descricao}</p>
+      <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '14px 0 0', fontStyle: 'italic' as const }}>Em breve nesta aba</p>
     </div>
   )
 }

@@ -1,7 +1,9 @@
 'use client'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
+
+import { tokens } from '@/lib/design-tokens'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
 
 type Hipotese = {
   nome: string
@@ -10,9 +12,9 @@ type Hipotese = {
 }
 
 const CORES_PROBABILIDADE: Record<string, { bg: string, text: string, label: string }> = {
-  alta:  { bg: '#dcfce7', text: '#166534', label: 'Alta' },
-  media: { bg: '#fef3c7', text: '#854d0e', label: 'Média' },
-  baixa: { bg: '#f3f4f6', text: '#6b7280', label: 'Baixa' },
+  alta:  { bg: tokens.status.successBgAlt, text: tokens.status.successDark, label: 'Alta' },
+  media: { bg: tokens.status.warningLightSoft, text: tokens.status.warningTextAlt, label: 'Média' },
+  baixa: { bg: tokens.bg.hoverStrong, text: tokens.text.secondary, label: 'Baixa' },
 }
 
 export function HipotesesCard({ hipoteses }: { hipoteses: any }) {
@@ -20,7 +22,7 @@ export function HipotesesCard({ hipoteses }: { hipoteses: any }) {
   if (lista.length === 0) return null
 
   return (
-    <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', border: '1px solid #f3f4f6' }}>
+    <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', border: `1px solid ${tokens.bg.hoverStrong}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', background: ACCENT_LIGHT }}>
         <div style={{
           width: 26, height: 26, borderRadius: 7,
@@ -39,7 +41,7 @@ export function HipotesesCard({ hipoteses }: { hipoteses: any }) {
           const prob = (h.probabilidade || '').toLowerCase()
           const corProb = CORES_PROBABILIDADE[prob] || CORES_PROBABILIDADE.baixa
           return (
-            <div key={i} style={{ paddingBottom: i < lista.length - 1 ? 12 : 0, borderBottom: i < lista.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+            <div key={i} style={{ paddingBottom: i < lista.length - 1 ? 12 : 0, borderBottom: i < lista.length - 1 ? `1px solid ${tokens.bg.hoverStrong}` : 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' as const }}>
                 <span style={{
                   width: 22, height: 22, borderRadius: '50%',
@@ -47,7 +49,7 @@ export function HipotesesCard({ hipoteses }: { hipoteses: any }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11, fontWeight: 700, flexShrink: 0,
                 }}>{i + 1}</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{h.nome}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary }}>{h.nome}</span>
                 {h.probabilidade && (
                   <span style={{
                     fontSize: 10, fontWeight: 700,
@@ -60,7 +62,7 @@ export function HipotesesCard({ hipoteses }: { hipoteses: any }) {
                 )}
               </div>
               {h.justificativa && (
-                <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 0 32px', lineHeight: 1.6 }}>
+                <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 0 32px', lineHeight: 1.6 }}>
                   {h.justificativa}
                 </p>
               )}

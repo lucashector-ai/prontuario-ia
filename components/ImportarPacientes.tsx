@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import { supabase } from '@/lib/supabase'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
 
 type Etapa = 'origem' | 'preview' | 'importando' | 'resultado'
 
@@ -238,10 +239,10 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
           padding: '20px 24px', borderBottom: '1px solid #f3f4f6',
         }}>
           <div>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>
               Importar pacientes
             </h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0 }}>
               {etapa === 'origem' && 'Escolha de onde importar'}
               {etapa === 'preview' && 'Confira os dados antes de importar'}
               {etapa === 'importando' && 'Importando pacientes...'}
@@ -251,7 +252,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
           {etapa !== 'importando' && (
             <button onClick={fechar} style={{
               width: 32, height: 32, borderRadius: 8,
-              border: 'none', background: '#F5F5F5', color: '#6b7280',
+              border: 'none', background: tokens.bg.hover, color: tokens.text.secondary,
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -265,8 +266,8 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
         <div style={{ padding: 24 }}>
           {erro && (
             <div style={{
-              background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10,
-              padding: '11px 14px', marginBottom: 16, fontSize: 13, color: '#991b1b',
+              background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, borderRadius: 10,
+              padding: '11px 14px', marginBottom: 16, fontSize: 13, color: tokens.status.dangerDark,
             }}>
               {erro}
             </div>
@@ -279,7 +280,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
               {medicos.length > 1 && (
                 <div>
                   <label style={{
-                    fontSize: 11, fontWeight: 600, color: '#6b7280',
+                    fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
                     display: 'block', marginBottom: 6,
                     textTransform: 'uppercase' as const, letterSpacing: '0.04em',
                   }}>
@@ -290,9 +291,9 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                     onChange={e => setMedicoDestino(e.target.value)}
                     style={{
                       width: '100%', padding: '10px 14px', fontSize: 14,
-                      borderRadius: 10, border: '1px solid #e5e7eb',
+                      borderRadius: 10, border: `1px solid ${tokens.border.default}`,
                       background: 'white', outline: 'none',
-                      color: '#111827', cursor: 'pointer',
+                      color: tokens.text.primary, cursor: 'pointer',
                     }}
                   >
                     <option value="">Sem vínculo — atribui no atendimento</option>
@@ -300,7 +301,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                       <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
                     ))}
                   </select>
-                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0', lineHeight: 1.5 }}>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '6px 0 0', lineHeight: 1.5 }}>
                     Se deixar sem vínculo, o médico será atribuído quando o paciente fizer a primeira consulta.
                   </p>
                 </div>
@@ -309,10 +310,10 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
               {/* Info quando tem so 1 medico */}
               {medicos.length === 1 && (
                 <div style={{
-                  padding: '10px 14px', background: '#F9FAFB',
-                  borderRadius: 10, fontSize: 12, color: '#6b7280',
+                  padding: '10px 14px', background: tokens.bg.muted,
+                  borderRadius: 10, fontSize: 12, color: tokens.text.secondary,
                 }}>
-                  Os pacientes serão vinculados a <strong style={{ color: '#111827' }}>Dr(a). {medicos[0].nome}</strong>
+                  Os pacientes serão vinculados a <strong style={{ color: tokens.text.primary }}>Dr(a). {medicos[0].nome}</strong>
                 </div>
               )}
 
@@ -323,12 +324,12 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                 style={{
                   display: 'flex', alignItems: 'center', gap: 14,
                   padding: 18, background: 'white',
-                  border: '1.5px solid #e5e7eb', borderRadius: 12,
+                  border: `1.5px solid ${tokens.border.default}`, borderRadius: 12,
                   cursor: 'pointer', textAlign: 'left' as const,
                   transition: 'border-color 0.15s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = ACCENT}
-                onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = tokens.border.default}
               >
                 <div style={{
                   width: 44, height: 44, borderRadius: 10,
@@ -341,10 +342,10 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                   </svg>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 3px' }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 3px' }}>
                     Arquivo CSV ou Excel
                   </p>
-                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>
                     Exporte sua planilha como CSV ou .xlsx e suba aqui
                   </p>
                 </div>
@@ -360,12 +361,12 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
               {/* Google Sheets */}
               <div style={{
                 padding: 18, background: 'white',
-                border: '1.5px solid #e5e7eb', borderRadius: 12,
+                border: `1.5px solid ${tokens.border.default}`, borderRadius: 12,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
                   <div style={{
                     width: 44, height: 44, borderRadius: 10,
-                    background: '#dcfce7', color: '#16a34a',
+                    background: tokens.status.successBgAlt, color: tokens.status.success,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
                   }}>
@@ -376,10 +377,10 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                     </svg>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 3px' }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 3px' }}>
                       Google Sheets
                     </p>
-                    <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>
+                    <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>
                       Cole o link (precisa estar como "qualquer pessoa com o link")
                     </p>
                   </div>
@@ -391,8 +392,8 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                     placeholder="https://docs.google.com/spreadsheets/d/..."
                     style={{
                       flex: 1, padding: '9px 12px', fontSize: 13,
-                      borderRadius: 8, border: '1px solid #e5e7eb',
-                      outline: 'none', color: '#111827',
+                      borderRadius: 8, border: `1px solid ${tokens.border.default}`,
+                      outline: 'none', color: tokens.text.primary,
                     }}
                   />
                   <button
@@ -400,7 +401,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                     disabled={carregando || !urlSheets.trim()}
                     style={{
                       padding: '9px 16px', borderRadius: 8,
-                      background: carregando || !urlSheets.trim() ? '#9ca3af' : ACCENT,
+                      background: carregando || !urlSheets.trim() ? tokens.text.tertiary : ACCENT,
                       color: 'white', border: 'none',
                       fontSize: 12, fontWeight: 600,
                       cursor: carregando || !urlSheets.trim() ? 'not-allowed' : 'pointer',
@@ -413,20 +414,20 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
 
               {/* Modelo */}
               <div style={{
-                background: '#fffbeb', borderRadius: 12, padding: '14px 16px',
-                border: '1px solid #fde68a',
+                background: tokens.status.warningBgAlt, borderRadius: 12, padding: '14px 16px',
+                border: `1px solid ${tokens.status.warningLightAlt}`,
                 display: 'flex', alignItems: 'center', gap: 12,
               }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={tokens.status.warningText} strokeWidth="2">
                   <circle cx="12" cy="12" r="10"/>
                   <line x1="12" y1="16" x2="12" y2="12"/>
                   <line x1="12" y1="8" x2="12.01" y2="8"/>
                 </svg>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: '#92400e', margin: '0 0 2px' }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: tokens.status.warningText, margin: '0 0 2px' }}>
                     Primeira vez? Baixe o modelo
                   </p>
-                  <p style={{ fontSize: 11, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontSize: 11, color: tokens.status.warningText, margin: 0, lineHeight: 1.5 }}>
                     Colunas aceitas: nome, cpf, data_nascimento, telefone, sexo, email
                   </p>
                 </div>
@@ -434,7 +435,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                   onClick={baixarModelo}
                   style={{
                     padding: '7px 14px', borderRadius: 8,
-                    background: '#92400e', color: 'white', border: 'none',
+                    background: tokens.status.warningText, color: 'white', border: 'none',
                     fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
                   }}
                 >
@@ -449,61 +450,61 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
             <div>
               {/* Resumo */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
-                <div style={{ padding: '12px 16px', background: '#F9FAFB', borderRadius: 10 }}>
-                  <p style={{ fontSize: 10, color: '#6b7280', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Total</p>
-                  <p style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: 0 }}>{preview.total}</p>
+                <div style={{ padding: '12px 16px', background: tokens.bg.muted, borderRadius: 10 }}>
+                  <p style={{ fontSize: 10, color: tokens.text.secondary, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Total</p>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{preview.total}</p>
                 </div>
-                <div style={{ padding: '12px 16px', background: '#ecfdf5', borderRadius: 10 }}>
-                  <p style={{ fontSize: 10, color: '#065f46', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Válidos</p>
-                  <p style={{ fontSize: 20, fontWeight: 700, color: '#065f46', margin: 0 }}>{preview.validos}</p>
+                <div style={{ padding: '12px 16px', background: tokens.status.successBgSoft, borderRadius: 10 }}>
+                  <p style={{ fontSize: 10, color: tokens.status.successText, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Válidos</p>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: tokens.status.successText, margin: 0 }}>{preview.validos}</p>
                 </div>
-                <div style={{ padding: '12px 16px', background: '#fffbeb', borderRadius: 10 }}>
-                  <p style={{ fontSize: 10, color: '#92400e', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Duplicados</p>
-                  <p style={{ fontSize: 20, fontWeight: 700, color: '#92400e', margin: 0 }}>{preview.duplicados}</p>
+                <div style={{ padding: '12px 16px', background: tokens.status.warningBgAlt, borderRadius: 10 }}>
+                  <p style={{ fontSize: 10, color: tokens.status.warningText, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Duplicados</p>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: tokens.status.warningText, margin: 0 }}>{preview.duplicados}</p>
                 </div>
-                <div style={{ padding: '12px 16px', background: '#fef2f2', borderRadius: 10 }}>
-                  <p style={{ fontSize: 10, color: '#991b1b', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Inválidos</p>
-                  <p style={{ fontSize: 20, fontWeight: 700, color: '#991b1b', margin: 0 }}>{preview.invalidos}</p>
+                <div style={{ padding: '12px 16px', background: tokens.status.dangerBg, borderRadius: 10 }}>
+                  <p style={{ fontSize: 10, color: tokens.status.dangerDark, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Inválidos</p>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: tokens.status.dangerDark, margin: 0 }}>{preview.invalidos}</p>
                 </div>
               </div>
 
               {/* Tabela de preview */}
               <div style={{
-                border: '1px solid #f3f4f6', borderRadius: 10,
+                border: `1px solid ${tokens.bg.hoverStrong}`, borderRadius: 10,
                 maxHeight: 340, overflow: 'auto', marginBottom: 20,
               }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 12 }}>
-                  <thead style={{ position: 'sticky' as const, top: 0, background: '#F9FAFB', zIndex: 1 }}>
+                  <thead style={{ position: 'sticky' as const, top: 0, background: tokens.bg.muted, zIndex: 1 }}>
                     <tr>
-                      <th style={{ padding: '10px 12px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Linha</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Nome</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>CPF</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Telefone</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Status</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Linha</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Nome</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>CPF</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Telefone</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {preview.linhas.slice(0, 100).map((l, i) => (
-                      <tr key={i} style={{ borderTop: '1px solid #f3f4f6' }}>
-                        <td style={{ padding: '8px 12px', color: '#9ca3af' }}>{l.linha}</td>
-                        <td style={{ padding: '8px 12px', color: '#111827', fontWeight: 500 }}>
-                          {l.dados.nome || <span style={{ color: '#dc2626' }}>(vazio)</span>}
+                      <tr key={i} style={{ borderTop: `1px solid ${tokens.bg.hoverStrong}` }}>
+                        <td style={{ padding: '8px 12px', color: tokens.text.tertiary }}>{l.linha}</td>
+                        <td style={{ padding: '8px 12px', color: tokens.text.primary, fontWeight: 500 }}>
+                          {l.dados.nome || <span style={{ color: tokens.status.danger }}>(vazio)</span>}
                         </td>
-                        <td style={{ padding: '8px 12px', color: '#6b7280', fontFamily: 'monospace' as const, fontSize: 11 }}>
+                        <td style={{ padding: '8px 12px', color: tokens.text.secondary, fontFamily: 'monospace' as const, fontSize: 11 }}>
                           {l.dados.cpf || '—'}
                         </td>
-                        <td style={{ padding: '8px 12px', color: '#6b7280' }}>
+                        <td style={{ padding: '8px 12px', color: tokens.text.secondary }}>
                           {l.dados.telefone || '—'}
                         </td>
                         <td style={{ padding: '8px 12px' }}>
                           {l.status === 'valido' && (
-                            <span style={{ fontSize: 10, color: '#065f46', background: '#ecfdf5', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>Válido</span>
+                            <span style={{ fontSize: 10, color: tokens.status.successText, background: tokens.status.successBgSoft, padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>Válido</span>
                           )}
                           {l.status === 'duplicado' && (
-                            <span style={{ fontSize: 10, color: '#92400e', background: '#fffbeb', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }} title={l.motivo}>Duplicado</span>
+                            <span style={{ fontSize: 10, color: tokens.status.warningText, background: tokens.status.warningBgAlt, padding: '2px 8px', borderRadius: 10, fontWeight: 600 }} title={l.motivo}>Duplicado</span>
                           )}
                           {l.status === 'invalido' && (
-                            <span style={{ fontSize: 10, color: '#991b1b', background: '#fef2f2', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }} title={l.motivo}>Inválido</span>
+                            <span style={{ fontSize: 10, color: tokens.status.dangerDark, background: tokens.status.dangerBg, padding: '2px 8px', borderRadius: 10, fontWeight: 600 }} title={l.motivo}>Inválido</span>
                           )}
                         </td>
                       </tr>
@@ -511,7 +512,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                   </tbody>
                 </table>
                 {preview.linhas.length > 100 && (
-                  <div style={{ padding: '10px 12px', background: '#F9FAFB', textAlign: 'center' as const, fontSize: 11, color: '#6b7280' }}>
+                  <div style={{ padding: '10px 12px', background: tokens.bg.muted, textAlign: 'center' as const, fontSize: 11, color: tokens.text.secondary }}>
                     Mostrando primeiras 100 de {preview.linhas.length} linhas. Todas serão processadas.
                   </div>
                 )}
@@ -523,8 +524,8 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                   onClick={() => { resetar() }}
                   style={{
                     padding: '10px 18px', borderRadius: 10,
-                    background: 'white', color: '#6b7280',
-                    border: '1px solid #e5e7eb',
+                    background: 'white', color: tokens.text.secondary,
+                    border: `1px solid ${tokens.border.default}`,
                     fontSize: 13, cursor: 'pointer',
                   }}
                 >
@@ -535,7 +536,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                   disabled={preview.validos === 0}
                   style={{
                     padding: '10px 22px', borderRadius: 10,
-                    background: preview.validos === 0 ? '#9ca3af' : ACCENT,
+                    background: preview.validos === 0 ? tokens.text.tertiary : ACCENT,
                     color: 'white', border: 'none',
                     fontSize: 13, fontWeight: 700,
                     cursor: preview.validos === 0 ? 'not-allowed' : 'pointer',
@@ -556,10 +557,10 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                 animation: 'spin 0.8s linear infinite',
                 margin: '0 auto 16px',
               }}/>
-              <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 4px' }}>
                 Importando pacientes...
               </p>
-              <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
+              <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0 }}>
                 Não feche essa janela
               </p>
               <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
@@ -571,7 +572,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
             <div style={{ padding: '20px 0', textAlign: 'center' as const }}>
               <div style={{
                 width: 64, height: 64, borderRadius: '50%',
-                background: '#ecfdf5', color: '#16a34a',
+                background: tokens.status.successBgSoft, color: tokens.status.success,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 16px',
               }}>
@@ -579,28 +580,28 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>
                 Importação concluída!
               </h3>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px' }}>
+              <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 24px' }}>
                 {resultado.inseridos} paciente{resultado.inseridos !== 1 ? 's' : ''} adicionado{resultado.inseridos !== 1 ? 's' : ''} à sua base
               </p>
 
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 24 }}>
-                <div style={{ padding: '10px 16px', background: '#ecfdf5', borderRadius: 10, minWidth: 100 }}>
-                  <p style={{ fontSize: 20, fontWeight: 700, color: '#065f46', margin: '0 0 2px' }}>{resultado.inseridos}</p>
-                  <p style={{ fontSize: 11, color: '#065f46', margin: 0 }}>Importados</p>
+                <div style={{ padding: '10px 16px', background: tokens.status.successBgSoft, borderRadius: 10, minWidth: 100 }}>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: tokens.status.successText, margin: '0 0 2px' }}>{resultado.inseridos}</p>
+                  <p style={{ fontSize: 11, color: tokens.status.successText, margin: 0 }}>Importados</p>
                 </div>
                 {resultado.pulados > 0 && (
-                  <div style={{ padding: '10px 16px', background: '#fffbeb', borderRadius: 10, minWidth: 100 }}>
-                    <p style={{ fontSize: 20, fontWeight: 700, color: '#92400e', margin: '0 0 2px' }}>{resultado.pulados}</p>
-                    <p style={{ fontSize: 11, color: '#92400e', margin: 0 }}>Duplicados</p>
+                  <div style={{ padding: '10px 16px', background: tokens.status.warningBgAlt, borderRadius: 10, minWidth: 100 }}>
+                    <p style={{ fontSize: 20, fontWeight: 700, color: tokens.status.warningText, margin: '0 0 2px' }}>{resultado.pulados}</p>
+                    <p style={{ fontSize: 11, color: tokens.status.warningText, margin: 0 }}>Duplicados</p>
                   </div>
                 )}
                 {resultado.invalidos > 0 && (
-                  <div style={{ padding: '10px 16px', background: '#fef2f2', borderRadius: 10, minWidth: 100 }}>
-                    <p style={{ fontSize: 20, fontWeight: 700, color: '#991b1b', margin: '0 0 2px' }}>{resultado.invalidos}</p>
-                    <p style={{ fontSize: 11, color: '#991b1b', margin: 0 }}>Inválidos</p>
+                  <div style={{ padding: '10px 16px', background: tokens.status.dangerBg, borderRadius: 10, minWidth: 100 }}>
+                    <p style={{ fontSize: 20, fontWeight: 700, color: tokens.status.dangerDark, margin: '0 0 2px' }}>{resultado.invalidos}</p>
+                    <p style={{ fontSize: 11, color: tokens.status.dangerDark, margin: 0 }}>Inválidos</p>
                   </div>
                 )}
               </div>

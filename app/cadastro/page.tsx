@@ -3,16 +3,17 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SenhaStrength, senhaEhForte } from '@/components/SenhaStrength'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 
 function ToggleSenha({ show, onToggle }: { show: boolean; onToggle: () => void }) {
   return (
     <button type="button" onClick={onToggle} style={{
       position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-      background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af',
+      background: 'none', border: 'none', cursor: 'pointer', color: tokens.text.tertiary,
       padding: 0, display: 'flex', alignItems: 'center',
     }}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -112,17 +113,17 @@ export default function CadastroPage() {
     padding: '12px 14px',
     fontSize: 14,
     borderRadius: 10,
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${tokens.border.default}`,
     background: 'white',
     outline: 'none',
     boxSizing: 'border-box',
-    color: '#111827',
+    color: tokens.text.primary,
   }
 
   const labelStyle: React.CSSProperties = {
     fontSize: 12,
     fontWeight: 600,
-    color: '#6b7280',
+    color: tokens.text.secondary,
     display: 'block',
     marginBottom: 6,
   }
@@ -142,8 +143,8 @@ export default function CadastroPage() {
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
             </svg>
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Clinical 360</h1>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Prontuário inteligente com IA</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Clinical 360</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Prontuário inteligente com IA</p>
         </div>
 
         <div style={{ background: 'white', borderRadius: 16, padding: 32 }}>
@@ -151,16 +152,16 @@ export default function CadastroPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
             <div style={{
               width: 24, height: 24, borderRadius: '50%',
-              background: etapa >= 1 ? ACCENT : '#e5e7eb',
-              color: etapa >= 1 ? 'white' : '#9ca3af',
+              background: etapa >= 1 ? ACCENT : tokens.border.default,
+              color: etapa >= 1 ? 'white' : tokens.text.tertiary,
               fontSize: 12, fontWeight: 700,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>1</div>
-            <div style={{ flex: 1, height: 2, background: etapa >= 2 ? ACCENT : '#e5e7eb' }}/>
+            <div style={{ flex: 1, height: 2, background: etapa >= 2 ? ACCENT : tokens.border.default }}/>
             <div style={{
               width: 24, height: 24, borderRadius: '50%',
-              background: etapa >= 2 ? ACCENT : '#e5e7eb',
-              color: etapa >= 2 ? 'white' : '#9ca3af',
+              background: etapa >= 2 ? ACCENT : tokens.border.default,
+              color: etapa >= 2 ? 'white' : tokens.text.tertiary,
               fontSize: 12, fontWeight: 700,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>2</div>
@@ -169,9 +170,9 @@ export default function CadastroPage() {
           {erro && (
             <div style={{
               padding: '11px 14px', borderRadius: 10,
-              background: '#fef2f2', color: '#991b1b',
+              background: tokens.status.dangerBg, color: tokens.status.dangerDark,
               fontSize: 13, marginBottom: 16,
-              border: '1px solid #fecaca',
+              border: `1px solid ${tokens.status.dangerLight}`,
             }}>
               {erro}
             </div>
@@ -179,8 +180,8 @@ export default function CadastroPage() {
 
           {etapa === 1 && (
             <>
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Vamos começar</h2>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px' }}>Conta sobre você e sua clínica</p>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Vamos começar</h2>
+              <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 24px' }}>Conta sobre você e sua clínica</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
@@ -210,7 +211,7 @@ export default function CadastroPage() {
                 Continuar
               </button>
 
-              <p style={{ fontSize: 12, color: '#9ca3af', margin: '20px 0 0', textAlign: 'center' }}>
+              <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '20px 0 0', textAlign: 'center' }}>
                 Já tem conta? <a href="/login" style={{ color: ACCENT, fontWeight: 600, textDecoration: 'none' }}>Entrar</a>
               </p>
             </>
@@ -218,12 +219,12 @@ export default function CadastroPage() {
 
           {etapa === 2 && (
             <>
-              <button onClick={() => setEtapa(1)} style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: 12, cursor: 'pointer', marginBottom: 12, padding: 0 }}>
+              <button onClick={() => setEtapa(1)} style={{ background: 'none', border: 'none', color: tokens.text.secondary, fontSize: 12, cursor: 'pointer', marginBottom: 12, padding: 0 }}>
                 ← Voltar
               </button>
 
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Crie uma senha segura</h2>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px' }}>Você vai usar pra acessar a plataforma</p>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Crie uma senha segura</h2>
+              <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 24px' }}>Você vai usar pra acessar a plataforma</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
@@ -251,19 +252,19 @@ export default function CadastroPage() {
                       placeholder="Repita a senha"
                       style={{
                         ...inputStyle, paddingRight: 40,
-                        borderColor: form.senha_confirma && form.senha !== form.senha_confirma ? '#fca5a5' : '#e5e7eb',
+                        borderColor: form.senha_confirma && form.senha !== form.senha_confirma ? tokens.status.dangerLightAlt : tokens.border.default,
                       }}
                     />
                   </div>
                   {form.senha_confirma && form.senha !== form.senha_confirma && (
-                    <p style={{ fontSize: 11, color: '#dc2626', margin: '4px 0 0' }}>Senhas não coincidem</p>
+                    <p style={{ fontSize: 11, color: tokens.status.danger, margin: '4px 0 0' }}>Senhas não coincidem</p>
                   )}
                 </div>
               </div>
 
               <button onClick={cadastrar} disabled={salvando} style={{
                 width: '100%', padding: 14, marginTop: 24,
-                background: salvando ? '#9ca3af' : ACCENT, color: 'white',
+                background: salvando ? tokens.text.tertiary : ACCENT, color: 'white',
                 border: 'none', borderRadius: 10,
                 fontSize: 14, fontWeight: 700, cursor: salvando ? 'not-allowed' : 'pointer',
               }}>

@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ImportarPacientes } from '@/components/ImportarPacientes'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 const CARD_RADIUS = 16
 
 const CONVENIOS_LISTA = ['Particular', 'Unimed', 'Amil', 'Bradesco Saúde', 'Hapvida', 'SulAmérica', 'NotreDame Intermédica', 'Porto Seguro', 'Outro']
@@ -233,12 +234,12 @@ export default function Pacientes() {
 
   // Cores de avatar por hash do nome (visual mais interessante)
   const coresAvatar = [
-    { bg: '#ede9fb', fg: '#6043C1' },
-    { bg: '#dbeafe', fg: '#2563eb' },
-    { bg: '#dcfce7', fg: '#16a34a' },
-    { bg: '#fef3c7', fg: '#d97706' },
-    { bg: '#fce7f3', fg: '#db2777' },
-    { bg: '#e0f2fe', fg: '#0284c7' },
+    { bg: tokens.brand.primaryLighter, fg: tokens.brand.primary },
+    { bg: tokens.status.infoLighter, fg: tokens.status.infoStrong },
+    { bg: tokens.status.successBgAlt, fg: tokens.status.success },
+    { bg: tokens.status.warningLightSoft, fg: tokens.status.warningAlt },
+    { bg: tokens.external.instagramPinkSoft, fg: tokens.external.instagramPink },
+    { bg: tokens.status.infoSkyBg, fg: tokens.status.infoSkyStrong },
   ]
   const getCorAvatar = (nome: string) => {
     let hash = 0
@@ -253,12 +254,12 @@ export default function Pacientes() {
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', fontSize: 14,
     borderRadius: 10, border: '1px solid #e5e7eb',
-    outline: 'none', fontFamily: 'inherit', color: '#111827',
+    outline: 'none', fontFamily: 'inherit', color: tokens.text.primary,
     background: 'white', boxSizing: 'border-box',
   }
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 600, color: '#6b7280',
+    fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
     display: 'block', marginBottom: 6,
     textTransform: 'uppercase' as const, letterSpacing: '0.04em',
   }
@@ -268,8 +269,8 @@ export default function Pacientes() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Meus pacientes</h1>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Meus pacientes</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>
             {pacientes.length} paciente{pacientes.length !== 1 ? 's' : ''} cadastrado{pacientes.length !== 1 ? 's' : ''}
             {totalHomens + totalMulheres > 0 && ` · ${totalHomens} ${totalHomens === 1 ? 'homem' : 'homens'}, ${totalMulheres} ${totalMulheres === 1 ? 'mulher' : 'mulheres'}`}
           </p>
@@ -280,7 +281,7 @@ export default function Pacientes() {
               display: 'flex', alignItems: 'center', gap: 7,
               padding: '10px 16px', borderRadius: 10,
               border: '1px solid #e5e7eb', background: 'white',
-              color: '#374151',
+              color: tokens.text.strong,
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -294,8 +295,8 @@ export default function Pacientes() {
             <button onClick={exportarCSV} style={{
               display: 'flex', alignItems: 'center', gap: 7,
               padding: '10px 16px', borderRadius: 10,
-              border: '1px solid #e5e7eb', background: 'white',
-              color: '#374151',
+              border: `1px solid ${tokens.border.default}`, background: 'white',
+              color: tokens.text.strong,
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }} title={'Exportar ' + pacientes.length + ' pacientes para CSV'}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -307,8 +308,8 @@ export default function Pacientes() {
           <button onClick={() => setMostrarImport(true)} className="pac-btn-importar" style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '10px 16px', borderRadius: 10,
-            border: '1px solid #e5e7eb', background: 'white',
-            color: '#374151',
+            border: `1px solid ${tokens.border.default}`, background: 'white',
+            color: tokens.text.strong,
             fontSize: 13, fontWeight: 600, cursor: 'pointer',
           }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -335,7 +336,7 @@ export default function Pacientes() {
         <div style={{
           position: 'fixed' as const, bottom: 24, left: '50%',
           transform: 'translateX(-50%)', zIndex: 90,
-          background: '#111827', color: 'white',
+          background: tokens.text.primary, color: 'white',
           borderRadius: 14, padding: '12px 20px',
           display: 'flex', alignItems: 'center', gap: 14,
           boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
@@ -358,7 +359,7 @@ export default function Pacientes() {
             disabled={selecionados.size === 0 || deletandoLote}
             style={{
               padding: '7px 14px', borderRadius: 8,
-              background: selecionados.size === 0 ? '#374151' : '#dc2626',
+              background: selecionados.size === 0 ? tokens.text.strong : tokens.status.danger,
               color: 'white', border: 'none',
               fontSize: 12, fontWeight: 600,
               cursor: selecionados.size === 0 || deletandoLote ? 'not-allowed' : 'pointer',
@@ -368,7 +369,7 @@ export default function Pacientes() {
             {deletandoLote ? 'Deletando...' : 'Deletar ' + (selecionados.size > 0 ? '(' + selecionados.size + ')' : '')}
           </button>
           <button onClick={sairSelecao} style={{
-            background: 'transparent', border: 'none', color: '#9ca3af',
+            background: 'transparent', border: 'none', color: tokens.text.tertiary,
             fontSize: 12, cursor: 'pointer', fontWeight: 500,
           }}>
             Cancelar
@@ -381,10 +382,10 @@ export default function Pacientes() {
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 200,
           padding: '12px 20px', borderRadius: 10,
-          background: msg.tipo === 'ok' ? '#ecfdf5' : '#fef2f2',
-          color: msg.tipo === 'ok' ? '#065f46' : '#991b1b',
+          background: msg.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
+          color: msg.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
           fontSize: 13, fontWeight: 600,
-          border: `1px solid ${msg.tipo === 'ok' ? '#a7f3d0' : '#fecaca'}`,
+          border: `1px solid ${msg.tipo === 'ok' ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         }}>
           {msg.texto}
@@ -401,8 +402,8 @@ export default function Pacientes() {
           }}
         >
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 28, width: '100%', maxWidth: 520 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Novo paciente</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 20px' }}>Preencha os dados principais pra começar</p>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Novo paciente</h2>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Preencha os dados principais pra começar</p>
 
             <form onSubmit={salvarPaciente} className="pac-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div style={{ gridColumn: '1 / -1' }}>
@@ -520,8 +521,8 @@ export default function Pacientes() {
                   onClick={() => setMostrarForm(false)}
                   style={{
                     padding: '12px 20px', borderRadius: 10,
-                    background: 'white', color: '#6b7280',
-                    border: '1px solid #e5e7eb',
+                    background: 'white', color: tokens.text.secondary,
+                    border: `1px solid ${tokens.border.default}`,
                     fontSize: 13, cursor: 'pointer',
                   }}
                 >
@@ -532,7 +533,7 @@ export default function Pacientes() {
                   disabled={salvando}
                   style={{
                     flex: 1, padding: '12px 20px', borderRadius: 10, border: 'none',
-                    background: salvando ? '#9ca3af' : ACCENT,
+                    background: salvando ? tokens.text.tertiary : ACCENT,
                     color: 'white', fontSize: 13, fontWeight: 700,
                     cursor: salvando ? 'not-allowed' : 'pointer',
                   }}
@@ -551,7 +552,7 @@ export default function Pacientes() {
         padding: '10px 16px', marginBottom: 14,
         display: 'flex', alignItems: 'center', gap: 10,
       }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2">
           <circle cx="11" cy="11" r="8"/>
           <path d="M21 21l-4.35-4.35"/>
         </svg>
@@ -559,12 +560,12 @@ export default function Pacientes() {
           value={busca}
           onChange={e => setBusca(e.target.value)}
           placeholder="Buscar por nome ou telefone..."
-          style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 14, outline: 'none', color: '#374151' }}
+          style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 14, outline: 'none', color: tokens.text.strong }}
         />
         {busca && (
           <button
             onClick={() => setBusca('')}
-            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex' }}
+            style={{ border: 'none', background: 'none', cursor: 'pointer', color: tokens.text.tertiary, padding: 0, display: 'flex' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18"/>
@@ -589,9 +590,9 @@ export default function Pacientes() {
               onClick={() => setFiltroSexo(opt.v)}
               style={{
                 padding: '7px 14px', borderRadius: 20,
-                border: `1px solid ${ativo ? ACCENT : '#e5e7eb'}`,
+                border: `1px solid ${ativo ? ACCENT : tokens.border.default}`,
                 background: ativo ? ACCENT : 'white',
-                color: ativo ? 'white' : '#374151',
+                color: ativo ? 'white' : tokens.text.strong,
                 fontSize: 12, fontWeight: 600, cursor: 'pointer',
               }}
             >
@@ -600,7 +601,7 @@ export default function Pacientes() {
           )
         })}
 
-        <div style={{ width: 1, height: 20, background: '#e5e7eb', margin: '0 4px' }}/>
+        <div style={{ width: 1, height: 20, background: tokens.border.default, margin: '0 4px' }}/>
 
         {/* Chips convenio */}
         {([
@@ -615,9 +616,9 @@ export default function Pacientes() {
               onClick={() => setFiltroConvenio(opt.v)}
               style={{
                 padding: '7px 14px', borderRadius: 20,
-                border: `1px solid ${ativo ? ACCENT : '#e5e7eb'}`,
+                border: `1px solid ${ativo ? ACCENT : tokens.border.default}`,
                 background: ativo ? ACCENT : 'white',
-                color: ativo ? 'white' : '#374151',
+                color: ativo ? 'white' : tokens.text.strong,
                 fontSize: 12, fontWeight: 600, cursor: 'pointer',
               }}
             >
@@ -626,7 +627,7 @@ export default function Pacientes() {
           )
         })}
 
-        <div style={{ width: 1, height: 20, background: '#e5e7eb', margin: '0 4px' }}/>
+        <div style={{ width: 1, height: 20, background: tokens.border.default, margin: '0 4px' }}/>
 
         {/* Ordenação */}
         <select
@@ -634,8 +635,8 @@ export default function Pacientes() {
           onChange={e => setOrdenar(e.target.value as 'nome' | 'recente')}
           style={{
             padding: '7px 12px', borderRadius: 20,
-            border: '1px solid #e5e7eb', background: 'white',
-            fontSize: 12, color: '#374151', cursor: 'pointer',
+            border: `1px solid ${tokens.border.default}`, background: 'white',
+            fontSize: 12, color: tokens.text.strong, cursor: 'pointer',
           }}
         >
           <option value="nome">Ordenar: A → Z</option>
@@ -647,8 +648,8 @@ export default function Pacientes() {
             onClick={() => { setFiltroSexo('todos'); setFiltroConvenio('todos'); setBusca('') }}
             style={{
               padding: '7px 12px', borderRadius: 20,
-              border: '1px solid #fecaca',
-              background: '#fef2f2', color: '#dc2626',
+              border: `1px solid ${tokens.status.dangerLight}`,
+              background: tokens.status.dangerBg, color: tokens.status.danger,
               fontSize: 12, fontWeight: 600, cursor: 'pointer',
               marginLeft: 'auto',
             }}
@@ -657,7 +658,7 @@ export default function Pacientes() {
           </button>
         )}
 
-        <span style={{ fontSize: 12, color: '#9ca3af', marginLeft: filtroAtivo ? 0 : 'auto' }}>
+        <span style={{ fontSize: 12, color: tokens.text.tertiary, marginLeft: filtroAtivo ? 0 : 'auto' }}>
           {pacientesFiltrados.length} resultado{pacientesFiltrados.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -685,10 +686,10 @@ export default function Pacientes() {
               <path d="M16 3.13a4 4 0 010 7.75"/>
             </svg>
           </div>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>
             {filtroAtivo ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado ainda'}
           </p>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
+          <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>
             {filtroAtivo ? 'Tente ajustar os filtros ou a busca' : 'Clique em "+ Novo paciente" pra começar'}
           </p>
         </div>
@@ -735,7 +736,7 @@ export default function Pacientes() {
                   <div style={{
                     width: 22, height: 22, borderRadius: 6,
                     border: selecionados.has(p.id) ? 'none' : '2px solid #d1d5db',
-                    background: selecionados.has(p.id) ? '#6043C1' : 'white',
+                    background: selecionados.has(p.id) ? tokens.brand.primary : 'white',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
                   }}>
@@ -758,10 +759,10 @@ export default function Pacientes() {
 
                 {/* Info principal */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 3px' }}>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 3px' }}>
                     {p.nome}
                   </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' as const, fontSize: 12, color: '#6b7280' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' as const, fontSize: 12, color: tokens.text.secondary }}>
                     {p.sexo && (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         {p.sexo === 'Masculino' ? (
@@ -812,18 +813,18 @@ export default function Pacientes() {
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '5px 10px', borderRadius: 20,
-                    background: '#ede9fb',
+                    background: tokens.brand.primaryLighter,
                     flexShrink: 0,
                   }}>
                     <div style={{
                       width: 18, height: 18, borderRadius: '50%',
-                      background: '#6043C1', color: 'white',
+                      background: tokens.brand.primary, color: 'white',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 9, fontWeight: 700,
                     }}>
                       {(p.medico.nome || '').split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()}
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#6043C1', whiteSpace: 'nowrap' as const }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: tokens.brand.primary, whiteSpace: 'nowrap' as const }}>
                       {(() => {
                         const partes = (p.medico.nome || '').split(' ')
                         const primeiro = partes[0] || ''
@@ -841,12 +842,12 @@ export default function Pacientes() {
                     style={{
                       width: 32, height: 32, borderRadius: 8,
                       background: 'transparent', border: 'none',
-                      cursor: 'pointer', color: '#d1d5db',
+                      cursor: 'pointer', color: tokens.border.strong,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'all 0.15s',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#dc2626' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#d1d5db' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = tokens.status.dangerBg; e.currentTarget.style.color = tokens.status.danger }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = tokens.border.strong }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <polyline points="3 6 5 6 21 6"/>
@@ -856,7 +857,7 @@ export default function Pacientes() {
                   <div style={{
                     width: 28, height: 28, borderRadius: 8,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#d1d5db',
+                    color: tokens.border.strong,
                   }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M9 18l6-6-6-6"/>
@@ -878,13 +879,13 @@ export default function Pacientes() {
         const fim = Math.min(ini + PACIENTES_POR_PAGINA, pacientesFiltrados.length)
         const btnBase: React.CSSProperties = {
           minWidth: 36, height: 36, padding: '0 10px',
-          borderRadius: 8, border: '1px solid #e5e7eb',
-          background: 'white', color: '#374151',
+          borderRadius: 8, border: `1px solid ${tokens.border.default}`,
+          background: 'white', color: tokens.text.strong,
           fontSize: 13, fontWeight: 500, cursor: 'pointer',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         }
         const btnDisabled: React.CSSProperties = {
-          ...btnBase, color: '#d1d5db', cursor: 'not-allowed', background: '#F9FAFB',
+          ...btnBase, color: tokens.border.strong, cursor: 'not-allowed', background: tokens.bg.muted,
         }
         const irPara = (n: number) => setPagina(Math.max(1, Math.min(totalPaginas, n)))
         return (
@@ -894,8 +895,8 @@ export default function Pacientes() {
             background: 'white', borderRadius: 16,
             flexWrap: 'wrap' as const, gap: 12,
           }}>
-            <span style={{ fontSize: 13, color: '#6b7280' }}>
-              Mostrando <strong style={{ color: '#111827' }}>{ini + 1}</strong>–<strong style={{ color: '#111827' }}>{fim}</strong> de <strong style={{ color: '#111827' }}>{pacientesFiltrados.length}</strong>
+            <span style={{ fontSize: 13, color: tokens.text.secondary }}>
+              Mostrando <strong style={{ color: tokens.text.primary }}>{ini + 1}</strong>–<strong style={{ color: tokens.text.primary }}>{fim}</strong> de <strong style={{ color: tokens.text.primary }}>{pacientesFiltrados.length}</strong>
             </span>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const }}>
@@ -907,7 +908,7 @@ export default function Pacientes() {
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px' }}>
-                <span style={{ fontSize: 13, color: '#6b7280' }}>Página</span>
+                <span style={{ fontSize: 13, color: tokens.text.secondary }}>Página</span>
                 <input
                   type="number"
                   min={1}
@@ -929,12 +930,12 @@ export default function Pacientes() {
                   }}
                   style={{
                     width: 50, height: 36, padding: '0 8px',
-                    borderRadius: 8, border: '1px solid #e5e7eb',
+                    borderRadius: 8, border: `1px solid ${tokens.border.default}`,
                     fontSize: 13, textAlign: 'center' as const,
-                    outline: 'none', color: '#111827', background: 'white',
+                    outline: 'none', color: tokens.text.primary, background: 'white',
                   }}
                 />
-                <span style={{ fontSize: 13, color: '#6b7280' }}>de <strong style={{ color: '#111827' }}>{totalPaginas}</strong></span>
+                <span style={{ fontSize: 13, color: tokens.text.secondary }}>de <strong style={{ color: tokens.text.primary }}>{totalPaginas}</strong></span>
               </div>
 
               <button onClick={() => irPara(paginaAtual + 1)} disabled={paginaAtual === totalPaginas} style={paginaAtual === totalPaginas ? btnDisabled : btnBase} title="Próxima página">

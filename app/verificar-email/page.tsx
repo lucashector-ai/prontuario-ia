@@ -2,8 +2,9 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
+const ACCENT = tokens.brand.primary
 
 function VerificarContent() {
   const router = useRouter()
@@ -64,37 +65,37 @@ function VerificarContent() {
   }, [searchParams, router])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F5F5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ minHeight: '100vh', background: tokens.bg.hover, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ background: 'white', borderRadius: 16, padding: 48, maxWidth: 420, width: '100%', textAlign: 'center' }}>
         {status === 'carregando' && (
           <>
-            <div style={{ width: 40, height: 40, border: `3px solid #ede9fb`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 20px' }}/>
-            <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Confirmando sua conta...</p>
+            <div style={{ width: 40, height: 40, border: `3px solid ${tokens.brand.primaryLighter}`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 20px' }}/>
+            <p style={{ fontSize: 14, color: tokens.text.secondary, margin: 0 }}>Confirmando sua conta...</p>
           </>
         )}
         {status === 'ok' && (
           <>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ede9fb', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: tokens.brand.primaryLighter, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Conta confirmada!</h1>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>{mensagem}</p>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px' }}>Conta confirmada!</h1>
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0, lineHeight: 1.6 }}>{mensagem}</p>
           </>
         )}
         {status === 'erro' && (
           <>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5">
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: tokens.status.dangerBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="2.5">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="15" y1="9" x2="9" y2="15"/>
                 <line x1="9" y1="9" x2="15" y2="15"/>
               </svg>
             </div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Não foi possível verificar</h1>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.6 }}>{mensagem}</p>
-            <button onClick={() => router.push('/login')} style={{ padding: '12px 24px', background: 'white', color: '#374151', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid #e5e7eb', cursor: 'pointer' }}>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px' }}>Não foi possível verificar</h1>
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 24px', lineHeight: 1.6 }}>{mensagem}</p>
+            <button onClick={() => router.push('/login')} style={{ padding: '12px 24px', background: 'white', color: tokens.text.strong, fontSize: 13, fontWeight: 600, borderRadius: 10, border: `1px solid ${tokens.border.default}`, cursor: 'pointer' }}>
               Voltar ao login
             </button>
           </>

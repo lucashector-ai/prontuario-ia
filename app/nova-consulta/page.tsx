@@ -14,6 +14,7 @@ import { BotaoMemed } from '@/components/BotaoMemed'
 import { SidebarContextoPaciente } from '@/components/SidebarContextoPaciente'
 import { ModalDadosPacienteAvulso } from '@/components/ModalDadosPacienteAvulso'
 import { ModalSelecionarPaciente } from '@/components/ModalSelecionarPaciente'
+import { tokens } from '@/lib/design-tokens'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
 type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
@@ -271,7 +272,7 @@ const handleCopiar = () => {
   if (!medico) return null
 
   return (
-    <div style={{ display: 'flex', height: '100%', minHeight: 0, overflow: 'hidden', background: '#FAFAFA' }}>
+    <div style={{ display: 'flex', height: '100%', minHeight: 0, overflow: 'hidden', background: tokens.bg.page }}>
       <Suspense fallback={null}>
         <SearchParamsReader onParams={handleSearchParams} />
       </Suspense>
@@ -295,16 +296,16 @@ const handleCopiar = () => {
             acoes={
               <>
                 {consultaSalva && (
-                  <span style={{ fontSize: 11, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '4px 9px', borderRadius: 20, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ fontSize: 11, color: tokens.status.success, background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, padding: '4px 9px', borderRadius: 20, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                     Salvo
                   </span>
                 )}
                 <button onClick={() => setModoPerfeita(m => !m)} style={{
                   fontSize: 12, fontWeight: 600,
-                  color: modoPerfeita ? '#6043C1' : '#6b7280',
-                  background: modoPerfeita ? '#f0ebff' : 'white',
-                  border: modoPerfeita ? '1px solid #b9a9ef' : '1px solid #e5e7eb',
+                  color: modoPerfeita ? tokens.brand.primary : tokens.text.secondary,
+                  background: modoPerfeita ? tokens.brand.primaryLight : 'white',
+                  border: modoPerfeita ? `1px solid ${tokens.brand.primaryAccent}` : `1px solid ${tokens.border.default}`,
                   padding: '7px 12px', borderRadius: 8, cursor: 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' as const
                 }}>
@@ -315,7 +316,7 @@ const handleCopiar = () => {
                 </button>
                 <BotaoMemed onClick={() => { if (pacienteSelecionado) { setMemedAberto(true) } else { setModalAvulso(true) } }} variant="primary" />
                 {estado === 'pronto' && (
-                  <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: '#6b7280', background: 'white', border: '1px solid #e5e7eb', padding: '7px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
+                  <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: tokens.text.secondary, background: 'white', border: `1px solid ${tokens.border.default}`, padding: '7px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
                     + Nova
                   </button>
                 )}
@@ -329,33 +330,33 @@ const handleCopiar = () => {
 
           {/* SIDEBAR - Contexto do paciente (isolado) */}
           {pacienteSelecionado && medico && (
-            <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f0f0f0', padding: '14px 14px 16px', overflow: 'auto', minHeight: 0, maxHeight: '100%', alignSelf: 'stretch' as const }}>
-              <p style={{ fontSize: 9, color: '#9ca3af', letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 10px', textTransform: 'uppercase' as const }}>Contexto do paciente</p>
+            <div style={{ background: 'white', borderRadius: 14, border: `1px solid ${tokens.neutral[150]}`, padding: '14px 14px 16px', overflow: 'auto', minHeight: 0, maxHeight: '100%', alignSelf: 'stretch' as const }}>
+              <p style={{ fontSize: 9, color: tokens.text.tertiary, letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 10px', textTransform: 'uppercase' as const }}>Contexto do paciente</p>
               <SidebarContextoPaciente pacienteId={pacienteSelecionado.id} medicoId={medico.id} />
             </div>
           )}
 
           {/* AREA PRINCIPAL - card unico que muda por estado */}
-          <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', minHeight: 0 }}>
+          <div style={{ background: 'white', borderRadius: 14, border: `1px solid ${tokens.neutral[150]}`, display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', minHeight: 0 }}>
 
             {estado === 'idle' && !prontuario && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 18, padding: 32, overflow: 'auto', minHeight: 0 }}>
-                <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fef2f2', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.8">
+                <div style={{ width: 64, height: 64, borderRadius: 16, background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="1.8">
                     <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
                     <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
                   </svg>
                 </div>
                 <div style={{ textAlign: 'center' as const, maxWidth: 380 }}>
-                  <p style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Pronto para iniciar a consulta?</p>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+                  <p style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Pronto para iniciar a consulta?</p>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0, lineHeight: 1.6 }}>
                     Fale normalmente durante a consulta. A IA vai transcrever em tempo real e gerar prontuário SOAP, CIDs, receita e mais ao final.
                   </p>
                 </div>
                 <button onClick={handleIniciar} style={{
                   display: 'inline-flex', alignItems: 'center', gap: 9,
                   padding: '12px 28px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                  background: '#dc2626', color: 'white', fontSize: 14, fontWeight: 600
+                  background: tokens.status.danger, color: 'white', fontSize: 14, fontWeight: 600
                 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
@@ -364,7 +365,7 @@ const handleCopiar = () => {
                   Iniciar gravação
                 </button>
                 {transcricao && (
-                  <button onClick={handleEstruturar} style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid #6043C1', background: 'white', color: '#6043C1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                  <button onClick={handleEstruturar} style={{ padding: '8px 18px', borderRadius: 8, border: `1px solid ${tokens.brand.primary}`, background: 'white', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                     Tenho transcrição salva — gerar prontuário
                   </button>
                 )}
@@ -373,62 +374,62 @@ const handleCopiar = () => {
 
             {estado === 'gravando' && !prontuario && (
               <>
-                <div style={{ padding: '16px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                <div style={{ padding: '16px 24px', borderBottom: `1px solid ${tokens.bg.hoverStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', animation: 'pulse 1.5s ease-in-out infinite' as const }}/>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', margin: 0, letterSpacing: '0.04em' as const }}>GRAVANDO</p>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.status.danger, animation: 'pulse 1.5s ease-in-out infinite' as const }}/>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: tokens.status.danger, margin: 0, letterSpacing: '0.04em' as const }}>GRAVANDO</p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     {transcrevendo && (
-                      <span style={{ fontSize: 11, color: '#9ca3af' }}>Transcrevendo...</span>
+                      <span style={{ fontSize: 11, color: tokens.text.tertiary }}>Transcrevendo...</span>
                     )}
                     {transcricao && (
-                      <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '3px 9px', borderRadius: 12, fontVariantNumeric: 'tabular-nums' as const }}>
+                      <span style={{ fontSize: 11, color: tokens.text.tertiary, background: tokens.bg.hoverStrong, padding: '3px 9px', borderRadius: 12, fontVariantNumeric: 'tabular-nums' as const }}>
                         {transcricao.split(' ').filter(Boolean).length} palavras
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', background: '#fafafa' }}>
+                <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', background: tokens.bg.page }}>
                   {transcricao ? (
-                    <p style={{ fontSize: 14, color: '#1f2937', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' as const }}>{transcricao}</p>
+                    <p style={{ fontSize: 14, color: tokens.neutral.gray800, lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' as const }}>{transcricao}</p>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, opacity: 0.5 }}>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="1.5">
                         <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
                         <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
                       </svg>
-                      <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Aguardando fala do paciente...</p>
+                      <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0 }}>Aguardando fala do paciente...</p>
                     </div>
                   )}
                 </div>
 
                 {modoPerfeita && (sugestoes.length > 0 || focoConsulta || alertasRT.length > 0) && (
-                  <div style={{ padding: '14px 22px', background: '#f0ebff', borderTop: '1px solid #e0d4ff', flexShrink: 0, maxHeight: 200, overflow: 'auto' }}>
+                  <div style={{ padding: '14px 22px', background: tokens.brand.primaryLight, borderTop: `1px solid ${tokens.neutral.purplePastel}`, flexShrink: 0, maxHeight: 200, overflow: 'auto' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6043C1" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#6043C1', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Sugestão IA</span>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Sugestão IA</span>
                     </div>
                     {focoConsulta && (
-                      <p style={{ fontSize: 12, color: '#3C3489', margin: '0 0 6px', lineHeight: 1.5 }}>
+                      <p style={{ fontSize: 12, color: tokens.brand.primaryDarker, margin: '0 0 6px', lineHeight: 1.5 }}>
                         <strong style={{ fontWeight: 600 }}>Foco:</strong> {focoConsulta}
                       </p>
                     )}
                     {alertasRT.map((a, i) => (
-                      <p key={i} style={{ fontSize: 12, color: '#b91c1c', margin: i === 0 ? 0 : '6px 0 0', lineHeight: 1.5 }}>⚠ {a}</p>
+                      <p key={i} style={{ fontSize: 12, color: tokens.status.dangerHover, margin: i === 0 ? 0 : '6px 0 0', lineHeight: 1.5 }}>⚠ {a}</p>
                     ))}
                     {sugestoes.slice(0, 3).map((sug, i) => (
-                      <p key={i} style={{ fontSize: 12, color: '#3C3489', margin: '6px 0 0', lineHeight: 1.5 }}>{sug}</p>
+                      <p key={i} style={{ fontSize: 12, color: tokens.brand.primaryDarker, margin: '6px 0 0', lineHeight: 1.5 }}>{sug}</p>
                     ))}
                   </div>
                 )}
 
-                <div style={{ padding: '14px 24px', borderTop: '1px solid #f3f4f6', display: 'flex', gap: 10, flexShrink: 0 }}>
-                  <button onClick={pausarGravacao} style={{ flex: 1, padding: '11px', borderRadius: 9, border: '1px solid ' + (gravandoPausado ? '#d97706' : '#fecaca'), background: gravandoPausado ? '#fffbeb' : 'white', color: gravandoPausado ? '#d97706' : '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                <div style={{ padding: '14px 24px', borderTop: `1px solid ${tokens.bg.hoverStrong}`, display: 'flex', gap: 10, flexShrink: 0 }}>
+                  <button onClick={pausarGravacao} style={{ flex: 1, padding: '11px', borderRadius: 9, border: '1px solid ' + (gravandoPausado ? tokens.status.warningAlt : tokens.status.dangerLight), background: gravandoPausado ? tokens.status.warningBgAlt : 'white', color: gravandoPausado ? tokens.status.warningAlt : tokens.status.danger, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                     {gravandoPausado ? 'Retomar' : 'Pausar'}
                   </button>
-                  <button onClick={handleParar} style={{ flex: 2, padding: '11px', borderRadius: 9, border: 'none', background: '#6043C1', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <button onClick={handleParar} style={{ flex: 2, padding: '11px', borderRadius: 9, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
                     Encerrar e gerar prontuário
                   </button>
@@ -438,24 +439,24 @@ const handleCopiar = () => {
 
             {estado === 'processando' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32, overflow: 'auto', minHeight: 0 }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #ede9fb', borderTopColor: '#6043C1', animation: 'spin 0.8s linear infinite' as const }}/>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', border: `3px solid ${tokens.brand.primaryLighter}`, borderTopColor: tokens.brand.primary, animation: 'spin 0.8s linear infinite' as const }}/>
                 <div style={{ textAlign: 'center' as const }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>Analisando consulta</p>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Estruturando prontuário SOAP com IA...</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 4px' }}>Analisando consulta</p>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Estruturando prontuário SOAP com IA...</p>
                 </div>
               </div>
             )}
 
             {estado === 'erro' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 32, overflow: 'auto', minHeight: 0 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fef2f2', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 </div>
                 <div style={{ textAlign: 'center' as const }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>Erro ao processar</p>
-                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{erroMsg || 'Tente novamente.'}</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 4px' }}>Erro ao processar</p>
+                  <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>{erroMsg || 'Tente novamente.'}</p>
                 </div>
-                <button onClick={handleNovo} style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#374151', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                <button onClick={handleNovo} style={{ padding: '8px 18px', borderRadius: 8, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.strong, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
                   Recomeçar
                 </button>
               </div>
@@ -463,13 +464,13 @@ const handleCopiar = () => {
 
             {estado === 'pronto' && prontuario && (
               <>
-                <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', padding: '0 20px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', borderBottom: `1px solid ${tokens.border.default}`, padding: '0 20px', flexShrink: 0 }}>
                   {(['prontuario', 'receita', 'resumo', 'documentos'] as Aba[]).map(tab => (
                     <button key={tab} onClick={() => setAba(tab)} style={{
                       padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
                       fontSize: 13, fontWeight: aba === tab ? 600 : 400,
-                      color: aba === tab ? '#111827' : '#6b7280',
-                      borderBottom: aba === tab ? '2px solid #6043C1' : '2px solid transparent',
+                      color: aba === tab ? tokens.text.primary : tokens.text.secondary,
+                      borderBottom: aba === tab ? `2px solid ${tokens.brand.primary}` : '2px solid transparent',
                       marginBottom: -1
                     }}>
                       {tab === 'prontuario' ? 'Prontuário' : tab === 'receita' ? 'Receita' : tab === 'resumo' ? 'Resumo' : 'Documentos'}
@@ -483,11 +484,11 @@ const handleCopiar = () => {
                   )}
                   {aba === 'receita' && (
                     <div style={{ textAlign: 'center' as const, padding: '60px 24px' }}>
-                      <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdfa', border: '1px solid #99f6e4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <div style={{ width: 56, height: 56, borderRadius: 14, background: tokens.status.infoTealBg, border: `1px solid ${tokens.status.infoTealLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                         <img src="/memed-logo.svg" alt="Memed" width={28} height={28} />
                       </div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Prescrição digital</p>
-                      <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px', maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>Crie receitas com validade legal ICP-Brasil e envio direto pra farmácia, via Memed.</p>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>Prescrição digital</p>
+                      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 20px', maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>Crie receitas com validade legal ICP-Brasil e envio direto pra farmácia, via Memed.</p>
                       <BotaoMemed onClick={() => setMemedAberto(true)} disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" />
                     </div>
                   )}
@@ -495,27 +496,27 @@ const handleCopiar = () => {
                     <div>
                       {!resumoPaciente ? (
                         <div style={{ textAlign: 'center' as const, padding: '60px 24px' }}>
-                          <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.5"><path d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+                          <div style={{ width: 48, height: 48, borderRadius: 12, background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={tokens.status.success} strokeWidth="1.5"><path d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
                           </div>
-                          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Resumo para o paciente</p>
-                          <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px' }}>Explica a consulta em linguagem simples e acolhedora.</p>
-                          <button onClick={handleGerarResumo} disabled={gerandoResumo} style={{ padding: '9px 22px', borderRadius: 8, border: 'none', background: '#16a34a', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>Resumo para o paciente</p>
+                          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 20px' }}>Explica a consulta em linguagem simples e acolhedora.</p>
+                          <button onClick={handleGerarResumo} disabled={gerandoResumo} style={{ padding: '9px 22px', borderRadius: 8, border: 'none', background: tokens.status.success, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                             {gerandoResumo ? 'Gerando...' : 'Gerar resumo'}
                           </button>
                         </div>
                       ) : (
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                            <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Resumo para o paciente</p>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Resumo para o paciente</p>
                             <div style={{ display: 'flex', gap: 8 }}>
-                              <button onClick={() => { navigator.clipboard.writeText(resumoPaciente) }} style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Copiar</button>
-                              <button onClick={() => setResumoPaciente('')} style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Regenerar</button>
-                              <button onClick={() => enviarWhatsApp('resumo', resumoPaciente)} style={{ fontSize: 11, color: 'white', background: '#25d366', border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Enviar WA</button>
+                              <button onClick={() => { navigator.clipboard.writeText(resumoPaciente) }} style={{ fontSize: 11, color: tokens.text.secondary, background: tokens.bg.hoverStrong, border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Copiar</button>
+                              <button onClick={() => setResumoPaciente('')} style={{ fontSize: 11, color: tokens.text.secondary, background: tokens.bg.hoverStrong, border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Regenerar</button>
+                              <button onClick={() => enviarWhatsApp('resumo', resumoPaciente)} style={{ fontSize: 11, color: 'white', background: tokens.whatsapp.greenLight, border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Enviar WA</button>
                             </div>
                           </div>
-                          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '16px 18px' }}>
-                            <p style={{ fontSize: 13, color: '#166534', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' as const }}>{resumoPaciente}</p>
+                          <div style={{ background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, borderRadius: 12, padding: '16px 18px' }}>
+                            <p style={{ fontSize: 13, color: tokens.status.successDark, lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' as const }}>{resumoPaciente}</p>
                           </div>
                         </div>
                       )}
@@ -523,38 +524,38 @@ const handleCopiar = () => {
                   )}
                   {aba === 'documentos' && (
                     <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
-                      <div style={{ background: 'white', borderRadius: 12, padding: '16px', border: '1px solid #f0f0f0' }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Pedido de exames</p>
+                      <div style={{ background: 'white', borderRadius: 12, padding: '16px', border: `1px solid ${tokens.neutral[150]}` }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 12px' }}>Pedido de exames</p>
                         {!exames ? (
-                          <button onClick={handleGerarExames} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#F5F5F5', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>
+                          <button onClick={handleGerarExames} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: `1px dashed ${tokens.border.strong}`, background: tokens.bg.hover, color: tokens.text.secondary, fontSize: 12, cursor: 'pointer' }}>
                             {gerandoDoc ? 'Gerando...' : 'Gerar pedido de exames'}
                           </button>
                         ) : (
                           <div>
                             {exames.exames?.map((e: any, i: number) => (
-                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid #F5F5F5' }}>
+                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '8px 0', borderBottom: `1px solid ${tokens.bg.hover}` }}>
                                 <div>
-                                  <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>{e.nome}</p>
-                                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{e.indicacao}</p>
+                                  <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>{e.nome}</p>
+                                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '2px 0 0' }}>{e.indicacao}</p>
                                 </div>
-                                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: e.urgencia === 'urgente' ? '#fef2f2' : '#f0fdf4', color: e.urgencia === 'urgente' ? '#dc2626' : '#16a34a' }}>{e.urgencia}</span>
+                                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: e.urgencia === 'urgente' ? tokens.status.dangerBg : tokens.status.successBg, color: e.urgencia === 'urgente' ? tokens.status.danger : tokens.status.success }}>{e.urgencia}</span>
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
-                      <div style={{ background: 'white', borderRadius: 12, padding: '16px', border: '1px solid #f0f0f0' }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>Atestado médico</p>
+                      <div style={{ background: 'white', borderRadius: 12, padding: '16px', border: `1px solid ${tokens.neutral[150]}` }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 12px' }}>Atestado médico</p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                          <label style={{ fontSize: 12, color: '#6b7280' }}>Dias:</label>
+                          <label style={{ fontSize: 12, color: tokens.text.secondary }}>Dias:</label>
                           <input type="number" min={1} max={30} value={diasAtestado} onChange={e => setDiasAtestado(Number(e.target.value))} style={{ width: 60, padding: '5px 8px', borderRadius: 6, fontSize: 13, textAlign: 'center' as const }} />
                         </div>
                         {!atestado ? (
-                          <button onClick={handleGerarAtestado} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed #d1d5db', background: '#F5F5F5', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>
+                          <button onClick={handleGerarAtestado} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: `1px dashed ${tokens.border.strong}`, background: tokens.bg.hover, color: tokens.text.secondary, fontSize: 12, cursor: 'pointer' }}>
                             {gerandoDoc ? 'Gerando...' : 'Gerar atestado'}
                           </button>
                         ) : (
-                          <button onClick={imprimirAtestado} style={{ width: '100%', padding: '9px', borderRadius: 8, background: '#6043C1', color: 'white', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                          <button onClick={imprimirAtestado} style={{ width: '100%', padding: '9px', borderRadius: 8, background: tokens.brand.primary, color: 'white', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                             Imprimir atestado
                           </button>
                         )}

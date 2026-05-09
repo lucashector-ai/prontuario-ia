@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { HipotesesCard } from '@/components/HipotesesCard'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 const CARD_RADIUS = 16
 
 export default function Historico() {
@@ -57,7 +58,7 @@ export default function Historico() {
       if (admin.clinica_id) {
         const { data: meds } = await supabase.from('medicos').select('id, nome, cor').eq('clinica_id', admin.clinica_id).eq('cargo', 'medico')
         const mapa: Record<string, { nome: string, cor: string }> = {}
-        ;(meds || []).forEach((m: any) => { mapa[m.id] = { nome: m.nome, cor: m.cor || '#6043C1' } })
+        ;(meds || []).forEach((m: any) => { mapa[m.id] = { nome: m.nome, cor: m.cor || tokens.brand.primary } })
         setMapaMedicos(mapa)
       }
     } else {
@@ -65,7 +66,7 @@ export default function Historico() {
       const m = localStorage.getItem('medico')
       if (m) {
         const med = JSON.parse(m)
-        setMapaMedicos({ [med.id]: { nome: med.nome, cor: '#6043C1' } })
+        setMapaMedicos({ [med.id]: { nome: med.nome, cor: tokens.brand.primary } })
       }
     }
 
@@ -139,9 +140,9 @@ export default function Historico() {
   })
 
   const secoes = [
-    { key: 'subjetivo', titulo: 'Subjetivo', letra: 'S', cor: '#2563eb', bg: '#eff6ff' },
-    { key: 'objetivo', titulo: 'Objetivo', letra: 'O', cor: '#0d9488', bg: '#f0fdfa' },
-    { key: 'avaliacao', titulo: 'Avaliação', letra: 'A', cor: '#d97706', bg: '#fffbeb' },
+    { key: 'subjetivo', titulo: 'Subjetivo', letra: 'S', cor: tokens.status.infoStrong, bg: tokens.status.infoBg },
+    { key: 'objetivo', titulo: 'Objetivo', letra: 'O', cor: tokens.status.infoTeal, bg: tokens.status.infoTealBg },
+    { key: 'avaliacao', titulo: 'Avaliação', letra: 'A', cor: tokens.status.warningAlt, bg: tokens.status.warningBgAlt },
     { key: 'plano', titulo: 'Plano', letra: 'P', cor: ACCENT, bg: ACCENT_LIGHT },
   ]
 
@@ -155,8 +156,8 @@ export default function Historico() {
     <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Histórico de consultas</h1>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Histórico de consultas</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>
             {filtradas.length}{busca ? ' de ' + consultas.length : ''} consulta{filtradas.length !== 1 ? 's' : ''} registrada{filtradas.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -181,8 +182,8 @@ export default function Historico() {
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 200,
           padding: '12px 20px', borderRadius: 10,
-          background: toast.tipo === 'ok' ? '#ecfdf5' : '#fef2f2',
-          color: toast.tipo === 'ok' ? '#065f46' : '#991b1b',
+          background: toast.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
+          color: toast.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
           fontSize: 13, fontWeight: 600,
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         }}>
@@ -197,7 +198,7 @@ export default function Historico() {
             padding: '10px 14px',
             display: 'flex', alignItems: 'center', gap: 10,
           }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2">
               <circle cx="11" cy="11" r="8"/>
               <path d="M21 21l-4.35-4.35"/>
             </svg>
@@ -205,7 +206,7 @@ export default function Historico() {
               value={busca}
               onChange={e => setBusca(e.target.value)}
               placeholder="CID, sintoma, conduta..."
-              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, outline: 'none', color: '#374151' }}
+              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, outline: 'none', color: tokens.text.strong }}
             />
           </div>
 
@@ -220,7 +221,7 @@ export default function Historico() {
               </div>
             ) : filtradas.length === 0 ? (
               <div style={{ padding: 32, textAlign: 'center' as const }}>
-                <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
+                <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>
                   {busca ? 'Nenhuma consulta encontrada' : 'Nenhuma consulta registrada'}
                 </p>
               </div>
@@ -231,7 +232,7 @@ export default function Historico() {
                 const nomePaciente = c.pacientes?.nome || 'Paciente'
                 const medInfo = mapaMedicos[c.medico_id]
                 const nomeMedico = medInfo?.nome || ''
-                const corMedico = medInfo?.cor || '#6043C1'
+                const corMedico = medInfo?.cor || tokens.brand.primary
                 const primNomeMed = nomeMedico.split(' ')[0] || ''
                 return (
                   <div
@@ -244,29 +245,29 @@ export default function Historico() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-                      <p style={{ fontSize: 11, color: ativa ? ACCENT : '#9ca3af', margin: 0, fontWeight: 700 }}>
+                      <p style={{ fontSize: 11, color: ativa ? ACCENT : tokens.text.tertiary, margin: 0, fontWeight: 700 }}>
                         {fmtCurto(c.criado_em)}
                       </p>
                       <span style={{
                         fontSize: 9, fontWeight: 700,
-                        color: ehTele ? '#2563eb' : ACCENT,
-                        background: ehTele ? '#eff6ff' : 'white',
+                        color: ehTele ? tokens.status.infoStrong : ACCENT,
+                        background: ehTele ? tokens.status.infoBg : 'white',
                         padding: '2px 8px', borderRadius: 10,
                         textTransform: 'uppercase' as const, letterSpacing: '0.04em',
                       }}>
                         {ehTele ? 'Tele' : 'Consulta'}
                       </span>
                     </div>
-                    <p style={{ fontSize: 13, color: '#111827', fontWeight: 600, margin: '0 0 3px' }}>
+                    <p style={{ fontSize: 13, color: tokens.text.primary, fontWeight: 600, margin: '0 0 3px' }}>
                       {nomePaciente}
                     </p>
                     {primNomeMed && (
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: corMedico, flexShrink: 0 }}/>
-                        <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 500 }}>Dr(a). {primNomeMed}</span>
+                        <span style={{ fontSize: 11, color: tokens.text.secondary, fontWeight: 500 }}>Dr(a). {primNomeMed}</span>
                       </div>
                     )}
-                    <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>
+                    <p style={{ fontSize: 12, color: tokens.text.strong, margin: 0, lineHeight: 1.5 }}>
                       {(c.subjetivo || 'Consulta sem detalhes').substring(0, 90)}{(c.subjetivo || '').length > 90 ? '...' : ''}
                     </p>
                     {c.cids && c.cids.length > 0 && (
@@ -295,10 +296,10 @@ export default function Historico() {
               <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' as const }}>
                   <div>
-                    <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 4px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>
+                    <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '0 0 4px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>
                       Consulta
                     </p>
-                    <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0, textTransform: 'capitalize' as const }}>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0, textTransform: 'capitalize' as const }}>
                       {fmtLongo(selecionada.criado_em)}
                     </p>
                   </div>
@@ -311,8 +312,8 @@ export default function Historico() {
                           disabled={salvando}
                           style={{
                             padding: '8px 16px', borderRadius: 9,
-                            background: 'white', color: '#6b7280',
-                            border: '1px solid #e5e7eb',
+                            background: 'white', color: tokens.text.secondary,
+                            border: `1px solid ${tokens.border.default}`,
                             fontSize: 12, cursor: 'pointer',
                           }}
                         >
@@ -323,7 +324,7 @@ export default function Historico() {
                           disabled={salvando}
                           style={{
                             padding: '8px 16px', borderRadius: 9,
-                            background: salvando ? '#9ca3af' : ACCENT,
+                            background: salvando ? tokens.text.tertiary : ACCENT,
                             color: 'white', border: 'none',
                             fontSize: 12, fontWeight: 700,
                             cursor: salvando ? 'not-allowed' : 'pointer',
@@ -355,8 +356,8 @@ export default function Historico() {
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 6,
                             padding: '8px 14px', borderRadius: 9,
-                            background: '#eff6ff', color: '#1d4ed8',
-                            border: '1px solid #bfdbfe',
+                            background: tokens.status.infoBg, color: tokens.status.infoDark,
+                            border: `1px solid ${tokens.status.infoLight}`,
                             fontSize: 12, fontWeight: 600, cursor: 'pointer',
                           }}
                         >
@@ -371,8 +372,8 @@ export default function Historico() {
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 6,
                             padding: '8px 14px', borderRadius: 9,
-                            background: 'white', color: '#374151',
-                            border: '1px solid #e5e7eb',
+                            background: 'white', color: tokens.text.strong,
+                            border: `1px solid ${tokens.border.default}`,
                             fontSize: 12, fontWeight: 500, cursor: 'pointer',
                           }}
                         >
@@ -386,8 +387,8 @@ export default function Historico() {
                           title="Deletar consulta"
                           style={{
                             padding: '8px 10px', borderRadius: 9,
-                            background: '#fef2f2', color: '#dc2626',
-                            border: '1px solid #fecaca',
+                            background: tokens.status.dangerBg, color: tokens.status.danger,
+                            border: `1px solid ${tokens.status.dangerLight}`,
                             cursor: 'pointer',
                             display: 'inline-flex', alignItems: 'center',
                           }}
@@ -432,15 +433,15 @@ export default function Historico() {
                         onChange={e => setEditForm((f: any) => ({ ...f, [s.key]: e.target.value }))}
                         style={{
                           width: '100%', padding: '10px 14px', fontSize: 14,
-                          borderRadius: 10, border: '1px solid #e5e7eb',
-                          outline: 'none', fontFamily: 'inherit', color: '#111827',
+                          borderRadius: 10, border: `1px solid ${tokens.border.default}`,
+                          outline: 'none', fontFamily: 'inherit', color: tokens.text.primary,
                           background: 'white', boxSizing: 'border-box' as const,
                           minHeight: 100, resize: 'vertical' as const, lineHeight: 1.7,
                         }}
                       />
                     ) : (
                       <p style={{
-                        fontSize: 14, color: '#111827', margin: 0,
+                        fontSize: 14, color: tokens.text.primary, margin: 0,
                         lineHeight: 1.7, whiteSpace: 'pre-wrap' as const,
                       }}>
                         {selecionada[s.key] || '—'}
@@ -455,7 +456,7 @@ export default function Historico() {
               {selecionada.cids && selecionada.cids.length > 0 && (
                 <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
                   <p style={{
-                    fontSize: 11, fontWeight: 700, color: '#6b7280', margin: '0 0 12px',
+                    fontSize: 11, fontWeight: 700, color: tokens.text.secondary, margin: '0 0 12px',
                     letterSpacing: '0.06em', textTransform: 'uppercase' as const,
                   }}>
                     CID-10 Sugeridos
@@ -464,7 +465,7 @@ export default function Historico() {
                     {selecionada.cids.map((cid: any, i: number) => (
                       <div key={i} style={{
                         display: 'flex', alignItems: 'center', gap: 8,
-                        background: '#F9FAFB', borderRadius: 10,
+                        background: tokens.bg.muted, borderRadius: 10,
                         padding: '8px 12px',
                       }}>
                         <span style={{
@@ -474,7 +475,7 @@ export default function Historico() {
                         }}>
                           {cid.codigo}
                         </span>
-                        <span style={{ fontSize: 13, color: '#374151' }}>{cid.descricao}</span>
+                        <span style={{ fontSize: 13, color: tokens.text.strong }}>{cid.descricao}</span>
                       </div>
                     ))}
                   </div>
@@ -498,10 +499,10 @@ export default function Historico() {
                   <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
               </div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>
                 {consultas.length === 0 ? 'Nenhuma consulta ainda' : 'Selecione uma consulta'}
               </p>
-              <p style={{ fontSize: 13, color: '#9ca3af', margin: 0, maxWidth: 320 }}>
+              <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0, maxWidth: 320 }}>
                 {consultas.length === 0
                   ? 'Comece gravando sua primeira consulta — o prontuário é gerado automaticamente'
                   : 'Clique em qualquer consulta na lista pra ver os detalhes'}

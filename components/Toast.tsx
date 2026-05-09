@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, createContext, useContext, useRef } from 'react'
+import { tokens } from '@/lib/design-tokens'
 
 type ToastType = 'success' | 'error' | 'info'
 type Toast = { id: string; msg: string; type: ToastType }
@@ -22,9 +23,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const colors = {
-    success: { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534', icon: '#16a34a' },
-    error:   { bg: '#fef2f2', border: '#fecaca', text: '#991b1b', icon: '#dc2626' },
-    info:    { bg: '#f0f9ff', border: '#bae6fd', text: '#075985', icon: '#0284c7' },
+    success: { bg: tokens.status.successBg, border: tokens.status.successLight, text: tokens.status.successDark, icon: tokens.status.success },
+    error:   { bg: tokens.status.dangerBg, border: tokens.status.dangerLight, text: tokens.status.dangerDark, icon: tokens.status.danger },
+    info:    { bg: tokens.status.infoSkyBgSoft, border: tokens.status.infoSkyMid, text: tokens.status.infoSkyDarker, icon: tokens.status.infoSkyStrong },
   }
 
   const icons = {

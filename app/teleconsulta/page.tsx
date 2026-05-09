@@ -2,10 +2,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 const CARD_RADIUS = 16
 
 export default function Teleconsulta() {
@@ -108,10 +109,10 @@ export default function Teleconsulta() {
 
   const statusInfo = (s: string): { txt: string; bg: string; cor: string } => {
     const map: Record<string, { txt: string; bg: string; cor: string }> = {
-      aguardando: { txt: 'Aguardando', bg: '#fef3c7', cor: '#92400e' },
+      aguardando: { txt: 'Aguardando', bg: tokens.status.warningLightSoft, cor: tokens.status.warningText },
       em_andamento: { txt: 'Em andamento', bg: ACCENT_LIGHT, cor: ACCENT },
     }
-    return map[s] || { txt: s, bg: '#f3f4f6', cor: '#6b7280' }
+    return map[s] || { txt: s, bg: tokens.bg.hoverStrong, cor: tokens.text.secondary }
   }
 
   const fmtData = (iso: string) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -123,8 +124,8 @@ export default function Teleconsulta() {
     <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Teleconsulta</h1>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Vídeo em tempo real — o paciente entra pelo link, sem precisar instalar nada</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Teleconsulta</h1>
+        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Vídeo em tempo real — o paciente entra pelo link, sem precisar instalar nada</p>
       </div>
 
       {/* Toast */}
@@ -132,10 +133,10 @@ export default function Teleconsulta() {
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 200,
           padding: '12px 20px', borderRadius: 10,
-          background: msg.tipo === 'ok' ? '#ecfdf5' : '#fef2f2',
-          color: msg.tipo === 'ok' ? '#065f46' : '#991b1b',
+          background: msg.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
+          color: msg.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
           fontSize: 13, fontWeight: 600,
-          border: `1px solid ${msg.tipo === 'ok' ? '#a7f3d0' : '#fecaca'}`,
+          border: `1px solid ${msg.tipo === 'ok' ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         }}>
           {msg.texto}
@@ -184,7 +185,7 @@ export default function Teleconsulta() {
             onClick={abrirAgendamento}
             style={{
               display: 'flex', alignItems: 'center', gap: 16,
-              padding: 24, background: 'white', color: '#111827',
+              padding: 24, background: 'white', color: tokens.text.primary,
               border: 'none', borderRadius: CARD_RADIUS,
               cursor: 'pointer', textAlign: 'left' as const,
             }}
@@ -204,7 +205,7 @@ export default function Teleconsulta() {
             </div>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>Agendar teleconsulta</p>
-              <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>
                 Programa no calendário e envia o link no horário
               </p>
             </div>
@@ -241,8 +242,8 @@ export default function Teleconsulta() {
 
           {/* Header da seção */}
           <div>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>Salas ativas</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Salas ativas</h2>
+            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0 }}>
               {consultas.length === 0
                 ? 'Nenhuma sala ativa no momento'
                 : `${consultas.length} sala${consultas.length !== 1 ? 's' : ''} — ${emAndamento} em andamento, ${aguardando} aguardando`
@@ -258,7 +259,7 @@ export default function Teleconsulta() {
             }}>
               <div style={{
                 width: 56, height: 56, borderRadius: 14,
-                background: '#F5F5F5', color: '#9ca3af',
+                background: tokens.bg.hover, color: tokens.text.tertiary,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 14px',
               }}>
@@ -266,8 +267,8 @@ export default function Teleconsulta() {
                   <path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
                 </svg>
               </div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Nenhuma sala ativa</p>
-              <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Nenhuma sala ativa</p>
+              <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>
                 Crie uma consulta nos cards ao lado pra começar
               </p>
             </div>
@@ -285,19 +286,19 @@ export default function Teleconsulta() {
                   }}>
                     <div style={{
                       width: 44, height: 44, borderRadius: 12,
-                      background: ehAndamento ? ACCENT_LIGHT : '#F5F5F5',
+                      background: ehAndamento ? ACCENT_LIGHT : tokens.bg.hover,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
                     }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke={ehAndamento ? ACCENT : '#9ca3af'} strokeWidth="2">
+                        stroke={ehAndamento ? ACCENT : tokens.text.tertiary} strokeWidth="2">
                         <path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
                       </svg>
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' as const }}>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>{c.titulo}</p>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{c.titulo}</p>
                         <span style={{
                           fontSize: 10, fontWeight: 700,
                           color: st.cor, background: st.bg,
@@ -307,7 +308,7 @@ export default function Teleconsulta() {
                           {st.txt}
                         </span>
                       </div>
-                      <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                      <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>
                         {c.pacientes?.nome ? c.pacientes.nome + ' · ' : ''}
                         Criada em {fmtData(c.criado_em)}
                       </p>
@@ -316,8 +317,8 @@ export default function Teleconsulta() {
                     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                       <button onClick={() => copiar(c.sala_id)} style={{
                         padding: '8px 12px', borderRadius: 9,
-                        background: 'white', border: '1px solid #e5e7eb',
-                        fontSize: 12, color: '#374151', fontWeight: 500,
+                        background: 'white', border: `1px solid ${tokens.border.default}`,
+                        fontSize: 12, color: tokens.text.strong, fontWeight: 500,
                         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
                       }}>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -328,8 +329,8 @@ export default function Teleconsulta() {
                       </button>
                       <button onClick={() => enviarWpp(c)} style={{
                         padding: '8px 12px', borderRadius: 9,
-                        background: '#ecfdf5', color: '#059669',
-                        border: '1px solid #a7f3d0',
+                        background: tokens.status.successBgSoft, color: tokens.status.successHover,
+                        border: `1px solid ${tokens.status.successLightAlt}`,
                         fontSize: 12, fontWeight: 600, cursor: 'pointer',
                         display: 'flex', alignItems: 'center', gap: 5,
                       }}>
@@ -347,8 +348,8 @@ export default function Teleconsulta() {
                       </button>
                       <button onClick={() => encerrar(c.id)} title="Encerrar sala" style={{
                         padding: '8px 10px', borderRadius: 9,
-                        background: '#fef2f2', color: '#dc2626',
-                        border: '1px solid #fecaca',
+                        background: tokens.status.dangerBg, color: tokens.status.danger,
+                        border: `1px solid ${tokens.status.dangerLight}`,
                         fontSize: 12, cursor: 'pointer',
                         display: 'flex', alignItems: 'center',
                       }}>

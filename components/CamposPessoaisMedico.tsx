@@ -1,5 +1,7 @@
 'use client'
 
+
+import { tokens } from '@/lib/design-tokens'
 interface Props {
   cpf: string
   data_nascimento: string
@@ -7,7 +9,7 @@ interface Props {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 12, fontWeight: 600, color: '#6b7280',
+  fontSize: 12, fontWeight: 600, color: tokens.text.secondary,
   display: 'block', marginBottom: 6,
 }
 
@@ -15,7 +17,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 12px',
   borderRadius: 10,
-  border: '1px solid #e5e7eb',
+  border: `1px solid ${tokens.border.default}`,
   fontSize: 13,
   outline: 'none',
   boxSizing: 'border-box',

@@ -6,15 +6,16 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
 import { CamposPessoaisMedico } from '@/components/CamposPessoaisMedico'
+import { tokens } from '@/lib/design-tokens'
 
-const ACCENT = '#6043C1'
-const ACCENT_LIGHT = '#ede9fb'
-const BG = '#FAFAFA'
+const ACCENT = tokens.brand.primary
+const ACCENT_LIGHT = tokens.brand.primaryLighter
+const BG = tokens.bg.page
 const CARD_RADIUS = 16
 
 const PALETA_CORES = [
-  '#6043C1', '#2563eb', '#059669', '#d97706', '#db2777',
-  '#0891b2', '#9333ea', '#e11d48', '#65a30d', '#0d9488',
+  tokens.brand.primary, tokens.status.infoStrong, tokens.status.successHover, tokens.status.warningAlt, tokens.external.instagramPink,
+  tokens.status.infoCyan, tokens.external.purpleViolet, tokens.status.dangerCrimson, tokens.accent.limeStrong, tokens.status.infoTeal,
 ]
 
 export default function Admin() {
@@ -34,7 +35,7 @@ export default function Admin() {
   const [senhaGerada, setSenhaGerada] = useState<{ pessoa: any; senha: string; tipo: 'medico' | 'recepcionista' } | null>(null)
   const [senhaCopiada, setSenhaCopiada] = useState(false)
 
-  const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
+  const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: tokens.brand.primary as string, comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
   const [formEditar, setFormEditar] = useState({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cargo: 'medico', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
   const [salvando, setSalvando] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -146,7 +147,7 @@ export default function Admin() {
       if (data.medico && data.senha_provisoria_gerada) {
         const tipoSalvo = modalNovoTipo!
         setModalNovoTipo(null)
-        setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' })
+        setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: tokens.brand.primary, comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' })
         setSenhaGerada({ pessoa: data.medico, senha: data.senha_provisoria_gerada, tipo: tipoSalvo })
         await carregarDados(medico.clinica_id)
       } else throw new Error(data.error || 'Erro ao criar')
@@ -237,12 +238,12 @@ export default function Admin() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', fontSize: 14,
-    borderRadius: 10, border: '1px solid #e5e7eb',
-    background: 'white', outline: 'none', boxSizing: 'border-box', color: '#111827',
+    borderRadius: 10, border: `1px solid ${tokens.border.default}`,
+    background: 'white', outline: 'none', boxSizing: 'border-box', color: tokens.text.primary,
   }
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 12, fontWeight: 600, color: '#6b7280',
+    fontSize: 12, fontWeight: 600, color: tokens.text.secondary,
     display: 'block', marginBottom: 6,
   }
 
@@ -255,8 +256,8 @@ export default function Admin() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Painel administrativo</h1>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Painel administrativo</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>
             {listaMedicos.length} médico{listaMedicos.length !== 1 ? 's' : ''} · {listaRecepcionistas.length} recepcionista{listaRecepcionistas.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -282,16 +283,16 @@ export default function Admin() {
               padding: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
             }}>
               <button
-                onClick={() => { setModalNovoTipo('medico'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
-                style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: '#374151', background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                onClick={() => { setModalNovoTipo('medico'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: tokens.brand.primary, comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
+                style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: tokens.text.strong, background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
+                onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 + Médico
               </button>
               <button
-                onClick={() => { setModalNovoTipo('recepcionista'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: '#6043C1', comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
-                style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: '#374151', background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                onClick={() => { setModalNovoTipo('recepcionista'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: tokens.brand.primary, comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
+                style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: tokens.text.strong, background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
+                onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 + Recepcionista
               </button>
@@ -309,19 +310,19 @@ export default function Admin() {
           { label: 'Consultas este mês', valor: kpis.consultasMes, sub: 'todos os médicos' },
         ].map(k => (
           <div key={k.label} style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
-            <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px', fontWeight: 500 }}>{k.label}</p>
-            <p style={{ fontSize: 28, fontWeight: 700, color: '#111827', margin: '0 0 4px', lineHeight: 1 }}>{k.valor}</p>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{k.sub}</p>
+            <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 8px', fontWeight: 500 }}>{k.label}</p>
+            <p style={{ fontSize: 28, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px', lineHeight: 1 }}>{k.valor}</p>
+            <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{k.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #e5e7eb' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: `1px solid ${tokens.border.default}` }}>
         {([{ key: 'medicos', label: `Médicos (${listaMedicos.length})` }, { key: 'recepcionistas', label: `Recepcionistas (${listaRecepcionistas.length})` }] as const).map(t => (
           <button key={t.key} onClick={() => setAba(t.key)} style={{
             padding: '10px 18px', border: 'none', cursor: 'pointer',
-            background: 'transparent', color: aba === t.key ? ACCENT : '#6b7280',
+            background: 'transparent', color: aba === t.key ? ACCENT : tokens.text.secondary,
             fontSize: 13, fontWeight: aba === t.key ? 700 : 500,
             borderBottom: `2px solid ${aba === t.key ? ACCENT : 'transparent'}`,
             marginBottom: -1,
@@ -336,7 +337,7 @@ export default function Admin() {
         </div>
       ) : listaAtual.length === 0 ? (
         <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 40, textAlign: 'center' }}>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Nenhum {labelAba} cadastrado ainda.</p>
+          <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Nenhum {labelAba} cadastrado ainda.</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -356,26 +357,26 @@ export default function Admin() {
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
-                      <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>{m.nome}</p>
-                      {isRecep && <span style={{ fontSize: 10, fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 8px', borderRadius: 10 }}>recepcionista</span>}
-                      {!m.ativo && <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', background: '#fef2f2', padding: '2px 8px', borderRadius: 10, border: '1px solid #fecaca' }}>inativo</span>}
+                      <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{m.nome}</p>
+                      {isRecep && <span style={{ fontSize: 10, fontWeight: 700, color: tokens.status.info, background: tokens.status.infoBg, padding: '2px 8px', borderRadius: 10 }}>recepcionista</span>}
+                      {!m.ativo && <span style={{ fontSize: 10, fontWeight: 700, color: tokens.status.danger, background: tokens.status.dangerBg, padding: '2px 8px', borderRadius: 10, border: `1px solid ${tokens.status.dangerLight}` }}>inativo</span>}
                     </div>
-                    <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                    <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>
                       {isRecep ? m.email : (m.especialidade || 'Sem especialidade') + (m.crm ? ' · CRM ' + m.crm : '') + ' · ' + m.email}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                    <button onClick={() => abrirEditar(m)} style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid #e5e7eb', background: 'white', color: '#374151', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>Editar</button>
+                    <button onClick={() => abrirEditar(m)} style={{ padding: '8px 12px', borderRadius: 9, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.strong, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>Editar</button>
                     {m.id !== medico.id && (
                       <>
                         <button onClick={() => toggleAtivo(m.id, m.ativo)} style={{
                           padding: '8px 12px', borderRadius: 9,
-                          border: m.ativo ? '1px solid #fecaca' : '1px solid #bbf7d0',
-                          background: m.ativo ? '#fef2f2' : '#f0fdf4',
-                          color: m.ativo ? '#dc2626' : '#16a34a',
+                          border: m.ativo ? `1px solid ${tokens.status.dangerLight}` : `1px solid ${tokens.status.successLight}`,
+                          background: m.ativo ? tokens.status.dangerBg : tokens.status.successBg,
+                          color: m.ativo ? tokens.status.danger : tokens.status.success,
                           fontSize: 12, fontWeight: 500, cursor: 'pointer',
                         }}>{m.ativo ? 'Desativar' : 'Reativar'}</button>
-                        <button onClick={() => setModalExcluir(m)} style={{ padding: '8px 10px', borderRadius: 9, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        <button onClick={() => setModalExcluir(m)} style={{ padding: '8px 10px', borderRadius: 9, border: `1px solid ${tokens.status.dangerLight}`, background: tokens.status.dangerBg, color: tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="3 6 5 6 21 6"/>
                             <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -387,22 +388,22 @@ export default function Admin() {
                 </div>
 
                 {!isRecep && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, paddingTop: 16, borderTop: '1px solid #f3f4f6' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, paddingTop: 16, borderTop: `1px solid ${tokens.bg.hoverStrong}` }}>
                     <div>
-                      <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Pacientes</p>
-                      <p style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1 }}>{s.pacientes}</p>
+                      <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Pacientes</p>
+                      <p style={{ fontSize: 20, fontWeight: 700, color: tokens.text.primary, margin: 0, lineHeight: 1 }}>{s.pacientes}</p>
                     </div>
                     <div>
-                      <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Consultas totais</p>
-                      <p style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1 }}>{s.consultas}</p>
+                      <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Consultas totais</p>
+                      <p style={{ fontSize: 20, fontWeight: 700, color: tokens.text.primary, margin: 0, lineHeight: 1 }}>{s.consultas}</p>
                     </div>
                     <div>
-                      <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Este mês</p>
+                      <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Este mês</p>
                       <p style={{ fontSize: 20, fontWeight: 700, color: ACCENT, margin: 0, lineHeight: 1 }}>{s.consultasMes}</p>
                     </div>
                     <div>
-                      <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Cadastrado em</p>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', margin: 0 }}>{fmt(m.criado_em)}</p>
+                      <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Cadastrado em</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.strong, margin: 0 }}>{fmt(m.criado_em)}</p>
                     </div>
                   </div>
                 )}
@@ -416,10 +417,10 @@ export default function Admin() {
       {modalNovoTipo && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalNovoTipo(null) }}>
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 28, width: 460 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>
               Novo {modalNovoTipo === 'medico' ? 'médico' : 'recepcionista'}
             </h2>
-            <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 20px' }}>
+            <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 20px' }}>
               {modalNovoTipo === 'medico' ? 'Cadastre um novo profissional na clínica' : 'Cadastre um atendente pra gerenciar agenda e WhatsApp'}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -467,7 +468,7 @@ export default function Admin() {
                           style={{
                             width: 36, height: 36, borderRadius: '50%',
                             background: cor, cursor: 'pointer',
-                            border: selecionada ? '3px solid #111827' : '3px solid transparent',
+                            border: selecionada ? `3px solid ${tokens.text.primary}` : '3px solid transparent',
                             transform: selecionada ? 'scale(1.1)' : 'scale(1)',
                             transition: 'all 0.15s',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -482,19 +483,19 @@ export default function Admin() {
                       )
                     })}
                   </div>
-                  <p style={{ fontSize: 11, color: '#9ca3af', margin: '8px 0 0' }}>
+                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '8px 0 0' }}>
                     Essa cor aparece nos agendamentos do médico na agenda.
                   </p>
                 </div>
               )}
-              <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#0369a1', lineHeight: 1.5 }}>
+              <div style={{ background: tokens.status.infoSkyBgSoft, border: `1px solid ${tokens.status.infoSkyMid}`, borderRadius: 10, padding: '10px 14px', fontSize: 12, color: tokens.status.infoSkyDark, lineHeight: 1.5 }}>
                 ℹ Uma senha provisória será gerada. No primeiro login, {modalNovoTipo === 'medico' ? 'o médico' : 'a pessoa'} precisa criar uma senha própria.
               </div>
             </div>
             {modalNovoTipo === 'medico' && <CamposComissao form={form} setForm={setForm}/>}
             <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
-              <button onClick={() => setModalNovoTipo(null)} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={handleCriar} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? '#9ca3af' : ACCENT, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={() => setModalNovoTipo(null)} style={{ padding: '10px 18px', borderRadius: 10, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={handleCriar} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? tokens.text.tertiary : ACCENT, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                 {salvando ? 'Criando...' : 'Criar ' + (modalNovoTipo === 'medico' ? 'médico' : 'recepcionista')}
               </button>
             </div>
@@ -506,8 +507,8 @@ export default function Admin() {
       {modalEditar && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalEditar(null) }}>
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 28, width: 460 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Editar {modalEditar.cargo === 'recepcionista' ? 'recepcionista' : 'médico'}</h2>
-            <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 20px' }}>Atualize informações</p>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Editar {modalEditar.cargo === 'recepcionista' ? 'recepcionista' : 'médico'}</h2>
+            <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 20px' }}>Atualize informações</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <label style={labelStyle}>Nome completo</label>
@@ -549,8 +550,8 @@ export default function Admin() {
             )}
             {modalEditar?.cargo === 'medico' && <CamposComissao form={formEditar} setForm={setFormEditar}/>}
             <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
-              <button onClick={() => setModalEditar(null)} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={handleEditar} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? '#9ca3af' : ACCENT, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={() => setModalEditar(null)} style={{ padding: '10px 18px', borderRadius: 10, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={handleEditar} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? tokens.text.tertiary : ACCENT, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                 {salvando ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
@@ -562,13 +563,13 @@ export default function Admin() {
       {modalExcluir && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalExcluir(null) }}>
           <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 28, width: 420 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: '#dc2626', margin: '0 0 8px' }}>Excluir?</h2>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px', lineHeight: 1.6 }}>
-              Você está prestes a excluir <strong style={{ color: '#111827' }}>{modalExcluir.nome}</strong> permanentemente.
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.status.danger, margin: '0 0 8px' }}>Excluir?</h2>
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 20px', lineHeight: 1.6 }}>
+              Você está prestes a excluir <strong style={{ color: tokens.text.primary }}>{modalExcluir.nome}</strong> permanentemente.
             </p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button onClick={() => setModalExcluir(null)} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={handleExcluir} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? '#9ca3af' : '#dc2626', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={() => setModalExcluir(null)} style={{ padding: '10px 18px', borderRadius: 10, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={handleExcluir} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? tokens.text.tertiary : tokens.status.danger, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                 {salvando ? 'Excluindo...' : 'Excluir'}
               </button>
             </div>
@@ -585,33 +586,33 @@ export default function Admin() {
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>
               {senhaGerada.tipo === 'medico' ? 'Médico' : 'Recepcionista'} cadastrado!
             </h2>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px', lineHeight: 1.6 }}>
-              Envie essas credenciais para <strong style={{ color: '#111827' }}>{senhaGerada.pessoa.nome}</strong>. No primeiro login, {senhaGerada.tipo === 'medico' ? 'ele' : 'ela'} vai precisar criar uma senha própria.
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 20px', lineHeight: 1.6 }}>
+              Envie essas credenciais para <strong style={{ color: tokens.text.primary }}>{senhaGerada.pessoa.nome}</strong>. No primeiro login, {senhaGerada.tipo === 'medico' ? 'ele' : 'ela'} vai precisar criar uma senha própria.
             </p>
 
-            <div style={{ background: '#F5F5F5', borderRadius: 12, padding: 16, marginBottom: 16 }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email</p>
-              <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 12px', wordBreak: 'break-all' }}>{senhaGerada.pessoa.email}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Senha provisória</p>
+            <div style={{ background: tokens.bg.hover, borderRadius: 12, padding: 16, marginBottom: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: tokens.text.secondary, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 12px', wordBreak: 'break-all' }}>{senhaGerada.pessoa.email}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: tokens.text.secondary, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Senha provisória</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'white', borderRadius: 8, padding: '8px 12px' }}>
                 <code style={{ flex: 1, fontSize: 15, fontWeight: 700, color: ACCENT, fontFamily: 'monospace', letterSpacing: '0.02em', wordBreak: 'break-all' }}>{senhaGerada.senha}</code>
-                <button onClick={copiarSenha} style={{ padding: '5px 10px', borderRadius: 6, background: senhaCopiada ? '#16a34a' : ACCENT, color: 'white', border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+                <button onClick={copiarSenha} style={{ padding: '5px 10px', borderRadius: 6, background: senhaCopiada ? tokens.status.success : ACCENT, color: 'white', border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
                   {senhaCopiada ? '✓ Copiado' : 'Copiar'}
                 </button>
               </div>
             </div>
 
-            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
-              <p style={{ fontSize: 12, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+            <div style={{ background: tokens.status.warningBgAlt, border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
+              <p style={{ fontSize: 12, color: tokens.status.warningText, margin: 0, lineHeight: 1.5 }}>
                 ⚠ Esta senha <strong>só aparece agora</strong>. Anote ou copie antes de fechar.
               </p>
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={copiarCredenciais} style={{ flex: 1, padding: '11px', borderRadius: 10, background: 'white', color: '#374151', border: '1px solid #e5e7eb', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={copiarCredenciais} style={{ flex: 1, padding: '11px', borderRadius: 10, background: 'white', color: tokens.text.strong, border: `1px solid ${tokens.border.default}`, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                 Copiar tudo
               </button>
               <button onClick={() => { setSenhaGerada(null); setSenhaCopiada(false); toast('Cadastrado com sucesso!') }} style={{ flex: 1, padding: '11px', borderRadius: 10, background: ACCENT, color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -635,10 +636,10 @@ export default function Admin() {
 function CamposComissao({ form, setForm }: any) {
   const tipo = form.comissao_tipo || 'sem'
   return (
-    <div style={{ marginTop: 18, padding: 16, background: '#fafafa', borderRadius: 10, border: '1px solid #f0f0f0' }}>
-      <p style={{ fontSize: 12, fontWeight: 700, color: '#525252', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: '0 0 12px' }}>Comissão</p>
+    <div style={{ marginTop: 18, padding: 16, background: tokens.bg.page, borderRadius: 10, border: `1px solid ${tokens.neutral[150]}` }}>
+      <p style={{ fontSize: 12, fontWeight: 700, color: tokens.text.muted, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: '0 0 12px' }}>Comissão</p>
 
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#374151', marginBottom: 6 }}>Tipo</label>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: tokens.text.strong, marginBottom: 6 }}>Tipo</label>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginBottom: 12 }}>
         {[
           { v: 'sem', l: 'Sem comissão' },
@@ -648,28 +649,28 @@ function CamposComissao({ form, setForm }: any) {
         ].map(o => (
           <button key={o.v} type="button" onClick={() => setForm((f: any) => ({ ...f, comissao_tipo: o.v }))} style={{
             padding: '9px', borderRadius: 8, border: 'none',
-            background: tipo === o.v ? '#0a0a0a' : 'white',
-            color: tipo === o.v ? 'white' : '#525252',
+            background: tipo === o.v ? tokens.neutral[900] : 'white',
+            color: tipo === o.v ? 'white' : tokens.text.muted,
             fontSize: 12, fontWeight: 600, cursor: 'pointer',
-            ...(tipo === o.v ? {} : { border: '1px solid #e5e7eb' })
+            ...(tipo === o.v ? {} : { border: `1px solid ${tokens.border.default}` })
           }}>{o.l}</button>
         ))}
       </div>
 
       {tipo !== 'sem' && (
         <>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#374151', marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: tokens.text.strong, marginBottom: 6 }}>
             {tipo === 'percentual' ? 'Percentual (%)' : 'Valor (R$)'}
           </label>
           <div style={{ position: 'relative' as const, marginBottom: 12 }}>
-            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>{tipo === 'percentual' ? '%' : 'R$'}</span>
+            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: tokens.text.tertiary, fontSize: 13 }}>{tipo === 'percentual' ? '%' : 'R$'}</span>
             <input type="text" value={form.comissao_valor || ''} onChange={e => setForm((f: any) => ({ ...f, comissao_valor: e.target.value.replace(/[^0-9,]/g, '') }))} placeholder="0,00"
-              style={{ width: '100%', padding: '9px 12px 9px 36px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, fontWeight: 600 }}/>
+              style={{ width: '100%', padding: '9px 12px 9px 36px', borderRadius: 8, border: `1px solid ${tokens.border.default}`, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, fontWeight: 600 }}/>
           </div>
 
           {tipo === 'percentual' && (
             <>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#374151', marginBottom: 6 }}>Base de cálculo</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: tokens.text.strong, marginBottom: 6 }}>Base de cálculo</label>
               <div style={{ display: 'flex', gap: 6 }}>
                 {[
                   { v: 'receita', l: 'Sobre receita' },
@@ -677,10 +678,10 @@ function CamposComissao({ form, setForm }: any) {
                 ].map(o => (
                   <button key={o.v} type="button" onClick={() => setForm((f: any) => ({ ...f, comissao_base: o.v }))} style={{
                     flex: 1, padding: '9px', borderRadius: 8, border: 'none',
-                    background: (form.comissao_base || 'receita') === o.v ? '#0a0a0a' : 'white',
-                    color: (form.comissao_base || 'receita') === o.v ? 'white' : '#525252',
+                    background: (form.comissao_base || 'receita') === o.v ? tokens.neutral[900] : 'white',
+                    color: (form.comissao_base || 'receita') === o.v ? 'white' : tokens.text.muted,
                     fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    ...((form.comissao_base || 'receita') === o.v ? {} : { border: '1px solid #e5e7eb' })
+                    ...((form.comissao_base || 'receita') === o.v ? {} : { border: `1px solid ${tokens.border.default}` })
                   }}>{o.l}</button>
                 ))}
               </div>

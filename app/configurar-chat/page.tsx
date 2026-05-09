@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { tokens } from '@/lib/design-tokens'
 
 const PERGUNTAS = [
   { id: 'nome_clinica', pergunta: 'Qual é o nome da sua clínica ou consultório?', placeholder: 'Ex: Clínica São Lucas' },
@@ -152,27 +153,27 @@ REGRAS:
   const s = { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }
 
   return (
-    <div style={{ ...s, minHeight: '100vh', background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div style={{ ...s, minHeight: '100vh', background: tokens.bg.chatBg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       
       {passo === 'intro' && (
         <div style={{ background: 'white', borderRadius: 20, padding: 40, maxWidth: 480, width: '100%', textAlign: 'center' }}>
-          <div style={{ width: 72, height: 72, background: '#d9fdd3', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <div style={{ width: 72, height: 72, background: tokens.status.successBgChat, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <span style={{ fontSize: 32 }}>🤖</span>
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Configurar a Sofia IA</h1>
-          <p style={{ fontSize: 15, color: '#6b7280', margin: '0 0 32px', lineHeight: 1.6 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px' }}>Configurar a Sofia IA</h1>
+          <p style={{ fontSize: 15, color: tokens.text.secondary, margin: '0 0 32px', lineHeight: 1.6 }}>
             Em menos de 3 minutos, vou configurar a assistente virtual da sua clínica. 
             Ela vai atender seus pacientes automaticamente pelo Chat.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32 }}>
             {['✅ Responde dúvidas dos pacientes', '📅 Agenda consultas automaticamente', '🔄 Transfere para humano quando necessário', '⭐ Tom de comunicação personalizado'].map(t => (
-              <div key={t} style={{ background: '#F5F5F5', borderRadius: 10, padding: '10px 16px', fontSize: 14, color: '#374151', textAlign: 'left' }}>{t}</div>
+              <div key={t} style={{ background: tokens.bg.hover, borderRadius: 10, padding: '10px 16px', fontSize: 14, color: tokens.text.strong, textAlign: 'left' }}>{t}</div>
             ))}
           </div>
-          <button onClick={iniciar} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: '#00a884', color: 'white', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={iniciar} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: tokens.whatsapp.green, color: 'white', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
             Começar configuração →
           </button>
-          <button onClick={() => router.back()} style={{ marginTop: 12, background: 'none', border: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Voltar</button>
+          <button onClick={() => router.back()} style={{ marginTop: 12, background: 'none', border: 'none', color: tokens.text.secondary, fontSize: 13, cursor: 'pointer' }}>Voltar</button>
         </div>
       )}
 
@@ -180,13 +181,13 @@ REGRAS:
         <div style={{ background: 'white', borderRadius: 20, maxWidth: 580, width: '100%', display: 'flex', flexDirection: 'column', height: '80vh' }}>
           {/* Header */}
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f2f5', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, background: '#d9fdd3', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🤖</div>
+            <div style={{ width: 36, height: 36, background: tokens.status.successBgChat, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🤖</div>
             <div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: 0 }}>Sofia — Configuração</p>
-              <p style={{ fontSize: 12, color: '#00a884', margin: 0 }}>Pergunta {Math.min(perguntaAtual + 1, PERGUNTAS.length)} de {PERGUNTAS.length}</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>Sofia — Configuração</p>
+              <p style={{ fontSize: 12, color: tokens.whatsapp.green, margin: 0 }}>Pergunta {Math.min(perguntaAtual + 1, PERGUNTAS.length)} de {PERGUNTAS.length}</p>
             </div>
-            <div style={{ marginLeft: 'auto', flex: 0.4, height: 4, background: '#f0f2f5', borderRadius: 4 }}>
-              <div style={{ width: `${((perguntaAtual) / PERGUNTAS.length) * 100}%`, height: '100%', background: '#00a884', borderRadius: 4, transition: 'width 0.3s' }}/>
+            <div style={{ marginLeft: 'auto', flex: 0.4, height: 4, background: tokens.bg.chatBg, borderRadius: 4 }}>
+              <div style={{ width: `${((perguntaAtual) / PERGUNTAS.length) * 100}%`, height: '100%', background: tokens.whatsapp.green, borderRadius: 4, transition: 'width 0.3s' }}/>
             </div>
           </div>
 
@@ -196,14 +197,14 @@ REGRAS:
               <div key={i} style={{ display: 'flex', justifyContent: m.role === 'sofia' ? 'flex-start' : 'flex-end' }}>
                 <div style={{
                   maxWidth: '80%', padding: '10px 14px', borderRadius: m.role === 'sofia' ? '0 12px 12px 12px' : '12px 12px 0 12px',
-                  background: m.role === 'sofia' ? '#f0f2f5' : '#d9fdd3',
-                  fontSize: 14, color: '#111827', lineHeight: 1.5, whiteSpace: 'pre-wrap'
+                  background: m.role === 'sofia' ? tokens.bg.chatBg : tokens.status.successBgChat,
+                  fontSize: 14, color: tokens.text.primary, lineHeight: 1.5, whiteSpace: 'pre-wrap'
                 }}>{m.texto}</div>
               </div>
             ))}
             {passo === 'gerando' && (
-              <div style={{ display: 'flex', gap: 6, padding: '8px 14px', background: '#f0f2f5', borderRadius: '0 12px 12px 12px', width: 'fit-content' }}>
-                {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: '#aebac1', animation: `pulse 1.2s ${i*0.2}s infinite` }}/>)}
+              <div style={{ display: 'flex', gap: 6, padding: '8px 14px', background: tokens.bg.chatBg, borderRadius: '0 12px 12px 12px', width: 'fit-content' }}>
+                {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.whatsapp.metadata, animation: `pulse 1.2s ${i*0.2}s infinite` }}/>)}
               </div>
             )}
             <div ref={endRef}/>
@@ -219,14 +220,14 @@ REGRAS:
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); responder() } }}
                   placeholder={PERGUNTAS[perguntaAtual]?.placeholder}
                   rows={2}
-                  style={{ flex: 1, padding: '10px 14px', borderRadius: 12, border: '1px solid #d1d7db', outline: 'none', resize: 'none', fontSize: 14, fontFamily: 'inherit', color: '#111827' }}
+                  style={{ flex: 1, padding: '10px 14px', borderRadius: 12, border: '1px solid #d1d7db', outline: 'none', resize: 'none', fontSize: 14, fontFamily: 'inherit', color: tokens.text.primary }}
                 />
-                <button onClick={responder} disabled={!inputAtual.trim()} style={{ padding: '10px 16px', borderRadius: 12, border: 'none', background: inputAtual.trim() ? '#00a884' : '#e5e7eb', color: inputAtual.trim() ? 'white' : '#9ca3af', cursor: inputAtual.trim() ? 'pointer' : 'default', fontWeight: 600, fontSize: 14 }}>
+                <button onClick={responder} disabled={!inputAtual.trim()} style={{ padding: '10px 16px', borderRadius: 12, border: 'none', background: inputAtual.trim() ? tokens.whatsapp.green : tokens.border.default, color: inputAtual.trim() ? 'white' : tokens.text.tertiary, cursor: inputAtual.trim() ? 'pointer' : 'default', fontWeight: 600, fontSize: 14 }}>
                   Enviar
                 </button>
               </div>
               {PERGUNTAS[perguntaAtual]?.id === 'regras_especiais' && (
-                <button onClick={pular} style={{ marginTop: 8, background: 'none', border: 'none', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>Pular esta pergunta</button>
+                <button onClick={pular} style={{ marginTop: 8, background: 'none', border: 'none', color: tokens.text.secondary, fontSize: 12, cursor: 'pointer' }}>Pular esta pergunta</button>
               )}
             </div>
           )}
@@ -235,22 +236,22 @@ REGRAS:
 
       {passo === 'revisao' && (
         <div style={{ background: 'white', borderRadius: 20, maxWidth: 640, width: '100%', overflow: 'hidden' }}>
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid #f0f2f5', background: '#F5F5F5' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>✅ Instruções geradas!</h2>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Revise e edite se quiser antes de salvar</p>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #f0f2f5', background: tokens.bg.hover }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>✅ Instruções geradas!</h2>
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Revise e edite se quiser antes de salvar</p>
           </div>
           <div style={{ padding: 24 }}>
             <textarea
               value={promptGerado}
               onChange={e => setPromptGerado(e.target.value)}
               rows={14}
-              style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d7db', outline: 'none', resize: 'vertical', fontSize: 13, fontFamily: 'monospace', color: '#374151', lineHeight: 1.6 }}
+              style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d7db', outline: 'none', resize: 'vertical', fontSize: 13, fontFamily: 'monospace', color: tokens.text.strong, lineHeight: 1.6 }}
             />
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={salvar} disabled={salvando} style={{ flex: 1, padding: 14, borderRadius: 12, border: 'none', background: '#00a884', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={salvar} disabled={salvando} style={{ flex: 1, padding: 14, borderRadius: 12, border: 'none', background: tokens.whatsapp.green, color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
                 {salvando ? 'Salvando...' : '✅ Salvar e ativar Sofia'}
               </button>
-              <button onClick={() => { setPasso('perguntas'); setPerguntaAtual(0); setMsgs([{ role: 'sofia', texto: PERGUNTAS[0].pergunta }]) }} style={{ padding: '14px 20px', borderRadius: 12, border: '1px solid #d1d7db', background: 'white', color: '#374151', fontSize: 14, cursor: 'pointer' }}>
+              <button onClick={() => { setPasso('perguntas'); setPerguntaAtual(0); setMsgs([{ role: 'sofia', texto: PERGUNTAS[0].pergunta }]) }} style={{ padding: '14px 20px', borderRadius: 12, border: '1px solid #d1d7db', background: 'white', color: tokens.text.strong, fontSize: 14, cursor: 'pointer' }}>
                 Refazer
               </button>
             </div>
@@ -261,15 +262,15 @@ REGRAS:
       {passo === 'pronto' && (
         <div style={{ background: 'white', borderRadius: 20, padding: 40, maxWidth: 440, width: '100%', textAlign: 'center' }}>
           <div style={{ fontSize: 64, marginBottom: 16 }}>🎉</div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Sofia configurada!</h1>
-          <p style={{ fontSize: 15, color: '#6b7280', margin: '0 0 32px', lineHeight: 1.6 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px' }}>Sofia configurada!</h1>
+          <p style={{ fontSize: 15, color: tokens.text.secondary, margin: '0 0 32px', lineHeight: 1.6 }}>
             Sua assistente já está pronta para atender os pacientes com as informações da sua clínica.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <button onClick={() => router.push('/whatsapp-app')} style={{ padding: 14, borderRadius: 12, border: 'none', background: '#00a884', color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={() => router.push('/whatsapp-app')} style={{ padding: 14, borderRadius: 12, border: 'none', background: tokens.whatsapp.green, color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
               Abrir Chat →
             </button>
-            <button onClick={() => router.push('/dashboard')} style={{ padding: 14, borderRadius: 12, border: '1px solid #d1d7db', background: 'white', color: '#374151', fontSize: 15, cursor: 'pointer' }}>
+            <button onClick={() => router.push('/dashboard')} style={{ padding: 14, borderRadius: 12, border: '1px solid #d1d7db', background: 'white', color: tokens.text.strong, fontSize: 15, cursor: 'pointer' }}>
               Ir para o Dashboard
             </button>
           </div>
