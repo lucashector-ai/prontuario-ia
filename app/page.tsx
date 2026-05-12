@@ -371,7 +371,6 @@ function Landing({ periodo, setPeriodo, router }: any) {
             <p style={footerTitle}>Legal</p>
             <a href="/privacidade" style={footerLink}>Privacidade</a>
             <a href="/termos" style={footerLink}>Termos de uso</a>
-            <a href="/lgpd" style={footerLink}>LGPD</a>
           </div>
         </div>
         <div style={{ maxWidth: 1100, margin: '32px auto 0', paddingTop: 24, borderTop: `1px solid ${tokens.neutral[800]}`, fontSize: 12 }}>
