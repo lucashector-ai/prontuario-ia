@@ -58,26 +58,34 @@ Infra:
 
 ---
 
-## Sprint 3 — Financeiro Premium ⏳
+## Sprint 3 — Financeiro Premium ✅
 
-Schema:
-- [ ] `financeiro_movimentacoes_v2` (decidir naming vs existing `financeiro_*`)
-- [ ] `financeiro_comissoes`
-- [ ] `financeiro_planos_recorrentes`
-- [ ] `financeiro_pix_cobrancas`
+Schema (migration em [supabase/migrations/002_financeiro_premium.sql](supabase/migrations/002_financeiro_premium.sql)):
+- [x] Reuso de `financeiro_movimentacoes` (já existia — não duplicado)
+- [x] Reuso de `financeiro_comissoes_config` (já existia)
+- [x] `financeiro_pix_cobrancas` (nova)
+- [x] `financeiro_planos_recorrentes` (nova — assinatura mensal, diferente de pacotes)
 
-Páginas (`/financeiro-premium/*` ou novo route group):
-- [ ] Visão geral (KPIs + fluxo de caixa)
-- [ ] Movimentações
-- [ ] Comissionamento
-- [ ] Pix (cobranças avulsas/agendamento)
-- [ ] Recorrência
-- [ ] DRE simplificada
-- [ ] Exportar contábil (CSV/PDF)
+Páginas (`/financeiro-premium/*` — coexiste com `/financeiro` legado):
+- [x] [Visão geral](app/financeiro-premium/page.tsx) — 4 KPIs com variação + chart SVG custom + últimas movimentações
+- [x] [Movimentações](app/financeiro-premium/movimentacoes/page.tsx) — tabela filtrável (tipo, status, busca)
+- [x] [Comissões](app/financeiro-premium/comissoes/page.tsx) — KPIs + ranking de médicos com bar gradient
+- [x] [Pix](app/financeiro-premium/pix/page.tsx) — geração mock + lista + modal de detalhe
+- [x] [Recorrência](app/financeiro-premium/recorrencia/page.tsx) — planos recorrentes com progress bar
+- [x] [DRE simplificada](app/financeiro-premium/dre/page.tsx) — receitas/despesas agrupadas por categoria
+- [x] [Exportar](app/financeiro-premium/exportar/page.tsx) — CSV (BOM UTF-8 + decimal vírgula) e JSON funcionais; PDF stub
 
-Hooks:
-- [ ] Agendamento "realizado" → movimentação
-- [ ] Consulta finalizada → comissão
+Infra:
+- [x] [lib/financeiro/](lib/financeiro/) — types, queries defensivas, format, useClinicaId
+- [x] [SubNav](app/financeiro-premium/_components/SubNav.tsx) Stripe-style com underline animado
+- [x] [FluxoCaixaChart](app/financeiro-premium/_components/FluxoCaixaChart.tsx) — SVG custom com gradient, hover tooltip, fade-in animation
+- [x] [KPICard](app/financeiro-premium/_components/KPICard.tsx) + [PeriodoSelect](app/financeiro-premium/_components/PeriodoSelect.tsx) (segmented control)
+
+TODOs deixados:
+- [ ] Integração gateway Pix real (Mercado Pago/Asaas/AbacatePay) — atualmente mock
+- [ ] Cobrança automática de planos recorrentes (cron + gateway)
+- [ ] PDF export com jsPDF/react-pdf
+- [ ] Hooks de agendamento "realizado" → movimentação (depende de evento no app legado)
 
 ---
 
