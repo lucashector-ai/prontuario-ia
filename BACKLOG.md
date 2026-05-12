@@ -115,18 +115,25 @@ TODOs:
 
 ---
 
-## Sprint 5 — CRM Médico ⏳
+## Sprint 5 — CRM Médico ✅
 
-Schema:
-- [ ] `crm_leads`
-- [ ] `crm_campanhas`
-- [ ] `crm_forms`
+Schema ([supabase/migrations/004_crm.sql](supabase/migrations/004_crm.sql)):
+- [x] `crm_leads` (origem, status, vínculo opcional a paciente, origem_form_id)
+- [x] `crm_campanhas` (segmento jsonb, canal, agendamento, contadores)
+- [x] `crm_forms` (campos jsonb, slug único, contador de submissões)
 
 Páginas:
-- [ ] Kanban de leads (drag-and-drop entre colunas)
-- [ ] Campanhas (segmento + mensagem + agendamento)
-- [ ] Lead capture forms embedáveis (iframe)
-- [ ] Score de paciente (frequência, ticket médio)
+- [x] [/crm](app/crm/page.tsx) — kanban com 5 colunas, drag-and-drop HTML5 nativo, contagem por coluna
+- [x] [/crm/campanhas](app/crm/campanhas/page.tsx) — cards canal+status+preview; modal com 4 canais, 6 segmentos predef
+- [x] [/crm/forms](app/crm/forms/page.tsx) — gerador com campos dinâmicos (5 tipos); modal embed (URL + iframe HTML)
+- [x] [/forms/[slug]](app/forms/[slug]/page.tsx) — público embedável (sem AppShell, sem auth); cria lead automático
+- [x] [/crm/score](app/crm/score/page.tsx) — ranking VIP/Ativo/Dormente/Nunca, calculado a partir de `financeiro_movimentacoes`
+
+TODOs:
+- [ ] Envio efetivo das campanhas (WhatsApp Business / Sofia / Resend)
+- [ ] Resolver segmentos em tempo de envio (`aniversariantes_mes` → lista real)
+- [ ] reCAPTCHA no form público
+- [ ] Customização visual do form (cor primária ainda não exposta na UI)
 
 ---
 
