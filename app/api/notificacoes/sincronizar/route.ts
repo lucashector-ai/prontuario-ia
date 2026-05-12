@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
         agendamento_id: ag.id,
         paciente_id: ag.paciente_id,
         tipo: 'confirmacao_pendente',
-        titulo: 'Aguardando confirmacao',
+        titulo: 'Aguardando confirmação',
         descricao: (ag.pacientes?.nome || 'Paciente') + ' - ' + dataFmt + ' as ' + horaFmt,
         lida: false,
       })

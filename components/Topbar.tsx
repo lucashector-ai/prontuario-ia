@@ -133,9 +133,9 @@ export function Topbar() {
   const formatarTempo = (iso: string) => {
     const diff = (Date.now() - new Date(iso).getTime()) / 60000
     if (diff < 1) return 'agora'
-    if (diff < 60) return `${Math.round(diff)} min atras`
-    if (diff < 1440) return `${Math.round(diff / 60)}h atras`
-    return `${Math.round(diff / 1440)}d atras`
+    if (diff < 60) return `${Math.round(diff)} min atrás`
+    if (diff < 1440) return `${Math.round(diff / 60)}h atrás`
+    return `${Math.round(diff / 1440)}d atrás`
   }
 
   const marcarNotifLida = async (id: string) => {

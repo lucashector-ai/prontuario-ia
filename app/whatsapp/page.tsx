@@ -524,7 +524,7 @@ REGRAS:
                 {ativa.modo === 'humano' && (
                   <div style={{ background: tokens.status.warningBgAlt, borderBottom: `1px solid ${tokens.status.warningLightAlt}`, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 14 }}></span>
-                    <p style={{ fontSize: 12, color: tokens.status.warningText, margin: 0 }}>Atendimento humano ativo{ativa.atendente_nome ? '  ' + ativa.atendente_nome : ''}. A Sofia IA esta pausada nesta conversa.</p>
+                    <p style={{ fontSize: 12, color: tokens.status.warningText, margin: 0 }}>Atendimento humano ativo{ativa.atendente_nome ? '  ' + ativa.atendente_nome : ''}. A Sofia IA está pausada nesta conversa.</p>
                   </div>
                 )}
 
@@ -751,7 +751,7 @@ REGRAS:
               <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
                 <div style={{ padding: '14px 20px', borderBottom: 'none' }}>
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Equipe de atendimento</h2>
-                  <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>Atendentes podem acessar a plataforma e responder conversas com o proprio nome</p>
+                  <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>Atendentes podem acessar a plataforma e responder conversas com o próprio nome</p>
                 </div>
                 <div style={{ padding: '16px 20px' }}>
                   {atendentes.length === 0 ? (
@@ -806,7 +806,7 @@ REGRAS:
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Alertas e riscos</h2>
-                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Pacientes que precisam de atencao</p>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Pacientes que precisam de atenção</p>
                 </div>
                 <button onClick={() => carregarAlertas()} style={{ fontSize: 12, color: tokens.brand.primary, background: tokens.brand.primaryLighter, border: 'none', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
                   Atualizar
@@ -964,7 +964,7 @@ REGRAS:
                     setRelatorioCarregando(false)
                   }}
                   style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: relatorioCarregando ? tokens.text.tertiary : tokens.brand.primary, color: 'white', fontWeight: 600, fontSize: 13, cursor: relatorioCarregando ? 'not-allowed' : 'pointer' }}>
-                  {relatorioCarregando ? 'Gerando...' : 'Gerar relatorio'}
+                  {relatorioCarregando ? 'Gerando...' : 'Gerar relatório'}
                 </button>
               </div>
 
@@ -1006,7 +1006,7 @@ REGRAS:
                 <div style={{ background: 'white', borderRadius: 12, padding: 48, textAlign: 'center' }}>
                   <p style={{ fontSize: 32, margin: '0 0 12px' }}></p>
                   <p style={{ fontSize: 15, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>Relatorio semanal com IA</p>
-                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Clique em "Gerar relatorio" para ver o resumo da semana</p>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Clique em "Gerar relatório" para ver o resumo da semana</p>
                 </div>
               )}
             </div>
@@ -1071,7 +1071,7 @@ REGRAS:
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Confirmacoes pendentes</h2>
-                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Consultas nas proximas 48h aguardando confirmacao</p>
+                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Consultas nas próximas 48h aguardando confirmação</p>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={async () => {
@@ -1164,7 +1164,7 @@ REGRAS:
                         { label: 'Ver alertas de risco', aba: 'alertas', cor: tokens.status.danger },
                         { label: 'Enviar check-in', aba: 'alertas', cor: tokens.status.warningAlt },
                         { label: 'Nova campanha', aba: 'campanha', cor: tokens.brand.primary },
-                        { label: 'Gerar relatorio', aba: 'relatorio', cor: tokens.status.infoCyan },
+                        { label: 'Gerar relatório', aba: 'relatorio', cor: tokens.status.infoCyan },
                       ].map((item: any) => (
                         <button key={item.label} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 8, border: 'none', background: tokens.bg.hover, cursor: 'pointer', fontSize: 13, color: item.cor, fontWeight: 600, marginBottom: 8 }}>
                           {item.label} 

@@ -85,7 +85,7 @@ export default function Configuracoes() {
               <div style={{ width: 32, height: 32, borderRadius: 8, background: tokens.brand.primaryLighter, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📱</div>
               <div>
                 <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{config ? 'Atualizar' : 'Conectar'} WhatsApp Business</h2>
-                <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>Cada clinica usa seu proprio numero oficial</p>
+                <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>Cada clínica usa seu próprio número oficial</p>
               </div>
             </div>
             <form onSubmit={salvar} style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -94,17 +94,17 @@ export default function Configuracoes() {
                 <input required value={form.phone_number_id} onChange={e => setForm(f => ({ ...f, phone_number_id: e.target.value }))}
                   style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: `1.5px solid ${tokens.border.default}`, fontFamily: 'monospace' }}
                   placeholder="2271401213668054"/>
-                <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '4px 0 0' }}>Meta for Developers → WhatsApp → Configuracao da API → Phone Number ID</p>
+                <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '4px 0 0' }}>Meta for Developers → WhatsApp → Configuração da API → Phone Number ID</p>
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 6 }}>Token de acesso permanente <span style={{ color: tokens.status.danger }}>*</span></label>
                 <input required type="password" value={form.access_token} onChange={e => setForm(f => ({ ...f, access_token: e.target.value }))}
                   style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: `1.5px solid ${tokens.border.default}`, fontFamily: 'monospace' }}
                   placeholder="EAANoj..."/>
-                <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '4px 0 0' }}>Meta Business Manager → Usuarios do sistema → Gerar token permanente</p>
+                <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '4px 0 0' }}>Meta Business Manager → Usuários do sistema → Gerar token permanente</p>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 6 }}>Nome de exibicao da clinica</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 6 }}>Nome de exibição da clínica</label>
                 <input value={form.nome_exibicao} onChange={e => setForm(f => ({ ...f, nome_exibicao: e.target.value }))}
                   style={{ width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8, border: `1.5px solid ${tokens.border.default}` }}
                   placeholder="Clínica Dr. Silva"/>

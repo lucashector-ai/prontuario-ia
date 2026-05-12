@@ -288,7 +288,7 @@ export default function PacienteDetalhe() {
                       <input id="foto-card" type="file" accept="image/*" style={{display:'none'}} onChange={e=>e.target.files?.[0]&&uploadFoto(e.target.files[0])}/>
                       <h2 style={{fontSize:16,fontWeight:700,color:tokens.text.primary,margin:'0 0 4px'}}>{paciente?.nome}</h2>
                       <p style={{fontSize:12,color:tokens.text.secondary,margin:0}}>{[paciente?.sexo,idadePac?idadePac+' anos':null].filter(Boolean).join(' · ')}</p>
-                      {prox&&<div style={{marginTop:12,background:tokens.status.infoBg,border:`1px solid ${tokens.status.infoLight}`,borderRadius:8,padding:'6px 12px'}}><p style={{fontSize:11,color:tokens.status.infoStrong,margin:0}}>Prox: {fmt(prox.data_hora)} {fmtH(prox.data_hora)}</p></div>}
+                      {prox&&<div style={{marginTop:12,background:tokens.status.infoBg,border:`1px solid ${tokens.status.infoLight}`,borderRadius:8,padding:'6px 12px'}}><p style={{fontSize:11,color:tokens.status.infoStrong,margin:0}}>Próx: {fmt(prox.data_hora)} {fmtH(prox.data_hora)}</p></div>}
                     </div>
                     <div style={{padding:'16px 20px'}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
