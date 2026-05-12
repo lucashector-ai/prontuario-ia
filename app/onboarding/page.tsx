@@ -1,222 +1,465 @@
-"use client"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
 
-type TipoConta = 'clinica' | 'medico' | null
+type TipoConta = 'clinica' | 'medico'
 
-const passosMedico = [
-  {
-    titulo: "Bem-vindo ao Clinical 360",
-    subtitulo: "Seu assistente médico inteligente",
-    desc: "Em poucos minutos você estará pronto para fazer sua primeira consulta com transcrição automática e prontuário gerado por IA.",
-    cta: "Começar",
-  },
-  {
-    titulo: "Complete seu perfil",
-    subtitulo: "Informações exibidas no prontuário",
-    desc: "Adicione sua especialidade, CRM e foto. Essas informações aparecem automaticamente em todos os documentos gerados.",
-    cta: "Ir para meu perfil",
-    href: "/perfil",
-    opcao: "Pular por agora",
-  },
-  {
-    titulo: "Cadastre seu primeiro paciente",
-    subtitulo: "Organize seu histórico de atendimentos",
-    desc: "Cadastre pacientes para vincular consultas, gerar histórico clínico e acompanhar a evolução ao longo do tempo.",
-    cta: "Cadastrar paciente",
-    href: "/pacientes",
-    opcao: "Pular por agora",
-  },
-  {
-    titulo: "Faça sua primeira consulta",
-    subtitulo: "Transcrição + prontuário em segundos",
-    desc: "Clique em Nova consulta, pressione gravar e fale normalmente com o paciente. A IA transcreve e gera o prontuário SOAP automaticamente.",
-    cta: "Fazer primeira consulta",
-    href: "/nova-consulta",
-  },
-]
-
-const passosClinica = [
-  {
-    titulo: "Bem-vindo ao Clinical 360",
-    subtitulo: "Prontuário com IA pra toda sua equipe",
-    desc: "Você acabou de criar a conta da sua clínica. Vamos configurar tudo em poucos minutos para começar a atender.",
-    cta: "Começar",
-  },
-  {
-    titulo: "Adicione seus médicos",
-    subtitulo: "Sua equipe no Painel administrativo",
-    desc: "Cadastre os médicos que atendem na sua clínica. Cada um recebe seu login próprio e passa pelo onboarding.",
-    cta: "Abrir painel administrativo",
-    href: "/admin",
-    opcao: "Adicionar depois",
-  },
-  {
-    titulo: "Configure sua clínica",
-    subtitulo: "Logo, dados de contato e mais",
-    desc: "Complete os dados da sua clínica para que apareçam nos prontuários e atendimentos via WhatsApp.",
-    cta: "Ir para configurações",
-    href: "/minha-clinica",
-    opcao: "Pular por agora",
-  },
-  {
-    titulo: "Tudo pronto",
-    subtitulo: "Explore sua plataforma",
-    desc: "Você e sua equipe já podem começar a atender. A Sofia cuida dos agendamentos via WhatsApp automaticamente.",
-    cta: "Ir para o painel",
-    href: "/admin",
-  },
-]
-
-const IconBoasVindas = (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="1.5">
-    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-  </svg>
-)
-const IconPerfil = (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="1.5">
-    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/>
-  </svg>
-)
-const IconPacientes = (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="1.5">
-    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-  </svg>
-)
-const IconMic = (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="1.5">
-    <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-    <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
-  </svg>
-)
-const IconClinica = (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="1.5">
-    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-    <polyline points="9 22 9 12 15 12 15 22"/>
-  </svg>
-)
-const IconCheck = (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="1.5">
-    <polyline points="20 6 9 17 4 12"/>
-  </svg>
-)
-
-const iconesMedico = [IconBoasVindas, IconPerfil, IconPacientes, IconMic]
-const iconesClinica = [IconBoasVindas, IconPerfil, IconClinica, IconCheck]
+type Passo =
+  | { kind: 'welcome' }
+  | { kind: 'medico-form' }
+  | { kind: 'clinica-form' }
+  | { kind: 'feature'; icon: 'mic' | 'memed' | 'sofia'; eyebrow: string; titulo: string; descricao: string; bullets: string[] }
+  | { kind: 'done' }
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const [passo, setPasso] = useState(0)
-  const [tipo, setTipo] = useState<TipoConta>(null)
+  const [tipo, setTipo] = useState<TipoConta | null>(null)
   const [usuario, setUsuario] = useState<any>(null)
+  const [passoIdx, setPassoIdx] = useState(0)
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  // Dados do formulário do médico
+  const [formMedico, setFormMedico] = useState({ nome: '', crm: '', especialidade: '' })
+  // Dados do formulário da clínica
+  const [formClinica, setFormClinica] = useState({ nome_fantasia: '', telefone: '', endereco: '' })
 
   useEffect(() => {
     const ca = localStorage.getItem('clinica_admin')
-    if (ca) {
-      setUsuario(JSON.parse(ca))
-      setTipo('clinica')
-      return
-    }
     const m = localStorage.getItem('medico')
-    if (m) {
-      setUsuario(JSON.parse(m))
-      setTipo('medico')
+    const dados = ca ? JSON.parse(ca) : (m ? JSON.parse(m) : null)
+    const tp: TipoConta | null = ca ? 'clinica' : (m ? 'medico' : null)
+
+    if (!dados || !tp) {
+      router.replace('/login')
       return
     }
-    router.push('/login')
+
+    // GATE: se já concluiu o onboarding, manda direto pro destino
+    if (dados.onboarding_concluido) {
+      router.replace(tp === 'clinica' ? '/admin' : '/dashboard')
+      return
+    }
+
+    setUsuario(dados)
+    setTipo(tp)
+    // Pré-popula formulário se o usuário já tem alguns dados
+    setFormMedico({
+      nome: dados.nome || '',
+      crm: dados.crm || '',
+      especialidade: dados.especialidade || '',
+    })
+    setFormClinica({
+      nome_fantasia: dados.nome_fantasia || dados.clinica_nome || '',
+      telefone: dados.telefone || '',
+      endereco: dados.endereco || '',
+    })
   }, [router])
+
+  // Monta os passos dinamicamente conforme tipo
+  const passos: Passo[] = !tipo ? [] : [
+    { kind: 'welcome' },
+    { kind: 'medico-form' },
+    ...(tipo === 'clinica' ? [{ kind: 'clinica-form' } as Passo] : []),
+    {
+      kind: 'feature',
+      icon: 'mic',
+      eyebrow: 'IA na consulta',
+      titulo: 'Grave a consulta. A IA escreve o prontuário.',
+      descricao: 'Aperte o botão de gravar, fale normalmente com seu paciente. Em segundos você recebe um prontuário SOAP completo, com CIDs sugeridos.',
+      bullets: ['Transcrição em tempo real', 'SOAP estruturado automaticamente', 'CIDs sugeridos pelo contexto'],
+    },
+    {
+      kind: 'feature',
+      icon: 'memed',
+      eyebrow: 'Prescrição digital',
+      titulo: 'Receitas Memed direto da plataforma.',
+      descricao: 'Integração nativa com a Memed: prescreva com validade ICP-Brasil, envie por SMS ou WhatsApp pro paciente, sem sair do prontuário.',
+      bullets: ['Validade legal ICP-Brasil', 'Envio direto pro paciente', 'Histórico completo na ficha'],
+    },
+    {
+      kind: 'feature',
+      icon: 'sofia',
+      eyebrow: 'Sofia · IA no WhatsApp',
+      titulo: 'Sua secretária IA atende 24/7.',
+      descricao: 'A Sofia agenda consultas, confirma horários, tira dúvidas e cuida do paciente pelo WhatsApp — automaticamente, no tom da sua clínica.',
+      bullets: ['Agendamento automático', 'Confirmação 48h antes', 'Reduz no-show em até 40%'],
+    },
+    { kind: 'done' },
+  ]
+
+  const passo = passos[passoIdx]
+  const total = passos.length
+  const progresso = total > 0 ? ((passoIdx + 1) / total) * 100 : 0
+  // Sabe se o passo atual coleta dado obrigatório (não dá pra pular)
+  const isPassoObrigatorio = passo?.kind === 'medico-form' || passo?.kind === 'clinica-form'
+
+  async function salvarMedico(): Promise<boolean> {
+    if (!usuario || !tipo) return false
+    if (!formMedico.nome.trim() || !formMedico.crm.trim()) {
+      setErro('Preencha nome e CRM pra continuar.')
+      return false
+    }
+    setSalvando(true); setErro('')
+    try {
+      const updates = {
+        nome: formMedico.nome.trim(),
+        crm: formMedico.crm.trim(),
+        especialidade: formMedico.especialidade.trim() || null,
+      }
+      const tabela = tipo === 'medico' ? 'medicos' : 'clinica_admins'
+      const { error } = await supabase.from(tabela).update(updates).eq('id', usuario.id)
+      if (error) throw error
+
+      const novo = { ...usuario, ...updates }
+      setUsuario(novo)
+      localStorage.setItem(tipo === 'medico' ? 'medico' : 'clinica_admin', JSON.stringify(novo))
+      return true
+    } catch (e: any) {
+      setErro(e.message || 'Erro ao salvar')
+      return false
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  async function salvarClinica(): Promise<boolean> {
+    if (!usuario || tipo !== 'clinica') return false
+    if (!formClinica.nome_fantasia.trim()) {
+      setErro('O nome da clínica é obrigatório.')
+      return false
+    }
+    setSalvando(true); setErro('')
+    try {
+      // Atualiza na tabela clinicas usando clinica_id do admin
+      const updates = {
+        nome_fantasia: formClinica.nome_fantasia.trim(),
+        telefone: formClinica.telefone.trim() || null,
+        endereco: formClinica.endereco.trim() || null,
+      }
+      if (usuario.clinica_id) {
+        const { error } = await supabase.from('clinicas').update(updates).eq('id', usuario.clinica_id)
+        if (error) throw error
+      }
+      const novo = { ...usuario, ...updates }
+      setUsuario(novo)
+      localStorage.setItem('clinica_admin', JSON.stringify(novo))
+      return true
+    } catch (e: any) {
+      setErro(e.message || 'Erro ao salvar')
+      return false
+    } finally {
+      setSalvando(false)
+    }
+  }
 
   async function concluir() {
     if (!usuario || !tipo) return
-    if (tipo === 'medico') {
-      await supabase.from('medicos').update({ onboarding_concluido: true }).eq('id', usuario.id)
+    setSalvando(true)
+    try {
+      const tabela = tipo === 'medico' ? 'medicos' : 'clinica_admins'
+      await supabase.from(tabela).update({ onboarding_concluido: true }).eq('id', usuario.id)
       const novo = { ...usuario, onboarding_concluido: true }
-      localStorage.setItem('medico', JSON.stringify(novo))
-      router.push('/dashboard')
-    } else {
-      await supabase.from('clinica_admins').update({ onboarding_concluido: true }).eq('id', usuario.id)
-      const novo = { ...usuario, onboarding_concluido: true }
-      localStorage.setItem('clinica_admin', JSON.stringify(novo))
-      router.push('/admin')
+      localStorage.setItem(tipo === 'medico' ? 'medico' : 'clinica_admin', JSON.stringify(novo))
+      router.replace(tipo === 'medico' ? '/dashboard' : '/admin')
+    } finally {
+      setSalvando(false)
     }
   }
 
-  if (!tipo) return null
-
-  const passos = tipo === 'clinica' ? passosClinica : passosMedico
-  const icones = tipo === 'clinica' ? iconesClinica : iconesMedico
-
-  function avancar(href?: string) {
-    if (href) { router.push(href); return }
-    if (passo < passos.length - 1) setPasso(passo + 1)
+  async function avancar() {
+    setErro('')
+    if (passo?.kind === 'medico-form') {
+      const ok = await salvarMedico()
+      if (!ok) return
+    }
+    if (passo?.kind === 'clinica-form') {
+      const ok = await salvarClinica()
+      if (!ok) return
+    }
+    if (passoIdx < passos.length - 1) setPassoIdx(passoIdx + 1)
     else concluir()
   }
 
-  const p = passos[passo]
-  const progresso = ((passo + 1) / passos.length) * 100
-  const icon = icones[passo]
+  function voltar() {
+    setErro('')
+    if (passoIdx > 0) setPassoIdx(passoIdx - 1)
+  }
+
+  // "Pular tudo" — só pode se já passou pelos forms obrigatórios
+  async function pularTudo() {
+    // Se ainda não chegou nos formulários obrigatórios, força ir até eles
+    const idxFormMedico = passos.findIndex(p => p.kind === 'medico-form')
+    const idxFormClinica = passos.findIndex(p => p.kind === 'clinica-form')
+    const maxFormIdx = Math.max(idxFormMedico, idxFormClinica)
+    if (passoIdx < maxFormIdx) {
+      // Pula direto pro próximo form obrigatório
+      const proxFormIdx = passos.findIndex((p, i) => i > passoIdx && (p.kind === 'medico-form' || p.kind === 'clinica-form'))
+      if (proxFormIdx >= 0) setPassoIdx(proxFormIdx)
+      return
+    }
+    // Se já passou pelos forms, conclui direto
+    concluir()
+  }
+
+  if (!tipo || !passo) return null
 
   return (
-    <div style={{ minHeight: '100vh', background: tokens.bg.hover, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
-      <div style={{ width: '100%', maxWidth: 480 }}>
+    <div style={{ minHeight: '100vh', background: 'white', display: 'flex', overflow: 'hidden' }}>
+      <style>{`
+        .ob-left { display: flex; }
+        .ob-right { flex: 1; }
+        @media (max-width: 900px) {
+          .ob-left { display: none !important; }
+          .ob-right { width: 100% !important; }
+        }
+        .ob-input {
+          width: 100%;
+          padding: 14px 16px;
+          background: white;
+          border: 1px solid ${tokens.neutral[200]};
+          border-radius: 12px;
+          font-size: 15px;
+          color: ${tokens.neutral[900]};
+          outline: none;
+          transition: border-color 0.15s, box-shadow 0.15s;
+          box-sizing: border-box;
+        }
+        .ob-input:focus {
+          border-color: ${tokens.brand.primary};
+          box-shadow: 0 0 0 4px ${tokens.brand.primaryLight};
+        }
+        .ob-label {
+          display: block;
+          font-size: 13px;
+          font-weight: 600;
+          color: ${tokens.neutral[700]};
+          margin-bottom: 8px;
+        }
+        .ob-fadein { animation: fadein 0.4s ease; }
+        @keyframes fadein {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary }}>Clinical 360</span>
+      {/* COLUNA ESQUERDA — Hero */}
+      <aside className="ob-left" style={{
+        width: '42%',
+        background: `linear-gradient(160deg, ${tokens.brand.primary} 0%, ${tokens.accent.violet} 55%, ${tokens.brand.primaryDark || tokens.brand.primary} 100%)`,
+        color: 'white',
+        padding: '56px 48px',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Decoração */}
+        <div style={{ position: 'absolute', top: -200, right: -200, width: 500, height: 500, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', filter: 'blur(40px)' }}/>
+        <div style={{ position: 'absolute', bottom: -150, left: -100, width: 380, height: 380, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', filter: 'blur(30px)' }}/>
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <img src="/logo-clinical-360.svg" alt="Clinical 360" style={{ height: 30, filter: 'brightness(0) invert(1)' }}/>
+        </div>
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.8, margin: '0 0 18px' }}>Configuração inicial</p>
+          <h2 style={{ fontSize: 38, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 18px' }}>
+            Vamos configurar sua clínica em poucos minutos.
+          </h2>
+          <p style={{ fontSize: 16, lineHeight: 1.55, opacity: 0.85, maxWidth: 360, margin: 0 }}>
+            Em 5 passos você conhece o essencial pra começar a atender com IA, prescrever via Memed e atender pacientes no WhatsApp.
+          </p>
+        </div>
+
+        <div style={{ position: 'relative', zIndex: 1, fontSize: 13, opacity: 0.75 }}>
+          Passo {passoIdx + 1} de {total}
+        </div>
+      </aside>
+
+      {/* COLUNA DIREITA — Conteúdo */}
+      <main className="ob-right" style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '48px 56px',
+        maxWidth: 720,
+        margin: '0 auto',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}>
+        {/* Topbar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 48 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {passoIdx > 0 && (
+              <button onClick={voltar} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', gap: 4, color: tokens.text.muted, fontSize: 13, fontWeight: 500 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Voltar
+              </button>
+            )}
           </div>
-          <span style={{ fontSize: 12, color: tokens.text.tertiary }}>Passo {passo + 1} de {passos.length}</span>
-        </div>
-
-        <div style={{ height: 3, background: tokens.border.default, borderRadius: 2, marginBottom: 40, overflow: 'hidden' }}>
-          <div style={{ height: '100%', background: tokens.brand.primary, borderRadius: 2, width: progresso + '%', transition: 'width 0.4s ease' }} />
-        </div>
-
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ width: 72, height: 72, borderRadius: 20, background: tokens.brand.primaryLighter, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            {icon}
+          <div style={{ flex: 1, maxWidth: 280, margin: '0 24px', height: 4, background: tokens.neutral[150], borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{ height: '100%', background: tokens.brand.primary, width: `${progresso}%`, transition: 'width 0.4s ease' }}/>
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>{p.titulo}</h1>
-          <p style={{ fontSize: 13, color: tokens.brand.primary, fontWeight: 600, margin: '0 0 16px' }}>{p.subtitulo}</p>
-          <p style={{ fontSize: 14, color: tokens.text.secondary, lineHeight: 1.7, maxWidth: 380, margin: '0 auto' }}>{p.desc}</p>
+          {!isPassoObrigatorio && (
+            <button onClick={pularTudo} disabled={salvando} style={{ background: 'none', border: 'none', cursor: salvando ? 'wait' : 'pointer', fontSize: 13, color: tokens.text.tertiary, fontWeight: 500 }}>
+              Pular tudo
+            </button>
+          )}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* Conteúdo do passo */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="ob-fadein" style={{ width: '100%', maxWidth: 480 }}>
+
+            {/* WELCOME */}
+            {passo.kind === 'welcome' && (
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Bem-vindo, {usuario?.nome?.split(' ')[0] || 'doutor(a)'}</p>
+                <h1 style={{ fontSize: 36, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 16px', color: tokens.neutral[900] }}>
+                  Tudo pronto pra começar.
+                </h1>
+                <p style={{ fontSize: 16, color: tokens.text.muted, lineHeight: 1.6, margin: '0 0 36px' }}>
+                  Vamos configurar 2 coisas essenciais e te mostrar 3 funcionalidades que vão mudar como sua clínica atende. Leva 3 minutos.
+                </p>
+              </div>
+            )}
+
+            {/* MÉDICO FORM */}
+            {passo.kind === 'medico-form' && (
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Sobre você</p>
+                <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 12px', color: tokens.neutral[900] }}>
+                  Quem aparece nos prontuários?
+                </h1>
+                <p style={{ fontSize: 15, color: tokens.text.muted, lineHeight: 1.55, margin: '0 0 28px' }}>
+                  Esses dados aparecem no rodapé de prontuários, prescrições Memed e PDFs gerados pela clínica.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <label className="ob-label">Nome completo</label>
+                    <input className="ob-input" value={formMedico.nome} onChange={e => setFormMedico({ ...formMedico, nome: e.target.value })} placeholder="Ex: Dr. João Silva" />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label className="ob-label">CRM</label>
+                      <input className="ob-input" value={formMedico.crm} onChange={e => setFormMedico({ ...formMedico, crm: e.target.value })} placeholder="12345-SP" />
+                    </div>
+                    <div>
+                      <label className="ob-label">Especialidade</label>
+                      <input className="ob-input" value={formMedico.especialidade} onChange={e => setFormMedico({ ...formMedico, especialidade: e.target.value })} placeholder="Cardiologia" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CLÍNICA FORM */}
+            {passo.kind === 'clinica-form' && (
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Sua clínica</p>
+                <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 12px', color: tokens.neutral[900] }}>
+                  Dados da clínica
+                </h1>
+                <p style={{ fontSize: 15, color: tokens.text.muted, lineHeight: 1.55, margin: '0 0 28px' }}>
+                  Aparece em documentos, no WhatsApp da Sofia e na sala de teleconsulta personalizada.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <label className="ob-label">Nome da clínica</label>
+                    <input className="ob-input" value={formClinica.nome_fantasia} onChange={e => setFormClinica({ ...formClinica, nome_fantasia: e.target.value })} placeholder="Ex: Clínica São Paulo" />
+                  </div>
+                  <div>
+                    <label className="ob-label">Telefone</label>
+                    <input className="ob-input" value={formClinica.telefone} onChange={e => setFormClinica({ ...formClinica, telefone: e.target.value })} placeholder="(11) 99999-9999" />
+                  </div>
+                  <div>
+                    <label className="ob-label">Endereço</label>
+                    <input className="ob-input" value={formClinica.endereco} onChange={e => setFormClinica({ ...formClinica, endereco: e.target.value })} placeholder="Av. Paulista, 1000 — São Paulo/SP" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* FEATURE */}
+            {passo.kind === 'feature' && (
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>{passo.eyebrow}</p>
+                <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 16px', color: tokens.neutral[900] }}>
+                  {passo.titulo}
+                </h1>
+                <p style={{ fontSize: 16, color: tokens.text.muted, lineHeight: 1.6, margin: '0 0 28px' }}>
+                  {passo.descricao}
+                </p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {passo.bullets.map((b, i) => (
+                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, color: tokens.neutral[700] }}>
+                      <span style={{ width: 22, height: 22, borderRadius: 6, background: tokens.brand.primaryLight, color: tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* DONE */}
+            {passo.kind === 'done' && (
+              <div style={{ textAlign: 'center' as const }}>
+                <div style={{ width: 80, height: 80, borderRadius: 24, background: tokens.brand.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <h1 style={{ fontSize: 36, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 16px', color: tokens.neutral[900] }}>
+                  Tudo pronto.
+                </h1>
+                <p style={{ fontSize: 16, color: tokens.text.muted, lineHeight: 1.6, margin: '0 0 8px', maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
+                  Sua clínica está configurada. {tipo === 'clinica' ? 'No painel administrativo você cadastra sua equipe e configura a Sofia.' : 'Comece sua primeira consulta com IA quando quiser.'}
+                </p>
+              </div>
+            )}
+
+            {erro && (
+              <div style={{ marginTop: 20, padding: '10px 14px', background: tokens.status.dangerBg, color: tokens.status.dangerDark, borderRadius: 8, fontSize: 13, fontWeight: 500 }}>
+                {erro}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer com botão de avançar */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 32 }}>
           <button
-            onClick={() => avancar((p as any).href)}
-            style={{ width: '100%', padding: '14px', background: tokens.brand.primary, color: 'white', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
+            onClick={avancar}
+            disabled={salvando}
+            style={{
+              padding: '14px 28px',
+              background: salvando ? tokens.neutral[400] : tokens.neutral[900],
+              color: 'white',
+              border: 'none',
+              borderRadius: 10,
+              fontSize: 15,
+              fontWeight: 600,
+              cursor: salvando ? 'wait' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
           >
-            {p.cta}
+            {salvando ? 'Salvando...' : (
+              passo.kind === 'welcome' ? 'Vamos começar' :
+              passo.kind === 'done' ? (tipo === 'clinica' ? 'Ir pro painel' : 'Ir pro dashboard') :
+              'Continuar'
+            )}
+            {!salvando && (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+            )}
           </button>
-          {(p as any).opcao && (
-            <button
-              onClick={() => setPasso(passo + 1)}
-              style={{ width: '100%', padding: '12px', background: 'transparent', color: tokens.text.tertiary, border: `1px solid ${tokens.border.default}`, borderRadius: 10, fontSize: 14, cursor: 'pointer' }}
-            >
-              {(p as any).opcao}
-            </button>
-          )}
-          {passo === 0 && (
-            <button
-              onClick={concluir}
-              style={{ width: '100%', padding: '12px', background: 'transparent', color: tokens.text.tertiary, border: 'none', fontSize: 13, cursor: 'pointer' }}
-            >
-              Já conheço a plataforma, pular tudo
-            </button>
-          )}
         </div>
-
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 32 }}>
-          {passos.map((_, i) => (
-            <div key={i} style={{ width: i === passo ? 20 : 6, height: 6, borderRadius: 3, background: i === passo ? tokens.brand.primary : tokens.border.default, transition: 'all 0.3s ease' }} />
-          ))}
-        </div>
-
-      </div>
+      </main>
     </div>
   )
 }
