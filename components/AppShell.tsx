@@ -7,7 +7,7 @@ import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { tokens } from '@/lib/design-tokens'
 
-const ROTAS_PUBLICAS = ['/login', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/whatsapp-app']
+const ROTAS_PUBLICAS = ['/login', '/login-atendente', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/whatsapp-app', '/privacidade', '/termos', '/sobre', '/contato']
 const PREFIXOS_PUBLICOS = ['/sala/', '/pre-consulta/', '/paciente-publico/']
 
 export function AppShell({ children }: { children: React.ReactNode }) {
