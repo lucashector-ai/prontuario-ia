@@ -43,7 +43,7 @@ export default function HomePage() {
   return <Landing periodo={periodo} setPeriodo={setPeriodo} router={router} />
 }
 
-function Landing({ periodo, setPeriodo, router }: any) {
+function Landing({ periodo, setPeriodo, router, logado, destinoLogado }: any) {
   const titulo = { fontWeight: 500 as const, letterSpacing: '-0.03em' as const, lineHeight: 1.05 }
   return (
     <div style={{ minHeight: '100vh', background: 'white', color: tokens.neutral[900] }}>
@@ -95,7 +95,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
       </div>
 
       {/* NAV */}
-      <NavBar router={router}/>
+      <NavBar router={router} logado={logado} destinoLogado={destinoLogado}/>
 
       {/* HERO */}
       <section className="lp-hero" style={{ textAlign: 'center' as const }}>
@@ -112,8 +112,8 @@ function Landing({ periodo, setPeriodo, router }: any) {
             Grava a consulta, gera prontuário SOAP, prescreve via Memed e atende paciente no WhatsApp — tudo automático. Você só atende.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' as const }}>
-            <button onClick={() => router.push('/cadastro')} style={{ padding: '14px 26px', borderRadius: 10, background: tokens.neutral[900], color: 'white', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-              Assinar agora →
+            <button onClick={() => router.push(logado ? destinoLogado : '/cadastro')} style={{ padding: '14px 26px', borderRadius: 10, background: tokens.neutral[900], color: 'white', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              {logado ? 'Ir pro dashboard →' : 'Assinar agora →'}
             </button>
             <button onClick={() => document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '14px 26px', borderRadius: 10, background: 'white', color: tokens.neutral[900], border: `1px solid ${tokens.neutral[200]}`, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
               Ver planos
@@ -281,7 +281,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
           </div>
 
           <div className="lp-grid-3">
-            <Plano nome="Solo" descricao="Para médicos autônomos" precoMensal={297} precoAnual={237} periodo={periodo} cta="Assinar" onCta={() => router.push('/cadastro')} features={[
+            <Plano nome="Solo" descricao="Para médicos autônomos" precoMensal={297} precoAnual={237} periodo={periodo} cta={logado ? 'Ir pro dashboard' : 'Assinar'} onCta={() => router.push(logado ? destinoLogado : '/cadastro')} features={[
               '1 médico',
               'IA na consulta ilimitada',
               'Prescrição Memed',
@@ -290,7 +290,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
               'Suporte por e-mail',
               'Trial de 7 dias',
             ]}/>
-            <Plano destaque nome="Clínica" badge="Mais vendido" descricao="Para clínicas 2 a 10 médicos" precoMensal={597} precoAnual={477} periodo={periodo} cta="Assinar" onCta={() => router.push('/cadastro')} features={[
+            <Plano destaque nome="Clínica" badge="Mais vendido" descricao="Para clínicas 2 a 10 médicos" precoMensal={597} precoAnual={477} periodo={periodo} cta={logado ? 'Ir pro dashboard' : 'Assinar'} onCta={() => router.push(logado ? destinoLogado : '/cadastro')} features={[
               'Até 10 usuários',
               '1.000 consultas IA/mês',
               'Sofia no WhatsApp',
@@ -299,7 +299,7 @@ function Landing({ periodo, setPeriodo, router }: any) {
               'Multi-perfil (médico, recepção)',
               'Suporte WhatsApp comercial',
             ]}/>
-            <Plano nome="Pro" descricao="Para clínicas grandes e redes" precoMensal={1197} precoAnual={957} periodo={periodo} cta="Assinar" onCta={() => router.push('/cadastro')} features={[
+            <Plano nome="Pro" descricao="Para clínicas grandes e redes" precoMensal={1197} precoAnual={957} periodo={periodo} cta={logado ? 'Ir pro dashboard' : 'Assinar'} onCta={() => router.push(logado ? destinoLogado : '/cadastro')} features={[
               'Usuários ilimitados',
               'Consultas IA ilimitadas',
               'Análise de exames com IA',
@@ -340,8 +340,8 @@ function Landing({ periodo, setPeriodo, router }: any) {
           <p style={{ fontSize: 17, opacity: 0.9, margin: '0 0 32px', lineHeight: 1.5 }}>
             Comece grátis hoje. Sem cartão de crédito.
           </p>
-          <button onClick={() => router.push('/cadastro')} style={{ padding: '14px 32px', borderRadius: 10, background: 'white', color: tokens.brand.primary, border: 'none', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            Assinar agora →
+          <button onClick={() => router.push(logado ? destinoLogado : '/cadastro')} style={{ padding: '14px 32px', borderRadius: 10, background: 'white', color: tokens.brand.primary, border: 'none', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            {logado ? 'Ir pro dashboard →' : 'Assinar agora →'}
           </button>
         </div>
       </section>
@@ -388,7 +388,7 @@ const footerTitle = { fontSize: 11, color: 'white', fontWeight: 700 as const, te
 const footerLink = { display: 'block', color: tokens.neutral[400], textDecoration: 'none', marginBottom: 8 }
 
 
-function NavBar({ router }: { router: any }) {
+function NavBar({ router, logado, destinoLogado }: { router: any; logado: boolean; destinoLogado: string }) {
   const [open, setOpen] = useState(false)
   return (
     <>
@@ -406,8 +406,14 @@ function NavBar({ router }: { router: any }) {
             </div>
           </div>
           <div className="lp-nav-actions" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={() => router.push('/login')} className="lp-nav-entrar" style={{ fontSize: 13, color: tokens.text.muted, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Entrar</button>
-            <button onClick={() => router.push('/cadastro')} style={{ fontSize: 13, color: 'white', background: tokens.neutral[900], border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Assinar</button>
+            {logado ? (
+              <button onClick={() => router.push(destinoLogado)} style={{ fontSize: 13, color: 'white', background: tokens.neutral[900], border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Ir pro dashboard →</button>
+            ) : (
+              <>
+                <button onClick={() => router.push('/login')} className="lp-nav-entrar" style={{ fontSize: 13, color: tokens.text.muted, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Entrar</button>
+                <button onClick={() => router.push('/cadastro')} style={{ fontSize: 13, color: 'white', background: tokens.neutral[900], border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Assinar</button>
+              </>
+            )}
             <button className="lp-hamburger" onClick={() => setOpen(true)} aria-label="Abrir menu" style={{ display: 'none', background: 'none', border: 'none', padding: 6, cursor: 'pointer' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={tokens.neutral[900]} strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
@@ -429,8 +435,14 @@ function NavBar({ router }: { router: any }) {
             <a href="#planos" onClick={() => setOpen(false)} style={mobileLink}>Planos</a>
             <a href="#faq" onClick={() => setOpen(false)} style={mobileLink}>FAQ</a>
             <div style={{ height: 1, background: tokens.neutral[150], margin: '12px 0' }}/>
-            <button onClick={() => { setOpen(false); router.push('/login') }} style={{ ...mobileLink, background: 'none', border: 'none', textAlign: 'left' as const, cursor: 'pointer', width: '100%' }}>Entrar</button>
-            <button onClick={() => { setOpen(false); router.push('/cadastro') }} style={{ marginTop: 12, padding: '12px', borderRadius: 10, background: tokens.neutral[900], color: 'white', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Assinar</button>
+            {logado ? (
+              <button onClick={() => { setOpen(false); router.push(destinoLogado) }} style={{ marginTop: 12, padding: '12px', borderRadius: 10, background: tokens.neutral[900], color: 'white', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Ir pro dashboard →</button>
+            ) : (
+              <>
+                <button onClick={() => { setOpen(false); router.push('/login') }} style={{ ...mobileLink, background: 'none', border: 'none', textAlign: 'left' as const, cursor: 'pointer', width: '100%' }}>Entrar</button>
+                <button onClick={() => { setOpen(false); router.push('/cadastro') }} style={{ marginTop: 12, padding: '12px', borderRadius: 10, background: tokens.neutral[900], color: 'white', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Assinar</button>
+              </>
+            )}
           </div>
         </div>
       )}
