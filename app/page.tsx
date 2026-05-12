@@ -8,9 +8,11 @@ export default function HomePage() {
   const router = useRouter()
   const [logado, setLogado] = useState(false)
   const [destinoLogado, setDestinoLogado] = useState<'/dashboard' | '/onboarding'>('/dashboard')
+  const [mounted, setMounted] = useState(false)
   const [periodo, setPeriodo] = useState<'mensal' | 'anual'>('anual')
 
   useEffect(() => {
+    setMounted(true)
     try {
       const rawAdmin = localStorage.getItem('clinica_admin')
       if (rawAdmin) {
@@ -30,7 +32,7 @@ export default function HomePage() {
     }
   }, [])
 
-  return <Landing periodo={periodo} setPeriodo={setPeriodo} router={router} logado={logado} destinoLogado={destinoLogado} />
+  return <Landing periodo={periodo} setPeriodo={setPeriodo} router={router} logado={logado && mounted} destinoLogado={destinoLogado} />
 }
 
 function Landing({ periodo, setPeriodo, router, logado, destinoLogado }: any) {

@@ -210,10 +210,17 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <style>{`
+          @media (max-width: 768px) {
+            .dash-kpis-grid {
+              grid-template-columns: 1fr 1fr !important;
+            }
+          }
+        `}</style>
         <SetupChecklist />
 
         {/* LINHA 1: KPIs */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 16 }}>
+        <div className="dash-kpis-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 16 }}>
           {carregando ? (
             <>
               <CardSkeleton/><CardSkeleton/><CardSkeleton/><CardSkeleton/>
