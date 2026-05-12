@@ -10,6 +10,7 @@ const ROTAS_APP = [
   '/admin', '/clinica', '/perfil', '/onboarding',
   '/login', '/login-atendente', '/cadastro',
   '/esqueci-senha', '/trocar-senha-obrigatoria', '/auth',
+  '/portal', '/design-system',
 ]
 
 // Rotas de MARKETING (domínio raiz)

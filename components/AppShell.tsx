@@ -8,7 +8,7 @@ import { BottomNav } from './BottomNav'
 import { tokens } from '@/lib/design-tokens'
 
 const ROTAS_PUBLICAS = ['/login', '/login-atendente', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/whatsapp-app', '/privacidade', '/termos', '/sobre', '/contato']
-const PREFIXOS_PUBLICOS = ['/sala/', '/pre-consulta/', '/paciente-publico/']
+const PREFIXOS_PUBLICOS = ['/sala/', '/pre-consulta/', '/paciente-publico/', '/portal', '/design-system']
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
