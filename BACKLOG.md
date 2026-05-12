@@ -89,22 +89,29 @@ TODOs deixados:
 
 ---
 
-## Sprint 4 — Estoque + Procedimentos ⏳
+## Sprint 4 — Estoque + Procedimentos ✅
 
-Schema:
-- [ ] `estoque_produtos`
-- [ ] `estoque_lotes`
-- [ ] `estoque_fornecedores`
-- [ ] `procedimentos_realizados`
+Schema ([supabase/migrations/003_estoque.sql](supabase/migrations/003_estoque.sql)):
+- [x] `estoque_produtos` (7 categorias, 7 unidades, estoque min/max, custo/preço, foto)
+- [x] `estoque_lotes` (rastreabilidade + validade ANVISA)
+- [x] `estoque_fornecedores`
+- [x] `procedimentos_realizados` (jsonb `produtos_usados`, margem calculada)
 
 Páginas (`/estoque/*`):
-- [ ] Lista de produtos
-- [ ] Detalhe produto + lotes
-- [ ] Lotes (alerta vencimento)
-- [ ] Fornecedores
-- [ ] Histórico de procedimentos com margem
+- [x] [/estoque](app/estoque/page.tsx) — grid de produtos com foto, busca, chips de categoria, alerta de baixo estoque
+- [x] [/estoque/[id]](app/estoque/[id]/page.tsx) — detalhe + lotes + form de novo lote (entra automaticamente no estoque)
+- [x] [/estoque/lotes](app/estoque/lotes/page.tsx) — consolidado com 4 KPIs (vencidos / <30 / <90 / OK), tabs de filtro
+- [x] [/estoque/fornecedores](app/estoque/fornecedores/page.tsx) — CRUD completo
+- [x] [/estoque/procedimentos](app/estoque/procedimentos/page.tsx) — histórico com receita/custo/margem agregados + tabela
 
-Hook: ao finalizar consulta → decrementa estoque + calcula margem.
+Helper:
+- [x] [`registrarProcedimentoRealizado()`](lib/estoque/queries.ts) — função única que decrementa estoque + decrementa lote + calcula margem + grava registro. Pronta pra hook do app legado (TODO Sprint 6).
+
+TODOs:
+- [ ] Upload de foto via Supabase Storage (atualmente URL externa)
+- [ ] Hook real "consulta finalizada → registrarProcedimentoRealizado" no app legado
+- [ ] UI in-app pra registrar procedimento manualmente
+- [ ] Notificação automática de lotes < 30 dias (cron)
 
 ---
 
