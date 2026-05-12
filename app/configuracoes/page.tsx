@@ -14,10 +14,13 @@ export default function Configuracoes() {
   const [removendo, setRemovendo] = useState(false)
 
   useEffect(() => {
-    const m = localStorage.getItem('medico')
-    if (!m) { router.push('/login'); return }
-    const med = JSON.parse(m); setMedico(med)
-    carregarConfig(med.id)
+    // Aceita tanto admin de clínica quanto médico
+    const rawAdmin = localStorage.getItem('clinica_admin')
+    const rawMedico = localStorage.getItem('medico')
+    if (!rawAdmin && !rawMedico) { router.push('/login'); return }
+    const med = JSON.parse(rawMedico || rawAdmin || '{}')
+    setMedico(med)
+    if (med.id) carregarConfig(med.id)
   }, [router])
 
   const carregarConfig = async (medicoId: string) => {
@@ -35,13 +38,13 @@ export default function Configuracoes() {
       })
       const d = await r.json()
       if (d.error) { setMsg({ tipo: 'erro', texto: d.error }) }
-      else { setConfig(d.config); setMsg({ tipo: 'ok', texto: 'WhatsApp conectado com sucesso! Numero: ' + d.meta.phone }); setForm(f => ({ ...f, access_token: '', phone_number_id: '' })) }
+      else { setConfig(d.config); setMsg({ tipo: 'ok', texto: 'WhatsApp conectado com sucesso! Número: ' + d.meta.phone }); setForm(f => ({ ...f, access_token: '', phone_number_id: '' })) }
     } catch (e: any) { setMsg({ tipo: 'erro', texto: e.message }) }
     finally { setSalvando(false) }
   }
 
   const remover = async () => {
-    if (!confirm('Desconectar o WhatsApp desta clinica?')) return
+    if (!confirm('Desconectar o WhatsApp desta clínica?')) return
     setRemovendo(true)
     await fetch('/api/whatsapp-config?medico_id=' + medico.id, { method: 'DELETE' })
     setConfig(null); setMsg({ tipo: 'ok', texto: 'WhatsApp desconectado.' })
@@ -55,8 +58,8 @@ export default function Configuracoes() {
     <div style={{ display: 'flex', height: '100vh', background: tokens.bg.hover, overflow: 'hidden' }}>
       <main style={{ flex: 1, overflow: 'auto', padding: 32 }}>
         <div style={{ maxWidth: 680 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: tokens.text.primary, margin: '0 0 6px', letterSpacing: '-0.3px' }}>Configuracoes</h1>
-          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 32px' }}>Gerencie as integracoes da sua clinica</p>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: tokens.text.primary, margin: '0 0 6px', letterSpacing: '-0.3px' }}>Configurações</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 32px' }}>Gerencie as integrações da sua clínica</p>
 
           {/* Status atual */}
           {config && (

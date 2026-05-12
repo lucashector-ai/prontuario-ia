@@ -324,7 +324,7 @@ export function Topbar() {
                 boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
               }}>
                 <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: TEXT_DEFAULT }}>Notificacoes</p>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: TEXT_DEFAULT }}>Notificações</p>
                   {notifs.length > 0 && (
                     <button
                       onClick={async () => {
