@@ -137,11 +137,23 @@ export function SetupChecklist() {
   return (
     <>
       {/* FAB no canto inferior direito */}
+      <style>{`
+        .setup-fab {
+          bottom: 24px;
+        }
+        @media (max-width: 768px) {
+          .setup-fab {
+            bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+            right: 16px !important;
+          }
+        }
+      `}</style>
       <button
         onClick={() => setAberto(true)}
+        className="setup-fab"
         style={{
           position: 'fixed' as const,
-          bottom: 24, right: 24, zIndex: 90,
+          right: 24, zIndex: 90,
           display: 'flex', alignItems: 'center', gap: 10,
           padding: tudoPronto ? '12px 16px' : '12px 18px 12px 14px',
           borderRadius: 999, border: 'none',

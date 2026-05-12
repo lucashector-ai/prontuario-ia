@@ -333,7 +333,7 @@ export default function PacienteDetalhe() {
                 </div>
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-                    {[{l:'Consultas',v:String(consultas.length),c:tokens.status.infoStrong},{l:'Agendamentos',v:String(agendamentos.filter(a=>a.status!=='cancelado').length),c:tokens.brand.primary},{l:'Proximo',v:prox?fmt(prox.data_hora):'Nao agendado',c:tokens.appointment.retorno.dot}].map(m=>(
+                    {[{l:'Consultas',v:String(consultas.length),c:tokens.status.infoStrong},{l:'Agendamentos',v:String(agendamentos.filter(a=>a.status!=='cancelado').length),c:tokens.brand.primary},{l:'Próximo',v:prox?fmt(prox.data_hora):'Não agendado',c:tokens.appointment.retorno.dot}].map(m=>(
                       <div key={m.l} style={{background:'white',borderRadius:16,padding:'18px 20px'}}>
                         <p style={{fontSize:22,fontWeight:800,color:m.c,margin:'0 0 4px'}}>{m.v}</p>
                         <p style={{fontSize:12,color:tokens.text.tertiary,margin:0}}>{m.l}</p>
