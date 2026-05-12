@@ -6,7 +6,8 @@ import { tokens } from '@/lib/design-tokens'
 
 export default function HomePage() {
   const router = useRouter()
-  const [verificado, setVerificado] = useState(false)
+  const [logado, setLogado] = useState(false)
+  const [destinoLogado, setDestinoLogado] = useState<'/dashboard' | '/onboarding'>('/dashboard')
   const [periodo, setPeriodo] = useState<'mensal' | 'anual'>('anual')
 
   useEffect(() => {
@@ -14,33 +15,22 @@ export default function HomePage() {
       const rawAdmin = localStorage.getItem('clinica_admin')
       if (rawAdmin) {
         const admin = JSON.parse(rawAdmin)
-        if (!admin.onboarding_concluido) router.replace('/onboarding')
-        else router.replace('/dashboard')
+        setLogado(true)
+        setDestinoLogado(admin.onboarding_concluido ? '/dashboard' : '/onboarding')
         return
       }
       const rawMedico = localStorage.getItem('medico')
       if (rawMedico) {
         const medico = JSON.parse(rawMedico)
-        if (!medico.onboarding_concluido) router.replace('/onboarding')
-        else router.replace('/dashboard')
-        return
+        setLogado(true)
+        setDestinoLogado(medico.onboarding_concluido ? '/dashboard' : '/onboarding')
       }
-      setVerificado(true)
     } catch {
-      setVerificado(true)
+      // sem sessão, mostra landing pública
     }
-  }, [router])
+  }, [])
 
-  if (!verificado) {
-    return (
-      <div style={{ minHeight: '100vh', background: tokens.bg.hover, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: `2px solid ${tokens.brand.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{"@keyframes spin { to { transform: rotate(360deg) } }"}</style>
-      </div>
-    )
-  }
-
-  return <Landing periodo={periodo} setPeriodo={setPeriodo} router={router} />
+  return <Landing periodo={periodo} setPeriodo={setPeriodo} router={router} logado={logado} destinoLogado={destinoLogado} />
 }
 
 function Landing({ periodo, setPeriodo, router, logado, destinoLogado }: any) {
