@@ -28,25 +28,33 @@ Versão premium da plataforma, construída em sprints sequenciais no mesmo repos
 
 ---
 
-## Sprint 2 — Portal do Paciente Premium ⏳
+## Sprint 2 — Portal do Paciente Premium ✅
 
-Schema (sem prefixo — merge final):
-- [ ] `pacientes_portal` (auth via magic link)
-- [ ] `portal_documentos`
-- [ ] `portal_chat_mensagens`
-- [ ] `portal_protocolos`
+Schema (sem prefixo — merge final): migration em [supabase/migrations/001_portal_paciente.sql](supabase/migrations/001_portal_paciente.sql)
+- [x] `pacientes_portal` (auth via magic link)
+- [x] `portal_documentos`
+- [x] `portal_chat_mensagens` (+ adicionado em `supabase_realtime` publication)
+- [x] `portal_protocolos`
 
 Páginas (rota `/portal/*`):
-- [x] `/portal` — dashboard placeholder (Sprint 1)
-- [ ] `/portal/login` — magic link
-- [ ] `/portal/timeline` — jornada Strava-style
-- [ ] `/portal/consultas` — lista + detalhe legível
-- [ ] `/portal/exames` — lista + IA explicando em linguagem leiga
-- [ ] `/portal/receitas` — reenvio Memed/WhatsApp
-- [ ] `/portal/pagamentos` — fatura + Pix on-demand
-- [ ] `/portal/protocolos` — progresso visual
-- [ ] `/portal/chat` — Supabase Realtime
-- [ ] `/portal/documentos` — PDFs
+- [x] `/portal` — dashboard com próxima consulta hero + cards de resumo + próximos passos
+- [x] `/portal/login` — magic link via Supabase (token 6 dígitos)
+- [x] `/portal/timeline` — feed cronológico com timeline rail visual
+- [x] `/portal/consultas` + `/portal/consultas/[id]` — lista + detalhe seccionado
+- [x] `/portal/exames` + `/portal/exames/[id]` — lista + detalhe com "Explicar pra mim" via Anthropic
+- [x] `/portal/receitas` — lista + botões de reenvio (TODO: Memed/WhatsApp wire)
+- [x] `/portal/pagamentos` — UI Pix em modal (TODO: gateway de cobrança real)
+- [x] `/portal/protocolos` — progresso visual com gradient bar
+- [x] `/portal/chat` — bubbles + Supabase Realtime + optimistic send
+- [x] `/portal/documentos` — lista filtrável por tipo
+
+Infra:
+- [x] `lib/portal/session.ts` — magic-link client + `usePortalSession`
+- [x] `lib/portal/queries.ts` — queries defensivas (degradam pra empty)
+- [x] `lib/portal/format.ts` — formatadores BR
+- [x] API routes: `/api/portal/login`, `/api/portal/verify`, `/api/portal/explicar-exame`
+- [x] `PortalGate` — redirect pra `/portal/login` sem sessão
+- [x] `PortalShell` atualizado: bottom nav (4 items + "Mais" abre sheet com restante)
 
 ---
 
