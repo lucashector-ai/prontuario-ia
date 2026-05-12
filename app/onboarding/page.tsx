@@ -9,8 +9,9 @@ type TipoConta = 'clinica' | 'medico'
 
 type Passo =
   | { kind: 'welcome' }
-  | { kind: 'medico-form' }
-  | { kind: 'clinica-form' }
+  | { kind: 'admin-form' }      // só pra admin: coleta nome
+  | { kind: 'medico-form' }     // só pra médico solo: nome + CRM + especialidade
+  | { kind: 'clinica-form' }    // só pra admin: dados da clínica
   | { kind: 'feature'; icon: 'mic' | 'memed' | 'sofia'; eyebrow: string; titulo: string; descricao: string; bullets: string[] }
   | { kind: 'done' }
 
@@ -22,10 +23,10 @@ export default function OnboardingPage() {
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
 
-  // Dados do formulário do médico
+  // Forms separados por tipo
+  const [formAdmin, setFormAdmin] = useState({ nome: '' })
   const [formMedico, setFormMedico] = useState({ nome: '', crm: '', especialidade: '' })
-  // Dados do formulário da clínica
-  const [formClinica, setFormClinica] = useState({ nome_fantasia: '', telefone: '', endereco: '' })
+  const [formClinica, setFormClinica] = useState({ nome: '', telefone: '', endereco: '' })
 
   useEffect(() => {
     const ca = localStorage.getItem('clinica_admin')
@@ -46,24 +47,28 @@ export default function OnboardingPage() {
 
     setUsuario(dados)
     setTipo(tp)
-    // Pré-popula formulário se o usuário já tem alguns dados
+    setFormAdmin({ nome: dados.nome || '' })
     setFormMedico({
       nome: dados.nome || '',
       crm: dados.crm || '',
       especialidade: dados.especialidade || '',
     })
     setFormClinica({
-      nome_fantasia: dados.nome_fantasia || dados.clinica_nome || '',
-      telefone: dados.telefone || '',
-      endereco: dados.endereco || '',
+      nome: '',
+      telefone: '',
+      endereco: '',
     })
+    // Pré-popula dados da clínica se o admin tiver clinica_id
+    if (tp === 'clinica' && dados.clinica_id) {
+      supabase.from('clinicas').select('nome, telefone, endereco').eq('id', dados.clinica_id).single()
+        .then(({ data }) => {
+          if (data) setFormClinica({ nome: data.nome || '', telefone: data.telefone || '', endereco: data.endereco || '' })
+        })
+    }
   }, [router])
 
-  // Monta os passos dinamicamente conforme tipo
-  const passos: Passo[] = !tipo ? [] : [
-    { kind: 'welcome' },
-    { kind: 'medico-form' },
-    ...(tipo === 'clinica' ? [{ kind: 'clinica-form' } as Passo] : []),
+  // Monta passos conforme tipo
+  const featuresPassos: Passo[] = [
     {
       kind: 'feature',
       icon: 'mic',
@@ -88,17 +93,52 @@ export default function OnboardingPage() {
       descricao: 'A Sofia agenda consultas, confirma horários, tira dúvidas e cuida do paciente pelo WhatsApp — automaticamente, no tom da sua clínica.',
       bullets: ['Agendamento automático', 'Confirmação 48h antes', 'Reduz no-show em até 40%'],
     },
+  ]
+
+  const passos: Passo[] = !tipo ? [] : tipo === 'clinica' ? [
+    { kind: 'welcome' },
+    { kind: 'admin-form' },
+    { kind: 'clinica-form' },
+    ...featuresPassos,
+    { kind: 'done' },
+  ] : [
+    { kind: 'welcome' },
+    { kind: 'medico-form' },
+    ...featuresPassos,
     { kind: 'done' },
   ]
 
   const passo = passos[passoIdx]
   const total = passos.length
   const progresso = total > 0 ? ((passoIdx + 1) / total) * 100 : 0
-  // Sabe se o passo atual coleta dado obrigatório (não dá pra pular)
-  const isPassoObrigatorio = passo?.kind === 'medico-form' || passo?.kind === 'clinica-form'
+  const isPassoObrigatorio = passo?.kind === 'admin-form' || passo?.kind === 'medico-form' || passo?.kind === 'clinica-form'
+
+  async function salvarAdmin(): Promise<boolean> {
+    if (!usuario || tipo !== 'clinica') return false
+    if (!formAdmin.nome.trim()) {
+      setErro('Preencha seu nome pra continuar.')
+      return false
+    }
+    setSalvando(true); setErro('')
+    try {
+      const updates = { nome: formAdmin.nome.trim() }
+      const { error } = await supabase.from('clinica_admins').update(updates).eq('id', usuario.id)
+      if (error) throw error
+
+      const novo = { ...usuario, ...updates }
+      setUsuario(novo)
+      localStorage.setItem('clinica_admin', JSON.stringify(novo))
+      return true
+    } catch (e: any) {
+      setErro(e.message || 'Erro ao salvar')
+      return false
+    } finally {
+      setSalvando(false)
+    }
+  }
 
   async function salvarMedico(): Promise<boolean> {
-    if (!usuario || !tipo) return false
+    if (!usuario || tipo !== 'medico') return false
     if (!formMedico.nome.trim() || !formMedico.crm.trim()) {
       setErro('Preencha nome e CRM pra continuar.')
       return false
@@ -110,13 +150,12 @@ export default function OnboardingPage() {
         crm: formMedico.crm.trim(),
         especialidade: formMedico.especialidade.trim() || null,
       }
-      const tabela = tipo === 'medico' ? 'medicos' : 'clinica_admins'
-      const { error } = await supabase.from(tabela).update(updates).eq('id', usuario.id)
+      const { error } = await supabase.from('medicos').update(updates).eq('id', usuario.id)
       if (error) throw error
 
       const novo = { ...usuario, ...updates }
       setUsuario(novo)
-      localStorage.setItem(tipo === 'medico' ? 'medico' : 'clinica_admin', JSON.stringify(novo))
+      localStorage.setItem('medico', JSON.stringify(novo))
       return true
     } catch (e: any) {
       setErro(e.message || 'Erro ao salvar')
@@ -128,25 +167,23 @@ export default function OnboardingPage() {
 
   async function salvarClinica(): Promise<boolean> {
     if (!usuario || tipo !== 'clinica') return false
-    if (!formClinica.nome_fantasia.trim()) {
+    if (!formClinica.nome.trim()) {
       setErro('O nome da clínica é obrigatório.')
+      return false
+    }
+    if (!usuario.clinica_id) {
+      setErro('Conta sem clínica vinculada. Contate o suporte.')
       return false
     }
     setSalvando(true); setErro('')
     try {
-      // Atualiza na tabela clinicas usando clinica_id do admin
       const updates = {
-        nome_fantasia: formClinica.nome_fantasia.trim(),
+        nome: formClinica.nome.trim(),
         telefone: formClinica.telefone.trim() || null,
         endereco: formClinica.endereco.trim() || null,
       }
-      if (usuario.clinica_id) {
-        const { error } = await supabase.from('clinicas').update(updates).eq('id', usuario.clinica_id)
-        if (error) throw error
-      }
-      const novo = { ...usuario, ...updates }
-      setUsuario(novo)
-      localStorage.setItem('clinica_admin', JSON.stringify(novo))
+      const { error } = await supabase.from('clinicas').update(updates).eq('id', usuario.clinica_id)
+      if (error) throw error
       return true
     } catch (e: any) {
       setErro(e.message || 'Erro ao salvar')
@@ -172,6 +209,10 @@ export default function OnboardingPage() {
 
   async function avancar() {
     setErro('')
+    if (passo?.kind === 'admin-form') {
+      const ok = await salvarAdmin()
+      if (!ok) return
+    }
     if (passo?.kind === 'medico-form') {
       const ok = await salvarMedico()
       if (!ok) return
@@ -189,19 +230,18 @@ export default function OnboardingPage() {
     if (passoIdx > 0) setPassoIdx(passoIdx - 1)
   }
 
-  // "Pular tudo" — só pode se já passou pelos forms obrigatórios
-  async function pularTudo() {
-    // Se ainda não chegou nos formulários obrigatórios, força ir até eles
-    const idxFormMedico = passos.findIndex(p => p.kind === 'medico-form')
-    const idxFormClinica = passos.findIndex(p => p.kind === 'clinica-form')
-    const maxFormIdx = Math.max(idxFormMedico, idxFormClinica)
-    if (passoIdx < maxFormIdx) {
-      // Pula direto pro próximo form obrigatório
-      const proxFormIdx = passos.findIndex((p, i) => i > passoIdx && (p.kind === 'medico-form' || p.kind === 'clinica-form'))
-      if (proxFormIdx >= 0) setPassoIdx(proxFormIdx)
+  // "Pular tudo" — só funciona após preencher os forms obrigatórios
+  function pularTudo() {
+    const maxObrigatorioIdx = passos.reduce((max, p, i) => {
+      if (p.kind === 'admin-form' || p.kind === 'medico-form' || p.kind === 'clinica-form') return Math.max(max, i)
+      return max
+    }, -1)
+    if (passoIdx < maxObrigatorioIdx) {
+      // Avança pro próximo form obrigatório, não conclui ainda
+      const proxObrig = passos.findIndex((p, i) => i > passoIdx && (p.kind === 'admin-form' || p.kind === 'medico-form' || p.kind === 'clinica-form'))
+      if (proxObrig >= 0) setPassoIdx(proxObrig)
       return
     }
-    // Se já passou pelos forms, conclui direto
     concluir()
   }
 
@@ -246,7 +286,6 @@ export default function OnboardingPage() {
         }
       `}</style>
 
-      {/* COLUNA ESQUERDA — Hero */}
       <aside className="ob-left" style={{
         width: '42%',
         background: `linear-gradient(160deg, ${tokens.brand.primary} 0%, ${tokens.accent.violet} 55%, ${tokens.brand.primaryDark || tokens.brand.primary} 100%)`,
@@ -257,7 +296,6 @@ export default function OnboardingPage() {
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* Decoração */}
         <div style={{ position: 'absolute', top: -200, right: -200, width: 500, height: 500, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', filter: 'blur(40px)' }}/>
         <div style={{ position: 'absolute', bottom: -150, left: -100, width: 380, height: 380, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', filter: 'blur(30px)' }}/>
 
@@ -268,10 +306,10 @@ export default function OnboardingPage() {
         <div style={{ position: 'relative', zIndex: 1 }}>
           <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.8, margin: '0 0 18px' }}>Configuração inicial</p>
           <h2 style={{ fontSize: 38, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 18px' }}>
-            Vamos configurar sua clínica em poucos minutos.
+            Vamos configurar sua {tipo === 'clinica' ? 'clínica' : 'conta'} em poucos minutos.
           </h2>
           <p style={{ fontSize: 16, lineHeight: 1.55, opacity: 0.85, maxWidth: 360, margin: 0 }}>
-            Em 5 passos você conhece o essencial pra começar a atender com IA, prescrever via Memed e atender pacientes no WhatsApp.
+            Você conhece o essencial pra começar a atender com IA, prescrever via Memed e atender pacientes no WhatsApp.
           </p>
         </div>
 
@@ -280,7 +318,6 @@ export default function OnboardingPage() {
         </div>
       </aside>
 
-      {/* COLUNA DIREITA — Conteúdo */}
       <main className="ob-right" style={{
         flex: 1,
         display: 'flex',
@@ -291,7 +328,6 @@ export default function OnboardingPage() {
         width: '100%',
         boxSizing: 'border-box',
       }}>
-        {/* Topbar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 48 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {passoIdx > 0 && (
@@ -311,11 +347,9 @@ export default function OnboardingPage() {
           )}
         </div>
 
-        {/* Conteúdo do passo */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="ob-fadein" style={{ width: '100%', maxWidth: 480 }}>
 
-            {/* WELCOME */}
             {passo.kind === 'welcome' && (
               <div>
                 <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Bem-vindo, {usuario?.nome?.split(' ')[0] || 'doutor(a)'}</p>
@@ -323,12 +357,30 @@ export default function OnboardingPage() {
                   Tudo pronto pra começar.
                 </h1>
                 <p style={{ fontSize: 16, color: tokens.text.muted, lineHeight: 1.6, margin: '0 0 36px' }}>
-                  Vamos configurar 2 coisas essenciais e te mostrar 3 funcionalidades que vão mudar como sua clínica atende. Leva 3 minutos.
+                  {tipo === 'clinica'
+                    ? 'Vamos configurar 2 coisas essenciais e te mostrar 3 funcionalidades que vão mudar como sua clínica atende. Leva 3 minutos.'
+                    : 'Vamos configurar seu perfil e te mostrar 3 funcionalidades que vão mudar como você atende. Leva 2 minutos.'
+                  }
                 </p>
               </div>
             )}
 
-            {/* MÉDICO FORM */}
+            {passo.kind === 'admin-form' && (
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Sobre você</p>
+                <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 12px', color: tokens.neutral[900] }}>
+                  Como devemos te chamar?
+                </h1>
+                <p style={{ fontSize: 15, color: tokens.text.muted, lineHeight: 1.55, margin: '0 0 28px' }}>
+                  Seu nome aparece como administrador da clínica em logs e comunicações internas.
+                </p>
+                <div>
+                  <label className="ob-label">Nome completo</label>
+                  <input className="ob-input" value={formAdmin.nome} onChange={e => setFormAdmin({ nome: e.target.value })} placeholder="Ex: Maria Silva" />
+                </div>
+              </div>
+            )}
+
             {passo.kind === 'medico-form' && (
               <div>
                 <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Sobre você</p>
@@ -357,7 +409,6 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* CLÍNICA FORM */}
             {passo.kind === 'clinica-form' && (
               <div>
                 <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Sua clínica</p>
@@ -370,7 +421,7 @@ export default function OnboardingPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
                     <label className="ob-label">Nome da clínica</label>
-                    <input className="ob-input" value={formClinica.nome_fantasia} onChange={e => setFormClinica({ ...formClinica, nome_fantasia: e.target.value })} placeholder="Ex: Clínica São Paulo" />
+                    <input className="ob-input" value={formClinica.nome} onChange={e => setFormClinica({ ...formClinica, nome: e.target.value })} placeholder="Ex: Clínica São Paulo" />
                   </div>
                   <div>
                     <label className="ob-label">Telefone</label>
@@ -384,7 +435,6 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* FEATURE */}
             {passo.kind === 'feature' && (
               <div>
                 <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>{passo.eyebrow}</p>
@@ -407,7 +457,6 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* DONE */}
             {passo.kind === 'done' && (
               <div style={{ textAlign: 'center' as const }}>
                 <div style={{ width: 80, height: 80, borderRadius: 24, background: tokens.brand.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
@@ -417,7 +466,9 @@ export default function OnboardingPage() {
                   Tudo pronto.
                 </h1>
                 <p style={{ fontSize: 16, color: tokens.text.muted, lineHeight: 1.6, margin: '0 0 8px', maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
-                  Sua clínica está configurada. {tipo === 'clinica' ? 'No painel administrativo você cadastra sua equipe e configura a Sofia.' : 'Comece sua primeira consulta com IA quando quiser.'}
+                  {tipo === 'clinica'
+                    ? 'No painel administrativo você cadastra sua equipe e configura a Sofia no WhatsApp.'
+                    : 'Comece sua primeira consulta com IA quando quiser.'}
                 </p>
               </div>
             )}
@@ -430,7 +481,6 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        {/* Footer com botão de avançar */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 32 }}>
           <button
             onClick={avancar}
