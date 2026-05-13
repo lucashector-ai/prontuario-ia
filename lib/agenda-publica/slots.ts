@@ -9,6 +9,7 @@ export type AgendaConfig = {
   horario_fim: string
   intervalo_almoco: [string, string] | null
   modo_aprovacao: 'automatico' | 'manual'
+  formulario_template_id?: string | null
 }
 
 export const CONFIG_DEFAULT: AgendaConfig = {
@@ -20,6 +21,7 @@ export const CONFIG_DEFAULT: AgendaConfig = {
   horario_fim: '18:00',
   intervalo_almoco: ['12:00', '13:00'],
   modo_aprovacao: 'automatico',
+  formulario_template_id: null,
 }
 
 export function parseConfig(raw: any): AgendaConfig {
@@ -32,6 +34,7 @@ export function parseConfig(raw: any): AgendaConfig {
     horario_inicio: raw.horario_inicio || CONFIG_DEFAULT.horario_inicio,
     horario_fim: raw.horario_fim || CONFIG_DEFAULT.horario_fim,
     intervalo_almoco: Array.isArray(raw.intervalo_almoco) ? raw.intervalo_almoco : CONFIG_DEFAULT.intervalo_almoco,
+    formulario_template_id: raw.formulario_template_id || null,
     modo_aprovacao: raw.modo_aprovacao === 'manual' ? 'manual' : 'automatico',
   }
 }

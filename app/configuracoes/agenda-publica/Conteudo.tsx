@@ -423,6 +423,53 @@ export default function Conteudo(props: any) {
         </div>
       </Card>
 
+      {/* Card 3.5: Formulário automático */}
+      <Card>
+        <SectionTitle 
+          icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>}
+          title="Formulário pré-consulta" 
+        />
+        <div style={{ marginTop: 16 }}>
+          <p style={{ fontSize: 14, color: tokens.text.secondary, margin: '0 0 16px', lineHeight: 1.5 }}>
+            Envie automaticamente um formulário pro paciente após ele agendar pela agenda pública. A IA gera um resumo das respostas pra você ler antes da consulta.
+          </p>
+          {(!props.templates || props.templates.length === 0) ? (
+            <div style={{
+              padding: 14,
+              background: tokens.bg.cardSubtle,
+              borderRadius: 10,
+              fontSize: 13,
+              color: tokens.text.secondary,
+              lineHeight: 1.5,
+            }}>
+              Você ainda não criou nenhum formulário.<br/>
+              Vai em <strong>Formulários</strong> no menu e crie o primeiro.
+            </div>
+          ) : (
+            <select
+              value={config.formulario_template_id || ''}
+              onChange={(e) => setConfig({ ...config, formulario_template_id: e.target.value || null })}
+              style={{
+                width: '100%',
+                padding: '11px 14px',
+                fontSize: 14,
+                color: tokens.text.primary,
+                border: '1px solid ' + tokens.border.default,
+                borderRadius: 10,
+                background: '#fff',
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">Não enviar formulário automaticamente</option>
+              {(props.templates || []).map((t: any) => (
+                <option key={t.id} value={t.id}>{t.nome}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      </Card>
+
       {/* Card 4: Solicitações pendentes (só se manual) */}
       {config.modo_aprovacao === 'manual' && (
         <Card>

@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 import { useMedicoLogado } from '@/lib/agenda-publica/use-medico'
 import { CONFIG_DEFAULT, parseConfig, type AgendaConfig } from '@/lib/agenda-publica/slots'
 import { normalizarSlug, validarFormatoSlug } from '@/lib/agenda-publica/slug'
+import { listarTemplatesClinica } from '@/lib/formularios/templates'
+import type { Template } from '@/lib/formularios/types'
 import Conteudo from './Conteudo'
 
 type SolicitacaoPendente = {
@@ -47,6 +49,7 @@ export default function AgendaPublicaPage() {
   const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(false)
   
   const [copiado, setCopiado] = useState(false)
+  const [templates, setTemplates] = useState<Template[]>([])
 
   useEffect(() => {
     if (!medicoAtivo) return
@@ -60,6 +63,9 @@ export default function AgendaPublicaPage() {
     setErroSlug(null)
     setSugestaoSlug(null)
     carregarSolicitacoes(medicoAtivo.id)
+    if (medicoAtivo.clinica_id) {
+      listarTemplatesClinica(medicoAtivo.clinica_id).then(setTemplates)
+    }
   }, [medicoAtivo?.id])
 
   async function carregarSolicitacoes(medicoId: string) {
@@ -298,6 +304,7 @@ export default function AgendaPublicaPage() {
         loadingSolicitacoes={loadingSolicitacoes}
         confirmarSolicitacao={confirmarSolicitacao}
         rejeitarSolicitacao={rejeitarSolicitacao}
+        templates={templates}
       />
     </div>
   )

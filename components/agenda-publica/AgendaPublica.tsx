@@ -66,6 +66,7 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
   const [primeiraConsulta, setPrimeiraConsulta] = useState(true)
   const [enviando, setEnviando] = useState(false)
   const [resultadoEnvio, setResultadoEnvio] = useState<'confirmado' | 'aguardando_confirmacao' | null>(null)
+  const [urlFormulario, setUrlFormulario] = useState<string | null>(null)
 
   useEffect(() => {
     async function carregar() {
@@ -171,6 +172,7 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
       const data = await res.json()
       if (data.sucesso) {
         setResultadoEnvio(data.status)
+        setUrlFormulario(data.urlFormulario || null)
         setMostrandoSucesso(true)
       } else {
         alert(data.erro || 'Erro ao agendar')
@@ -211,7 +213,7 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
 
   // SUCESSO - tela full overlay
   if (mostrandoSucesso && dataSelecionada && horarioSelecionado) {
-    return <TelaSucesso resultado={resultadoEnvio} data={dataSelecionada} horario={horarioSelecionado} medico={medico} clinica={clinica} />
+    return <TelaSucesso resultado={resultadoEnvio} urlFormulario={urlFormulario} data={dataSelecionada} horario={horarioSelecionado} medico={medico} clinica={clinica} />
   }
 
   const duracao = configMedico?.duracao_consulta_min || 30
@@ -499,7 +501,7 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
 }
 
 // ─── Tela de sucesso ───
-function TelaSucesso({ resultado, data, horario, medico, clinica }: any) {
+function TelaSucesso({ resultado, urlFormulario, data, horario, medico, clinica }: any) {
   const aguardando = resultado === 'aguardando_confirmacao'
   const dataObj = new Date(data + 'T12:00:00')
   const dataLabel = dataObj.getDate() + ' de ' + MESES_PT[dataObj.getMonth()] + ' às ' + horario
@@ -553,6 +555,45 @@ function TelaSucesso({ resultado, data, horario, medico, clinica }: any) {
           borderRadius: 12,
           textAlign: 'left',
         }}>
+          {urlFormulario && (
+            <div style={{
+              marginBottom: 16,
+              padding: 16,
+              background: tokens.brand.primaryLight,
+              borderRadius: 12,
+              borderLeft: '3px solid ' + tokens.brand.primary,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Último passo
+              </div>
+              <div style={{ fontSize: 14, color: tokens.text.primary, fontWeight: 500, marginBottom: 12, lineHeight: 1.5 }}>
+                Preencha esse formulário rápido pra agilizar sua consulta:
+              </div>
+              <a
+                href={urlFormulario}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '10px 16px',
+                  background: tokens.brand.primary,
+                  color: '#fff',
+                  borderRadius: 10,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}
+              >
+                Preencher formulário
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </div>
+          )}
           <Linha label="Profissional" valor={medico.nome} />
           {medico.especialidade && <Linha label="Especialidade" valor={medico.especialidade} />}
           {clinica && <Linha label="Clínica" valor={clinica.nome} />}

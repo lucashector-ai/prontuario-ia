@@ -7,6 +7,7 @@ import { listarTemplatesClinica, deletarTemplate } from '@/lib/formularios/templ
 import type { Template } from '@/lib/formularios/types'
 import { useToast } from '@/components/Toast'
 import ModalNovoTemplate from './ModalNovoTemplate'
+import ListaEnvios from './ListaEnvios'
 
 type Auth = {
   tipo: 'medico' | 'admin' | null
@@ -22,6 +23,7 @@ export default function FormulariosPage() {
   const [loadingTemplates, setLoadingTemplates] = useState(true)
   const [busca, setBusca] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
+  const [aba, setAba] = useState<'modelos' | 'envios'>('modelos')
 
   useEffect(() => {
     try {
@@ -122,6 +124,43 @@ export default function FormulariosPage() {
           </button>
         </div>
 
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid ' + tokens.border.subtle }}>
+          {[
+            { key: 'modelos', label: 'Meus formulários' },
+            { key: 'envios', label: 'Envios' },
+          ].map(t => {
+            const ativo = aba === t.key
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setAba(t.key as 'modelos' | 'envios')}
+                style={{
+                  padding: '12px 16px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: '2px solid ' + (ativo ? tokens.brand.primary : 'transparent'),
+                  color: ativo ? tokens.text.primary : tokens.text.secondary,
+                  fontSize: 14,
+                  fontWeight: ativo ? 600 : 500,
+                  cursor: 'pointer',
+                  marginBottom: -1,
+                  transition: 'color 0.12s',
+                }}
+              >
+                {t.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {aba === 'envios' && auth.clinicaId && (
+          <ListaEnvios clinicaId={auth.clinicaId} />
+        )}
+
+        {aba === 'modelos' && <>
+
         {/* Busca */}
         {templates.length > 0 && (
           <div style={{ marginBottom: 20 }}>
@@ -179,6 +218,7 @@ export default function FormulariosPage() {
             ))}
           </div>
         )}
+        </>}
       </div>
 
       {modalAberto && auth.clinicaId && (
