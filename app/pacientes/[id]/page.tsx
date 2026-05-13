@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ModalEnviarFormulario from '@/components/formularios/ModalEnviarFormulario'
 import { useRouter, useParams } from 'next/navigation'
 import { HipotesesCard } from '@/components/HipotesesCard'
 import { supabase } from '@/lib/supabase'
@@ -120,6 +121,7 @@ export default function PacienteDetalhe() {
   const [editForm, setEditForm] = useState<any>({})
   const [salvando, setSalvando] = useState(false)
   const [modalAg, setModalAg] = useState(false)
+  const [modalForm, setModalForm] = useState(false)
   const [agForm, setAgForm] = useState({data_hora:'',tipo:'consulta',motivo:'',observacoes:''})
   const [salvandoAg, setSalvandoAg] = useState(false)
   const [consultaAberta, setConsultaAberta] = useState<any>(null)
@@ -264,6 +266,7 @@ export default function PacienteDetalhe() {
             <div style={{display:'flex',gap:8}}>
               <BotaoMemed onClick={()=>setMemedAberto(true)} variant="primary" />
               <button onClick={()=>setModalAg(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,background:tokens.bg.hover,color:tokens.brand.primary,fontSize:13,fontWeight:600,cursor:'pointer'}}>Agendar</button>
+              <button onClick={()=>setModalForm(true)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,background:tokens.bg.hover,color:tokens.brand.primary,fontSize:13,fontWeight:600,cursor:'pointer'}}>Enviar formulário</button>
               <a href="/consulta" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:tokens.brand.primary,color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
             </div>
           </div>
@@ -827,6 +830,19 @@ export default function PacienteDetalhe() {
       )}
 
       {/* Modal/overlay Memed */}
+      {modalForm && paciente && medicoLogado && (
+        <ModalEnviarFormulario
+          clinicaId={medicoLogado.clinica_id}
+          medicoId={medicoLogado.id}
+          paciente={{
+            id: paciente.id,
+            nome: paciente.nome,
+            telefone: paciente.telefone,
+            email: paciente.email,
+          }}
+          onFechar={() => setModalForm(false)}
+        />
+      )}
       {memedAberto && medicoLogado && paciente && (
         <MemedPrescricao
           medicoId={medicoLogado.id}
