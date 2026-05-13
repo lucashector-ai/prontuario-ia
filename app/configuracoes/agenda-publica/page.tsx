@@ -1,9 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { Sidebar } from '@/components/Sidebar'
-import { Topbar } from '@/components/Topbar'
+import { useEffect, useState } from 'react'
 import { tokens } from '@/lib/design-tokens'
 import { supabase } from '@/lib/supabase'
 import { useMedicoLogado } from '@/lib/agenda-publica/use-medico'
@@ -23,76 +20,48 @@ type SolicitacaoPendente = {
   criada_em: string
 }
 
-const DIAS_SEMANA = [
-  { id: 0, label: 'Dom' },
-  { id: 1, label: 'Seg' },
-  { id: 2, label: 'Ter' },
-  { id: 3, label: 'Qua' },
-  { id: 4, label: 'Qui' },
-  { id: 5, label: 'Sex' },
-  { id: 6, label: 'Sáb' },
-]
-
-const DURACOES = [15, 20, 30, 45, 60, 90]
-const ANTECEDENCIAS_MIN = [
-  { valor: 1, label: '1 hora' },
-  { valor: 6, label: '6 horas' },
-  { valor: 12, label: '12 horas' },
-  { valor: 24, label: '24 horas' },
-  { valor: 48, label: '48 horas' },
-  { valor: 72, label: '72 horas' },
-]
-const ANTECEDENCIAS_MAX = [
-  { valor: 7, label: '7 dias' },
-  { valor: 15, label: '15 dias' },
-  { valor: 30, label: '30 dias' },
-  { valor: 60, label: '60 dias' },
-  { valor: 90, label: '90 dias' },
-  { valor: 180, label: '6 meses' },
-]
-
-const HORAS = Array.from({ length: 24 }, (_, h) => {
-  return [`${String(h).padStart(2, '0')}:00`, `${String(h).padStart(2, '0')}:30`]
-}).flat()
-
 export default function AgendaPublicaPage() {
-  const router = useRouter()
-  const { medico, setMedico, loading: loadingMedico } = useMedicoLogado()
+  const { 
+    tipo, 
+    medicoAtivo, 
+    medicosDisponiveis, 
+    trocarMedicoAtivo, 
+    atualizarMedicoAtivo, 
+    loading: loadingAuth 
+  } = useMedicoLogado()
   
-  // Estado da agenda
   const [ativa, setAtiva] = useState(false)
   const [slug, setSlug] = useState('')
   const [config, setConfig] = useState<AgendaConfig>(CONFIG_DEFAULT)
   const [usarAlmoco, setUsarAlmoco] = useState(true)
   
-  // Estado de UI
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
   
-  // Validação de slug
   const [validandoSlug, setValidandoSlug] = useState(false)
   const [statusSlug, setStatusSlug] = useState<'ok' | 'erro' | 'idle'>('idle')
   const [erroSlug, setErroSlug] = useState<string | null>(null)
   const [sugestaoSlug, setSugestaoSlug] = useState<string | null>(null)
   
-  // Solicitações pendentes
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoPendente[]>([])
   const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(false)
   
   const [copiado, setCopiado] = useState(false)
 
-  // Carrega dados iniciais do médico
   useEffect(() => {
-    if (!medico) return
-    setAtiva(medico.agenda_publica_ativa || false)
-    setSlug(medico.slug_publico || normalizarSlug(medico.nome || ''))
-    const cfg = parseConfig(medico.agenda_publica_config)
+    if (!medicoAtivo) return
+    setAtiva(medicoAtivo.agenda_publica_ativa || false)
+    setSlug(medicoAtivo.slug_publico || normalizarSlug(medicoAtivo.nome || ''))
+    const cfg = parseConfig(medicoAtivo.agenda_publica_config)
     setConfig(cfg)
     setUsarAlmoco(cfg.intervalo_almoco !== null)
-    carregarSolicitacoes(medico.id)
-  }, [medico])
+    setMensagem(null)
+    setStatusSlug('idle')
+    setErroSlug(null)
+    setSugestaoSlug(null)
+    carregarSolicitacoes(medicoAtivo.id)
+  }, [medicoAtivo?.id])
 
-  // Carrega solicitações pendentes
   async function carregarSolicitacoes(medicoId: string) {
     setLoadingSolicitacoes(true)
     try {
@@ -109,9 +78,8 @@ export default function AgendaPublicaPage() {
     }
   }
 
-  // Validação de slug em tempo real (debounce)
   useEffect(() => {
-    if (!medico || !slug || slug === medico.slug_publico) {
+    if (!medicoAtivo || !slug || slug === medicoAtivo.slug_publico) {
       setStatusSlug('idle')
       setErroSlug(null)
       setSugestaoSlug(null)
@@ -132,7 +100,7 @@ export default function AgendaPublicaPage() {
         const res = await fetch('/api/agenda-publica/check-slug', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slug, tipo: 'medico', id: medico.id }),
+          body: JSON.stringify({ slug, tipo: 'medico', id: medicoAtivo.id }),
         })
         const data = await res.json()
         if (data.disponivel) {
@@ -153,11 +121,10 @@ export default function AgendaPublicaPage() {
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [slug, medico])
+  }, [slug, medicoAtivo])
 
-  // Salvar configurações
   async function salvar() {
-    if (!medico) return
+    if (!medicoAtivo) return
     if (statusSlug === 'erro') {
       setMensagem({ tipo: 'erro', texto: 'Corrija o link público antes de salvar.' })
       return
@@ -181,14 +148,11 @@ export default function AgendaPublicaPage() {
       const { error } = await supabase
         .from('medicos')
         .update(updates)
-        .eq('id', medico.id)
+        .eq('id', medicoAtivo.id)
 
       if (error) throw error
 
-      const novoMedico = { ...medico, ...updates }
-      setMedico(novoMedico)
-      localStorage.setItem('medico', JSON.stringify(novoMedico))
-
+      atualizarMedicoAtivo(updates)
       setMensagem({ tipo: 'ok', texto: 'Configurações salvas com sucesso.' })
     } catch (e: any) {
       setMensagem({ tipo: 'erro', texto: e.message || 'Erro ao salvar' })
@@ -197,16 +161,15 @@ export default function AgendaPublicaPage() {
     }
   }
 
-  // Confirmar solicitação manualmente
   async function confirmarSolicitacao(s: SolicitacaoPendente) {
-    if (!medico) return
+    if (!medicoAtivo) return
     try {
       const observacoes = 'Agendado via link público. Paciente: ' + s.nome_paciente + ' · ' + s.telefone + (s.email ? ' · ' + s.email : '')
       
       const { data: agendamento } = await supabase
         .from('agendamentos')
         .insert({
-          medico_id: medico.id,
+          medico_id: medicoAtivo.id,
           data_hora: s.data_hora,
           tipo: 'consulta',
           status: 'agendado',
@@ -225,7 +188,7 @@ export default function AgendaPublicaPage() {
         })
         .eq('id', s.id)
 
-      carregarSolicitacoes(medico.id)
+      carregarSolicitacoes(medicoAtivo.id)
       setMensagem({ tipo: 'ok', texto: 'Consulta confirmada e adicionada à agenda.' })
     } catch (e: any) {
       setMensagem({ tipo: 'erro', texto: e.message || 'Erro ao confirmar' })
@@ -240,7 +203,7 @@ export default function AgendaPublicaPage() {
         .update({ status: 'rejeitado' })
         .eq('id', s.id)
       
-      if (medico) carregarSolicitacoes(medico.id)
+      if (medicoAtivo) carregarSolicitacoes(medicoAtivo.id)
       setMensagem({ tipo: 'ok', texto: 'Solicitação rejeitada.' })
     } catch (e: any) {
       setMensagem({ tipo: 'erro', texto: e.message || 'Erro ao rejeitar' })
@@ -268,51 +231,130 @@ export default function AgendaPublicaPage() {
     setConfig({ ...config, dias_semana: novoDias })
   }
 
-  if (loadingMedico || !medico) {
+  // Loading inicial
+  if (loadingAuth) {
     return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: `2px solid ${tokens.brand.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ padding: '64px 0', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, border: '2px solid ' + tokens.brand.primary, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
+      </div>
+    )
+  }
+
+  // Admin sem médicos
+  if (tipo === 'admin' && medicosDisponiveis.length === 0) {
+    return (
+      <div style={{ maxWidth: 640, margin: '64px auto', textAlign: 'center', padding: 32, background: '#fff', borderRadius: 16, border: '1px solid ' + tokens.border.default }}>
+        <h2 style={{ fontSize: 22, fontWeight: 600, color: tokens.text.primary, marginBottom: 8 }}>Nenhum médico cadastrado</h2>
+        <p style={{ fontSize: 14, color: tokens.text.secondary, lineHeight: 1.5 }}>
+          Cadastre médicos no Painel admin antes de configurar a agenda pública.
+        </p>
+      </div>
+    )
+  }
+
+  if (!medicoAtivo) {
+    return (
+      <div style={{ padding: '64px 0', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, border: '2px solid ' + tokens.brand.primary, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
       </div>
     )
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: tokens.bg.page, overflow: 'hidden' }}>
-      <Sidebar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' }}>
-        <Topbar />
-        <main style={{ flex: 1, overflow: 'auto', padding: '32px 32px 64px' }}>
-          <Conteudo
-            medico={medico}
-            ativa={ativa}
-            setAtiva={setAtiva}
-            slug={slug}
-            setSlug={setSlug}
-            config={config}
-            setConfig={setConfig}
-            usarAlmoco={usarAlmoco}
-            setUsarAlmoco={setUsarAlmoco}
-            salvar={salvar}
-            salvando={salvando}
-            mensagem={mensagem}
-            statusSlug={statusSlug}
-            validandoSlug={validandoSlug}
-            erroSlug={erroSlug}
-            sugestaoSlug={sugestaoSlug}
-            aplicarSugestao={aplicarSugestao}
-            copiado={copiado}
-            copiarLink={copiarLink}
-            toggleDiaSemana={toggleDiaSemana}
-            solicitacoes={solicitacoes}
-            loadingSolicitacoes={loadingSolicitacoes}
-            confirmarSolicitacao={confirmarSolicitacao}
-            rejeitarSolicitacao={rejeitarSolicitacao}
+    <div style={{ padding: '32px 32px 64px' }}>
+      {tipo === 'admin' && medicosDisponiveis.length > 0 && (
+        <div style={{ maxWidth: 880, margin: '0 auto 24px' }}>
+          <SeletorMedico 
+            medicos={medicosDisponiveis} 
+            medicoAtivoId={medicoAtivo.id}
+            onChange={trocarMedicoAtivo}
           />
-        </main>
-      </div>
+        </div>
+      )}
+      <Conteudo
+        medico={medicoAtivo}
+        ativa={ativa}
+        setAtiva={setAtiva}
+        slug={slug}
+        setSlug={setSlug}
+        config={config}
+        setConfig={setConfig}
+        usarAlmoco={usarAlmoco}
+        setUsarAlmoco={setUsarAlmoco}
+        salvar={salvar}
+        salvando={salvando}
+        mensagem={mensagem}
+        statusSlug={statusSlug}
+        validandoSlug={validandoSlug}
+        erroSlug={erroSlug}
+        sugestaoSlug={sugestaoSlug}
+        aplicarSugestao={aplicarSugestao}
+        copiado={copiado}
+        copiarLink={copiarLink}
+        toggleDiaSemana={toggleDiaSemana}
+        solicitacoes={solicitacoes}
+        loadingSolicitacoes={loadingSolicitacoes}
+        confirmarSolicitacao={confirmarSolicitacao}
+        rejeitarSolicitacao={rejeitarSolicitacao}
+      />
     </div>
   )
 }
 
-
+function SeletorMedico({ medicos, medicoAtivoId, onChange }: any) {
+  return (
+    <div style={{
+      background: '#fff',
+      border: '1px solid ' + tokens.border.default,
+      borderRadius: 12,
+      padding: 16,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+    }}>
+      <div style={{
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        background: tokens.brand.primaryLight,
+        color: tokens.brand.primary,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+          Configurando agenda de
+        </div>
+        <select
+          value={medicoAtivoId}
+          onChange={(e) => onChange(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '4px 0',
+            fontSize: 15,
+            fontWeight: 600,
+            color: tokens.text.primary,
+            border: 'none',
+            background: 'transparent',
+            outline: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          {medicos.map((m: any) => (
+            <option key={m.id} value={m.id}>
+              {m.nome}{m.especialidade ? ' · ' + m.especialidade : ''}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )
+}
