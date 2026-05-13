@@ -24,10 +24,10 @@ type Clinica = {
   logo_url: string | null
 }
 
-type Etapa = 'calendario' | 'horario' | 'dados' | 'sucesso'
-
 const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+const MESES_PT_CURTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 const DIAS_SEMANA_CURTO = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+const DIAS_SEMANA_FULL = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
 function formatarTelefone(v: string) {
   const num = v.replace(/\D/g, '').slice(0, 11)
@@ -43,7 +43,6 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
   const [medico, setMedico] = useState<Medico | null>(null)
   const [clinica, setClinica] = useState<Clinica | null>(null)
 
-  // Calendário
   const [hojeData] = useState(new Date())
   const [mesAtual, setMesAtual] = useState(() => {
     const d = new Date()
@@ -53,14 +52,13 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
   const [configMedico, setConfigMedico] = useState<any>(null)
   const [carregandoMes, setCarregandoMes] = useState(false)
 
-  // Seleção
   const [dataSelecionada, setDataSelecionada] = useState<string | null>(null)
   const [slots, setSlots] = useState<string[]>([])
   const [carregandoSlots, setCarregandoSlots] = useState(false)
   const [horarioSelecionado, setHorarioSelecionado] = useState<string | null>(null)
-  const [etapa, setEtapa] = useState<Etapa>('calendario')
+  const [mostrandoForm, setMostrandoForm] = useState(false)
+  const [mostrandoSucesso, setMostrandoSucesso] = useState(false)
 
-  // Form
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
   const [email, setEmail] = useState('')
@@ -69,7 +67,6 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
   const [enviando, setEnviando] = useState(false)
   const [resultadoEnvio, setResultadoEnvio] = useState<'confirmado' | 'aguardando_confirmacao' | null>(null)
 
-  // 1) Carrega dados do médico/clínica
   useEffect(() => {
     async function carregar() {
       setLoading(true)
@@ -121,7 +118,6 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
     carregar()
   }, [medicoSlug, clinicaSlug])
 
-  // 2) Carrega disponibilidade do mês
   useEffect(() => {
     if (!medico) return
     async function carregar() {
@@ -138,7 +134,6 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
     carregar()
   }, [medico, mesAtual, medicoSlug])
 
-  // 3) Carrega slots da data selecionada
   useEffect(() => {
     if (!dataSelecionada || !medico) return
     async function carregar() {
@@ -176,7 +171,7 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
       const data = await res.json()
       if (data.sucesso) {
         setResultadoEnvio(data.status)
-        setEtapa('sucesso')
+        setMostrandoSucesso(true)
       } else {
         alert(data.erro || 'Erro ao agendar')
       }
@@ -189,8 +184,8 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
 
   if (loading) {
     return (
-      <div style={containerEstado}>
-        <div style={{ width: 32, height: 32, border: `2.5px solid ${tokens.brand.primaryLight}`, borderTopColor: tokens.brand.primary, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ minHeight: '100vh', background: tokens.bg.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, border: '2.5px solid ' + tokens.brand.primaryLight, borderTopColor: tokens.brand.primary, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
       </div>
     )
@@ -198,8 +193,8 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
 
   if (erro || !medico) {
     return (
-      <div style={containerEstado}>
-        <div style={{ maxWidth: 420, textAlign: 'center', padding: 32 }}>
+      <div style={{ minHeight: '100vh', background: tokens.bg.page, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ maxWidth: 420, textAlign: 'center' }}>
           <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
@@ -214,384 +209,312 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
     )
   }
 
-  return (
-    <div style={{ minHeight: '100vh', background: tokens.bg.page, paddingBottom: 48 }}>
-      <Header medico={medico} clinica={clinica} />
-
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px' }}>
-        {etapa === 'calendario' && (
-          <SecaoCalendario
-            mesAtual={mesAtual}
-            setMesAtual={setMesAtual}
-            disponibilidade={disponibilidade}
-            carregando={carregandoMes}
-            hojeData={hojeData}
-            onSelecionarData={(d: string) => {
-              setDataSelecionada(d)
-              setEtapa('horario')
-            }}
-          />
-        )}
-
-        {etapa === 'horario' && dataSelecionada && (
-          <SecaoHorario
-            data={dataSelecionada}
-            slots={slots}
-            carregando={carregandoSlots}
-            duracao={configMedico?.duracao_consulta_min || 30}
-            onSelecionarHorario={(h: string) => {
-              setHorarioSelecionado(h)
-              setEtapa('dados')
-            }}
-            onVoltar={() => {
-              setDataSelecionada(null)
-              setEtapa('calendario')
-            }}
-          />
-        )}
-
-        {etapa === 'dados' && dataSelecionada && horarioSelecionado && (
-          <SecaoDados
-            data={dataSelecionada}
-            horario={horarioSelecionado}
-            nome={nome}
-            setNome={setNome}
-            telefone={telefone}
-            setTelefone={(v: string) => setTelefone(formatarTelefone(v))}
-            email={email}
-            setEmail={setEmail}
-            motivo={motivo}
-            setMotivo={setMotivo}
-            primeiraConsulta={primeiraConsulta}
-            setPrimeiraConsulta={setPrimeiraConsulta}
-            enviando={enviando}
-            onConfirmar={enviarSolicitacao}
-            onVoltar={() => setEtapa('horario')}
-          />
-        )}
-
-        {etapa === 'sucesso' && dataSelecionada && horarioSelecionado && (
-          <SecaoSucesso
-            resultado={resultadoEnvio}
-            data={dataSelecionada}
-            horario={horarioSelecionado}
-            medico={medico}
-            clinica={clinica}
-          />
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ─── Header ───
-function Header({ medico, clinica }: { medico: Medico; clinica: Clinica | null }) {
-  return (
-    <div style={{
-      background: `linear-gradient(135deg, ${tokens.brand.primary} 0%, ${tokens.brand.primaryDark || tokens.brand.primary} 100%)`,
-      padding: '32px 16px 48px',
-      color: '#fff',
-    }}>
-      <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 20 }}>
-        <div style={{
-          width: 72,
-          height: 72,
-          borderRadius: 18,
-          background: 'rgba(255,255,255,0.18)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 28,
-          fontWeight: 700,
-          flexShrink: 0,
-          backdropFilter: 'blur(8px)',
-        }}>
-          {medico.nome.charAt(0).toUpperCase()}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {clinica && (
-            <div style={{ fontSize: 13, opacity: 0.85, fontWeight: 500, marginBottom: 4 }}>
-              {clinica.nome}
-            </div>
-          )}
-          <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>
-            {medico.nome}
-          </h1>
-          <div style={{ fontSize: 14, opacity: 0.9, marginTop: 4 }}>
-            {medico.especialidade || 'Médico(a)'}
-            {medico.crm ? ' · CRM ' + medico.crm : ''}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Seção: Calendário ───
-function SecaoCalendario({ mesAtual, setMesAtual, disponibilidade, carregando, hojeData, onSelecionarData }: any) {
-  const primeiroDia = new Date(mesAtual.ano, mesAtual.mes - 1, 1)
-  const diaSemanaInicio = primeiroDia.getDay()
-  const ultimoDia = new Date(mesAtual.ano, mesAtual.mes, 0).getDate()
-  const hojeISO = hojeData.toISOString().split('T')[0]
-
-  const podeVoltar = (() => {
-    const hoje = new Date()
-    return mesAtual.ano > hoje.getFullYear() || (mesAtual.ano === hoje.getFullYear() && mesAtual.mes > hoje.getMonth() + 1)
-  })()
-
-  function mudarMes(delta: number) {
-    let novoMes = mesAtual.mes + delta
-    let novoAno = mesAtual.ano
-    if (novoMes < 1) { novoMes = 12; novoAno-- }
-    if (novoMes > 12) { novoMes = 1; novoAno++ }
-    setMesAtual({ ano: novoAno, mes: novoMes })
+  // SUCESSO - tela full overlay
+  if (mostrandoSucesso && dataSelecionada && horarioSelecionado) {
+    return <TelaSucesso resultado={resultadoEnvio} data={dataSelecionada} horario={horarioSelecionado} medico={medico} clinica={clinica} />
   }
 
-  const dias: (number | null)[] = []
-  for (let i = 0; i < diaSemanaInicio; i++) dias.push(null)
-  for (let d = 1; d <= ultimoDia; d++) dias.push(d)
+  const duracao = configMedico?.duracao_consulta_min || 30
 
   return (
-    <Card>
-      <div style={{ marginBottom: 24, textAlign: 'center' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>
-          Escolha o melhor dia
-        </h2>
-        <p style={{ fontSize: 14, color: tokens.text.secondary, marginTop: 6, margin: 0 }}>
-          Dias com bolinha roxa têm horários disponíveis.
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <button
-          type="button"
-          onClick={() => mudarMes(-1)}
-          disabled={!podeVoltar}
-          style={navBtnStyle(!podeVoltar)}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
-        </button>
-        <div style={{ fontSize: 16, fontWeight: 600, color: tokens.text.primary }}>
-          {MESES_PT[mesAtual.mes - 1]} {mesAtual.ano}
-        </div>
-        <button type="button" onClick={() => mudarMes(1)} style={navBtnStyle(false)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
-        </button>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 8 }}>
-        {DIAS_SEMANA_CURTO.map((d, i) => (
-          <div key={i} style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, color: tokens.text.tertiary, padding: 6 }}>
-            {d}
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, opacity: carregando ? 0.5 : 1 }}>
-        {dias.map((dia, idx) => {
-          if (dia === null) return <div key={idx} />
-          const dataISO = mesAtual.ano + '-' + String(mesAtual.mes).padStart(2, '0') + '-' + String(dia).padStart(2, '0')
-          const temVagas = !!disponibilidade[dataISO]
-          const ehHoje = dataISO === hojeISO
-          const ehPassado = dataISO < hojeISO
-          const desabilitado = !temVagas || ehPassado
-
-          return (
-            <button
-              key={idx}
-              type="button"
-              disabled={desabilitado}
-              onClick={() => onSelecionarData(dataISO)}
-              style={{
-                aspectRatio: '1',
-                border: ehHoje ? '1.5px solid ' + tokens.brand.primary : '1px solid transparent',
-                borderRadius: 10,
-                background: temVagas && !ehPassado ? tokens.brand.primaryLight : 'transparent',
-                color: desabilitado ? tokens.text.tertiary : tokens.text.primary,
-                fontSize: 14,
-                fontWeight: temVagas ? 600 : 500,
-                cursor: desabilitado ? 'not-allowed' : 'pointer',
-                position: 'relative',
-                transition: 'all 0.15s',
-                opacity: ehPassado ? 0.35 : 1,
-              }}
-            >
-              {dia}
-              {temVagas && !ehPassado && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: 4,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 5,
-                  height: 5,
-                  borderRadius: '50%',
-                  background: tokens.brand.primary,
-                }} />
-              )}
-            </button>
-          )
-        })}
-      </div>
-    </Card>
-  )
-}
-
-// ─── Seção: Horário ───
-function SecaoHorario({ data, slots, carregando, duracao, onSelecionarHorario, onVoltar }: any) {
-  const dataObj = new Date(data + 'T12:00:00')
-  const dataLabel = dataObj.getDate() + ' de ' + MESES_PT[dataObj.getMonth()].toLowerCase()
-  const diaSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][dataObj.getDay()]
-
-  return (
-    <Card>
-      <ButtonVoltar onClick={onVoltar} />
-      <div style={{ marginBottom: 24, marginTop: 12 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>
-          Horários disponíveis
-        </h2>
-        <p style={{ fontSize: 14, color: tokens.text.secondary, marginTop: 6, margin: 0 }}>
-          {diaSemana}, {dataLabel} · {duracao} minutos por consulta
-        </p>
-      </div>
-
-      {carregando ? (
-        <div style={{ padding: 48, textAlign: 'center', color: tokens.text.tertiary }}>
-          Carregando horários...
-        </div>
-      ) : slots.length === 0 ? (
-        <div style={{ padding: 48, textAlign: 'center', color: tokens.text.tertiary, fontSize: 14, background: tokens.bg.cardSubtle, borderRadius: 12 }}>
-          Nenhum horário disponível nesta data.
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))', gap: 10 }}>
-          {slots.map((h: string) => (
-            <button
-              key={h}
-              type="button"
-              onClick={() => onSelecionarHorario(h)}
-              style={{
-                padding: '14px 8px',
-                border: '1.5px solid ' + tokens.border.default,
-                borderRadius: 10,
-                background: '#fff',
-                color: tokens.text.primary,
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.12s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = tokens.brand.primary
-                e.currentTarget.style.background = tokens.brand.primaryLight
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = tokens.border.default
-                e.currentTarget.style.background = '#fff'
-              }}
-            >
-              {h}
-            </button>
-          ))}
-        </div>
-      )}
-    </Card>
-  )
-}
-
-// ─── Seção: Dados ───
-function SecaoDados({ data, horario, nome, setNome, telefone, setTelefone, email, setEmail, motivo, setMotivo, primeiraConsulta, setPrimeiraConsulta, enviando, onConfirmar, onVoltar }: any) {
-  const dataObj = new Date(data + 'T12:00:00')
-  const dataLabel = dataObj.getDate() + ' de ' + MESES_PT[dataObj.getMonth()].toLowerCase() + ' às ' + horario
-  const valido = nome.trim().length >= 2 && telefone.replace(/\D/g, '').length >= 10
-
-  return (
-    <Card>
-      <ButtonVoltar onClick={onVoltar} />
-      <div style={{ marginBottom: 8, marginTop: 12 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>
-          Seus dados
-        </h2>
-        <p style={{ fontSize: 14, color: tokens.text.secondary, marginTop: 6, margin: 0 }}>
-          Agendamento para {dataLabel}.
-        </p>
-      </div>
+    <div style={{ minHeight: '100vh', background: tokens.bg.page, padding: '24px 16px' }}>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        .agenda-grid { display: grid; gap: 0; }
+        @media (min-width: 768px) {
+          .agenda-grid {
+            grid-template-columns: 280px 1fr ${dataSelecionada ? '280px' : '0'};
+            transition: grid-template-columns 0.3s;
+          }
+          .agenda-grid-2 {
+            grid-template-columns: 280px 1fr 0;
+          }
+        }
+      `}</style>
 
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: 12,
-        background: tokens.brand.primaryLight,
-        borderRadius: 10,
-        margin: '20px 0',
-        color: tokens.brand.primary,
-        fontSize: 13,
-        fontWeight: 500,
+        maxWidth: dataSelecionada ? 980 : 760,
+        margin: '0 auto',
+        background: '#fff',
+        borderRadius: 20,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        overflow: 'hidden',
+        transition: 'max-width 0.3s',
       }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="3" y="11" width="18" height="11" rx="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-        Seus dados são protegidos. Usamos apenas para confirmar a consulta.
-      </div>
+        <div className={'agenda-grid' + (dataSelecionada ? '' : ' agenda-grid-2')}>
+          {/* COLUNA 1 — Info do médico */}
+          <div style={{
+            padding: '32px 24px',
+            borderRight: '1px solid ' + tokens.border.subtle,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 20,
+          }}>
+            <div style={{
+              width: 56,
+              height: 56,
+              borderRadius: 14,
+              background: 'linear-gradient(135deg, ' + tokens.brand.primary + ' 0%, ' + (tokens.brand.primaryDark || tokens.brand.primary) + ' 100%)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 22,
+              fontWeight: 700,
+            }}>
+              {medico.nome.charAt(0).toUpperCase()}
+            </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <InputField label="Nome completo" value={nome} onChange={setNome} required placeholder="Como você quer ser chamado(a)" />
-        <InputField label="WhatsApp" value={telefone} onChange={setTelefone} required placeholder="(11) 99999-9999" type="tel" />
-        <InputField label="Email (opcional)" value={email} onChange={setEmail} placeholder="seu@email.com" type="email" />
-        <InputField
-          label="Motivo da consulta (opcional)"
-          value={motivo}
-          onChange={setMotivo}
-          placeholder="Ex: avaliação inicial, retorno, dor recorrente"
-          textarea
-        />
+            <div>
+              {clinica && (
+                <div style={{ fontSize: 12, color: tokens.text.tertiary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+                  {clinica.nome}
+                </div>
+              )}
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+                {medico.nome}
+              </h1>
+              {medico.especialidade && (
+                <div style={{ fontSize: 14, color: tokens.text.secondary, marginTop: 4 }}>
+                  {medico.especialidade}
+                </div>
+              )}
+            </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary }}>
-            É sua primeira consulta?
-          </label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <ChipRadio ativo={primeiraConsulta === true} onClick={() => setPrimeiraConsulta(true)} label="Sim, primeira vez" />
-            <ChipRadio ativo={primeiraConsulta === false} onClick={() => setPrimeiraConsulta(false)} label="Não, já consultei antes" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 16, borderTop: '1px solid ' + tokens.border.subtle }}>
+              <InfoLinha
+                icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+                text={duracao + ' minutos'}
+              />
+              {medico.crm && (
+                <InfoLinha
+                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>}
+                  text={'CRM ' + medico.crm}
+                />
+              )}
+              {configMedico?.modo_aprovacao === 'manual' && (
+                <InfoLinha
+                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-6 0v4"/><rect x="3" y="11" width="18" height="11" rx="2"/></svg>}
+                  text="Requer confirmação"
+                />
+              )}
+            </div>
           </div>
+
+          {/* COLUNA 2 — Calendário */}
+          <div style={{
+            padding: '32px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 16, fontWeight: 600, color: tokens.text.primary }}>
+                <span style={{ fontWeight: 400, color: tokens.text.secondary }}>{MESES_PT_CURTO[mesAtual.mes - 1]}</span>{' '}
+                {mesAtual.ano}
+              </div>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <NavBtn 
+                  disabled={(() => {
+                    const hoje = new Date()
+                    return mesAtual.ano <= hoje.getFullYear() && mesAtual.mes <= hoje.getMonth() + 1
+                  })()}
+                  onClick={() => {
+                    let m = mesAtual.mes - 1, a = mesAtual.ano
+                    if (m < 1) { m = 12; a-- }
+                    setMesAtual({ ano: a, mes: m })
+                    setDataSelecionada(null)
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
+                </NavBtn>
+                <NavBtn 
+                  disabled={false}
+                  onClick={() => {
+                    let m = mesAtual.mes + 1, a = mesAtual.ano
+                    if (m > 12) { m = 1; a++ }
+                    setMesAtual({ ano: a, mes: m })
+                    setDataSelecionada(null)
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                </NavBtn>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+              {DIAS_SEMANA_CURTO.map((d, i) => (
+                <div key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: tokens.text.tertiary, padding: '6px 0', textTransform: 'uppercase' }}>
+                  {d}
+                </div>
+              ))}
+              {(() => {
+                const primeiroDia = new Date(mesAtual.ano, mesAtual.mes - 1, 1).getDay()
+                const ultimoDia = new Date(mesAtual.ano, mesAtual.mes, 0).getDate()
+                const hojeISO = hojeData.toISOString().split('T')[0]
+                const dias: (number | null)[] = []
+                for (let i = 0; i < primeiroDia; i++) dias.push(null)
+                for (let d = 1; d <= ultimoDia; d++) dias.push(d)
+
+                return dias.map((dia, idx) => {
+                  if (dia === null) return <div key={idx} />
+                  const dataISO = mesAtual.ano + '-' + String(mesAtual.mes).padStart(2, '0') + '-' + String(dia).padStart(2, '0')
+                  const temVagas = !!disponibilidade[dataISO]
+                  const ehHoje = dataISO === hojeISO
+                  const ehPassado = dataISO < hojeISO
+                  const desabilitado = !temVagas || ehPassado
+                  const ehSelecionada = dataISO === dataSelecionada
+
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      disabled={desabilitado}
+                      onClick={() => setDataSelecionada(dataISO)}
+                      style={{
+                        aspectRatio: '1',
+                        border: 'none',
+                        borderRadius: 10,
+                        background: ehSelecionada ? tokens.brand.primary : (temVagas && !ehPassado ? tokens.brand.primaryLight : 'transparent'),
+                        color: ehSelecionada ? '#fff' : (desabilitado ? tokens.text.tertiary : tokens.text.primary),
+                        fontSize: 14,
+                        fontWeight: ehSelecionada || temVagas ? 600 : 500,
+                        cursor: desabilitado ? 'default' : 'pointer',
+                        position: 'relative',
+                        transition: 'all 0.15s',
+                        opacity: ehPassado ? 0.3 : 1,
+                        outline: ehHoje && !ehSelecionada ? '1.5px solid ' + tokens.brand.primary : 'none',
+                        outlineOffset: -1,
+                      }}
+                    >
+                      {dia}
+                    </button>
+                  )
+                })
+              })()}
+            </div>
+          </div>
+
+          {/* COLUNA 3 — Horários (só aparece quando data selecionada) */}
+          {dataSelecionada && (
+            <div style={{
+              padding: '32px 24px',
+              borderLeft: '1px solid ' + tokens.border.subtle,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+              maxHeight: 580,
+            }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: tokens.text.primary }}>
+                  {(() => {
+                    const d = new Date(dataSelecionada + 'T12:00:00')
+                    return DIAS_SEMANA_FULL[d.getDay()] + ', ' + d.getDate() + ' ' + MESES_PT_CURTO[d.getMonth()]
+                  })()}
+                </div>
+                <div style={{ fontSize: 12, color: tokens.text.tertiary, marginTop: 2 }}>
+                  {slots.length} {slots.length === 1 ? 'horário disponível' : 'horários disponíveis'}
+                </div>
+              </div>
+
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {carregandoSlots ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
+                    <div style={{ width: 20, height: 20, border: '2px solid ' + tokens.border.default, borderTopColor: tokens.brand.primary, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                  </div>
+                ) : slots.length === 0 ? (
+                  <div style={{ fontSize: 13, color: tokens.text.tertiary, textAlign: 'center', padding: 24 }}>
+                    Nenhum horário livre.
+                  </div>
+                ) : (
+                  slots.map((h: string) => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => {
+                        setHorarioSelecionado(h)
+                        setMostrandoForm(true)
+                      }}
+                      style={{
+                        padding: '12px',
+                        border: '1px solid ' + tokens.border.default,
+                        borderRadius: 8,
+                        background: '#fff',
+                        color: tokens.text.primary,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.12s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = tokens.brand.primary
+                        e.currentTarget.style.background = tokens.brand.primaryLight
+                        e.currentTarget.style.color = tokens.brand.primary
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = tokens.border.default
+                        e.currentTarget.style.background = '#fff'
+                        e.currentTarget.style.color = tokens.text.primary
+                      }}
+                    >
+                      {h}
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={onConfirmar}
-        disabled={!valido || enviando}
-        style={{
-          marginTop: 24,
-          width: '100%',
-          padding: '14px',
-          border: 'none',
-          borderRadius: 12,
-          background: (!valido || enviando) ? tokens.text.tertiary : tokens.brand.primary,
-          color: '#fff',
-          fontSize: 15,
-          fontWeight: 600,
-          cursor: (!valido || enviando) ? 'not-allowed' : 'pointer',
-          transition: 'background 0.15s',
-        }}
-      >
-        {enviando ? 'Confirmando...' : 'Confirmar agendamento'}
-      </button>
-    </Card>
+      {/* MODAL DE DADOS */}
+      {mostrandoForm && dataSelecionada && horarioSelecionado && (
+        <ModalDados
+          data={dataSelecionada}
+          horario={horarioSelecionado}
+          medico={medico}
+          clinica={clinica}
+          duracao={duracao}
+          nome={nome}
+          setNome={setNome}
+          telefone={telefone}
+          setTelefone={(v: string) => setTelefone(formatarTelefone(v))}
+          email={email}
+          setEmail={setEmail}
+          motivo={motivo}
+          setMotivo={setMotivo}
+          primeiraConsulta={primeiraConsulta}
+          setPrimeiraConsulta={setPrimeiraConsulta}
+          enviando={enviando}
+          onConfirmar={enviarSolicitacao}
+          onFechar={() => setMostrandoForm(false)}
+        />
+      )}
+
+      <div style={{ textAlign: 'center', marginTop: 32, fontSize: 12, color: tokens.text.tertiary }}>
+        Powered by <span style={{ fontWeight: 600, color: tokens.text.secondary }}>Clinical 360</span>
+      </div>
+    </div>
   )
 }
 
-// ─── Seção: Sucesso ───
-function SecaoSucesso({ resultado, data, horario, medico, clinica }: any) {
+// ─── Tela de sucesso ───
+function TelaSucesso({ resultado, data, horario, medico, clinica }: any) {
   const aguardando = resultado === 'aguardando_confirmacao'
   const dataObj = new Date(data + 'T12:00:00')
   const dataLabel = dataObj.getDate() + ' de ' + MESES_PT[dataObj.getMonth()] + ' às ' + horario
 
   return (
-    <Card>
-      <div style={{ textAlign: 'center', padding: '16px 8px' }}>
+    <div style={{ minHeight: '100vh', background: tokens.bg.page, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{
+        maxWidth: 480,
+        width: '100%',
+        background: '#fff',
+        borderRadius: 20,
+        padding: '40px 32px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        textAlign: 'center',
+      }}>
         <div style={{
           width: 72,
           height: 72,
@@ -614,22 +537,21 @@ function SecaoSucesso({ resultado, data, horario, medico, clinica }: any) {
           )}
         </div>
 
-        <h2 style={{ fontSize: 24, fontWeight: 700, color: tokens.text.primary, margin: 0, marginBottom: 12 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: tokens.text.primary, margin: 0, marginBottom: 12, letterSpacing: '-0.01em' }}>
           {aguardando ? 'Solicitação enviada!' : 'Consulta confirmada!'}
         </h2>
 
-        <p style={{ fontSize: 15, color: tokens.text.secondary, lineHeight: 1.5, maxWidth: 480, margin: '0 auto 24px' }}>
+        <p style={{ fontSize: 15, color: tokens.text.secondary, lineHeight: 1.5, margin: '0 0 24px' }}>
           {aguardando
             ? 'O médico vai analisar e confirmar em breve. Você receberá uma mensagem no WhatsApp informado.'
             : 'Sua consulta foi confirmada e adicionada à agenda. Você receberá um lembrete antes do horário.'}
         </p>
 
         <div style={{
-          padding: 20,
+          padding: 16,
           background: tokens.bg.cardSubtle,
           borderRadius: 12,
           textAlign: 'left',
-          marginBottom: 8,
         }}>
           <Linha label="Profissional" valor={medico.nome} />
           {medico.especialidade && <Linha label="Especialidade" valor={medico.especialidade} />}
@@ -637,47 +559,140 @@ function SecaoSucesso({ resultado, data, horario, medico, clinica }: any) {
           <Linha label="Data" valor={dataLabel} ultimo />
         </div>
       </div>
-    </Card>
-  )
-}
-
-// ─── Componentes auxiliares ───
-function Card({ children }: any) {
-  return (
-    <div style={{
-      background: '#fff',
-      borderRadius: 16,
-      padding: 24,
-      border: '1px solid ' + tokens.border.default,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    }}>
-      {children}
     </div>
   )
 }
 
-function ButtonVoltar({ onClick }: { onClick: () => void }) {
+// ─── Modal de dados (overlay) ───
+function ModalDados(props: any) {
+  const { data, horario, medico, clinica, duracao, nome, setNome, telefone, setTelefone, email, setEmail, motivo, setMotivo, primeiraConsulta, setPrimeiraConsulta, enviando, onConfirmar, onFechar } = props
+  
+  const dataObj = new Date(data + 'T12:00:00')
+  const dataLabel = DIAS_SEMANA_FULL[dataObj.getDay()] + ', ' + dataObj.getDate() + ' de ' + MESES_PT[dataObj.getMonth()].toLowerCase()
+  const valido = nome.trim().length >= 2 && telefone.replace(/\D/g, '').length >= 10
+
   return (
-    <button type="button" onClick={onClick} style={{
-      display: 'inline-flex',
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.5)',
+      backdropFilter: 'blur(4px)',
+      display: 'flex',
       alignItems: 'center',
-      gap: 6,
-      background: 'none',
-      border: 'none',
-      color: tokens.text.secondary,
-      fontSize: 13,
-      fontWeight: 600,
-      cursor: 'pointer',
-      padding: 4,
-    }}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
-      Voltar
+      justifyContent: 'center',
+      padding: 16,
+      zIndex: 50,
+    }}
+    onClick={(e) => { if (e.target === e.currentTarget) onFechar() }}
+    >
+      <div style={{
+        background: '#fff',
+        borderRadius: 16,
+        padding: 32,
+        maxWidth: 480,
+        width: '100%',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+          <div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: tokens.text.primary, margin: 0, letterSpacing: '-0.01em' }}>
+              Confirmar agendamento
+            </h2>
+            <p style={{ fontSize: 14, color: tokens.text.secondary, margin: '6px 0 0' }}>
+              {dataLabel} às {horario} · {duracao}min
+            </p>
+          </div>
+          <button type="button" onClick={onFechar} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: tokens.text.tertiary }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 24 }}>
+          <InputField label="Nome completo" value={nome} onChange={setNome} required placeholder="Como você quer ser chamado(a)" />
+          <InputField label="WhatsApp" value={telefone} onChange={setTelefone} required placeholder="(11) 99999-9999" type="tel" />
+          <InputField label="Email (opcional)" value={email} onChange={setEmail} placeholder="seu@email.com" type="email" />
+          <InputField label="Motivo da consulta (opcional)" value={motivo} onChange={setMotivo} placeholder="Ex: avaliação inicial, retorno, dor recorrente" textarea />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 2 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary }}>É sua primeira consulta?</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <ChipRadio ativo={primeiraConsulta === true} onClick={() => setPrimeiraConsulta(true)} label="Sim" />
+              <ChipRadio ativo={primeiraConsulta === false} onClick={() => setPrimeiraConsulta(false)} label="Já consultei antes" />
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onConfirmar}
+          disabled={!valido || enviando}
+          style={{
+            marginTop: 24,
+            width: '100%',
+            padding: '14px',
+            border: 'none',
+            borderRadius: 12,
+            background: (!valido || enviando) ? tokens.text.tertiary : tokens.brand.primary,
+            color: '#fff',
+            fontSize: 15,
+            fontWeight: 600,
+            cursor: (!valido || enviando) ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {enviando ? 'Confirmando...' : 'Confirmar agendamento'}
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, fontSize: 12, color: tokens.text.tertiary, justifyContent: 'center' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          Seus dados são protegidos.
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Auxiliares ───
+function InfoLinha({ icon, text }: any) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: tokens.text.secondary }}>
+      <div style={{ color: tokens.text.tertiary, display: 'flex' }}>{icon}</div>
+      {text}
+    </div>
+  )
+}
+
+function NavBtn({ children, onClick, disabled }: any) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        border: 'none',
+        background: disabled ? 'transparent' : tokens.bg.cardSubtle,
+        color: disabled ? tokens.text.tertiary : tokens.text.primary,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.4 : 1,
+        transition: 'background 0.12s',
+      }}
+    >
+      {children}
     </button>
   )
 }
 
 function InputField({ label, value, onChange, required, placeholder, type = 'text', textarea }: any) {
-  const Tag = textarea ? 'textarea' : 'input'
+  const Tag: any = textarea ? 'textarea' : 'input'
   return (
     <div>
       <label style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, display: 'block', marginBottom: 6 }}>
@@ -691,7 +706,7 @@ function InputField({ label, value, onChange, required, placeholder, type = 'tex
         rows={textarea ? 3 : undefined}
         style={{
           width: '100%',
-          padding: '12px 14px',
+          padding: '11px 14px',
           fontSize: 14,
           color: tokens.text.primary,
           border: '1px solid ' + tokens.border.default,
@@ -736,36 +751,11 @@ function Linha({ label, valor, ultimo }: any) {
       display: 'flex',
       justifyContent: 'space-between',
       gap: 16,
-      padding: '10px 0',
+      padding: '8px 0',
       borderBottom: ultimo ? 'none' : '1px solid ' + tokens.border.subtle,
     }}>
       <span style={{ fontSize: 13, color: tokens.text.secondary, fontWeight: 500 }}>{label}</span>
-      <span style={{ fontSize: 14, color: tokens.text.primary, fontWeight: 600, textAlign: 'right' }}>{valor}</span>
+      <span style={{ fontSize: 13, color: tokens.text.primary, fontWeight: 600, textAlign: 'right' }}>{valor}</span>
     </div>
   )
-}
-
-// ─── Estilos compartilhados ───
-const containerEstado: React.CSSProperties = {
-  minHeight: '100vh',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: tokens.bg.page,
-}
-
-function navBtnStyle(disabled: boolean): React.CSSProperties {
-  return {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    border: '1px solid ' + tokens.border.default,
-    background: '#fff',
-    color: disabled ? tokens.text.tertiary : tokens.text.primary,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.4 : 1,
-  }
 }

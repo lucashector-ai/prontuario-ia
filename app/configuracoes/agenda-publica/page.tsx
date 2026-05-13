@@ -307,9 +307,9 @@ function SeletorMedico({ medicos, medicoAtivoId, onChange }: any) {
   return (
     <div style={{
       background: '#fff',
-      border: '1px solid ' + tokens.border.default,
       borderRadius: 12,
       padding: 16,
+      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
       display: 'flex',
       alignItems: 'center',
       gap: 12,

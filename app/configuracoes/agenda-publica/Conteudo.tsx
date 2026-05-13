@@ -166,7 +166,7 @@ export default function Conteudo(props: any) {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            border: '1px solid ' + (statusSlug === 'erro' ? '#FCA5A5' : statusSlug === 'ok' ? '#86EFAC' : tokens.border.default),
+            border: '1px solid ' + (statusSlug === 'erro' ? '#FCA5A5' : tokens.border.default),
             borderRadius: 12,
             background: '#fff',
             overflow: 'hidden',
@@ -560,7 +560,7 @@ export default function Conteudo(props: any) {
             fontWeight: 600,
             cursor: (salvando || statusSlug === 'erro') ? 'not-allowed' : 'pointer',
             transition: 'background 0.15s',
-            boxShadow: '0 4px 14px rgba(96, 67, 193, 0.2)',
+            boxShadow: '0 2px 8px rgba(96, 67, 193, 0.15)',
           }}
         >
           {salvando ? 'Salvando...' : 'Salvar configurações'}
@@ -577,7 +577,7 @@ function Card({ children }: { children: React.ReactNode }) {
       background: '#fff',
       borderRadius: 16,
       padding: 24,
-      border: '1px solid ' + tokens.border.default,
+      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
     }}>
       {children}
     </div>
