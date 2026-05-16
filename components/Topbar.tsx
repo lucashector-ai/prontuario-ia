@@ -206,7 +206,7 @@ export function Topbar() {
 
   return (
     <header style={{
-      height: 64, background: 'white',
+      height: 64, background: tokens.bg.page,
       display: 'flex', alignItems: 'center',
       gap: 8, padding: '0 20px', flexShrink: 0,
     }}>

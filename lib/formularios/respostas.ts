@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Campo, Resposta } from './types'
+import { MODELOS, ANTHROPIC_API_URL, ANTHROPIC_API_VERSION } from '@/lib/ai/models'
 
 /**
  * Salva resposta de um formulário.
@@ -83,7 +84,7 @@ Use linguagem técnica médica, seja DIRETO e ÚTIL. NÃO faça diagnóstico. N�
 
 Formato: bullets curtos com "•" no início de cada linha. Sem cabeçalho, sem despedida.`
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
@@ -91,7 +92,7 @@ Formato: bullets curtos com "•" no início de cada linha. Sem cabeçalho, sem 
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: MODELOS.apoio,
         max_tokens: 500,
         system: systemPrompt,
         messages: [
