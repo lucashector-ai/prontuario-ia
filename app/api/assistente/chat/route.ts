@@ -5,9 +5,16 @@ import { SYSTEM_PROMPT_MEDICO } from '@/lib/ai/system-prompt-medico'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
+type Anexo = {
+  tipo: 'image' | 'document'
+  media_type: string   // ex: image/jpeg, application/pdf
+  data: string         // base64 sem o prefixo data:
+}
+
 type MensagemEntrada = {
   papel: 'user' | 'assistant'
   conteudo: string
+  anexos?: Anexo[]
 }
 
 export async function POST(req: NextRequest) {
@@ -24,13 +31,37 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ erro: 'Assistente indisponível no momento' }), { status: 503 })
     }
 
-    // Converte pro formato da Anthropic API
-    const messages = mensagens.map(m => ({
-      role: m.papel === 'user' ? 'user' : 'assistant',
-      content: m.conteudo,
-    }))
+    // Converte pro formato da Anthropic. Mensagens com anexo viram content array.
+    const messages = mensagens.map(m => {
+      const role = m.papel === 'user' ? 'user' : 'assistant'
 
-    // Chama a API com streaming ativado
+      // Sem anexo: content é só string
+      if (!m.anexos || m.anexos.length === 0) {
+        return { role, content: m.conteudo }
+      }
+
+      // Com anexo: content é array de blocos
+      const blocos: any[] = []
+      for (const anexo of m.anexos) {
+        if (anexo.tipo === 'image') {
+          blocos.push({
+            type: 'image',
+            source: { type: 'base64', media_type: anexo.media_type, data: anexo.data },
+          })
+        } else if (anexo.tipo === 'document') {
+          blocos.push({
+            type: 'document',
+            source: { type: 'base64', media_type: anexo.media_type, data: anexo.data },
+          })
+        }
+      }
+      // Texto vem depois dos anexos
+      if (m.conteudo) {
+        blocos.push({ type: 'text', text: m.conteudo })
+      }
+      return { role, content: blocos }
+    })
+
     const anthropicRes = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
       headers: {
@@ -53,7 +84,6 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ erro: 'Erro ao processar a resposta' }), { status: 502 })
     }
 
-    // Stream de saída: lê o SSE da Anthropic, extrai só o texto, repassa
     const encoder = new TextEncoder()
     const decoder = new TextDecoder()
 
@@ -61,34 +91,26 @@ export async function POST(req: NextRequest) {
       async start(controller) {
         const reader = anthropicRes.body!.getReader()
         let buffer = ''
-
         try {
           while (true) {
             const { done, value } = await reader.read()
             if (done) break
-
             buffer += decoder.decode(value, { stream: true })
             const linhas = buffer.split('\n')
             buffer = linhas.pop() || ''
-
             for (const linha of linhas) {
               const trim = linha.trim()
               if (!trim.startsWith('data:')) continue
-
               const payload = trim.slice(5).trim()
               if (payload === '[DONE]') continue
-
               try {
                 const evento = JSON.parse(payload)
-                // Só nos interessa o delta de texto
                 if (evento.type === 'content_block_delta' && evento.delta?.type === 'text_delta') {
                   const texto = evento.delta.text || ''
-                  if (texto) {
-                    controller.enqueue(encoder.encode(texto))
-                  }
+                  if (texto) controller.enqueue(encoder.encode(texto))
                 }
               } catch {
-                // ignora linhas que não são JSON válido
+                // ignora
               }
             }
           }
