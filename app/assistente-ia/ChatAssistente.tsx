@@ -234,9 +234,8 @@ export default function ChatAssistente({
 
       {/* Input */}
       <div style={{
-        borderTop: '1px solid ' + tokens.border.subtle,
-        background: '#fff',
-        padding: '16px 24px 12px',
+        background: 'transparent',
+        padding: '8px 24px 16px',
         flexShrink: 0,
       }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
@@ -244,10 +243,10 @@ export default function ChatAssistente({
             display: 'flex',
             alignItems: 'flex-end',
             gap: 10,
-            border: '1px solid ' + tokens.border.default,
+            border: 'none',
             borderRadius: 14,
             padding: 8,
-            background: '#fff',
+            background: tokens.bg.cardSubtle,
           }}>
             <textarea
               ref={inputRef}
@@ -347,8 +346,9 @@ function EstadoVazio({ nomeMedico, onSugestao }: { nomeMedico: string; onSugesta
               textAlign: 'left',
               padding: '12px 16px',
               background: '#fff',
-              border: '1px solid ' + tokens.border.default,
+              border: 'none',
               borderRadius: 12,
+              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
               fontSize: 14,
               color: tokens.text.primary,
               cursor: 'pointer',
@@ -358,11 +358,9 @@ function EstadoVazio({ nomeMedico, onSugestao }: { nomeMedico: string; onSugesta
               gap: 10,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = tokens.brand.primary
               e.currentTarget.style.background = tokens.brand.primaryLight
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = tokens.border.default
               e.currentTarget.style.background = '#fff'
             }}
           >

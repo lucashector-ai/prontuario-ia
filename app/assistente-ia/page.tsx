@@ -104,7 +104,7 @@ export default function AssistenteIAPage() {
   }
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 0px)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
       {/* Sidebar de conversas */}
       <div style={{
         width: sidebarAberta ? 280 : 0,
