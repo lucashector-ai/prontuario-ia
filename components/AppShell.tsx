@@ -54,45 +54,53 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // ===== DESKTOP LAYOUT (mantido como antes) =====
+  // ===== DESKTOP LAYOUT — modelo B (sidebar fundida, topbar ilha) =====
   return (
     <div style={{
       height: '100vh',
       background: tokens.bg.page,
-      padding: 12,
       display: 'flex',
-      gap: 12,
       overflow: 'hidden',
     }}>
-      {/* Ilha 1 — Sidebar */}
+      {/* Sidebar — funde no fundo, sem card */}
       <div style={{
-        background: tokens.bg.card,
-        borderRadius: 20,
-        overflow: 'hidden',
         flexShrink: 0,
-        boxShadow: tokens.shadow.island,
+        background: tokens.bg.page,
       }}>
         <Sidebar />
       </div>
 
-      {/* Ilha 2 — Topbar + Conteúdo */}
+      {/* Coluna direita — Topbar (ilha) + Conteúdo */}
       <div style={{
         flex: 1,
-        background: tokens.bg.card,
-        borderRadius: 20,
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
         minWidth: 0,
-        boxShadow: tokens.shadow.island,
+        padding: '16px 16px 16px 0',
+        gap: 16,
+        overflow: 'hidden',
       }}>
-        <Topbar />
+        {/* Topbar — ilha branca separada */}
+        <div style={{
+          background: tokens.bg.card,
+          borderRadius: 16,
+          flexShrink: 0,
+          boxShadow: tokens.shadow.island,
+          overflow: 'hidden',
+        }}>
+          <Topbar />
+        </div>
+
+        {/* Área de conteúdo — superfície branca (ilha) */}
         <main className="appshell-main" style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
           overscrollBehavior: 'contain',
           minHeight: 0,
+          borderRadius: 16,
+          background: tokens.bg.card,
+          boxShadow: tokens.shadow.island,
         }}>
           {children}
         </main>

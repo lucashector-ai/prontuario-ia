@@ -300,34 +300,25 @@ export default function Conteudo(props: any) {
         <SectionTitle icon={<IconCalendar />} title="Como funciona sua agenda" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 16 }}>
 
-          {/* Duração */}
-          <Field label="Duração de cada consulta">
-            <SelectChips
-              opcoes={DURACOES.map(d => ({ valor: d, label: d + ' min' }))}
-              valor={config.duracao_consulta_min}
-              onChange={(v: number) => setConfig({ ...config, duracao_consulta_min: v })}
-            />
-          </Field>
+          {/* Linha 1: Duracao + Antecedencia minima */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <Field label="Duração de cada consulta">
+              <SelectChips
+                opcoes={DURACOES.map(d => ({ valor: d, label: d + ' min' }))}
+                valor={config.duracao_consulta_min}
+                onChange={(v: number) => setConfig({ ...config, duracao_consulta_min: v })}
+              />
+            </Field>
+            <Field label="Antecedência mínima" hint="Quanto tempo antes o paciente precisa agendar">
+              <SelectChips
+                opcoes={ANTECEDENCIAS_MIN}
+                valor={config.antecedencia_minima_horas}
+                onChange={(v: number) => setConfig({ ...config, antecedencia_minima_horas: v })}
+              />
+            </Field>
+          </div>
 
-          {/* Antecedência mínima */}
-          <Field label="Antecedência mínima" hint="Quanto tempo antes o paciente precisa agendar">
-            <SelectChips
-              opcoes={ANTECEDENCIAS_MIN}
-              valor={config.antecedencia_minima_horas}
-              onChange={(v: number) => setConfig({ ...config, antecedencia_minima_horas: v })}
-            />
-          </Field>
-
-          {/* Antecedência máxima */}
-          <Field label="Antecedência máxima" hint="Quanto tempo no futuro o paciente pode agendar">
-            <SelectChips
-              opcoes={ANTECEDENCIAS_MAX}
-              valor={config.antecedencia_maxima_dias}
-              onChange={(v: number) => setConfig({ ...config, antecedencia_maxima_dias: v })}
-            />
-          </Field>
-
-          {/* Dias da semana */}
+          {/* Linha 2: Dias da semana (largura inteira) */}
           <Field label="Dias de atendimento">
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {DIAS_SEMANA.map(d => {
@@ -357,66 +348,66 @@ export default function Conteudo(props: any) {
             </div>
           </Field>
 
-          {/* Horário */}
-          <Field label="Horário de funcionamento">
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <SelectHora
-                valor={config.horario_inicio}
-                onChange={(v: string) => setConfig({ ...config, horario_inicio: v })}
-              />
-              <span style={{ color: tokens.text.tertiary, fontSize: 14 }}>até</span>
-              <SelectHora
-                valor={config.horario_fim}
-                onChange={(v: string) => setConfig({ ...config, horario_fim: v })}
-              />
-            </div>
-          </Field>
-
-          {/* Almoço */}
-          <Field label="Intervalo de almoço">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Toggle ativo={usarAlmoco} onChange={() => setUsarAlmoco(!usarAlmoco)} />
-                <span style={{ fontSize: 14, color: tokens.text.primary }}>
-                  {usarAlmoco ? 'Bloquear horário de almoço' : 'Sem bloqueio de almoço'}
-                </span>
+          {/* Linha 3: Horario + Almoco */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'start' }}>
+            <Field label="Horário de funcionamento">
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <SelectHora
+                  valor={config.horario_inicio}
+                  onChange={(v: string) => setConfig({ ...config, horario_inicio: v })}
+                />
+                <span style={{ color: tokens.text.tertiary, fontSize: 14 }}>até</span>
+                <SelectHora
+                  valor={config.horario_fim}
+                  onChange={(v: string) => setConfig({ ...config, horario_fim: v })}
+                />
               </div>
-              {usarAlmoco && (
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <SelectHora
-                    valor={config.intervalo_almoco?.[0] || '12:00'}
-                    onChange={(v: string) => setConfig({
-                      ...config,
-                      intervalo_almoco: [v, config.intervalo_almoco?.[1] || '13:00']
-                    })}
-                  />
-                  <span style={{ color: tokens.text.tertiary, fontSize: 14 }}>até</span>
-                  <SelectHora
-                    valor={config.intervalo_almoco?.[1] || '13:00'}
-                    onChange={(v: string) => setConfig({
-                      ...config,
-                      intervalo_almoco: [config.intervalo_almoco?.[0] || '12:00', v]
-                    })}
-                  />
+            </Field>
+            <Field label="Intervalo de almoço">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Toggle ativo={usarAlmoco} onChange={() => setUsarAlmoco(!usarAlmoco)} />
+                  <span style={{ fontSize: 14, color: tokens.text.primary }}>
+                    {usarAlmoco ? 'Bloquear almoço' : 'Sem bloqueio'}
+                  </span>
                 </div>
-              )}
-            </div>
-          </Field>
+                {usarAlmoco && (
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <SelectHora
+                      valor={config.intervalo_almoco?.[0] || '12:00'}
+                      onChange={(v: string) => setConfig({
+                        ...config,
+                        intervalo_almoco: [v, config.intervalo_almoco?.[1] || '13:00']
+                      })}
+                    />
+                    <span style={{ color: tokens.text.tertiary, fontSize: 14 }}>até</span>
+                    <SelectHora
+                      valor={config.intervalo_almoco?.[1] || '13:00'}
+                      onChange={(v: string) => setConfig({
+                        ...config,
+                        intervalo_almoco: [config.intervalo_almoco?.[0] || '12:00', v]
+                      })}
+                    />
+                  </div>
+                )}
+              </div>
+            </Field>
+          </div>
 
-          {/* Modo de aprovação */}
+          {/* Linha 4: Modo de aprovacao (2 opcoes lado a lado) */}
           <Field label="Como tratar novas solicitações">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <RadioOption
                 ativo={config.modo_aprovacao === 'automatico'}
                 onClick={() => setConfig({ ...config, modo_aprovacao: 'automatico' })}
                 titulo="Confirma direto"
-                desc="Paciente escolhe horário e já vira consulta confirmada. Reduz fricção."
+                desc="Paciente escolhe horário e já vira consulta confirmada."
               />
               <RadioOption
                 ativo={config.modo_aprovacao === 'manual'}
                 onClick={() => setConfig({ ...config, modo_aprovacao: 'manual' })}
                 titulo="Eu aprovo manualmente"
-                desc="Solicitações ficam pendentes até você confirmar ou rejeitar."
+                desc="Solicitações ficam pendentes até você confirmar."
               />
             </div>
           </Field>

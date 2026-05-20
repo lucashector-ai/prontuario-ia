@@ -1071,7 +1071,7 @@ function AgendaContent() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: tokens.bg.page, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100%', background: 'transparent', overflow: 'hidden' }}>
       {renderPainel()}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderHeader()}

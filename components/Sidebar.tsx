@@ -153,7 +153,7 @@ export function Sidebar() {
     <aside style={{
       width: 240,
       height: '100%',
-      background: 'white',
+      background: tokens.bg.page,
       display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,

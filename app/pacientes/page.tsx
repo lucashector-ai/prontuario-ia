@@ -7,7 +7,7 @@ import { tokens } from '@/lib/design-tokens'
 
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = tokens.bg.page
+const BG = 'transparent'
 const CARD_RADIUS = 16
 
 const CONVENIOS_LISTA = ['Particular', 'Unimed', 'Amil', 'Bradesco Saúde', 'Hapvida', 'SulAmérica', 'NotreDame Intermédica', 'Porto Seguro', 'Outro']

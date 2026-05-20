@@ -6,7 +6,7 @@ import { tokens } from '@/lib/design-tokens'
 
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = tokens.bg.page
+const BG = 'transparent'
 const CARD_RADIUS = 16
 
 export default function Teleconsulta() {

@@ -10,7 +10,7 @@ import { tokens } from '@/lib/design-tokens'
 
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = tokens.bg.page
+const BG = 'transparent'
 const CARD_RADIUS = 16
 
 const PALETA_CORES = [
@@ -309,7 +309,7 @@ export default function Admin() {
           { label: 'Pacientes cadastrados', valor: kpis.totalPacientes, sub: 'na clínica' },
           { label: 'Consultas este mês', valor: kpis.consultasMes, sub: 'todos os médicos' },
         ].map(k => (
-          <div key={k.label} style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
+          <div key={k.label} style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20, border: `1px solid ${tokens.border.subtle}` }}>
             <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 8px', fontWeight: 500 }}>{k.label}</p>
             <p style={{ fontSize: 28, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px', lineHeight: 1 }}>{k.valor}</p>
             <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{k.sub}</p>
@@ -336,7 +336,7 @@ export default function Admin() {
           <div style={{ width: 32, height: 32, border: `3px solid ${ACCENT_LIGHT}`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
       ) : listaAtual.length === 0 ? (
-        <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 40, textAlign: 'center' }}>
+        <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 40, textAlign: 'center', border: `1px solid ${tokens.border.subtle}` }}>
           <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Nenhum {labelAba} cadastrado ainda.</p>
         </div>
       ) : (
@@ -346,7 +346,7 @@ export default function Admin() {
             const iniciais = m.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
             const isRecep = m.cargo === 'recepcionista'
             return (
-              <div key={m.id} style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20, opacity: m.ativo ? 1 : 0.6 }}>
+              <div key={m.id} style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20, opacity: m.ativo ? 1 : 0.6, border: `1px solid ${tokens.border.subtle}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: isRecep ? 0 : 16 }}>
                   {m.foto_url ? (
                     <img src={m.foto_url} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}/>

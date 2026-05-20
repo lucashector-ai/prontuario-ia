@@ -10,9 +10,9 @@
 export const tokens = {
   // ── Backgrounds ────────────────────────────────────────────────────────
   bg: {
-    page: '#FAFAFA',           // fundo da plataforma e páginas
+    page: '#F5F5F5',           // fundo da plataforma e páginas
     card: '#FFFFFF',           // fundo de cards / superfícies elevadas
-    cardSubtle: '#FAFAFA',     // cards aninhados / itens em listas
+    cardSubtle: '#F1F0F4',     // cards aninhados / itens em listas
     hover: '#F5F5F5',          // hover de items clicáveis
     hoverStrong: '#F3F4F6',    // hover mais marcante
     overlay: 'rgba(0,0,0,0.4)',// modais / overlays
@@ -24,7 +24,7 @@ export const tokens = {
   // ── Borders ────────────────────────────────────────────────────────────
   border: {
     default: '#E5E7EB',        // border padrão (inputs, cards)
-    subtle: '#F3F4F6',         // separadores leves
+    subtle: '#F3F2F3',         // separadores leves
     strong: '#D1D5DB',         // borders mais marcantes
     muted: '#E5E5E5',          // border alternativa neutra
     focus: '#6043C1',          // border de foco (alinhada à brand)

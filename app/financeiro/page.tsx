@@ -659,7 +659,7 @@ export default function FinanceiroPage() {
   const pctLucro = lucroAnterior > 0 ? Math.round(((lucro - lucroAnterior) / lucroAnterior) * 100) : null
 
   return (
-      <div style={{ padding: '28px 32px', minHeight: '100%', background: tokens.bg.page }}>
+      <div style={{ padding: '28px 32px', minHeight: '100%', background: 'transparent' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -722,7 +722,7 @@ export default function FinanceiroPage() {
 
             {/* Saldo por conta */}
             {saldosContas.length > 0 && (
-              <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 16 }}>
+              <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 16, border: `1px solid ${tokens.border.subtle}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                   <div>
                     <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Saldo por conta</p>
@@ -745,7 +745,7 @@ export default function FinanceiroPage() {
             )}
 
             {/* Chart fluxo */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 16 }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 16, border: `1px solid ${tokens.border.subtle}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
                 <div>
                   <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Fluxo de caixa</p>
@@ -760,7 +760,7 @@ export default function FinanceiroPage() {
             </div>
 
             {/* Movimentacoes recentes */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 16 }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 16, border: `1px solid ${tokens.border.subtle}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <p style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Últimas movimentações</p>
                 <button onClick={() => setTab('movimentacoes')} style={{ background: 'none', border: 'none', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Ver todas →</button>
@@ -800,7 +800,7 @@ export default function FinanceiroPage() {
 
             {/* Pacotes ativos */}
             {pacotesAtivos.length > 0 && (
-              <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+              <div style={{ background: 'white', borderRadius: 14, padding: 22, border: `1px solid ${tokens.border.subtle}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                   <p style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Pacotes ativos</p>
                   <button onClick={() => setTab('pacotes')} style={{ background: 'none', border: 'none', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Gerenciar →</button>
@@ -832,7 +832,7 @@ export default function FinanceiroPage() {
         {tab === 'movimentacoes' && (
           <>
             {/* Filtros */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 14, marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap' as const, alignItems: 'center', border: `1px solid ${tokens.border.subtle}` }}>
               <div style={{ flex: '1 1 240px', position: 'relative' as const }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2" style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input
@@ -858,7 +858,7 @@ export default function FinanceiroPage() {
             </div>
 
             {/* Tabela */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 22, border: `1px solid ${tokens.border.subtle}` }}>
               {carregandoMov ? (
                 <div style={{ textAlign: 'center' as const, padding: 40, color: tokens.text.tertiary, fontSize: 13 }}>Carregando...</div>
               ) : movFiltradas.length === 0 ? (
@@ -930,7 +930,7 @@ export default function FinanceiroPage() {
             {carregandoPac ? (
               <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: tokens.text.tertiary, fontSize: 13 }}>Carregando...</div>
             ) : todosPacotes.length === 0 ? (
-              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const }}>
+              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, border: `1px solid ${tokens.border.subtle}` }}>
                 <p style={{ fontSize: 14, color: tokens.text.muted, margin: '0 0 6px', fontWeight: 600 }}>Nenhum pacote {filtroPacStatus === 'ativo' ? 'ativo' : filtroPacStatus === 'concluido' ? 'concluído' : 'encontrado'}</p>
                 <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: '0 0 16px' }}>Crie pacotes de sessões para fisioterapia, nutrição, psicoterapia.</p>
                 <button onClick={() => setModalPacOpen(true)} style={btnPrimary}>+ Novo pacote</button>
@@ -997,13 +997,13 @@ export default function FinanceiroPage() {
             {carregandoCom ? (
               <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, color: tokens.text.tertiary, fontSize: 13 }}>Carregando...</div>
             ) : comissoesData.length === 0 ? (
-              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const }}>
+              <div style={{ background: 'white', borderRadius: 14, padding: 60, textAlign: 'center' as const, border: `1px solid ${tokens.border.subtle}` }}>
                 <p style={{ fontSize: 14, color: tokens.text.muted, fontWeight: 600 }}>Nenhum médico cadastrado</p>
                 <p style={{ fontSize: 13, color: tokens.text.tertiary }}>Adicione médicos no Painel admin.</p>
               </div>
             ) : (
               <>
-                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14, border: `1px solid ${tokens.border.subtle}` }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
                     <thead>
                       <tr style={{ background: tokens.bg.page }}>
@@ -1085,7 +1085,7 @@ export default function FinanceiroPage() {
             </div>
 
             {/* Tabela de cobrancas */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 22, border: `1px solid ${tokens.border.subtle}` }}>
               {carregandoCob ? (
                 <div style={{ textAlign: 'center' as const, padding: 40, color: tokens.text.tertiary, fontSize: 13 }}>Carregando...</div>
               ) : cobrancasData.length === 0 ? (
@@ -1169,7 +1169,7 @@ export default function FinanceiroPage() {
             </div>
 
             {configSubtab === 'categorias' && (
-              <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+              <div style={{ background: 'white', borderRadius: 14, padding: 22, border: `1px solid ${tokens.border.subtle}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <div>
                     <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Categorias financeiras</p>
@@ -1216,7 +1216,7 @@ export default function FinanceiroPage() {
             )}
 
             {configSubtab === 'contas' && (
-              <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+              <div style={{ background: 'white', borderRadius: 14, padding: 22, border: `1px solid ${tokens.border.subtle}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <div>
                     <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Contas bancárias</p>
@@ -1275,7 +1275,7 @@ export default function FinanceiroPage() {
             )}
 
             {configSubtab === 'recorrentes' && (
-              <div style={{ background: 'white', borderRadius: 14, padding: 22 }}>
+              <div style={{ background: 'white', borderRadius: 14, padding: 22, border: `1px solid ${tokens.border.subtle}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <div>
                     <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>Despesas recorrentes</p>
@@ -1369,7 +1369,7 @@ export default function FinanceiroPage() {
             ) : !relatoriosData ? null : (
               <>
                 {/* 1. DRE Simplificado */}
-                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14, border: `1px solid ${tokens.border.subtle}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <div>
                       <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>1. DRE Simplificado</p>
@@ -1402,7 +1402,7 @@ export default function FinanceiroPage() {
                 </div>
 
                 {/* 2. Receitas por Categoria */}
-                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14, border: `1px solid ${tokens.border.subtle}` }}>
                   <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>2. Receitas por Categoria</p>
                   <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>De onde vem o dinheiro</p>
                   {relatoriosData.receitasPorCat.length === 0 ? (
@@ -1413,7 +1413,7 @@ export default function FinanceiroPage() {
                 </div>
 
                 {/* 3. Receitas por Médico */}
-                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14, border: `1px solid ${tokens.border.subtle}` }}>
                   <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>3. Receitas por Médico</p>
                   <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>Performance da equipe</p>
                   {relatoriosData.receitasPorMed.length === 0 ? (
@@ -1443,7 +1443,7 @@ export default function FinanceiroPage() {
                 </div>
 
                 {/* 4. Despesas por Categoria */}
-                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14, border: `1px solid ${tokens.border.subtle}` }}>
                   <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>4. Despesas por Categoria</p>
                   <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>Pra onde vai o dinheiro</p>
                   {relatoriosData.despesasPorCat.length === 0 ? (
@@ -1454,7 +1454,7 @@ export default function FinanceiroPage() {
                 </div>
 
                 {/* 5. Top Procedimentos */}
-                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14 }}>
+                <div style={{ background: 'white', borderRadius: 14, padding: 22, marginBottom: 14, border: `1px solid ${tokens.border.subtle}` }}>
                   <p style={{ fontSize: 11, color: tokens.text.tertiary, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: 0, fontWeight: 700 }}>5. Top Procedimentos</p>
                   <p style={{ fontSize: 16, fontWeight: 700, margin: '4px 0 16px', letterSpacing: '-0.01em' }}>Mais realizados no período</p>
                   {relatoriosData.topProcedimentos.length === 0 ? (
@@ -1572,7 +1572,7 @@ function ChartFluxo({ data }: { data: { data: string; receita: number; despesa: 
 function KPI({ label, valor, cor, sub, subCor, carregando }: any) {
   if (carregando) {
     return (
-      <div style={{ background: 'white', borderRadius: 14, padding: 18 }}>
+      <div style={{ background: 'white', borderRadius: 14, padding: 18, border: `1px solid ${tokens.border.subtle}` }}>
         <div style={{ height: 11, width: '50%', background: tokens.bg.hoverStrong, borderRadius: 4, marginBottom: 8 }}/>
         <div style={{ height: 28, width: '70%', background: tokens.border.default, borderRadius: 4, marginBottom: 6 }}/>
         <div style={{ height: 10, width: '60%', background: tokens.bg.hoverStrong, borderRadius: 4 }}/>
@@ -1580,7 +1580,7 @@ function KPI({ label, valor, cor, sub, subCor, carregando }: any) {
     )
   }
   return (
-    <div style={{ background: 'white', borderRadius: 14, padding: 18 }}>
+    <div style={{ background: 'white', borderRadius: 14, padding: 18, border: `1px solid ${tokens.border.subtle}` }}>
       <p style={{ fontSize: 12, color: tokens.text.quaternary, margin: '0 0 6px' }}>{label}</p>
       <p style={{ fontSize: 26, fontWeight: 700, color: cor, letterSpacing: '-0.02em', margin: '0 0 4px' }}>{valor}</p>
       <p style={{ fontSize: 11, color: subCor || tokens.text.tertiary, margin: 0 }}>{sub}</p>

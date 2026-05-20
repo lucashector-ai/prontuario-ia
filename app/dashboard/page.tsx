@@ -183,7 +183,7 @@ export default function Dashboard() {
   if (!medico) return null
 
   return (
-    <div style={{ padding: '24px 28px', background: tokens.bg.page, minHeight: '100%' }}>
+    <div style={{ padding: '24px 28px', background: 'transparent', minHeight: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Dashboard</h1>
@@ -252,7 +252,7 @@ export default function Dashboard() {
           {/* ESQUERDA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* Consultas por dia */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: `1px solid ${tokens.border.subtle}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Consultas por dia</p>
@@ -289,7 +289,7 @@ export default function Dashboard() {
             </div>
 
             {/* Top CIDs */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: `1px solid ${tokens.border.subtle}` }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 14px' }}>CIDs mais frequentes</p>
               {carregando ? (
                 <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12 }}>
@@ -329,7 +329,7 @@ export default function Dashboard() {
           {/* DIREITA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* Próximos agendamentos */}
-            <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: 20, border: `1px solid ${tokens.border.subtle}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Próximos agendamentos</p>
                 <button onClick={() => router.push('/agenda')} style={{ fontSize: 11, color: tokens.brand.primary, background: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver todos →</button>
@@ -385,7 +385,7 @@ export default function Dashboard() {
 
         {/* LINHA 3: Comparativo médicos (só admin) */}
         {comparativoMedicos.length > 0 && (
-          <div style={{ background: 'white', borderRadius: 14, padding: 20, marginBottom: 16 }}>
+          <div style={{ background: 'white', borderRadius: 14, padding: 20, marginBottom: 16, border: `1px solid ${tokens.border.subtle}` }}>
             <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 14px' }}>Comparativo entre médicos</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
               {comparativoMedicos.map((m, i) => (
@@ -408,7 +408,7 @@ export default function Dashboard() {
         )}
 
         {/* LINHA 4: Últimas consultas */}
-        <div style={{ background: 'white', borderRadius: 14, padding: 20 }}>
+        <div style={{ background: 'white', borderRadius: 14, padding: 20, border: `1px solid ${tokens.border.subtle}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Últimas consultas</p>
             <button onClick={() => router.push('/historico')} style={{ fontSize: 11, color: tokens.brand.primary, background: 'none', cursor: 'pointer', fontWeight: 600 }}>Ver histórico →</button>
@@ -447,7 +447,7 @@ export default function Dashboard() {
 
 function CardSkeleton() {
   return (
-    <div style={{ background: 'white', borderRadius: 14, padding: 18 }}>
+    <div style={{ background: 'white', borderRadius: 14, padding: 18, border: `1px solid ${tokens.border.subtle}` }}>
       <Skeleton width={90} height={11} radius={3}/>
       <div style={{ marginTop: 8 }}><Skeleton width={70} height={28} radius={4}/></div>
       <div style={{ marginTop: 6 }}><Skeleton width={120} height={10} radius={3}/></div>
@@ -482,7 +482,7 @@ function Skeleton({ width, height, radius = 4 }: { width: number | string; heigh
 
 function Card({ titulo, valor, subtitulo, cor }: { titulo: string; valor: any; subtitulo: string; cor: string }) {
   return (
-    <div style={{ background: 'white', borderRadius: 14, padding: 18 }}>
+    <div style={{ background: 'white', borderRadius: 14, padding: 18, border: `1px solid ${tokens.border.subtle}` }}>
       <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 6px' }}>{titulo}</p>
       <p style={{ fontSize: 28, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px', letterSpacing: '-0.02em', lineHeight: 1 }}>{valor}</p>
       <p style={{ fontSize: 11, color: cor, margin: 0, fontWeight: 500 }}>{subtitulo}</p>

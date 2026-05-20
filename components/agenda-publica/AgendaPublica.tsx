@@ -135,6 +135,22 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
     carregar()
   }, [medico, mesAtual, medicoSlug])
 
+  // Pre-seleciona o primeiro dia futuro com vaga ao carregar a disponibilidade.
+  // Estilo Cal.com: paciente ja chega vendo horarios, sem precisar clicar no calendario.
+  useEffect(() => {
+    if (dataSelecionada) return
+    if (!disponibilidade || Object.keys(disponibilidade).length === 0) return
+
+    const hojeISO = new Date().toISOString().slice(0, 10)
+    const proximaData = Object.keys(disponibilidade)
+      .filter(d => d >= hojeISO && disponibilidade[d] > 0)
+      .sort()[0]
+
+    if (proximaData) {
+      setDataSelecionada(proximaData)
+    }
+  }, [disponibilidade, dataSelecionada])
+
   useEffect(() => {
     if (!dataSelecionada || !medico) return
     async function carregar() {
