@@ -10,7 +10,7 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { paciente_id, medico_id, clinica_id, agendamento_id, observacao } = body
+    const { paciente_id, medico_id, profissional_id, clinica_id, agendamento_id, observacao, observacoes } = body
 
     if (!paciente_id) {
       return NextResponse.json({ error: 'paciente_id obrigatorio' }, { status: 400 })
@@ -20,11 +20,13 @@ export async function POST(req: NextRequest) {
       .from('comandas')
       .insert({
         paciente_id,
-        medico_id: medico_id || null,
+        profissional_id: profissional_id || medico_id || null,
         clinica_id: clinica_id || null,
         agendamento_id: agendamento_id || null,
-        observacao: observacao || null,
+        observacoes: observacoes ?? observacao ?? null,
+        origem: agendamento_id ? 'agendamento' : 'avulsa',
         status: 'aberta',
+        aberto_em: new Date().toISOString(),
       })
       .select()
       .single()
@@ -45,8 +47,8 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from('comandas')
-      .select('*, pacientes:paciente_id(nome), medicos:medico_id(nome)')
-      .order('criada_em', { ascending: false })
+      .select('*, pacientes:paciente_id(nome), medicos:profissional_id(nome)')
+      .order('created_at', { ascending: false })
       .limit(100)
 
     if (pacienteId) query = query.eq('paciente_id', pacienteId)

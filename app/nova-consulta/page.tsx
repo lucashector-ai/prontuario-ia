@@ -14,6 +14,7 @@ import { BotaoMemed } from '@/components/BotaoMemed'
 import { SidebarContextoPaciente } from '@/components/SidebarContextoPaciente'
 import { ModalDadosPacienteAvulso } from '@/components/ModalDadosPacienteAvulso'
 import { ModalSelecionarPaciente } from '@/components/ModalSelecionarPaciente'
+import ComandaDrawer from '@/components/financeiro/ComandaDrawer'
 import { tokens } from '@/lib/design-tokens'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
@@ -276,6 +277,15 @@ const handleCopiar = () => {
       <Suspense fallback={null}>
         <SearchParamsReader onParams={handleSearchParams} />
       </Suspense>
+
+      {pacienteSelecionado && medico && (
+        <ComandaDrawer
+          pacienteId={pacienteSelecionado.id}
+          clinicaId={medico.clinica_id || null}
+          profissionalId={medico.id}
+          usuarioId={medico.id}
+        />
+      )}
 
       {/* Modal seleção de paciente */}
       {modalPaciente && (

@@ -795,10 +795,10 @@ export default function PacienteDetalhe() {
             ) : (
               <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
                 {comandasPaciente.map((c:any) => {
-                  const data = new Date(c.criada_em)
+                  const data = new Date(c.created_at)
                   const dataFmt = data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                  const total = Number(c.total_liquido || c.total || 0)
-                  const fechada = c.status === 'fechada'
+                  const total = Number(c.valor_final || c.valor_total || 0)
+                  const fechada = c.status === 'fechada' || c.status === 'paga'
                   const cancelada = c.status === 'cancelada'
                   return (
                     <div key={c.id} onClick={() => router.push('/comandas/' + c.id)} style={{
