@@ -188,6 +188,13 @@ export interface DashboardFinanceiro {
   // gráficos
   serie: SerieFluxoPonto[]
   categorias: CategoriaFatia[]
+  // projeção (fluxo de caixa preditivo)
+  projecao: {
+    entradasPrevistas: number
+    saidasPrevistas: number
+    saldoFinal: number
+    diasJanela: number
+  }
 }
 
 export interface InsightFinanceiro {

@@ -14,7 +14,7 @@ export function Procedimentos() {
   const [carregando, setCarregando] = useState(true)
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState<any>(null)
-  const [form, setForm] = useState({ nome: '', duracao: '30', valor: '' })
+  const [form, setForm] = useState({ nome: '', duracao: '30', valor: '', custo_insumos: '', custo_operacional: '' })
   const [salvando, setSalvando] = useState(false)
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
 
@@ -50,7 +50,7 @@ export function Procedimentos() {
 
   const abrirNovo = () => {
     setEditando(null)
-    setForm({ nome: '', duracao: '30', valor: '' })
+    setForm({ nome: '', duracao: '30', valor: '', custo_insumos: '', custo_operacional: '' })
     setModalAberto(true)
   }
 
@@ -60,6 +60,8 @@ export function Procedimentos() {
       nome: p.nome,
       duracao: String(p.duracao),
       valor: p.valor != null ? String(p.valor) : '',
+      custo_insumos: p.custo_insumos != null ? String(p.custo_insumos) : '',
+      custo_operacional: p.custo_operacional != null ? String(p.custo_operacional) : '',
     })
     setModalAberto(true)
   }
@@ -230,6 +232,39 @@ export function Procedimentos() {
               </div>
             </div>
 
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Custo de insumos (R$)</label>
+                <input type="number" step="0.01" value={form.custo_insumos}
+                  onChange={e => setForm(f => ({ ...f, custo_insumos: e.target.value }))}
+                  placeholder="0,00"
+                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1px solid ${tokens.border.default}`, outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Custo operacional (R$)</label>
+                <input type="number" step="0.01" value={form.custo_operacional}
+                  onChange={e => setForm(f => ({ ...f, custo_operacional: e.target.value }))}
+                  placeholder="0,00"
+                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1px solid ${tokens.border.default}`, outline: 'none' }} />
+              </div>
+            </div>
+
+            {(() => {
+              const v = parseFloat(form.valor) || 0
+              const c = (parseFloat(form.custo_insumos) || 0) + (parseFloat(form.custo_operacional) || 0)
+              if (v <= 0) return null
+              const margem = v - c
+              const pct = (margem / v) * 100
+              return (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 8, background: tokens.bg.cardSubtle, fontSize: 12 }}>
+                  <span style={{ color: tokens.text.secondary }}>Margem estimada</span>
+                  <span style={{ fontWeight: 700, color: margem >= 0 ? tokens.status.success : tokens.status.danger }}>
+                    R$ {margem.toFixed(2).replace('.', ',')} · {pct.toFixed(0)}%
+                  </span>
+                </div>
+              )
+            })()}
+
             <button type="submit" disabled={salvando} style={{
               padding: '11px', borderRadius: 9, background: ACCENT, color: 'white', border: 'none',
               fontSize: 13, fontWeight: 700, cursor: salvando ? 'default' : 'pointer', opacity: salvando ? 0.7 : 1, marginTop: 6,
@@ -250,6 +285,9 @@ function ProcedimentoCard({ p, fmtValor, onEditar, onDesativar, desativarLabel =
         <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{p.nome}</p>
         <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '3px 0 0' }}>
           {p.duracao} min{p.valor != null ? ' · ' + fmtValor(p.valor) : ''}
+          {p.valor > 0 && (Number(p.custo_insumos) || Number(p.custo_operacional))
+            ? ' · margem ' + Math.round(((p.valor - (Number(p.custo_insumos || 0) + Number(p.custo_operacional || 0))) / p.valor) * 100) + '%'
+            : ''}
         </p>
       </div>
       <button onClick={onEditar} style={{

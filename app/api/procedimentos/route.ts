@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { clinica_id, nome, duracao, valor } = body
+    const { clinica_id, nome, duracao, valor, custo_insumos, custo_operacional } = body
     if (!clinica_id || !nome) return NextResponse.json({ error: 'clinica_id e nome obrigatórios' }, { status: 400 })
     const { data, error } = await supabase
       .from('procedimentos')
@@ -33,6 +33,8 @@ export async function POST(req: NextRequest) {
         nome: nome.trim(),
         duracao: parseInt(duracao) || 30,
         valor: valor != null && valor !== '' ? parseFloat(valor) : null,
+        custo_insumos: custo_insumos != null && custo_insumos !== '' ? parseFloat(custo_insumos) : 0,
+        custo_operacional: custo_operacional != null && custo_operacional !== '' ? parseFloat(custo_operacional) : 0,
       })
       .select()
       .single()
@@ -47,12 +49,14 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json()
-    const { id, nome, duracao, valor, ativo } = body
+    const { id, nome, duracao, valor, ativo, custo_insumos, custo_operacional } = body
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
     const updates: any = { atualizado_em: new Date().toISOString() }
     if (nome !== undefined) updates.nome = nome.trim()
     if (duracao !== undefined) updates.duracao = parseInt(duracao) || 30
     if (valor !== undefined) updates.valor = valor != null && valor !== '' ? parseFloat(valor) : null
+    if (custo_insumos !== undefined) updates.custo_insumos = custo_insumos !== '' ? parseFloat(custo_insumos) || 0 : 0
+    if (custo_operacional !== undefined) updates.custo_operacional = custo_operacional !== '' ? parseFloat(custo_operacional) || 0 : 0
     if (ativo !== undefined) updates.ativo = !!ativo
 
     const { data, error } = await supabase

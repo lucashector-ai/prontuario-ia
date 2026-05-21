@@ -149,8 +149,24 @@ export default function FinanceiroPage() {
       }}>
         <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Fluxo de caixa</p>
         <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 14px' }}>
-          Entradas e saídas dos últimos 30 dias e previsão dos próximos 15.
+          Realizado dos últimos 30 dias e projeção dos próximos 45 — inclui despesas recorrentes.
         </p>
+        {d && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginBottom: 12 }}>
+            {[
+              ['Entradas previstas (45d)', d.projecao.entradasPrevistas, tokens.status.success],
+              ['Saídas previstas (45d)', d.projecao.saidasPrevistas, tokens.status.danger],
+              ['Saldo projetado do período', d.projecao.saldoFinal, d.projecao.saldoFinal >= 0 ? tokens.brand.primary : tokens.status.danger],
+            ].map(([label, valor, cor]) => (
+              <div key={label as string}>
+                <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{label}</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: cor as string, margin: '2px 0 0', fontVariantNumeric: 'tabular-nums' }}>
+                  {brl(valor as number)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
         <div style={{ width: '100%', height: 300 }}>
           {serie.length > 0 && (
             <ResponsiveContainer>
@@ -253,6 +269,9 @@ export default function FinanceiroPage() {
           ['Contas a receber', '/financeiro/recebimentos'],
           ['Contas a pagar', '/financeiro/despesas'],
           ['Repasse médico', '/financeiro/repasses'],
+          ['Margem por procedimento', '/financeiro/margem'],
+          ['CRM financeiro', '/financeiro/pacientes'],
+          ['Assistente financeiro', '/financeiro/assistente'],
         ].map(([label, rota]) => (
           <button key={rota} onClick={() => router.push(rota)} style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,

@@ -17,7 +17,7 @@ export async function obterDashboard(clinicaId: string): Promise<Resultado<Dashb
     const anoIni = new Date(y, 0, 1).toISOString()
     const hoje = isoDate(agora)
     const janelaIni = new Date(agora); janelaIni.setDate(janelaIni.getDate() - 29)
-    const janelaFim = new Date(agora); janelaFim.setDate(janelaFim.getDate() + 15)
+    const janelaFim = new Date(agora); janelaFim.setDate(janelaFim.getDate() + 45)
 
     const [comandasR, recebR, despR, movR, itensR] = await Promise.all([
       supabase.from('comandas')
@@ -29,7 +29,7 @@ export async function obterDashboard(clinicaId: string): Promise<Resultado<Dashb
         .select('valor, valor_pago, status, vencimento, pago_em')
         .eq('clinica_id', clinicaId),
       supabase.from('despesas')
-        .select('valor, status, vencimento, pago_em')
+        .select('valor, status, vencimento, pago_em, recorrente, recorrencia_periodicidade')
         .eq('clinica_id', clinicaId),
       supabase.from('movimentacoes_caixa')
         .select('tipo, valor, data_movimentacao')
@@ -111,6 +111,24 @@ export async function obterDashboard(clinicaId: string): Promise<Resultado<Dashb
       }
     }
 
+    // projeção de despesas recorrentes nas próximas semanas (fluxo preditivo)
+    const fimJanela = isoDate(janelaFim)
+    for (const dsp of despesas) {
+      if (!dsp.recorrente || dsp.status === 'cancelado') continue
+      const venc = (dsp.vencimento || '').slice(0, 10)
+      if (!venc) continue
+      const passo = dsp.recorrencia_periodicidade || 'mensal'
+      for (let k = 1; k <= 24; k++) {
+        const oc = new Date(venc + 'T12:00:00')
+        if (passo === 'semanal') oc.setDate(oc.getDate() + 7 * k)
+        else if (passo === 'anual') oc.setFullYear(oc.getFullYear() + k)
+        else oc.setMonth(oc.getMonth() + k)
+        const ocIso = isoDate(oc)
+        if (ocIso > fimJanela) break
+        if (ocIso > hoje) despPrevDia[ocIso] = (despPrevDia[ocIso] || 0) + num(dsp.valor)
+      }
+    }
+
     const lucroMes = recebidoMes - pagoMes
     const lucroMesAnterior = recebidoMesAnterior - pagoMesAnterior
 
@@ -150,6 +168,15 @@ export async function obterDashboard(clinicaId: string): Promise<Resultado<Dashb
       .map(([tipo, valor]) => ({ tipo: tipo as ItemTipo, valor }))
       .sort((a, b) => b.valor - a.valor)
 
+    // ── Projeção (resumo do fluxo preditivo) ─────────────────────────────────
+    const futuros = serie.filter((p) => p.futuro)
+    const projecao = {
+      entradasPrevistas: futuros.reduce((s, p) => s + p.entradasPrevistas, 0),
+      saidasPrevistas: futuros.reduce((s, p) => s + p.saidasPrevistas, 0),
+      saldoFinal: serie.length ? serie[serie.length - 1].saldo : 0,
+      diasJanela: 45,
+    }
+
     return {
       data: {
         faturamentoMes, faturamentoMesAnterior, faturamentoHoje,
@@ -165,7 +192,7 @@ export async function obterDashboard(clinicaId: string): Promise<Resultado<Dashb
           emAtraso: despEmAtraso, paraHoje: despParaHoje, esteMes: despEsteMes,
           esteAno: despEsteAno, pagoMes, pagoAno,
         },
-        serie, categorias,
+        serie, categorias, projecao,
       },
       error: null,
     }

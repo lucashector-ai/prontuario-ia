@@ -40,6 +40,7 @@ Despesas vencidas: ${brl(m.painelPagar?.emAtraso || 0)}
 Ticket médio: ${brl(m.ticketMedio)}
 Comandas fechadas no mês: ${m.comandasFechadasMes || 0}
 Receita por categoria: ${(m.categorias || []).map((c: any) => `${c.tipo}=${brl(c.valor)}`).join(', ') || 'sem dados'}
+Projeção próximos 45 dias — entradas previstas: ${brl(m.projecao?.entradasPrevistas || 0)}, saídas previstas: ${brl(m.projecao?.saidasPrevistas || 0)}
 `.trim()
 
     const message = await anthropic.messages.create({
