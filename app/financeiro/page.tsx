@@ -1,102 +1,300 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell,
+} from 'recharts'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
-import { obterMetricasFinanceiras } from '@/lib/financeiro/dashboard'
-import type { MetricasFinanceiras } from '@/lib/financeiro/types'
+import { obterDashboard } from '@/lib/financeiro/dashboard'
+import type { DashboardFinanceiro, InsightFinanceiro, ItemTipo } from '@/lib/financeiro/types'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+const brlCompact = (v: number) => {
+  const n = Number(v) || 0
+  if (Math.abs(n) >= 1000) return `${n < 0 ? '-' : ''}${(Math.abs(n) / 1000).toFixed(0)}k`
+  return String(Math.round(n))
+}
+const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`
 
 function delta(atual: number, anterior: number): { texto: string; positivo: boolean } | null {
   if (!anterior) return null
-  const pct = ((atual - anterior) / anterior) * 100
+  const pct = ((atual - anterior) / Math.abs(anterior)) * 100
   if (!isFinite(pct) || Math.abs(pct) < 0.5) return null
   return { texto: `${pct > 0 ? '+' : ''}${pct.toFixed(0)}% vs mês anterior`, positivo: pct >= 0 }
 }
+
+const CAT_LABEL: Record<ItemTipo, string> = {
+  consulta: 'Consultas', procedimento: 'Procedimentos', exame: 'Exames',
+  produto: 'Produtos', pacote: 'Pacotes', outro: 'Outros',
+}
+const CAT_CORES = ['#6043C1', '#8B5CF6', '#B9A9EF', '#A7F3D0', '#FBBF24', '#94A3B8']
 
 export default function FinanceiroPage() {
   const router = useRouter()
   const { usuario } = useAuth()
   const clinicaId = usuario?.clinica_id || null
 
-  const [m, setM] = useState<MetricasFinanceiras | null>(null)
+  const [d, setD] = useState<DashboardFinanceiro | null>(null)
   const [carregando, setCarregando] = useState(true)
+  const [insights, setInsights] = useState<InsightFinanceiro[] | null>(null)
 
   useEffect(() => {
     if (!clinicaId) return
-    obterMetricasFinanceiras(clinicaId).then(({ data }) => {
-      setM(data)
+    obterDashboard(clinicaId).then(({ data }) => {
+      setD(data)
       setCarregando(false)
+      if (data) {
+        fetch('/api/financeiro/insights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+          .then((r) => r.json())
+          .then((j) => setInsights(j.insights || []))
+          .catch(() => setInsights([]))
+      }
     })
   }, [clinicaId])
 
-  const cards = [
-    { label: 'Faturamento do mês', valor: m?.faturamentoMes ?? 0, delta: m ? delta(m.faturamentoMes, m.faturamentoMesAnterior) : null },
-    { label: 'Recebido no mês', valor: m?.recebidoMes ?? 0, delta: m ? delta(m.recebidoMes, m.recebidoMesAnterior) : null },
-    { label: 'A receber', valor: m?.aReceber ?? 0, delta: null },
-    { label: 'Ticket médio', valor: m?.ticketMedio ?? 0, delta: null },
-  ]
+  const kpis = useMemo(() => {
+    if (!d) return []
+    return [
+      { label: 'Faturamento do mês', valor: d.faturamentoMes, delta: delta(d.faturamentoMes, d.faturamentoMesAnterior) },
+      { label: 'Recebido no mês', valor: d.recebidoMes, delta: delta(d.recebidoMes, d.recebidoMesAnterior) },
+      { label: 'Lucro do mês', valor: d.lucroMes, delta: delta(d.lucroMes, d.lucroMesAnterior), destaque: true },
+      { label: 'A receber', valor: d.aReceber, delta: null },
+      { label: 'A pagar', valor: d.aPagar, delta: null, negativo: true },
+      { label: 'Inadimplência', valor: d.inadimplencia, delta: null, negativo: true },
+      { label: 'Ticket médio', valor: d.ticketMedio, delta: null },
+      { label: 'Faturamento hoje', valor: d.faturamentoHoje, delta: null },
+    ]
+  }, [d])
+
+  const serie = (d?.serie || []).map((p) => ({ ...p, label: ddmm(p.data) }))
+  const tickInterval = Math.max(0, Math.floor(serie.length / 9))
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
-        Financeiro
-      </h1>
-      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 22px' }}>
+      <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Financeiro</h1>
+      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 20px' }}>
         Acompanhe receita, recebimentos e saúde financeira da clínica.
       </p>
 
-      {/* Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
-        {cards.map((c) => (
-          <div key={c.label} style={{
+      {/* Cockpit de insights */}
+      <div style={{
+        background: `linear-gradient(180deg, ${tokens.brand.primarySoftBg}, ${tokens.bg.card})`,
+        border: `1px solid ${tokens.border.subtle}`, borderRadius: 16, padding: 18, marginBottom: 16,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+          <span style={{ fontSize: 12, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Leitura inteligente
+          </span>
+        </div>
+        {insights === null ? (
+          <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Analisando os números...</p>
+        ) : insights.length === 0 ? (
+          <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Sem leitura disponível no momento.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+            {insights.map((ins, i) => {
+              const cor = ins.tom === 'positivo' ? tokens.status.success
+                : ins.tom === 'alerta' ? tokens.status.danger : tokens.text.tertiary
+              return (
+                <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: 99, background: cor, marginTop: 6, flexShrink: 0 }} />
+                  <span style={{ fontSize: 13.5, color: tokens.text.strong, lineHeight: 1.5 }}>{ins.texto}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* KPIs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 16 }}>
+        {kpis.map((k) => (
+          <div key={k.label} style={{
             background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`,
-            borderRadius: 14, padding: '18px 20px',
+            borderRadius: 14, padding: '16px 18px',
           }}>
-            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>{c.label}</p>
+            <p style={{ fontSize: 12.5, color: tokens.text.secondary, margin: 0 }}>{k.label}</p>
             <p style={{
-              fontSize: 28, fontWeight: 600, color: tokens.text.primary,
-              margin: '8px 0 0', fontVariantNumeric: 'tabular-nums',
+              fontSize: 25, fontWeight: 600, margin: '7px 0 0', fontVariantNumeric: 'tabular-nums',
+              color: (k as any).negativo && k.valor > 0 ? tokens.status.danger
+                : (k as any).destaque ? tokens.brand.primary : tokens.text.primary,
             }}>
-              {carregando ? '—' : brl(c.valor)}
+              {carregando ? '—' : brl(k.valor)}
             </p>
-            {c.delta && (
+            {k.delta && (
               <p style={{
-                fontSize: 11.5, fontWeight: 600, margin: '5px 0 0',
-                color: c.delta.positivo ? tokens.status.success : tokens.status.danger,
-              }}>
-                {c.delta.texto}
-              </p>
+                fontSize: 11, fontWeight: 600, margin: '4px 0 0',
+                color: k.delta.positivo ? tokens.status.success : tokens.status.danger,
+              }}>{k.delta.texto}</p>
             )}
           </div>
         ))}
       </div>
 
-      {/* Navegação */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 22 }}>
-        <button onClick={() => router.push('/financeiro/recebimentos')} style={navCard}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary }}>Contas a receber</span>
-          <span style={{ fontSize: 16, color: tokens.brand.primary }}>→</span>
-        </button>
-        <div style={{ ...navCard, cursor: 'default', opacity: 0.7 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary }}>Contas a pagar</span>
-          <span style={{
-            fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 100,
-            background: tokens.bg.cardSubtle, color: tokens.text.tertiary,
-            textTransform: 'uppercase', letterSpacing: '0.03em',
-          }}>Em breve</span>
+      {/* Fluxo de caixa */}
+      <div style={{
+        background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`,
+        borderRadius: 16, padding: 20, marginBottom: 16,
+      }}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Fluxo de caixa</p>
+        <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 14px' }}>
+          Entradas e saídas dos últimos 30 dias e previsão dos próximos 15.
+        </p>
+        <div style={{ width: '100%', height: 300 }}>
+          {serie.length > 0 && (
+            <ResponsiveContainer>
+              <ComposedChart data={serie} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
+                <CartesianGrid stroke={tokens.border.subtle} vertical={false} />
+                <XAxis dataKey="label" interval={tickInterval} tick={{ fontSize: 10, fill: tokens.text.tertiary }} tickLine={false} axisLine={{ stroke: tokens.border.default }} />
+                <YAxis tickFormatter={brlCompact} tick={{ fontSize: 10, fill: tokens.text.tertiary }} tickLine={false} axisLine={false} width={42} />
+                <Tooltip
+                  formatter={(v: any, n: any) => [brl(Number(v)), LEGENDAS[n] || n]}
+                  labelFormatter={(l) => `Dia ${l}`}
+                  contentStyle={{ fontSize: 12, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}
+                />
+                <Bar dataKey="entradas" stackId="real" fill={tokens.status.success} radius={[3, 3, 0, 0]} maxBarSize={14} />
+                <Bar dataKey="saidas" stackId="real" fill={tokens.status.danger} radius={[3, 3, 0, 0]} maxBarSize={14} />
+                <Bar dataKey="entradasPrevistas" stackId="prev" fill={tokens.status.successLight} radius={[3, 3, 0, 0]} maxBarSize={14} />
+                <Bar dataKey="saidasPrevistas" stackId="prev" fill={tokens.status.dangerLight} radius={[3, 3, 0, 0]} maxBarSize={14} />
+                <Line type="monotone" dataKey="saldo" stroke={tokens.brand.primary} strokeWidth={2} dot={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 10 }}>
+          {[
+            ['Entradas', tokens.status.success], ['Saídas', tokens.status.danger],
+            ['Entradas previstas', tokens.status.successLight], ['Saídas previstas', tokens.status.dangerLight],
+            ['Saldo acumulado', tokens.brand.primary],
+          ].map(([txt, cor]) => (
+            <span key={txt} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: tokens.text.secondary }}>
+              <span style={{ width: 9, height: 9, borderRadius: 3, background: cor }} />{txt}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Painéis a receber / a pagar / categorias */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+        <Painel
+          titulo="A receber"
+          onVerTodas={() => router.push('/financeiro/recebimentos')}
+          cor={tokens.status.success}
+          linhas={d ? [
+            ['Inadimplência', d.painelReceber.inadimplencia],
+            ['Para hoje', d.painelReceber.paraHoje],
+            ['Para este mês', d.painelReceber.esteMes],
+            ['Para este ano', d.painelReceber.esteAno],
+            ['Recebido no mês', d.painelReceber.recebidoMes],
+            ['Recebido no ano', d.painelReceber.recebidoAno],
+          ] : []}
+        />
+        <Painel
+          titulo="A pagar"
+          cor={tokens.status.danger}
+          rodape="UI de despesas chega na Fase 3"
+          linhas={d ? [
+            ['Em atraso', d.painelPagar.emAtraso],
+            ['Para hoje', d.painelPagar.paraHoje],
+            ['Para este mês', d.painelPagar.esteMes],
+            ['Para este ano', d.painelPagar.esteAno],
+            ['Pago no mês', d.painelPagar.pagoMes],
+            ['Pago no ano', d.painelPagar.pagoAno],
+          ] : []}
+        />
+        <div style={painelCard}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 12px' }}>
+            Receita por categoria
+          </p>
+          {d && d.categorias.length > 0 ? (
+            <>
+              <div style={{ width: '100%', height: 150 }}>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie data={d.categorias} dataKey="valor" nameKey="tipo" cx="50%" cy="50%" innerRadius={38} outerRadius={62} paddingAngle={2}>
+                      {d.categorias.map((c, i) => <Cell key={c.tipo} fill={CAT_CORES[i % CAT_CORES.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(v: any, n: any) => [brl(Number(v)), CAT_LABEL[n as ItemTipo] || n]} contentStyle={{ fontSize: 12, borderRadius: 10 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                {d.categorias.map((c, i) => (
+                  <div key={c.tipo} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12 }}>
+                    <span style={{ width: 9, height: 9, borderRadius: 3, background: CAT_CORES[i % CAT_CORES.length] }} />
+                    <span style={{ flex: 1, color: tokens.text.secondary }}>{CAT_LABEL[c.tipo] || c.tipo}</span>
+                    <span style={{ fontWeight: 600, color: tokens.text.primary, fontVariantNumeric: 'tabular-nums' }}>{brl(c.valor)}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p style={{ fontSize: 12.5, color: tokens.text.tertiary, margin: 0 }}>
+              Sem receita categorizada neste mês.
+            </p>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-const navCard: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-  minWidth: 240, padding: '16px 20px', borderRadius: 14,
+const LEGENDAS: Record<string, string> = {
+  entradas: 'Entradas', saidas: 'Saídas',
+  entradasPrevistas: 'Entradas previstas', saidasPrevistas: 'Saídas previstas',
+  saldo: 'Saldo acumulado',
+}
+
+function Painel({ titulo, cor, linhas, onVerTodas, rodape }: {
+  titulo: string
+  cor: string
+  linhas: [string, number][]
+  onVerTodas?: () => void
+  rodape?: string
+}) {
+  const brlL = (v: number) =>
+    'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return (
+    <div style={painelCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{titulo}</p>
+        {onVerTodas && (
+          <button onClick={onVerTodas} style={{
+            background: 'none', border: 'none', color: tokens.brand.primary,
+            fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0,
+          }}>Ver todas →</button>
+        )}
+      </div>
+      <div>
+        {linhas.map(([label, valor]) => (
+          <div key={label} style={{
+            display: 'flex', justifyContent: 'space-between', padding: '8px 0',
+            borderBottom: `1px solid ${tokens.border.subtle}`, fontSize: 13,
+          }}>
+            <span style={{ color: tokens.text.secondary }}>{label}</span>
+            <span style={{ fontWeight: 600, color: cor, fontVariantNumeric: 'tabular-nums' }}>{brlL(valor)}</span>
+          </div>
+        ))}
+      </div>
+      {rodape && (
+        <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '10px 0 0' }}>{rodape}</p>
+      )}
+    </div>
+  )
+}
+
+const painelCard: React.CSSProperties = {
   background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`,
-  cursor: 'pointer',
+  borderRadius: 16, padding: 18,
 }

@@ -105,14 +105,64 @@ export interface MovimentacaoCaixa {
   created_at: string
 }
 
-export interface MetricasFinanceiras {
-  faturamentoMes: number
+export interface SerieFluxoPonto {
+  data: string
+  entradas: number
+  saidas: number
+  entradasPrevistas: number
+  saidasPrevistas: number
+  saldo: number
+  futuro: boolean
+}
+
+export interface CategoriaFatia {
+  tipo: ItemTipo
+  valor: number
+}
+
+export interface PainelReceber {
+  inadimplencia: number
+  paraHoje: number
+  esteMes: number
+  esteAno: number
   recebidoMes: number
+  recebidoAno: number
+}
+
+export interface PainelPagar {
+  emAtraso: number
+  paraHoje: number
+  esteMes: number
+  esteAno: number
+  pagoMes: number
+  pagoAno: number
+}
+
+export interface DashboardFinanceiro {
+  // KPIs principais
+  faturamentoMes: number
+  faturamentoMesAnterior: number
+  faturamentoHoje: number
+  recebidoMes: number
+  recebidoMesAnterior: number
   aReceber: number
+  aPagar: number
+  lucroMes: number
+  lucroMesAnterior: number
   ticketMedio: number
   comandasFechadasMes: number
-  faturamentoMesAnterior: number
-  recebidoMesAnterior: number
+  inadimplencia: number
+  // painéis detalhados
+  painelReceber: PainelReceber
+  painelPagar: PainelPagar
+  // gráficos
+  serie: SerieFluxoPonto[]
+  categorias: CategoriaFatia[]
+}
+
+export interface InsightFinanceiro {
+  texto: string
+  tom: 'positivo' | 'alerta' | 'neutro'
 }
 
 // Resultado padrão de todas as funções da camada de dados
