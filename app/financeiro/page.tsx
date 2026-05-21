@@ -203,7 +203,7 @@ export default function FinanceiroPage() {
         <Painel
           titulo="A pagar"
           cor={tokens.status.danger}
-          rodape="UI de despesas chega na Fase 3"
+          onVerTodas={() => router.push('/financeiro/despesas')}
           linhas={d ? [
             ['Em atraso', d.painelPagar.emAtraso],
             ['Para hoje', d.painelPagar.paraHoje],
@@ -245,6 +245,24 @@ export default function FinanceiroPage() {
             </p>
           )}
         </div>
+      </div>
+
+      {/* Navegação */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 16 }}>
+        {[
+          ['Contas a receber', '/financeiro/recebimentos'],
+          ['Contas a pagar', '/financeiro/despesas'],
+          ['Repasse médico', '/financeiro/repasses'],
+        ].map(([label, rota]) => (
+          <button key={rota} onClick={() => router.push(rota)} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+            minWidth: 220, padding: '15px 18px', borderRadius: 14,
+            background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, cursor: 'pointer',
+          }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary }}>{label}</span>
+            <span style={{ fontSize: 16, color: tokens.brand.primary }}>→</span>
+          </button>
+        ))}
       </div>
     </div>
   )

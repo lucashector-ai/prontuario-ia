@@ -7,7 +7,8 @@ export type RecebimentoStatus =
   | 'pendente' | 'pago' | 'parcial' | 'atrasado' | 'cancelado' | 'reembolsado'
 export type DespesaStatus = 'pendente' | 'pago' | 'atrasado' | 'cancelado'
 export type MovimentacaoTipo = 'entrada' | 'saida'
-export type MovimentacaoOrigem = 'recebimento' | 'despesa' | 'ajuste_manual' | 'estorno'
+export type MovimentacaoOrigem = 'recebimento' | 'despesa' | 'ajuste_manual' | 'estorno' | 'repasse'
+export type RepasseStatus = 'pendente' | 'aprovado' | 'pago' | 'cancelado'
 
 export interface FormaPagamento {
   id: string
@@ -85,6 +86,35 @@ export interface Despesa {
   forma_pagamento_id: string | null
   recorrente: boolean
   recorrencia_periodicidade: 'semanal' | 'mensal' | 'anual' | null
+  observacoes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface RepasseRegra {
+  id: string
+  clinica_id: string
+  profissional_id: string
+  tipo_item: ItemTipo | null
+  percentual: number
+  ativo: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Repasse {
+  id: string
+  clinica_id: string
+  profissional_id: string
+  comanda_id: string | null
+  comanda_item_id: string | null
+  descricao: string | null
+  base_calculo: number
+  percentual: number
+  valor: number
+  status: RepasseStatus
+  competencia: string
+  pago_em: string | null
   observacoes: string | null
   created_at: string
   updated_at: string

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { registrarEntrada } from './movimentacoes'
+import { gerarRepasses } from './repasses'
 import type {
   Comanda, ComandaItem, ComandaStatus, ItemTipo, Resultado,
 } from './types'
@@ -263,7 +264,10 @@ export async function fecharComanda(
 export async function marcarComoPaga(comandaId: string): Promise<Resultado<boolean>> {
   const { error } = await supabase
     .from('comandas').update({ status: 'paga' }).eq('id', comandaId)
-  return { data: error ? null : true, error: error?.message || null }
+  if (error) return { data: null, error: error.message }
+  // gera os repasses médicos dos itens da comanda
+  await gerarRepasses(comandaId)
+  return { data: true, error: null }
 }
 
 // Chamada após dar baixa num recebimento: se todos os recebíveis da comanda

@@ -21,7 +21,7 @@ interface SaidaInput {
   forma_pagamento_id?: string | null
   data?: string
   descricao?: string
-  origem?: 'despesa' | 'ajuste_manual' | 'estorno'
+  origem?: 'despesa' | 'ajuste_manual' | 'estorno' | 'repasse'
   criado_por?: string | null
 }
 
