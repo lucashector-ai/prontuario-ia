@@ -271,6 +271,7 @@ export default function FinanceiroPage() {
           ['Repasse médico', '/financeiro/repasses'],
           ['Margem por procedimento', '/financeiro/margem'],
           ['CRM financeiro', '/financeiro/pacientes'],
+          ['Cofre financeiro', '/financeiro/saude'],
           ['Assistente financeiro', '/financeiro/assistente'],
         ].map(([label, rota]) => (
           <button key={rota} onClick={() => router.push(rota)} style={{

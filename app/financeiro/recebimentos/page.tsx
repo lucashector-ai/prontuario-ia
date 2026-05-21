@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
+import { cleanTelefone } from '@/lib/format'
 import {
   listarRecebimentos, listarFormasPagamento, darBaixa, statusEfetivo,
 } from '@/lib/financeiro/recebimentos'
@@ -92,6 +93,15 @@ export default function RecebimentosPage() {
 
   function toggleStatus(s: string) {
     setFStatus((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])
+  }
+
+  function cobrarWhatsApp(r: any) {
+    const tel = cleanTelefone(r.pacientes?.telefone)
+    if (tel.length < 10) { alert('Paciente sem telefone válido cadastrado.'); return }
+    const msg = `Olá ${r.pacientes?.nome || ''}! Passando para lembrar do pagamento de ${brl(r.valor)}`
+      + (r.vencimento ? `, com vencimento em ${fmtData(r.vencimento)}` : '')
+      + '. Qualquer dúvida, estamos à disposição.'
+    window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
   return (
@@ -207,6 +217,9 @@ export default function RecebimentosPage() {
                       <div style={{ display: 'flex', gap: 6 }}>
                         {podeBaixar && (
                           <button onClick={() => setBaixaAlvo(r)} style={btnAcao}>Dar baixa</button>
+                        )}
+                        {podeBaixar && r.pacientes?.telefone && (
+                          <button onClick={() => cobrarWhatsApp(r)} style={btnAcao}>Cobrar</button>
                         )}
                         {ef === 'pago' && (
                           <a href={`/api/financeiro/recibo/${r.id}`} target="_blank" rel="noreferrer" style={{ ...btnAcao, textDecoration: 'none' }}>

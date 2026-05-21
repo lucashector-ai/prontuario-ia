@@ -22,7 +22,7 @@ export async function listarRecebimentos(
 ): Promise<Resultado<any[]>> {
   let query = supabase
     .from('recebimentos')
-    .select('*, pacientes:paciente_id(nome), formas_pagamento:forma_pagamento_id(nome, codigo), comandas:comanda_id(id, status, profissional_id)')
+    .select('*, pacientes:paciente_id(nome, telefone), formas_pagamento:forma_pagamento_id(nome, codigo), comandas:comanda_id(id, status, profissional_id)')
     .eq('clinica_id', clinicaId)
     .order('vencimento', { ascending: true })
     .limit(500)
