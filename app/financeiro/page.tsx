@@ -11,6 +11,7 @@ import { tokens } from '@/lib/design-tokens'
 import { obterDashboard } from '@/lib/financeiro/dashboard'
 import { listarUnidades } from '@/lib/financeiro/unidades'
 import type { DashboardFinanceiro, InsightFinanceiro, ItemTipo, Unidade } from '@/lib/financeiro/types'
+import { PageHeader } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -89,10 +90,10 @@ export default function FinanceiroPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Financeiro</h1>
-      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 20px' }}>
-        Acompanhe receita, recebimentos e saúde financeira da clínica.
-      </p>
+      <PageHeader
+        titulo="Financeiro"
+        descricao="Acompanhe receita, recebimentos e saúde financeira da clínica."
+      />
 
       {unidades.length > 0 && (
         <div style={{ marginBottom: 16 }}>

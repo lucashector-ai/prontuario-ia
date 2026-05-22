@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { obterDashboard } from '@/lib/financeiro/dashboard'
 import { obterMargens } from '@/lib/financeiro/margem'
+import { PageHeader } from '@/components/ui'
 
 const brl = (v: number) => 'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',')
 
@@ -78,10 +79,10 @@ Margem por procedimento: ${m.length ? m.map((p) => `${p.nome} (preço ${brl(p.va
 
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Assistente financeiro</h1>
-      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 16px' }}>
-        Pergunte sobre receita, custos, margem e previsão de caixa da clínica.
-      </p>
+      <PageHeader
+        titulo="Assistente financeiro"
+        descricao="Pergunte sobre receita, custos, margem e previsão de caixa da clínica."
+      />
 
       <div style={{
         flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',

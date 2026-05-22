@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { cleanTelefone } from '@/lib/format'
+import { PageHeader } from '@/components/ui'
 import {
   listarRecebimentos, listarFormasPagamento, darBaixa, statusEfetivo,
 } from '@/lib/financeiro/recebimentos'
@@ -127,13 +128,10 @@ export default function RecebimentosPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      {/* Header */}
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
-        Contas a receber
-      </h1>
-      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 20px' }}>
-        Acompanhe pagamentos pendentes, atrasados e baixados.
-      </p>
+      <PageHeader
+        titulo="Contas a receber"
+        descricao="Acompanhe pagamentos pendentes, atrasados e baixados."
+      />
 
       {/* Filtros */}
       <div style={{

@@ -10,6 +10,7 @@ import {
   PROVEDORES_SUPORTADOS, PROVEDORES, type GatewayConfig,
 } from '@/lib/financeiro/gateway'
 import type { Unidade } from '@/lib/financeiro/types'
+import { PageHeader } from '@/components/ui'
 
 export default function ConfiguracoesFinanceiroPage() {
   const router = useRouter()
@@ -18,12 +19,10 @@ export default function ConfiguracoesFinanceiroPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
-        Configurações do financeiro
-      </h1>
-      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 20px' }}>
-        Unidades da clínica e integração de pagamentos.
-      </p>
+      <PageHeader
+        titulo="Configurações do financeiro"
+        descricao="Unidades da clínica e integração de pagamentos."
+      />
 
       {clinicaId && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 720 }}>

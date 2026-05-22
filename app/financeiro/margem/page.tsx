@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { obterMargens, type ProcedimentoMargem } from '@/lib/financeiro/margem'
+import { PageHeader } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -40,12 +41,10 @@ export default function MargemPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
-        Margem por procedimento
-      </h1>
-      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 20px' }}>
-        Veja quais serviços realmente dão lucro. Custos são cadastrados em Procedimentos.
-      </p>
+      <PageHeader
+        titulo="Margem por procedimento"
+        descricao="Veja quais serviços realmente dão lucro. Custos são cadastrados em Procedimentos."
+      />
 
       {semCusto > 0 && (
         <div style={{

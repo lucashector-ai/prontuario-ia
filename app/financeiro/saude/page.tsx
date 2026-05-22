@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { obterSaudeFinanceira, type SaudeFinanceira } from '@/lib/financeiro/saude'
+import { PageHeader } from '@/components/ui'
 
 const CLASSIF = {
   saudavel: { label: 'Saudável', cor: tokens.status.success },
@@ -36,12 +37,10 @@ export default function SaudeFinanceiraPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
-        Cofre financeiro
-      </h1>
-      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 20px' }}>
-        Um índice de saúde financeira da clínica, de 0 a 100.
-      </p>
+      <PageHeader
+        titulo="Cofre financeiro"
+        descricao="Um índice de saúde financeira da clínica, de 0 a 100."
+      />
 
       {carregando ? (
         <p style={{ fontSize: 13, color: tokens.text.tertiary }}>Calculando...</p>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { tokens } from '@/lib/design-tokens'
 import ComandaPanel from '@/components/financeiro/ComandaPanel'
+import { PageHeader } from '@/components/ui'
 import type { Comanda } from '@/lib/financeiro/types'
 
 export default function ComandaDetalhe() {
@@ -30,14 +31,12 @@ export default function ComandaDetalhe() {
         }}>
           ← Voltar
         </button>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
-          Comanda
-        </h1>
-        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 18px' }}>
-          {comanda?.pacientes?.nome
+        <PageHeader
+          titulo="Comanda"
+          descricao={comanda?.pacientes?.nome
             ? `${comanda.pacientes.nome} — gerencie itens, descontos e fechamento.`
             : 'Gerencie itens, descontos e fechamento da comanda.'}
-        </p>
+        />
 
         <ComandaPanel
           comandaId={id}

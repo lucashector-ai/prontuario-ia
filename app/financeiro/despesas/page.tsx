@@ -10,6 +10,7 @@ import {
 } from '@/lib/financeiro/despesas'
 import { listarUnidades } from '@/lib/financeiro/unidades'
 import type { Despesa, FormaPagamento, Unidade } from '@/lib/financeiro/types'
+import { PageHeader, Button } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -99,15 +100,11 @@ export default function DespesasPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Contas a pagar</h1>
-          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 0' }}>
-            Controle despesas, fornecedores e vencimentos da clínica.
-          </p>
-        </div>
-        <button onClick={() => setModalNova(true)} style={btnPri}>+ Nova despesa</button>
-      </div>
+      <PageHeader
+        titulo="Contas a pagar"
+        descricao="Controle despesas, fornecedores e vencimentos da clínica."
+        acao={<Button onClick={() => setModalNova(true)}>+ Nova despesa</Button>}
+      />
 
       {/* Filtros */}
       <div style={{ background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 14, padding: 16, margin: '18px 0 16px' }}>

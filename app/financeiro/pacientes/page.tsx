@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { obterCrmFinanceiro, type ClienteFinanceiro } from '@/lib/financeiro/crm'
+import { PageHeader } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -42,12 +43,10 @@ export default function CrmFinanceiroPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
-        CRM financeiro
-      </h1>
-      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 18px' }}>
-        Valor de cada paciente para a clínica — LTV, frequência e pendências.
-      </p>
+      <PageHeader
+        titulo="CRM financeiro"
+        descricao="Valor de cada paciente para a clínica — LTV, frequência e pendências."
+      />
 
       {/* Resumo */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 16 }}>

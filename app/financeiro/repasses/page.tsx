@@ -11,6 +11,7 @@ import {
 } from '@/lib/financeiro/repasses'
 import { listarUnidades } from '@/lib/financeiro/unidades'
 import type { ItemTipo, RepasseStatus, Unidade } from '@/lib/financeiro/types'
+import { PageHeader } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -47,10 +48,10 @@ export default function RepassesPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Repasse médico</h1>
-      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 18px' }}>
-        Comissões dos profissionais — regras de cálculo e repasses gerados.
-      </p>
+      <PageHeader
+        titulo="Repasse médico"
+        descricao="Comissões dos profissionais — regras de cálculo e repasses gerados."
+      />
 
       <div style={{ display: 'flex', gap: 4, marginBottom: 18, borderBottom: `1px solid ${tokens.border.subtle}` }}>
         {([['repasses', 'Repasses'], ['regras', 'Regras de comissão']] as const).map(([k, label]) => (
