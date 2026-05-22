@@ -131,3 +131,51 @@ export async function obterMovimentacoesPeriodo(
     .order('data_movimentacao')
   return { data: data || [], error: error?.message || null }
 }
+
+// ─── Pacote contábil — tudo do período para enviar ao contador ──────────────
+export interface PacoteContabil {
+  recebimentos: any[]
+  despesas: any[]
+  repasses: any[]
+  movimentacoes: any[]
+}
+
+export async function obterPacoteContabil(
+  clinicaId: string,
+  de: string,
+  ate: string,
+): Promise<Resultado<PacoteContabil>> {
+  try {
+    const deTS = `${de}T00:00:00`
+    const ateTS = `${ate}T23:59:59`
+    const [recR, despR, repR, movR] = await Promise.all([
+      supabase.from('recebimentos')
+        .select('pago_em, valor_pago, status, pacientes:paciente_id(nome), formas_pagamento:forma_pagamento_id(nome)')
+        .eq('clinica_id', clinicaId).eq('status', 'pago')
+        .gte('pago_em', deTS).lte('pago_em', ateTS),
+      supabase.from('despesas')
+        .select('pago_em, valor, categoria, fornecedor, descricao, status')
+        .eq('clinica_id', clinicaId).eq('status', 'pago')
+        .gte('pago_em', deTS).lte('pago_em', ateTS),
+      supabase.from('repasses')
+        .select('pago_em, valor, status, medicos:profissional_id(nome)')
+        .eq('clinica_id', clinicaId).eq('status', 'pago')
+        .gte('pago_em', deTS).lte('pago_em', ateTS),
+      supabase.from('movimentacoes_caixa')
+        .select('data_movimentacao, tipo, origem, valor, descricao')
+        .eq('clinica_id', clinicaId)
+        .gte('data_movimentacao', de).lte('data_movimentacao', ate),
+    ])
+    return {
+      data: {
+        recebimentos: recR.data || [],
+        despesas: despR.data || [],
+        repasses: repR.data || [],
+        movimentacoes: movR.data || [],
+      },
+      error: null,
+    }
+  } catch (e: any) {
+    return { data: null, error: e?.message || 'erro ao montar pacote contábil' }
+  }
+}

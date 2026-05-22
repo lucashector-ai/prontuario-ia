@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import {
-  obterDRE, obterFluxoMensal, obterMovimentacoesPeriodo,
+  obterDRE, obterFluxoMensal, obterMovimentacoesPeriodo, obterPacoteContabil,
   type DRE, type MesFluxo,
 } from '@/lib/financeiro/relatorios'
 import { PageHeader, Card, Button, Field, Input } from '@/components/ui'
@@ -62,6 +62,40 @@ export default function RelatoriosPage() {
     XLSX.utils.book_append_sheet(wb, ws, 'Movimentações')
     XLSX.writeFile(wb, `movimentacoes_${de}_a_${ate}.xlsx`)
     setExportando(false)
+  }
+
+  async function exportarPacote() {
+    if (!clinicaId) return
+    setExportando(true)
+    const { data } = await obterPacoteContabil(clinicaId, de, ate)
+    setExportando(false)
+    if (!data) return
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+      data.recebimentos.map((r: any) => ({
+        'Pago em': (r.pago_em || '').slice(0, 10), Paciente: r.pacientes?.nome || '',
+        'Forma': r.formas_pagamento?.nome || '', Valor: Number(r.valor_pago || 0),
+      })),
+    ), 'Recebimentos')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+      data.despesas.map((d: any) => ({
+        'Pago em': (d.pago_em || '').slice(0, 10), Descrição: d.descricao || '',
+        Categoria: d.categoria || '', Fornecedor: d.fornecedor || '', Valor: Number(d.valor || 0),
+      })),
+    ), 'Despesas')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+      data.repasses.map((r: any) => ({
+        'Pago em': (r.pago_em || '').slice(0, 10), Profissional: r.medicos?.nome || '',
+        Valor: Number(r.valor || 0),
+      })),
+    ), 'Repasses')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+      data.movimentacoes.map((m: any) => ({
+        Data: m.data_movimentacao, Tipo: m.tipo === 'entrada' ? 'Entrada' : 'Saída',
+        Origem: m.origem, Descrição: m.descricao || '', Valor: Number(m.valor || 0),
+      })),
+    ), 'Movimentações')
+    XLSX.writeFile(wb, `pacote_contabil_${de}_a_${ate}.xlsx`)
   }
 
   return (
@@ -141,10 +175,17 @@ export default function RelatoriosPage() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
           <Field label="De"><Input type="date" value={de} onChange={(e) => setDe(e.target.value)} style={{ width: 'auto' }} /></Field>
           <Field label="Até"><Input type="date" value={ate} onChange={(e) => setAte(e.target.value)} style={{ width: 'auto' }} /></Field>
-          <Button onClick={exportar} disabled={exportando}>
-            {exportando ? 'Gerando...' : 'Exportar XLSX'}
+          <Button variant="secondary" onClick={exportar} disabled={exportando}>
+            {exportando ? 'Gerando...' : 'Só movimentações'}
+          </Button>
+          <Button onClick={exportarPacote} disabled={exportando}>
+            {exportando ? 'Gerando...' : 'Pacote contábil completo'}
           </Button>
         </div>
+        <p style={{ fontSize: 11.5, color: tokens.text.tertiary, margin: '12px 0 0' }}>
+          O pacote completo traz recebimentos, despesas, repasses e movimentações em abas separadas.
+          Emissão de NFSe não está incluída — depende de certificado digital e cadastro na prefeitura.
+        </p>
       </Card>
 
       <Button variant="ghost" size="sm" onClick={() => router.push('/financeiro')} style={{ marginTop: 16, paddingLeft: 0 }}>
