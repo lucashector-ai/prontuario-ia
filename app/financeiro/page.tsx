@@ -337,6 +337,7 @@ export default function FinanceiroPage() {
           ['CRM financeiro', '/financeiro/pacientes'],
           ['Cofre financeiro', '/financeiro/saude'],
           ['Assistente financeiro', '/financeiro/assistente'],
+          ['Relatórios', '/financeiro/relatorios'],
           ['Conciliação bancária', '/financeiro/conciliacao'],
           ['Importar planilha', '/financeiro/importar'],
           ['Auditoria', '/financeiro/auditoria'],
