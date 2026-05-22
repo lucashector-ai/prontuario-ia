@@ -106,18 +106,11 @@ export default function Conteudo(props: any) {
   const linkPreview = 'clinical360.vercel.app/agenda/' + (slug || 'seu-link')
 
   return (
-    <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Header */}
-      <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: tokens.brand.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 8 }}>
-          Configurações
-        </div>
-        <h1 style={{ fontSize: 32, fontWeight: 600, color: tokens.text.primary, letterSpacing: '-0.02em', margin: 0, marginBottom: 8 }}>
-          Agenda pública
-        </h1>
-        <p style={{ fontSize: 15, color: tokens.text.secondary, margin: 0, maxWidth: 640 }}>
-          Crie um link único para que pacientes agendem consultas sem precisar entrar em contato. Estilo Cal.com, com a sua cara.
-        </p>
+    <div style={{ minHeight: '100%', padding: 24 }}>
+      {/* Header — padrao Minha clinica */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Agenda pública</h1>
+        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Crie um link único para pacientes agendarem consultas sem entrar em contato</p>
       </div>
 
       {/* Mensagem global */}

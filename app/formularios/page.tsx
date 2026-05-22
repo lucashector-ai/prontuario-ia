@@ -83,18 +83,15 @@ export default function FormulariosPage() {
     : templates
 
   return (
-    <div style={{ padding: '32px 32px 64px' }}>
-      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+    <div style={{ padding: 24 }}>
+      <div>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: tokens.brand.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 8 }}>
-              Sua clínica
-            </div>
-            <h1 style={{ fontSize: 32, fontWeight: 600, color: tokens.text.primary, letterSpacing: '-0.02em', margin: 0, marginBottom: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>
               Formulários
             </h1>
-            <p style={{ fontSize: 15, color: tokens.text.secondary, margin: 0, maxWidth: 580 }}>
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>
               Crie formulários pra enviar ao paciente antes da consulta. A IA gera um resumo das respostas pra você ler em 30 segundos.
             </p>
           </div>
