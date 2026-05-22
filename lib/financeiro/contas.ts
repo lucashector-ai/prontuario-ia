@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { registrarEntrada, registrarSaida } from './movimentacoes'
+import { registrarLog } from './auditoria'
 import type { ContaBancaria, ContaTipo, SaldoConta, Resultado } from './types'
 
 const num = (v: any) => Number(v) || 0
@@ -139,6 +140,16 @@ export async function registrarTransferencia(input: {
   })
   if (entrada.error) return { data: null, error: entrada.error }
 
+  await registrarLog({
+    clinica_id: input.clinica_id,
+    usuario_id: input.criado_por,
+    acao: 'conta.transferencia',
+    entidade: 'conta',
+    entidade_id: input.conta_origem_id,
+    detalhe: 'Transferência entre contas',
+    valor: input.valor,
+  })
+
   return { data: true, error: null }
 }
 
@@ -161,5 +172,17 @@ export async function ajustarSaldo(input: {
     criado_por: input.criado_por || null,
   }
   const r = input.valor > 0 ? await registrarEntrada(comum) : await registrarSaida(comum)
-  return { data: r.error ? null : true, error: r.error }
+  if (r.error) return { data: null, error: r.error }
+
+  await registrarLog({
+    clinica_id: input.clinica_id,
+    usuario_id: input.criado_por,
+    acao: 'conta.ajuste',
+    entidade: 'conta',
+    entidade_id: input.conta_id,
+    detalhe: input.descricao || 'Ajuste manual de saldo',
+    valor: input.valor,
+  })
+
+  return { data: true, error: null }
 }

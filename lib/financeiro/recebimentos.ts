@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { registrarEntrada } from './movimentacoes'
 import { verificarEAtualizarComandaPaga } from './comandas'
+import { registrarLog } from './auditoria'
 import type { FormaPagamento, Recebimento, RecebimentoStatus, Resultado } from './types'
 
 const agora = () => new Date().toISOString()
@@ -112,6 +113,16 @@ export async function darBaixa(
     data: baixa.data,
     descricao: 'Baixa de recebimento',
     criado_por: baixa.usuario_id || null,
+  })
+
+  await registrarLog({
+    clinica_id: receb.clinica_id,
+    usuario_id: baixa.usuario_id,
+    acao: 'recebimento.baixa',
+    entidade: 'recebimento',
+    entidade_id: recebimentoId,
+    detalhe: `Baixa registrada (${status})`,
+    valor: valorPago,
   })
 
   // se a comanda toda ficou paga, atualiza

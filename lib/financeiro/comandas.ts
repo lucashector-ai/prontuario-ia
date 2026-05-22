@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { registrarEntrada } from './movimentacoes'
 import { gerarRepasses } from './repasses'
 import { distribuirParcelas, vencimentoParcela } from './calculos'
+import { registrarLog } from './auditoria'
 import type {
   Comanda, ComandaItem, ComandaStatus, ItemTipo, Resultado,
 } from './types'
@@ -232,6 +233,16 @@ export async function fecharComanda(
   const { data: recebimentos, error: e3 } = await supabase
     .from('recebimentos').insert(linhas).select()
   if (e3) return { data: null, error: e3.message }
+
+  await registrarLog({
+    clinica_id: comanda.clinica_id,
+    usuario_id: pagamento.usuario_id,
+    acao: 'comanda.fechar',
+    entidade: 'comanda',
+    entidade_id: comandaId,
+    detalhe: `Comanda fechada em ${n}x`,
+    valor: total,
+  })
 
   // 3. à vista líquido → registra entrada no caixa e marca comanda como paga
   if (liquidaAgora && recebimentos?.[0]) {

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { registrarSaida } from './movimentacoes'
+import { registrarLog } from './auditoria'
 import type { Despesa, DespesaStatus, Resultado } from './types'
 
 const agora = () => new Date().toISOString()
@@ -104,6 +105,37 @@ export async function pagarDespesa(
     origem: 'despesa',
     criado_por: pagamento.usuario_id || null,
   })
+
+  await registrarLog({
+    clinica_id: desp.clinica_id,
+    usuario_id: pagamento.usuario_id,
+    acao: 'despesa.pagar',
+    entidade: 'despesa',
+    entidade_id: id,
+    detalhe: `Pagamento de "${desp.descricao}"`,
+    valor: Number(desp.valor || 0),
+  })
+
+  // recorrência: ao pagar uma despesa recorrente, já gera a próxima ocorrência
+  if (desp.recorrente && desp.vencimento) {
+    const periodo = desp.recorrencia_periodicidade || 'mensal'
+    const prox = new Date(`${String(desp.vencimento).slice(0, 10)}T12:00:00`)
+    if (periodo === 'semanal') prox.setDate(prox.getDate() + 7)
+    else if (periodo === 'anual') prox.setFullYear(prox.getFullYear() + 1)
+    else prox.setMonth(prox.getMonth() + 1)
+    await supabase.from('despesas').insert({
+      clinica_id: desp.clinica_id,
+      descricao: desp.descricao,
+      valor: desp.valor,
+      categoria: desp.categoria,
+      fornecedor: desp.fornecedor,
+      unidade_id: desp.unidade_id,
+      vencimento: prox.toISOString().slice(0, 10),
+      recorrente: true,
+      recorrencia_periodicidade: periodo,
+      status: 'pendente',
+    })
+  }
 
   return { data: atualizada as Despesa, error: null }
 }

@@ -338,6 +338,7 @@ export default function FinanceiroPage() {
           ['Cofre financeiro', '/financeiro/saude'],
           ['Assistente financeiro', '/financeiro/assistente'],
           ['Importar planilha', '/financeiro/importar'],
+          ['Auditoria', '/financeiro/auditoria'],
           ['Configurações', '/financeiro/configuracoes'],
         ].map(([label, rota]) => (
           <button key={rota} onClick={() => router.push(rota)} style={{
