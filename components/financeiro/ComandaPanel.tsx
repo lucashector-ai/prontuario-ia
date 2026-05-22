@@ -6,17 +6,17 @@ import {
   obterComanda, adicionarItem, removerItem, atualizarDescontoAcrescimo, atualizarComanda,
 } from '@/lib/financeiro/comandas'
 import type { Comanda, ComandaItem, ComandaStatus, ItemTipo } from '@/lib/financeiro/types'
+import { Card, Badge, Button, Input, Select, Field, Modal, ModalAcoes, type BadgeTone } from '@/components/ui'
 import ModalFecharComanda from './ModalFecharComanda'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 
-const STATUS_BADGE: Record<ComandaStatus, { label: string; bg: string; fg: string }> = {
-  rascunho:  { label: 'Rascunho', bg: tokens.bg.cardSubtle,        fg: tokens.text.secondary },
-  aberta:    { label: 'Aberta',   bg: tokens.status.infoBg,        fg: tokens.status.infoStrong },
-  fechada:   { label: 'Fechada',  bg: tokens.status.successBg,     fg: tokens.status.success },
-  paga:      { label: 'Paga',     bg: tokens.status.successBgAlt,  fg: tokens.status.successDarker },
-  cancelada: { label: 'Cancelada', bg: tokens.bg.cardSubtle,       fg: tokens.text.tertiary },
+const STATUS_LABEL: Record<ComandaStatus, string> = {
+  rascunho: 'Rascunho', aberta: 'Aberta', fechada: 'Fechada', paga: 'Paga', cancelada: 'Cancelada',
+}
+const STATUS_TONE: Record<ComandaStatus, BadgeTone> = {
+  rascunho: 'neutral', aberta: 'info', fechada: 'success', paga: 'success', cancelada: 'neutral',
 }
 
 const TIPOS: { value: ItemTipo; label: string }[] = [
@@ -65,14 +65,13 @@ export default function ComandaPanel({ comandaId, usuarioId, onAtualizar }: Prop
   useEffect(() => { carregar() }, [carregar])
 
   if (carregando) {
-    return <div style={{ ...card, textAlign: 'center', color: tokens.text.tertiary, fontSize: 13 }}>Carregando comanda...</div>
+    return <Card style={{ textAlign: 'center', color: tokens.text.tertiary, fontSize: 13 }}>Carregando comanda...</Card>
   }
   if (!comanda) {
-    return <div style={{ ...card, textAlign: 'center', color: tokens.text.tertiary, fontSize: 13 }}>Comanda não encontrada</div>
+    return <Card style={{ textAlign: 'center', color: tokens.text.tertiary, fontSize: 13 }}>Comanda não encontrada</Card>
   }
 
   const editavel = comanda.status === 'rascunho' || comanda.status === 'aberta'
-  const badge = STATUS_BADGE[comanda.status]
 
   async function salvarItem() {
     const valor = Number(novoItem.valor_unitario.replace(',', '.'))
@@ -102,16 +101,13 @@ export default function ComandaPanel({ comandaId, usuarioId, onAtualizar }: Prop
   }
 
   return (
-    <div style={card}>
+    <Card>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Comanda</h3>
-            <span style={{
-              fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 100,
-              background: badge.bg, color: badge.fg, textTransform: 'uppercase', letterSpacing: '0.03em',
-            }}>{badge.label}</span>
+            <Badge tone={STATUS_TONE[comanda.status]}>{STATUS_LABEL[comanda.status]}</Badge>
           </div>
           <p style={{ fontSize: 11.5, color: tokens.text.tertiary, margin: '4px 0 0' }}>
             #{comanda.id.substring(0, 8)}
@@ -176,25 +172,21 @@ export default function ComandaPanel({ comandaId, usuarioId, onAtualizar }: Prop
           {ajustesAbertos && (
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div>
-                  <label style={lbl}>Desconto (R$)</label>
-                  <input value={desconto} onChange={(e) => setDesconto(e.target.value)} onBlur={salvarAjustes} style={inp} />
-                </div>
-                <div>
-                  <label style={lbl}>Acréscimo (R$)</label>
-                  <input value={acrescimo} onChange={(e) => setAcrescimo(e.target.value)} onBlur={salvarAjustes} style={inp} />
-                </div>
+                <Field label="Desconto (R$)">
+                  <Input value={desconto} onChange={(e) => setDesconto(e.target.value)} onBlur={salvarAjustes} />
+                </Field>
+                <Field label="Acréscimo (R$)">
+                  <Input value={acrescimo} onChange={(e) => setAcrescimo(e.target.value)} onBlur={salvarAjustes} />
+                </Field>
               </div>
-              <div>
-                <label style={lbl}>Observações</label>
-                <input
+              <Field label="Observações">
+                <Input
                   value={observacoes}
                   onChange={(e) => setObservacoes(e.target.value)}
                   onBlur={() => atualizarComanda(comandaId, { observacoes })}
                   placeholder="Opcional"
-                  style={inp}
                 />
-              </div>
+              </Field>
             </div>
           )}
         </div>
@@ -203,18 +195,13 @@ export default function ComandaPanel({ comandaId, usuarioId, onAtualizar }: Prop
       {/* Footer */}
       <div style={{ marginTop: 16 }}>
         {editavel ? (
-          <button
+          <Button
             onClick={() => setModalFechar(true)}
             disabled={itens.length === 0}
-            style={{
-              ...btnFechar,
-              background: itens.length === 0 ? tokens.border.default : tokens.brand.primary,
-              color: itens.length === 0 ? tokens.text.tertiary : '#fff',
-              cursor: itens.length === 0 ? 'not-allowed' : 'pointer',
-            }}
+            style={{ width: '100%', padding: '12px', fontSize: 13.5, fontWeight: 700 }}
           >
             Fechar comanda
-          </button>
+          </Button>
         ) : (
           <p style={{ fontSize: 12, color: tokens.text.tertiary, textAlign: 'center', margin: 0 }}>
             {comanda.status === 'paga' ? 'Comanda quitada.' : 'Comanda fechada — aguardando recebimento.'}
@@ -224,36 +211,28 @@ export default function ComandaPanel({ comandaId, usuarioId, onAtualizar }: Prop
 
       {/* Modal adicionar item */}
       {modalItem && (
-        <div
-          onClick={(e) => { if (e.target === e.currentTarget) setModalItem(false) }}
-          style={{ position: 'fixed', inset: 0, background: tokens.bg.overlay, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
-        >
-          <div style={{ background: tokens.bg.card, borderRadius: 16, width: 'min(400px, 100%)', padding: 26 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: tokens.text.primary, margin: '0 0 16px' }}>Adicionar item</h3>
-            <label style={lbl}>Tipo</label>
-            <select value={novoItem.tipo} onChange={(e) => setNovoItem({ ...novoItem, tipo: e.target.value as ItemTipo })} style={inp}>
+        <Modal titulo="Adicionar item" onClose={() => setModalItem(false)} largura={400}>
+          <Field label="Tipo">
+            <Select value={novoItem.tipo} onChange={(e) => setNovoItem({ ...novoItem, tipo: e.target.value as ItemTipo })}>
               {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-            <div style={{ marginTop: 12 }}>
-              <label style={lbl}>Descrição</label>
-              <input value={novoItem.descricao} onChange={(e) => setNovoItem({ ...novoItem, descricao: e.target.value })} placeholder="Ex: Consulta clínica" style={inp} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 10, marginTop: 12 }}>
-              <div>
-                <label style={lbl}>Qtd.</label>
-                <input type="number" min="1" value={novoItem.quantidade} onChange={(e) => setNovoItem({ ...novoItem, quantidade: e.target.value })} style={inp} />
-              </div>
-              <div>
-                <label style={lbl}>Valor unitário (R$)</label>
-                <input value={novoItem.valor_unitario} onChange={(e) => setNovoItem({ ...novoItem, valor_unitario: e.target.value })} placeholder="0,00" style={inp} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
-              <button onClick={() => setModalItem(false)} style={btnSec}>Cancelar</button>
-              <button onClick={salvarItem} style={btnPri}>Adicionar</button>
-            </div>
+            </Select>
+          </Field>
+          <Field label="Descrição" style={{ marginTop: 12 }}>
+            <Input value={novoItem.descricao} onChange={(e) => setNovoItem({ ...novoItem, descricao: e.target.value })} placeholder="Ex: Consulta clínica" />
+          </Field>
+          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 10, marginTop: 12 }}>
+            <Field label="Qtd.">
+              <Input type="number" min="1" value={novoItem.quantidade} onChange={(e) => setNovoItem({ ...novoItem, quantidade: e.target.value })} />
+            </Field>
+            <Field label="Valor unitário (R$)">
+              <Input value={novoItem.valor_unitario} onChange={(e) => setNovoItem({ ...novoItem, valor_unitario: e.target.value })} placeholder="0,00" />
+            </Field>
           </div>
-        </div>
+          <ModalAcoes>
+            <Button variant="secondary" onClick={() => setModalItem(false)}>Cancelar</Button>
+            <Button onClick={salvarItem}>Adicionar</Button>
+          </ModalAcoes>
+        </Modal>
       )}
 
       {/* Modal fechar comanda */}
@@ -265,20 +244,10 @@ export default function ComandaPanel({ comandaId, usuarioId, onAtualizar }: Prop
           onFechada={() => { setModalFechar(false); carregar() }}
         />
       )}
-    </div>
+    </Card>
   )
 }
 
-const card: React.CSSProperties = {
-  background: tokens.bg.card, borderRadius: 16, border: `1px solid ${tokens.border.subtle}`, padding: 20,
-}
-const lbl: React.CSSProperties = {
-  fontSize: 12, fontWeight: 600, color: tokens.text.secondary, display: 'block', marginBottom: 6,
-}
-const inp: React.CSSProperties = {
-  width: '100%', padding: '9px 11px', borderRadius: 9, border: `1px solid ${tokens.border.default}`,
-  fontSize: 13, outline: 'none', boxSizing: 'border-box', background: tokens.bg.card, color: tokens.text.primary,
-}
 const btnX: React.CSSProperties = {
   width: 26, height: 26, borderRadius: 7, border: 'none', background: 'transparent',
   color: tokens.text.tertiary, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -292,15 +261,4 @@ const btnColapso: React.CSSProperties = {
   width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
   fontSize: 12.5, fontWeight: 600, color: tokens.text.secondary,
-}
-const btnFechar: React.CSSProperties = {
-  width: '100%', padding: '12px', borderRadius: 10, border: 'none', fontSize: 13.5, fontWeight: 700,
-}
-const btnSec: React.CSSProperties = {
-  padding: '9px 16px', borderRadius: 9, border: `1px solid ${tokens.border.default}`,
-  background: tokens.bg.card, color: tokens.text.strong, fontSize: 13, fontWeight: 500, cursor: 'pointer',
-}
-const btnPri: React.CSSProperties = {
-  padding: '9px 16px', borderRadius: 9, border: 'none',
-  background: tokens.brand.primary, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }

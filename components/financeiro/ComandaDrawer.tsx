@@ -6,6 +6,7 @@ import { listarComandas, criarComandaAvulsa } from '@/lib/financeiro/comandas'
 import { listarUnidades } from '@/lib/financeiro/unidades'
 import type { Comanda, Unidade } from '@/lib/financeiro/types'
 import ComandaPanel from './ComandaPanel'
+import { Card, Button, Select } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -93,32 +94,25 @@ export default function ComandaDrawer({ pacienteId, clinicaId, profissionalId, u
             {comanda ? (
               <ComandaPanel comandaId={comanda.id} usuarioId={usuarioId} onAtualizar={setComanda} />
             ) : (
-              <div style={{
-                background: tokens.bg.card, borderRadius: 16, border: `1px solid ${tokens.border.subtle}`,
-                padding: 28, textAlign: 'center',
-              }}>
+              <Card style={{ padding: 28, textAlign: 'center' }}>
                 <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 16px', lineHeight: 1.6 }}>
                   Nenhuma comanda em aberto para este paciente. Comandas de agendamentos
                   confirmados aparecem aqui automaticamente.
                 </p>
                 {unidades.length > 0 && (
-                  <select
+                  <Select
                     value={unidadeSel}
                     onChange={(e) => setUnidadeSel(e.target.value)}
-                    style={{
-                      width: '100%', padding: '9px 11px', borderRadius: 9, marginBottom: 10,
-                      border: `1px solid ${tokens.border.default}`, fontSize: 13,
-                      background: tokens.bg.card, color: tokens.text.primary, outline: 'none',
-                    }}
+                    style={{ marginBottom: 10 }}
                   >
                     <option value="">Sem unidade específica</option>
                     {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
-                  </select>
+                  </Select>
                 )}
-                <button onClick={abrirAvulsa} disabled={criando} style={btnAvulsa}>
+                <Button onClick={abrirAvulsa} disabled={criando}>
                   {criando ? 'Abrindo...' : 'Abrir comanda avulsa'}
-                </button>
-              </div>
+                </Button>
+              </Card>
             )}
           </div>
         </div>
@@ -138,8 +132,4 @@ const btnFechar: React.CSSProperties = {
   width: 30, height: 30, borderRadius: 8, border: `1px solid ${tokens.border.default}`,
   background: tokens.bg.card, color: tokens.text.secondary, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-}
-const btnAvulsa: React.CSSProperties = {
-  padding: '10px 20px', borderRadius: 10, border: 'none',
-  background: tokens.brand.primary, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
