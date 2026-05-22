@@ -121,10 +121,5 @@ export async function darBaixa(
   return { data: atualizado as Recebimento, error: null }
 }
 
-// Recebimentos pendentes/parciais com vencimento no passado contam como atrasados.
-export function statusEfetivo(r: { status: string; vencimento: string | null }): string {
-  if ((r.status === 'pendente' || r.status === 'parcial') && r.vencimento) {
-    if (r.vencimento < new Date().toISOString().slice(0, 10)) return 'atrasado'
-  }
-  return r.status
-}
+// Recebimentos pendentes/parciais vencidos contam como atrasados.
+export { statusEfetivoRecebimento as statusEfetivo } from './calculos'

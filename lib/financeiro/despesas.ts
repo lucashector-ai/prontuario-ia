@@ -108,9 +108,4 @@ export async function pagarDespesa(
 }
 
 // Despesa pendente vencida conta como atrasada (status visual).
-export function statusEfetivoDespesa(d: { status: string; vencimento: string | null }): string {
-  if (d.status === 'pendente' && d.vencimento) {
-    if (d.vencimento < new Date().toISOString().slice(0, 10)) return 'atrasado'
-  }
-  return d.status
-}
+export { statusEfetivoDespesa } from './calculos'

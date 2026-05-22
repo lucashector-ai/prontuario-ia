@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { registrarEntrada } from './movimentacoes'
 import { gerarRepasses } from './repasses'
+import { distribuirParcelas, vencimentoParcela } from './calculos'
 import type {
   Comanda, ComandaItem, ComandaStatus, ItemTipo, Resultado,
 } from './types'
@@ -175,21 +176,6 @@ export async function cancelarComanda(comandaId: string): Promise<Resultado<bool
 }
 
 // ─── Fechamento ─────────────────────────────────────────────────────────────
-
-function distribuirParcelas(total: number, n: number): number[] {
-  if (n <= 1) return [total]
-  const base = Math.floor((total / n) * 100) / 100
-  const parcelas = Array(n).fill(base)
-  parcelas[n - 1] = Math.round((total - base * (n - 1)) * 100) / 100
-  return parcelas
-}
-
-function vencimentoParcela(indice: number): string {
-  // 1ª parcela = hoje; demais = hoje + 30/60/90... dias
-  const d = new Date()
-  d.setDate(d.getDate() + indice * 30)
-  return d.toISOString().slice(0, 10)
-}
 
 export async function fecharComanda(
   comandaId: string,
