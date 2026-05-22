@@ -9,7 +9,8 @@ import {
   listarDespesas, criarDespesa, pagarDespesa, cancelarDespesa, statusEfetivoDespesa,
 } from '@/lib/financeiro/despesas'
 import { listarUnidades } from '@/lib/financeiro/unidades'
-import type { Despesa, FormaPagamento, Unidade } from '@/lib/financeiro/types'
+import { listarContas } from '@/lib/financeiro/contas'
+import type { Despesa, FormaPagamento, Unidade, ContaBancaria } from '@/lib/financeiro/types'
 import { PageHeader, Button, Card, Input, Select, Field } from '@/components/ui'
 
 const brl = (v: number) =>
@@ -39,6 +40,7 @@ export default function DespesasPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([])
   const [formas, setFormas] = useState<FormaPagamento[]>([])
   const [unidades, setUnidades] = useState<Unidade[]>([])
+  const [contas, setContas] = useState<ContaBancaria[]>([])
   const [carregando, setCarregando] = useState(true)
 
   const [fStatus, setFStatus] = useState<string[]>([])
@@ -62,6 +64,7 @@ export default function DespesasPage() {
   useEffect(() => {
     if (!clinicaId) return
     listarUnidades(clinicaId, true).then(({ data }) => setUnidades(data || []))
+    listarContas(clinicaId, true).then(({ data }) => setContas(data || []))
   }, [clinicaId])
 
   const filtradas = useMemo(() => {
@@ -224,6 +227,7 @@ export default function DespesasPage() {
         <ModalPagar
           despesa={pagarAlvo}
           formas={formas}
+          contas={contas}
           usuarioId={usuario?.id || null}
           onClose={() => setPagarAlvo(null)}
           onPago={() => { setPagarAlvo(null); carregar() }}
@@ -330,11 +334,12 @@ function ModalNovaDespesa({ clinicaId, unidades, onClose, onCriada }: {
   )
 }
 
-function ModalPagar({ despesa, formas, usuarioId, onClose, onPago }: {
-  despesa: Despesa; formas: FormaPagamento[]; usuarioId: string | null
+function ModalPagar({ despesa, formas, contas, usuarioId, onClose, onPago }: {
+  despesa: Despesa; formas: FormaPagamento[]; contas: ContaBancaria[]; usuarioId: string | null
   onClose: () => void; onPago: () => void
 }) {
   const [formaId, setFormaId] = useState(formas[0]?.id || '')
+  const [contaId, setContaId] = useState(contas[0]?.id || '')
   const [data, setData] = useState(hojeISO())
   const [observacoes, setObservacoes] = useState('')
   const [salvando, setSalvando] = useState(false)
@@ -347,6 +352,7 @@ function ModalPagar({ despesa, formas, usuarioId, onClose, onPago }: {
       data,
       observacoes: observacoes || undefined,
       usuario_id: usuarioId,
+      conta_id: contaId || null,
     })
     setSalvando(false)
     if (error) { setErro(error); return }
@@ -364,6 +370,14 @@ function ModalPagar({ despesa, formas, usuarioId, onClose, onPago }: {
         <option value="">Não informar</option>
         {formas.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
       </select>
+      {contas.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <label style={lbl}>Conta de saída</label>
+          <select value={contaId} onChange={(e) => setContaId(e.target.value)} style={{ ...inp, width: '100%' }}>
+            {contas.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+        </div>
+      )}
       <div style={{ marginTop: 12 }}>
         <label style={lbl}>Data do pagamento</label>
         <input type="date" value={data} onChange={(e) => setData(e.target.value)} style={{ ...inp, width: '100%' }} />

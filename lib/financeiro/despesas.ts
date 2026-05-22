@@ -71,7 +71,7 @@ export async function cancelarDespesa(id: string): Promise<Resultado<boolean>> {
 
 export async function pagarDespesa(
   id: string,
-  pagamento: { forma_pagamento_id?: string | null; data?: string; observacoes?: string; usuario_id?: string | null },
+  pagamento: { forma_pagamento_id?: string | null; data?: string; observacoes?: string; usuario_id?: string | null; conta_id?: string | null },
 ): Promise<Resultado<Despesa>> {
   const { data: desp, error: e1 } = await supabase
     .from('despesas').select('*').eq('id', id).single()
@@ -97,6 +97,7 @@ export async function pagarDespesa(
     despesa_id: id,
     forma_pagamento_id: pagamento.forma_pagamento_id || null,
     unidade_id: desp.unidade_id,
+    conta_id: pagamento.conta_id || null,
     valor: Number(desp.valor || 0),
     data: pagamento.data,
     descricao: `Despesa — ${desp.descricao}`,

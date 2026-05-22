@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { obterDashboard } from '@/lib/financeiro/dashboard'
+import { obterSaldos, type ResumoSaldos } from '@/lib/financeiro/contas'
 import { listarUnidades } from '@/lib/financeiro/unidades'
 import type { DashboardFinanceiro, InsightFinanceiro, ItemTipo, Unidade } from '@/lib/financeiro/types'
 import { PageHeader, Card } from '@/components/ui'
@@ -45,10 +46,12 @@ export default function FinanceiroPage() {
   const [insights, setInsights] = useState<InsightFinanceiro[] | null>(null)
   const [unidades, setUnidades] = useState<Unidade[]>([])
   const [unidadeSel, setUnidadeSel] = useState('')
+  const [saldos, setSaldos] = useState<ResumoSaldos | null>(null)
 
   useEffect(() => {
     if (!clinicaId) return
     listarUnidades(clinicaId, true).then(({ data }) => setUnidades(data || []))
+    obterSaldos(clinicaId).then(({ data }) => setSaldos(data))
   }, [clinicaId])
 
   useEffect(() => {
@@ -282,11 +285,51 @@ export default function FinanceiroPage() {
             </p>
           )}
         </div>
+
+        {/* Contas financeiras */}
+        <div style={painelCard}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Contas financeiras</p>
+            <button onClick={() => router.push('/financeiro/contas')} style={{
+              background: 'none', border: 'none', color: tokens.brand.primary,
+              fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0,
+            }}>Ver todas →</button>
+          </div>
+          {!saldos || saldos.contas.length === 0 ? (
+            <p style={{ fontSize: 12.5, color: tokens.text.tertiary, margin: 0 }}>
+              Nenhuma conta cadastrada.
+            </p>
+          ) : (
+            <>
+              {saldos.contas.slice(0, 5).map((c) => (
+                <div key={c.id} style={{
+                  display: 'flex', justifyContent: 'space-between', padding: '8px 0',
+                  borderBottom: `1px solid ${tokens.border.subtle}`, fontSize: 13,
+                }}>
+                  <span style={{ color: tokens.text.secondary }}>{c.nome}</span>
+                  <span style={{
+                    fontWeight: 600, fontVariantNumeric: 'tabular-nums',
+                    color: c.saldoAtual < 0 ? tokens.status.danger : tokens.text.primary,
+                  }}>
+                    {'R$ ' + (c.saldoAtual).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                  </span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, fontSize: 13 }}>
+                <span style={{ fontWeight: 700, color: tokens.text.primary }}>Saldo total</span>
+                <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: tokens.brand.primary }}>
+                  {'R$ ' + (saldos.total).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Navegação */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 16 }}>
         {[
+          ['Contas', '/financeiro/contas'],
           ['Contas a receber', '/financeiro/recebimentos'],
           ['Contas a pagar', '/financeiro/despesas'],
           ['Repasse médico', '/financeiro/repasses'],

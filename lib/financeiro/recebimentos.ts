@@ -73,7 +73,7 @@ export async function criarRecebimento(input: {
 
 export async function darBaixa(
   recebimentoId: string,
-  baixa: { forma_pagamento_id: string; valor_pago: number; data?: string; observacoes?: string; usuario_id?: string | null },
+  baixa: { forma_pagamento_id: string; valor_pago: number; data?: string; observacoes?: string; usuario_id?: string | null; conta_id?: string | null },
 ): Promise<Resultado<Recebimento>> {
   const { data: receb, error: e1 } = await supabase
     .from('recebimentos').select('*').eq('id', recebimentoId).single()
@@ -107,6 +107,7 @@ export async function darBaixa(
     recebimento_id: recebimentoId,
     forma_pagamento_id: baixa.forma_pagamento_id,
     unidade_id: receb.unidade_id,
+    conta_id: baixa.conta_id || null,
     valor: valorPago,
     data: baixa.data,
     descricao: 'Baixa de recebimento',

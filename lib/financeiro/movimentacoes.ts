@@ -9,9 +9,10 @@ interface EntradaInput {
   recebimento_id?: string | null
   forma_pagamento_id?: string | null
   unidade_id?: string | null
+  conta_id?: string | null
   data?: string
   descricao?: string
-  origem?: 'recebimento' | 'ajuste_manual' | 'estorno'
+  origem?: 'recebimento' | 'ajuste_manual' | 'estorno' | 'transferencia'
   criado_por?: string | null
 }
 
@@ -21,9 +22,10 @@ interface SaidaInput {
   despesa_id?: string | null
   forma_pagamento_id?: string | null
   unidade_id?: string | null
+  conta_id?: string | null
   data?: string
   descricao?: string
-  origem?: 'despesa' | 'ajuste_manual' | 'estorno' | 'repasse'
+  origem?: 'despesa' | 'ajuste_manual' | 'estorno' | 'repasse' | 'transferencia'
   criado_por?: string | null
 }
 
@@ -37,6 +39,7 @@ export async function registrarEntrada(input: EntradaInput): Promise<Resultado<M
       recebimento_id: input.recebimento_id || null,
       forma_pagamento_id: input.forma_pagamento_id || null,
       unidade_id: input.unidade_id || null,
+      conta_id: input.conta_id || null,
       valor: input.valor,
       data_movimentacao: input.data || hojeISO(),
       descricao: input.descricao || null,
@@ -57,6 +60,7 @@ export async function registrarSaida(input: SaidaInput): Promise<Resultado<Movim
       despesa_id: input.despesa_id || null,
       forma_pagamento_id: input.forma_pagamento_id || null,
       unidade_id: input.unidade_id || null,
+      conta_id: input.conta_id || null,
       valor: input.valor,
       data_movimentacao: input.data || hojeISO(),
       descricao: input.descricao || null,

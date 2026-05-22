@@ -11,7 +11,8 @@ import {
   listarRecebimentos, listarFormasPagamento, darBaixa, statusEfetivo,
 } from '@/lib/financeiro/recebimentos'
 import { listarUnidades } from '@/lib/financeiro/unidades'
-import type { FormaPagamento, Unidade } from '@/lib/financeiro/types'
+import { listarContas } from '@/lib/financeiro/contas'
+import type { FormaPagamento, Unidade, ContaBancaria } from '@/lib/financeiro/types'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -43,6 +44,7 @@ export default function RecebimentosPage() {
   const [formas, setFormas] = useState<FormaPagamento[]>([])
   const [medicos, setMedicos] = useState<any[]>([])
   const [unidades, setUnidades] = useState<Unidade[]>([])
+  const [contas, setContas] = useState<ContaBancaria[]>([])
   const [carregando, setCarregando] = useState(true)
 
   // filtros
@@ -73,6 +75,7 @@ export default function RecebimentosPage() {
     supabase.from('medicos').select('id, nome').eq('clinica_id', clinicaId).order('nome')
       .then(({ data }) => setMedicos(data || []))
     listarUnidades(clinicaId, true).then(({ data }) => setUnidades(data || []))
+    listarContas(clinicaId, true).then(({ data }) => setContas(data || []))
   }, [clinicaId])
 
   const filtrados = useMemo(() => {
@@ -267,6 +270,7 @@ export default function RecebimentosPage() {
         <ModalBaixa
           recebimento={baixaAlvo}
           formas={formas}
+          contas={contas}
           usuarioId={usuario?.id || null}
           onClose={() => setBaixaAlvo(null)}
           onBaixado={() => { setBaixaAlvo(null); carregar() }}
@@ -276,14 +280,16 @@ export default function RecebimentosPage() {
   )
 }
 
-function ModalBaixa({ recebimento, formas, usuarioId, onClose, onBaixado }: {
+function ModalBaixa({ recebimento, formas, contas, usuarioId, onClose, onBaixado }: {
   recebimento: any
   formas: FormaPagamento[]
+  contas: ContaBancaria[]
   usuarioId: string | null
   onClose: () => void
   onBaixado: () => void
 }) {
   const [formaId, setFormaId] = useState(recebimento.forma_pagamento_id || formas[0]?.id || '')
+  const [contaId, setContaId] = useState(contas[0]?.id || '')
   const [valorPago, setValorPago] = useState(String(recebimento.valor))
   const [data, setData] = useState(hojeISO())
   const [observacoes, setObservacoes] = useState('')
@@ -299,6 +305,7 @@ function ModalBaixa({ recebimento, formas, usuarioId, onClose, onBaixado }: {
       data,
       observacoes: observacoes || undefined,
       usuario_id: usuarioId,
+      conta_id: contaId || null,
     })
     setSalvando(false)
     if (error) { setErro(error); return }
@@ -315,6 +322,13 @@ function ModalBaixa({ recebimento, formas, usuarioId, onClose, onBaixado }: {
           {formas.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
         </Select>
       </Field>
+      {contas.length > 0 && (
+        <Field label="Conta de destino" style={{ marginTop: 12 }}>
+          <Select value={contaId} onChange={(e) => setContaId(e.target.value)}>
+            {contas.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </Select>
+        </Field>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 }}>
         <Field label="Valor pago (R$)">
           <Input value={valorPago} onChange={(e) => setValorPago(e.target.value)} />

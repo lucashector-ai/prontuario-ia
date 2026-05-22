@@ -7,7 +7,8 @@ export type RecebimentoStatus =
   | 'pendente' | 'pago' | 'parcial' | 'atrasado' | 'cancelado' | 'reembolsado'
 export type DespesaStatus = 'pendente' | 'pago' | 'atrasado' | 'cancelado'
 export type MovimentacaoTipo = 'entrada' | 'saida'
-export type MovimentacaoOrigem = 'recebimento' | 'despesa' | 'ajuste_manual' | 'estorno' | 'repasse'
+export type MovimentacaoOrigem = 'recebimento' | 'despesa' | 'ajuste_manual' | 'estorno' | 'repasse' | 'transferencia'
+export type ContaTipo = 'corrente' | 'poupanca' | 'caixa' | 'carteira_digital'
 export type RepasseStatus = 'pendente' | 'aprovado' | 'pago' | 'cancelado'
 
 export interface Unidade {
@@ -18,6 +19,25 @@ export interface Unidade {
   ativo: boolean
   created_at: string
   updated_at: string
+}
+
+export interface ContaBancaria {
+  id: string
+  clinica_id: string
+  unidade_id: string | null
+  nome: string
+  instituicao: string | null
+  tipo: ContaTipo
+  saldo_inicial: number
+  ativo: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface SaldoConta extends ContaBancaria {
+  entradas: number
+  saidas: number
+  saldoAtual: number
 }
 
 export interface FormaPagamento {
