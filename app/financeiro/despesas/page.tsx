@@ -10,7 +10,7 @@ import {
 } from '@/lib/financeiro/despesas'
 import { listarUnidades } from '@/lib/financeiro/unidades'
 import type { Despesa, FormaPagamento, Unidade } from '@/lib/financeiro/types'
-import { PageHeader, Button } from '@/components/ui'
+import { PageHeader, Button, Card, Input, Select, Field } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -107,7 +107,7 @@ export default function DespesasPage() {
       />
 
       {/* Filtros */}
-      <div style={{ background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 14, padding: 16, margin: '18px 0 16px' }}>
+      <Card style={{ borderRadius: 14, padding: 16, margin: '18px 0 16px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
           {STATUS_FILTROS.map((s) => {
             const ativo = fStatus.includes(s)
@@ -123,28 +123,25 @@ export default function DespesasPage() {
           })}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end' }}>
-          <div>
-            <label style={lbl}>Categoria</label>
-            <select value={fCategoria} onChange={(e) => setFCategoria(e.target.value)} style={inp}>
+          <Field label="Categoria">
+            <Select value={fCategoria} onChange={(e) => setFCategoria(e.target.value)} style={{ width: 'auto' }}>
               <option value="">Todas</option>
               {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
+            </Select>
+          </Field>
           {unidades.length > 0 && (
-            <div>
-              <label style={lbl}>Unidade</label>
-              <select value={fUnidade} onChange={(e) => setFUnidade(e.target.value)} style={inp}>
+            <Field label="Unidade">
+              <Select value={fUnidade} onChange={(e) => setFUnidade(e.target.value)} style={{ width: 'auto' }}>
                 <option value="">Todas</option>
                 {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
-              </select>
-            </div>
+              </Select>
+            </Field>
           )}
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <label style={lbl}>Buscar</label>
-            <input value={fBusca} onChange={(e) => setFBusca(e.target.value)} placeholder="Descrição ou fornecedor" style={{ ...inp, width: '100%' }} />
-          </div>
+          <Field label="Buscar" style={{ flex: 1, minWidth: 200 }}>
+            <Input value={fBusca} onChange={(e) => setFBusca(e.target.value)} placeholder="Descrição ou fornecedor" />
+          </Field>
         </div>
-      </div>
+      </Card>
 
       <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 12.5, color: tokens.text.secondary }}>
         <span>{filtradas.length} despesa(s)</span>
@@ -153,14 +150,14 @@ export default function DespesasPage() {
       </div>
 
       {/* Tabela */}
-      <div style={{ background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 14, overflow: 'hidden' }}>
+      <Card style={{ padding: 0, borderRadius: 14, overflow: 'hidden' }}>
         {carregando ? (
           <p style={vazio}>Carregando...</p>
         ) : filtradas.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px' }}>
             <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 4px' }}>Nenhuma despesa por aqui</p>
             <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 16px' }}>Cadastre suas contas a pagar para acompanhar os vencimentos.</p>
-            <button onClick={() => setModalNova(true)} style={btnPri}>+ Nova despesa</button>
+            <Button onClick={() => setModalNova(true)}>+ Nova despesa</Button>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -209,9 +206,11 @@ export default function DespesasPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
-      <button onClick={() => router.push('/financeiro')} style={{ ...btnAcaoGhost, marginTop: 14 }}>← Voltar ao financeiro</button>
+      <Button variant="ghost" size="sm" onClick={() => router.push('/financeiro')} style={{ marginTop: 14, paddingLeft: 0 }}>
+        ← Voltar ao financeiro
+      </Button>
 
       {modalNova && clinicaId && (
         <ModalNovaDespesa

@@ -11,7 +11,7 @@ import {
 } from '@/lib/financeiro/repasses'
 import { listarUnidades } from '@/lib/financeiro/unidades'
 import type { ItemTipo, RepasseStatus, Unidade } from '@/lib/financeiro/types'
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Card, Button, Input, Select, Field, Modal, ModalAcoes } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -67,7 +67,9 @@ export default function RepassesPage() {
       {clinicaId && aba === 'repasses' && <AbaRepasses clinicaId={clinicaId} medicos={medicos} usuarioId={usuario?.id || null} />}
       {clinicaId && aba === 'regras' && <AbaRegras clinicaId={clinicaId} medicos={medicos} />}
 
-      <button onClick={() => router.push('/financeiro')} style={{ ...btnGhost, marginTop: 16 }}>← Voltar ao financeiro</button>
+      <Button variant="ghost" size="sm" onClick={() => router.push('/financeiro')} style={{ marginTop: 16, paddingLeft: 0 }}>
+        ← Voltar ao financeiro
+      </Button>
     </div>
   )
 }
@@ -125,7 +127,7 @@ function AbaRepasses({ clinicaId, medicos, usuarioId }: { clinicaId: string; med
 
   return (
     <>
-      <div style={{ background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 14, padding: 16, marginBottom: 14 }}>
+      <Card style={{ borderRadius: 14, padding: 16, marginBottom: 14 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
           {STATUS_FILTROS.map((s) => {
             const ativo = fStatus.includes(s)
@@ -140,28 +142,25 @@ function AbaRepasses({ clinicaId, medicos, usuarioId }: { clinicaId: string; med
           })}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end' }}>
-          <div>
-            <label style={lbl}>Profissional</label>
-            <select value={fProf} onChange={(e) => setFProf(e.target.value)} style={inp}>
+          <Field label="Profissional">
+            <Select value={fProf} onChange={(e) => setFProf(e.target.value)} style={{ width: 'auto' }}>
               <option value="">Todos</option>
               {medicos.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={lbl}>Competência</label>
-            <input type="month" value={fMes} onChange={(e) => setFMes(e.target.value)} style={inp} />
-          </div>
+            </Select>
+          </Field>
+          <Field label="Competência">
+            <Input type="month" value={fMes} onChange={(e) => setFMes(e.target.value)} style={{ width: 'auto' }} />
+          </Field>
           {unidades.length > 0 && (
-            <div>
-              <label style={lbl}>Unidade</label>
-              <select value={fUnidade} onChange={(e) => setFUnidade(e.target.value)} style={inp}>
+            <Field label="Unidade">
+              <Select value={fUnidade} onChange={(e) => setFUnidade(e.target.value)} style={{ width: 'auto' }}>
                 <option value="">Todas</option>
                 {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
-              </select>
-            </div>
+              </Select>
+            </Field>
           )}
         </div>
-      </div>
+      </Card>
 
       <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 12.5, color: tokens.text.secondary }}>
         <span>{filtrados.length} repasse(s)</span>
@@ -170,7 +169,7 @@ function AbaRepasses({ clinicaId, medicos, usuarioId }: { clinicaId: string; med
         <span>Pago: <strong style={{ color: tokens.status.success }}>{brl(resumo.pago)}</strong></span>
       </div>
 
-      <div style={{ background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 14, overflow: 'hidden' }}>
+      <Card style={{ padding: 0, borderRadius: 14, overflow: 'hidden' }}>
         {carregando ? (
           <p style={vazio}>Carregando...</p>
         ) : filtrados.length === 0 ? (
@@ -221,7 +220,7 @@ function AbaRepasses({ clinicaId, medicos, usuarioId }: { clinicaId: string; med
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
     </>
   )
 }
@@ -247,10 +246,10 @@ function AbaRegras({ clinicaId, medicos }: { clinicaId: string; medicos: any[] }
         <p style={{ fontSize: 12.5, color: tokens.text.secondary, margin: 0 }}>
           A regra mais específica (por tipo de item) vence sobre a regra padrão do profissional.
         </p>
-        <button onClick={() => setModal(true)} style={btnPri}>+ Nova regra</button>
+        <Button onClick={() => setModal(true)}>+ Nova regra</Button>
       </div>
 
-      <div style={{ background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 14, overflow: 'hidden' }}>
+      <Card style={{ padding: 0, borderRadius: 14, overflow: 'hidden' }}>
         {carregando ? (
           <p style={vazio}>Carregando...</p>
         ) : regras.length === 0 ? (
@@ -287,7 +286,7 @@ function AbaRegras({ clinicaId, medicos }: { clinicaId: string; medicos: any[] }
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
       {modal && (
         <ModalRegra
@@ -327,42 +326,32 @@ function ModalRegra({ clinicaId, medicos, onClose, onCriada }: {
   }
 
   return (
-    <div onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position: 'fixed', inset: 0, background: tokens.bg.overlay, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ background: tokens.bg.card, borderRadius: 16, width: 'min(420px, 100%)', padding: 26 }}>
-        <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 16px' }}>Nova regra de comissão</h2>
-        <label style={lbl}>Profissional</label>
-        <select value={profissionalId} onChange={(e) => setProfissionalId(e.target.value)} style={{ ...inp, width: '100%' }}>
+    <Modal titulo="Nova regra de comissão" onClose={onClose} largura={420}>
+      <Field label="Profissional">
+        <Select value={profissionalId} onChange={(e) => setProfissionalId(e.target.value)}>
           {medicos.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
-        </select>
-        <div style={{ marginTop: 12 }}>
-          <label style={lbl}>Aplica-se a</label>
-          <select value={tipo} onChange={(e) => setTipo(e.target.value)} style={{ ...inp, width: '100%' }}>
-            <option value="">Todos os itens (regra padrão)</option>
-            {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <label style={lbl}>Percentual de repasse (%)</label>
-          <input value={percentual} onChange={(e) => setPercentual(e.target.value)} placeholder="Ex: 40" style={{ ...inp, width: '100%' }} />
-        </div>
-        {erro && <p style={{ color: tokens.status.danger, fontSize: 12.5, margin: '12px 0 0' }}>{erro}</p>}
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
-          <button onClick={onClose} style={btnSec}>Cancelar</button>
-          <button onClick={salvar} disabled={salvando} style={{ ...btnPri, opacity: salvando ? 0.6 : 1 }}>
-            {salvando ? 'Salvando...' : 'Criar regra'}
-          </button>
-        </div>
-      </div>
-    </div>
+        </Select>
+      </Field>
+      <Field label="Aplica-se a" style={{ marginTop: 12 }}>
+        <Select value={tipo} onChange={(e) => setTipo(e.target.value)}>
+          <option value="">Todos os itens (regra padrão)</option>
+          {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+        </Select>
+      </Field>
+      <Field label="Percentual de repasse (%)" style={{ marginTop: 12 }}>
+        <Input value={percentual} onChange={(e) => setPercentual(e.target.value)} placeholder="Ex: 40" />
+      </Field>
+      {erro && <p style={{ color: tokens.status.danger, fontSize: 12.5, margin: '12px 0 0' }}>{erro}</p>}
+      <ModalAcoes>
+        <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+        <Button onClick={salvar} disabled={salvando}>
+          {salvando ? 'Salvando...' : 'Criar regra'}
+        </Button>
+      </ModalAcoes>
+    </Modal>
   )
 }
 
-const lbl: React.CSSProperties = { fontSize: 11.5, fontWeight: 600, color: tokens.text.secondary, display: 'block', marginBottom: 5 }
-const inp: React.CSSProperties = {
-  padding: '8px 11px', borderRadius: 9, border: `1px solid ${tokens.border.default}`,
-  fontSize: 13, outline: 'none', boxSizing: 'border-box', background: tokens.bg.card, color: tokens.text.primary,
-}
 const th: React.CSSProperties = {
   textAlign: 'left', padding: '11px 14px', fontSize: 11, fontWeight: 700,
   color: tokens.text.secondary, textTransform: 'uppercase', letterSpacing: '0.04em',
@@ -376,12 +365,4 @@ const btnAcao: React.CSSProperties = {
 const btnGhost: React.CSSProperties = {
   padding: '6px 11px', borderRadius: 8, border: 'none',
   background: 'transparent', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-}
-const btnSec: React.CSSProperties = {
-  padding: '10px 18px', borderRadius: 9, border: `1px solid ${tokens.border.default}`,
-  background: tokens.bg.card, color: tokens.text.strong, fontSize: 13, fontWeight: 500, cursor: 'pointer',
-}
-const btnPri: React.CSSProperties = {
-  padding: '10px 18px', borderRadius: 9, border: 'none',
-  background: tokens.brand.primary, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
