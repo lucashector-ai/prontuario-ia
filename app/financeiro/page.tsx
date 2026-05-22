@@ -9,7 +9,8 @@ import {
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { obterDashboard } from '@/lib/financeiro/dashboard'
-import type { DashboardFinanceiro, InsightFinanceiro, ItemTipo } from '@/lib/financeiro/types'
+import { listarUnidades } from '@/lib/financeiro/unidades'
+import type { DashboardFinanceiro, InsightFinanceiro, ItemTipo, Unidade } from '@/lib/financeiro/types'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -41,10 +42,19 @@ export default function FinanceiroPage() {
   const [d, setD] = useState<DashboardFinanceiro | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [insights, setInsights] = useState<InsightFinanceiro[] | null>(null)
+  const [unidades, setUnidades] = useState<Unidade[]>([])
+  const [unidadeSel, setUnidadeSel] = useState('')
 
   useEffect(() => {
     if (!clinicaId) return
-    obterDashboard(clinicaId).then(({ data }) => {
+    listarUnidades(clinicaId, true).then(({ data }) => setUnidades(data || []))
+  }, [clinicaId])
+
+  useEffect(() => {
+    if (!clinicaId) return
+    setCarregando(true)
+    setInsights(null)
+    obterDashboard(clinicaId, unidadeSel || null).then(({ data }) => {
       setD(data)
       setCarregando(false)
       if (data) {
@@ -58,7 +68,7 @@ export default function FinanceiroPage() {
           .catch(() => setInsights([]))
       }
     })
-  }, [clinicaId])
+  }, [clinicaId, unidadeSel])
 
   const kpis = useMemo(() => {
     if (!d) return []
@@ -83,6 +93,22 @@ export default function FinanceiroPage() {
       <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 20px' }}>
         Acompanhe receita, recebimentos e saúde financeira da clínica.
       </p>
+
+      {unidades.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <select
+            value={unidadeSel}
+            onChange={(e) => setUnidadeSel(e.target.value)}
+            style={{
+              padding: '8px 12px', borderRadius: 9, border: `1px solid ${tokens.border.default}`,
+              fontSize: 13, fontWeight: 600, background: tokens.bg.card, color: tokens.text.primary, outline: 'none',
+            }}
+          >
+            <option value="">Todas as unidades (consolidado)</option>
+            {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+          </select>
+        </div>
+      )}
 
       {/* Cockpit de insights */}
       <div style={{
@@ -273,6 +299,7 @@ export default function FinanceiroPage() {
           ['CRM financeiro', '/financeiro/pacientes'],
           ['Cofre financeiro', '/financeiro/saude'],
           ['Assistente financeiro', '/financeiro/assistente'],
+          ['Configurações', '/financeiro/configuracoes'],
         ].map(([label, rota]) => (
           <button key={rota} onClick={() => router.push(rota)} style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,

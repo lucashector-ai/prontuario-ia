@@ -51,6 +51,7 @@ export default function RecebimentosPage() {
 
   // modal de baixa
   const [baixaAlvo, setBaixaAlvo] = useState<any>(null)
+  const [cobrando, setCobrando] = useState<string | null>(null)
 
   const carregar = useCallback(async () => {
     if (!clinicaId) return
@@ -95,13 +96,28 @@ export default function RecebimentosPage() {
     setFStatus((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])
   }
 
-  function cobrarWhatsApp(r: any) {
+  async function cobrarWhatsApp(r: any) {
     const tel = cleanTelefone(r.pacientes?.telefone)
     if (tel.length < 10) { alert('Paciente sem telefone válido cadastrado.'); return }
     const msg = `Olá ${r.pacientes?.nome || ''}! Passando para lembrar do pagamento de ${brl(r.valor)}`
       + (r.vencimento ? `, com vencimento em ${fmtData(r.vencimento)}` : '')
       + '. Qualquer dúvida, estamos à disposição.'
-    window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`, '_blank')
+    const telWpp = tel.startsWith('55') ? tel : '55' + tel
+    setCobrando(r.id)
+    try {
+      const resp = await fetch('/api/whatsapp/enviar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telefone: telWpp, texto: msg, medico_id: usuario?.id }),
+      })
+      const d = await resp.json()
+      if (d.error) alert('Não foi possível enviar: ' + d.error)
+      else alert('Cobrança enviada pelo WhatsApp.')
+    } catch {
+      alert('Falha de conexão ao enviar a cobrança.')
+    } finally {
+      setCobrando(null)
+    }
   }
 
   return (
@@ -219,7 +235,9 @@ export default function RecebimentosPage() {
                           <button onClick={() => setBaixaAlvo(r)} style={btnAcao}>Dar baixa</button>
                         )}
                         {podeBaixar && r.pacientes?.telefone && (
-                          <button onClick={() => cobrarWhatsApp(r)} style={btnAcao}>Cobrar</button>
+                          <button onClick={() => cobrarWhatsApp(r)} disabled={cobrando === r.id} style={btnAcao}>
+                            {cobrando === r.id ? 'Enviando...' : 'Cobrar no WhatsApp'}
+                          </button>
                         )}
                         {ef === 'pago' && (
                           <a href={`/api/financeiro/recibo/${r.id}`} target="_blank" rel="noreferrer" style={{ ...btnAcao, textDecoration: 'none' }}>

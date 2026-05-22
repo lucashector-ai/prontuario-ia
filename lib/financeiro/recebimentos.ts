@@ -106,6 +106,7 @@ export async function darBaixa(
     clinica_id: receb.clinica_id,
     recebimento_id: recebimentoId,
     forma_pagamento_id: baixa.forma_pagamento_id,
+    unidade_id: receb.unidade_id,
     valor: valorPago,
     data: baixa.data,
     descricao: 'Baixa de recebimento',

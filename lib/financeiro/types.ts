@@ -10,6 +10,16 @@ export type MovimentacaoTipo = 'entrada' | 'saida'
 export type MovimentacaoOrigem = 'recebimento' | 'despesa' | 'ajuste_manual' | 'estorno' | 'repasse'
 export type RepasseStatus = 'pendente' | 'aprovado' | 'pago' | 'cancelado'
 
+export interface Unidade {
+  id: string
+  clinica_id: string
+  nome: string
+  endereco: string | null
+  ativo: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface FormaPagamento {
   id: string
   codigo: string

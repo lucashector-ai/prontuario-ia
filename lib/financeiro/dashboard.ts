@@ -6,7 +6,10 @@ import type {
 const isoDate = (d: Date) => d.toISOString().slice(0, 10)
 const num = (v: any) => Number(v) || 0
 
-export async function obterDashboard(clinicaId: string): Promise<Resultado<DashboardFinanceiro>> {
+export async function obterDashboard(
+  clinicaId: string,
+  unidadeId?: string | null,
+): Promise<Resultado<DashboardFinanceiro>> {
   try {
     const agora = new Date()
     const y = agora.getFullYear()
@@ -19,27 +22,31 @@ export async function obterDashboard(clinicaId: string): Promise<Resultado<Dashb
     const janelaIni = new Date(agora); janelaIni.setDate(janelaIni.getDate() - 29)
     const janelaFim = new Date(agora); janelaFim.setDate(janelaFim.getDate() + 45)
 
+    // aplica o filtro de unidade quando uma unidade específica é selecionada
+    const uni = <T,>(q: T): T => (unidadeId ? (q as any).eq('unidade_id', unidadeId) : q)
+    const itensQuery = supabase.from('comanda_itens')
+      .select('tipo, valor_total, comandas!inner(clinica_id, status, fechado_em)')
+      .eq('comandas.clinica_id', clinicaId)
+      .in('comandas.status', ['fechada', 'paga'])
+      .gte('comandas.fechado_em', mesIni)
+
     const [comandasR, recebR, despR, movR, itensR] = await Promise.all([
-      supabase.from('comandas')
+      uni(supabase.from('comandas')
         .select('valor_final, fechado_em, status')
         .eq('clinica_id', clinicaId)
         .in('status', ['fechada', 'paga'])
-        .gte('fechado_em', mesAntIni),
-      supabase.from('recebimentos')
+        .gte('fechado_em', mesAntIni)),
+      uni(supabase.from('recebimentos')
         .select('valor, valor_pago, status, vencimento, pago_em')
-        .eq('clinica_id', clinicaId),
-      supabase.from('despesas')
+        .eq('clinica_id', clinicaId)),
+      uni(supabase.from('despesas')
         .select('valor, status, vencimento, pago_em, recorrente, recorrencia_periodicidade')
-        .eq('clinica_id', clinicaId),
-      supabase.from('movimentacoes_caixa')
+        .eq('clinica_id', clinicaId)),
+      uni(supabase.from('movimentacoes_caixa')
         .select('tipo, valor, data_movimentacao')
         .eq('clinica_id', clinicaId)
-        .gte('data_movimentacao', isoDate(janelaIni)),
-      supabase.from('comanda_itens')
-        .select('tipo, valor_total, comandas!inner(clinica_id, status, fechado_em)')
-        .eq('comandas.clinica_id', clinicaId)
-        .in('comandas.status', ['fechada', 'paga'])
-        .gte('comandas.fechado_em', mesIni),
+        .gte('data_movimentacao', isoDate(janelaIni))),
+      unidadeId ? itensQuery.eq('comandas.unidade_id', unidadeId) : itensQuery,
     ])
 
     const comandas = comandasR.data || []

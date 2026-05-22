@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { tokens } from '@/lib/design-tokens'
 import { listarComandas, criarComandaAvulsa } from '@/lib/financeiro/comandas'
-import type { Comanda } from '@/lib/financeiro/types'
+import { listarUnidades } from '@/lib/financeiro/unidades'
+import type { Comanda, Unidade } from '@/lib/financeiro/types'
 import ComandaPanel from './ComandaPanel'
 
 const brl = (v: number) =>
@@ -21,6 +22,13 @@ export default function ComandaDrawer({ pacienteId, clinicaId, profissionalId, u
   const [comanda, setComanda] = useState<Comanda | null>(null)
   const [aberto, setAberto] = useState(false)
   const [criando, setCriando] = useState(false)
+  const [unidades, setUnidades] = useState<Unidade[]>([])
+  const [unidadeSel, setUnidadeSel] = useState('')
+
+  useEffect(() => {
+    if (!clinicaId) return
+    listarUnidades(clinicaId, true).then(({ data }) => setUnidades(data || []))
+  }, [clinicaId])
 
   const buscar = useCallback(async () => {
     if (!pacienteId || !clinicaId) { setComanda(null); return }
@@ -41,6 +49,7 @@ export default function ComandaDrawer({ pacienteId, clinicaId, profissionalId, u
       clinica_id: clinicaId,
       paciente_id: pacienteId,
       profissional_id: profissionalId,
+      unidade_id: unidadeSel || null,
     })
     setCriando(false)
     if (data) setComanda(data)
@@ -92,6 +101,20 @@ export default function ComandaDrawer({ pacienteId, clinicaId, profissionalId, u
                   Nenhuma comanda em aberto para este paciente. Comandas de agendamentos
                   confirmados aparecem aqui automaticamente.
                 </p>
+                {unidades.length > 0 && (
+                  <select
+                    value={unidadeSel}
+                    onChange={(e) => setUnidadeSel(e.target.value)}
+                    style={{
+                      width: '100%', padding: '9px 11px', borderRadius: 9, marginBottom: 10,
+                      border: `1px solid ${tokens.border.default}`, fontSize: 13,
+                      background: tokens.bg.card, color: tokens.text.primary, outline: 'none',
+                    }}
+                  >
+                    <option value="">Sem unidade específica</option>
+                    {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                  </select>
+                )}
                 <button onClick={abrirAvulsa} disabled={criando} style={btnAvulsa}>
                   {criando ? 'Abrindo...' : 'Abrir comanda avulsa'}
                 </button>

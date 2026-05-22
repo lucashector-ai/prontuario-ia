@@ -65,6 +65,7 @@ export async function criarComandaAvulsa(input: {
   clinica_id: string
   paciente_id: string
   profissional_id?: string | null
+  unidade_id?: string | null
   observacoes?: string | null
 }): Promise<Resultado<Comanda>> {
   const { data, error } = await supabase
@@ -73,6 +74,7 @@ export async function criarComandaAvulsa(input: {
       clinica_id: input.clinica_id,
       paciente_id: input.paciente_id,
       profissional_id: input.profissional_id || null,
+      unidade_id: input.unidade_id || null,
       observacoes: input.observacoes || null,
       origem: 'avulsa',
       status: 'aberta',
@@ -229,6 +231,7 @@ export async function fecharComanda(
   const linhas = valores.map((valor, i) => ({
     clinica_id: comanda.clinica_id,
     comanda_id: comandaId,
+    unidade_id: comanda.unidade_id,
     paciente_id: comanda.paciente_id,
     forma_pagamento_id: pagamento.forma_pagamento_id,
     status: liquidaAgora ? 'pago' : 'pendente',
@@ -250,6 +253,7 @@ export async function fecharComanda(
       clinica_id: comanda.clinica_id,
       recebimento_id: recebimentos[0].id,
       forma_pagamento_id: pagamento.forma_pagamento_id,
+      unidade_id: comanda.unidade_id,
       valor: total,
       descricao: 'Recebimento de comanda',
       criado_por: pagamento.usuario_id || null,

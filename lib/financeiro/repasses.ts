@@ -62,7 +62,7 @@ export async function gerarRepasses(comandaId: string): Promise<void> {
   if (existente && existente.length) return
 
   const { data: comanda } = await supabase
-    .from('comandas').select('id, clinica_id, profissional_id').eq('id', comandaId).single()
+    .from('comandas').select('id, clinica_id, profissional_id, unidade_id').eq('id', comandaId).single()
   if (!comanda || !comanda.clinica_id) return
 
   const { data: itens } = await supabase
@@ -88,6 +88,7 @@ export async function gerarRepasses(comandaId: string): Promise<void> {
     const valor = Math.round(base * (Number(regra.percentual) / 100) * 100) / 100
     linhas.push({
       clinica_id: comanda.clinica_id,
+      unidade_id: comanda.unidade_id,
       profissional_id: prof,
       comanda_id: comandaId,
       comanda_item_id: item.id,
@@ -150,6 +151,7 @@ export async function pagarRepasse(
 
   await registrarSaida({
     clinica_id: rep.clinica_id,
+    unidade_id: rep.unidade_id,
     valor: Number(rep.valor || 0),
     origem: 'repasse',
     descricao: `Repasse médico${opcoes?.nomeProfissional ? ' — ' + opcoes.nomeProfissional : ''}`,

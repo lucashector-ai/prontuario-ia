@@ -8,7 +8,8 @@ import { listarFormasPagamento } from '@/lib/financeiro/recebimentos'
 import {
   listarDespesas, criarDespesa, pagarDespesa, cancelarDespesa, statusEfetivoDespesa,
 } from '@/lib/financeiro/despesas'
-import type { Despesa, FormaPagamento } from '@/lib/financeiro/types'
+import { listarUnidades } from '@/lib/financeiro/unidades'
+import type { Despesa, FormaPagamento, Unidade } from '@/lib/financeiro/types'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -36,6 +37,7 @@ export default function DespesasPage() {
 
   const [despesas, setDespesas] = useState<Despesa[]>([])
   const [formas, setFormas] = useState<FormaPagamento[]>([])
+  const [unidades, setUnidades] = useState<Unidade[]>([])
   const [carregando, setCarregando] = useState(true)
 
   const [fStatus, setFStatus] = useState<string[]>([])
@@ -55,6 +57,10 @@ export default function DespesasPage() {
 
   useEffect(() => { carregar() }, [carregar])
   useEffect(() => { listarFormasPagamento().then(({ data }) => setFormas(data || [])) }, [])
+  useEffect(() => {
+    if (!clinicaId) return
+    listarUnidades(clinicaId, true).then(({ data }) => setUnidades(data || []))
+  }, [clinicaId])
 
   const filtradas = useMemo(() => {
     return despesas.filter((d) => {
@@ -202,6 +208,7 @@ export default function DespesasPage() {
       {modalNova && clinicaId && (
         <ModalNovaDespesa
           clinicaId={clinicaId}
+          unidades={unidades}
           onClose={() => setModalNova(false)}
           onCriada={() => { setModalNova(false); carregar() }}
         />
@@ -219,13 +226,14 @@ export default function DespesasPage() {
   )
 }
 
-function ModalNovaDespesa({ clinicaId, onClose, onCriada }: {
-  clinicaId: string; onClose: () => void; onCriada: () => void
+function ModalNovaDespesa({ clinicaId, unidades, onClose, onCriada }: {
+  clinicaId: string; unidades: Unidade[]; onClose: () => void; onCriada: () => void
 }) {
   const [descricao, setDescricao] = useState('')
   const [valor, setValor] = useState('')
   const [categoria, setCategoria] = useState('')
   const [fornecedor, setFornecedor] = useState('')
+  const [unidadeId, setUnidadeId] = useState('')
   const [vencimento, setVencimento] = useState(hojeISO())
   const [recorrente, setRecorrente] = useState(false)
   const [periodicidade, setPeriodicidade] = useState<'semanal' | 'mensal' | 'anual'>('mensal')
@@ -244,6 +252,7 @@ function ModalNovaDespesa({ clinicaId, onClose, onCriada }: {
       categoria: categoria || null,
       fornecedor: fornecedor || null,
       vencimento: vencimento || null,
+      unidade_id: unidadeId || null,
       recorrente,
       recorrencia_periodicidade: recorrente ? periodicidade : null,
       observacoes: observacoes || null,
@@ -279,6 +288,15 @@ function ModalNovaDespesa({ clinicaId, onClose, onCriada }: {
           <input value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} placeholder="Opcional" style={{ ...inp, width: '100%' }} />
         </div>
       </div>
+      {unidades.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <label style={lbl}>Unidade</label>
+          <select value={unidadeId} onChange={(e) => setUnidadeId(e.target.value)} style={{ ...inp, width: '100%' }}>
+            <option value="">Sem unidade específica</option>
+            {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+          </select>
+        </div>
+      )}
       <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
         <input type="checkbox" id="rec" checked={recorrente} onChange={(e) => setRecorrente(e.target.checked)} />
         <label htmlFor="rec" style={{ fontSize: 13, color: tokens.text.strong }}>Despesa recorrente</label>

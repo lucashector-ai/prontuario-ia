@@ -29,6 +29,7 @@ export async function criarDespesa(input: {
   categoria?: string | null
   fornecedor?: string | null
   vencimento?: string | null
+  unidade_id?: string | null
   recorrente?: boolean
   recorrencia_periodicidade?: 'semanal' | 'mensal' | 'anual' | null
   observacoes?: string | null
@@ -42,6 +43,7 @@ export async function criarDespesa(input: {
       categoria: input.categoria || null,
       fornecedor: input.fornecedor || null,
       vencimento: input.vencimento || null,
+      unidade_id: input.unidade_id || null,
       recorrente: !!input.recorrente,
       recorrencia_periodicidade: input.recorrente ? (input.recorrencia_periodicidade || 'mensal') : null,
       observacoes: input.observacoes || null,
@@ -94,6 +96,7 @@ export async function pagarDespesa(
     clinica_id: desp.clinica_id,
     despesa_id: id,
     forma_pagamento_id: pagamento.forma_pagamento_id || null,
+    unidade_id: desp.unidade_id,
     valor: Number(desp.valor || 0),
     data: pagamento.data,
     descricao: `Despesa — ${desp.descricao}`,
