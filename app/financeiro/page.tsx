@@ -11,7 +11,7 @@ import { tokens } from '@/lib/design-tokens'
 import { obterDashboard } from '@/lib/financeiro/dashboard'
 import { listarUnidades } from '@/lib/financeiro/unidades'
 import type { DashboardFinanceiro, InsightFinanceiro, ItemTipo, Unidade } from '@/lib/financeiro/types'
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Card } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -147,10 +147,7 @@ export default function FinanceiroPage() {
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 16 }}>
         {kpis.map((k) => (
-          <div key={k.label} style={{
-            background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`,
-            borderRadius: 14, padding: '16px 18px',
-          }}>
+          <Card key={k.label} style={{ borderRadius: 14, padding: '16px 18px' }}>
             <p style={{ fontSize: 12.5, color: tokens.text.secondary, margin: 0 }}>{k.label}</p>
             <p style={{
               fontSize: 25, fontWeight: 600, margin: '7px 0 0', fontVariantNumeric: 'tabular-nums',
@@ -165,15 +162,12 @@ export default function FinanceiroPage() {
                 color: k.delta.positivo ? tokens.status.success : tokens.status.danger,
               }}>{k.delta.texto}</p>
             )}
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Fluxo de caixa */}
-      <div style={{
-        background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`,
-        borderRadius: 16, padding: 20, marginBottom: 16,
-      }}>
+      <Card style={{ marginBottom: 16 }}>
         <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Fluxo de caixa</p>
         <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 14px' }}>
           Realizado dos últimos 30 dias e projeção dos próximos 45 — inclui despesas recorrentes.
@@ -226,7 +220,7 @@ export default function FinanceiroPage() {
             </span>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Painéis a receber / a pagar / categorias */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>

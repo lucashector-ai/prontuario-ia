@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { cleanTelefone } from '@/lib/format'
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Card, Button, Input, Select, Field, Modal, ModalAcoes } from '@/components/ui'
 import {
   listarRecebimentos, listarFormasPagamento, darBaixa, statusEfetivo,
 } from '@/lib/financeiro/recebimentos'
@@ -134,10 +134,7 @@ export default function RecebimentosPage() {
       />
 
       {/* Filtros */}
-      <div style={{
-        background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`,
-        borderRadius: 14, padding: 16, marginBottom: 16,
-      }}>
+      <Card style={{ borderRadius: 14, padding: 16, marginBottom: 16 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
           {STATUS_FILTROS.map((s) => {
             const ativo = fStatus.includes(s)
@@ -155,36 +152,31 @@ export default function RecebimentosPage() {
           })}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end' }}>
-          <div>
-            <label style={lbl}>Vencimento de</label>
-            <input type="date" value={fDe} onChange={(e) => setFDe(e.target.value)} style={inp} />
-          </div>
-          <div>
-            <label style={lbl}>até</label>
-            <input type="date" value={fAte} onChange={(e) => setFAte(e.target.value)} style={inp} />
-          </div>
-          <div>
-            <label style={lbl}>Profissional</label>
-            <select value={fProfissional} onChange={(e) => setFProfissional(e.target.value)} style={inp}>
+          <Field label="Vencimento de">
+            <Input type="date" value={fDe} onChange={(e) => setFDe(e.target.value)} style={{ width: 'auto' }} />
+          </Field>
+          <Field label="até">
+            <Input type="date" value={fAte} onChange={(e) => setFAte(e.target.value)} style={{ width: 'auto' }} />
+          </Field>
+          <Field label="Profissional">
+            <Select value={fProfissional} onChange={(e) => setFProfissional(e.target.value)} style={{ width: 'auto' }}>
               <option value="">Todos</option>
               {medicos.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
-            </select>
-          </div>
+            </Select>
+          </Field>
           {unidades.length > 0 && (
-            <div>
-              <label style={lbl}>Unidade</label>
-              <select value={fUnidade} onChange={(e) => setFUnidade(e.target.value)} style={inp}>
+            <Field label="Unidade">
+              <Select value={fUnidade} onChange={(e) => setFUnidade(e.target.value)} style={{ width: 'auto' }}>
                 <option value="">Todas</option>
                 {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
-              </select>
-            </div>
+              </Select>
+            </Field>
           )}
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <label style={lbl}>Buscar paciente</label>
-            <input value={fBusca} onChange={(e) => setFBusca(e.target.value)} placeholder="Nome do paciente" style={{ ...inp, width: '100%' }} />
-          </div>
+          <Field label="Buscar paciente" style={{ flex: 1, minWidth: 180 }}>
+            <Input value={fBusca} onChange={(e) => setFBusca(e.target.value)} placeholder="Nome do paciente" />
+          </Field>
         </div>
-      </div>
+      </Card>
 
       {/* Resumo da seleção */}
       <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 12.5, color: tokens.text.secondary }}>
@@ -194,7 +186,7 @@ export default function RecebimentosPage() {
       </div>
 
       {/* Tabela */}
-      <div style={{ background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 14, overflow: 'hidden' }}>
+      <Card style={{ padding: 0, borderRadius: 14, overflow: 'hidden' }}>
         {carregando ? (
           <p style={vazio}>Carregando...</p>
         ) : filtrados.length === 0 ? (
@@ -205,7 +197,7 @@ export default function RecebimentosPage() {
             <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 16px' }}>
               Recebíveis são gerados ao fechar uma comanda no atendimento.
             </p>
-            <button onClick={() => router.push('/nova-consulta')} style={btnPri}>Ir para atendimento</button>
+            <Button onClick={() => router.push('/nova-consulta')}>Ir para atendimento</Button>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -269,7 +261,7 @@ export default function RecebimentosPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
       {baixaAlvo && (
         <ModalBaixa
@@ -314,50 +306,37 @@ function ModalBaixa({ recebimento, formas, usuarioId, onClose, onBaixado }: {
   }
 
   return (
-    <div onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position: 'fixed', inset: 0, background: tokens.bg.overlay, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ background: tokens.bg.card, borderRadius: 16, width: 'min(420px, 100%)', padding: 26 }}>
-        <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Dar baixa</h2>
-        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 18px' }}>
-          {recebimento.pacientes?.nome || 'Recebível'} · {brl(recebimento.valor)}
-        </p>
-        <label style={lbl}>Forma de pagamento</label>
-        <select value={formaId} onChange={(e) => setFormaId(e.target.value)} style={{ ...inp, width: '100%' }}>
+    <Modal titulo="Dar baixa" onClose={onClose} largura={420}>
+      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '-8px 0 18px' }}>
+        {recebimento.pacientes?.nome || 'Recebível'} · {brl(recebimento.valor)}
+      </p>
+      <Field label="Forma de pagamento">
+        <Select value={formaId} onChange={(e) => setFormaId(e.target.value)}>
           {formas.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
-        </select>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 }}>
-          <div>
-            <label style={lbl}>Valor pago (R$)</label>
-            <input value={valorPago} onChange={(e) => setValorPago(e.target.value)} style={{ ...inp, width: '100%' }} />
-          </div>
-          <div>
-            <label style={lbl}>Data do pagamento</label>
-            <input type="date" value={data} onChange={(e) => setData(e.target.value)} style={{ ...inp, width: '100%' }} />
-          </div>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <label style={lbl}>Observações</label>
-          <input value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Opcional" style={{ ...inp, width: '100%' }} />
-        </div>
-        {erro && <p style={{ color: tokens.status.danger, fontSize: 12.5, margin: '12px 0 0' }}>{erro}</p>}
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
-          <button onClick={onClose} style={btnSec}>Cancelar</button>
-          <button onClick={confirmar} disabled={salvando} style={{ ...btnPri, opacity: salvando ? 0.6 : 1 }}>
-            {salvando ? 'Confirmando...' : 'Confirmar baixa'}
-          </button>
-        </div>
+        </Select>
+      </Field>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 }}>
+        <Field label="Valor pago (R$)">
+          <Input value={valorPago} onChange={(e) => setValorPago(e.target.value)} />
+        </Field>
+        <Field label="Data do pagamento">
+          <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />
+        </Field>
       </div>
-    </div>
+      <Field label="Observações" style={{ marginTop: 12 }}>
+        <Input value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Opcional" />
+      </Field>
+      {erro && <p style={{ color: tokens.status.danger, fontSize: 12.5, margin: '12px 0 0' }}>{erro}</p>}
+      <ModalAcoes>
+        <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+        <Button onClick={confirmar} disabled={salvando}>
+          {salvando ? 'Confirmando...' : 'Confirmar baixa'}
+        </Button>
+      </ModalAcoes>
+    </Modal>
   )
 }
 
-const lbl: React.CSSProperties = {
-  fontSize: 11.5, fontWeight: 600, color: tokens.text.secondary, display: 'block', marginBottom: 5,
-}
-const inp: React.CSSProperties = {
-  padding: '8px 11px', borderRadius: 9, border: `1px solid ${tokens.border.default}`,
-  fontSize: 13, outline: 'none', boxSizing: 'border-box', background: tokens.bg.card, color: tokens.text.primary,
-}
 const th: React.CSSProperties = {
   textAlign: 'left', padding: '11px 14px', fontSize: 11, fontWeight: 700,
   color: tokens.text.secondary, textTransform: 'uppercase', letterSpacing: '0.04em',
@@ -375,12 +354,4 @@ const btnAcao: React.CSSProperties = {
 const btnAcaoGhost: React.CSSProperties = {
   padding: '6px 11px', borderRadius: 8, border: 'none',
   background: 'transparent', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-}
-const btnSec: React.CSSProperties = {
-  padding: '10px 18px', borderRadius: 9, border: `1px solid ${tokens.border.default}`,
-  background: tokens.bg.card, color: tokens.text.strong, fontSize: 13, fontWeight: 500, cursor: 'pointer',
-}
-const btnPri: React.CSSProperties = {
-  padding: '10px 18px', borderRadius: 9, border: 'none',
-  background: tokens.brand.primary, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }

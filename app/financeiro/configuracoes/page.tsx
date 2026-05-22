@@ -10,7 +10,7 @@ import {
   PROVEDORES_SUPORTADOS, PROVEDORES, type GatewayConfig,
 } from '@/lib/financeiro/gateway'
 import type { Unidade } from '@/lib/financeiro/types'
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Card, Button, Input, Select, Field } from '@/components/ui'
 
 export default function ConfiguracoesFinanceiroPage() {
   const router = useRouter()
@@ -32,13 +32,15 @@ export default function ConfiguracoesFinanceiroPage() {
         </div>
       )}
 
-      <button onClick={() => router.push('/financeiro')} style={{
-        marginTop: 16, padding: '6px 11px', borderRadius: 8, border: 'none',
-        background: 'transparent', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-      }}>← Voltar ao financeiro</button>
+      <Button variant="ghost" size="sm" onClick={() => router.push('/financeiro')} style={{ marginTop: 16, paddingLeft: 0 }}>
+        ← Voltar ao financeiro
+      </Button>
     </div>
   )
 }
+
+const titulo: React.CSSProperties = { fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }
+const descSecao: React.CSSProperties = { fontSize: 12.5, color: tokens.text.secondary, margin: '0 0 14px' }
 
 // ───────────────────────────────── Unidades ────────────────────────────────
 
@@ -63,9 +65,9 @@ function SecaoUnidades({ clinicaId }: { clinicaId: string }) {
   }
 
   return (
-    <div style={card}>
+    <Card>
       <p style={titulo}>Unidades</p>
-      <p style={{ fontSize: 12.5, color: tokens.text.secondary, margin: '0 0 14px' }}>
+      <p style={descSecao}>
         Cadastre as filiais da clínica. Lançamentos financeiros podem ser atribuídos a uma unidade,
         e o dashboard permite ver cada uma ou o consolidado.
       </p>
@@ -92,13 +94,11 @@ function SecaoUnidades({ clinicaId }: { clinicaId: string }) {
       )}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da unidade" style={{ ...inp, flex: 1, minWidth: 160 }} />
-        <input value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Endereço (opcional)" style={{ ...inp, flex: 1, minWidth: 160 }} />
-        <button onClick={adicionar} disabled={salvando || !nome.trim()} style={{
-          ...btnPri, opacity: salvando || !nome.trim() ? 0.6 : 1,
-        }}>Adicionar</button>
+        <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da unidade" style={{ flex: 1, minWidth: 160 }} />
+        <Input value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Endereço (opcional)" style={{ flex: 1, minWidth: 160 }} />
+        <Button onClick={adicionar} disabled={salvando || !nome.trim()}>Adicionar</Button>
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -128,9 +128,9 @@ function SecaoMedicos({ clinicaId }: { clinicaId: string }) {
   }
 
   return (
-    <div style={card}>
+    <Card>
       <p style={titulo}>Médicos por unidade</p>
-      <p style={{ fontSize: 12.5, color: tokens.text.secondary, margin: '0 0 14px' }}>
+      <p style={descSecao}>
         Vincule cada médico à sua unidade. Comandas geradas por agendamentos confirmados
         herdam automaticamente a unidade do médico responsável.
       </p>
@@ -148,19 +148,19 @@ function SecaoMedicos({ clinicaId }: { clinicaId: string }) {
               background: tokens.bg.cardSubtle, borderRadius: 10,
             }}>
               <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: tokens.text.primary }}>{m.nome}</span>
-              <select
+              <Select
                 value={m.unidade_id || ''}
                 onChange={(e) => vincular(m.id, e.target.value)}
-                style={{ ...inp, minWidth: 180 }}
+                style={{ width: 'auto', minWidth: 180 }}
               >
                 <option value="">Sem unidade</option>
                 {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
-              </select>
+              </Select>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </Card>
   )
 }
 
@@ -198,28 +198,26 @@ function SecaoGateway({ clinicaId }: { clinicaId: string }) {
   const operacional = gatewayOperacional({ ...(config as any), provedor, ativo })
 
   return (
-    <div style={card}>
+    <Card>
       <p style={titulo}>Gateway de pagamento</p>
-      <p style={{ fontSize: 12.5, color: tokens.text.secondary, margin: '0 0 14px' }}>
+      <p style={descSecao}>
         A estrutura de cobranças (PIX, cartão, boleto) já está pronta. A integração é ativada
         quando as credenciais da API do provedor forem conectadas.
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <div>
-          <label style={lbl}>Provedor</label>
-          <select value={provedor} onChange={(e) => setProvedor(e.target.value)} style={{ ...inp, width: '100%' }}>
+        <Field label="Provedor">
+          <Select value={provedor} onChange={(e) => setProvedor(e.target.value)}>
             <option value="">Nenhum</option>
             {PROVEDORES_SUPORTADOS.map((p) => <option key={p.codigo} value={p.codigo}>{p.nome}</option>)}
-          </select>
-        </div>
-        <div>
-          <label style={lbl}>Ambiente</label>
-          <select value={ambiente} onChange={(e) => setAmbiente(e.target.value as any)} style={{ ...inp, width: '100%' }}>
+          </Select>
+        </Field>
+        <Field label="Ambiente">
+          <Select value={ambiente} onChange={(e) => setAmbiente(e.target.value as any)}>
             <option value="sandbox">Sandbox (teste)</option>
             <option value="producao">Produção</option>
-          </select>
-        </div>
+          </Select>
+        </Field>
       </div>
 
       <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, fontSize: 13, color: tokens.text.strong }}>
@@ -241,24 +239,10 @@ function SecaoGateway({ clinicaId }: { clinicaId: string }) {
 
       {msg && <p style={{ fontSize: 12.5, color: tokens.text.secondary, margin: '10px 0 0' }}>{msg}</p>}
       <div style={{ marginTop: 14 }}>
-        <button onClick={salvar} disabled={salvando} style={{ ...btnPri, opacity: salvando ? 0.6 : 1 }}>
+        <Button onClick={salvar} disabled={salvando}>
           {salvando ? 'Salvando...' : 'Salvar configuração'}
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   )
-}
-
-const card: React.CSSProperties = {
-  background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 16, padding: 20,
-}
-const titulo: React.CSSProperties = { fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }
-const lbl: React.CSSProperties = { fontSize: 11.5, fontWeight: 600, color: tokens.text.secondary, display: 'block', marginBottom: 5 }
-const inp: React.CSSProperties = {
-  padding: '9px 11px', borderRadius: 9, border: `1px solid ${tokens.border.default}`,
-  fontSize: 13, outline: 'none', boxSizing: 'border-box', background: tokens.bg.card, color: tokens.text.primary,
-}
-const btnPri: React.CSSProperties = {
-  padding: '9px 18px', borderRadius: 9, border: 'none',
-  background: tokens.brand.primary, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
