@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { obterMargens, type ProcedimentoMargem } from '@/lib/financeiro/margem'
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Card, Button } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -55,7 +55,7 @@ export default function MargemPage() {
         </div>
       )}
 
-      <div style={{ background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 14, overflow: 'hidden' }}>
+      <Card style={{ padding: 0, borderRadius: 14, overflow: 'hidden' }}>
         {carregando ? (
           <p style={vazio}>Carregando...</p>
         ) : ordenados.length === 0 ? (
@@ -94,12 +94,11 @@ export default function MargemPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
-      <button onClick={() => router.push('/financeiro')} style={{
-        marginTop: 14, padding: '6px 11px', borderRadius: 8, border: 'none',
-        background: 'transparent', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-      }}>← Voltar ao financeiro</button>
+      <Button variant="ghost" size="sm" onClick={() => router.push('/financeiro')} style={{ marginTop: 14, paddingLeft: 0 }}>
+        ← Voltar ao financeiro
+      </Button>
     </div>
   )
 }

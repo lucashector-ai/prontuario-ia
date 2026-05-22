@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { obterCrmFinanceiro, type ClienteFinanceiro } from '@/lib/financeiro/crm'
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Card, Button, Input } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -55,27 +55,23 @@ export default function CrmFinanceiroPage() {
           ['LTV total (recebido)', brl(resumo.ltvTotal)],
           ['Em aberto com pacientes', brl(resumo.emAberto)],
         ].map(([label, valor]) => (
-          <div key={label} style={{ background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 14, padding: '16px 18px' }}>
+          <Card key={label} style={{ padding: '16px 18px' }}>
             <p style={{ fontSize: 12.5, color: tokens.text.secondary, margin: 0 }}>{label}</p>
             <p style={{ fontSize: 24, fontWeight: 600, color: tokens.text.primary, margin: '7px 0 0', fontVariantNumeric: 'tabular-nums' }}>{valor}</p>
-          </div>
+          </Card>
         ))}
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <input
+        <Input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Buscar paciente"
-          style={{
-            width: 'min(320px, 100%)', padding: '9px 12px', borderRadius: 9,
-            border: `1px solid ${tokens.border.default}`, fontSize: 13, outline: 'none',
-            background: tokens.bg.card, color: tokens.text.primary,
-          }}
+          style={{ width: 'min(320px, 100%)' }}
         />
       </div>
 
-      <div style={{ background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 14, overflow: 'hidden' }}>
+      <Card style={{ padding: 0, borderRadius: 14, overflow: 'hidden' }}>
         {carregando ? (
           <p style={vazio}>Carregando...</p>
         ) : filtrados.length === 0 ? (
@@ -109,12 +105,11 @@ export default function CrmFinanceiroPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
-      <button onClick={() => router.push('/financeiro')} style={{
-        marginTop: 14, padding: '6px 11px', borderRadius: 8, border: 'none',
-        background: 'transparent', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-      }}>← Voltar ao financeiro</button>
+      <Button variant="ghost" size="sm" onClick={() => router.push('/financeiro')} style={{ marginTop: 14, paddingLeft: 0 }}>
+        ← Voltar ao financeiro
+      </Button>
     </div>
   )
 }

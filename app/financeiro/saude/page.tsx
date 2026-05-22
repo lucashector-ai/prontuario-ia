@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { obterSaudeFinanceira, type SaudeFinanceira } from '@/lib/financeiro/saude'
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Card, Button } from '@/components/ui'
 
 const CLASSIF = {
   saudavel: { label: 'Saudável', cor: tokens.status.success },
@@ -49,10 +49,7 @@ export default function SaudeFinanceiraPage() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, alignItems: 'start' }}>
           {/* Score */}
-          <div style={{
-            background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`,
-            borderRadius: 16, padding: 28, display: 'flex', flexDirection: 'column', alignItems: 'center',
-          }}>
+          <Card style={{ padding: 28, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <svg width="140" height="140" viewBox="0 0 140 140">
               <circle cx="70" cy="70" r={R} fill="none" stroke={tokens.border.subtle} strokeWidth="12" />
               <circle
@@ -66,13 +63,10 @@ export default function SaudeFinanceiraPage() {
               marginTop: 12, padding: '5px 14px', borderRadius: 100, fontSize: 12.5, fontWeight: 700,
               background: classif.cor + '20', color: classif.cor,
             }}>{classif.label}</span>
-          </div>
+          </Card>
 
           {/* Componentes */}
-          <div style={{
-            background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`,
-            borderRadius: 16, padding: 22, gridColumn: 'span 2', minWidth: 0,
-          }}>
+          <Card style={{ padding: 22, gridColumn: 'span 2', minWidth: 0 }}>
             <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 14px' }}>
               O que compõe o índice
             </p>
@@ -97,14 +91,13 @@ export default function SaudeFinanceiraPage() {
                 )
               })}
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
-      <button onClick={() => router.push('/financeiro')} style={{
-        marginTop: 16, padding: '6px 11px', borderRadius: 8, border: 'none',
-        background: 'transparent', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-      }}>← Voltar ao financeiro</button>
+      <Button variant="ghost" size="sm" onClick={() => router.push('/financeiro')} style={{ marginTop: 16, paddingLeft: 0 }}>
+        ← Voltar ao financeiro
+      </Button>
     </div>
   )
 }

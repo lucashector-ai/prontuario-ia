@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
 import { obterDashboard } from '@/lib/financeiro/dashboard'
 import { obterMargens } from '@/lib/financeiro/margem'
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Card, Button, Input } from '@/components/ui'
 
 const brl = (v: number) => 'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',')
 
@@ -84,10 +84,7 @@ Margem por procedimento: ${m.length ? m.map((p) => `${p.nome} (preço ${brl(p.va
         descricao="Pergunte sobre receita, custos, margem e previsão de caixa da clínica."
       />
 
-      <div style={{
-        flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
-        background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, borderRadius: 16, overflow: 'hidden',
-      }}>
+      <Card style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
         {/* Mensagens */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 20, minHeight: 0 }}>
           {mensagens.length === 0 ? (
@@ -97,10 +94,10 @@ Margem por procedimento: ${m.length ? m.map((p) => `${p.nome} (preço ${brl(p.va
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {SUGESTOES.map((s) => (
-                  <button key={s} onClick={() => enviar(s)} style={{
-                    padding: '8px 13px', borderRadius: 100, fontSize: 12.5, cursor: 'pointer',
-                    border: `1px solid ${tokens.border.default}`, background: tokens.bg.card, color: tokens.text.strong,
-                  }}>{s}</button>
+                  <Button key={s} variant="secondary" size="sm" onClick={() => enviar(s)}
+                    style={{ borderRadius: 100, fontWeight: 400 }}>
+                    {s}
+                  </Button>
                 ))}
               </div>
             </div>
@@ -126,28 +123,21 @@ Margem por procedimento: ${m.length ? m.map((p) => `${p.nome} (preço ${brl(p.va
 
         {/* Input */}
         <div style={{ borderTop: `1px solid ${tokens.border.subtle}`, padding: 14, display: 'flex', gap: 10 }}>
-          <input
+          <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') enviar(input) }}
             placeholder="Pergunte algo sobre o financeiro..."
-            style={{
-              flex: 1, padding: '10px 14px', borderRadius: 10, border: `1px solid ${tokens.border.default}`,
-              fontSize: 13, outline: 'none', background: tokens.bg.card, color: tokens.text.primary,
-            }}
+            style={{ flex: 1 }}
           />
-          <button onClick={() => enviar(input)} disabled={enviando || !input.trim()} style={{
-            padding: '10px 20px', borderRadius: 10, border: 'none',
-            background: tokens.brand.primary, color: '#fff', fontSize: 13, fontWeight: 600,
-            cursor: enviando || !input.trim() ? 'not-allowed' : 'pointer', opacity: enviando || !input.trim() ? 0.6 : 1,
-          }}>Enviar</button>
+          <Button onClick={() => enviar(input)} disabled={enviando || !input.trim()}>Enviar</Button>
         </div>
-      </div>
+      </Card>
 
-      <button onClick={() => router.push('/financeiro')} style={{
-        marginTop: 12, padding: '6px 11px', borderRadius: 8, border: 'none', alignSelf: 'flex-start',
-        background: 'transparent', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-      }}>← Voltar ao financeiro</button>
+      <Button variant="ghost" size="sm" onClick={() => router.push('/financeiro')}
+        style={{ marginTop: 12, paddingLeft: 0, alignSelf: 'flex-start' }}>
+        ← Voltar ao financeiro
+      </Button>
     </div>
   )
 }

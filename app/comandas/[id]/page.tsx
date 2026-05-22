@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { tokens } from '@/lib/design-tokens'
 import ComandaPanel from '@/components/financeiro/ComandaPanel'
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Button } from '@/components/ui'
 import type { Comanda } from '@/lib/financeiro/types'
 
 export default function ComandaDetalhe() {
@@ -25,12 +25,10 @@ export default function ComandaDetalhe() {
   return (
     <div style={{ padding: 24 }}>
       <div style={{ maxWidth: 620 }}>
-        <button onClick={() => router.back()} style={{
-          background: 'none', border: 'none', color: tokens.text.secondary,
-          fontSize: 13, cursor: 'pointer', padding: 0, marginBottom: 10,
-        }}>
+        <Button variant="ghost" size="sm" onClick={() => router.back()}
+          style={{ padding: 0, marginBottom: 10, color: tokens.text.secondary }}>
           ← Voltar
-        </button>
+        </Button>
         <PageHeader
           titulo="Comanda"
           descricao={comanda?.pacientes?.nome
