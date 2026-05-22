@@ -33,6 +33,7 @@ export interface FormaPagamento {
 export interface Comanda {
   id: string
   clinica_id: string | null
+  unidade_id: string | null
   agendamento_id: string | null
   paciente_id: string | null
   profissional_id: string | null
@@ -67,6 +68,7 @@ export interface ComandaItem {
 export interface Recebimento {
   id: string
   clinica_id: string
+  unidade_id: string | null
   comanda_id: string | null
   paciente_id: string | null
   forma_pagamento_id: string | null
@@ -86,6 +88,7 @@ export interface Recebimento {
 export interface Despesa {
   id: string
   clinica_id: string
+  unidade_id: string | null
   categoria: string | null
   descricao: string
   fornecedor: string | null
@@ -115,6 +118,7 @@ export interface RepasseRegra {
 export interface Repasse {
   id: string
   clinica_id: string
+  unidade_id: string | null
   profissional_id: string
   comanda_id: string | null
   comanda_item_id: string | null
@@ -133,6 +137,7 @@ export interface Repasse {
 export interface MovimentacaoCaixa {
   id: string
   clinica_id: string
+  unidade_id: string | null
   tipo: MovimentacaoTipo
   origem: MovimentacaoOrigem
   recebimento_id: string | null

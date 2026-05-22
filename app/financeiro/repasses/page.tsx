@@ -9,7 +9,8 @@ import {
   listarRegras, criarRegra, atualizarRegra, removerRegra,
   listarRepasses, atualizarStatusRepasse, pagarRepasse,
 } from '@/lib/financeiro/repasses'
-import type { ItemTipo, RepasseStatus } from '@/lib/financeiro/types'
+import { listarUnidades } from '@/lib/financeiro/unidades'
+import type { ItemTipo, RepasseStatus, Unidade } from '@/lib/financeiro/types'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -78,6 +79,8 @@ function AbaRepasses({ clinicaId, medicos, usuarioId }: { clinicaId: string; med
   const [fStatus, setFStatus] = useState<string[]>([])
   const [fProf, setFProf] = useState('')
   const [fMes, setFMes] = useState('')
+  const [fUnidade, setFUnidade] = useState('')
+  const [unidades, setUnidades] = useState<Unidade[]>([])
 
   const carregar = useCallback(async () => {
     setCarregando(true)
@@ -86,15 +89,19 @@ function AbaRepasses({ clinicaId, medicos, usuarioId }: { clinicaId: string; med
     setCarregando(false)
   }, [clinicaId])
   useEffect(() => { carregar() }, [carregar])
+  useEffect(() => {
+    listarUnidades(clinicaId, true).then(({ data }) => setUnidades(data || []))
+  }, [clinicaId])
 
   const filtrados = useMemo(() => {
     return repasses.filter((r) => {
       if (fStatus.length && !fStatus.includes(r.status)) return false
       if (fProf && r.profissional_id !== fProf) return false
       if (fMes && (r.competencia || '').slice(0, 7) !== fMes) return false
+      if (fUnidade && r.unidade_id !== fUnidade) return false
       return true
     })
-  }, [repasses, fStatus, fProf, fMes])
+  }, [repasses, fStatus, fProf, fMes, fUnidade])
 
   const resumo = useMemo(() => {
     let pendente = 0, aprovado = 0, pago = 0
@@ -143,6 +150,15 @@ function AbaRepasses({ clinicaId, medicos, usuarioId }: { clinicaId: string; med
             <label style={lbl}>Competência</label>
             <input type="month" value={fMes} onChange={(e) => setFMes(e.target.value)} style={inp} />
           </div>
+          {unidades.length > 0 && (
+            <div>
+              <label style={lbl}>Unidade</label>
+              <select value={fUnidade} onChange={(e) => setFUnidade(e.target.value)} style={inp}>
+                <option value="">Todas</option>
+                {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 

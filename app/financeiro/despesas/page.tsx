@@ -43,6 +43,7 @@ export default function DespesasPage() {
   const [fStatus, setFStatus] = useState<string[]>([])
   const [fCategoria, setFCategoria] = useState('')
   const [fBusca, setFBusca] = useState('')
+  const [fUnidade, setFUnidade] = useState('')
 
   const [modalNova, setModalNova] = useState(false)
   const [pagarAlvo, setPagarAlvo] = useState<Despesa | null>(null)
@@ -67,13 +68,14 @@ export default function DespesasPage() {
       const ef = statusEfetivoDespesa(d)
       if (fStatus.length && !fStatus.includes(ef)) return false
       if (fCategoria && d.categoria !== fCategoria) return false
+      if (fUnidade && d.unidade_id !== fUnidade) return false
       if (fBusca) {
         const alvo = `${d.descricao || ''} ${d.fornecedor || ''}`.toLowerCase()
         if (!alvo.includes(fBusca.toLowerCase())) return false
       }
       return true
     })
-  }, [despesas, fStatus, fCategoria, fBusca])
+  }, [despesas, fStatus, fCategoria, fUnidade, fBusca])
 
   const totais = useMemo(() => {
     let aberto = 0, pago = 0
@@ -131,6 +133,15 @@ export default function DespesasPage() {
               {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
+          {unidades.length > 0 && (
+            <div>
+              <label style={lbl}>Unidade</label>
+              <select value={fUnidade} onChange={(e) => setFUnidade(e.target.value)} style={inp}>
+                <option value="">Todas</option>
+                {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+              </select>
+            </div>
+          )}
           <div style={{ flex: 1, minWidth: 200 }}>
             <label style={lbl}>Buscar</label>
             <input value={fBusca} onChange={(e) => setFBusca(e.target.value)} placeholder="Descrição ou fornecedor" style={{ ...inp, width: '100%' }} />

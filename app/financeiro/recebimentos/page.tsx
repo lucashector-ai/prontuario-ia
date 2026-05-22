@@ -9,7 +9,8 @@ import { cleanTelefone } from '@/lib/format'
 import {
   listarRecebimentos, listarFormasPagamento, darBaixa, statusEfetivo,
 } from '@/lib/financeiro/recebimentos'
-import type { FormaPagamento } from '@/lib/financeiro/types'
+import { listarUnidades } from '@/lib/financeiro/unidades'
+import type { FormaPagamento, Unidade } from '@/lib/financeiro/types'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -40,6 +41,7 @@ export default function RecebimentosPage() {
   const [recebimentos, setRecebimentos] = useState<any[]>([])
   const [formas, setFormas] = useState<FormaPagamento[]>([])
   const [medicos, setMedicos] = useState<any[]>([])
+  const [unidades, setUnidades] = useState<Unidade[]>([])
   const [carregando, setCarregando] = useState(true)
 
   // filtros
@@ -47,6 +49,7 @@ export default function RecebimentosPage() {
   const [fDe, setFDe] = useState('')
   const [fAte, setFAte] = useState('')
   const [fProfissional, setFProfissional] = useState('')
+  const [fUnidade, setFUnidade] = useState('')
   const [fBusca, setFBusca] = useState('')
 
   // modal de baixa
@@ -68,6 +71,7 @@ export default function RecebimentosPage() {
     listarFormasPagamento().then(({ data }) => setFormas(data || []))
     supabase.from('medicos').select('id, nome').eq('clinica_id', clinicaId).order('nome')
       .then(({ data }) => setMedicos(data || []))
+    listarUnidades(clinicaId, true).then(({ data }) => setUnidades(data || []))
   }, [clinicaId])
 
   const filtrados = useMemo(() => {
@@ -77,6 +81,7 @@ export default function RecebimentosPage() {
       if (fDe && (!r.vencimento || r.vencimento < fDe)) return false
       if (fAte && (!r.vencimento || r.vencimento > fAte)) return false
       if (fProfissional && r.comandas?.profissional_id !== fProfissional) return false
+      if (fUnidade && r.unidade_id !== fUnidade) return false
       if (fBusca && !(r.pacientes?.nome || '').toLowerCase().includes(fBusca.toLowerCase())) return false
       return true
     })
@@ -167,6 +172,15 @@ export default function RecebimentosPage() {
               {medicos.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
             </select>
           </div>
+          {unidades.length > 0 && (
+            <div>
+              <label style={lbl}>Unidade</label>
+              <select value={fUnidade} onChange={(e) => setFUnidade(e.target.value)} style={inp}>
+                <option value="">Todas</option>
+                {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+              </select>
+            </div>
+          )}
           <div style={{ flex: 1, minWidth: 180 }}>
             <label style={lbl}>Buscar paciente</label>
             <input value={fBusca} onChange={(e) => setFBusca(e.target.value)} placeholder="Nome do paciente" style={{ ...inp, width: '100%' }} />
