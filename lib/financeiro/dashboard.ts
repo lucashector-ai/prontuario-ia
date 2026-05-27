@@ -6,6 +6,29 @@ import type {
 const isoDate = (d: Date) => d.toISOString().slice(0, 10)
 const num = (v: any) => Number(v) || 0
 
+// Entradas e saídas do dia de hoje no caixa — usado no card de saldo.
+// Retorna zeros graciosamente se a tabela ainda não estiver provisionada.
+export async function obterMovimentosHoje(
+  clinicaId: string,
+): Promise<{ entradas: number; saidas: number }> {
+  try {
+    const hoje = new Date().toISOString().slice(0, 10)
+    const { data } = await supabase
+      .from('movimentacoes_caixa')
+      .select('tipo, valor')
+      .eq('clinica_id', clinicaId)
+      .eq('data_movimentacao', hoje)
+    let entradas = 0, saidas = 0
+    for (const m of data || []) {
+      if (m.tipo === 'entrada') entradas += num(m.valor)
+      else saidas += num(m.valor)
+    }
+    return { entradas, saidas }
+  } catch {
+    return { entradas: 0, saidas: 0 }
+  }
+}
+
 export async function obterDashboard(
   clinicaId: string,
   unidadeId?: string | null,

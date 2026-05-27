@@ -8,11 +8,11 @@ import {
 } from 'recharts'
 import { useAuth } from '@/lib/useAuth'
 import { tokens } from '@/lib/design-tokens'
-import { obterDashboard } from '@/lib/financeiro/dashboard'
+import { obterDashboard, obterMovimentosHoje } from '@/lib/financeiro/dashboard'
 import { obterSaldos, type ResumoSaldos } from '@/lib/financeiro/contas'
 import { listarUnidades } from '@/lib/financeiro/unidades'
 import type { DashboardFinanceiro, InsightFinanceiro, ItemTipo, Unidade } from '@/lib/financeiro/types'
-import { PageHeader, Card } from '@/components/ui'
+import { Card } from '@/components/ui'
 
 const brl = (v: number) =>
   'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -47,11 +47,13 @@ export default function FinanceiroPage() {
   const [unidades, setUnidades] = useState<Unidade[]>([])
   const [unidadeSel, setUnidadeSel] = useState('')
   const [saldos, setSaldos] = useState<ResumoSaldos | null>(null)
+  const [movHoje, setMovHoje] = useState<{ entradas: number; saidas: number }>({ entradas: 0, saidas: 0 })
 
   useEffect(() => {
     if (!clinicaId) return
     listarUnidades(clinicaId, true).then(({ data }) => setUnidades(data || []))
     obterSaldos(clinicaId).then(({ data }) => setSaldos(data))
+    obterMovimentosHoje(clinicaId).then(setMovHoje)
   }, [clinicaId])
 
   useEffect(() => {
@@ -74,30 +76,25 @@ export default function FinanceiroPage() {
     })
   }, [clinicaId, unidadeSel])
 
-  const kpis = useMemo(() => {
-    if (!d) return []
-    return [
-      { label: 'Faturamento do mês', valor: d.faturamentoMes, delta: delta(d.faturamentoMes, d.faturamentoMesAnterior) },
-      { label: 'Recebido no mês', valor: d.recebidoMes, delta: delta(d.recebidoMes, d.recebidoMesAnterior) },
-      { label: 'Lucro do mês', valor: d.lucroMes, delta: delta(d.lucroMes, d.lucroMesAnterior), destaque: true },
-      { label: 'A receber', valor: d.aReceber, delta: null },
-      { label: 'A pagar', valor: d.aPagar, delta: null, negativo: true },
-      { label: 'Inadimplência', valor: d.inadimplencia, delta: null, negativo: true },
-      { label: 'Ticket médio', valor: d.ticketMedio, delta: null },
-      { label: 'Faturamento hoje', valor: d.faturamentoHoje, delta: null },
-    ]
-  }, [d])
+  // KPIs em 2 linhas de 4 — receita em cima, operacional embaixo
+  const kpisReceita = useMemo(() => d ? [
+    { label: 'Faturamento do mês', valor: d.faturamentoMes, delta: delta(d.faturamentoMes, d.faturamentoMesAnterior) },
+    { label: 'Recebido no mês', valor: d.recebidoMes, delta: delta(d.recebidoMes, d.recebidoMesAnterior) },
+    { label: 'Lucro do mês', valor: d.lucroMes, delta: delta(d.lucroMes, d.lucroMesAnterior), destaque: true },
+    { label: 'Ticket médio', valor: d.ticketMedio, delta: null },
+  ] : [], [d])
+  const kpisOperacional = useMemo(() => d ? [
+    { label: 'A receber', valor: d.aReceber, delta: null },
+    { label: 'A pagar', valor: d.aPagar, delta: null, negativo: true },
+    { label: 'Inadimplência', valor: d.inadimplencia, delta: null, negativo: true },
+    { label: 'Faturamento hoje', valor: d.faturamentoHoje, delta: null },
+  ] : [], [d])
 
   const serie = (d?.serie || []).map((p) => ({ ...p, label: ddmm(p.data) }))
   const tickInterval = Math.max(0, Math.floor(serie.length / 9))
 
   return (
-    <div style={{ padding: 24 }}>
-      <PageHeader
-        titulo="Financeiro"
-        descricao="Acompanhe receita, recebimentos e saúde financeira da clínica."
-      />
-
+    <>
       {unidades.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <select
@@ -113,6 +110,42 @@ export default function FinanceiroPage() {
           </select>
         </div>
       )}
+
+      {/* Saldo em caixa — destaque no topo */}
+      <Card style={{ padding: '28px 32px', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 10 }}>
+          <span style={{
+            fontSize: 11, fontWeight: 700, color: tokens.text.secondary,
+            textTransform: 'uppercase', letterSpacing: '0.06em',
+          }}>Saldo em caixa</span>
+          <button onClick={() => router.push('/financeiro/contas')} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 12, fontWeight: 600, color: tokens.brand.primary, padding: 0,
+          }}>Ajustar saldo →</button>
+        </div>
+        <p style={{
+          fontSize: 36, fontWeight: 700, color: tokens.text.primary,
+          margin: 0, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
+        }}>
+          {brl(saldos?.total || 0)}
+        </p>
+        <div style={{ display: 'flex', gap: 28, marginTop: 18, fontSize: 12.5 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 99, background: tokens.status.success }} />
+            <span style={{ color: tokens.text.secondary }}>Entrou hoje</span>
+            <span style={{ fontWeight: 700, color: tokens.status.success, fontVariantNumeric: 'tabular-nums' }}>
+              {brl(movHoje.entradas)}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 99, background: tokens.status.danger }} />
+            <span style={{ color: tokens.text.secondary }}>Saiu hoje</span>
+            <span style={{ fontWeight: 700, color: tokens.status.danger, fontVariantNumeric: 'tabular-nums' }}>
+              {brl(movHoje.saidas)}
+            </span>
+          </div>
+        </div>
+      </Card>
 
       {/* Cockpit de insights */}
       <div style={{
@@ -147,27 +180,10 @@ export default function FinanceiroPage() {
         )}
       </div>
 
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 16 }}>
-        {kpis.map((k) => (
-          <Card key={k.label} style={{ borderRadius: 14, padding: '16px 18px' }}>
-            <p style={{ fontSize: 12.5, color: tokens.text.secondary, margin: 0 }}>{k.label}</p>
-            <p style={{
-              fontSize: 25, fontWeight: 600, margin: '7px 0 0', fontVariantNumeric: 'tabular-nums',
-              color: (k as any).negativo && k.valor > 0 ? tokens.status.danger
-                : (k as any).destaque ? tokens.brand.primary : tokens.text.primary,
-            }}>
-              {carregando ? '—' : brl(k.valor)}
-            </p>
-            {k.delta && (
-              <p style={{
-                fontSize: 11, fontWeight: 600, margin: '4px 0 0',
-                color: k.delta.positivo ? tokens.status.success : tokens.status.danger,
-              }}>{k.delta.texto}</p>
-            )}
-          </Card>
-        ))}
-      </div>
+      {/* KPIs — Linha 1: receita */}
+      <KpiGrid kpis={kpisReceita} carregando={carregando} />
+      {/* KPIs — Linha 2: operacional */}
+      <KpiGrid kpis={kpisOperacional} carregando={carregando} />
 
       {/* Fluxo de caixa */}
       <Card style={{ marginBottom: 16 }}>
@@ -225,7 +241,7 @@ export default function FinanceiroPage() {
         </div>
       </Card>
 
-      {/* Painéis a receber / a pagar / categorias */}
+      {/* Painéis a receber / a pagar / categorias / contas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
         <Painel
           titulo="A receber"
@@ -310,49 +326,48 @@ export default function FinanceiroPage() {
                   <span style={{
                     fontWeight: 600, fontVariantNumeric: 'tabular-nums',
                     color: c.saldoAtual < 0 ? tokens.status.danger : tokens.text.primary,
-                  }}>
-                    {'R$ ' + (c.saldoAtual).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                  </span>
+                  }}>{brl(c.saldoAtual)}</span>
                 </div>
               ))}
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, fontSize: 13 }}>
                 <span style={{ fontWeight: 700, color: tokens.text.primary }}>Saldo total</span>
                 <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: tokens.brand.primary }}>
-                  {'R$ ' + (saldos.total).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                  {brl(saldos.total)}
                 </span>
               </div>
             </>
           )}
         </div>
       </div>
+    </>
+  )
+}
 
-      {/* Navegação */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 16 }}>
-        {[
-          ['Contas', '/financeiro/contas'],
-          ['Contas a receber', '/financeiro/recebimentos'],
-          ['Contas a pagar', '/financeiro/despesas'],
-          ['Repasse médico', '/financeiro/repasses'],
-          ['Margem por procedimento', '/financeiro/margem'],
-          ['CRM financeiro', '/financeiro/pacientes'],
-          ['Cofre financeiro', '/financeiro/saude'],
-          ['Assistente financeiro', '/financeiro/assistente'],
-          ['Relatórios', '/financeiro/relatorios'],
-          ['Conciliação bancária', '/financeiro/conciliacao'],
-          ['Importar planilha', '/financeiro/importar'],
-          ['Auditoria', '/financeiro/auditoria'],
-          ['Configurações', '/financeiro/configuracoes'],
-        ].map(([label, rota]) => (
-          <button key={rota} onClick={() => router.push(rota)} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-            minWidth: 220, padding: '15px 18px', borderRadius: 14,
-            background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`, cursor: 'pointer',
+// Grid de 4 cards de KPI — uma linha inteira
+function KpiGrid({ kpis, carregando }: {
+  kpis: { label: string; valor: number; delta: { texto: string; positivo: boolean } | null; destaque?: boolean; negativo?: boolean }[]
+  carregando: boolean
+}) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
+      {kpis.map((k) => (
+        <Card key={k.label} style={{ padding: 16 }}>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>{k.label}</p>
+          <p style={{
+            fontSize: 22, fontWeight: 600, margin: '6px 0 0', fontVariantNumeric: 'tabular-nums',
+            color: k.negativo && k.valor > 0 ? tokens.status.danger
+              : k.destaque ? tokens.brand.primary : tokens.text.primary,
           }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary }}>{label}</span>
-            <span style={{ fontSize: 16, color: tokens.brand.primary }}>→</span>
-          </button>
-        ))}
-      </div>
+            {carregando ? '—' : brl(k.valor)}
+          </p>
+          {k.delta && (
+            <p style={{
+              fontSize: 11, fontWeight: 600, margin: '4px 0 0',
+              color: k.delta.positivo ? tokens.status.success : tokens.status.danger,
+            }}>{k.delta.texto}</p>
+          )}
+        </Card>
+      ))}
     </div>
   )
 }
@@ -370,8 +385,6 @@ function Painel({ titulo, cor, linhas, onVerTodas, rodape }: {
   onVerTodas?: () => void
   rodape?: string
 }) {
-  const brlL = (v: number) =>
-    'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
   return (
     <div style={painelCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -390,7 +403,7 @@ function Painel({ titulo, cor, linhas, onVerTodas, rodape }: {
             borderBottom: `1px solid ${tokens.border.subtle}`, fontSize: 13,
           }}>
             <span style={{ color: tokens.text.secondary }}>{label}</span>
-            <span style={{ fontWeight: 600, color: cor, fontVariantNumeric: 'tabular-nums' }}>{brlL(valor)}</span>
+            <span style={{ fontWeight: 600, color: cor, fontVariantNumeric: 'tabular-nums' }}>{brl(valor)}</span>
           </div>
         ))}
       </div>

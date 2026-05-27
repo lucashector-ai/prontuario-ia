@@ -105,6 +105,26 @@ export default function RelatoriosPage() {
         descricao="DRE, fluxo de caixa mensal e exportação para a contabilidade."
       />
 
+      {/* Sub-análises agrupadas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, marginBottom: 16 }}>
+        {[
+          { href: '/financeiro/margem', titulo: 'Margem por procedimento', descricao: 'Quais serviços dão mais lucro' },
+          { href: '/financeiro/auditoria', titulo: 'Auditoria', descricao: 'Trilha de movimentações para rastrear erros' },
+        ].map((item) => (
+          <button key={item.href} onClick={() => router.push(item.href)} style={{
+            background: tokens.bg.card, border: `1px solid ${tokens.border.subtle}`,
+            borderRadius: 14, padding: '14px 16px', textAlign: 'left' as const, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+          }}>
+            <div>
+              <p style={{ fontSize: 13.5, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{item.titulo}</p>
+              <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '3px 0 0' }}>{item.descricao}</p>
+            </div>
+            <span style={{ fontSize: 16, color: tokens.brand.primary }}>→</span>
+          </button>
+        ))}
+      </div>
+
       {/* DRE */}
       <Card style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
