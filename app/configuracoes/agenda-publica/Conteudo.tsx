@@ -1,6 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { tokens } from '@/lib/design-tokens'
+
+type Aba = 'config' | 'link' | 'form'
+
+const ACCENT = tokens.brand.primary
+const STROKE = tokens.border.subtle  // #F3F2F3 — stroke padrão de cards
 
 const DIAS_SEMANA = [
   { id: 0, label: 'Dom' },
@@ -96,21 +102,76 @@ const IconUser = () => (
 
 export default function Conteudo(props: any) {
   const {
-    medico, ativa, setAtiva, slug, setSlug, config, setConfig,
+    medico, medicosDisponiveis = [], trocarMedicoAtivo,
+    ativa, setAtiva, slug, setSlug, config, setConfig,
     usarAlmoco, setUsarAlmoco, salvar, salvando, mensagem,
     statusSlug, validandoSlug, erroSlug, sugestaoSlug, aplicarSugestao,
     copiado, copiarLink, toggleDiaSemana,
     solicitacoes, loadingSolicitacoes, confirmarSolicitacao, rejeitarSolicitacao,
   } = props
 
+  const [aba, setAba] = useState<Aba>('config')
   const linkPreview = 'clinical360.vercel.app/agenda/' + (slug || 'seu-link')
+  const adminComMedicos = medicosDisponiveis.length > 1
 
   return (
     <div style={{ minHeight: '100%', padding: 24 }}>
-      {/* Header — padrao Minha clinica */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Agenda pública</h1>
-        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Crie um link único para pacientes agendarem consultas sem entrar em contato</p>
+      {/* Header padrão — h1 + descrição + seletor compacto (admin com multiplos médicos) */}
+      <div style={{
+        marginBottom: 20, display: 'flex', justifyContent: 'space-between',
+        alignItems: 'flex-start', gap: 16, flexWrap: 'wrap',
+      }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Agenda pública</h1>
+          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Crie um link único pra pacientes agendarem consultas sem entrar em contato.</p>
+        </div>
+        {adminComMedicos && medico && (
+          <select
+            value={medico.id}
+            onChange={(e) => trocarMedicoAtivo(e.target.value)}
+            style={{
+              padding: '8px 12px', borderRadius: 9, border: '1px solid ' + tokens.border.default,
+              fontSize: 13, fontWeight: 600, color: tokens.text.primary, background: '#fff', outline: 'none', cursor: 'pointer',
+            }}
+          >
+            {medicosDisponiveis.map((m: any) => (
+              <option key={m.id} value={m.id}>{m.nome}{m.especialidade ? ' · ' + m.especialidade : ''}</option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* Tabs internas */}
+      <div style={{
+        display: 'flex', gap: 4, marginBottom: 20,
+        borderBottom: '1px solid ' + tokens.border.default,
+        overflowX: 'auto', flexWrap: 'nowrap' as const,
+      }}>
+        {([
+          ['config', 'Configurações'],
+          ['link', 'Link público'],
+          ['form', 'Formulário pré-consulta'],
+        ] as const).map(([key, label]) => {
+          const ativo = aba === key
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setAba(key)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                padding: '10px 16px', border: 'none', background: 'transparent',
+                fontSize: 13, fontWeight: ativo ? 700 : 500,
+                color: ativo ? ACCENT : tokens.text.secondary,
+                borderBottom: '2px solid ' + (ativo ? ACCENT : 'transparent'),
+                marginBottom: -1, cursor: 'pointer', whiteSpace: 'nowrap' as const,
+                transition: 'color 0.15s',
+              }}
+            >
+              {label}
+            </button>
+          )
+        })}
       </div>
 
       {/* Mensagem global */}
@@ -132,14 +193,15 @@ export default function Conteudo(props: any) {
         </div>
       )}
 
-      {/* Card 1: Status */}
+      {/* Card 1: Status — aba config */}
+      {aba === 'config' && (
       <Card>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div style={{ flex: 1 }}>
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: tokens.text.primary, margin: 0, marginBottom: 4 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: tokens.text.primary, margin: 0, marginBottom: 4 }}>
               Status da agenda pública
             </h3>
-            <p style={{ fontSize: 14, color: tokens.text.secondary, margin: 0 }}>
+            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>
               {ativa
                 ? 'Pacientes podem agendar usando seu link público.'
                 : 'Sua agenda pública está desativada. Ninguém pode agendar pelo link.'}
@@ -148,8 +210,10 @@ export default function Conteudo(props: any) {
           <Toggle ativo={ativa} onChange={() => setAtiva(!ativa)} />
         </div>
       </Card>
+      )}
 
-      {/* Card 2: Link público */}
+      {/* Card 2: Link público — aba link */}
+      {aba === 'link' && (
       <Card>
         <SectionTitle icon={<IconLink />} title="Seu link público" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
@@ -287,8 +351,10 @@ export default function Conteudo(props: any) {
           </button>
         </div>
       </Card>
+      )}
 
-      {/* Card 3: Configurações da agenda */}
+      {/* Card 3: Configurações da agenda — aba config */}
+      {aba === 'config' && (
       <Card>
         <SectionTitle icon={<IconCalendar />} title="Como funciona sua agenda" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 16 }}>
@@ -322,16 +388,16 @@ export default function Conteudo(props: any) {
                     type="button"
                     onClick={() => toggleDiaSemana(d.id)}
                     style={{
-                      padding: '10px 16px',
-                      borderRadius: 10,
-                      border: '1.5px solid ' + (ativo ? tokens.brand.primary : tokens.border.default),
+                      padding: '8px 14px',
+                      borderRadius: 8,
+                      border: '1px solid ' + (ativo ? tokens.brand.primary : STROKE),
                       background: ativo ? tokens.brand.primary : '#fff',
                       color: ativo ? '#fff' : tokens.text.primary,
                       fontSize: 13,
                       fontWeight: 600,
                       cursor: 'pointer',
                       transition: 'all 0.12s',
-                      minWidth: 56,
+                      minWidth: 48,
                     }}
                   >
                     {d.label}
@@ -406,10 +472,12 @@ export default function Conteudo(props: any) {
           </Field>
         </div>
       </Card>
+      )}
 
-      {/* Card 3.5: Formulário automático */}
+      {/* Card 3.5: Formulário automático — aba form */}
+      {aba === 'form' && (
       <Card>
-        <SectionTitle 
+        <SectionTitle
           icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>}
           title="Formulário pré-consulta" 
         />
@@ -453,9 +521,10 @@ export default function Conteudo(props: any) {
           )}
         </div>
       </Card>
+      )}
 
-      {/* Card 4: Solicitações pendentes (só se manual) */}
-      {config.modo_aprovacao === 'manual' && (
+      {/* Card 4: Solicitações pendentes — aba config, só se manual */}
+      {aba === 'config' && config.modo_aprovacao === 'manual' && (
         <Card>
           <SectionTitle
             icon={<IconUser />}
@@ -607,8 +676,9 @@ function Card({ children }: { children: React.ReactNode }) {
     <div style={{
       background: '#fff',
       borderRadius: 16,
-      padding: 24,
-      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+      padding: 20,
+      border: '0.5px solid ' + STROKE,
+      marginBottom: 14,
     }}>
       {children}
     </div>
@@ -617,30 +687,21 @@ function Card({ children }: { children: React.ReactNode }) {
 
 function SectionTitle({ icon, title, badge }: { icon: React.ReactNode; title: string; badge?: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        background: tokens.brand.primaryLight,
-        color: tokens.brand.primary,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ color: tokens.text.secondary, display: 'flex', alignItems: 'center' }}>
         {icon}
-      </div>
-      <h3 style={{ fontSize: 17, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>
+      </span>
+      <h3 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
         {title}
       </h3>
       {badge && (
         <span style={{
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: 700,
           color: '#fff',
           background: tokens.brand.primary,
           padding: '2px 8px',
-          borderRadius: 100,
+          borderRadius: 6,
           marginLeft: 4,
         }}>
           {badge}
@@ -674,8 +735,8 @@ function Toggle({ ativo, onChange }: { ativo: boolean; onChange: () => void }) {
       type="button"
       onClick={onChange}
       style={{
-        width: 44,
-        height: 26,
+        width: 36,
+        height: 22,
         borderRadius: 100,
         background: ativo ? tokens.brand.primary : '#D1D5DB',
         position: 'relative',
@@ -687,14 +748,14 @@ function Toggle({ ativo, onChange }: { ativo: boolean; onChange: () => void }) {
     >
       <div style={{
         position: 'absolute',
-        top: 3,
-        left: ativo ? 21 : 3,
-        width: 20,
-        height: 20,
+        top: 2,
+        left: ativo ? 16 : 2,
+        width: 18,
+        height: 18,
         background: '#fff',
         borderRadius: '50%',
         transition: 'left 0.2s',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.12)',
       }} />
     </button>
   )
@@ -713,7 +774,7 @@ function SelectChips({ opcoes, valor, onChange }: any) {
             style={{
               padding: '8px 14px',
               borderRadius: 8,
-              border: '1.5px solid ' + (ativo ? tokens.brand.primary : tokens.border.default),
+              border: '1px solid ' + (ativo ? tokens.brand.primary : STROKE),
               background: ativo ? tokens.brand.primary : '#fff',
               color: ativo ? '#fff' : tokens.text.primary,
               fontSize: 13,
@@ -768,8 +829,8 @@ function RadioOption({ ativo, onClick, titulo, desc }: any) {
         textAlign: 'left',
         padding: 14,
         borderRadius: 10,
-        border: '1.5px solid ' + (ativo ? tokens.brand.primary : tokens.border.default),
-        background: ativo ? tokens.brand.primaryLight : '#fff',
+        border: '1px solid ' + (ativo ? tokens.brand.primary : STROKE),
+        background: '#fff',
         cursor: 'pointer',
         transition: 'all 0.12s',
         display: 'flex',

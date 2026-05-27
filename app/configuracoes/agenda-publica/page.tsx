@@ -269,99 +269,34 @@ export default function AgendaPublicaPage() {
   }
 
   return (
-    <div style={{ padding: '32px 32px 64px' }}>
-      {tipo === 'admin' && medicosDisponiveis.length > 0 && (
-        <div style={{ maxWidth: 880, margin: '0 auto 24px' }}>
-          <SeletorMedico 
-            medicos={medicosDisponiveis} 
-            medicoAtivoId={medicoAtivo.id}
-            onChange={trocarMedicoAtivo}
-          />
-        </div>
-      )}
-      <Conteudo
-        medico={medicoAtivo}
-        ativa={ativa}
-        setAtiva={setAtiva}
-        slug={slug}
-        setSlug={setSlug}
-        config={config}
-        setConfig={setConfig}
-        usarAlmoco={usarAlmoco}
-        setUsarAlmoco={setUsarAlmoco}
-        salvar={salvar}
-        salvando={salvando}
-        mensagem={mensagem}
-        statusSlug={statusSlug}
-        validandoSlug={validandoSlug}
-        erroSlug={erroSlug}
-        sugestaoSlug={sugestaoSlug}
-        aplicarSugestao={aplicarSugestao}
-        copiado={copiado}
-        copiarLink={copiarLink}
-        toggleDiaSemana={toggleDiaSemana}
-        solicitacoes={solicitacoes}
-        loadingSolicitacoes={loadingSolicitacoes}
-        confirmarSolicitacao={confirmarSolicitacao}
-        rejeitarSolicitacao={rejeitarSolicitacao}
-        templates={templates}
-      />
-    </div>
-  )
-}
-
-function SeletorMedico({ medicos, medicoAtivoId, onChange }: any) {
-  return (
-    <div style={{
-      background: '#fff',
-      borderRadius: 12,
-      padding: 16,
-      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 12,
-    }}>
-      <div style={{
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        background: tokens.brand.primaryLight,
-        color: tokens.brand.primary,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
-          Configurando agenda de
-        </div>
-        <select
-          value={medicoAtivoId}
-          onChange={(e) => onChange(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '4px 0',
-            fontSize: 15,
-            fontWeight: 600,
-            color: tokens.text.primary,
-            border: 'none',
-            background: 'transparent',
-            outline: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          {medicos.map((m: any) => (
-            <option key={m.id} value={m.id}>
-              {m.nome}{m.especialidade ? ' · ' + m.especialidade : ''}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
+    <Conteudo
+      medico={medicoAtivo}
+      medicosDisponiveis={tipo === 'admin' ? medicosDisponiveis : []}
+      trocarMedicoAtivo={trocarMedicoAtivo}
+      ativa={ativa}
+      setAtiva={setAtiva}
+      slug={slug}
+      setSlug={setSlug}
+      config={config}
+      setConfig={setConfig}
+      usarAlmoco={usarAlmoco}
+      setUsarAlmoco={setUsarAlmoco}
+      salvar={salvar}
+      salvando={salvando}
+      mensagem={mensagem}
+      statusSlug={statusSlug}
+      validandoSlug={validandoSlug}
+      erroSlug={erroSlug}
+      sugestaoSlug={sugestaoSlug}
+      aplicarSugestao={aplicarSugestao}
+      copiado={copiado}
+      copiarLink={copiarLink}
+      toggleDiaSemana={toggleDiaSemana}
+      solicitacoes={solicitacoes}
+      loadingSolicitacoes={loadingSolicitacoes}
+      confirmarSolicitacao={confirmarSolicitacao}
+      rejeitarSolicitacao={rejeitarSolicitacao}
+      templates={templates}
+    />
   )
 }
