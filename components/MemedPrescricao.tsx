@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 import { useEffect, useState } from 'react'
 import { tokens } from '@/lib/design-tokens'
@@ -144,14 +145,14 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
           // Listener pra capturar prescrição gerada
           if (window.MdHub.event?.add) {
             window.MdHub.event.add('prescricaoImpressa', (dados: any) => {
-              console.log('[Memed] Prescrição gerada:', dados)
+              log.info('[Memed] Prescrição gerada:', dados)
               if (onPrescricaoGerada) onPrescricaoGerada(dados)
             })
 
             // Listener pra prescricao excluida (Memed compliance)
             // Memed envia: numero (id numerico) OU objeto { prescricao: { id, prescriptionUuid } }
             window.MdHub.event.add('prescricaoExcluida', (dados: any) => {
-              console.log('[Memed] Prescrição excluída:', dados)
+              log.info('[Memed] Prescrição excluída:', dados)
               
               // Detecta se é numero ou objeto
               let idNumerico: string | null = null
@@ -173,14 +174,14 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
                     prescricao_id_numerico: idNumerico,
                     dados_memed: dados,
                   }),
-                }).catch(err => console.error('Erro ao marcar prescricao como excluida:', err))
+                }).catch(err => log.error('Erro ao marcar prescricao como excluida:', err))
               }
             })
           }
 
           setEstado('pronto')
         } catch (err: any) {
-          console.error('[Memed] erro setPaciente:', err)
+          log.error('[Memed] erro setPaciente:', err)
           setErro('Erro ao configurar paciente: ' + (err?.message || 'desconhecido'))
           setEstado('erro')
         }

@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -72,13 +73,13 @@ export default function Pacientes() {
           .neq('cargo', 'recepcionista')
           .order('nome')
           .then(({ data, error }) => {
-            if (error) console.error('Erro carregando medicos:', error)
-            console.log('Medicos da clinica:', data?.length, data)
+            if (error) log.error('Erro carregando medicos:', error)
+            log.info('Medicos da clinica:', data?.length, data)
             setMedicosClinica(data || [])
           })
       })
     } else {
-      console.log('Nao eh admin OU sem clinica_id', { temCa: !!ca_, clinicaId: med.clinica_id })
+      log.info('Nao eh admin OU sem clinica_id', { temCa: !!ca_, clinicaId: med.clinica_id })
     }
   }, [router])
 

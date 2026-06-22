@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 import type { Campo, Resposta } from './types'
 import { MODELOS, ANTHROPIC_API_URL, ANTHROPIC_API_VERSION } from '@/lib/ai/models'
@@ -69,7 +70,7 @@ export async function gerarResumoIA(respostaId: string, campos: Campo[], respost
 
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
-      console.warn('ANTHROPIC_API_KEY não configurada, pulando resumo IA')
+      log.warn('ANTHROPIC_API_KEY não configurada, pulando resumo IA')
       return
     }
 
@@ -102,7 +103,7 @@ Formato: bullets curtos com "•" no início de cada linha. Sem cabeçalho, sem 
     })
 
     if (!res.ok) {
-      console.error('Erro Claude API:', await res.text())
+      log.error('Erro Claude API:', await res.text())
       return
     }
 
@@ -116,7 +117,7 @@ Formato: bullets curtos com "•" no início de cada linha. Sem cabeçalho, sem 
         .eq('id', respostaId)
     }
   } catch (e: any) {
-    console.error('Erro ao gerar resumo IA:', e)
+    log.error('Erro ao gerar resumo IA:', e)
   }
 }
 
@@ -160,6 +161,6 @@ export async function notificarPreenchimento(params: {
       })
     }
   } catch (e: any) {
-    console.error('Erro ao notificar:', e)
+    log.error('Erro ao notificar:', e)
   }
 }

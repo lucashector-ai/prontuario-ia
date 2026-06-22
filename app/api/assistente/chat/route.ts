@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest } from 'next/server'
 import { MODELOS, ANTHROPIC_API_URL, ANTHROPIC_API_VERSION } from '@/lib/ai/models'
 import { SYSTEM_PROMPT_MEDICO } from '@/lib/ai/system-prompt-medico'
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     if (!anthropicRes.ok || !anthropicRes.body) {
       const errText = await anthropicRes.text().catch(() => '')
-      console.error('Erro Anthropic API:', anthropicRes.status, errText)
+      log.error('Erro Anthropic API:', anthropicRes.status, errText)
       return new Response(JSON.stringify({ erro: 'Erro ao processar a resposta' }), { status: 502 })
     }
 
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
             }
           }
         } catch (e) {
-          console.error('Erro no stream:', e)
+          log.error('Erro no stream:', e)
         } finally {
           controller.close()
           reader.releaseLock()
@@ -131,7 +132,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (e: any) {
-    console.error('Erro na API do assistente:', e)
+    log.error('Erro na API do assistente:', e)
     return new Response(JSON.stringify({ erro: e.message || 'Erro interno' }), { status: 500 })
   }
 }

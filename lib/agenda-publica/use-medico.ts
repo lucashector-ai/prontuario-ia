@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -93,7 +94,7 @@ export function useMedicoLogado() {
         // Nenhum dos dois: redireciona pro login
         router.replace('/login')
       } catch (e) {
-        console.error('useMedicoLogado:', e)
+        log.error('useMedicoLogado:', e)
         router.replace('/login')
       }
     }

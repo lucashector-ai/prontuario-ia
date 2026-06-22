@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 
@@ -86,7 +87,7 @@ NUNCA inclua comentários, markdown, ou texto fora do JSON.`
     if (perguntas.length < 2 || perguntas.length > 6) return PERGUNTAS_FALLBACK
     return perguntas
   } catch (e) {
-    console.error('gerarPerguntasAdaptativas erro:', e)
+    log.error('gerarPerguntasAdaptativas erro:', e)
     return PERGUNTAS_FALLBACK
   }
 }
@@ -160,7 +161,7 @@ export async function iniciarPreAtendimento(params: {
     .single()
 
   if (error || !data) {
-    console.error('iniciarPreAtendimento erro:', error)
+    log.error('iniciarPreAtendimento erro:', error)
     return null
   }
   return { id: data.id, perguntas }

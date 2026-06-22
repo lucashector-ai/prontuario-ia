@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ prontuario })
   } catch (error: any) {
-    console.error('Erro Claude:', error)
+    log.error('Erro Claude:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

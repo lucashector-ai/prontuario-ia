@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -79,7 +80,7 @@ Digite apenas o numero (ex: 9)`
             enviados++
           }
         }
-      } catch (e) { console.error('Erro NPS:', e) }
+      } catch (e) { log.error('Erro NPS:', e) }
     }
 
     return NextResponse.json({ enviados, total: consultas.length })

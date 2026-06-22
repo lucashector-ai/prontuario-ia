@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
@@ -143,7 +144,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (e: any) {
-    console.error('MESSENGER_ERROR:', e.message)
+    log.error('MESSENGER_ERROR:', e.message)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

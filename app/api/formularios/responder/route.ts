@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { buscarEnvioPorToken, marcarComoPreenchido } from '@/lib/formularios/envios'
 import { salvarResposta, gerarResumoIA, notificarPreenchimento } from '@/lib/formularios/respostas'
@@ -40,14 +41,14 @@ export async function POST(req: NextRequest) {
 
     await marcarComoPreenchido(resultado.envio.id, respostaId)
 
-    gerarResumoIA(respostaId, campos, respostas).catch((e: any) => console.error('Resumo IA falhou:', e))
+    gerarResumoIA(respostaId, campos, respostas).catch((e: any) => log.error('Resumo IA falhou:', e))
 
     notificarPreenchimento({
       medicoId: resultado.envio.medico_id,
       clinicaId: resultado.envio.clinica_id,
       nomePaciente: resultado.envio.nome_paciente,
       envioId: resultado.envio.id,
-    }).catch((e: any) => console.error('Notificacao falhou:', e))
+    }).catch((e: any) => log.error('Notificacao falhou:', e))
 
     return NextResponse.json({ sucesso: true })
   } catch (e: any) {

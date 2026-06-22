@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
     try {
       analise = JSON.parse(inicio >= 0 && fim >= 0 ? texto.slice(inicio, fim + 1) : '{}')
     } catch (parseErr) {
-      console.warn('[analisar-exame] JSON parse falhou, retornando texto bruto. Resposta:', texto.slice(0, 300))
+      log.warn('[analisar-exame] JSON parse falhou, retornando texto bruto. Resposta:', texto.slice(0, 300))
       return NextResponse.json({
         analise: {
           tipo: 'Exame medico',
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ analise })
   } catch (err: any) {
-    console.error('[analisar-exame] erro:', err)
+    log.error('[analisar-exame] erro:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

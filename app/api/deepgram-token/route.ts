@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { DeepgramClient } from '@deepgram/sdk'
 
@@ -13,7 +14,7 @@ export async function POST() {
     const tokenResponse = await authClient.auth.v1.tokens.grant()
 
     if (!tokenResponse?.access_token) {
-      console.error('[deepgram-token] token não retornado')
+      log.error('[deepgram-token] token não retornado')
       return NextResponse.json({ error: 'falha ao gerar token' }, { status: 500 })
     }
 
@@ -22,7 +23,7 @@ export async function POST() {
       expires_in: (tokenResponse as any).expires_in ?? 30,
     })
   } catch (e: any) {
-    console.error('[deepgram-token] exception:', e?.message || e)
+    log.error('[deepgram-token] exception:', e?.message || e)
     return NextResponse.json({ error: e?.message || 'erro desconhecido' }, { status: 500 })
   }
 }

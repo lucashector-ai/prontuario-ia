@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
 
     // Por enquanto retorna o link diretamente (em produção mandaria email)
     const link = `${req.headers.get('origin')}/reset-password?token=${token}`
-    console.log('RESET LINK:', link)
     
     return NextResponse.json({ ok: true, link })
   } catch (e: any) {

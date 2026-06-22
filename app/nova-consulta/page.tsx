@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -14,7 +15,7 @@ import { BotaoMemed } from '@/components/BotaoMemed'
 import { SidebarContextoPaciente } from '@/components/SidebarContextoPaciente'
 import { ModalDadosPacienteAvulso } from '@/components/ModalDadosPacienteAvulso'
 import { ModalSelecionarPaciente } from '@/components/ModalSelecionarPaciente'
-import ComandaDrawer from '@/components/financeiro/ComandaDrawer'
+// import ComandaDrawer from '@/components/financeiro/ComandaDrawer' // Financeiro desligado pra rebuild. Sprint 1 pré-beta.
 import { tokens } from '@/lib/design-tokens'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
@@ -94,7 +95,7 @@ export default function Home() {
         const lista = Array.isArray(data) ? data : (data?.pacientes || data?.data || [])
         setPacientes(lista)
       } catch (err) {
-        console.error('[nova-consulta] erro carregando pacientes:', err)
+        log.error('[nova-consulta] erro carregando pacientes:', err)
         setPacientes([])
       }
     })()
@@ -159,7 +160,7 @@ export default function Home() {
         body: JSON.stringify({ paciente_id: p.paciente_id, medico_id: medico.id, prontuario_atual: p })
       }).then(r => r.json()).then(d => setCopiloto(d)).catch(() => {})
     }
-    } catch (e) { console.error(e) }
+    } catch (e) { log.error(e) }
   }
 
 const handleCopiar = () => {
@@ -187,7 +188,7 @@ const handleCopiar = () => {
       })
       const data = await res.json()
       if (data.resumo) { setResumoPaciente(data.resumo); setAba('resumo') }
-    } catch (e) { console.error(e) }
+    } catch (e) { log.error(e) }
     finally { setGerandoResumo(false) }
   }
 
@@ -201,7 +202,7 @@ const handleCopiar = () => {
       })
       const data = await res.json()
       if (data.exames) { setExames(data); setAba('documentos') }
-    } catch (e) { console.error(e) }
+    } catch (e) { log.error(e) }
     finally { setGerandoDoc(false) }
   }
 
@@ -215,7 +216,7 @@ const handleCopiar = () => {
       })
       const data = await res.json()
       if (data.dias !== undefined) { setAtestado({ ...data, dias: diasAtestado }); setAba('documentos') }
-    } catch (e) { console.error(e) }
+    } catch (e) { log.error(e) }
     finally { setGerandoDoc(false) }
   }
 
@@ -243,7 +244,7 @@ const handleCopiar = () => {
       if (data.sugestoes) setSugestoes(data.sugestoes)
       if (data.alertas) setAlertasRT(data.alertas)
       if (data.foco) setFocoConsulta(data.foco)
-    } catch (e) { console.error(e) }
+    } catch (e) { log.error(e) }
     finally { setCarregandoSugestoes(false) }
   }
 
@@ -278,14 +279,7 @@ const handleCopiar = () => {
         <SearchParamsReader onParams={handleSearchParams} />
       </Suspense>
 
-      {pacienteSelecionado && medico && (
-        <ComandaDrawer
-          pacienteId={pacienteSelecionado.id}
-          clinicaId={medico.clinica_id || null}
-          profissionalId={medico.id}
-          usuarioId={medico.id}
-        />
-      )}
+      {/* ComandaDrawer removido — módulo financeiro desligado pra rebuild. Sprint 1 pré-beta. */}
 
       {/* Modal seleção de paciente */}
       {modalPaciente && (
@@ -623,7 +617,7 @@ const handleCopiar = () => {
                 clinica_id: medico?.clinica_id || null,
                 dados_memed: dados,
               }),
-            }).catch(err => console.error('Erro ao salvar prescricao:', err))
+            }).catch(err => log.error('Erro ao salvar prescricao:', err))
             setMemedAberto(false)
           }}
         />

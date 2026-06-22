@@ -319,7 +319,7 @@ export function Topbar() {
             {notifOpen && (
               <div style={{
                 position: 'absolute', top: 48, right: 0, width: 340,
-                background: 'white', borderRadius: 12, zIndex: 100,
+                background: 'white', borderRadius: 12, zIndex: 1000,
                 maxHeight: 440, overflow: 'auto',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
               }}>

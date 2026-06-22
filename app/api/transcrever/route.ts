@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 
 const DEEPGRAM_KEY = process.env.DEEPGRAM_API_KEY || ''
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     // Usa o mime-type real do arquivo — pode ser 'audio/webm;codecs=opus' etc
     const mimeType = audioFile.type || 'audio/webm'
-    console.log('[transcrever] chunk recebido:', {
+    log.info('[transcrever] chunk recebido:', {
       size: audioFile.size,
       type: audioFile.type,
       name: audioFile.name,
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const err = await res.text()
-      console.error('Deepgram error:', err)
+      log.error('Deepgram error:', err)
       return NextResponse.json({ texto: '', error: err }, { status: 500 })
     }
 
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ texto })
   } catch (e: any) {
-    console.error('Transcrever error:', e)
+    log.error('Transcrever error:', e)
     return NextResponse.json({ texto: '', error: e.message }, { status: 500 })
   }
 }

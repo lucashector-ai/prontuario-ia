@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 
 import { tokens } from '@/lib/design-tokens'
@@ -33,7 +34,7 @@ export function ProntuarioCard({ prontuario, onCopiar, nomeMedico, crm, medico, 
           setTimeout(() => { win.print() }, 500)
         })
       }
-    } catch (e) { console.error(e) }
+    } catch (e) { log.error(e) }
   }
 
   const corHipotese = (p: string) => p === 'alta' ? { bg: tokens.status.dangerBg, cor: tokens.status.danger, border: tokens.status.dangerLight } : p === 'media' ? { bg: tokens.status.warningBgAlt, cor: tokens.status.warningAlt, border: tokens.status.warningLightAlt } : { bg: tokens.status.successBg, cor: tokens.status.success, border: tokens.status.successLight }

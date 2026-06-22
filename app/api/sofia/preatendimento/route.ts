@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { iniciarPreAtendimento } from '@/lib/sofia/preatendimento'
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, pre_consulta_id: pre.id, total_perguntas: pre.perguntas.length })
   } catch (e: any) {
-    console.error('preatendimento/iniciar erro:', e)
+    log.error('preatendimento/iniciar erro:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -68,7 +69,7 @@ Posso te ajudar com alguma coisa? 😊`
           await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString() }).eq('id', conv.id)
           enviados++
         }
-      } catch (e) { console.error('Erro checkin:', conv.telefone, e) }
+      } catch (e) { log.error('Erro checkin:', conv.telefone, e) }
     }
 
     return NextResponse.json({ enviados, total: conversas.length })

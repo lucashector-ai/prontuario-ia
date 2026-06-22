@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -299,13 +300,13 @@ export async function POST(req: NextRequest) {
         const lote = paraInserir.slice(i, i + tamLote)
         const { data, error } = await supabase.from('pacientes').insert(lote).select('id')
         if (error) {
-          console.error('[IMPORTAR] Erro ao inserir lote:', error)
+          log.error('[IMPORTAR] Erro ao inserir lote:', error)
           errosInsert.push(error.message)
           // Tenta inserir 1 por 1 pra identificar qual linha quebra
           for (const p of lote) {
             const { data: d2, error: e2 } = await supabase.from('pacientes').insert(p).select('id').single()
             if (!e2 && d2) inseridos++
-            else if (e2) console.error('[IMPORTAR] Linha com erro:', p.nome, e2.message)
+            else if (e2) log.error('[IMPORTAR] Linha com erro:', p.nome, e2.message)
           }
         } else if (data) {
           inseridos += data.length

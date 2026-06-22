@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 /**
  * Transcrição de áudios recebidos pelo WhatsApp.
  * Usa Groq (Whisper grátis, rápido) com fallback opcional pra OpenAI.
@@ -23,7 +24,7 @@ async function baixarAudioWhatsApp(mediaId: string): Promise<Buffer | null> {
     })
     const urlData = await urlRes.json()
     if (!urlData.url) {
-      console.error('baixarAudio: sem URL no response', urlData)
+      log.error('baixarAudio: sem URL no response', urlData)
       return null
     }
 
@@ -32,13 +33,13 @@ async function baixarAudioWhatsApp(mediaId: string): Promise<Buffer | null> {
       headers: { 'Authorization': `Bearer ${WPP_TOKEN}` }
     })
     if (!audioRes.ok) {
-      console.error('baixarAudio: HTTP', audioRes.status)
+      log.error('baixarAudio: HTTP', audioRes.status)
       return null
     }
     const ab = await audioRes.arrayBuffer()
     return Buffer.from(ab)
   } catch (e) {
-    console.error('baixarAudio erro:', e)
+    log.error('baixarAudio erro:', e)
     return null
   }
 }
@@ -62,13 +63,13 @@ async function transcreverComGroq(audio: Buffer): Promise<string | null> {
       body: form,
     })
     if (!res.ok) {
-      console.error('Groq transcribe HTTP:', res.status, await res.text())
+      log.error('Groq transcribe HTTP:', res.status, await res.text())
       return null
     }
     const texto = await res.text()
     return texto.trim()
   } catch (e) {
-    console.error('Groq transcribe erro:', e)
+    log.error('Groq transcribe erro:', e)
     return null
   }
 }
@@ -94,7 +95,7 @@ async function transcreverComOpenAI(audio: Buffer): Promise<string | null> {
     const d = await res.json()
     return d.text?.trim() || null
   } catch (e) {
-    console.error('OpenAI transcribe erro:', e)
+    log.error('OpenAI transcribe erro:', e)
     return null
   }
 }

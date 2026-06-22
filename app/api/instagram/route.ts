@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
@@ -42,10 +43,10 @@ export async function POST(req: NextRequest) {
         const texto = event.message?.text || ''
         if (!texto.trim() || !senderId) continue
 
-        console.log('IG_STEP1', senderId, pageId)
+        log.info('IG_STEP1', senderId, pageId)
 
         const MEDICO_ID = await getMedicoId()
-        console.log('IG_STEP2 medico:', MEDICO_ID?.substring(0,8))
+        log.info('IG_STEP2 medico:', MEDICO_ID?.substring(0,8))
         if (!MEDICO_ID) continue
 
         let { data: conversa } = await supabase
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
           .eq('canal', 'instagram')
           .maybeSingle()
 
-        console.log('IG_STEP3 conversa:', conversa?.id?.substring(0,8) || 'nova')
+        log.info('IG_STEP3 conversa:', conversa?.id?.substring(0,8) || 'nova')
 
         if (!conversa) {
           const { data: nova, error: errNova } = await supabase
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
               modo: 'ia', status: 'ativa', canal: 'instagram',
               ultimo_contato: new Date().toISOString()
             }).select().single()
-          if (errNova) { console.error('IG_CONV_ERROR:', errNova.message); continue }
+          if (errNova) { log.error('IG_CONV_ERROR:', errNova.message); continue }
           conversa = nova
         }
 
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
 
         if (conversa.modo === 'humano') continue
 
-        console.log('IG_STEP4 chamando Claude')
+        log.info('IG_STEP4 chamando Claude')
 
         const { data: hist } = await supabase
           .from('whatsapp_mensagens')
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
         let resposta = aiRes.content[0].type==='text' ? aiRes.content[0].text : 'Olá! Como posso ajudar?'
         resposta = resposta.replace('[HUMANO]','').replace(/\[BOTOES:[^\]]+\]/g,'').trim()
 
-        console.log('IG_STEP5 salvando e enviando')
+        log.info('IG_STEP5 salvando e enviando')
 
         await supabase.from('whatsapp_mensagens').insert({
           conversa_id: conversa.id, tipo: 'enviada', conteudo: resposta,
@@ -111,7 +112,7 @@ export async function POST(req: NextRequest) {
         })
         await supabase.from('whatsapp_conversas').update({ ultimo_contato: new Date().toISOString() }).eq('id', conversa.id)
 
-        if (!IG_TOKEN) { console.error('IG: sem token'); continue }
+        if (!IG_TOKEN) { log.error('IG: sem token'); continue }
 
         const igRes = await fetch(`https://graph.facebook.com/v20.0/${pageId}/messages`, {
           method: 'POST',
@@ -124,11 +125,11 @@ export async function POST(req: NextRequest) {
           })
         })
         const igData = await igRes.json()
-        if (igData.error) console.error('IG_SEND_ERROR:', JSON.stringify(igData.error))
-        else console.log('IG_SEND_OK:', igData.message_id)
+        if (igData.error) log.error('IG_SEND_ERROR:', JSON.stringify(igData.error))
+        else log.info('IG_SEND_OK:', igData.message_id)
 
       } catch(e:any) {
-        console.error('IG_EVENT_ERROR:', e.message)
+        log.error('IG_EVENT_ERROR:', e.message)
       }
     }
   }

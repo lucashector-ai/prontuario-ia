@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
@@ -149,7 +150,7 @@ export async function POST(req: NextRequest) {
     try {
       memedData = JSON.parse(respText)
     } catch {
-      console.error('[memed/prescritor] Memed retornou nao-JSON. Status:', res.status, 'Body:', respText.slice(0, 500))
+      log.error('[memed/prescritor] Memed retornou nao-JSON. Status:', res.status, 'Body:', respText.slice(0, 500))
       return NextResponse.json({
         error: 'Memed nao retornou JSON valido. Status: ' + res.status + '. Resposta: ' + respText.slice(0, 200),
         debug: {
@@ -205,13 +206,13 @@ export async function POST(req: NextRequest) {
           }
         } else {
           const recoveryText = await getRes.text()
-          console.error('[memed/prescritor] falha ao recuperar GET:', recoveryText.slice(0, 300))
+          log.error('[memed/prescritor] falha ao recuperar GET:', recoveryText.slice(0, 300))
           return NextResponse.json({
             error: 'Memed conflito ao cadastrar e nao foi possivel recuperar. Erro original: ' + errorDetail
           }, { status: 500 })
         }
       } else {
-        console.error('[memed/prescritor] erro Memed (nao-conflito):', JSON.stringify(memedData).slice(0, 500))
+        log.error('[memed/prescritor] erro Memed (nao-conflito):', JSON.stringify(memedData).slice(0, 500))
         return NextResponse.json({
           error: 'Erro ao cadastrar prescritor na Memed: ' + errorDetail
         }, { status: 500 })
@@ -238,7 +239,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ token, status, from_cache: false })
   } catch (e: any) {
-    console.error('[memed/prescritor] exception:', e)
+    log.error('[memed/prescritor] exception:', e)
     return NextResponse.json({ error: e?.message || 'erro desconhecido' }, { status: 500 })
   }
 }

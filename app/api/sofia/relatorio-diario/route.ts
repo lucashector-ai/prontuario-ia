@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { montarRelatorioDia, formatarRelatorioWhatsApp, formatarRelatorioEmail } from '@/lib/sofia/relatorio'
@@ -24,7 +25,7 @@ async function enviarEmail(para: string, assunto: string, html: string) {
   // Usa Resend se configurado, senão loga e simula
   const resendKey = process.env.RESEND_API_KEY
   if (!resendKey) {
-    console.log('[EMAIL não configurado]', { para, assunto })
+    log.info('[EMAIL não configurado]', { para, assunto })
     return { simulado: true }
   }
   const r = await fetch('https://api.resend.com/emails', {
@@ -102,7 +103,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, relatorio, resultados })
   } catch (e: any) {
-    console.error('relatorio-diario erro:', e)
+    log.error('relatorio-diario erro:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

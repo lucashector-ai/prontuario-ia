@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
     }
 
     const emailNorm = email.trim().toLowerCase()
-    console.log('[LOGIN] Tentando autenticar:', emailNorm)
 
     // 1. Tenta encontrar em clinica_admins
     const adminRes = await supabase
@@ -25,7 +24,6 @@ export async function POST(req: NextRequest) {
       .ilike('email', emailNorm)
       .maybeSingle()
 
-    console.log('[LOGIN] Admin query:', JSON.stringify({ data: adminRes.data, error: adminRes.error }))
     const admin = adminRes.data
     if (admin) {
       if (!admin.ativo) {
@@ -64,7 +62,6 @@ export async function POST(req: NextRequest) {
       .ilike('email', emailNorm)
       .maybeSingle()
 
-    console.log('[LOGIN] Medico query:', JSON.stringify({ data: medRes.data ? { id: medRes.data.id, email: medRes.data.email, tem_senha_hash: !!medRes.data.senha_hash, ativo: medRes.data.ativo } : null, error: medRes.error }))
     const medico = medRes.data
     if (medico) {
       if (!medico.ativo) {
@@ -97,7 +94,6 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    console.log('[LOGIN] Nenhum usuario encontrado para:', emailNorm)
     return NextResponse.json({ error: 'Email não encontrado' }, { status: 404 })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

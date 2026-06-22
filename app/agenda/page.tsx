@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 
 import { Suspense, useEffect, useState, useMemo } from 'react'
@@ -315,28 +316,29 @@ function AgendaContent() {
     }
   }, [searchParams, agendamentos])
 
-  const gerarComandaDoAgendamento = async (ag: any) => {
-    if (!ag?.id) return
-    try {
-      const r = await fetch('/api/comandas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paciente_id: ag.paciente_id,
-          medico_id: ag.medico_id || null,
-          clinica_id: medico?.clinica_id || null,
-          agendamento_id: ag.id,
-        }),
-      })
-      const d = await r.json()
-      if (d.error) { alert('Erro ao gerar comanda: ' + d.error); return }
-      if (d.comanda?.id) {
-        router.push('/comandas/' + d.comanda.id)
-      }
-    } catch (e: any) {
-      alert('Erro: ' + (e?.message || 'desconhecido'))
-    }
-  }
+  // Comanda financeira desligada pra rebuild (Financeiro 2.0). Sprint 1 pré-beta.
+  // const gerarComandaDoAgendamento = async (ag: any) => {
+  //   if (!ag?.id) return
+  //   try {
+  //     const r = await fetch('/api/comandas', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({
+  //         paciente_id: ag.paciente_id,
+  //         medico_id: ag.medico_id || null,
+  //         clinica_id: medico?.clinica_id || null,
+  //         agendamento_id: ag.id,
+  //       }),
+  //     })
+  //     const d = await r.json()
+  //     if (d.error) { alert('Erro ao gerar comanda: ' + d.error); return }
+  //     if (d.comanda?.id) {
+  //       router.push('/comandas/' + d.comanda.id)
+  //     }
+  //   } catch (e: any) {
+  //     alert('Erro: ' + (e?.message || 'desconhecido'))
+  //   }
+  // }
 
   const abrirModal = (date?: Date, ag?: any) => {
     setPreConsultaEnviada(false); setComVideo(false); setSalaLink(''); setSalaId('')
@@ -398,11 +400,11 @@ function AgendaContent() {
         setSalaLink(link)
         setComVideo(true)
       } else {
-        console.error('Erro criando sala:', tcData.error)
+        log.error('Erro criando sala:', tcData.error)
         toast('Erro ao criar sala: ' + (tcData.error || 'desconhecido'))
       }
     } catch (err) {
-      console.error('Erro criando sala:', err)
+      log.error('Erro criando sala:', err)
       toast('Erro ao criar sala')
     }
   }
@@ -416,7 +418,7 @@ function AgendaContent() {
         if (tc?.id) {
           await supabase.from('teleconsultas').update({ status: 'encerrada', encerrada_em: new Date().toISOString() }).eq('id', tc.id)
         }
-      } catch (err) { console.error('Erro removendo sala:', err) }
+      } catch (err) { log.error('Erro removendo sala:', err) }
     }
     setSalaLink(''); setSalaId(''); setComVideo(false)
   }
@@ -1393,21 +1395,7 @@ function AgendaContent() {
                   {modal.date && <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{fmtDia(modal.date)}</p>}
                 </div>
               </div>
-              {modal.ag && (
-                <button
-                  type="button"
-                  onClick={() => { gerarComandaDoAgendamento(modal.ag); setModal({ open: false }) }}
-                  style={{
-                    padding: '7px 12px', borderRadius: 8, border: `1px solid ${tokens.appointment.exame.border}`,
-                    background: tokens.appointment.exame.bg, color: tokens.brand.primary, fontSize: 12, fontWeight: 600,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, marginRight: 8
-                  }}
-                  title="Gerar comanda financeira a partir deste agendamento"
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 10 12 15 7 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  Gerar comanda
-                </button>
-              )}
+              {/* Botão "Gerar comanda" removido — módulo financeiro desligado pra rebuild. Sprint 1 pré-beta. */}
               <button onClick={() => setModal({ open: false })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.text.tertiary, fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
             </div>
             <form onSubmit={salvar} style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>

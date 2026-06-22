@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -125,7 +126,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, resposta, botoes })
   } catch (e: any) {
-    console.error('SIMULAR_ERROR:', e.message)
+    log.error('SIMULAR_ERROR:', e.message)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

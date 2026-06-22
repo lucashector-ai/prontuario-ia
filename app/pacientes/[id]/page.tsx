@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 import { useEffect, useState } from 'react'
 import ModalEnviarFormulario from '@/components/formularios/ModalEnviarFormulario'
@@ -72,7 +73,7 @@ export default function PacienteDetalhe() {
       const r = await fetch('/api/prescricoes?paciente_id=' + paciente.id)
       const d = await r.json()
       setPrescricoes(d.prescricoes || [])
-    } catch (e) { console.error(e) }
+    } catch (e) { log.error(e) }
     finally { setCarregandoPresc(false) }
   }
 
@@ -83,7 +84,7 @@ export default function PacienteDetalhe() {
       const r = await fetch('/api/comandas?paciente_id=' + paciente.id)
       const d = await r.json()
       setComandasPaciente(d.comandas || [])
-    } catch (e) { console.error(e) }
+    } catch (e) { log.error(e) }
     finally { setCarregandoComandas(false) }
   }
 
@@ -868,7 +869,7 @@ export default function PacienteDetalhe() {
                 clinica_id: paciente.clinica_id || null,
                 dados_memed: dados,
               }),
-            }).then(() => carregarPrescricoes()).catch(err => console.error('Erro ao salvar prescricao:', err))
+            }).then(() => carregarPrescricoes()).catch(err => log.error('Erro ao salvar prescricao:', err))
             setMemedAberto(false)
           }}
         />

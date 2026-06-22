@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -107,7 +108,7 @@ export default function Admin() {
       setStats(statsMap)
       setKpis({ totalPacientes, consultasMes: totalConsultasMes, consultasTotal: totalConsultas })
     } catch (e) {
-      console.error('Erro:', e)
+      log.error('Erro:', e)
     } finally {
       setCarregando(false)
     }

@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -89,7 +90,7 @@ Voce confirma o comparecimento?
             enviados++
           }
         }
-      } catch (e) { console.error('Erro confirmacao:', paciente.telefone, e) }
+      } catch (e) { log.error('Erro confirmacao:', paciente.telefone, e) }
     }
 
     return NextResponse.json({ enviados, total: agendamentos.length })

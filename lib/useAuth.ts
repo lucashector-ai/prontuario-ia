@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -75,7 +76,7 @@ export function useAuth(options: UseAuthOptions = {}) {
       })
       setCarregando(false)
     } catch (e) {
-      console.error('Erro em useAuth:', e)
+      log.error('Erro em useAuth:', e)
       router.replace('/login')
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -93,13 +94,13 @@ export async function dispararConfirmacoes24h(medico_id: string) {
           })
         }
 
-        console.log('CONFIRMACAO_24H enviada:', ag.id, primeiroNome)
+        log.info('CONFIRMACAO_24H enviada:', ag.id, primeiroNome)
       } catch (e: any) {
-        console.error('Erro ao enviar confirmação 24h:', ag.id, e.message)
+        log.error('Erro ao enviar confirmação 24h:', ag.id, e.message)
       }
     }
   } catch (e) {
-    console.error('dispararConfirmacoes24h erro:', e)
+    log.error('dispararConfirmacoes24h erro:', e)
   }
 }
 

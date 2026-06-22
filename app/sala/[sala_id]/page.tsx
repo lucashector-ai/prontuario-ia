@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 import { useEffect, useRef, useState } from 'react'
 import { supabase as sb } from '@/lib/supabase'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
@@ -366,10 +367,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       let texto = transcricao?.trim() || ''
       if (!texto || texto.length < 10) {
         // Fallback: tenta transcrever chunks acumulados em batch
-        console.log('[encerrar] transcrição vazia, tentando batch...')
+        log.info('[encerrar] transcrição vazia, tentando batch...')
         texto = await transcreverAudio()
       } else {
-        console.log('[encerrar] reutilizando transcrição do Modo Perfeita:', texto.length, 'chars')
+        log.info('[encerrar] reutilizando transcrição do Modo Perfeita:', texto.length, 'chars')
       }
       if (texto && texto.trim().length > 10) {
         await gerarProntuario(texto)
@@ -400,12 +401,12 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         signal: ctrl.signal,
       })
       if (!res.ok) {
-        console.warn('[ModoPerfeita] API retornou', res.status)
+        log.warn('[ModoPerfeita] API retornou', res.status)
         return
       }
       const data = await res.json()
       if (data.error) {
-        console.warn('[ModoPerfeita] API error:', data.error)
+        log.warn('[ModoPerfeita] API error:', data.error)
         return
       }
       const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
@@ -445,9 +446,9 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       }
     } catch (e: any) {
       if (e?.name === 'AbortError') {
-        console.warn('[ModoPerfeita] request timeout — próxima tentativa virá com mais contexto')
+        log.warn('[ModoPerfeita] request timeout — próxima tentativa virá com mais contexto')
       } else {
-        console.error('[ModoPerfeita] erro:', e?.message || e)
+        log.error('[ModoPerfeita] erro:', e?.message || e)
       }
     } finally {
       clearTimeout(timeoutId)
@@ -487,7 +488,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         chosenMime = m; break
       }
     }
-    console.log('[ModoPerfeita] mimeType:', chosenMime || '(default)')
+    log.info('[ModoPerfeita] mimeType:', chosenMime || '(default)')
 
     const recorder = chosenMime
       ? new MediaRecorder(audioStream, { mimeType: chosenMime })
@@ -514,7 +515,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         ws.onopen = () => { clearTimeout(timeout); wsReady = true; resolve() }
         ws.onerror = (err) => { clearTimeout(timeout); reject(err) }
       })
-      console.log('[ModoPerfeita] WebSocket Deepgram conectado')
+      log.info('[ModoPerfeita] WebSocket Deepgram conectado')
 
       ws.onmessage = (msg) => {
         try {
@@ -523,20 +524,20 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           if (data.type === 'Results') {
             const alt = data.channel?.alternatives?.[0]
             const texto = alt?.transcript?.trim()
-            console.log('[DG]', data.is_final ? 'FINAL' : 'interim', '|', texto || '(vazio)')
+            log.info('[DG]', data.is_final ? 'FINAL' : 'interim', '|', texto || '(vazio)')
             if (data.is_final && texto) {
               setTranscrição(prev => (prev ? prev + ' ' : '') + texto)
             }
           } else {
-            console.log('[DG] msg tipo:', data.type, data)
+            log.info('[DG] msg tipo:', data.type, data)
           }
         } catch (err) {
-          console.warn('[DG] parse erro:', msg.data)
+          log.warn('[DG] parse erro:', msg.data)
         }
       }
 
       ws.onclose = (ev) => {
-        console.log('[ModoPerfeita] WebSocket fechado:', ev.code, ev.reason)
+        log.info('[ModoPerfeita] WebSocket fechado:', ev.code, ev.reason)
         if (dgKeepAliveRef.current) { clearInterval(dgKeepAliveRef.current); dgKeepAliveRef.current = null }
       }
 
@@ -548,7 +549,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       }, 8000)
 
     } catch (err: any) {
-      console.warn('[ModoPerfeita] WebSocket falhou, gravação ficará só pra transcrição final:', err?.message || err)
+      log.warn('[ModoPerfeita] WebSocket falhou, gravação ficará só pra transcrição final:', err?.message || err)
       wsReady = false
     }
 
@@ -556,19 +557,19 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     let chunkCount = 0
     recorder.ondataavailable = (e) => {
       if (e.data.size < 500) {
-        console.log('[DG] chunk vazio ignorado:', e.data.size)
+        log.info('[DG] chunk vazio ignorado:', e.data.size)
         return
       }
       chunkCount++
       if (chunkCount <= 3 || chunkCount % 20 === 0) {
-        console.log('[DG] chunk #' + chunkCount, 'tamanho:', e.data.size, 'bytes')
+        log.info('[DG] chunk #' + chunkCount, 'tamanho:', e.data.size, 'bytes')
       }
       chunksRef.current.push(e.data)
       const ws = dgSocketRef.current
       if (wsReady && ws && ws.readyState === WebSocket.OPEN) {
-        try { ws.send(e.data) } catch (err) { console.error('[DG] ws send error:', err) }
+        try { ws.send(e.data) } catch (err) { log.error('[DG] ws send error:', err) }
       } else {
-        console.warn('[DG] WS nao aberto, chunk perdido. State:', ws?.readyState)
+        log.warn('[DG] WS nao aberto, chunk perdido. State:', ws?.readyState)
       }
     }
 
@@ -668,7 +669,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         ...(campos.plano !== undefined && { plano: campos.plano }),
         ...(campos.receita !== undefined && { receita: campos.receita }),
       }
-      console.log('[salvar] body keys:', Object.keys(body))
+      log.info('[salvar] body keys:', Object.keys(body))
       const r = await fetch('/api/consultas', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -678,7 +679,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         setSalvado(true)
         setTimeout(() => { window.location.href = '/histórico' }, 1500)
       }
-    } catch (err) { console.error('Erro salvar:', err) }
+    } catch (err) { log.error('Erro salvar:', err) }
     setSalvando(false)
   }
 
@@ -790,7 +791,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       send('anexo', { nome: nomeFinal, url: base64, tipo: tipoFinal })
       if (!chatAberto) { setChatAberto(true); setNaoLidas(0) }
     } catch (err) {
-      console.error('Erro ao enviar anexo:', err)
+      log.error('Erro ao enviar anexo:', err)
       alert('Erro ao enviar anexo. Tente novamente.')
     }
     setEnviandoAnexo(false)
@@ -1475,7 +1476,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
                 clinica_id: medicoSala?.clinica_id || null,
                 dados_memed: dados,
               }),
-            }).catch((err: any) => console.error('Erro ao salvar prescricao:', err))
+            }).catch((err: any) => log.error('Erro ao salvar prescricao:', err))
             setMemedAberto(false)
           }}
         />

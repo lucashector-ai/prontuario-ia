@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -120,7 +121,7 @@ export function SetupChecklist() {
 
       setPassos(lista)
     } catch (e) {
-      console.error('Erro ao carregar setup:', e)
+      log.error('Erro ao carregar setup:', e)
     } finally {
       setCarregando(false)
     }

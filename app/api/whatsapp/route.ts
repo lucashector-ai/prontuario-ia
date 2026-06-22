@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { iniciarPreAtendimento, registrarRespostaEAvancar, getPreConsultaAtiva, marcarPermissaoConcedida, marcarPermissaoNegada } from '@/lib/sofia/preatendimento'
@@ -124,7 +125,7 @@ async function getWppCredentials(medicoId: string): Promise<{token: string, phon
     const phoneId = (data as any)?.phone_number_id || WPP_PHONE_ID
     return { token, phoneId }
   } catch (e) {
-    console.error('getWppCredentials error:', e)
+    log.error('getWppCredentials error:', e)
     return { token: WPP_TOKEN, phoneId: WPP_PHONE_ID }
   }
 }
@@ -139,9 +140,9 @@ async function enviarWpp(para: string, texto: string, token?: string, phoneId?: 
       body: JSON.stringify({ messaging_product: 'whatsapp', to: para, type: 'text', text: { body: texto } })
     })
     const d = await r.json()
-    console.log('WPP_SEND:', JSON.stringify(d).substring(0, 100))
+    log.info('WPP_SEND:', JSON.stringify(d).substring(0, 100))
     return d
-  } catch (e) { console.error('WPP_ERR:', e) }
+  } catch (e) { log.error('WPP_ERR:', e) }
 }
 
 async function enviarWppComBotoes(para: string, texto: string, botoes: string[], token?: string, phoneId?: string) {
@@ -168,10 +169,10 @@ async function enviarWppComBotoes(para: string, texto: string, botoes: string[],
       })
     })
     const d = await r.json()
-    console.log('WPP_BOTOES_SEND:', JSON.stringify(d).substring(0, 150))
+    log.info('WPP_BOTOES_SEND:', JSON.stringify(d).substring(0, 150))
     return d
   } catch (e) {
-    console.error('WPP_BOTOES_ERR:', e)
+    log.error('WPP_BOTOES_ERR:', e)
     // Fallback para mensagem de texto simples
     return enviarWpp(para, texto, token, phoneId)
   }
@@ -244,7 +245,7 @@ async function getOuCriarConversa(telefone: string, nome: string, MEDICO_ID: str
       if (foto) updates.foto_url = foto
     }
     await supabase.from('whatsapp_conversas').update(updates).eq('id', existente.id)
-    console.log('CONVERSA_EXISTENTE:', existente.id)
+    log.info('CONVERSA_EXISTENTE:', existente.id)
     return { ...existente, ...updates }
   }
 
@@ -256,11 +257,11 @@ async function getOuCriarConversa(telefone: string, nome: string, MEDICO_ID: str
     foto_url: foto || null,
   }).select().single()
 
-  console.log('CONVERSA_NOVA:', nova?.id, 'erro:', error?.message, 'code:', error?.code)
+  log.info('CONVERSA_NOVA:', nova?.id, 'erro:', error?.message, 'code:', error?.code)
   if (error) {
     // Tenta buscar novamente caso seja conflito de unique
     const { data: retry } = await supabase.from('whatsapp_conversas').select('*').eq('telefone', tel).eq('medico_id', MEDICO_ID).maybeSingle()
-    console.log('RETRY_BUSCA:', retry?.id || 'null')
+    log.info('RETRY_BUSCA:', retry?.id || 'null')
     return retry
   }
   return nova
@@ -371,10 +372,10 @@ async function verificarLembretesTeleconsulta(MEDICO_ID: string) {
         .update({ lembrete_teleconsulta_enviado: true })
         .eq('id', ag.id)
 
-      console.log('LEMBRETE_TELECONSULTA enviado:', ag.id, primeiroNome)
+      log.info('LEMBRETE_TELECONSULTA enviado:', ag.id, primeiroNome)
     }
   } catch (e) {
-    console.error('verificarLembretes erro:', e)
+    log.error('verificarLembretes erro:', e)
   }
 }
 
@@ -423,14 +424,14 @@ async function getMedicoId(phoneNumberId: string): Promise<string> {
         .eq('phone_number_id', phoneNumberId)
         .maybeSingle()
       if ((data as any)?.medico_id) {
-        console.log('getMedicoId by phoneId:', phoneNumberId, '->', (data as any).medico_id)
+        log.info('getMedicoId by phoneId:', phoneNumberId, '->', (data as any).medico_id)
         return (data as any).medico_id
       }
     }
 
     // Fallback 1: env var WHATSAPP_MEDICO_ID
     if (MEDICO_ID_FALLBACK) {
-      console.log('getMedicoId fallback env:', MEDICO_ID_FALLBACK)
+      log.info('getMedicoId fallback env:', MEDICO_ID_FALLBACK)
       return MEDICO_ID_FALLBACK
     }
 
@@ -452,14 +453,14 @@ async function getMedicoId(phoneNumberId: string): Promise<string> {
       .limit(1)
       .maybeSingle()
     if ((medicos as any)?.id) {
-      console.log('getMedicoId by medicos table:', (medicos as any).id)
+      log.info('getMedicoId by medicos table:', (medicos as any).id)
       return (medicos as any).id
     }
 
-    console.error('getMedicoId: nenhum medico encontrado')
+    log.error('getMedicoId: nenhum medico encontrado')
     return ''
   } catch (e) {
-    console.error('getMedicoId error:', e)
+    log.error('getMedicoId error:', e)
     return MEDICO_ID_FALLBACK
   }
 }
@@ -483,19 +484,19 @@ export async function POST(req: NextRequest) {
 
     const phoneNumberId = value.metadata?.phone_number_id
     const MEDICO_ID = await getMedicoId(phoneNumberId)
-    if (!MEDICO_ID) { console.log('Nenhum medico para phone_number_id:', phoneNumberId); return NextResponse.json({ ok: true }) }
+    if (!MEDICO_ID) { log.info('Nenhum medico para phone_number_id:', phoneNumberId); return NextResponse.json({ ok: true }) }
 
     // Dispara lembretes de teleconsulta pendentes em background (non-blocking)
-    verificarLembretesTeleconsulta(MEDICO_ID).catch(e => console.error('lembrete bg erro:', e))
-    dispararConfirmacoes24h(MEDICO_ID).catch(e => console.error('conf24h bg erro:', e))
+    verificarLembretesTeleconsulta(MEDICO_ID).catch(e => log.error('lembrete bg erro:', e))
+    dispararConfirmacoes24h(MEDICO_ID).catch(e => log.error('conf24h bg erro:', e))
 
-    console.log('WEBHOOK_OK medico:', MEDICO_ID, 'msgs:', messages.length, 'phoneId:', phoneNumberId)
+    log.info('WEBHOOK_OK medico:', MEDICO_ID, 'msgs:', messages.length, 'phoneId:', phoneNumberId)
     if (!MEDICO_ID) {
-      console.error('MEDICO_ID VAZIO — phoneNumberId:', phoneNumberId)
+      log.error('MEDICO_ID VAZIO — phoneNumberId:', phoneNumberId)
       // Tenta fallback direto pela env
       const fallback = process.env.WHATSAPP_MEDICO_ID || ''
       if (!fallback) {
-        console.error('WHATSAPP_MEDICO_ID nao configurado no Vercel')
+        log.error('WHATSAPP_MEDICO_ID nao configurado no Vercel')
         return NextResponse.json({ ok: true, aviso: 'medico_id nao encontrado' })
       }
     }
@@ -522,11 +523,11 @@ export async function POST(req: NextRequest) {
         // Áudio enviado pelo paciente — transcreve via Whisper
         const mediaId = msg.audio?.id || msg.voice?.id
         if (mediaId) {
-          console.log('AUDIO_RECEBIDO:', mediaId)
+          log.info('AUDIO_RECEBIDO:', mediaId)
           const transcrito = await transcreverAudioWhatsApp(mediaId)
           if (transcrito) {
             texto = transcrito
-            console.log('AUDIO_TRANSCRITO:', transcrito.substring(0, 100))
+            log.info('AUDIO_TRANSCRITO:', transcrito.substring(0, 100))
           } else {
             // Falha na transcrição — avisa paciente
             texto = '__audio_falha__'
@@ -535,10 +536,10 @@ export async function POST(req: NextRequest) {
       }
       
       if (!texto.trim()) continue
-      console.log('MSG:', telefone, msg.type, texto.substring(0, 50))
+      log.info('MSG:', telefone, msg.type, texto.substring(0, 50))
 
       const conversa = await getOuCriarConversa(telefone, nome, MEDICO_ID)
-      if (!conversa) { console.log('ERRO: sem conversa'); continue }
+      if (!conversa) { log.info('ERRO: sem conversa'); continue }
       
       // Se conversa estava encerrada — verifica se é resposta de NPS
       if (conversa.status === 'encerrada') {
@@ -585,7 +586,7 @@ export async function POST(req: NextRequest) {
           .eq('id', conversa.id)
         conversa.status = 'ativa'
         conversa.modo = 'ia'
-        console.log('CONVERSA_REATIVADA:', conversa.id)
+        log.info('CONVERSA_REATIVADA:', conversa.id)
       }
 
       // Reconhecimento de paciente pelo telefone
@@ -600,7 +601,7 @@ export async function POST(req: NextRequest) {
           }).eq('id', conversa.id)
           conversa.paciente_id = pacienteExistente.id
           conversa.nome_contato = pacienteExistente.nome
-          console.log('PACIENTE_RECONHECIDO:', pacienteExistente.nome)
+          log.info('PACIENTE_RECONHECIDO:', pacienteExistente.nome)
         } else {
           // Verifica se a mensagem contém CPF ou email para identificar
           const cpfRegex = /\d{3}[\.\-]?\d{3}[\.\-]?\d{3}[\.\-]?\d{2}/
@@ -620,7 +621,6 @@ export async function POST(req: NextRequest) {
               }).eq('id', conversa.id)
               conversa.paciente_id = pacienteBuscado.id
               conversa.nome_contato = pacienteBuscado.nome
-              console.log('PACIENTE_IDENTIFICADO_POR_CPF_EMAIL:', pacienteBuscado.nome)
             }
           }
         }
@@ -794,7 +794,7 @@ export async function POST(req: NextRequest) {
           }
         }
       } catch (e) {
-        console.error('Interceptador confirmação 24h erro:', e)
+        log.error('Interceptador confirmação 24h erro:', e)
       }
       // === FIM INTERCEPTADOR CONFIRMAÇÃO 24H ===
 
@@ -937,7 +937,7 @@ export async function POST(req: NextRequest) {
           .maybeSingle()
 
         if (existente) {
-          console.log('AGENDAR: já existe agendamento próximo, ignorando duplicata')
+          log.info('AGENDAR: já existe agendamento próximo, ignorando duplicata')
         }
 
         const { data: agCreated, error: agError } = existente
@@ -955,9 +955,9 @@ export async function POST(req: NextRequest) {
             }).select().single()
 
         if (agError) {
-          console.error('AGENDAR_ERRO:', agError.message)
+          log.error('AGENDAR_ERRO:', agError.message)
         } else {
-          console.log('AGENDADO:', agCreated?.id, agendarData.data)
+          log.info('AGENDADO:', agCreated?.id, agendarData.data)
           // Envia mensagem de confirmação com instruções de pré-consulta
           const dataFmt = new Date(agendarData.data).toLocaleDateString('pt-BR', {weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'})
           // Envia pré-consulta integrada junto com a confirmação (mesma mensagem)
@@ -974,7 +974,7 @@ export async function POST(req: NextRequest) {
 
       if (encerrar) {
         await supabase.from('whatsapp_conversas').update({ status: 'encerrada' }).eq('id', conversa.id)
-        console.log('CONVERSA_ENCERRADA:', conversa.id)
+        log.info('CONVERSA_ENCERRADA:', conversa.id)
         
         // Envia pesquisa de satisfação
         const msgNps = 'Fico feliz em ter ajudado! Posso pedir um feedback rapidinho?'
@@ -1007,7 +1007,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (e: any) {
-    console.error('WEBHOOK_ERROR:', e.message)
+    log.error('WEBHOOK_ERROR:', e.message)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

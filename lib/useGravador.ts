@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logger'
 
 import { useRef, useState, useCallback } from 'react'
 
@@ -72,7 +73,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
 
     const sampleRate = audioCtxRef.current?.sampleRate || 16000
     const wav = float32ToWav(merged, sampleRate)
-    console.log('Enviando audio:', wav.size, 'bytes, samples:', total, 'sampleRate:', sampleRate)
+    log.info('Enviando audio:', wav.size, 'bytes, samples:', total, 'sampleRate:', sampleRate)
 
     setTranscrevendo(true)
     try {
@@ -81,7 +82,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
       const res = await fetch('/api/transcrever', { method: 'POST', body: form })
       const data = await res.json()
 
-      console.log('Resposta Deepgram:', JSON.stringify(data))
+      log.info('Resposta Deepgram:', JSON.stringify(data))
       if (data.texto?.trim()) {
         const texto = data.texto.trim()
         const alucinacoes = ['www.', 'acesse o site', 'inscreva-se', 'obrigado por assistir', 'subtitle', 'legenda', '[música]', '[music]']
@@ -90,7 +91,7 @@ export function useGravador(onNovoTexto: (texto: string) => void): UseGravadorRe
         setTranscricaoAcumulada(textoRef.current)
         onNovoTextoRef.current(textoRef.current)
       }
-    } catch (e) { console.error('Erro transcrever:', e) }
+    } catch (e) { log.error('Erro transcrever:', e) }
     finally { setTranscrevendo(false) }
   }, [])
 
