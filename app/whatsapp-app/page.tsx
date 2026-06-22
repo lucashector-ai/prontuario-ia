@@ -439,7 +439,8 @@ export default function WhatsAppApp() {
                     {[
                       {label:'Nova conversa',fn:()=>{setNovaConversa(v=>!v);setMenuLista(false)}},
                       {label:'Marcar todas lidas',fn:async()=>{await Promise.all(conversas.map(cv=>supabase.from('whatsapp_mensagens').update({lida:true}).eq('conversa_id',cv.id).eq('tipo','recebida')));carregarConversas();setMenuLista(false)}},
-                      {label:'Configurações',fn:()=>{router.push('/whatsapp-app');setMenuLista(false)}},
+                      // TODO Sprint pós-beta: reconstruir tela de Configurações dentro de /whatsapp-app
+                      // {label:'Configurações',fn:()=>{router.push('/whatsapp-app');setMenuLista(false)}},
                       {label:'Ir para plataforma',fn:()=>{router.push('/dashboard');setMenuLista(false)}},
                     ].map(item=>(
                       <button key={item.label} onClick={item.fn} style={{display:'flex',alignItems:'center',width:'100%',padding:'11px 16px',border:'none',background:'none',color:'#111827',fontSize:14,cursor:'pointer',textAlign:'left' as const}}
@@ -708,9 +709,11 @@ export default function WhatsAppApp() {
                 <p style={{fontSize:14,fontWeight:500,color:'#111827',margin:0}}>{config?.nome_exibicao||medico?.nome||'—'}</p>
               </div>
             </div>
+            {/* TODO Sprint pós-beta: reconstruir tela de Configurações dentro de /whatsapp-app
             <button onClick={()=>{setShowInfo(false);router.push('/whatsapp-app')}} style={{width:'100%',marginTop:14,padding:'9px',borderRadius:8,border:'none',background:'#f0f2f5',color:'#54656f',fontSize:13,cursor:'pointer',fontWeight:500}}>
               Configurações avançadas →
             </button>
+            */}
           </div>
         </>
       )}
