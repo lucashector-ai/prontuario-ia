@@ -168,7 +168,7 @@ export default function FormulariosPage() {
               padding: '10px 14px',
               background: '#fff',
               borderRadius: 10,
-              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+              border: `1px solid ${tokens.border.subtle}`,
             }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
@@ -255,26 +255,14 @@ function EstadoVazio({ onClick }: { onClick: () => void }) {
       borderRadius: 16,
       padding: '48px 32px',
       textAlign: 'center',
-      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+      border: `1px solid ${tokens.border.subtle}`,
     }}>
-      <div style={{
-        width: 64,
-        height: 64,
-        margin: '0 auto 20px',
-        background: tokens.brand.primaryLight,
-        color: tokens.brand.primary,
-        borderRadius: 16,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-        </svg>
-      </div>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={tokens.text.secondary} strokeWidth="1.5" style={{ display: 'block', margin: '0 auto 20px' }}>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
       <h2 style={{ fontSize: 19, fontWeight: 600, color: tokens.text.primary, margin: '0 0 8px' }}>
         Nenhum formulário ainda
       </h2>
@@ -309,7 +297,7 @@ function CardTemplate({ template, onEditar, onDeletar }: { template: Template; o
       background: '#fff',
       borderRadius: 14,
       padding: 20,
-      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+      border: `1px solid ${tokens.border.subtle}`,
       display: 'flex',
       flexDirection: 'column',
       gap: 12,
@@ -318,7 +306,7 @@ function CardTemplate({ template, onEditar, onDeletar }: { template: Template; o
     }}
     onClick={onEditar}
     onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)'}
-    onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)'}
+    onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <div style={{

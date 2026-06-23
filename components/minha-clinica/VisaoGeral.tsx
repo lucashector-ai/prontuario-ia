@@ -179,13 +179,13 @@ export function VisaoGeral() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           {/* Card logo + nome */}
-          <div style={{ background: 'white', borderRadius: 16, padding: 24, textAlign: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 24, textAlign: 'center', border: `1px solid ${tokens.border.subtle}` }}>
             <div style={{ position: 'relative', cursor: 'pointer', width: 120, height: 120, margin: '0 auto 16px' }}
               onClick={() => (document.getElementById('logo-input') as HTMLInputElement)?.click()}>
               {clinica?.logo_url ? (
                 <img src={clinica.logo_url} style={{ width: 120, height: 120, borderRadius: 20, objectFit: 'cover' }} />
               ) : (
-                <div style={{ width: 120, height: 120, borderRadius: 20, background: `linear-gradient(135deg, ${ACCENT}, ${tokens.appointment.exame.dot})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 700, color: 'white' }}>
+                <div style={{ width: 120, height: 120, borderRadius: 20, background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 700, color: 'white' }}>
                   {iniciais}
                 </div>
               )}
@@ -212,7 +212,7 @@ export function VisaoGeral() {
           </div>
 
           {/* Card stats */}
-          <div style={{ background: 'white', borderRadius: 16, padding: 24 }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 16px' }}>Visão geral</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -238,7 +238,7 @@ export function VisaoGeral() {
         </div>
 
         {/* COLUNA DIREITA — formulário */}
-        <div style={{ background: 'white', borderRadius: 16, padding: 28 }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: 28, border: `1px solid ${tokens.border.subtle}` }}>
           <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Informações da clínica</h2>
           <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 24px' }}>Clique no lápis ao lado de cada campo pra editar</p>
 

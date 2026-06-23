@@ -255,7 +255,7 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
         margin: '0 auto',
         background: '#fff',
         borderRadius: 20,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        border: `1px solid ${tokens.border.subtle}`,
         overflow: 'hidden',
         transition: 'max-width 0.3s',
       }}>

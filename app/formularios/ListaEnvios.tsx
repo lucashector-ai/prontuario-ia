@@ -85,7 +85,7 @@ export default function ListaEnvios({ clinicaId }: { clinicaId: string }) {
         borderRadius: 16,
         padding: '48px 32px',
         textAlign: 'center',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+        border: `1px solid ${tokens.border.subtle}`,
       }}>
         <div style={{
           width: 56, height: 56, margin: '0 auto 16px',
@@ -159,7 +159,7 @@ export default function ListaEnvios({ clinicaId }: { clinicaId: string }) {
         background: '#fff',
         borderRadius: 14,
         overflow: 'hidden',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+        border: `1px solid ${tokens.border.subtle}`,
       }}>
         {filtrados.length === 0 ? (
           <div style={{ padding: 48, textAlign: 'center', color: tokens.text.tertiary, fontSize: 14 }}>

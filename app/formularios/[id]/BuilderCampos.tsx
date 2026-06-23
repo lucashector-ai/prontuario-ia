@@ -70,7 +70,7 @@ export default function BuilderCampos({ campos, onChange }: Props) {
       background: '#fff',
       borderRadius: 16,
       padding: 24,
-      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+      border: `1px solid ${tokens.border.subtle}`,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
         <h3 style={{ fontSize: 17, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>
@@ -198,7 +198,7 @@ export default function BuilderCampos({ campos, onChange }: Props) {
 function ItemCampo({ campo, idx, total, expandido, onExpandir, onAtualizar, onRemover, onMoverCima, onMoverBaixo, onDuplicar }: any) {
   return (
     <div style={{
-      background: expandido ? tokens.brand.primaryLight : '#fff',
+      background: '#fff',
       border: '1px solid ' + (expandido ? tokens.brand.primary : tokens.border.default),
       borderRadius: 12,
       overflow: 'hidden',

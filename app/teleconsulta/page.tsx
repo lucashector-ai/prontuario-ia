@@ -161,16 +161,9 @@ export default function Teleconsulta() {
               boxShadow: '0 2px 12px rgba(96,67,193,0.15)',
             }}
           >
-            <div style={{
-              width: 56, height: 56, borderRadius: 14,
-              background: 'rgba(255,255,255,0.2)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-              </svg>
-            </div>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" style={{ flexShrink: 0 }}>
+              <path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+            </svg>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>
                 {criandoAgora ? 'Criando sala...' : 'Nova consulta agora'}
@@ -186,23 +179,16 @@ export default function Teleconsulta() {
             style={{
               display: 'flex', alignItems: 'center', gap: 16,
               padding: 24, background: 'white', color: tokens.text.primary,
-              border: 'none', borderRadius: CARD_RADIUS,
+              border: `1px solid ${tokens.border.subtle}`, borderRadius: CARD_RADIUS,
               cursor: 'pointer', textAlign: 'left' as const,
             }}
           >
-            <div style={{
-              width: 56, height: 56, borderRadius: 14,
-              background: ACCENT_LIGHT,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2">
-                <rect x="3" y="4" width="18" height="18" rx="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-            </div>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" style={{ flexShrink: 0 }}>
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>Agendar teleconsulta</p>
               <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>
@@ -255,7 +241,7 @@ export default function Teleconsulta() {
           {consultas.length === 0 ? (
             <div style={{
               background: 'white', borderRadius: CARD_RADIUS,
-              padding: 48, textAlign: 'center' as const,
+              padding: 48, textAlign: 'center' as const, border: `1px solid ${tokens.border.subtle}`,
             }}>
               <div style={{
                 width: 56, height: 56, borderRadius: 14,
@@ -282,7 +268,7 @@ export default function Teleconsulta() {
                     background: 'white', borderRadius: CARD_RADIUS,
                     padding: '16px 20px',
                     display: 'flex', alignItems: 'center', gap: 16,
-                    border: ehAndamento ? `1.5px solid ${ACCENT_LIGHT}` : '1px solid transparent',
+                    border: ehAndamento ? `1px solid ${ACCENT}` : `1px solid ${tokens.border.subtle}`,
                   }}>
                     <div style={{
                       width: 44, height: 44, borderRadius: 12,

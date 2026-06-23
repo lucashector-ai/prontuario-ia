@@ -27,8 +27,7 @@ export function Card({ children, padding = 20, radius = 14, onClick, style, clas
     background: tokens.bg.card,
     borderRadius: radius,
     padding,
-    boxShadow: tokens.shadow.card,
-    border: 'none',
+    border: `1px solid ${tokens.border.subtle}`,
     ...style,
   }
 

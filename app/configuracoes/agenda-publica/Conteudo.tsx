@@ -677,7 +677,7 @@ function Card({ children }: { children: React.ReactNode }) {
       background: '#fff',
       borderRadius: 16,
       padding: 20,
-      border: '0.5px solid ' + STROKE,
+      border: '1px solid ' + STROKE,
       marginBottom: 14,
     }}>
       {children}

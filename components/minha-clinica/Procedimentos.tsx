@@ -152,7 +152,7 @@ export function Procedimentos() {
       {carregando ? (
         <p style={{ color: tokens.text.tertiary, fontSize: 14 }}>Carregando...</p>
       ) : ativos.length === 0 && inativos.length === 0 ? (
-        <div style={{ background: 'white', borderRadius: 16, padding: 48, textAlign: 'center' }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: 48, textAlign: 'center', border: `1px solid ${tokens.border.subtle}` }}>
           <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Nenhum procedimento cadastrado</p>
           <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Clique em "Novo procedimento" pra começar</p>
         </div>
@@ -280,7 +280,7 @@ export function Procedimentos() {
 
 function ProcedimentoCard({ p, fmtValor, onEditar, onDesativar, desativarLabel = 'Desativar' }: any) {
   return (
-    <div style={{ background: 'white', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16 }}>
+    <div style={{ background: 'white', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16, border: `1px solid ${tokens.border.subtle}` }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{p.nome}</p>
         <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '3px 0 0' }}>

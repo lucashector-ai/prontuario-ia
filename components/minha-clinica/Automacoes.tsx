@@ -85,7 +85,7 @@ export function Automacoes() {
   const pDescStyle: React.CSSProperties = { fontSize: 13, color: tokens.text.secondary, margin: 0, lineHeight: 1.6 }
 
   const card = (titulo: string, desc: string, acao: string, body: any, extra?: React.ReactNode) => (
-    <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24, display: "flex", flexDirection: "column" as const, gap: 16 }}>
+    <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24, display: "flex", flexDirection: "column" as const, gap: 16, border: `1px solid ${tokens.border.subtle}` }}>
       <div>
         <h3 style={h3Style}>{titulo}</h3>
         <p style={pDescStyle}>{desc}</p>
@@ -167,7 +167,7 @@ export function Automacoes() {
             { dias_sem_contato: 3 }
           )}
           {resultado?.enviados !== undefined && (
-            <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 20 }}>
+            <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 20, border: `1px solid ${tokens.border.subtle}` }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: "0 0 8px" }}>Resultado</p>
               <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Pacientes contatados: <strong style={{ color: ACCENT }}>{resultado.enviados}</strong> de {resultado.total || resultado.enviados}</p>
             </div>
@@ -199,7 +199,7 @@ export function Automacoes() {
             {}
           )}
           {resultado && (
-            <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 20 }}>
+            <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 20, border: `1px solid ${tokens.border.subtle}` }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: "0 0 8px" }}>Resultado</p>
               <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Pesquisas enviadas: <strong style={{ color: ACCENT }}>{resultado.enviados ?? 0}</strong></p>
             </div>
@@ -208,7 +208,7 @@ export function Automacoes() {
 
         {/* PDF MENSAL */}
         {aba === "pdf" && (<>
-          <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24 }}>
+          <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
             <h3 style={h3Style}>Relatório mensal completo em PDF</h3>
             <p style={{ ...pDescStyle, marginBottom: 16 }}>
               Gera um PDF completo do mês atual com consultas, crescimento, diagnósticos mais frequentes, próximos agendamentos e análise por IA. Ideal para arquivar ou compartilhar com a gestão da clínica.
@@ -259,7 +259,7 @@ export function Automacoes() {
             {}
           )}
           {resultado?.periodo && (
-            <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24, display: "flex", flexDirection: "column" as const, gap: 16 }}>
+            <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24, display: "flex", flexDirection: "column" as const, gap: 16, border: `1px solid ${tokens.border.subtle}` }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Período {resultado.periodo.inicio} — {resultado.periodo.fim}</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                 {[

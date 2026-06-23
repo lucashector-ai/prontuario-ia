@@ -99,7 +99,7 @@ export default function MinhaClinicaPage() {
 function Placeholder({ titulo, descricao }: { titulo: string; descricao: string }) {
   return (
     <div style={{ background: 'white', borderRadius: 16, padding: 48, textAlign: 'center' as const }}>
-      <div style={{ width: 56, height: 56, borderRadius: 14, background: ACCENT_LIGHT, color: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+      <div style={{ width: 56, height: 56, borderRadius: 14, background: 'transparent', color: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10"/>
           <line x1="12" y1="8" x2="12" y2="12"/>

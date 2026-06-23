@@ -280,7 +280,7 @@ export default function PacienteDetalhe() {
             {aba==='overview'&&(
               <div style={{display:'grid',gridTemplateColumns:'320px 1fr',gap:20}}>
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                  <div style={{background:'white',borderRadius:16,overflow:'hidden'}}>
+                  <div style={{background:'white',borderRadius:16,overflow:'hidden',border:`1px solid ${tokens.border.subtle}`}}>
                     <div style={{background:`linear-gradient(135deg,${tokens.brand.primaryLighter},${tokens.brand.primaryLighter})`,padding:'24px 20px',textAlign:'center',borderBottom: 'none'}}>
                       <div style={{position:'relative',cursor:'pointer',width:64,height:64,margin:'0 auto 12px'}} onClick={()=>(document.getElementById('foto-card') as HTMLInputElement)?.click()} title="Trocar foto">
                         {paciente?.foto_url?<img src={paciente.foto_url} style={{width:64,height:64,borderRadius:'50%',objectFit:'cover',border:`3px solid ${tokens.brand.primaryAccent}`}}/>:<div style={{width:64,height:64,borderRadius:'50%',background:'white',border:`3px solid ${tokens.brand.primaryAccent}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,color:tokens.brand.primary}}>{ini}</div>}
@@ -338,13 +338,13 @@ export default function PacienteDetalhe() {
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
                     {[{l:'Consultas',v:String(consultas.length),c:tokens.status.infoStrong},{l:'Agendamentos',v:String(agendamentos.filter(a=>a.status!=='cancelado').length),c:tokens.brand.primary},{l:'Próximo',v:prox?fmt(prox.data_hora):'Não agendado',c:tokens.appointment.retorno.dot}].map(m=>(
-                      <div key={m.l} style={{background:'white',borderRadius:16,padding:'18px 20px'}}>
+                      <div key={m.l} style={{background:'white',borderRadius:16,padding:'18px 20px',border:`1px solid ${tokens.border.subtle}`}}>
                         <p style={{fontSize:22,fontWeight:800,color:m.c,margin:'0 0 4px'}}>{m.v}</p>
                         <p style={{fontSize:12,color:tokens.text.tertiary,margin:0}}>{m.l}</p>
                       </div>
                     ))}
                   </div>
-                  <div style={{background:'white',borderRadius:16,overflow:'hidden'}}>
+                  <div style={{background:'white',borderRadius:16,overflow:'hidden',border:`1px solid ${tokens.border.subtle}`}}>
                     <div style={{padding:'14px 20px',borderBottom: 'none',display:'flex',justifyContent:'space-between'}}>
                       <p style={{fontSize:13,fontWeight:700,color:tokens.text.primary,margin:0}}>Últimas consultas</p>
                       <button onClick={()=>setAba('consultas')} style={{fontSize:12,color:tokens.brand.primary,background:'none',border:'none',cursor:'pointer',fontWeight:600}}>Ver todas</button>
@@ -360,7 +360,7 @@ export default function PacienteDetalhe() {
 
                   {/* Prescricoes Memed */}
                   {prescricoes.length > 0 && (
-                    <div style={{background:'white',borderRadius:16,overflow:'hidden',marginTop:12}}>
+                    <div style={{background:'white',borderRadius:16,overflow:'hidden',marginTop:12,border:`1px solid ${tokens.border.subtle}`}}>
                       <div style={{padding:'14px 20px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                         <p style={{fontSize:13,fontWeight:700,color:tokens.text.primary,margin:0}}>Prescrições Memed</p>
                         <span style={{fontSize:11,color:tokens.text.tertiary}}>{prescricoes.length} {prescricoes.length === 1 ? 'prescrição' : 'prescrições'}</span>
@@ -437,7 +437,7 @@ export default function PacienteDetalhe() {
                 </div>
                 <div>
                   {consultaAberta?(
-                    <div style={{background:'white',borderRadius:16}}>
+                    <div style={{background:'white',borderRadius:16,border:`1px solid ${tokens.border.subtle}`}}>
                       <div style={{padding:'18px 22px',borderBottom:`1px solid ${tokens.bg.hoverStrong}`,display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap' as const}}>
                         <div>
                           <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4,flexWrap:'wrap' as const}}>

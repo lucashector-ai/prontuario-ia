@@ -118,10 +118,10 @@ export function Sofia() {
         {/* COLUNA ESQUERDA — Status + Navegação */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, position: 'sticky' as const, top: 0 }}>
           {/* Card status Sofia */}
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20, textAlign: 'center' as const }}>
+          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20, textAlign: 'center' as const, border: `1px solid ${tokens.border.subtle}` }}>
             <div style={{
               width: 72, height: 72, borderRadius: 18,
-              background: config.ativa ? `linear-gradient(135deg, ${ACCENT}, ${tokens.appointment.exame.dot})` : tokens.text.tertiary,
+              background: config.ativa ? ACCENT : tokens.text.tertiary,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 12px',
             }}>
@@ -144,7 +144,7 @@ export function Sofia() {
           </div>
 
           {/* Navegação de seções */}
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 8 }}>
+          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 8, border: `1px solid ${tokens.border.subtle}` }}>
             {SECOES.map(s => (
               <button
                 key={s.id}
@@ -184,7 +184,7 @@ export function Sofia() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           {/* Comportamento */}
-          <div id="secao-comportamento" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
+          <div id="secao-comportamento" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Comportamento geral</h2>
             <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Define se a Sofia está ativa e como ela age</p>
 
@@ -214,7 +214,7 @@ export function Sofia() {
           </div>
 
           {/* Pré-atendimento */}
-          <div id="secao-pre-atendimento" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
+          <div id="secao-pre-atendimento" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Pré-atendimento</h2>
             <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia coleta informações antes da consulta pra agilizar</p>
 
@@ -245,7 +245,7 @@ export function Sofia() {
           </div>
 
           {/* Tipos de consulta */}
-          <div id="secao-tipos" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
+          <div id="secao-tipos" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Tipos de consulta oferecidos</h2>
             <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia pergunta ao paciente qual ele prefere</p>
 
@@ -291,7 +291,7 @@ export function Sofia() {
           </div>
 
           {/* Horários */}
-          <div id="secao-horarios" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
+          <div id="secao-horarios" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Horários de funcionamento</h2>
             <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia só oferece agendamento nesses horários. Deixe vazio pra fechado.</p>
 
@@ -323,7 +323,7 @@ export function Sofia() {
           </div>
 
           {/* Preços */}
-          <div id="secao-precos" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
+          <div id="secao-precos" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Valores de consulta</h2>
             <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia cita esses valores quando o paciente perguntar</p>
 
@@ -363,7 +363,7 @@ export function Sofia() {
           </div>
 
           {/* Saudação */}
-          <div id="secao-saudacao" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
+          <div id="secao-saudacao" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Saudação personalizada</h2>
             <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Mensagem inicial que a Sofia envia ao abrir conversa</p>
 
@@ -380,7 +380,7 @@ export function Sofia() {
           </div>
 
           {/* Relatório diário */}
-          <div id="secao-relatorio" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
+          <div id="secao-relatorio" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Relatório diário</h2>
             <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia envia resumo das consultas do dia toda manhã</p>
 

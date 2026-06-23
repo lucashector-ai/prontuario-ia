@@ -550,6 +550,7 @@ export default function Pacientes() {
       {/* Barra de busca */}
       <div style={{
         background: 'white', borderRadius: 12,
+        border: `1px solid ${tokens.border.subtle}`,
         padding: '10px 16px', marginBottom: 14,
         display: 'flex', alignItems: 'center', gap: 10,
       }}>
@@ -666,13 +667,13 @@ export default function Pacientes() {
 
       {/* Lista */}
       {carregando ? (
-        <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 60, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 60, display: 'flex', justifyContent: 'center', border: `1px solid ${tokens.border.subtle}` }}>
           <div style={{ width: 32, height: 32, border: `3px solid ${ACCENT_LIGHT}`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/>
         </div>
       ) : pacientesFiltrados.length === 0 ? (
         <div style={{
           background: 'white', borderRadius: CARD_RADIUS, padding: 48,
-          textAlign: 'center' as const,
+          textAlign: 'center' as const, border: `1px solid ${tokens.border.subtle}`,
         }}>
           <div style={{
             width: 56, height: 56, borderRadius: 14,
@@ -718,7 +719,7 @@ export default function Pacientes() {
                   display: 'flex', alignItems: 'center', gap: 16,
                   cursor: 'pointer',
                   transition: 'transform 0.15s, box-shadow 0.15s',
-                  border: modoSelecao && selecionados.has(p.id) ? '2px solid #6043C1' : '2px solid transparent',
+                  border: modoSelecao && selecionados.has(p.id) ? `1px solid ${tokens.brand.primary}` : '1px solid transparent',
                 }}
                 onMouseEnter={e => {
                   if (!modoSelecao) {
@@ -894,6 +895,7 @@ export default function Pacientes() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             marginTop: 20, padding: '14px 20px',
             background: 'white', borderRadius: 16,
+            border: `1px solid ${tokens.border.subtle}`,
             flexWrap: 'wrap' as const, gap: 12,
           }}>
             <span style={{ fontSize: 13, color: tokens.text.secondary }}>
