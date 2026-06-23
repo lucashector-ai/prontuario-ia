@@ -86,7 +86,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           borderRadius: 16,
           flexShrink: 0,
           boxShadow: tokens.shadow.island,
-          overflow: 'hidden',
+          overflow: 'visible',
         }}>
           <Topbar />
         </div>
