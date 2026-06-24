@@ -10,6 +10,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
 import { BotaoMemed } from '@/components/BotaoMemed'
 import { tokens } from '@/lib/design-tokens'
+import { Tabs } from '@/components/ui'
 
 type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario' | 'timeline' | 'financeiro'
 
@@ -271,11 +272,18 @@ export default function PacienteDetalhe() {
               <a href="/consulta" style={{display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:8,border:'none',background:tokens.brand.primary,color:'white',fontSize:13,fontWeight:600,textDecoration:'none'}}>Nova consulta</a>
             </div>
           </div>
-          <div style={{background:'white',borderRadius:16,padding:'0 16px',margin:'12px 24px 0',display:'flex',flexShrink:0,gap:4}}>
-            {([{id:'overview',label:'Visão geral'},{id:'consultas',label:'Consultas ('+consultas.length+')'},{id:'agendamentos',label:'Agenda ('+agendamentos.filter(a=>a.status!=='cancelado').length+')'},{id:'prontuario',label:'Prontuário'},{id:'timeline',label:'Linha do tempo'}] as {id:Aba;label:string}[]).map(tab=>(
-              <button key={tab.id} onClick={()=>setAba(tab.id)} style={{padding:'14px 16px',background:'transparent',border:'none',cursor:'pointer',fontSize:13,fontWeight:aba===tab.id?600:400,color:aba===tab.id?tokens.text.primary:tokens.text.secondary,borderBottom:aba===tab.id?`2px solid ${tokens.brand.primary}`:'2px solid transparent',marginBottom:-1}}>{tab.label}</button>
-            ))}
-          </div>
+          <Tabs
+            style={{ margin: '12px 24px 0' }}
+            ativa={aba}
+            onChange={(id) => setAba(id as Aba)}
+            tabs={[
+              { id: 'overview', label: 'Visão geral' },
+              { id: 'consultas', label: 'Consultas (' + consultas.length + ')' },
+              { id: 'agendamentos', label: 'Agenda (' + agendamentos.filter(a => a.status !== 'cancelado').length + ')' },
+              { id: 'prontuario', label: 'Prontuário' },
+              { id: 'timeline', label: 'Linha do tempo' },
+            ]}
+          />
           <div style={{flex:1,overflow:'auto',padding:'20px 24px 24px'}}>
             {aba==='overview'&&(
               <div style={{display:'grid',gridTemplateColumns:'320px 1fr',gap:20}}>

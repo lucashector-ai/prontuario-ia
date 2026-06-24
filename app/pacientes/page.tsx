@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ImportarPacientes } from '@/components/ImportarPacientes'
 import { tokens } from '@/lib/design-tokens'
+import { Button, Input, Select } from '@/components/ui'
 
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
@@ -252,12 +253,6 @@ export default function Pacientes() {
   const totalMulheres = pacientes.filter(p => p.sexo === 'Feminino').length
   const filtroAtivo = busca || filtroSexo !== 'todos' || filtroConvenio !== 'todos'
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 14px', fontSize: 14,
-    borderRadius: 10, border: '1px solid #e5e7eb',
-    outline: 'none', fontFamily: 'inherit', color: tokens.text.primary,
-    background: 'white', boxSizing: 'border-box',
-  }
 
   const labelStyle: React.CSSProperties = {
     fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
@@ -318,17 +313,12 @@ export default function Pacientes() {
             </svg>
             Importar
           </button>
-          <button onClick={() => setMostrarForm(true)} className="pac-btn-novo" style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            padding: '10px 18px', borderRadius: 10, border: 'none',
-            background: ACCENT, color: 'white',
-            fontSize: 13, fontWeight: 600, cursor: 'pointer',
-          }}>
+          <Button variant="primary" onClick={() => setMostrarForm(true)} className="pac-btn-novo">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 5v14M5 12h14"/>
             </svg>
             <span className="pac-btn-novo-text">Novo paciente</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -409,11 +399,10 @@ export default function Pacientes() {
             <form onSubmit={salvarPaciente} className="pac-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>Nome completo *</label>
-                <input
+                <Input
                   required
                   value={form.nome}
                   onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
-                  style={inputStyle}
                   placeholder="Nome completo do paciente"
                   autoFocus
                 />
@@ -421,10 +410,9 @@ export default function Pacientes() {
 
               <div>
                 <label style={labelStyle}>CPF</label>
-                <input
+                <Input
                   value={form.cpf}
                   onChange={e => setForm(f => ({ ...f, cpf: formatarCPF(e.target.value) }))}
-                  style={inputStyle}
                   placeholder="000.000.000-00"
                   maxLength={14}
                 />
@@ -432,20 +420,18 @@ export default function Pacientes() {
 
               <div>
                 <label style={labelStyle}>Data de nascimento</label>
-                <input
+                <Input
                   type="date"
                   value={form.data_nascimento}
                   onChange={e => setForm(f => ({ ...f, data_nascimento: e.target.value }))}
-                  style={inputStyle}
                 />
               </div>
 
               <div>
                 <label style={labelStyle}>Telefone</label>
-                <input
+                <Input
                   value={form.telefone}
                   onChange={e => setForm(f => ({ ...f, telefone: formatarTelefone(e.target.value) }))}
-                  style={inputStyle}
                   placeholder="(11) 99999-9999"
                   maxLength={15}
                 />
@@ -453,49 +439,47 @@ export default function Pacientes() {
 
               <div>
                 <label style={labelStyle}>Sexo</label>
-                <select
+                <Select
                   value={form.sexo}
                   onChange={e => setForm(f => ({ ...f, sexo: e.target.value }))}
-                  style={{ ...inputStyle, cursor: 'pointer' }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <option value="">Selecionar</option>
                   <option value="Masculino">Masculino</option>
                   <option value="Feminino">Feminino</option>
                   <option value="Outro">Outro</option>
-                </select>
+                </Select>
               </div>
 
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>E-mail</label>
-                <input
+                <Input
                   type="email"
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  style={inputStyle}
                   placeholder="email@paciente.com"
                 />
               </div>
 
               <div>
                 <label style={labelStyle}>Convênio</label>
-                <select
+                <Select
                   value={form.convenio}
                   onChange={e => setForm(f => ({ ...f, convenio: e.target.value, convenio_outro: '' }))}
-                  style={{ ...inputStyle, cursor: 'pointer' as const }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <option value="">Selecionar</option>
                   {CONVENIOS_LISTA.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                </Select>
               </div>
 
               {form.convenio === 'Outro' && (
                 <div>
                   <label style={labelStyle}>Qual convênio?</label>
-                  <input
+                  <Input
                     value={form.convenio_outro}
                     onChange={e => setForm(f => ({ ...f, convenio_outro: e.target.value }))}
                     placeholder="Nome do convênio"
-                    style={inputStyle}
                   />
                 </div>
               )}
@@ -503,44 +487,26 @@ export default function Pacientes() {
               {ehClinicaAdmin && medicosClinica.length > 0 && (
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Vincular ao médico</label>
-                  <select
+                  <Select
                     value={form.medico_id}
                     onChange={e => setForm(f => ({ ...f, medico_id: e.target.value }))}
-                    style={{ ...inputStyle, cursor: 'pointer' as const }}
+                    style={{ cursor: 'pointer' }}
                   >
                     <option value="">Sem vínculo (atribui no atendimento)</option>
                     {medicosClinica.map(m => (
                       <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               )}
 
               <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10, marginTop: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => setMostrarForm(false)}
-                  style={{
-                    padding: '12px 20px', borderRadius: 10,
-                    background: 'white', color: tokens.text.secondary,
-                    border: `1px solid ${tokens.border.default}`,
-                    fontSize: 13, cursor: 'pointer',
-                  }}
-                >
+                <Button type="button" variant="secondary" onClick={() => setMostrarForm(false)}>
                   Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={salvando}
-                  style={{
-                    flex: 1, padding: '12px 20px', borderRadius: 10, border: 'none',
-                    background: salvando ? tokens.text.tertiary : ACCENT,
-                    color: 'white', fontSize: 13, fontWeight: 700,
-                    cursor: salvando ? 'not-allowed' : 'pointer',
-                  }}
-                >
+                </Button>
+                <Button type="submit" variant="primary" disabled={salvando} style={{ flex: 1 }}>
                   {salvando ? 'Cadastrando...' : 'Cadastrar e abrir ficha'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
