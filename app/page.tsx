@@ -120,7 +120,7 @@ function Landing({ router, logado, destinoLogado }: { router: any; logado: boole
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         html{scroll-behavior:smooth;}
         @keyframes c360pulse{0%,100%{opacity:1}50%{opacity:.25}}
         @keyframes c360float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
@@ -167,7 +167,7 @@ function Landing({ router, logado, destinoLogado }: { router: any; logado: boole
           .c360-orbit{transform:scale(0.62);transform-origin:top center;margin-bottom:-170px;}
           .c360-wordmark{font-size:96px !important;}
         }
-      `}</style>
+      ` }} />
 
       {/* ============ NAV ============ */}
       <nav style={navStyle}>
