@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase'
 import { ProntuarioCard } from '@/components/ProntuarioCard'
 import { PacienteBanner } from '@/components/PacienteBanner'
 import { PreConsultaCard } from '@/components/PreConsultaCard'
+import { Tabs } from '@/components/ui'
 import { HistoricoRapido } from '@/components/HistoricoRapido'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
 import { BotaoMemed } from '@/components/BotaoMemed'
@@ -468,19 +469,17 @@ const handleCopiar = () => {
 
             {estado === 'pronto' && prontuario && (
               <>
-                <div style={{ display: 'flex', borderBottom: `1px solid ${tokens.border.default}`, padding: '0 20px', flexShrink: 0 }}>
-                  {(['prontuario', 'receita', 'resumo', 'documentos'] as Aba[]).map(tab => (
-                    <button key={tab} onClick={() => setAba(tab)} style={{
-                      padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
-                      fontSize: 13, fontWeight: aba === tab ? 600 : 400,
-                      color: aba === tab ? tokens.text.primary : tokens.text.secondary,
-                      borderBottom: aba === tab ? `2px solid ${tokens.brand.primary}` : '2px solid transparent',
-                      marginBottom: -1
-                    }}>
-                      {tab === 'prontuario' ? 'Prontuário' : tab === 'receita' ? 'Receita' : tab === 'resumo' ? 'Resumo' : 'Documentos'}
-                    </button>
-                  ))}
-                </div>
+                <Tabs
+                  style={{ padding: '0 20px', marginBottom: 0, flexShrink: 0 }}
+                  ativa={aba}
+                  onChange={(id) => setAba(id as Aba)}
+                  tabs={[
+                    { id: 'prontuario', label: 'Prontuário' },
+                    { id: 'receita', label: 'Receita' },
+                    { id: 'resumo', label: 'Resumo' },
+                    { id: 'documentos', label: 'Documentos' },
+                  ]}
+                />
 
                 <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
                   {aba === 'prontuario' && (
