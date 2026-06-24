@@ -258,6 +258,7 @@ export const tokens = {
     lg: '0 4px 12px rgba(0,0,0,0.08)',
     card: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
     island: '0 1px 3px rgba(0,0,0,0.04)',
+    focusRing: '0 0 0 3px rgba(96, 67, 193, 0.12)', // ring de foco (brand.primary a 12%)
   },
 } as const
 
