@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { SetupChecklist } from '@/components/SetupChecklist'
 import { tokens } from '@/lib/design-tokens'
+import { PageHeader, MetricCard, Button } from '@/components/ui'
 
 type Periodo = 'semana' | 'mes' | 'ano'
 
@@ -184,31 +185,29 @@ export default function Dashboard() {
 
   return (
     <div style={{ padding: '24px 28px', background: 'transparent', minHeight: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22, flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Dashboard</h1>
-            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>
-              {ehAdmin ? `${medicoIds.length} médico${medicoIds.length > 1 ? 's' : ''} na clínica` : 'Visão pessoal'}
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ display: 'flex', background: 'white', borderRadius: 8, border: `1px solid ${tokens.border.default}`, padding: 2 }}>
-              {(['semana', 'mes', 'ano'] as Periodo[]).map(p => (
-                <button key={p} onClick={() => setPeriodo(p)} style={{
-                  padding: '6px 14px', borderRadius: 6, cursor: 'pointer',
-                  background: periodo === p ? tokens.brand.primary : 'transparent',
-                  color: periodo === p ? 'white' : tokens.text.secondary,
-                  fontSize: 12, fontWeight: 500
-                }}>
-                  {p === 'semana' ? '7 dias' : p === 'mes' ? '30 dias' : '12 meses'}
-                </button>
-              ))}
+        <PageHeader
+          titulo="Dashboard"
+          descricao={ehAdmin ? `${medicoIds.length} médico${medicoIds.length > 1 ? 's' : ''} na clínica` : 'Visão pessoal'}
+          acao={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', background: 'white', borderRadius: 8, border: `1px solid ${tokens.border.default}`, padding: 2 }}>
+                {(['semana', 'mes', 'ano'] as Periodo[]).map(p => (
+                  <button key={p} onClick={() => setPeriodo(p)} style={{
+                    padding: '6px 14px', borderRadius: 6, cursor: 'pointer', border: 'none',
+                    background: periodo === p ? tokens.brand.primary : 'transparent',
+                    color: periodo === p ? 'white' : tokens.text.secondary,
+                    fontSize: 12, fontWeight: 500
+                  }}>
+                    {p === 'semana' ? '7 dias' : p === 'mes' ? '30 dias' : '12 meses'}
+                  </button>
+                ))}
+              </div>
+              <Button variant="secondary" size="sm" onClick={gerarRelatorio} disabled={gerandoRelatorio}>
+                {gerandoRelatorio ? 'Gerando...' : 'Relatório mensal'}
+              </Button>
             </div>
-            <button onClick={gerarRelatorio} disabled={gerandoRelatorio} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'white', border: `1px solid ${tokens.border.default}`, color: tokens.text.strong, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
-              {gerandoRelatorio ? 'Gerando...' : 'Relatório mensal'}
-            </button>
-          </div>
-        </div>
+          }
+        />
 
         <style>{`
           @media (max-width: 768px) {
@@ -227,22 +226,20 @@ export default function Dashboard() {
             </>
           ) : (
             <>
-              <Card titulo="Consultas hoje" valor={consultasHoje} subtitulo={
-                consultasHoje > consultasOntem ? `+${consultasHoje - consultasOntem} vs ontem` :
-                consultasHoje < consultasOntem ? `${consultasHoje - consultasOntem} vs ontem` :
-                'Igual a ontem'
-              } cor={consultasHoje >= consultasOntem ? tokens.status.success : tokens.status.danger} />
+              <MetricCard label="Consultas hoje" valor={consultasHoje}
+                delta={consultasHoje > consultasOntem ? `+${consultasHoje - consultasOntem} vs ontem` :
+                  consultasHoje < consultasOntem ? `${consultasHoje - consultasOntem} vs ontem` : 'Igual a ontem'}
+                deltaTone={consultasHoje >= consultasOntem ? 'success' : 'danger'} />
 
-              <Card titulo="Taxa de no-show" valor={noShowRate === null ? '--' : noShowRate + '%'}
-                subtitulo={noShowRate === null ? 'sem dados últimos 30 dias' : noShowRate > 20 ? 'acima do esperado' : 'dentro do esperado'}
-                cor={noShowRate === null ? tokens.text.tertiary : noShowRate > 20 ? tokens.status.danger : tokens.status.success} />
+              <MetricCard label="Taxa de no-show" valor={noShowRate === null ? '--' : noShowRate + '%'}
+                delta={noShowRate === null ? 'sem dados últimos 30 dias' : noShowRate > 20 ? 'acima do esperado' : 'dentro do esperado'}
+                deltaTone={noShowRate === null ? 'neutral' : noShowRate > 20 ? 'danger' : 'success'} />
 
-              <Card titulo="Pacientes ativos" valor={pacientesAtivos}
-                subtitulo="com consulta últimos 6 meses" cor={tokens.brand.primary} />
+              <MetricCard label="Pacientes ativos" valor={pacientesAtivos}
+                sublabel="com consulta últimos 6 meses" />
 
-              <Card titulo="Pacientes em risco" valor={pacientesRisco}
-                subtitulo={pacientesRisco > 0 ? 'crônicos sem retorno >90d' : 'todos acompanhados'}
-                cor={pacientesRisco > 0 ? tokens.status.warningAlt : tokens.status.success} />
+              <MetricCard label="Pacientes em risco" valor={pacientesRisco}
+                sublabel={pacientesRisco > 0 ? 'crônicos sem retorno >90d' : 'todos acompanhados'} />
             </>
           )}
         </div>
@@ -480,12 +477,3 @@ function Skeleton({ width, height, radius = 4 }: { width: number | string; heigh
   )
 }
 
-function Card({ titulo, valor, subtitulo, cor }: { titulo: string; valor: any; subtitulo: string; cor: string }) {
-  return (
-    <div style={{ background: 'white', borderRadius: 14, padding: 18, border: `1px solid ${tokens.border.subtle}` }}>
-      <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 6px' }}>{titulo}</p>
-      <p style={{ fontSize: 28, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px', letterSpacing: '-0.02em', lineHeight: 1 }}>{valor}</p>
-      <p style={{ fontSize: 11, color: cor, margin: 0, fontWeight: 500 }}>{subtitulo}</p>
-    </div>
-  )
-}
