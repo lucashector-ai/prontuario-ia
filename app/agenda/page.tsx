@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/components/Sidebar'
 import { IconGift } from '@/components/Icon'
 import { tokens } from '@/lib/design-tokens'
+import { Button, Input, Select, Textarea } from '@/components/ui'
 
 const TIPOS = {
   consulta: { label: 'Consulta', bg: tokens.brand.primaryLighter, text: tokens.brand.primaryDark, border: tokens.brand.primaryAccent, dot: tokens.brand.primary },
@@ -676,20 +677,17 @@ function AgendaContent() {
               </button>
             ))}
           </div>
-          <button onClick={abrirModalBloqueio}
-            title="Bloquear horario"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          <Button variant="secondary" size="sm" onClick={abrirModalBloqueio} title="Bloquear horario">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
             </svg>
             Bloquear
-          </button>
-          <button onClick={() => abrirModal()}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => abrirModal()}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Novo
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -1427,20 +1425,19 @@ function AgendaContent() {
                 return (
                   <div>
                     <label style={labelStyle}>Profissional</label>
-                    <select value={form.medico_id} onChange={e => setForm(f => ({...f, medico_id: e.target.value}))}
-                      style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: tokens.text.primary }}>
+                    <Select value={form.medico_id} onChange={e => setForm(f => ({...f, medico_id: e.target.value}))}>
                       <option value="">Selecionar médico</option>
                       {medicosClinica.filter((m: any) => (m.cargo === 'medico' || m.cargo === 'admin' || !m.cargo) && m.ativo !== false).map((m: any) => (
                         <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                 )
               })()}
               {procedimentos.length > 0 && (
                 <div>
                   <label style={labelStyle}>Procedimento</label>
-                  <select
+                  <Select
                     value={form.procedimento_id}
                     onChange={e => {
                       const procId = e.target.value
@@ -1452,23 +1449,22 @@ function AgendaContent() {
                         duracao: proc?.duracao ? String(proc.duracao) : f.duracao,
                       }))
                     }}
-                    style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: tokens.text.primary }}>
+                    >
                     <option value="">Nenhum (consulta padrão)</option>
                     {procedimentos.map((p: any) => (
                       <option key={p.id} value={p.id}>
                         {p.nome}{p.duracao ? ' · ' + p.duracao + 'min' : ''}{p.valor ? ' · R$ ' + Number(p.valor).toFixed(2).replace('.', ',') : ''}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               )}
               <div>
                 <label style={labelStyle}>Paciente</label>
-                <select value={form.paciente_id} onChange={e => setForm(f => ({...f, paciente_id: e.target.value}))}
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white', color: tokens.text.primary }}>
+                <Select value={form.paciente_id} onChange={e => setForm(f => ({...f, paciente_id: e.target.value}))}>
                   <option value="">Selecionar paciente (opcional)</option>
                   {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                </select>
+                </Select>
                 {!form.paciente_id && (
                   <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '5px 2px 0', fontStyle: 'italic' }}>
                     Deixe em branco para criar um encaixe rápido
@@ -1478,31 +1474,28 @@ function AgendaContent() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 10 }}>
                 <div>
                   <label style={labelStyle}>Data e hora *</label>
-                  <input type="datetime-local" required value={form.data_hora} onChange={e => setForm(f => ({...f, data_hora: e.target.value}))}
-                    style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8 }}/>
+                  <Input type="datetime-local" required value={form.data_hora} onChange={e => setForm(f => ({...f, data_hora: e.target.value}))} />
                 </div>
                 <div>
                   <label style={labelStyle}>Duração</label>
-                  <select value={form.duracao} onChange={e => setForm(f => ({...f, duracao: e.target.value}))}
-                    style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, background: 'white' }}>
+                  <Select value={form.duracao} onChange={e => setForm(f => ({...f, duracao: e.target.value}))}>
                     <option value="15">15 min</option>
                     <option value="30">30 min</option>
                     <option value="45">45 min</option>
                     <option value="60">1 hora</option>
                     <option value="90">1h30</option>
-                  </select>
+                  </Select>
                 </div>
               </div>
               <div>
                 <label style={labelStyle}>Motivo</label>
-                <input value={form.motivo} onChange={e => setForm(f => ({...f, motivo: e.target.value}))}
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8 }}
+                <Input value={form.motivo} onChange={e => setForm(f => ({...f, motivo: e.target.value}))}
                   placeholder="Ex: Consulta de rotina, dor abdominal..."/>
               </div>
               <div>
                 <label style={labelStyle}>Observações</label>
-                <textarea value={form.observacoes} onChange={e => setForm(f => ({...f, observacoes: e.target.value}))}
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, minHeight: 56, resize: 'none' }}
+                <Textarea value={form.observacoes} onChange={e => setForm(f => ({...f, observacoes: e.target.value}))}
+                  style={{ minHeight: 56, resize: 'none' }}
                   placeholder="Observações adicionais..."/>
               </div>
               {modal.ag && (
@@ -1584,10 +1577,9 @@ function AgendaContent() {
                 </div>
               )}
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-                <button type="submit" disabled={salvando}
-                  style={{ flex: 1, padding: '11px', borderRadius: 9, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                <Button type="submit" variant="primary" disabled={salvando} style={{ flex: 1 }}>
                   {salvando ? 'Salvando...' : modal.ag ? 'Salvar alterações' : 'Criar agendamento'}
-                </button>
+                </Button>
                 {modal.ag && (
                   <>
                     <button type="button" onClick={() => {
