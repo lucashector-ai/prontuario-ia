@@ -7,6 +7,7 @@ import { Lgpd } from '@/components/minha-clinica/Lgpd'
 import { Automacoes } from '@/components/minha-clinica/Automacoes'
 import { Sofia } from '@/components/minha-clinica/Sofia'
 import { tokens } from '@/lib/design-tokens'
+import { PageHeader, Tabs } from '@/components/ui'
 
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
@@ -57,34 +58,15 @@ export default function MinhaClinicaPage() {
   return (
     <div style={{ minHeight: '100%', background: BG, padding: 24 }}>
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Minha Clínica</h1>
-        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Configurações, equipe, automações e privacidade — tudo no mesmo lugar</p>
-      </div>
+      <PageHeader titulo="Minha Clínica" descricao="Configurações, equipe, automações e privacidade — tudo no mesmo lugar" />
 
       {/* Tabs horizontais */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: `1px solid ${tokens.border.default}`, overflowX: 'auto', flexWrap: 'nowrap' as const }}>
-        {TABS.map(t => {
-          const ativo = tab === t.key
-          return (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                padding: '10px 16px', border: 'none', background: 'transparent',
-                fontSize: 13, fontWeight: ativo ? 700 : 500,
-                color: ativo ? ACCENT : tokens.text.secondary,
-                borderBottom: ativo ? `2px solid ${ACCENT}` : '2px solid transparent',
-                marginBottom: -1, cursor: 'pointer', whiteSpace: 'nowrap' as const,
-                transition: 'color 0.15s',
-              }}
-              onMouseEnter={e => { if (!ativo) e.currentTarget.style.color = tokens.text.primary }}
-              onMouseLeave={e => { if (!ativo) e.currentTarget.style.color = tokens.text.secondary }}>
-              {t.icon}
-              {t.label}
-            </button>
-          )
-        })}
-      </div>
+      <Tabs
+        style={{ overflowX: 'auto', flexWrap: 'nowrap' }}
+        ativa={tab}
+        onChange={(id) => setTab(id as TabKey)}
+        tabs={TABS.map(t => ({ id: t.key, label: t.label, icon: t.icon }))}
+      />
 
       {/* Conteúdo da tab ativa */}
       {tab === 'visao' && <VisaoGeral />}
