@@ -8,6 +8,7 @@ import { useToast } from '@/components/Toast'
 import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
 import { CamposPessoaisMedico } from '@/components/CamposPessoaisMedico'
 import { tokens } from '@/lib/design-tokens'
+import { MetricCard, Tabs, EmptyState } from '@/components/ui'
 
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
@@ -310,26 +311,20 @@ export default function Admin() {
           { label: 'Pacientes cadastrados', valor: kpis.totalPacientes, sub: 'na clínica' },
           { label: 'Consultas este mês', valor: kpis.consultasMes, sub: 'todos os médicos' },
         ].map(k => (
-          <div key={k.label} style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20, border: `1px solid ${tokens.border.subtle}` }}>
-            <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 8px', fontWeight: 500 }}>{k.label}</p>
-            <p style={{ fontSize: 28, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px', lineHeight: 1 }}>{k.valor}</p>
-            <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{k.sub}</p>
-          </div>
+          <MetricCard key={k.label} label={k.label} valor={k.valor} sublabel={k.sub} />
         ))}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: `1px solid ${tokens.border.default}` }}>
-        {([{ key: 'medicos', label: `Médicos (${listaMedicos.length})` }, { key: 'recepcionistas', label: `Recepcionistas (${listaRecepcionistas.length})` }] as const).map(t => (
-          <button key={t.key} onClick={() => setAba(t.key)} style={{
-            padding: '10px 18px', border: 'none', cursor: 'pointer',
-            background: 'transparent', color: aba === t.key ? ACCENT : tokens.text.secondary,
-            fontSize: 13, fontWeight: aba === t.key ? 700 : 500,
-            borderBottom: `2px solid ${aba === t.key ? ACCENT : 'transparent'}`,
-            marginBottom: -1,
-          }}>{t.label}</button>
-        ))}
-      </div>
+      <Tabs
+        style={{ marginBottom: 16 }}
+        ativa={aba}
+        onChange={(id) => setAba(id as 'medicos' | 'recepcionistas')}
+        tabs={[
+          { id: 'medicos', label: `Médicos (${listaMedicos.length})` },
+          { id: 'recepcionistas', label: `Recepcionistas (${listaRecepcionistas.length})` },
+        ]}
+      />
 
       {/* Lista */}
       {carregando ? (
@@ -337,9 +332,7 @@ export default function Admin() {
           <div style={{ width: 32, height: 32, border: `3px solid ${ACCENT_LIGHT}`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
       ) : listaAtual.length === 0 ? (
-        <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 40, textAlign: 'center', border: `1px solid ${tokens.border.subtle}` }}>
-          <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Nenhum {labelAba} cadastrado ainda.</p>
-        </div>
+        <EmptyState titulo={`Nenhum ${labelAba} cadastrado ainda.`} />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {listaAtual.map(m => {
