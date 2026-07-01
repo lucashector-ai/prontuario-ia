@@ -9,22 +9,25 @@ type TipoConta = 'clinica' | 'medico'
 
 type Passo =
   | { kind: 'welcome' }
-  | { kind: 'admin-form' }      // só pra admin: coleta nome
-  | { kind: 'medico-form' }     // só pra médico solo: nome + CRM + especialidade
-  | { kind: 'clinica-form' }    // só pra admin: dados da clínica
+  | { kind: 'perfil' }          // escolha do perfil (autônomo vs clínica com equipe) — só conta clinica
+  | { kind: 'medico-form' }     // médico convidado: nome + CRM + especialidade
+  | { kind: 'clinica-form' }    // dados da clínica
   | { kind: 'feature'; icon: 'mic' | 'memed' | 'sofia'; eyebrow: string; titulo: string; descricao: string; bullets: string[] }
+  | { kind: 'equipe' }          // etapa de equipe no final — só perfil clínica
   | { kind: 'done' }
 
 export default function OnboardingPage() {
   const router = useRouter()
   const [tipo, setTipo] = useState<TipoConta | null>(null)
+  // Perfil escolhido no onboarding — NÃO é a identidade da conta (essa é `tipo`).
+  // Só decide o fluxo (mostra etapa de equipe?) e o redirect final.
+  const [perfil, setPerfil] = useState<'autonomo' | 'clinica' | null>(null)
   const [usuario, setUsuario] = useState<any>(null)
   const [passoIdx, setPassoIdx] = useState(0)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
 
   // Forms separados por tipo
-  const [formAdmin, setFormAdmin] = useState({ nome: '' })
   const [formMedico, setFormMedico] = useState({ nome: '', crm: '', especialidade: '' })
   const [formClinica, setFormClinica] = useState({ nome: '', telefone: '', endereco: '' })
 
@@ -47,7 +50,6 @@ export default function OnboardingPage() {
 
     setUsuario(dados)
     setTipo(tp)
-    setFormAdmin({ nome: dados.nome || '' })
     setFormMedico({
       nome: dados.nome || '',
       crm: dados.crm || '',
@@ -97,10 +99,11 @@ export default function OnboardingPage() {
 
   const passos: Passo[] = !tipo ? [] : tipo === 'clinica' ? [
     { kind: 'welcome' },
-    { kind: 'admin-form' },
+    { kind: 'perfil' },
     { kind: 'clinica-form' },
     ...featuresPassos,
-    { kind: 'done' },
+    // Etapa de equipe só pra quem tem clínica com equipe; autônomo termina em 'done'.
+    ...(perfil === 'clinica' ? [{ kind: 'equipe' } as Passo] : [{ kind: 'done' } as Passo]),
   ] : [
     { kind: 'welcome' },
     { kind: 'medico-form' },
@@ -111,31 +114,7 @@ export default function OnboardingPage() {
   const passo = passos[passoIdx]
   const total = passos.length
   const progresso = total > 0 ? ((passoIdx + 1) / total) * 100 : 0
-  const isPassoObrigatorio = passo?.kind === 'admin-form' || passo?.kind === 'medico-form' || passo?.kind === 'clinica-form'
-
-  async function salvarAdmin(): Promise<boolean> {
-    if (!usuario || tipo !== 'clinica') return false
-    if (!formAdmin.nome.trim()) {
-      setErro('Preencha seu nome pra continuar.')
-      return false
-    }
-    setSalvando(true); setErro('')
-    try {
-      const updates = { nome: formAdmin.nome.trim() }
-      const { error } = await supabase.from('clinica_admins').update(updates).eq('id', usuario.id)
-      if (error) throw error
-
-      const novo = { ...usuario, ...updates }
-      setUsuario(novo)
-      localStorage.setItem('clinica_admin', JSON.stringify(novo))
-      return true
-    } catch (e: any) {
-      setErro(e.message || 'Erro ao salvar')
-      return false
-    } finally {
-      setSalvando(false)
-    }
-  }
+  const isPassoObrigatorio = passo?.kind === 'perfil' || passo?.kind === 'medico-form' || passo?.kind === 'clinica-form'
 
   async function salvarMedico(): Promise<boolean> {
     if (!usuario || tipo !== 'medico') return false
@@ -193,7 +172,7 @@ export default function OnboardingPage() {
     }
   }
 
-  async function concluir() {
+  async function concluir(destinoCustom?: string) {
     if (!usuario || !tipo) return
     setSalvando(true)
     try {
@@ -201,7 +180,9 @@ export default function OnboardingPage() {
       await supabase.from(tabela).update({ onboarding_concluido: true }).eq('id', usuario.id)
       const novo = { ...usuario, onboarding_concluido: true }
       localStorage.setItem(tipo === 'medico' ? 'medico' : 'clinica_admin', JSON.stringify(novo))
-      router.replace(tipo === 'medico' ? '/dashboard' : '/admin')
+      // Redirect por perfil: clínica com equipe → /admin; autônomo (ou médico convidado) → /dashboard.
+      const destino = destinoCustom ?? ((tipo === 'clinica' && perfil === 'clinica') ? '/admin' : '/dashboard')
+      router.replace(destino)
     } finally {
       setSalvando(false)
     }
@@ -209,9 +190,9 @@ export default function OnboardingPage() {
 
   async function avancar() {
     setErro('')
-    if (passo?.kind === 'admin-form') {
-      const ok = await salvarAdmin()
-      if (!ok) return
+    if (passo?.kind === 'perfil' && !perfil) {
+      setErro('Escolha uma opção pra continuar.')
+      return
     }
     if (passo?.kind === 'medico-form') {
       const ok = await salvarMedico()
@@ -233,12 +214,12 @@ export default function OnboardingPage() {
   // "Pular tudo" — só funciona após preencher os forms obrigatórios
   function pularTudo() {
     const maxObrigatorioIdx = passos.reduce((max, p, i) => {
-      if (p.kind === 'admin-form' || p.kind === 'medico-form' || p.kind === 'clinica-form') return Math.max(max, i)
+      if (p.kind === 'perfil' || p.kind === 'medico-form' || p.kind === 'clinica-form') return Math.max(max, i)
       return max
     }, -1)
     if (passoIdx < maxObrigatorioIdx) {
       // Avança pro próximo form obrigatório, não conclui ainda
-      const proxObrig = passos.findIndex((p, i) => i > passoIdx && (p.kind === 'admin-form' || p.kind === 'medico-form' || p.kind === 'clinica-form'))
+      const proxObrig = passos.findIndex((p, i) => i > passoIdx && (p.kind === 'perfil' || p.kind === 'medico-form' || p.kind === 'clinica-form'))
       if (proxObrig >= 0) setPassoIdx(proxObrig)
       return
     }
@@ -365,18 +346,39 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {passo.kind === 'admin-form' && (
+            {passo.kind === 'perfil' && (
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Sobre você</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Perfil</p>
                 <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 12px', color: tokens.neutral[900] }}>
-                  Como devemos te chamar?
+                  Como você atua?
                 </h1>
                 <p style={{ fontSize: 15, color: tokens.text.muted, lineHeight: 1.55, margin: '0 0 28px' }}>
-                  Seu nome aparece como administrador da clínica em logs e comunicações internas.
+                  Isso personaliza sua experiência no Clinical 360.
                 </p>
-                <div>
-                  <label className="ob-label">Nome completo</label>
-                  <input className="ob-input" value={formAdmin.nome} onChange={e => setFormAdmin({ nome: e.target.value })} placeholder="Ex: Maria Silva" />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {([
+                    { key: 'autonomo', titulo: 'Sou médico autônomo', sub: 'Atendo meus próprios pacientes' },
+                    { key: 'clinica', titulo: 'Tenho uma clínica com equipe', sub: 'Gerencio médicos e recepcionistas' },
+                  ] as const).map(op => {
+                    const sel = perfil === op.key
+                    return (
+                      <button key={op.key} type="button" onClick={() => { setPerfil(op.key); setErro('') }}
+                        style={{
+                          textAlign: 'left' as const, padding: '18px 20px', borderRadius: 14, cursor: 'pointer',
+                          border: `1.5px solid ${sel ? tokens.brand.primary : tokens.neutral[200]}`,
+                          background: sel ? tokens.brand.primaryLight : 'white',
+                          transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 14,
+                        }}>
+                        <span style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, border: `2px solid ${sel ? tokens.brand.primary : tokens.neutral[300]}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {sel && <span style={{ width: 10, height: 10, borderRadius: '50%', background: tokens.brand.primary }} />}
+                        </span>
+                        <span>
+                          <span style={{ display: 'block', fontSize: 16, fontWeight: 600, color: tokens.neutral[900] }}>{op.titulo}</span>
+                          <span style={{ display: 'block', fontSize: 13, color: tokens.text.muted, marginTop: 2 }}>{op.sub}</span>
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -457,6 +459,31 @@ export default function OnboardingPage() {
               </div>
             )}
 
+            {passo.kind === 'equipe' && (
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Sua equipe</p>
+                <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 12px', color: tokens.neutral[900] }}>
+                  Adicione sua equipe
+                </h1>
+                <p style={{ fontSize: 15, color: tokens.text.muted, lineHeight: 1.6, margin: '0 0 8px' }}>
+                  Cadastre médicos e recepcionistas — cada um recebe uma senha provisória pra acessar o sistema.
+                </p>
+                <p style={{ fontSize: 14, color: tokens.text.tertiary, lineHeight: 1.55, margin: '0 0 28px' }}>
+                  Você pode fazer isso agora ou depois, quando quiser.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <button type="button" onClick={() => concluir('/admin?add=medico')} disabled={salvando}
+                    style={{ padding: '14px 24px', background: salvando ? tokens.neutral[400] : tokens.brand.primary, color: 'white', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}>
+                    {salvando ? 'Salvando...' : 'Adicionar equipe agora'}
+                  </button>
+                  <button type="button" onClick={() => concluir()} disabled={salvando}
+                    style={{ padding: '14px 24px', background: 'transparent', color: tokens.text.muted, border: `1px solid ${tokens.neutral[200]}`, borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}>
+                    Pular, adiciono depois
+                  </button>
+                </div>
+              </div>
+            )}
+
             {passo.kind === 'done' && (
               <div style={{ textAlign: 'center' as const }}>
                 <div style={{ width: 80, height: 80, borderRadius: 24, background: tokens.brand.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
@@ -482,6 +509,8 @@ export default function OnboardingPage() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 32 }}>
+          {/* No step de equipe os botões ficam no conteúdo (Adicionar / Pular), então some o do rodapé */}
+          {passo.kind !== 'equipe' && (
           <button
             onClick={avancar}
             disabled={salvando}
@@ -501,13 +530,14 @@ export default function OnboardingPage() {
           >
             {salvando ? 'Salvando...' : (
               passo.kind === 'welcome' ? 'Vamos começar' :
-              passo.kind === 'done' ? (tipo === 'clinica' ? 'Ir pro painel' : 'Ir pro dashboard') :
+              passo.kind === 'done' ? ((tipo === 'clinica' && perfil === 'clinica') ? 'Ir pro painel' : 'Ir pro dashboard') :
               'Continuar'
             )}
             {!salvando && (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
             )}
           </button>
+          )}
         </div>
       </main>
     </div>

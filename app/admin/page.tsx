@@ -1,8 +1,8 @@
 'use client'
 import { log } from '@/lib/logger'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
@@ -20,7 +20,15 @@ const PALETA_CORES = [
   tokens.status.infoCyan, tokens.external.purpleViolet, tokens.status.dangerCrimson, tokens.accent.limeStrong, tokens.status.infoTeal,
 ]
 
-export default function Admin() {
+export default function AdminPage() {
+  return (
+    <Suspense fallback={null}>
+      <Admin />
+    </Suspense>
+  )
+}
+
+function Admin() {
   const router = useRouter()
   const { toast } = useToast()
   const [medico, setMedico] = useState<any>(null)
@@ -57,6 +65,17 @@ export default function Admin() {
     setMedico(med)
     carregarDados(med.clinica_id)
   }, [router])
+
+  // Abre já na aba/modal certos quando vem do onboarding (?add= / ?tab=)
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const add = searchParams.get('add')
+    const tab = searchParams.get('tab')
+    if (add === 'medico') { setAba('medicos'); setModalNovoTipo('medico') }
+    else if (add === 'recepcionista') { setAba('recepcionistas'); setModalNovoTipo('recepcionista') }
+    else if (tab === 'recepcionistas') setAba('recepcionistas')
+    else if (tab === 'medicos') setAba('medicos')
+  }, [searchParams])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
