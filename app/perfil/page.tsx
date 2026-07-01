@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
 import { tokens } from '@/lib/design-tokens'
+import { PageHeader, Input, Textarea, Button } from '@/components/ui'
 
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
@@ -104,18 +105,6 @@ export default function PerfilPage() {
 
   const iniciais = medico.nome?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || '??'
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px 14px',
-    fontSize: 14,
-    borderRadius: 10,
-    border: `1px solid ${tokens.border.default}`,
-    background: 'white',
-    outline: 'none',
-    boxSizing: 'border-box',
-    color: tokens.text.primary,
-  }
-
   const labelStyle: React.CSSProperties = {
     fontSize: 12,
     fontWeight: 600,
@@ -147,10 +136,8 @@ export default function PerfilPage() {
   return (
     <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
         {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Meu perfil</h1>
-          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Gerencie suas informações pessoais e de acesso</p>
-        </div>
+        <PageHeader titulo="Meu perfil" descricao="Gerencie suas informações pessoais e de acesso" />
+
 
         {/* Toast de mensagem */}
         {msg && (
@@ -223,32 +210,25 @@ export default function PerfilPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div>
                   <label style={labelStyle}>Senha atual</label>
-                  <input type="password" value={senhaForm.atual}
+                  <Input type="password" value={senhaForm.atual}
                     onChange={e => setSenhaForm(p => ({ ...p, atual: e.target.value }))}
-                    placeholder="••••••••" style={inputStyle}/>
+                    placeholder="••••••••" />
                 </div>
                 <div>
                   <label style={labelStyle}>Nova senha</label>
-                  <input type="password" value={senhaForm.nova}
+                  <Input type="password" value={senhaForm.nova}
                     onChange={e => setSenhaForm(p => ({ ...p, nova: e.target.value }))}
-                    placeholder="Mínimo 6 caracteres" style={inputStyle}/>
+                    placeholder="Mínimo 6 caracteres" />
                 </div>
                 <div>
                   <label style={labelStyle}>Confirmar nova senha</label>
-                  <input type="password" value={senhaForm.confirma}
+                  <Input type="password" value={senhaForm.confirma}
                     onChange={e => setSenhaForm(p => ({ ...p, confirma: e.target.value }))}
-                    placeholder="••••••••" style={inputStyle}/>
+                    placeholder="••••••••" />
                 </div>
-                <button onClick={salvarSenha} disabled={salvandoSenha}
-                  style={{
-                    padding: '11px 20px',
-                    background: salvandoSenha ? tokens.text.tertiary : ACCENT,
-                    color: 'white', border: 'none', borderRadius: 10,
-                    fontSize: 13, fontWeight: 600, cursor: salvandoSenha ? 'not-allowed' : 'pointer',
-                    marginTop: 4,
-                  }}>
+                <Button onClick={salvarSenha} disabled={salvandoSenha} style={{ marginTop: 4 }}>
                   {salvandoSenha ? 'Alterando...' : 'Alterar senha'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -261,8 +241,8 @@ export default function PerfilPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
                 <label style={labelStyle}>Nome completo</label>
-                <input value={form.nome} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))}
-                  placeholder="Dr. João Silva" style={inputStyle}/>
+                <Input value={form.nome} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))}
+                  placeholder="Dr. João Silva" />
               </div>
               <div>
                 <label style={labelStyle}>Especialidade</label>
@@ -270,38 +250,31 @@ export default function PerfilPage() {
               </div>
               <div>
                 <label style={labelStyle}>CRM</label>
-                <input value={form.crm} onChange={e => setForm(p => ({ ...p, crm: e.target.value }))}
-                  placeholder="Ex: 12345-SP" style={inputStyle}/>
+                <Input value={form.crm} onChange={e => setForm(p => ({ ...p, crm: e.target.value }))}
+                  placeholder="Ex: 12345-SP" />
               </div>
               <div>
                 <label style={labelStyle}>Telefone</label>
-                <input value={form.telefone} onChange={e => setForm(p => ({ ...p, telefone: e.target.value }))}
-                  placeholder="(11) 99999-9999" style={inputStyle}/>
+                <Input value={form.telefone} onChange={e => setForm(p => ({ ...p, telefone: e.target.value }))}
+                  placeholder="(11) 99999-9999" />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>Nome da clínica</label>
-                <input value={form.clinica} onChange={e => setForm(p => ({ ...p, clinica: e.target.value }))}
-                  placeholder="Ex: Clínica São Paulo" style={inputStyle}/>
+                <Input value={form.clinica} onChange={e => setForm(p => ({ ...p, clinica: e.target.value }))}
+                  placeholder="Ex: Clínica São Paulo" />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>Bio / Apresentação</label>
-                <textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))}
+                <Textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))}
                   placeholder="Breve descrição sobre você, sua abordagem clínica e experiência..."
-                  rows={4}
-                  style={{ ...inputStyle, resize: 'vertical' as const, fontFamily: 'inherit' }}/>
+                  rows={4} />
               </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20, paddingTop: 20, borderTop: `1px solid ${tokens.bg.hoverStrong}` }}>
-              <button onClick={salvarPerfil} disabled={salvando}
-                style={{
-                  padding: '11px 24px',
-                  background: salvando ? tokens.text.tertiary : ACCENT,
-                  color: 'white', border: 'none', borderRadius: 10,
-                  fontSize: 13, fontWeight: 600, cursor: salvando ? 'not-allowed' : 'pointer',
-                }}>
+              <Button onClick={salvarPerfil} disabled={salvando}>
                 {salvando ? 'Salvando...' : 'Salvar alterações'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
