@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { Input } from '@/components/ui'
 
 type AbaConfig = 'dashboard'|'sofia'|'alertas'|'campanha'|'relatorio'|'configuracao'
 
@@ -298,15 +299,15 @@ export default function ConfigPanel({ medico, onClose }: { medico: any, onClose:
               <div style={{display:'flex',flexDirection:'column',gap:14,maxWidth:500}}>
                 <div>
                   <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Phone Number ID</label>
-                  <input value={configForm.phone_number_id} onChange={e=>setConfigForm(p=>({...p,phone_number_id:e.target.value}))} style={s} placeholder="Ex: 1030374870164992"/>
+                  <Input value={configForm.phone_number_id} onChange={e=>setConfigForm(p=>({...p,phone_number_id:e.target.value}))} placeholder="Ex: 1030374870164992"/>
                 </div>
                 <div>
                   <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Token permanente</label>
-                  <input value={configForm.token} onChange={e=>setConfigForm(p=>({...p,token:e.target.value}))} style={s} placeholder="EAANoj..."/>
+                  <Input value={configForm.token} onChange={e=>setConfigForm(p=>({...p,token:e.target.value}))} placeholder="EAANoj..."/>
                 </div>
                 <div>
                   <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Nome da clínica</label>
-                  <input value={configForm.nome_clinica} onChange={e=>setConfigForm(p=>({...p,nome_clinica:e.target.value}))} style={s} placeholder="Clínica São Lucas"/>
+                  <Input value={configForm.nome_clinica} onChange={e=>setConfigForm(p=>({...p,nome_clinica:e.target.value}))} placeholder="Clínica São Lucas"/>
                 </div>
                 <button onClick={salvarConfig} disabled={salvandoConfig} style={btn('#00a884')}>{salvandoConfig?'Salvando...':'Salvar configurações'}</button>
               </div>
