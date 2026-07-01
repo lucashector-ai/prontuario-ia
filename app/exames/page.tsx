@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
+import { PageHeader } from '@/components/ui'
 
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
@@ -199,10 +200,8 @@ export default function Exames() {
   return (
     <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Análise de exames</h1>
-        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Envie um exame ou laudo e a IA interpreta pra você em segundos</p>
-      </div>
+      <PageHeader titulo="Análise de exames" descricao="Envie um exame ou laudo e a IA interpreta pra você em segundos" />
+
 
       {/* Grid 2 colunas quando tem análise, 1 coluna caso contrário */}
       <div style={{
