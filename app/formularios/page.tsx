@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { tokens } from '@/lib/design-tokens'
+import { PageHeader, Tabs, Button } from '@/components/ui'
 import { listarTemplatesClinica, deletarTemplate } from '@/lib/formularios/templates'
 import type { Template } from '@/lib/formularios/types'
 import { useToast } from '@/components/Toast'
@@ -86,71 +87,29 @@ export default function FormulariosPage() {
     <div style={{ padding: 24 }}>
       <div>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>
-              Formulários
-            </h1>
-            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>
-              Crie formulários pra enviar ao paciente antes da consulta. A IA gera um resumo das respostas pra você ler em 30 segundos.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setModalAberto(true)}
-            style={{
-              padding: '12px 20px',
-              background: tokens.brand.primary,
-              color: '#fff',
-              border: 'none',
-              borderRadius: 10,
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              flexShrink: 0,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Novo formulário
-          </button>
-        </div>
+        <PageHeader
+          titulo="Formulários"
+          descricao="Crie formulários pra enviar ao paciente antes da consulta. A IA gera um resumo das respostas pra você ler em 30 segundos."
+          acao={
+            <Button variant="primary" onClick={() => setModalAberto(true)} style={{ flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Novo formulário
+            </Button>
+          }
+        />
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid ' + tokens.border.subtle }}>
-          {[
-            { key: 'modelos', label: 'Meus formulários' },
-            { key: 'envios', label: 'Envios' },
-          ].map(t => {
-            const ativo = aba === t.key
-            return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setAba(t.key as 'modelos' | 'envios')}
-                style={{
-                  padding: '12px 16px',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: '2px solid ' + (ativo ? tokens.brand.primary : 'transparent'),
-                  color: ativo ? tokens.text.primary : tokens.text.secondary,
-                  fontSize: 14,
-                  fontWeight: ativo ? 600 : 500,
-                  cursor: 'pointer',
-                  marginBottom: -1,
-                  transition: 'color 0.12s',
-                }}
-              >
-                {t.label}
-              </button>
-            )
-          })}
-        </div>
+        <Tabs
+          ativa={aba}
+          onChange={(id) => setAba(id as 'modelos' | 'envios')}
+          tabs={[
+            { id: 'modelos', label: 'Meus formulários' },
+            { id: 'envios', label: 'Envios' },
+          ]}
+        />
 
         {aba === 'envios' && auth.clinicaId && (
           <ListaEnvios clinicaId={auth.clinicaId} />
