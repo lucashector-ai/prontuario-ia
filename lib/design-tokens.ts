@@ -24,7 +24,7 @@ export const tokens = {
   // ── Borders ────────────────────────────────────────────────────────────
   border: {
     default: '#E5E7EB',        // border padrão (inputs, cards)
-    subtle: '#F3F2F3',         // separadores leves
+    subtle: '#E6E7EB',         // bordas de cards/inputs e separadores — visível e suave
     strong: '#D1D5DB',         // borders mais marcantes
     muted: '#E5E5E5',          // border alternativa neutra
     focus: '#6043C1',          // border de foco (alinhada à brand)

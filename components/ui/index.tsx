@@ -85,12 +85,13 @@ export function Card({ style, onClick, padding = 20, radius, hover, ...props }: 
         border: `1px solid ${tokens.border.subtle}`,
         borderRadius: radius ?? tokens.radius['2xl'],
         padding,
+        boxShadow: tokens.shadow.sm,
         transition: isClickable ? 'box-shadow 0.15s, transform 0.15s' : undefined,
         cursor: onClick ? 'pointer' : undefined,
         ...style,
       }}
       onMouseEnter={isClickable ? (e) => { e.currentTarget.style.boxShadow = tokens.shadow.lg } : undefined}
-      onMouseLeave={isClickable ? (e) => { e.currentTarget.style.boxShadow = 'none' } : undefined}
+      onMouseLeave={isClickable ? (e) => { e.currentTarget.style.boxShadow = tokens.shadow.sm } : undefined}
     />
   )
 }

@@ -195,6 +195,7 @@ export default function Historico() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{
             background: 'white', borderRadius: 12,
+            border: `1px solid ${tokens.border.subtle}`,
             padding: '10px 14px',
             display: 'flex', alignItems: 'center', gap: 10,
           }}>

@@ -197,17 +197,17 @@ export function Sidebar() {
                     }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 11,
-                      padding: '9px 12px', borderRadius: 9,
+                      padding: '9px 12px', borderRadius: 10,
                       marginBottom: 2, cursor: (item as any).emBreve ? 'not-allowed' : 'pointer',
                       width: '100%', textAlign: 'left' as const,
-                      background: active ? tokens.bg.hoverStrong : 'transparent',
-                      color: (item as any).emBreve ? tokens.text.tertiary : (active ? tokens.text.primary : TEXT_DEFAULT),
+                      background: active ? tokens.brand.primaryLight : 'transparent',
+                      color: (item as any).emBreve ? tokens.text.tertiary : (active ? tokens.brand.primary : TEXT_DEFAULT),
                       opacity: (item as any).emBreve ? 0.7 : 1,
                       fontSize: 13, fontWeight: active ? 600 : 500,
                       border: 'none',
                       transition: 'background 0.12s',
                     }}
-                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = tokens.bg.hover }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = tokens.bg.card }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
                   >
                     <span style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }}>{item.icon}</span>
