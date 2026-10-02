@@ -253,3 +253,7 @@ input[style*="border:none"]:focus, textarea[style*="border:none"]:focus {
   .c360-kpis > div > div:nth-child(2) { font-size: 24px !important; margin-top: 10px !important; }
   .c360-kpis > div > div:nth-child(3) > span:last-child { display: none; }
 }
+
+/* Respiro padrão entre a borda do painel e o conteúdo de cada página */
+.c360-pagina { padding: 20px; box-sizing: border-box; min-width: 0; }
+@media (max-width: 759px) { .c360-pagina { padding: 16px; } }

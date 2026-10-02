@@ -149,7 +149,12 @@ export default function Teleconsulta() {
     avisar('Sala encerrada')
   }
 
-  if (!medico) return null
+  if (!medico && !semMedico) return (
+    <div className="c360-pagina" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="c360-skel" style={{ height: 200, borderRadius: 20 }} />
+      <div className="c360-skel" style={{ height: 120, borderRadius: 16 }} />
+    </div>
+  )
 
   const ativas = salas.filter(s => s.status !== 'encerrada')
   const seteDias = Date.now() - 7 * 86400000
@@ -163,7 +168,7 @@ export default function Teleconsulta() {
   ]
 
   if (semMedico) return (
-    <div style={{ padding: 24, minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="c360-pagina" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <EmptyState
         icon={VideoOff}
         titulo="Nenhum médico ativo na clínica"
@@ -174,7 +179,7 @@ export default function Teleconsulta() {
   )
 
   return (
-    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 26 }}>
+    <div className="c360-pagina" style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
       {/* Hero */}
       <div className="tele-hero" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.25fr) minmax(0,1fr)', gap: 24, alignItems: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 }}>

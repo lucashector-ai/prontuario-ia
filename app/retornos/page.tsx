@@ -70,14 +70,14 @@ export default function RetornosPage() {
 
   if (!carregando && !ctx) {
     return (
-      <div style={{ padding: 24 }}>
+      <div className="c360-pagina">
         <EmptyState icon={Stethoscope} titulo="Nenhum médico ativo na clínica" descricao="Retornos e campanhas pertencem à agenda de um médico. Cadastre um médico no Painel admin para começar." />
       </div>
     )
   }
 
   return (
-    <div style={{ padding: 'clamp(14px, 3vw, 24px)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
+    <div className="c360-pagina" style={{ maxWidth: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap', borderBottom: `1px solid ${T.border.default}`, marginBottom: 20 }}>
         <div style={{ flex: '1 1 auto', minWidth: 0, overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', marginBottom: -1 }}>
           <Tabs

@@ -192,7 +192,7 @@ function Conteudo({ demo }: { demo: boolean }) {
   const editavel = !!rascunho && rascunho.id === selId
 
   return (
-    <div style={{ padding: '4px 0 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="c360-pagina" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <style dangerouslySetInnerHTML={{ __html: `
         .mp-grid { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 16px; align-items: start; }
         .mp-lista { position: sticky; top: 12px; }

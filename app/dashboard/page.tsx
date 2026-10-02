@@ -252,7 +252,7 @@ export default function Dashboard() {
   const semDados = !carregando && porMes.every(m => SERIES.every(s => m[s.id] === 0)) && proximos.length === 0 && cids.length === 0
 
   return (
-    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="c360-pagina" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Barra de período */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <SegmentedControl<Periodo>

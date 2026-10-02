@@ -156,7 +156,7 @@ export default function RelatoriosPage() {
 
   if (!medicos.length) {
     return (
-      <div style={{ padding: 16 }}>
+      <div className="c360-pagina">
         <EmptyState icon={Users} titulo="Nenhum médico ativo"
           descricao={erro || 'Cadastre médicos ativos na clínica para gerar os relatórios.'} />
       </div>
@@ -167,7 +167,7 @@ export default function RelatoriosPage() {
   const semMovimento = !carregando && r && r.visao.atual.total === 0
 
   return (
-    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+    <div className="c360-pagina" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <style dangerouslySetInnerHTML={{ __html: `
         .rel-periodo-seg { display: flex; } .rel-periodo-sel { display: none; }
         @media (max-width: 759px) { .rel-periodo-seg { display: none !important; } .rel-periodo-sel { display: block; } }

@@ -48,7 +48,7 @@ export default function FaturamentoPage() {
   const nAbertos = fat.lotes.filter(l => l.status === 'aberto').length
 
   return (
-    <div style={{ padding: '20px 24px 32px', maxWidth: 1240, margin: '0 auto', boxSizing: 'border-box' }}>
+    <div className="c360-pagina">
       <style dangerouslySetInnerHTML={{ __html: CSS_FATURAMENTO }} />
 
       {(fat.demo || fat.semMigration) && (
