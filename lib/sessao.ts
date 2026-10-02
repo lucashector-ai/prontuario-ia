@@ -13,10 +13,19 @@ export function ehAtendente(): boolean {
   } catch { return false }
 }
 
+/** Guarda o token emitido pelo login (o cookie httpOnly vem junto na resposta). */
+export function guardarToken(token?: string | null) {
+  try {
+    if (token) localStorage.setItem('c360_token', token)
+    localStorage.removeItem('c360_dev')
+  } catch {}
+}
+
 /** Limpa a sessão e devolve a rota de login adequada. */
 export function sairDaConta(): string {
   const atendente = ehAtendente()
-  for (const k of ['medico', 'clinica_admin', 'clinica', 'atendente']) {
+  fetch('/api/logout', { method: 'POST', keepalive: true }).catch(() => {})
+  for (const k of ['medico', 'clinica_admin', 'clinica', 'atendente', 'c360_token', 'c360_dev']) {
     try { localStorage.removeItem(k) } catch {}
   }
   document.cookie = 'is_atendente=; path=/; max-age=0'

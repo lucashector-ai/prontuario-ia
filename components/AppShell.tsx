@@ -8,6 +8,8 @@ import { BottomNav } from './BottomNav'
 import { HeaderProvider } from './shell/header-context'
 import { AvisoConexao } from './shell/AvisoConexao'
 import { BatimentoAutomacoes } from './shell/BatimentoAutomacoes'
+import { tokenSessao } from '@/lib/supabase'
+import { sairDaConta } from '@/lib/sessao'
 import { tokens } from '@/lib/design-tokens'
 
 const ROTAS_PUBLICAS = ['/login', '/login-atendente', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/privacidade', '/termos', '/sobre', '/contato', '/dev-login']
@@ -45,6 +47,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     pathname === '/' ||
     ROTAS_PUBLICAS.includes(pathname) ||
     PREFIXOS_PUBLICOS.some(p => pathname.startsWith(p))
+
+  // Sessão sem token (login antigo) ou token vencido: volta ao login uma vez.
+  // Modo demonstração (?demo=1) e /dev-login não exigem sessão.
+  useEffect(() => {
+    if (ehPublica) return
+    try {
+      if (new URLSearchParams(window.location.search).get('demo') === '1') return
+      if (localStorage.getItem('c360_dev') === '1') return
+      const logado = localStorage.getItem('medico') || localStorage.getItem('clinica_admin')
+      if (!tokenSessao()) {
+        const destino = logado ? sairDaConta() : '/login'
+        window.location.replace(destino + (logado ? '?expirou=1' : ''))
+      }
+    } catch {}
+  }, [pathname, ehPublica])
 
   const alternarMenu = () => {
     setRecolhido(r => {

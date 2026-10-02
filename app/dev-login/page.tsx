@@ -16,6 +16,7 @@ export default function DevLogin() {
       especialidade: 'Clínica Geral', onboarding_concluido: true, clinica_id: clinica.id,
     }))
     localStorage.setItem('clinica', JSON.stringify(clinica))
+    localStorage.setItem('c360_dev', '1')
     localStorage.setItem('clinica_admin', JSON.stringify({
       id: '00000000-0000-0000-0000-000000000003', nome: 'Admin Teste', clinica_id: clinica.id, onboarding_concluido: true,
     }))

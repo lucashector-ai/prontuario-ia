@@ -25,6 +25,7 @@ Rode **sempre em ordem numérica**, de `0000` até a última:
 | `0012_faturamento_tiss.sql` | Faturamento de convênios no padrão TISS (operadoras, guias, lotes). |
 | `0013_auditoria_acessos.sql` | Registro de acessos ao prontuário (LGPD/CFM): quem viu/editou/exportou o quê. |
 | `0014_modelos_prontuario.sql` | Modelos de prontuário personalizados por especialidade. |
+| `0016_seguranca_rls.sql` | **Segurança**: liga o RLS em todas as tabelas com acesso por clínica (exige `SUPABASE_JWT_SECRET` no app). |
 | `0015_automacoes_estado.sql` | Controle das automações a cada 15 min (evita disparo duplicado com várias abas abertas). |
 
 Novas desta fase: **0010, 0011, 0012, 0013, 0014, 0015** (e a 0000, que documenta a base).
@@ -88,8 +89,9 @@ API: *Settings → API → Reload schema* (ou `notify pgrst, 'reload schema';`).
 
 ## Observações
 
-- **RLS** está desligado/fora de escopo (projeto separado). O app usa a chave
-  `anon` no navegador; ligar RLS sem políticas derruba as telas.
+- **RLS** fica ligado (0016). O login emite um token assinado com o JWT secret
+  do Supabase (`SUPABASE_JWT_SECRET`) e as políticas liberam só os dados da
+  clínica do token. Sem esse segredo configurado, o login não funciona.
 - A `0000` cria FKs com `NOT VALID` e só se a coluna ainda não tiver FK (duas FKs
   para a mesma tabela quebram os joins do PostgREST).
 - Prontuário tem guarda obrigatória (CFM 1.821/2007): consultas e prescrições não

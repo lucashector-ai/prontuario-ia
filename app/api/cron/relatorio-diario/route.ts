@@ -67,7 +67,10 @@ export async function GET(req: NextRequest) {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://prontuario-ia-five.vercel.app'
       const r = await fetch(`${baseUrl}/api/sofia/relatorio-diario`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(process.env.CRON_SECRET ? { Authorization: `Bearer ${process.env.CRON_SECRET}` } : {}),
+        },
         body: JSON.stringify({ medico_id: c.medico_id }),
       })
       const data = await r.json()

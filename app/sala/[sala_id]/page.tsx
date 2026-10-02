@@ -146,17 +146,12 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   }, [tela])
 
   const carregarSala = async () => {
-    const { data } = await sb.from('teleconsultas').select('*').eq('sala_id', sala_id).single()
-    if (!data) { setErro('Sala nao encontrada ou link expirado.'); setTela('erro'); return }
-    if (data.status === 'encerrada') {
-      await sb.from('teleconsultas').update({ status: 'aguardando', encerrada_em: null }).eq('sala_id', sala_id)
-      data.status = 'aguardando'
-    }
-    setSala(data)
-    if (data.paciente_id) {
-      const { data: pac } = await sb.from('pacientes').select('*').eq('id', data.paciente_id).single()
-      if (pac) setPacienteSala(pac)
-    }
+    // Pelo servidor: o paciente entra sem login e não tem acesso direto ao banco
+    const r = await fetch(`/api/sala/${encodeURIComponent(String(sala_id))}`).catch(() => null)
+    const j = r ? await r.json().catch(() => ({})) : {}
+    if (!r?.ok || !j.sala) { setErro('Sala nao encontrada ou link expirado.'); setTela('erro'); return }
+    setSala(j.sala)
+    if (j.paciente) setPacienteSala(j.paciente)
     iniciarEspera()
   }
 
@@ -241,7 +236,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         setEntrando(false)
         tocarSom('entrada')
         if (!timerRef.current) timerRef.current = setInterval(() => setTimer(t => t + 1), 1000)
-        sb.from('teleconsultas').update({ status: 'em_andamento', iniciada_em: new Date().toISOString() }).eq('sala_id', sala_id)
+        fetch(`/api/sala/${encodeURIComponent(String(sala_id))}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'em_andamento' }) }).catch(() => {})
       }
     }
 
@@ -360,7 +355,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   const encerrar = async () => {
     send('encerrar', {})
-    await sb.from('teleconsultas').update({ status: 'encerrada', encerrada_em: new Date().toISOString(), duracao_segundos: timer }).eq('sala_id', sala_id)
+    await fetch(`/api/sala/${encodeURIComponent(String(sala_id))}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'encerrada', duracao_segundos: timer }) }).catch(() => {})
     // Para gravacao
     if (recorderRef.current && recorderRef.current.state !== 'inactive') {
       recorderRef.current.stop()

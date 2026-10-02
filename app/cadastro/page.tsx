@@ -8,6 +8,7 @@ import { tokens } from '@/lib/design-tokens'
 import { Marca } from '@/components/Marca'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { Input, Button } from '@/components/ui'
+import { guardarToken } from '@/lib/sessao'
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
 const BG = tokens.bg.page
@@ -84,6 +85,7 @@ export default function CadastroPage() {
       })
       const verifyData = await verifyRes.json()
 
+      if (verifyData.ok) guardarToken(verifyData.token)
       if (verifyData.ok && verifyData.tipo_conta === 'clinica') {
         localStorage.setItem('clinica_admin', JSON.stringify(verifyData.admin))
         localStorage.setItem('clinica', JSON.stringify(verifyData.clinica))

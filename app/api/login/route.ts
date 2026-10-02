@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
+import { assinarToken, comSessao } from '@/lib/sessao-servidor'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,9 +42,11 @@ export async function POST(req: NextRequest) {
         .eq('id', admin.clinica_id)
         .single()
 
-      return NextResponse.json({
+      const token = await assinarToken({ sub: admin.id, tipo: 'clinica', clinica_id: admin.clinica_id, medico_id: null })
+      return comSessao(NextResponse.json({
         ok: true,
         tipo: 'clinica',
+        token,
         clinica,
         admin: {
           id: admin.id,
@@ -52,7 +55,7 @@ export async function POST(req: NextRequest) {
           role: admin.role,
           clinica_id: admin.clinica_id,
         },
-      })
+      }), token)
     }
 
     // 2. Tenta encontrar em medicos
@@ -85,13 +88,15 @@ export async function POST(req: NextRequest) {
         .eq('id', medico.clinica_id)
         .single()
 
-      return NextResponse.json({
+      const token = await assinarToken({ sub: medico.id, tipo: 'medico', clinica_id: medico.clinica_id || null, medico_id: medico.id })
+      return comSessao(NextResponse.json({
         ok: true,
         tipo: 'medico',
+        token,
         medico: { ...medico, senha: undefined, senha_hash: undefined },
         clinica,
         precisa_trocar_senha: medico.senha_provisoria === true,
-      })
+      }), token)
     }
 
     return NextResponse.json({ error: 'Email não encontrado' }, { status: 404 })

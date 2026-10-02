@@ -6,6 +6,7 @@ import { MailCheck, CircleCheck, CircleAlert, ArrowLeft } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { TelaAcesso } from '@/components/TelaAcesso'
 import { Button } from '@/components/ui'
+import { guardarToken } from '@/lib/sessao'
 
 function VerificarContent() {
   const router = useRouter()
@@ -37,6 +38,7 @@ function VerificarContent() {
         }
 
         // Auto-login: grava localStorage
+        guardarToken(data.token)
         if (data.tipo_conta === 'clinica') {
           localStorage.setItem('clinica_admin', JSON.stringify(data.admin))
           localStorage.setItem('clinica', JSON.stringify(data.clinica))

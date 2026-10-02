@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import bcrypt from 'bcryptjs'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,7 +21,8 @@ export async function POST(req: NextRequest) {
   // Verifica se email já existe
   const { data: existe } = await supabase.from('atendentes').select('id').eq('email', email).maybeSingle()
   if (existe) return NextResponse.json({ error: 'Email já cadastrado' }, { status: 400 })
-  const { data, error } = await supabase.from('atendentes').insert({ medico_id, nome, email, senha, cargo: cargo || 'Atendente', ativo: true }).select().single()
+  const senhaHash = await bcrypt.hash(senha, 10)
+  const { data, error } = await supabase.from('atendentes').insert({ medico_id, nome, email, senha: senhaHash, cargo: cargo || 'Atendente', ativo: true }).select('id,nome,email,cargo,ativo,medico_id,criado_em').single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ atendente: data })
 }
@@ -35,7 +37,7 @@ export async function DELETE(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const { id, nome, cargo, ativo } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
-  const { data, error } = await supabase.from('atendentes').update({ nome, cargo, ativo }).eq('id', id).select().single()
+  const { data, error } = await supabase.from('atendentes').update({ nome, cargo, ativo }).eq('id', id).select('id,nome,email,cargo,ativo,medico_id,criado_em').single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ atendente: data })
 }

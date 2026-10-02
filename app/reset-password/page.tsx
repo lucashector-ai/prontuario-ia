@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { LockKeyhole, CircleCheck } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAuth } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
 import { TelaAcesso } from '@/components/TelaAcesso'
 import { Field, Input, Button } from '@/components/ui'
@@ -19,7 +19,7 @@ export default function ResetPasswordPage() {
     if (senha.length < 6) return setErro('Senha deve ter pelo menos 6 caracteres')
     if (senha !== confirma) return setErro('Senhas nao coincidem')
     setLoading(true)
-    const { error } = await supabase.auth.updateUser({ password: senha })
+    const { error } = await supabaseAuth.auth.updateUser({ password: senha })
     setLoading(false)
     if (error) setErro(error.message)
     else { setOk(true); setTimeout(() => router.push('/dashboard'), 2000) }

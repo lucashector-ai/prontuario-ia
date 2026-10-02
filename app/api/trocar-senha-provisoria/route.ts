@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { sessaoDaRequisicao } from '@/lib/sessao-servidor'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 
@@ -15,6 +16,8 @@ export async function POST(req: NextRequest) {
   try {
     const { medico_id, nova_senha } = await req.json()
     if (!medico_id) return NextResponse.json({ error: 'medico_id é obrigatório' }, { status: 400 })
+    const sessao = await sessaoDaRequisicao(req)
+    if (!sessao || sessao.medico_id !== medico_id) return NextResponse.json({ error: 'Sem permissão' }, { status: 403 })
     if (!senhaEhForte(nova_senha)) {
       return NextResponse.json({ error: 'Senha não atende aos critérios de segurança' }, { status: 400 })
     }

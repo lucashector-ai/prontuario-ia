@@ -5,6 +5,7 @@ import { MessageCircle } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { TelaAcesso } from '@/components/TelaAcesso'
 import { Field, Input, Button } from '@/components/ui'
+import { guardarToken } from '@/lib/sessao'
 
 export default function LoginAtendente() {
   const router = useRouter()
@@ -23,6 +24,7 @@ export default function LoginAtendente() {
       })
       const data = await res.json()
       if (data.atendente) {
+        guardarToken(data.token)
         localStorage.setItem('atendente', JSON.stringify(data.atendente))
         localStorage.setItem('medico', JSON.stringify({
           id: data.atendente.medico_id,

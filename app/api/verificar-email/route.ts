@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { assinarToken, comSessao } from '@/lib/sessao-servidor'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -48,9 +49,11 @@ export async function POST(req: NextRequest) {
         .eq('id', data.clinica_id)
         .single()
 
-      return NextResponse.json({
+      const tokenSessao = await assinarToken({ sub: data.id, tipo: 'clinica', clinica_id: data.clinica_id, medico_id: null })
+      return comSessao(NextResponse.json({
         ok: true,
         tipo_conta: 'clinica',
+        token: tokenSessao,
         admin: {
           id: data.id,
           email: data.email,
@@ -60,7 +63,7 @@ export async function POST(req: NextRequest) {
         },
         clinica,
         mensagem: 'Email confirmado! Redirecionando...',
-      })
+      }), tokenSessao)
     } else {
       const { data: clinica } = await supabase
         .from('clinicas')
@@ -70,13 +73,15 @@ export async function POST(req: NextRequest) {
 
       const medicoLimpo = { ...data, senha: undefined, senha_hash: undefined, token_verificacao: undefined }
 
-      return NextResponse.json({
+      const tokenSessao = await assinarToken({ sub: data.id, tipo: 'medico', clinica_id: data.clinica_id || null, medico_id: data.id })
+      return comSessao(NextResponse.json({
         ok: true,
         tipo_conta: 'medico',
+        token: tokenSessao,
         medico: medicoLimpo,
         clinica,
         mensagem: 'Email confirmado! Redirecionando...',
-      })
+      }), tokenSessao)
     }
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

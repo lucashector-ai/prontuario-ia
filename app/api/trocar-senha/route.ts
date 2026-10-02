@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
+import { sessaoDaRequisicao } from '@/lib/sessao-servidor'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,6 +17,11 @@ export async function POST(req: NextRequest) {
     const { medico_id, senha_nova } = await req.json()
     if (!medico_id || !senha_nova) {
       return NextResponse.json({ error: 'Dados faltando' }, { status: 400 })
+    }
+    // Só o próprio médico troca a própria senha
+    const sessao = await sessaoDaRequisicao(req)
+    if (!sessao || sessao.medico_id !== medico_id) {
+      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 })
     }
     if (!senhaEhForte(senha_nova)) {
       return NextResponse.json({ error: 'Senha não atende aos critérios' }, { status: 400 })

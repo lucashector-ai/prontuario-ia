@@ -6,7 +6,8 @@ import { Input } from '@/components/ui'
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAuth } from '@/lib/supabase'
+import { guardarToken } from '@/lib/sessao'
 
 function LoginForm() {
   const router = useRouter()
@@ -22,12 +23,15 @@ function LoginForm() {
     if (searchParams?.get('cadastrado') === '1') {
       setSucesso('Conta criada com sucesso! Faça login pra entrar.')
     }
+    if (searchParams?.get('expirou') === '1') {
+      setSucesso('Atualizamos a segurança do sistema. Entre novamente para continuar.')
+    }
   }, [searchParams])
 
   const handleGoogle = async () => {
     setCarregandoGoogle(true); setErro('')
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabaseAuth.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: `${window.location.origin}/auth/callback` }
       })
@@ -51,6 +55,7 @@ function LoginForm() {
       const data = await res.json()
 
       if (!res.ok) { setErro(data.error || 'Erro ao entrar'); return }
+      guardarToken(data.token)
 
       if (data.tipo === 'clinica') {
         localStorage.setItem('clinica_admin', JSON.stringify(data.admin))

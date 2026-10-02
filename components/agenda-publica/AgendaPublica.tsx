@@ -7,7 +7,6 @@ import {
   ClipboardList, Clock, Lock, ShieldCheck, UserRound,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
-import { supabase } from '@/lib/supabase'
 import { notificar } from '@/components/ui/dialogos'
 import { Button, EmptyState, Field, Icon, IconButton, IconTile, Input, Modal, Textarea } from '@/components/ui'
 import { CascaPublica, Spinner, cartaoPublico } from '@/components/publico/CascaPublica'
@@ -82,44 +81,19 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
     async function carregar() {
       setLoading(true)
       try {
-        const { data: medicoData, error: errMed } = await supabase
-          .from('medicos')
-          .select('id, nome, especialidade, crm, foto_url, clinica_id, agenda_publica_ativa, agenda_publica_config')
-          .eq('slug_publico', medicoSlug)
-          .single()
-
-        if (errMed || !medicoData) {
-          setErro('Médico não encontrado.')
+        // Pelo servidor: o paciente não tem acesso direto ao banco
+        const q = new URLSearchParams({ medico: medicoSlug })
+        if (clinicaSlug) q.set('clinica', clinicaSlug)
+        const r = await fetch('/api/agenda-publica/perfil?' + q.toString())
+        const j = await r.json().catch(() => ({}))
+        if (!r.ok || !j.medico) {
+          setErro(j.error || 'Médico não encontrado.')
           setLoading(false)
           return
         }
-
-        if (!medicoData.agenda_publica_ativa) {
-          setErro('Esse médico ainda não ativou a agenda pública.')
-          setLoading(false)
-          return
-        }
-
-        setMedico(medicoData as any)
-        setConfigMedico(medicoData.agenda_publica_config)
-
-        if (clinicaSlug) {
-          const { data: clinicaData } = await supabase
-            .from('clinicas')
-            .select('id, nome, logo_url')
-            .eq('slug_publico', clinicaSlug)
-            .single()
-          if (clinicaData && clinicaData.id === medicoData.clinica_id) {
-            setClinica(clinicaData as any)
-          }
-        } else if (medicoData.clinica_id) {
-          const { data: clinicaData } = await supabase
-            .from('clinicas')
-            .select('id, nome, logo_url')
-            .eq('id', medicoData.clinica_id)
-            .single()
-          if (clinicaData) setClinica(clinicaData as any)
-        }
+        setMedico(j.medico as any)
+        setConfigMedico(j.medico.agenda_publica_config)
+        if (j.clinica) setClinica(j.clinica as any)
       } catch (e: any) {
         setErro(e.message || 'Erro ao carregar')
       } finally {
