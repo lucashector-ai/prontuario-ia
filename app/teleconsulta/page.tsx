@@ -36,6 +36,7 @@ function quandoComeca(iso: string) {
 export default function Teleconsulta() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
+  const [semMedico, setSemMedico] = useState(false)
   const [salas, setSalas] = useState<any[]>([])
   const [agendadas, setAgendadas] = useState<any[]>([])
   const [carregando, setCarregando] = useState(true)
@@ -56,7 +57,7 @@ export default function Teleconsulta() {
           .from('medicos').select('*')
           .eq('clinica_id', admin.clinica_id).eq('cargo', 'medico').eq('ativo', true)
           .order('criado_em', { ascending: true }).limit(1).maybeSingle()
-        if (!primeiroMedico) { router.push('/admin'); return }
+        if (!primeiroMedico) { setSemMedico(true); return }
         setMedico(primeiroMedico)
         carregar(primeiroMedico.id)
         return
@@ -160,6 +161,17 @@ export default function Teleconsulta() {
     { icon: CalendarPlus, label: 'Agendar para depois', desc: 'Marca na agenda com link de vídeo', fn: () => router.push('/agenda?nova_teleconsulta=1') },
     { icon: Link2, label: 'Criar link para enviar', desc: 'Gera a sala sem entrar agora', fn: () => criarSala(false) },
   ]
+
+  if (semMedico) return (
+    <div style={{ padding: 24, minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <EmptyState
+        icon={VideoOff}
+        titulo="Nenhum médico ativo na clínica"
+        descricao="A teleconsulta é feita em nome de um médico. Cadastre ou reative um médico em Minha clínica para começar."
+        acao={<Button onClick={() => router.push('/minha-clinica')}>Ir para Minha clínica</Button>}
+      />
+    </div>
+  )
 
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 26 }}>
