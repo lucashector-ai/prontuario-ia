@@ -217,7 +217,7 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
       }}>
         <div onClick={e => e.stopPropagation()} style={{
-          background: 'white', borderRadius: 14, padding: 24,
+          background: 'white', boxShadow: tokens.shadow.lg, borderRadius: 14, padding: 24,
           maxWidth: 420, width: '100%',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>

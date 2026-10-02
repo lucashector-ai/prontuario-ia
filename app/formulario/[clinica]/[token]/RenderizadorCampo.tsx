@@ -1,6 +1,8 @@
 'use client'
 
+import { Check } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
+import { Input, Textarea } from '@/components/ui'
 import type { Campo } from '@/lib/formularios/types'
 
 type Props = {
@@ -13,7 +15,7 @@ export default function RenderizadorCampo({ campo, valor, onChange }: Props) {
   switch (campo.tipo) {
     case 'texto':
       return (
-        <input
+        <Input
           type="text"
           value={valor || ''}
           onChange={e => onChange(e.target.value)}
@@ -24,18 +26,18 @@ export default function RenderizadorCampo({ campo, valor, onChange }: Props) {
 
     case 'textarea':
       return (
-        <textarea
+        <Textarea
           value={valor || ''}
           onChange={e => onChange(e.target.value)}
           placeholder={campo.placeholder}
           rows={4}
-          style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical', minHeight: 90 }}
+          style={{ ...inputStyle, minHeight: 96 }}
         />
       )
 
     case 'numero':
       return (
-        <input
+        <Input
           type="number"
           value={valor ?? ''}
           onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}
@@ -48,7 +50,7 @@ export default function RenderizadorCampo({ campo, valor, onChange }: Props) {
 
     case 'data':
       return (
-        <input
+        <Input
           type="date"
           value={valor || ''}
           onChange={e => onChange(e.target.value)}
@@ -138,17 +140,20 @@ export default function RenderizadorCampo({ campo, valor, onChange }: Props) {
                   key={v}
                   type="button"
                   onClick={() => onChange(v)}
+                  aria-pressed={ativo}
                   style={{
                     width: 44,
                     height: 44,
                     border: '1.5px solid ' + (ativo ? tokens.brand.primary : tokens.border.default),
-                    borderRadius: 10,
-                    background: ativo ? tokens.brand.primary : '#fff',
-                    color: ativo ? '#fff' : tokens.text.primary,
+                    borderRadius: tokens.radius.lg,
+                    background: ativo ? tokens.brand.primarySoftBg : tokens.bg.card,
+                    color: ativo ? tokens.brand.primary : tokens.text.strong,
                     fontSize: 14,
-                    fontWeight: 600,
+                    fontWeight: ativo ? 700 : 600,
+                    fontFamily: 'inherit',
+                    fontVariantNumeric: 'tabular-nums',
                     cursor: 'pointer',
-                    transition: 'all 0.12s',
+                    transition: 'all .15s',
                   }}
                 >
                   {v}
@@ -161,7 +166,7 @@ export default function RenderizadorCampo({ campo, valor, onChange }: Props) {
             justifyContent: 'space-between',
             marginTop: 8,
             fontSize: 12,
-            color: tokens.text.tertiary,
+            color: tokens.text.quaternary,
           }}>
             <span>{min} = mínimo</span>
             <span>{max} = máximo</span>
@@ -172,7 +177,7 @@ export default function RenderizadorCampo({ campo, valor, onChange }: Props) {
 
     default:
       return (
-        <div style={{ fontSize: 13, color: tokens.text.tertiary, fontStyle: 'italic' }}>
+        <div style={{ fontSize: 13, color: tokens.text.quaternary }}>
           Tipo não suportado: {campo.tipo}
         </div>
       )
@@ -184,17 +189,20 @@ function BotaoEscolha({ ativo, onClick, label }: { ativo: boolean; onClick: () =
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={ativo}
       style={{
         flex: 1,
-        padding: '14px',
+        height: 46,
+        padding: '0 14px',
         border: '1.5px solid ' + (ativo ? tokens.brand.primary : tokens.border.default),
-        borderRadius: 12,
-        background: '#fff',
-        color: ativo ? tokens.brand.primary : tokens.text.primary,
-        fontSize: 15,
+        borderRadius: tokens.radius.input,
+        background: ativo ? tokens.brand.primarySoftBg : tokens.bg.card,
+        color: ativo ? tokens.brand.primary : tokens.text.strong,
+        fontSize: 14,
         fontWeight: 600,
+        fontFamily: 'inherit',
         cursor: 'pointer',
-        transition: 'all 0.12s',
+        transition: 'all .15s',
       }}
     >
       {label}
@@ -207,28 +215,31 @@ function BotaoOpcao({ ativo, onClick, label, tipo }: { ativo: boolean; onClick: 
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={ativo}
       style={{
         textAlign: 'left',
         padding: '12px 14px',
         border: '1.5px solid ' + (ativo ? tokens.brand.primary : tokens.border.default),
-        borderRadius: 10,
-        background: '#fff',
-        color: tokens.text.primary,
+        borderRadius: tokens.radius.input,
+        background: ativo ? tokens.brand.primarySoftBg : tokens.bg.card,
+        color: ativo ? tokens.brand.primary : tokens.text.strong,
         fontSize: 14,
-        fontWeight: 500,
+        fontWeight: ativo ? 600 : 500,
+        fontFamily: 'inherit',
+        lineHeight: 1.4,
         cursor: 'pointer',
-        transition: 'all 0.12s',
+        transition: 'all .15s',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
       }}
     >
       <div style={{
-        width: 20,
-        height: 20,
+        width: 18,
+        height: 18,
         border: '1.5px solid ' + (ativo ? tokens.brand.primary : tokens.border.strong),
         borderRadius: tipo === 'radio' ? '50%' : 5,
-        background: '#fff',
+        background: ativo && tipo === 'checkbox' ? tokens.brand.primary : tokens.bg.card,
         flexShrink: 0,
         position: 'relative',
         display: 'flex',
@@ -237,16 +248,14 @@ function BotaoOpcao({ ativo, onClick, label, tipo }: { ativo: boolean; onClick: 
       }}>
         {ativo && tipo === 'radio' && (
           <div style={{
-            width: 10,
-            height: 10,
+            width: 8,
+            height: 8,
             borderRadius: '50%',
             background: tokens.brand.primary,
           }} />
         )}
         {ativo && tipo === 'checkbox' && (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="3">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+          <Check size={12} strokeWidth={3} color={tokens.text.inverse} />
         )}
       </div>
       {label}
@@ -254,14 +263,8 @@ function BotaoOpcao({ ativo, onClick, label, tipo }: { ativo: boolean; onClick: 
   )
 }
 
+// Campos maiores para o toque no celular (base: Input/Textarea do design system)
 const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '12px 14px',
-  fontSize: 14,
-  color: tokens.text.primary,
-  border: '1px solid ' + tokens.border.default,
-  borderRadius: 10,
-  background: '#fff',
-  outline: 'none',
-  boxSizing: 'border-box',
+  minHeight: 44,
+  fontSize: 15,
 }

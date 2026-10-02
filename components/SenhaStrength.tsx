@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import { Check, Circle } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 
 export interface RegrasSenha {
@@ -27,45 +28,38 @@ export function senhaEhForte(senha: string): boolean {
 export function SenhaStrength({ senha }: { senha: string }) {
   const regras = useMemo(() => validarSenha(senha), [senha])
   const atendidas = Object.values(regras).filter(Boolean).length
-  const cor = atendidas === 0 ? tokens.border.default : atendidas <= 1 ? tokens.status.danger : atendidas <= 3 ? tokens.status.warningAmber : tokens.brand.primary
+  const cor = atendidas === 0 ? tokens.border.default : atendidas <= 1 ? tokens.status.danger : atendidas <= 3 ? tokens.status.warningAlt : tokens.status.success
   const label = atendidas === 0 ? '' : atendidas <= 1 ? 'Fraca' : atendidas <= 3 ? 'Média' : 'Forte'
 
   if (!senha) return null
 
-  const itemStyle = (ok: boolean): React.CSSProperties => ({
-    fontSize: 11,
-    color: ok ? tokens.brand.primary : tokens.text.tertiary,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 5,
-  })
-
-  const check = (ok: boolean) => (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ok ? tokens.brand.primary : tokens.text.tertiary} strokeWidth="3">
-      {ok ? <polyline points="20 6 9 17 4 12"/> : <circle cx="12" cy="12" r="3"/>}
-    </svg>
+  const item = (ok: boolean, texto: string) => (
+    <span style={{ fontSize: 12, color: ok ? tokens.status.success : tokens.text.tertiary, display: 'flex', alignItems: 'center', gap: 5 }}>
+      {ok ? <Check size={12} strokeWidth={2} /> : <Circle size={6} strokeWidth={0} fill="currentColor" style={{ margin: '0 3px' }} />}
+      {texto}
+    </span>
   )
 
   return (
-    <div style={{ marginTop: 6 }}>
+    <div style={{ marginTop: 2 }}>
       {/* Barra de força */}
-      <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
-        {[0, 1, 2, 3].map(i => (
-          <div key={i} style={{
-            flex: 1, height: 3, borderRadius: 2,
-            background: atendidas > i ? cor : tokens.border.default,
-            transition: 'background 0.15s',
-          }}/>
-        ))}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <div style={{ flex: 1, display: 'flex', gap: 4 }}>
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} style={{
+              flex: 1, height: 4, borderRadius: 99,
+              background: atendidas > i ? cor : tokens.border.muted,
+              transition: 'background 0.15s',
+            }}/>
+          ))}
+        </div>
+        {label && <span style={{ fontSize: 12, fontWeight: 600, color: cor, minWidth: 40, textAlign: 'right' }}>{label}</span>}
       </div>
-      {label && (
-        <p style={{ fontSize: 10, fontWeight: 600, color: cor, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
-      )}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px' }}>
-        <span style={itemStyle(regras.tamanho)}>{check(regras.tamanho)} 8+ caracteres</span>
-        <span style={itemStyle(regras.maiuscula)}>{check(regras.maiuscula)} Letra maiúscula</span>
-        <span style={itemStyle(regras.minuscula)}>{check(regras.minuscula)} Letra minúscula</span>
-        <span style={itemStyle(regras.numero)}>{check(regras.numero)} Número</span>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
+        {item(regras.tamanho, '8+ caracteres')}
+        {item(regras.maiuscula, 'Letra maiúscula')}
+        {item(regras.minuscula, 'Letra minúscula')}
+        {item(regras.numero, 'Número')}
       </div>
     </div>
   )

@@ -2,41 +2,79 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import type { LucideIcon } from 'lucide-react'
+import {
+  Search, Sparkles, Bell, MessageCircle, ChevronDown, CornerDownLeft, UserRound, SlidersHorizontal, Hospital, LogOut,
+  LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, ClipboardList, CalendarCheck, CalendarClock,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
+import { Icon, IconButton, Avatar } from '@/components/ui'
+import { useHeaderInfo, tituloDaRota } from '@/components/shell/header-context'
 
-const ACCENT = tokens.brand.primary
-const TEXT_DEFAULT = tokens.text.primary
-const TEXT_MUTED = tokens.text.secondary
-const BUSCA_BG = tokens.bg.hover
+import { ehAtendente, sairDaConta } from '@/lib/sessao'
+const T = tokens
 
-export function Topbar() {
+const PAGINAS: { label: string; href: string; icon: LucideIcon }[] = [
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Agenda', href: '/agenda', icon: Calendar },
+  { label: 'Pacientes', href: '/pacientes', icon: Users },
+  { label: 'Histórico', href: '/historico', icon: Clock },
+  { label: 'Nova consulta', href: '/nova-consulta', icon: CirclePlus },
+  { label: 'Teleconsulta', href: '/teleconsulta', icon: Video },
+  { label: 'Analisar exames', href: '/exames', icon: ScanSearch },
+  { label: 'Assistente IA', href: '/assistente-ia', icon: Sparkles },
+  { label: 'Chat (WhatsApp, Instagram, Messenger)', href: '/chat', icon: MessageCircle },
+  { label: 'Minha clínica', href: '/minha-clinica', icon: Hospital },
+  { label: 'Painel admin', href: '/admin', icon: SlidersHorizontal },
+  { label: 'Formulários', href: '/formularios', icon: ClipboardList },
+  { label: 'Agenda pública', href: '/configuracoes/agenda-publica', icon: CalendarCheck },
+  { label: 'Perfil', href: '/perfil', icon: UserRound },
+]
+
+const semAcento = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+
+const popover: React.CSSProperties = {
+  position: 'absolute', top: 'calc(100% + 8px)', background: '#fff', border: `1px solid ${T.border.default}`,
+  borderRadius: 14, boxShadow: T.shadow.lg, padding: 6, zIndex: 60,
+}
+const itemMenu: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 10, width: '100%', boxSizing: 'border-box', textAlign: 'left',
+  padding: '9px 10px', borderRadius: 9, fontSize: 13, color: T.text.strong, background: 'transparent',
+  border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+}
+const hoverOn = (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = T.bg.hover }
+const hoverOff = (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = 'transparent' }
+
+/**
+ * Cabeçalho do app: título/subtítulo da página, busca ⌘K, atalhos e chip da clínica.
+ * `compacto` (mobile) esconde o subtítulo e põe a busca em linha própria.
+ */
+export function Topbar({ compacto = false }: { compacto?: boolean }) {
   const router = useRouter()
   const pathname = usePathname()
+  const headerPagina = useHeaderInfo()
+  const { titulo, descricao } = headerPagina || tituloDaRota(pathname)
 
   const [medico, setMedico] = useState<any>(null)
   const [clinicaAdmin, setClinicaAdmin] = useState<any>(null)
   const [clinica, setClinica] = useState<any>(null)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [notifOpen, setNotifOpen] = useState(false)
+  const [aberto, setAberto] = useState<null | 'menu' | 'notif' | 'busca'>(null)
   const [notifs, setNotifs] = useState<any[]>([])
 
   const [busca, setBusca] = useState('')
   const [buscaFocus, setBuscaFocus] = useState(false)
-  const [resultadosOpen, setResultadosOpen] = useState(false)
   const [resultados, setResultados] = useState<{ pacientes: any[]; agendamentos: any[] }>({ pacientes: [], agendamentos: [] })
   const [buscando, setBuscando] = useState(false)
 
-  const menuRef = useRef<HTMLDivElement>(null)
-  const notifRef = useRef<HTMLDivElement>(null)
-  const buscaRef = useRef<HTMLDivElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [atendente, setAtendente] = useState(false)
+  useEffect(() => { setAtendente(ehAtendente()) }, [])
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Modo: 'clinica' quando logado como clinica_admin, 'medico' quando logado como médico
   const modo: 'clinica' | 'medico' | null = clinicaAdmin ? 'clinica' : (medico ? 'medico' : null)
 
   useEffect(() => {
-    // Primeiro tenta clinica_admin
     const ca = localStorage.getItem('clinica_admin')
     const c = localStorage.getItem('clinica')
 
@@ -61,7 +99,6 @@ export function Topbar() {
       return
     }
 
-    // Senão, tenta medico
     const m = localStorage.getItem('medico')
     if (m) {
       const med = JSON.parse(m)
@@ -98,19 +135,12 @@ export function Topbar() {
       } catch {}
       const r = await fetch(`/api/notificacoes-sofia?medico_id=${medicoId}&nao_lidas=true`)
       const d = await r.json()
-      if (d.notificacoes) {
-        setNotifs(d.notificacoes.map((n: any) => ({
-          id: n.id, titulo: n.titulo, descricao: n.descricao,
-          tempo: formatarTempo(n.criada_em), lida: n.lida,
-          agendamento_id: n.agendamento_id, tipo: n.tipo,
-        })))
-      }
+      if (d.notificacoes) setNotifs(d.notificacoes.map(mapNotif))
     } catch {}
   }
 
   const carregarNotificacoesClinica = async (clinicaId: string) => {
     try {
-      // Sincroniza notificacoes da clinica (gera novas baseadas na agenda do dia)
       try {
         await fetch('/api/notificacoes/sincronizar', {
           method: 'POST',
@@ -120,15 +150,15 @@ export function Topbar() {
       } catch {}
       const r = await fetch(`/api/notificacoes-sofia?clinica_id=${clinicaId}&nao_lidas=true`)
       const d = await r.json()
-      if (d.notificacoes) {
-        setNotifs(d.notificacoes.map((n: any) => ({
-          id: n.id, titulo: n.titulo, descricao: n.descricao,
-          tempo: formatarTempo(n.criada_em), lida: n.lida,
-          agendamento_id: n.agendamento_id, tipo: n.tipo,
-        })))
-      }
+      if (d.notificacoes) setNotifs(d.notificacoes.map(mapNotif))
     } catch {}
   }
+
+  const mapNotif = (n: any) => ({
+    id: n.id, titulo: n.titulo, descricao: n.descricao,
+    tempo: formatarTempo(n.criada_em), lida: n.lida,
+    agendamento_id: n.agendamento_id, paciente_id: n.paciente_id, tipo: n.tipo,
+  })
 
   const formatarTempo = (iso: string) => {
     const diff = (Date.now() - new Date(iso).getTime()) / 60000
@@ -148,23 +178,29 @@ export function Topbar() {
     } catch {}
   }
 
+  // Fecha popovers com clique fora / Esc; ⌘K foca a busca
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false)
-      if (buscaRef.current && !buscaRef.current.contains(e.target as Node)) setResultadosOpen(false)
+    const onDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setAberto(null)
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); inputRef.current?.focus() }
+      if (e.key === 'Escape') { setAberto(null); inputRef.current?.blur() }
+    }
+    document.addEventListener('mousedown', onDown)
+    window.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey) }
   }, [])
 
+  useEffect(() => { setAberto(null) }, [pathname])
+
+  // Busca de pacientes/agendamentos (só médico — usa medico_id)
   useEffect(() => {
-    if (modo !== 'medico' || !medico || !busca.trim() || busca.length < 2) {
+    if (modo !== 'medico' || !medico || busca.trim().length < 2) {
       setResultados({ pacientes: [], agendamentos: [] })
       return
     }
     setBuscando(true)
-    setResultadosOpen(true)
     const timer = setTimeout(async () => {
       const termo = busca.trim()
       const [{ data: pacs }, { data: ags }] = await Promise.all([
@@ -177,286 +213,212 @@ export function Topbar() {
     return () => clearTimeout(timer)
   }, [busca, medico, modo])
 
-  const iniciaisUsuario = useMemo(() => {
-    const nome = clinicaAdmin?.nome || medico?.nome
-    if (!nome) return '??'
-    return nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
-  }, [medico, clinicaAdmin])
+  const paginasFiltradas = useMemo(() => {
+    const q = semAcento(busca.trim())
+    const base = atendente ? PAGINAS.filter(p => p.href === '/chat') : PAGINAS
+    return (q ? base.filter(p => semAcento(p.label).includes(q)) : base.slice(0, 6))
+  }, [busca, atendente])
 
-  const primeiroNome = (clinicaAdmin?.nome || medico?.nome || '').split(' ')[0] || ''
-  const inicialClinica = clinica?.nome?.[0]?.toUpperCase() || ''
+  const sair = () => router.push(sairDaConta())
 
-  const sair = () => {
-    localStorage.removeItem('medico')
-    localStorage.removeItem('clinica_admin')
-    localStorage.removeItem('clinica')
-    router.push('/login')
-  }
+  const ir = (href: string) => { router.push(href); setBusca(''); setAberto(null); inputRef.current?.blur() }
 
-  const notifsNaoLidas = notifs.length
-
-  const iconBtnStyle = (active: boolean) => ({
-    width: 40, height: 40, borderRadius: 11,
-    background: active ? tokens.bg.hoverStrong : 'transparent',
-    border: 'none', cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    position: 'relative' as const,
-    transition: 'background 0.12s',
-  })
+  const nomeUsuario = clinicaAdmin?.nome || medico?.nome || ''
+  const nomeClinica = clinica?.nome || nomeUsuario
+  const semResultado = !buscando && busca.trim().length >= 2 && resultados.pacientes.length === 0 && resultados.agendamentos.length === 0 && paginasFiltradas.length === 0
 
   return (
-    <header style={{
-      height: 64, background: 'white',
-      display: 'flex', alignItems: 'center',
-      gap: 8, padding: '0 20px', flexShrink: 0,
+    <header ref={rootRef} style={{
+      display: 'flex', alignItems: 'center', gap: '10px 12px', padding: '0 2px',
+      flexWrap: compacto ? 'wrap' : 'nowrap', position: 'relative', zIndex: 45,
     }}>
-      {/* ESQUERDA — Busca (só mostra se for médico) */}
-      {modo === 'medico' ? (
-        <div ref={buscaRef}
-          style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke={TEXT_MUTED} strokeWidth='2'
-            style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-            <circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/>
-          </svg>
+      {/* Título da página */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h1 style={{ margin: 0, fontSize: compacto ? 19 : 21, fontWeight: 700, letterSpacing: '-.025em', lineHeight: 1.2, color: T.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titulo}</h1>
+        {descricao && !compacto && (
+          <div style={{ fontSize: 12.5, color: T.text.quaternary, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{descricao}</div>
+        )}
+      </div>
+
+      {/* Busca ⌘K */}
+      <div style={{ flex: compacto ? '1 1 100%' : '0 1 320px', order: compacto ? 3 : 0, minWidth: 0, position: 'relative' }}>
+        <label style={{
+          display: 'flex', alignItems: 'center', gap: 10, height: 38, padding: '0 6px 0 14px', borderRadius: 12, background: '#fff',
+          border: `1px solid ${buscaFocus ? T.brand.primaryAccent : T.border.default}`, boxShadow: buscaFocus ? T.shadow.focusRing : 'none',
+          color: T.text.tertiary, cursor: 'text', transition: 'border-color .15s, box-shadow .15s',
+        }}>
+          <Search size={16} strokeWidth={1.6} />
           <input
             ref={inputRef}
-            type='text'
-            placeholder='Buscar pacientes, agendamentos...'
             value={busca}
-            onChange={e => setBusca(e.target.value)}
-            onFocus={() => { setBuscaFocus(true); if (busca.length >= 2) setResultadosOpen(true) }}
+            onChange={e => { setBusca(e.target.value); setAberto('busca') }}
+            onFocus={() => { setBuscaFocus(true); setAberto('busca') }}
             onBlur={() => setBuscaFocus(false)}
-            style={{
-              width: '100%', height: 44,
-              padding: '0 16px 0 42px',
-              background: BUSCA_BG,
-              border: 'none', borderRadius: 12,
-              outline: 'none', fontSize: 14, color: TEXT_DEFAULT,
-              transition: 'background 0.15s',
-              boxSizing: 'border-box',
-              WebkitAppearance: 'none' as const,
-              MozAppearance: 'none' as const,
-              appearance: 'none' as const,
-              boxShadow: 'none',
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                const p = resultados.pacientes[0]
+                if (p) ir(`/pacientes/${p.id}`)
+                else if (paginasFiltradas[0]) ir(paginasFiltradas[0].href)
+              }
             }}
+            placeholder="Buscar paciente ou página"
+            style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', padding: 0, minHeight: 0, boxShadow: 'none', fontSize: 13.5, color: T.text.primary }}
           />
+          <kbd style={{ fontSize: 11, border: `1px solid ${T.border.default}`, borderRadius: 7, padding: '3px 7px', background: T.bg.page, color: T.text.secondary }}>⌘K</kbd>
+        </label>
 
-          {resultadosOpen && busca.length >= 2 && (
-            <div style={{
-              position: 'absolute', top: 52, left: 0, right: 0,
-              background: 'white', borderRadius: 12,
-              maxHeight: 380, overflow: 'auto', zIndex: 100,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            }}>
-              {buscando && <div style={{ padding: 16, fontSize: 12, color: TEXT_MUTED }}>Buscando...</div>}
-              {!buscando && resultados.pacientes.length === 0 && resultados.agendamentos.length === 0 && (
-                <div style={{ padding: 16, fontSize: 12, color: TEXT_MUTED }}>Nenhum resultado</div>
-              )}
-              {resultados.pacientes.length > 0 && (
-                <div>
-                  <p style={{ margin: 0, padding: '10px 16px 6px', fontSize: 10, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Pacientes</p>
-                  {resultados.pacientes.map((p: any) => (
-                    <button key={p.id}
-                      onClick={() => { router.push(`/pacientes/${p.id}`); setBusca(''); setResultadosOpen(false) }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                      onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      {p.nome}
-                      {p.telefone && <span style={{ color: TEXT_MUTED, marginLeft: 8, fontSize: 11 }}>{p.telefone}</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {resultados.agendamentos.length > 0 && (
-                <div>
-                  <p style={{ margin: 0, padding: '10px 16px 6px', fontSize: 10, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Agendamentos</p>
-                  {resultados.agendamentos.map((a: any) => (
-                    <button key={a.id}
-                      onClick={() => { router.push('/agenda'); setBusca(''); setResultadosOpen(false) }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                      onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      {a.motivo || 'Consulta'}
-                      <span style={{ color: TEXT_MUTED, marginLeft: 8, fontSize: 11 }}>{new Date(a.data_hora).toLocaleDateString('pt-BR')}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div style={{ flex: 1 }}/>
-      )}
-
-      {/* DIREITA — empurra resto pra direita */}
-      <div style={{ flex: 1 }}/>
-
-      {/* Chat e Notificações — só pra médico */}
-      {(modo === 'medico' || modo === 'clinica') && (
-        <>
-          <div ref={notifRef} style={{ position: 'relative' }}>
-            <button
-              onClick={() => setNotifOpen(!notifOpen)}
-              style={iconBtnStyle(notifOpen)}
-              onMouseEnter={e => { if (!notifOpen) e.currentTarget.style.background = tokens.bg.hover }}
-              onMouseLeave={e => { if (!notifOpen) e.currentTarget.style.background = 'transparent' }}
-            >
-              <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke={TEXT_DEFAULT} strokeWidth='2'>
-                <path d='M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9'/>
-                <path d='M13.73 21a2 2 0 01-3.46 0'/>
-              </svg>
-              {notifsNaoLidas > 0 && (
-                <span style={{
-                  position: 'absolute', top: 9, right: 10,
-                  width: 8, height: 8, borderRadius: '50%', background: tokens.status.danger,
-                }}/>
-              )}
-            </button>
-
-            {notifOpen && (
-              <div style={{
-                position: 'absolute', top: 48, right: 0, width: 340,
-                background: 'white', borderRadius: 12, zIndex: 1000,
-                maxHeight: 440, overflow: 'auto',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-              }}>
-                <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: TEXT_DEFAULT }}>Notificações</p>
-                  {notifs.length > 0 && (
-                    <button
-                      onClick={async () => {
-                        await Promise.all(notifs.map((n: any) => fetch('/api/notificacoes-sofia', {
-                          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ id: n.id, lida: true }),
-                        })))
-                        setNotifs([])
-                      }}
-                      style={{ fontSize: 11, color: ACCENT, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
-                    >Marcar todas</button>
-                  )}
-                </div>
-                {notifs.length === 0 ? (
-                  <div style={{ padding: '32px 20px', textAlign: 'center', fontSize: 12, color: TEXT_MUTED }}>Tudo em dia</div>
-                ) : (
-                  notifs.map((n: any) => (
-                    <div key={n.id}
-                      onClick={() => {
-                        marcarNotifLida(n.id)
-                        if (n.agendamento_id) {
-                          router.push('/agenda?ag=' + n.agendamento_id)
-                        } else if (n.paciente_id) {
-                          router.push('/pacientes/' + n.paciente_id)
-                        } else {
-                          router.push('/agenda')
-                        }
-                        setNotifOpen(false)
-                      }}
-                      style={{ padding: '12px 16px', cursor: 'pointer', background: n.lida ? 'white' : tokens.neutral.grayMist }}
-                      onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hoverStrong}
-                      onMouseLeave={e => e.currentTarget.style.background = n.lida ? 'white' : tokens.neutral.grayMist}
-                    >
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: TEXT_DEFAULT }}>{n.titulo}</p>
-                      {n.descricao && <p style={{ margin: '2px 0 0', fontSize: 11, color: TEXT_MUTED }}>{n.descricao}</p>}
-                      <p style={{ margin: '4px 0 0', fontSize: 10, color: TEXT_MUTED }}>{n.tempo}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Clínica — aparece em ambos os modos */}
-      {clinica?.nome && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '6px 12px 6px 6px', borderRadius: 22,
-          marginLeft: 6,
-        }}>
-          {clinica.logo_url ? (
-            <img src={clinica.logo_url} alt='' style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }}/>
-          ) : (
-            <div style={{
-              width: 28, height: 28, borderRadius: '50%',
-              background: tokens.bg.hoverStrong, color: TEXT_MUTED,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 700,
-            }}>{inicialClinica}</div>
-          )}
-          <span className="topbar-text-mobile-hide" style={{ fontSize: 13, fontWeight: 500, color: TEXT_DEFAULT, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clinica.nome}</span>
-        </div>
-      )}
-
-      {/* Avatar do usuário — mostra médico OU admin da clínica */}
-      <div ref={menuRef} style={{ position: 'relative' }}>
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '6px 12px 6px 6px', borderRadius: 22,
-            background: menuOpen ? tokens.bg.hoverStrong : 'transparent',
-            border: 'none', cursor: 'pointer',
-            transition: 'background 0.12s',
-          }}
-          onMouseEnter={e => { if (!menuOpen) e.currentTarget.style.background = tokens.bg.hover }}
-          onMouseLeave={e => { if (!menuOpen) e.currentTarget.style.background = 'transparent' }}
-        >
-          {medico?.foto_url ? (
-            <img src={medico.foto_url} alt='' style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }}/>
-          ) : (
-            <div style={{
-              width: 32, height: 32, borderRadius: '50%',
-              background: ACCENT, color: 'white',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 700,
-            }}>{iniciaisUsuario}</div>
-          )}
-          {primeiroNome && <span className="topbar-text-mobile-hide" style={{ fontSize: 13, fontWeight: 500, color: TEXT_DEFAULT }}>{primeiroNome}</span>}
-        </button>
-
-        {menuOpen && (
-          <div style={{
-            position: 'absolute', top: 52, right: 0, width: 220,
-            background: 'white', borderRadius: 12, zIndex: 100,
-            padding: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          }}>
-            {(modo === 'medico' || modo === 'clinica') && (
-              <button
-                onClick={() => { router.push('/perfil'); setMenuOpen(false) }}
-                style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >Meu perfil</button>
-            )}
-            {modo === 'clinica' && (
+        {aberto === 'busca' && (
+          <div style={{ ...popover, left: 0, right: 0, minWidth: 300, maxHeight: 380, overflow: 'auto' }}>
+            {buscando && <div style={{ padding: '10px 10px', fontSize: 12.5, color: T.text.quaternary }}>Buscando…</div>}
+            {resultados.pacientes.length > 0 && (
               <>
-                <button
-                  onClick={() => { router.push('/admin'); setMenuOpen(false) }}
-                  style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                  onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >Painel administrativo</button>
-                <button
-                  onClick={() => { router.push('/minha-clinica'); setMenuOpen(false) }}
-                  style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: TEXT_DEFAULT }}
-                  onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >Dados da clínica</button>
+                <div style={{ fontSize: 11.5, color: '#9A98A5', padding: '8px 10px 4px' }}>Pacientes</div>
+                {resultados.pacientes.map((p: any) => (
+                  <button key={p.id} onMouseDown={e => e.preventDefault()} onClick={() => ir(`/pacientes/${p.id}`)} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+                    <Avatar nome={p.nome} size={28} />
+                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>{p.nome}</span>
+                      {p.telefone && <span style={{ fontSize: 12, color: T.text.quaternary }}>{p.telefone}</span>}
+                    </span>
+                  </button>
+                ))}
               </>
             )}
-            <button
-              onClick={sair}
-              style={{ display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 12px', border: 'none', background: 'transparent', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: tokens.status.danger }}
-              onMouseEnter={e => e.currentTarget.style.background = tokens.status.dangerBg}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-            >Sair</button>
+            {resultados.agendamentos.length > 0 && (
+              <>
+                <div style={{ fontSize: 11.5, color: '#9A98A5', padding: '8px 10px 4px' }}>Agendamentos</div>
+                {resultados.agendamentos.map((a: any) => (
+                  <button key={a.id} onMouseDown={e => e.preventDefault()} onClick={() => ir('/agenda?ag=' + a.id)} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+                    <Icon icon={CalendarClock} size={16} color={T.text.secondary} />
+                    <span style={{ flex: 1 }}>{a.motivo || 'Consulta'}</span>
+                    <span className="mono" style={{ fontSize: 11.5, color: T.text.tertiary }}>{new Date(a.data_hora).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}</span>
+                  </button>
+                ))}
+              </>
+            )}
+            {paginasFiltradas.length > 0 && (
+              <>
+                <div style={{ fontSize: 11.5, color: '#9A98A5', padding: '8px 10px 4px' }}>Páginas</div>
+                {paginasFiltradas.map(p => (
+                  <button key={p.href} onMouseDown={e => e.preventDefault()} onClick={() => ir(p.href)} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+                    <Icon icon={p.icon} size={16} color={T.text.secondary} />
+                    <span style={{ flex: 1 }}>{p.label}</span>
+                    <CornerDownLeft size={13} color="#B4B2BF" />
+                  </button>
+                ))}
+              </>
+            )}
+            {semResultado && (
+              <div style={{ padding: '22px 10px', textAlign: 'center', fontSize: 13, color: T.text.quaternary }}>Nada encontrado para “{busca}”</div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Atalhos */}
+      {modo && (
+        <div style={{ display: 'flex', flexShrink: 0, gap: 4, position: 'relative' }}>
+          {!atendente && <IconButton icon={Sparkles} size={38} title="Assistente IA" onClick={() => router.push('/assistente-ia')} />}
+          <IconButton
+            icon={Bell} size={38} title="Notificações"
+            active={aberto === 'notif'}
+            badge={notifs.length > 0 ? (notifs.length > 9 ? '9+' : notifs.length) : undefined}
+            onClick={() => setAberto(aberto === 'notif' ? null : 'notif')}
+          />
+          {aberto === 'notif' && (
+            <div style={{ ...popover, right: 0, width: 340, padding: 0, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px' }}>
+                <span style={{ fontSize: 14, fontWeight: 700 }}>Notificações</span>
+                {notifs.length > 0 && (
+                  <button
+                    onClick={async () => {
+                      await Promise.all(notifs.map((n: any) => fetch('/api/notificacoes-sofia', {
+                        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: n.id, lida: true }),
+                      })))
+                      setNotifs([])
+                    }}
+                    style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, color: T.brand.primary, fontFamily: 'inherit' }}
+                  >Marcar todas como lidas</button>
+                )}
+              </div>
+              <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+                {notifs.length === 0 ? (
+                  <div style={{ padding: '28px 16px', textAlign: 'center', fontSize: 13, color: T.text.quaternary, borderTop: `1px solid ${T.border.muted}` }}>Tudo em dia</div>
+                ) : notifs.map((n: any) => (
+                  <button
+                    key={n.id}
+                    onClick={() => {
+                      marcarNotifLida(n.id)
+                      if (n.agendamento_id) router.push('/agenda?ag=' + n.agendamento_id)
+                      else if (n.paciente_id) router.push('/pacientes/' + n.paciente_id)
+                      else router.push('/agenda')
+                      setAberto(null)
+                    }}
+                    style={{ ...itemMenu, borderRadius: 0, gap: 12, padding: '12px 16px', alignItems: 'flex-start', borderTop: `1px solid ${T.border.muted}`, background: n.lida ? '#fff' : T.brand.primarySoftBg }}
+                    onMouseEnter={hoverOn}
+                    onMouseLeave={e => e.currentTarget.style.background = n.lida ? '#fff' : T.brand.primarySoftBg}
+                  >
+                    <span style={{ width: 34, height: 34, borderRadius: 11, flexShrink: 0, display: 'grid', placeItems: 'center', background: T.brand.primaryLight, color: T.brand.primary }}>
+                      <Bell size={16} strokeWidth={1.6} />
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary }}>{n.titulo}</span>
+                      {n.descricao && <span style={{ fontSize: 12, color: T.text.quaternary, lineHeight: 1.4 }}>{n.descricao}</span>}
+                      <span style={{ fontSize: 11.5, color: '#B4B2BF', marginTop: 2 }}>{n.tempo}</span>
+                    </span>
+                    {!n.lida && <span style={{ width: 8, height: 8, borderRadius: '50%', background: T.brand.primary, marginTop: 6, flexShrink: 0 }} />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Chip da clínica + menu do usuário */}
+      {modo && (
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <button
+            onClick={() => setAberto(aberto === 'menu' ? null : 'menu')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 9, height: 38, padding: '0 10px 0 4px', borderRadius: 12,
+              background: '#fff', border: `1px solid ${aberto === 'menu' ? '#DCD9E4' : T.border.default}`, maxWidth: 220, cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            <Avatar nome={nomeClinica} size={28} forma="square" src={clinica?.logo_url} />
+            {!compacto && (
+              <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.2, textAlign: 'left' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: T.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nomeClinica}</span>
+                <span style={{ fontSize: 11, color: T.text.quaternary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nomeUsuario && nomeUsuario !== nomeClinica ? nomeUsuario : (modo === 'clinica' ? 'Administrador' : 'Médico')}</span>
+              </span>
+            )}
+            <ChevronDown size={14} color={T.text.tertiary} />
+          </button>
+
+          {aberto === 'menu' && (
+            <div style={{ ...popover, right: 0, width: 260 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px 12px' }}>
+                <Avatar nome={nomeUsuario} size={36} src={medico?.foto_url} />
+                <div style={{ minWidth: 0, lineHeight: 1.3 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nomeUsuario}</div>
+                  <div style={{ fontSize: 12, color: T.text.quaternary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(clinicaAdmin || medico)?.email}</div>
+                </div>
+              </div>
+              <div style={{ height: 1, background: T.border.muted, margin: '0 4px 6px' }} />
+              {!atendente && <button onClick={() => ir('/perfil')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><UserRound size={16} strokeWidth={1.6} color={T.text.secondary} />Meu perfil</button>}
+              {modo === 'clinica' && (
+                <>
+                  <button onClick={() => ir('/admin')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><SlidersHorizontal size={16} strokeWidth={1.6} color={T.text.secondary} />Painel admin</button>
+                  <button onClick={() => ir('/minha-clinica')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Hospital size={16} strokeWidth={1.6} color={T.text.secondary} />Dados da clínica</button>
+                </>
+              )}
+              <div style={{ height: 1, background: T.border.muted, margin: '6px 4px' }} />
+              <button onClick={sair} style={{ ...itemMenu, color: T.status.danger }} onMouseEnter={e => e.currentTarget.style.background = T.status.dangerBg} onMouseLeave={hoverOff}><LogOut size={16} strokeWidth={1.6} />Sair</button>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   )
 }

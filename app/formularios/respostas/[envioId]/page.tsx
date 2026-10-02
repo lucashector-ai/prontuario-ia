@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { ArrowLeft, CalendarCheck, Clock, FileText, FileX, Mail, Phone, Sparkles } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
+import { Button, Card, EmptyState, Icon, IconTile } from '@/components/ui'
+import { usePageHeader } from '@/components/shell/header-context'
+
+const T = tokens
 import { supabase } from '@/lib/supabase'
 import type { Campo } from '@/lib/formularios/types'
 
@@ -111,31 +116,29 @@ export default function VerRespostaPage() {
     carregar()
   }, [envioId, router])
 
+  usePageHeader(
+    dados ? dados.envio.nome_paciente : 'Resposta de formulário',
+    dados ? 'Resposta de formulário · ' + (dados.template?.nome || '') : undefined,
+  )
+
   if (loading) {
     return (
-      <div style={{ padding: 64, display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: 28, height: 28, border: '2.5px solid ' + tokens.brand.primaryLight, borderTopColor: tokens.brand.primary, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
+      <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 880 }}>
+        <div className="c360-skel" style={{ height: 20, width: 140, borderRadius: 8 }} />
+        <div className="c360-skel" style={{ height: 120, borderRadius: 16 }} />
+        <div className="c360-skel" style={{ height: 280, borderRadius: 16 }} />
       </div>
     )
   }
 
   if (erro || !dados) {
     return (
-      <div style={{ padding: 32, maxWidth: 640, margin: '64px auto', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: tokens.text.primary, marginBottom: 8 }}>
-          {erro || 'Não encontrado'}
-        </h2>
-        <button
-          type="button"
-          onClick={() => router.push('/formularios')}
-          style={{
-            marginTop: 16, padding: '10px 18px', background: tokens.brand.primary,
-            color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-          }}
-        >
-          Voltar
-        </button>
+      <div style={{ padding: 20 }}>
+        <EmptyState
+          icon={FileX}
+          titulo={erro || 'Não encontrado'}
+          acao={<Button icon={ArrowLeft} variant="secondary" onClick={() => router.push('/formularios')}>Voltar</Button>}
+        />
       </div>
     )
   }
@@ -143,141 +146,86 @@ export default function VerRespostaPage() {
   const { envio, template, resposta } = dados
   const preenchido = !!resposta
 
-  return (
-    <div style={{ padding: '32px 32px 64px' }}>
-      <div style={{ maxWidth: 880, margin: '0 auto' }}>
-        {/* Breadcrumb */}
-        <button
-          type="button"
-          onClick={() => router.push('/formularios')}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: 'none', border: 'none',
-            color: tokens.text.secondary, fontSize: 13, fontWeight: 600,
-            cursor: 'pointer', padding: 0, marginBottom: 16,
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
-          Formulários
-        </button>
+  const meta: Array<[typeof FileText, string]> = [[FileText, template.nome]]
+  if (envio.telefone) meta.push([Phone, envio.telefone])
+  if (envio.email) meta.push([Mail, envio.email])
+  if (resposta) meta.push([CalendarCheck, 'Preenchido em ' + formatarData(resposta.preenchido_em)])
 
-        {/* Header */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: tokens.brand.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 8 }}>
-            Resposta de formulário
-          </div>
-          <h1 style={{ fontSize: 28, fontWeight: 600, color: tokens.text.primary, letterSpacing: '-0.02em', margin: '0 0 12px' }}>
-            {envio.nome_paciente}
-          </h1>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: tokens.text.secondary }}>
-            <span><strong style={{ color: tokens.text.primary }}>Formulário:</strong> {template.nome}</span>
-            {envio.telefone && <span><strong style={{ color: tokens.text.primary }}>Tel:</strong> {envio.telefone}</span>}
-            {envio.email && <span><strong style={{ color: tokens.text.primary }}>Email:</strong> {envio.email}</span>}
-            {resposta && <span><strong style={{ color: tokens.text.primary }}>Preenchido em:</strong> {formatarData(resposta.preenchido_em)}</span>}
-          </div>
+  return (
+    <div style={{ padding: 20 }}>
+      <div style={{ maxWidth: 880, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* Voltar + metadados */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <Button variant="secondary" size="sm" icon={ArrowLeft} onClick={() => router.push('/formularios')}>Formulários</Button>
+          <span style={{ flex: 1 }} />
+          {meta.map(([I, txt], i) => (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: T.text.secondary }}>
+              <Icon icon={I} size={14} color={T.text.tertiary} />{txt}
+            </span>
+          ))}
         </div>
 
         {!preenchido ? (
-          <div style={{
-            background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-          }}>
-            <div style={{
-              width: 56, height: 56, margin: '0 auto 16px',
-              background: '#FEF3C7', color: '#D97706',
-              borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            </div>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: tokens.text.primary, margin: '0 0 8px' }}>
-              Paciente ainda não respondeu
-            </h2>
-            <p style={{ fontSize: 14, color: tokens.text.secondary, margin: 0 }}>
-              Enviado em {formatarData(envio.enviado_em)}.
-            </p>
-          </div>
+          <Card padding={0}>
+            <EmptyState
+              icon={Clock}
+              titulo="Paciente ainda não respondeu"
+              descricao={'Enviado em ' + formatarData(envio.enviado_em) + '.'}
+            />
+          </Card>
         ) : (
           <>
             {/* Resumo IA */}
             <div style={{
-              background: 'linear-gradient(135deg, ' + tokens.brand.primary + ' 0%, ' + (tokens.brand.primaryDark || tokens.brand.primary) + ' 100%)',
-              color: '#fff',
-              borderRadius: 16,
-              padding: 24,
-              marginBottom: 24,
+              background: T.brand.primarySoftBg, border: `1px solid ${T.brand.primaryAccentLight}`,
+              borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 10,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <div style={{
-                  width: 28, height: 28, borderRadius: 8,
-                  background: 'rgba(255,255,255,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.95 }}>
-                  Resumo gerado por IA
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <IconTile icon={Sparkles} size={30} radius={9} />
+                <span style={{ fontSize: 14, fontWeight: 700, color: T.text.primary }}>Resumo gerado por IA</span>
               </div>
               {resposta?.resumo_ia ? (
-                <div style={{ fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                <div style={{ fontSize: 13.5, lineHeight: 1.6, whiteSpace: 'pre-wrap', color: T.text.strong }}>
                   {resposta.resumo_ia}
                 </div>
               ) : resumoGerando ? (
-                <div style={{ fontSize: 14, opacity: 0.85, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                  Gerando resumo... pode levar uns segundos.
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontSize: 13, color: T.text.quaternary }}>Gerando resumo... pode levar uns segundos.</span>
+                  <div className="c360-skel" style={{ height: 12, width: '90%', borderRadius: 6 }} />
+                  <div className="c360-skel" style={{ height: 12, width: '70%', borderRadius: 6 }} />
                 </div>
               ) : (
-                <div style={{ fontSize: 14, opacity: 0.85 }}>
+                <div style={{ fontSize: 13, color: T.text.quaternary }}>
                   Resumo ainda não disponível. Pode estar sendo gerado em segundo plano.
                 </div>
               )}
             </div>
 
             {/* Respostas detalhadas */}
-            <div style={{
-              background: '#fff', borderRadius: 16,
-              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-              overflow: 'hidden',
-            }}>
-              <div style={{ padding: '20px 24px', borderBottom: '1px solid ' + tokens.border.subtle }}>
-                <h2 style={{ fontSize: 17, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>
+            <Card padding={0} style={{ overflow: 'hidden' }}>
+              <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                <h3 style={{ margin: 0, flex: 1, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>
                   Respostas completas
-                </h2>
-                <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '4px 0 0' }}>
-                  {template.campos.length} perguntas respondidas
-                </p>
+                </h3>
+                <span style={{ fontSize: 12.5, color: T.text.quaternary }}>{template.campos.length} perguntas</span>
               </div>
               <div>
                 {template.campos.map((campo, idx) => {
                   const val = resposta?.respostas[campo.id]
-                  const ultima = idx === template.campos.length - 1
                   return (
-                    <div key={campo.id} style={{
-                      padding: '16px 24px',
-                      borderBottom: ultima ? 'none' : '1px solid ' + tokens.border.subtle,
-                    }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
-                        Pergunta {idx + 1}
-                      </div>
-                      <div style={{ fontSize: 14, color: tokens.text.secondary, marginBottom: 8 }}>
+                    <div key={campo.id} style={{ padding: '14px 18px', borderTop: '1px solid ' + T.border.muted, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontSize: 12.5, color: T.text.secondary }}>
+                        <span className="mono" style={{ color: T.text.tertiary, marginRight: 6 }}>{String(idx + 1).padStart(2, '0')}</span>
                         {campo.label}
-                      </div>
-                      <div style={{ fontSize: 15, color: tokens.text.primary, fontWeight: 500 }}>
+                      </span>
+                      <span style={{ fontSize: 14, color: T.text.primary, fontWeight: 600, whiteSpace: 'pre-wrap' }}>
                         {formatarValor(val)}
-                      </div>
+                      </span>
                     </div>
                   )
                 })}
               </div>
-            </div>
+            </Card>
           </>
         )}
       </div>

@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Plus, Stethoscope, Pencil, Power, RotateCcw, Check, Clock } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
+import { Badge, Button, Card, EmptyState, Field, Icon, IconButton, IconTile, Input, Modal, ModalAcoes, Overline, Select } from '@/components/ui'
+import { confirmar, notificar } from '@/components/ui/dialogos'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
+const T = tokens
 
 export function Procedimentos() {
   const router = useRouter()
@@ -22,7 +24,7 @@ export function Procedimentos() {
     const ca = localStorage.getItem('clinica_admin')
     if (!ca) {
       // Só admin da clínica acessa
-      alert('Acesso restrito: apenas administradores da clínica')
+      notificar('Acesso restrito a administradores da clínica', 'erro')
       router.push('/dashboard')
       return
     }
@@ -108,7 +110,7 @@ export function Procedimentos() {
   }
 
   const excluir = async (p: any) => {
-    if (!confirm('Desativar procedimento "' + p.nome + '"? (Pode reativar depois)')) return
+    if (!(await confirmar({ titulo: `Desativar “${p.nome}”?`, mensagem: 'Ele deixa de aparecer na agenda e nas comandas. Você pode reativar depois.', confirmar: 'Desativar' }))) return
     await fetch('/api/procedimentos?id=' + p.id, { method: 'DELETE' })
     carregar(clinicaId)
     toast('ok', 'Procedimento desativado')
@@ -123,130 +125,108 @@ export function Procedimentos() {
   const inativos = procedimentos.filter(p => !p.ativo)
 
   return (
-    <div style={{ padding: '0 4px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {msg && (
         <div style={{
-          position: 'fixed', top: 24, right: 24, zIndex: 200,
-          padding: '12px 20px', borderRadius: 10,
-          background: msg.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
-          color: msg.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
-          fontSize: 13, fontWeight: 600, border: `1px solid ${msg.tipo === 'ok' ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
-        }}>{msg.texto}</div>
+          position: 'fixed', top: 24, right: 24, zIndex: 300,
+          padding: '11px 16px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8,
+          background: '#fff', border: `1px solid ${T.border.default}`, boxShadow: T.shadow.lg,
+          color: msg.tipo === 'ok' ? T.status.success : T.status.danger, fontSize: 13, fontWeight: 600,
+        }}>
+          {msg.tipo === 'ok' && <Icon icon={Check} size={15} />}
+          {msg.texto}
+        </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Procedimentos</h1>
-          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Cadastre os procedimentos que sua clínica oferece</p>
+      <Card padding={0} style={{ overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>Procedimentos</h3>
+            <span style={{ fontSize: 12.5, color: T.text.quaternary }}>Consultas, exames e procedimentos que a clínica oferece — aparecem na agenda e nas comandas.</span>
+          </div>
+          <Button icon={Plus} onClick={abrirNovo}>Novo procedimento</Button>
         </div>
-        <button onClick={abrirNovo} style={{
-          padding: '10px 18px', borderRadius: 9, background: ACCENT, color: 'white',
-          border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Novo procedimento
-        </button>
-      </div>
 
-      {carregando ? (
-        <p style={{ color: tokens.text.tertiary, fontSize: 14 }}>Carregando...</p>
-      ) : ativos.length === 0 && inativos.length === 0 ? (
-        <div style={{ background: 'white', borderRadius: 16, padding: 48, textAlign: 'center', border: `1px solid ${tokens.border.subtle}` }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Nenhum procedimento cadastrado</p>
-          <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>Clique em "Novo procedimento" pra começar</p>
-        </div>
-      ) : (
-        <>
-          {/* Lista de ativos */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {carregando ? (
+          <div style={{ padding: '4px 18px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[0, 1, 2].map(i => <div key={i} className="c360-skel" style={{ height: 44, borderRadius: 10 }} />)}
+          </div>
+        ) : ativos.length === 0 && inativos.length === 0 ? (
+          <div style={{ borderTop: `1px solid ${T.border.muted}` }}>
+            <EmptyState
+              icon={Stethoscope}
+              titulo="Nenhum procedimento cadastrado"
+              descricao="Cadastre consultas, exames e procedimentos com valor e duração — eles aparecem na agenda e nas comandas."
+              acao={<Button variant="secondary" icon={Plus} onClick={abrirNovo}>Cadastrar procedimento</Button>}
+            />
+          </div>
+        ) : (
+          <>
             {ativos.map(p => (
-              <ProcedimentoCard key={p.id} p={p} fmtValor={fmtValor}
+              <ProcedimentoLinha key={p.id} p={p} fmtValor={fmtValor}
                 onEditar={() => abrirEditar(p)}
                 onDesativar={() => excluir(p)} />
             ))}
-          </div>
-
-          {inativos.length > 0 && (
-            <>
-              <h2 style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, marginTop: 28, marginBottom: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                Inativos ({inativos.length})
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: 0.6 }}>
-                {inativos.map(p => (
-                  <ProcedimentoCard key={p.id} p={p} fmtValor={fmtValor}
-                    onEditar={() => abrirEditar(p)}
-                    onDesativar={() => toggleAtivo(p)}
-                    desativarLabel="Reativar" />
-                ))}
+            {ativos.length === 0 && (
+              <div style={{ padding: '14px 18px', borderTop: `1px solid ${T.border.muted}`, fontSize: 12.5, color: T.text.quaternary }}>
+                Nenhum procedimento ativo.
               </div>
-            </>
-          )}
-        </>
+            )}
+          </>
+        )}
+      </Card>
+
+      {!carregando && inativos.length > 0 && (
+        <Card padding={0} style={{ overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px' }}>
+            <Overline>Inativos ({inativos.length})</Overline>
+          </div>
+          {inativos.map(p => (
+            <ProcedimentoLinha key={p.id} p={p} fmtValor={fmtValor} inativo
+              onEditar={() => abrirEditar(p)}
+              onDesativar={() => toggleAtivo(p)} />
+          ))}
+        </Card>
       )}
 
       {/* Modal criar/editar */}
       {modalAberto && (
-        <div onClick={() => setModalAberto(false)} style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16,
-        }}>
-          <form onClick={e => e.stopPropagation()} onSubmit={salvar} style={{
-            background: 'white', borderRadius: 16, padding: 24, width: '100%', maxWidth: 460,
-            display: 'flex', flexDirection: 'column', gap: 14,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>
-                {editando ? 'Editar procedimento' : 'Novo procedimento'}
-              </h2>
-              <button type="button" onClick={() => setModalAberto(false)}
-                style={{ background: 'none', border: 'none', fontSize: 22, color: tokens.text.tertiary, cursor: 'pointer', lineHeight: 1 }}>✕</button>
-            </div>
-
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nome *</label>
-              <input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
-                placeholder="Ex: Consulta clínica geral, ECG, Holter 24h..."
-                style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1px solid ${tokens.border.default}`, outline: 'none' }} />
-            </div>
+        <Modal titulo={editando ? 'Editar procedimento' : 'Novo procedimento'} onClose={() => setModalAberto(false)} largura={480}>
+          <form onSubmit={salvar} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Field label="Nome *">
+              <Input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
+                placeholder="Ex.: Consulta clínica geral, ECG, Holter 24h..." autoFocus />
+            </Field>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Duração padrão</label>
-                <select value={form.duracao} onChange={e => setForm(f => ({ ...f, duracao: e.target.value }))}
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1px solid ${tokens.border.default}` }}>
+              <Field label="Duração padrão">
+                <Select value={form.duracao} onChange={e => setForm(f => ({ ...f, duracao: e.target.value }))}>
                   <option value="15">15 min</option>
                   <option value="30">30 min</option>
                   <option value="45">45 min</option>
                   <option value="60">1 hora</option>
                   <option value="90">1h30</option>
                   <option value="120">2 horas</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Valor (R$)</label>
-                <input type="number" step="0.01" value={form.valor}
+                </Select>
+              </Field>
+              <Field label="Valor (R$)">
+                <Input type="number" step="0.01" value={form.valor}
                   onChange={e => setForm(f => ({ ...f, valor: e.target.value }))}
-                  placeholder="Opcional"
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1px solid ${tokens.border.default}`, outline: 'none' }} />
-              </div>
+                  placeholder="Opcional" />
+              </Field>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Custo de insumos (R$)</label>
-                <input type="number" step="0.01" value={form.custo_insumos}
+              <Field label="Custo de insumos (R$)">
+                <Input type="number" step="0.01" value={form.custo_insumos}
                   onChange={e => setForm(f => ({ ...f, custo_insumos: e.target.value }))}
-                  placeholder="0,00"
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1px solid ${tokens.border.default}`, outline: 'none' }} />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Custo operacional (R$)</label>
-                <input type="number" step="0.01" value={form.custo_operacional}
+                  placeholder="0,00" />
+              </Field>
+              <Field label="Custo operacional (R$)">
+                <Input type="number" step="0.01" value={form.custo_operacional}
                   onChange={e => setForm(f => ({ ...f, custo_operacional: e.target.value }))}
-                  placeholder="0,00"
-                  style={{ width: '100%', padding: '9px 12px', fontSize: 13, borderRadius: 8, border: `1px solid ${tokens.border.default}`, outline: 'none' }} />
-              </div>
+                  placeholder="0,00" />
+              </Field>
             </div>
 
             {(() => {
@@ -256,48 +236,58 @@ export function Procedimentos() {
               const margem = v - c
               const pct = (margem / v) * 100
               return (
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 8, background: tokens.bg.cardSubtle, fontSize: 12 }}>
-                  <span style={{ color: tokens.text.secondary }}>Margem estimada</span>
-                  <span style={{ fontWeight: 700, color: margem >= 0 ? tokens.status.success : tokens.status.danger }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 12, background: T.bg.page, border: `1px solid ${T.border.default}`, fontSize: 12.5 }}>
+                  <span style={{ color: T.text.secondary }}>Margem estimada</span>
+                  <span style={{ fontWeight: 700, color: margem >= 0 ? T.status.success : T.status.danger, fontVariantNumeric: 'tabular-nums' }}>
                     R$ {margem.toFixed(2).replace('.', ',')} · {pct.toFixed(0)}%
                   </span>
                 </div>
               )
             })()}
 
-            <button type="submit" disabled={salvando} style={{
-              padding: '11px', borderRadius: 9, background: ACCENT, color: 'white', border: 'none',
-              fontSize: 13, fontWeight: 700, cursor: salvando ? 'default' : 'pointer', opacity: salvando ? 0.7 : 1, marginTop: 6,
-            }}>
-              {salvando ? 'Salvando...' : (editando ? 'Salvar alterações' : 'Criar procedimento')}
-            </button>
+            <ModalAcoes>
+              <Button type="button" variant="secondary" onClick={() => setModalAberto(false)}>Cancelar</Button>
+              <Button type="submit" disabled={salvando}>
+                {salvando ? 'Salvando…' : (editando ? 'Salvar alterações' : 'Criar procedimento')}
+              </Button>
+            </ModalAcoes>
           </form>
-        </div>
+        </Modal>
       )}
     </div>
   )
 }
 
-function ProcedimentoCard({ p, fmtValor, onEditar, onDesativar, desativarLabel = 'Desativar' }: any) {
+function ProcedimentoLinha({ p, fmtValor, onEditar, onDesativar, inativo }: {
+  p: any
+  fmtValor: (v: number | null) => string
+  onEditar: () => void
+  onDesativar: () => void
+  inativo?: boolean
+}) {
+  const custo = Number(p.custo_insumos || 0) + Number(p.custo_operacional || 0)
+  const margem = p.valor > 0 && custo ? Math.round(((p.valor - custo) / p.valor) * 100) : null
   return (
-    <div style={{ background: 'white', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16, border: `1px solid ${tokens.border.subtle}` }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{p.nome}</p>
-        <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '3px 0 0' }}>
-          {p.duracao} min{p.valor != null ? ' · ' + fmtValor(p.valor) : ''}
-          {p.valor > 0 && (Number(p.custo_insumos) || Number(p.custo_operacional))
-            ? ' · margem ' + Math.round(((p.valor - (Number(p.custo_insumos || 0) + Number(p.custo_operacional || 0))) / p.valor) * 100) + '%'
-            : ''}
-        </p>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderTop: `1px solid ${T.border.muted}`, flexWrap: 'wrap' }}>
+      <IconTile icon={Stethoscope} color={inativo ? T.text.tertiary : T.data.purple} size={34} radius={10} />
+      <div style={{ flex: 1, minWidth: 160, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ fontSize: 13.5, fontWeight: 700, color: inativo ? T.text.secondary : T.text.primary }}>{p.nome}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: T.text.quaternary }}>
+          <Icon icon={Clock} size={12} />
+          <span className="mono">{p.duracao} min</span>
+          {margem !== null && <span>· margem {margem}%</span>}
+        </span>
       </div>
-      <button onClick={onEditar} style={{
-        padding: '6px 12px', borderRadius: 7, background: 'white', border: `1px solid ${tokens.border.default}`,
-        fontSize: 12, color: tokens.text.strong, fontWeight: 500, cursor: 'pointer',
-      }}>Editar</button>
-      <button onClick={onDesativar} style={{
-        padding: '6px 12px', borderRadius: 7, background: tokens.status.dangerBg, color: tokens.status.danger,
-        border: `1px solid ${tokens.status.dangerLight}`, fontSize: 12, cursor: 'pointer', fontWeight: 500,
-      }}>{desativarLabel}</button>
+      <span style={{ fontSize: 13.5, fontWeight: 700, color: T.text.strong, fontVariantNumeric: 'tabular-nums', minWidth: 80, textAlign: 'right' }}>
+        {p.valor != null ? fmtValor(p.valor) : '—'}
+      </span>
+      {inativo && <Badge>Inativo</Badge>}
+      <div style={{ display: 'flex', gap: 2 }}>
+        <IconButton icon={Pencil} size={32} onClick={onEditar} title="Editar" aria-label="Editar" />
+        {inativo
+          ? <IconButton icon={RotateCcw} size={32} onClick={onDesativar} title="Reativar" aria-label="Reativar" />
+          : <IconButton icon={Power} size={32} tone="danger" onClick={onDesativar} title="Desativar" aria-label="Desativar" />}
+      </div>
     </div>
   )
 }

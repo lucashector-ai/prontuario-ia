@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Rotas que atendentes (WhatsApp) podem acessar
-const ATENDENTE_ROUTES = ['/whatsapp-app', '/login-atendente', '/api/']
+// Rotas que atendentes (equipe de atendimento do Chat) podem acessar
+const ATENDENTE_ROUTES = ['/chat', '/login-atendente', '/api/']
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -16,7 +16,7 @@ export function middleware(req: NextRequest) {
   if (isAtendente) {
     const permitido = ATENDENTE_ROUTES.some(r => pathname.startsWith(r))
     if (!permitido && pathname !== '/') {
-      return NextResponse.redirect(new URL('/whatsapp-app', req.url))
+      return NextResponse.redirect(new URL('/chat', req.url))
     }
   }
 

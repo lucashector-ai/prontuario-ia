@@ -1,8 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { Pill, TriangleAlert, FileText } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
+import { Icon, Modal, Overline } from '@/components/ui'
+
+const T = tokens
 
 type Props = {
   pacienteId: string | null
@@ -34,8 +38,8 @@ export function SidebarContextoPaciente({ pacienteId, medicoId }: Props) {
 
   if (!pacienteId) {
     return (
-      <div style={{ padding: 16, background: tokens.bg.page, borderRadius: 12, border: `1px dashed ${tokens.border.default}`, textAlign: 'center' as const }}>
-        <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0, lineHeight: 1.6 }}>
+      <div style={{ padding: 16, background: T.bg.page, borderRadius: 12, border: `1px dashed ${T.border.strong}`, textAlign: 'center' }}>
+        <p style={{ fontSize: 12.5, color: T.text.tertiary, margin: 0, lineHeight: 1.5 }}>
           Vincule um paciente<br />
           para ver contexto clínico
         </p>
@@ -45,11 +49,11 @@ export function SidebarContextoPaciente({ pacienteId, medicoId }: Props) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {[1, 2, 3].map(i => (
-          <div key={i} style={{ background: 'white', borderRadius: 10, padding: 12, border: `1px solid ${tokens.bg.hoverStrong}`, height: 70 }}>
-            <div style={{ height: 8, width: '40%', background: tokens.bg.hoverStrong, borderRadius: 4, marginBottom: 8 }}/>
-            <div style={{ height: 10, width: '70%', background: tokens.bg.hoverStrong, borderRadius: 4 }}/>
+          <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="c360-skel" style={{ height: 10, width: '40%', borderRadius: 5 }} />
+            <div className="c360-skel" style={{ height: 12, width: '80%', borderRadius: 5 }} />
           </div>
         ))}
       </div>
@@ -89,47 +93,49 @@ export function SidebarContextoPaciente({ pacienteId, medicoId }: Props) {
     return partes.join(', ').replace(/^./, c => c.toUpperCase()) + '.'
   }
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+  const secao: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 }
 
-      <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', border: `1px solid ${tokens.border.default}` }}>
-        <p style={{ fontSize: 10, color: tokens.text.secondary, letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 6px', textTransform: 'uppercase' as const }}>Resumo IA</p>
-        <p style={{ fontSize: 13, color: tokens.text.strong, margin: 0, lineHeight: 1.55 }}>{construirResumo()}</p>
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      <div style={secao}>
+        <Overline>Resumo IA</Overline>
+        <p style={{ fontSize: 13, color: T.text.strong, margin: 0, lineHeight: 1.55 }}>{construirResumo()}</p>
       </div>
 
       {(alergiasArr.length > 0 || comorbidadesArr.length > 0) && (
-        <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', border: `1px solid ${tokens.border.default}` }}>
-          <p style={{ fontSize: 10, color: tokens.text.secondary, letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 8px', textTransform: 'uppercase' as const }}>Alertas</p>
-          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
+        <div style={secao}>
+          <Overline>Alertas</Overline>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
             {alergiasArr.map((a: string, i: number) => (
-              <div key={'al-'+i} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 10px', borderRadius: 6, background: tokens.status.warningLightSoft, border: `1px solid ${tokens.status.warningLightAlt}` }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tokens.status.warningText} strokeWidth="2.2" style={{ flexShrink: 0 }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                <span style={{ fontSize: 12, color: tokens.status.warningText, fontWeight: 600 }}>Alergia: {a}</span>
-              </div>
+              <span key={'al-' + i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, padding: '4px 9px', borderRadius: 8, background: T.status.dangerBg, color: T.status.danger }}>
+                <Icon icon={TriangleAlert} size={12} />Alergia: {a}
+              </span>
             ))}
             {comorbidadesArr.map((c: string, i: number) => (
-              <div key={'co-'+i} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 10px', borderRadius: 6, background: tokens.status.warningOrangeSoft, border: `1px solid ${tokens.status.warningOrangePeach}` }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tokens.status.warningTextStrong} strokeWidth="2.2" style={{ flexShrink: 0 }}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
-                <span style={{ fontSize: 12, color: tokens.status.warningTextStrong, fontWeight: 600 }}>{c}</span>
-              </div>
+              <span key={'co-' + i} style={{ fontSize: 12, fontWeight: 600, padding: '4px 9px', borderRadius: 8, background: T.status.warningBg, color: T.status.warning }}>
+                {c}
+              </span>
             ))}
           </div>
         </div>
       )}
 
       {medicacoesArr.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', border: `1px solid ${tokens.border.default}` }}>
-          <p style={{ fontSize: 10, color: tokens.brand.primary, letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 8px', textTransform: 'uppercase' as const }}>Medicações ativas</p>
-          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
+        <div style={secao}>
+          <Overline>Medicações ativas</Overline>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {medicacoesArr.map((m: string, i: number) => {
               const partes = m.replace(/^[•\-\*]\s*/, '').split(/\s*[\-\—]\s*/)
               const nome = partes[0]
               const posologia = partes.slice(1).join(' - ')
               return (
-                <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 6, fontSize: 12, lineHeight: 1.5 }}>
-                  <span style={{ color: tokens.brand.primary, fontSize: 14, lineHeight: 1, marginTop: 2 }}>•</span>
-                  <span style={{ color: tokens.text.strong, fontWeight: 500 }}>{nome}</span>
-                  {posologia && <span style={{ color: tokens.text.tertiary }}>{posologia}</span>}
+                <div key={i} style={{ display: 'flex', gap: 8, padding: '8px 10px', borderRadius: 10, background: T.bg.page }}>
+                  <Icon icon={Pill} size={14} color={T.brand.primary} style={{ marginTop: 2 }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: T.text.strong }}>{nome}</span>
+                    {posologia && <span style={{ fontSize: 11.5, color: T.text.secondary, lineHeight: 1.4 }}>{posologia}</span>}
+                  </div>
                 </div>
               )
             })}
@@ -137,29 +143,29 @@ export function SidebarContextoPaciente({ pacienteId, medicoId }: Props) {
         </div>
       )}
 
-      <div style={{ background: 'white', borderRadius: 10, padding: '11px 13px', border: `1px solid ${tokens.border.default}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <p style={{ fontSize: 9, color: tokens.text.secondary, letterSpacing: '0.05em', fontWeight: 700, margin: 0, textTransform: 'uppercase' as const }}>Últimas consultas</p>
-          {consultas.length > 0 && <span style={{ fontSize: 10, color: tokens.text.tertiary }}>{consultas.length}</span>}
+      <div style={secao}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Overline>Últimas consultas</Overline>
+          {consultas.length > 0 && <span style={{ fontSize: 11.5, color: T.text.tertiary }}>{consultas.length}</span>}
         </div>
         {consultas.length === 0 ? (
-          <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0, fontStyle: 'italic' as const }}>Primeira consulta</p>
+          <p style={{ fontSize: 12.5, color: T.text.tertiary, margin: 0 }}>Primeira consulta</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {consultas.slice(0, 3).map(c => {
               const hip = primeiraHipotese(c.hipoteses)
               const cid = c.cids && Array.isArray(c.cids) && c.cids[0]
               return (
-                <div key={c.id} onClick={() => setConsultaAberta(c)}
-                  style={{ padding: '7px 9px', borderRadius: 6, cursor: 'pointer', borderLeft: `2px solid ${tokens.brand.primary}`, background: tokens.bg.page }}
-                  onMouseEnter={e => (e.currentTarget.style.background = tokens.brand.primarySubtle)}
-                  onMouseLeave={e => (e.currentTarget.style.background = tokens.bg.page)}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: tokens.brand.primary }}>{fmtData(c.criado_em)}</span>
-                    {cid && <span style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 700, color: tokens.brand.primary, background: tokens.brand.primaryLighter, padding: '1px 5px', borderRadius: 3 }}>{cid.codigo || cid}</span>}
-                  </div>
-                  {hip && <p style={{ fontSize: 11, color: tokens.text.secondary, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{hip}</p>}
-                </div>
+                <button key={c.id} type="button" onClick={() => setConsultaAberta(c)}
+                  style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 10px', borderRadius: 10, border: `1px solid ${T.border.default}`, transition: 'background .15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.bg.hover)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: T.text.primary }}>{fmtData(c.criado_em)}</span>
+                    {cid && <span className="mono" style={{ fontSize: 10.5, fontWeight: 500, color: T.brand.primary, background: T.brand.primarySubtle, padding: '1px 5px', borderRadius: 5 }}>{cid.codigo || cid}</span>}
+                  </span>
+                  {hip && <span style={{ fontSize: 11.5, color: T.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hip}</span>}
+                </button>
               )
             })}
           </div>
@@ -167,28 +173,25 @@ export function SidebarContextoPaciente({ pacienteId, medicoId }: Props) {
       </div>
 
       {consultaAberta && (
-        <div onClick={() => setConsultaAberta(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 12, padding: 22, maxWidth: 540, width: '100%', maxHeight: '85vh', overflow: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Consulta de {fmtData(consultaAberta.criado_em)}</p>
-              <button onClick={() => setConsultaAberta(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: tokens.text.tertiary }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
+        <Modal titulo={'Consulta de ' + fmtData(consultaAberta.criado_em)} onClose={() => setConsultaAberta(null)} largura={540}>
+          {!consultaAberta.avaliacao && !consultaAberta.plano && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: T.text.tertiary }}>
+              <Icon icon={FileText} size={14} />Sem avaliação ou plano registrados.
             </div>
-            {consultaAberta.avaliacao && (
-              <div style={{ marginBottom: 10 }}>
-                <p style={{ fontSize: 10, fontWeight: 700, color: tokens.text.secondary, margin: '0 0 4px', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Avaliação</p>
-                <p style={{ fontSize: 12, color: tokens.text.strong, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' as const }}>{consultaAberta.avaliacao}</p>
-              </div>
-            )}
-            {consultaAberta.plano && (
-              <div style={{ marginBottom: 10 }}>
-                <p style={{ fontSize: 10, fontWeight: 700, color: tokens.text.secondary, margin: '0 0 4px', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Plano</p>
-                <p style={{ fontSize: 12, color: tokens.text.strong, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' as const }}>{consultaAberta.plano}</p>
-              </div>
-            )}
-          </div>
-        </div>
+          )}
+          {consultaAberta.avaliacao && (
+            <div style={{ marginBottom: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Overline>Avaliação</Overline>
+              <p style={{ fontSize: 13.5, color: T.text.strong, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{consultaAberta.avaliacao}</p>
+            </div>
+          )}
+          {consultaAberta.plano && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Overline>Plano</Overline>
+              <p style={{ fontSize: 13.5, color: T.text.strong, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{consultaAberta.plano}</p>
+            </div>
+          )}
+        </Modal>
       )}
 
     </div>

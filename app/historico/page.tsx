@@ -2,14 +2,29 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { FileText, Pencil, Trash2, Plus, Download, Sparkles, SearchX, ScrollText, Pill } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { HipotesesCard } from '@/components/HipotesesCard'
 import { tokens } from '@/lib/design-tokens'
+import {
+  Avatar, Badge, Button, EmptyState, Icon, IconButton, PageHeader, SearchInput, SegmentedControl, Textarea,
+} from '@/components/ui'
+import { confirmar } from '@/components/ui/dialogos'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = 'transparent'
-const CARD_RADIUS = 16
+const T = tokens
+
+type FiltroTipo = 'Todos' | 'Presencial' | 'Teleconsulta'
+type AbaDetalhe = 'pront' | 'rx' | 'tx' | 'files'
+
+const ehTeleconsulta = (c: any) => !!(c.meet_link || c.sala_id)
+
+/** Rótulo de seção do prontuário (11.5/700 +.05em). */
+function RotuloSecao({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: T.text.tertiary }}>
+      {children}
+    </span>
+  )
+}
 
 export default function Historico() {
   const router = useRouter()
@@ -21,6 +36,8 @@ export default function Historico() {
   const [editForm, setEditForm] = useState<any>({})
   const [salvando, setSalvando] = useState(false)
   const [busca, setBusca] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('Todos')
+  const [aba, setAba] = useState<AbaDetalhe>('pront')
   const [toast, setToast] = useState<{tipo: string, texto: string} | null>(null)
   const [mapaMedicos, setMapaMedicos] = useState<Record<string, { nome: string, cor: string }>>({})
 
@@ -81,6 +98,7 @@ export default function Historico() {
   const selecionar = (c: any) => {
     setSelecionada(c)
     setEditando(false)
+    setAba('pront')
     setEditForm({
       subjetivo: c.subjetivo || '',
       objetivo: c.objetivo || '',
@@ -99,8 +117,10 @@ export default function Historico() {
       .select()
       .single()
     if (!error && data) {
-      setSelecionada(data)
-      setConsultas(prev => prev.map(c => c.id === data.id ? data : c))
+      // mantém o join de pacientes (o update não o retorna)
+      const atualizada = { ...selecionada, ...data }
+      setSelecionada(atualizada)
+      setConsultas(prev => prev.map(c => c.id === data.id ? { ...c, ...data } : c))
       setEditando(false)
       showToast('ok', 'Alterações salvas')
     } else {
@@ -110,7 +130,7 @@ export default function Historico() {
   }
 
   const deletar = async (id: string) => {
-    if (!confirm('Deletar esta consulta?')) return
+    if (!(await confirmar({ titulo: 'Excluir esta consulta?', mensagem: 'O prontuário, a prescrição e os anexos dela serão apagados. Essa ação não pode ser desfeita.', confirmar: 'Excluir', perigo: true }))) return
     await supabase.from('consultas').delete().eq('id', id)
     setConsultas(prev => prev.filter(c => c.id !== id))
     if (selecionada && selecionada.id === id) setSelecionada(null)
@@ -126,9 +146,11 @@ export default function Historico() {
   })
 
   const filtradas = consultas.filter(c => {
+    if (filtroTipo === 'Teleconsulta' && !ehTeleconsulta(c)) return false
+    if (filtroTipo === 'Presencial' && ehTeleconsulta(c)) return false
     if (!busca.trim()) return true
     const b = busca.toLowerCase()
-    const campos = [c.subjetivo, c.avaliacao, c.plano].filter(Boolean).join(' ').toLowerCase()
+    const campos = [c.subjetivo, c.avaliacao, c.plano, c.pacientes?.nome].filter(Boolean).join(' ').toLowerCase()
     if (campos.includes(b)) return true
     if (c.cids) {
       return c.cids.some((cid: any) =>
@@ -140,10 +162,10 @@ export default function Historico() {
   })
 
   const secoes = [
-    { key: 'subjetivo', titulo: 'Subjetivo', letra: 'S', cor: tokens.status.infoStrong, bg: tokens.status.infoBg },
-    { key: 'objetivo', titulo: 'Objetivo', letra: 'O', cor: tokens.status.infoTeal, bg: tokens.status.infoTealBg },
-    { key: 'avaliacao', titulo: 'Avaliação', letra: 'A', cor: tokens.status.warningAlt, bg: tokens.status.warningBgAlt },
-    { key: 'plano', titulo: 'Plano', letra: 'P', cor: ACCENT, bg: ACCENT_LIGHT },
+    { key: 'subjetivo', titulo: 'Subjetivo', letra: 'S' },
+    { key: 'objetivo', titulo: 'Objetivo', letra: 'O' },
+    { key: 'avaliacao', titulo: 'Avaliação', letra: 'A' },
+    { key: 'plano', titulo: 'Plano', letra: 'P' },
   ]
 
   const abrirPdf = (tipo: string) => {
@@ -152,368 +174,313 @@ export default function Historico() {
     window.open(url, '_blank')
   }
 
+  // Abas: só as que têm dado real na consulta
+  const temReceita = !!(selecionada && typeof selecionada.receita === 'string' && selecionada.receita.trim())
+  const temTranscricao = !!(selecionada && typeof selecionada.transcricao === 'string' && selecionada.transcricao.trim())
+  const abas: { value: AbaDetalhe; label: string }[] = [
+    { value: 'pront', label: 'Prontuário' },
+    ...(temReceita ? [{ value: 'rx' as const, label: 'Prescrição' }] : []),
+    ...(temTranscricao ? [{ value: 'tx' as const, label: 'Transcrição' }] : []),
+    { value: 'files', label: 'Anexos' },
+  ]
+  const abaAtiva: AbaDetalhe = abas.some(a => a.value === aba) ? aba : 'pront'
+
+  const contagem = `${filtradas.length}${(busca || filtroTipo !== 'Todos') ? ' de ' + consultas.length : ''} consulta${filtradas.length !== 1 ? 's' : ''}`
+
   return (
-    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Histórico de consultas</h1>
-          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>
-            {filtradas.length}{busca ? ' de ' + consultas.length : ''} consulta{filtradas.length !== 1 ? 's' : ''} registrada{filtradas.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <button
-          onClick={() => router.push('/nova-consulta')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            padding: '10px 18px', borderRadius: 10, border: 'none',
-            background: ACCENT, color: 'white',
-            fontSize: 13, fontWeight: 600, cursor: 'pointer',
-            flexShrink: 0,
-          }}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M12 5v14M5 12h14"/>
-          </svg>
-          Nova consulta
-        </button>
-      </div>
+    <div style={{ padding: 20 }}>
+      <PageHeader
+        titulo="Histórico de consultas"
+        descricao="Prontuários gerados e registros anteriores"
+      />
 
       {toast && (
         <div style={{
-          position: 'fixed', top: 24, right: 24, zIndex: 200,
-          padding: '12px 20px', borderRadius: 10,
-          background: toast.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
-          color: toast.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
-          fontSize: 13, fontWeight: 600,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          position: 'fixed', top: 24, right: 24, zIndex: 300,
+          padding: '11px 16px', borderRadius: 12,
+          background: toast.tipo === 'ok' ? T.status.successBg : T.status.dangerBg,
+          color: toast.tipo === 'ok' ? T.status.success : T.status.danger,
+          fontSize: 13, fontWeight: 600, boxShadow: T.shadow.lg,
         }}>
           {toast.texto}
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20, alignItems: 'start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{
-            background: 'white', borderRadius: 12,
-            border: `1px solid ${tokens.border.subtle}`,
-            padding: '10px 14px',
-            display: 'flex', alignItems: 'center', gap: 10,
-          }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="M21 21l-4.35-4.35"/>
-            </svg>
-            <input
-              value={busca}
-              onChange={e => setBusca(e.target.value)}
-              placeholder="CID, sintoma, conduta..."
-              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, outline: 'none', color: tokens.text.strong }}
-            />
+      <div className="hist-grid">
+        {/* ── Lista ─────────────────────────────────────────── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+          <SearchInput value={busca} onChange={setBusca} placeholder="CID, sintoma, conduta ou paciente" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <SegmentedControl<FiltroTipo> options={['Todos', 'Presencial', 'Teleconsulta']} value={filtroTipo} onChange={setFiltroTipo} />
+            {!carregando && <span style={{ fontSize: 12, color: T.text.quaternary }}>{contagem}</span>}
           </div>
 
-          <div style={{
-            background: 'white', borderRadius: CARD_RADIUS,
-            padding: 10, display: 'flex', flexDirection: 'column', gap: 6,
-            maxHeight: 'calc(100vh - 220px)', overflow: 'auto',
-          }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 'calc(100vh - 250px)', minHeight: 200, overflow: 'auto', scrollbarWidth: 'thin' }}>
             {carregando ? (
-              <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}>
-                <div style={{ width: 24, height: 24, border: '2px solid ' + ACCENT_LIGHT, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/>
-              </div>
+              [0, 1, 2, 3, 4].map(i => (
+                <div key={i} style={{ padding: '12px 14px', borderRadius: 14, border: `1px solid ${T.border.default}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="c360-skel" style={{ height: 14, width: '60%', borderRadius: 6 }} />
+                  <div className="c360-skel" style={{ height: 11, width: '40%', borderRadius: 6 }} />
+                  <div className="c360-skel" style={{ height: 11, width: '85%', borderRadius: 6 }} />
+                </div>
+              ))
             ) : filtradas.length === 0 ? (
-              <div style={{ padding: 32, textAlign: 'center' as const }}>
-                <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>
-                  {busca ? 'Nenhuma consulta encontrada' : 'Nenhuma consulta registrada'}
-                </p>
-              </div>
+              <EmptyState
+                icon={SearchX}
+                titulo={consultas.length === 0 ? 'Nenhuma consulta registrada' : 'Nada encontrado'}
+                descricao={consultas.length === 0 ? 'As consultas gravadas aparecem aqui.' : 'Busque por outro termo ou troque o filtro.'}
+              />
             ) : (
-              filtradas.map((c: any) => {
-                const ativa = selecionada && selecionada.id === c.id
-                const ehTele = !!(c.meet_link || c.sala_id)
-                const nomePaciente = c.pacientes?.nome || 'Paciente'
-                const medInfo = mapaMedicos[c.medico_id]
-                const nomeMedico = medInfo?.nome || ''
-                const corMedico = medInfo?.cor || tokens.brand.primary
-                const primNomeMed = nomeMedico.split(' ')[0] || ''
-                return (
-                  <div
-                    key={c.id}
-                    onClick={() => selecionar(c)}
-                    style={{
-                      padding: 14, borderRadius: 10, cursor: 'pointer',
-                      background: ativa ? ACCENT_LIGHT : 'transparent',
-                      border: ativa ? '1.5px solid ' + ACCENT : '1.5px solid transparent',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-                      <p style={{ fontSize: 11, color: ativa ? ACCENT : tokens.text.tertiary, margin: 0, fontWeight: 700 }}>
-                        {fmtCurto(c.criado_em)}
-                      </p>
-                      <span style={{
-                        fontSize: 9, fontWeight: 700,
-                        color: ehTele ? tokens.status.infoStrong : ACCENT,
-                        background: ehTele ? tokens.status.infoBg : 'white',
-                        padding: '2px 8px', borderRadius: 10,
-                        textTransform: 'uppercase' as const, letterSpacing: '0.04em',
-                      }}>
-                        {ehTele ? 'Tele' : 'Consulta'}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: 13, color: tokens.text.primary, fontWeight: 600, margin: '0 0 3px' }}>
-                      {nomePaciente}
-                    </p>
-                    {primNomeMed && (
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: corMedico, flexShrink: 0 }}/>
-                        <span style={{ fontSize: 11, color: tokens.text.secondary, fontWeight: 500 }}>Dr(a). {primNomeMed}</span>
-                      </div>
-                    )}
-                    <p style={{ fontSize: 12, color: tokens.text.strong, margin: 0, lineHeight: 1.5 }}>
-                      {(c.subjetivo || 'Consulta sem detalhes').substring(0, 90)}{(c.subjetivo || '').length > 90 ? '...' : ''}
-                    </p>
-                    {c.cids && c.cids.length > 0 && (
-                      <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' as const }}>
-                        {c.cids.slice(0, 3).map((cid: any, i: number) => (
-                          <span key={i} style={{
-                            fontSize: 10, color: ACCENT, background: ativa ? 'white' : ACCENT_LIGHT,
-                            padding: '2px 7px', borderRadius: 5,
-                            fontFamily: 'monospace' as const, fontWeight: 700,
-                          }}>
-                            {cid.codigo}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })
+              filtradas.map((c: any) => (
+                <ItemConsulta
+                  key={c.id}
+                  c={c}
+                  ativa={!!selecionada && selecionada.id === c.id}
+                  data={fmtCurto(c.criado_em)}
+                  medico={mapaMedicos[c.medico_id]}
+                  onClick={() => selecionar(c)}
+                />
+              ))
             )}
           </div>
         </div>
 
-        <div>
+        {/* ── Detalhe ───────────────────────────────────────── */}
+        <div style={{ minWidth: 0 }}>
           {selecionada ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' as const }}>
-                  <div>
-                    <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '0 0 4px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>
-                      Consulta
-                    </p>
-                    <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0, textTransform: 'capitalize' as const }}>
-                      {fmtLongo(selecionada.criado_em)}
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
-                    {editando ? (
-                      <>
-                        <button
-                          onClick={() => setEditando(false)}
-                          disabled={salvando}
-                          style={{
-                            padding: '8px 16px', borderRadius: 9,
-                            background: 'white', color: tokens.text.secondary,
-                            border: `1px solid ${tokens.border.default}`,
-                            fontSize: 12, cursor: 'pointer',
-                          }}
-                        >
-                          Cancelar
-                        </button>
-                        <button
-                          onClick={salvar}
-                          disabled={salvando}
-                          style={{
-                            padding: '8px 16px', borderRadius: 9,
-                            background: salvando ? tokens.text.tertiary : ACCENT,
-                            color: 'white', border: 'none',
-                            fontSize: 12, fontWeight: 700,
-                            cursor: salvando ? 'not-allowed' : 'pointer',
-                          }}
-                        >
-                          {salvando ? 'Salvando...' : 'Salvar alterações'}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => abrirPdf('prontuario')}
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 6,
-                            padding: '8px 14px', borderRadius: 9,
-                            background: ACCENT_LIGHT, color: ACCENT,
-                            border: 'none',
-                            fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                          }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                          </svg>
-                          PDF prontuário
-                        </button>
-                        <button
-                          onClick={() => abrirPdf('receita')}
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 6,
-                            padding: '8px 14px', borderRadius: 9,
-                            background: tokens.status.infoBg, color: tokens.status.infoDark,
-                            border: `1px solid ${tokens.status.infoLight}`,
-                            fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                          }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                          </svg>
-                          PDF receita
-                        </button>
-                        <button
-                          onClick={() => setEditando(true)}
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 6,
-                            padding: '8px 14px', borderRadius: 9,
-                            background: 'white', color: tokens.text.strong,
-                            border: `1px solid ${tokens.border.default}`,
-                            fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                          }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                          </svg>
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => deletar(selecionada.id)}
-                          title="Deletar consulta"
-                          style={{
-                            padding: '8px 10px', borderRadius: 9,
-                            background: tokens.status.dangerBg, color: tokens.status.danger,
-                            border: `1px solid ${tokens.status.dangerLight}`,
-                            cursor: 'pointer',
-                            display: 'inline-flex', alignItems: 'center',
-                          }}
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                          </svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
+            <div style={{ border: `1px solid ${T.border.default}`, borderRadius: 16, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '18px 20px', borderBottom: `1px solid ${T.border.muted}`, flexWrap: 'wrap' }}>
+                <Avatar nome={selecionada.pacientes?.nome || 'Paciente'} size={46} />
+                <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>
+                    {selecionada.pacientes?.nome || 'Consulta avulsa'}
+                  </span>
+                  <span style={{ fontSize: 12.5, color: T.text.quaternary }}>
+                    <span style={{ textTransform: 'capitalize' }}>{fmtLongo(selecionada.criado_em)}</span>
+                    {' · '}{ehTeleconsulta(selecionada) ? 'Teleconsulta' : 'Consulta'}
+                    {mapaMedicos[selecionada.medico_id]?.nome ? ' · ' + mapaMedicos[selecionada.medico_id].nome : ''}
+                  </span>
+                  {temTranscricao && (
+                    <Badge tone="accent" icon={Sparkles} style={{ alignSelf: 'flex-start', marginTop: 4 }}>
+                      Gerado a partir da transcrição
+                    </Badge>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {editando ? (
+                    <>
+                      <Button variant="secondary" onClick={() => setEditando(false)} disabled={salvando}>Cancelar</Button>
+                      <Button onClick={salvar} disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar alterações'}</Button>
+                    </>
+                  ) : (
+                    <>
+                      <IconButton icon={Pencil} variant="outline" title="Editar" aria-label="Editar" onClick={() => { setAba('pront'); setEditando(true) }} />
+                      <IconButton icon={Trash2} variant="outline" tone="danger" title="Deletar consulta" aria-label="Deletar consulta" onClick={() => deletar(selecionada.id)} />
+                      <Button icon={Download} onClick={() => abrirPdf('prontuario')}>PDF</Button>
+                    </>
+                  )}
                 </div>
               </div>
 
-              {secoes.map(s => (
-                <div key={s.key} style={{ background: 'white', borderRadius: CARD_RADIUS, overflow: 'hidden' as const }}>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '14px 20px', background: s.bg,
-                  }}>
-                    <div style={{
-                      width: 26, height: 26, borderRadius: 7,
-                      background: 'white', color: s.cor,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 13, fontWeight: 700,
-                    }}>
-                      {s.letra}
+              {!editando && (
+                <div style={{ padding: '14px 20px 0' }}>
+                  <SegmentedControl<AbaDetalhe> options={abas} value={abaAtiva} onChange={setAba} />
+                </div>
+              )}
+
+              {abaAtiva === 'pront' && (
+                <div style={{ padding: '18px 20px 22px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {secoes.map(s => (
+                    <div key={s.key} style={{ display: 'flex', gap: 14 }}>
+                      <span style={{
+                        width: 30, height: 30, borderRadius: 10, background: T.brand.primarySubtle, color: T.brand.primary,
+                        display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0,
+                      }}>{s.letra}</span>
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <RotuloSecao>{s.titulo}</RotuloSecao>
+                        {editando ? (
+                          <Textarea
+                            value={editForm[s.key] || ''}
+                            onChange={e => setEditForm((f: any) => ({ ...f, [s.key]: e.target.value }))}
+                            style={{ minHeight: 100, fontSize: 13.5, lineHeight: 1.6 }}
+                          />
+                        ) : (
+                          <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: T.text.strong, whiteSpace: 'pre-wrap' }}>
+                            {selecionada[s.key] || '—'}
+                          </p>
+                        )}
+                      </div>
                     </div>
+                  ))}
+
+                  {selecionada.cids && selecionada.cids.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <RotuloSecao>CID-10 sugeridos</RotuloSecao>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {selecionada.cids.map((cid: any, i: number) => (
+                          <span key={i} title={cid.justificativa || undefined} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 10,
+                            border: `1px solid ${T.border.default}`, fontSize: 13, color: T.text.primary,
+                          }}>
+                            <span className="mono" style={{ fontSize: 11.5, color: T.brand.primary, fontWeight: 500 }}>{cid.codigo}</span>
+                            {cid.descricao}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <ListaHipoteses hipoteses={selecionada.hipoteses} />
+                </div>
+              )}
+
+              {abaAtiva === 'rx' && temReceita && (
+                <div style={{ padding: '18px 20px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', borderRadius: 12, background: T.bg.page }}>
                     <span style={{
-                      fontSize: 12, fontWeight: 700,
-                      textTransform: 'uppercase' as const, letterSpacing: '0.06em',
-                      color: s.cor,
-                    }}>
-                      {s.titulo}
-                    </span>
-                  </div>
-                  <div style={{ padding: 20 }}>
-                    {editando ? (
-                      <textarea
-                        value={editForm[s.key] || ''}
-                        onChange={e => setEditForm((f: any) => ({ ...f, [s.key]: e.target.value }))}
-                        style={{
-                          width: '100%', padding: '10px 14px', fontSize: 14,
-                          borderRadius: 10, border: `1px solid ${tokens.border.default}`,
-                          outline: 'none', fontFamily: 'inherit', color: tokens.text.primary,
-                          background: 'white', boxSizing: 'border-box' as const,
-                          minHeight: 100, resize: 'vertical' as const, lineHeight: 1.7,
-                        }}
-                      />
-                    ) : (
-                      <p style={{
-                        fontSize: 14, color: tokens.text.primary, margin: 0,
-                        lineHeight: 1.7, whiteSpace: 'pre-wrap' as const,
-                      }}>
-                        {selecionada[s.key] || '—'}
-                      </p>
-                    )}
+                      width: 34, height: 34, borderRadius: 10, background: '#fff', color: T.brand.primary,
+                      display: 'grid', placeItems: 'center', flexShrink: 0, border: `1px solid ${T.border.default}`,
+                    }}><Icon icon={Pill} size={16} /></span>
+                    <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 13.5, lineHeight: 1.6, color: T.text.strong, whiteSpace: 'pre-wrap' }}>
+                      {selecionada.receita}
+                    </p>
                   </div>
                 </div>
-              ))}
+              )}
 
-              <HipotesesCard hipoteses={selecionada.hipoteses} />
-
-              {selecionada.cids && selecionada.cids.length > 0 && (
-                <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
+              {abaAtiva === 'tx' && temTranscricao && (
+                <div style={{ padding: '18px 20px 22px' }}>
                   <p style={{
-                    fontSize: 11, fontWeight: 700, color: tokens.text.secondary, margin: '0 0 12px',
-                    letterSpacing: '0.06em', textTransform: 'uppercase' as const,
-                  }}>
-                    CID-10 Sugeridos
-                  </p>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
-                    {selecionada.cids.map((cid: any, i: number) => (
-                      <div key={i} style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        background: tokens.bg.muted, borderRadius: 10,
-                        padding: '8px 12px',
-                      }}>
-                        <span style={{
-                          fontFamily: 'monospace', fontSize: 12, fontWeight: 700,
-                          color: ACCENT, background: ACCENT_LIGHT,
-                          padding: '3px 8px', borderRadius: 6,
-                        }}>
-                          {cid.codigo}
-                        </span>
-                        <span style={{ fontSize: 13, color: tokens.text.strong }}>{cid.descricao}</span>
-                      </div>
-                    ))}
-                  </div>
+                    margin: 0, padding: '14px 16px', borderRadius: 12, background: T.bg.cardSubtle, border: `1px solid ${T.border.muted}`,
+                    fontSize: 13.5, lineHeight: 1.7, color: T.text.strong, whiteSpace: 'pre-wrap', maxHeight: 520, overflow: 'auto',
+                  }}>{selecionada.transcricao}</p>
+                </div>
+              )}
+
+              {abaAtiva === 'files' && (
+                <div style={{ padding: '18px 20px 22px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <ItemAnexo icon={FileText} nome="Prontuário da consulta.pdf" meta="PDF · gerado automaticamente" onBaixar={() => abrirPdf('prontuario')} />
+                  <ItemAnexo icon={ScrollText} nome="Receita.pdf" meta="PDF · receita da consulta" onBaixar={() => abrirPdf('receita')} />
                 </div>
               )}
             </div>
           ) : (
             <div style={{
-              background: 'white', borderRadius: CARD_RADIUS,
-              padding: 60, textAlign: 'center' as const,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              minHeight: 400,
+              border: `1px solid ${T.border.default}`, borderRadius: 16, minHeight: 400,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: 16,
-                background: ACCENT_LIGHT, color: ACCENT,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: 16,
-              }}>
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-              </div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>
-                {consultas.length === 0 ? 'Nenhuma consulta ainda' : 'Selecione uma consulta'}
-              </p>
-              <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0, maxWidth: 320 }}>
-                {consultas.length === 0
-                  ? 'Comece gravando sua primeira consulta — o prontuário é gerado automaticamente'
-                  : 'Clique em qualquer consulta na lista pra ver os detalhes'}
-              </p>
+              <EmptyState
+                icon={FileText}
+                titulo={consultas.length === 0 ? 'Nenhuma consulta ainda' : 'Selecione uma consulta'}
+                descricao={consultas.length === 0
+                  ? 'Comece gravando sua primeira consulta — o prontuário é gerado automaticamente.'
+                  : 'Clique em qualquer consulta na lista para ver os detalhes.'}
+                acao={consultas.length === 0 ? <Button icon={Plus} onClick={() => router.push('/nova-consulta')}>Nova consulta</Button> : undefined}
+              />
             </div>
           )}
         </div>
       </div>
 
-      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
-    </main>
+      <style>{`
+        .hist-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; align-items: start; }
+        @media (max-width: 1000px) { .hist-grid { grid-template-columns: minmax(0, 1fr); } }
+      `}</style>
+    </div>
+  )
+}
+
+// ── Item da lista ────────────────────────────────────────────────────────────
+
+function ItemConsulta({ c, ativa, data, medico, onClick }: {
+  c: any
+  ativa: boolean
+  data: string
+  medico?: { nome: string; cor: string }
+  onClick: () => void
+}) {
+  const [h, setH] = useState(false)
+  const tele = ehTeleconsulta(c)
+  const nomePaciente = c.pacientes?.nome || 'Consulta avulsa'
+  const primNomeMed = (medico?.nome || '').split(' ')[0] || ''
+  const cid = c.cids && c.cids.length > 0 ? c.cids[0]?.codigo : null
+  const resumo = (c.subjetivo || 'Consulta sem detalhes')
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
+      style={{
+        all: 'unset', cursor: 'pointer', boxSizing: 'border-box', width: '100%',
+        display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', borderRadius: 14,
+        border: `1px solid ${ativa ? T.brand.primary : h ? T.brand.primaryAccentSoft : T.border.default}`,
+        background: ativa ? T.brand.primarySoftBg : '#fff', transition: 'border-color .15s, background .15s',
+      }}
+    >
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: T.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nomePaciente}</span>
+        <span style={{ fontSize: 11.5, color: T.text.quaternary, whiteSpace: 'nowrap' }}>{data}</span>
+      </span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: T.text.quaternary }}>
+        {primNomeMed && <span style={{ width: 7, height: 7, borderRadius: '50%', background: medico?.cor || T.brand.primary, flexShrink: 0 }} />}
+        {tele ? 'Teleconsulta' : 'Consulta'}{primNomeMed ? ' · Dr(a). ' + primNomeMed : ''}
+      </span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        {cid && (
+          <span className="mono" style={{ fontSize: 11, fontWeight: 500, padding: '2px 6px', borderRadius: 6, background: T.brand.primarySubtle, color: T.brand.primary, flexShrink: 0 }}>{cid}</span>
+        )}
+        <span style={{ fontSize: 12, color: T.text.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{resumo}</span>
+      </span>
+    </button>
+  )
+}
+
+const PROB: Record<string, { tone: 'success' | 'pending' | 'neutral'; label: string }> = {
+  alta: { tone: 'success', label: 'Alta' },
+  media: { tone: 'pending', label: 'Média' },
+  baixa: { tone: 'neutral', label: 'Baixa' },
+}
+
+/** Hipóteses diagnósticas da consulta (mesmos dados do HipotesesCard, no visual novo). */
+function ListaHipoteses({ hipoteses }: { hipoteses: any }) {
+  const lista: { nome: string; probabilidade?: string; justificativa?: string }[] = Array.isArray(hipoteses) ? hipoteses : []
+  if (lista.length === 0) return null
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <RotuloSecao>Hipóteses diagnósticas</RotuloSecao>
+      <div style={{ display: 'flex', flexDirection: 'column', border: `1px solid ${T.border.default}`, borderRadius: 12 }}>
+        {lista.map((h, i) => {
+          const p = PROB[(h.probabilidade || '').toLowerCase()]
+          return (
+            <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 12px', borderTop: i ? `1px solid ${T.border.muted}` : 'none' }}>
+              <span style={{ width: 22, height: 22, borderRadius: '50%', background: T.brand.primaryLight, color: T.brand.primary, display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{i + 1}</span>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: T.text.primary }}>{h.nome}</span>
+                  {h.probabilidade && <Badge tone={p?.tone || 'neutral'}>{p?.label || h.probabilidade}</Badge>}
+                </span>
+                {h.justificativa && <span style={{ fontSize: 12.5, color: T.text.secondary, lineHeight: 1.5 }}>{h.justificativa}</span>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function ItemAnexo({ icon, nome, meta, onBaixar }: { icon: any; nome: string; meta: string; onBaixar: () => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, border: `1px solid ${T.border.default}` }}>
+      <span style={{ width: 34, height: 34, borderRadius: 10, background: T.brand.primarySubtle, color: T.brand.primary, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+        <Icon icon={icon} size={16} />
+      </span>
+      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nome}</span>
+        <span style={{ fontSize: 11.5, color: T.text.quaternary }}>{meta}</span>
+      </span>
+      <IconButton icon={Download} size={32} title="Baixar" aria-label="Baixar" onClick={onBaixar} />
+    </div>
   )
 }

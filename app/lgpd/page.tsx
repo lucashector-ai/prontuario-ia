@@ -3,18 +3,21 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
+import { usePageHeader } from '@/components/shell/header-context'
+import type { LucideIcon } from 'lucide-react'
+import { Check, Download, Eye, Lock, PenLine, ShieldCheck, Trash2, TriangleAlert, Upload } from 'lucide-react'
+import { Button, Card, Field, IconTile, Input } from '@/components/ui'
+import { notificar } from '@/components/ui/dialogos'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = tokens.bg.page
+const T = tokens
 
 export default function LGPD() {
+  usePageHeader('Privacidade e LGPD', 'Gerencie seus dados conforme a Lei Geral de Proteção de Dados')
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
   const [exportando, setExportando] = useState(false)
   const [deletando, setDeletando] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState('')
-  const [msg, setMsg] = useState<{tipo:'ok'|'erro', texto:string}|null>(null)
 
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
@@ -24,8 +27,7 @@ export default function LGPD() {
   }, [router])
 
   const mostrarMsg = (tipo: 'ok'|'erro', texto: string) => {
-    setMsg({ tipo, texto })
-    setTimeout(() => setMsg(null), 3500)
+    notificar(texto, tipo)
   }
 
   const exportarDados = async () => {
@@ -90,38 +92,11 @@ export default function LGPD() {
 
   if (!medico) return null
 
-  const cardStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: 16,
-    padding: 24,
-  }
-
-  const direitos = [
-    { titulo: 'Acesso', desc: 'Veja todos os dados armazenados sobre você', icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth={1.8}>
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-        <circle cx="12" cy="12" r="3"/>
-      </svg>
-    )},
-    { titulo: 'Portabilidade', desc: 'Exporte em formato legível (JSON)', icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth={1.8}>
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-        <polyline points="17 8 12 3 7 8"/>
-        <line x1="12" y1="3" x2="12" y2="15"/>
-      </svg>
-    )},
-    { titulo: 'Correção', desc: 'Ajuste dados incorretos no seu perfil', icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth={1.8}>
-        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-      </svg>
-    )},
-    { titulo: 'Eliminação', desc: 'Delete sua conta permanentemente', icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth={1.8}>
-        <polyline points="3 6 5 6 21 6"/>
-        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-      </svg>
-    )},
+  const direitos: { titulo: string; desc: string; icon: LucideIcon }[] = [
+    { titulo: 'Acesso', desc: 'Veja todos os dados armazenados sobre você', icon: Eye },
+    { titulo: 'Portabilidade', desc: 'Exporte em formato legível (JSON)', icon: Upload },
+    { titulo: 'Correção', desc: 'Ajuste dados incorretos no seu perfil', icon: PenLine },
+    { titulo: 'Eliminação', desc: 'Delete sua conta permanentemente', icon: Trash2 },
   ]
 
   const consentimentos = [
@@ -131,186 +106,119 @@ export default function LGPD() {
     { label: 'Análise de métricas e relatórios', desc: 'Dados agregados para o dashboard', obrig: false },
   ]
 
+  const emailConfere = confirmDelete === medico?.email
+
   return (
-    <main style={{ height: '100%', overflow: 'auto', background: BG, padding: 24 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Privacidade e LGPD</h1>
-        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Gerencie seus dados conforme a Lei Geral de Proteção de Dados</p>
-      </div>
+    <div style={{ padding: 20 }}>
+      <style>{`
+        .lgpd-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+        @media (min-width: 960px) { .lgpd-grid { grid-template-columns: 360px minmax(0, 1fr); } }
+      `}</style>
 
-      {/* Toast */}
-      {msg && (
-        <div style={{
-          position: 'fixed', top: 24, right: 24, zIndex: 200,
-          padding: '12px 20px', borderRadius: 10,
-          background: msg.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
-          color: msg.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
-          fontSize: 13, fontWeight: 600,
-          border: `1px solid ${msg.tipo === 'ok' ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-        }}>
-          {msg.texto}
-        </div>
-      )}
-
-      {/* Grid 2 colunas */}
-      <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 20, alignItems: 'start' }}>
-
+      <div className="lgpd-grid">
         {/* COLUNA ESQUERDA */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Card seus direitos */}
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: ACCENT_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              </div>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Seus direitos (LGPD)</h3>
-            </div>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 16px' }}>O que a lei te garante</p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Seus direitos */}
+          <Card padding={20}>
+            <CabecalhoCard icon={ShieldCheck} titulo="Seus direitos (LGPD)" sub="O que a lei te garante" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {direitos.map(d => (
-                <div key={d.titulo} style={{ display: 'flex', gap: 12, padding: '10px 12px', background: tokens.bg.muted, borderRadius: 10 }}>
-                  <div style={{ flexShrink: 0, marginTop: 1 }}>{d.icon}</div>
-                  <div>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>{d.titulo}</p>
-                    <p style={{ fontSize: 11, color: tokens.text.secondary, margin: 0, lineHeight: 1.4 }}>{d.desc}</p>
+                <div key={d.titulo} style={itemLista}>
+                  <IconTile icon={d.icon} size={30} radius={9} />
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: T.text.primary, margin: '0 0 2px' }}>{d.titulo}</p>
+                    <p style={{ fontSize: 12, color: T.text.secondary, margin: 0, lineHeight: 1.4 }}>{d.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
-          {/* Card consentimentos */}
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: ACCENT_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2"/>
-                  <path d="M7 11V7a5 5 0 0110 0v4"/>
-                </svg>
-              </div>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Consentimentos ativos</h3>
-            </div>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 16px' }}>O que você autorizou ao se cadastrar</p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Consentimentos */}
+          <Card padding={20}>
+            <CabecalhoCard icon={Lock} titulo="Consentimentos ativos" sub="O que você autorizou ao se cadastrar" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {consentimentos.map(item => (
-                <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', background: tokens.bg.muted, borderRadius: 10 }}>
-                  <div style={{ width: 18, height: 18, borderRadius: 5, background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 12, fontWeight: 600, color: tokens.text.primary, margin: '0 0 2px' }}>{item.label}</p>
-                    <p style={{ fontSize: 11, color: tokens.text.secondary, margin: 0, lineHeight: 1.4 }}>
+                <div key={item.label} style={itemLista}>
+                  <span style={{ width: 18, height: 18, borderRadius: 5, background: T.brand.primary, color: T.text.inverse, display: 'grid', placeItems: 'center', flexShrink: 0, marginTop: 1 }}>
+                    <Check size={11} strokeWidth={3} />
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 12.5, fontWeight: 600, color: T.text.primary, margin: '0 0 2px' }}>{item.label}</p>
+                    <p style={{ fontSize: 12, color: T.text.secondary, margin: 0, lineHeight: 1.4 }}>
                       {item.desc}
-                      {item.obrig && <span style={{ color: tokens.status.danger, marginLeft: 4 }}> · Obrigatório</span>}
+                      {item.obrig && <span style={{ color: T.status.danger, fontWeight: 600 }}> · Obrigatório</span>}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* COLUNA DIREITA */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
 
-          {/* Card exportar */}
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: ACCENT_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-              </div>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Exportar meus dados</h3>
-            </div>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 16px' }}>Baixe tudo em formato JSON</p>
-
-            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 16px', lineHeight: 1.6 }}>
+          {/* Exportar */}
+          <Card padding={20}>
+            <CabecalhoCard icon={Upload} titulo="Exportar meus dados" sub="Baixe tudo em formato JSON" />
+            <p style={{ fontSize: 13, color: T.text.secondary, margin: '0 0 16px', lineHeight: 1.6 }}>
               O arquivo inclui todos os seus pacientes, consultas e agendamentos. Ideal pra migrar de plataforma ou fazer backup pessoal.
             </p>
+            <Button icon={Download} onClick={exportarDados} disabled={exportando}>
+              {exportando ? 'Exportando…' : 'Exportar tudo em JSON'}
+            </Button>
+          </Card>
 
-            <button onClick={exportarDados} disabled={exportando} style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '11px 20px', borderRadius: 10, border: 'none',
-              background: exportando ? tokens.text.tertiary : ACCENT, color: 'white',
-              fontSize: 13, fontWeight: 600, cursor: exportando ? 'not-allowed' : 'pointer',
-            }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              {exportando ? 'Exportando...' : 'Exportar tudo em JSON'}
-            </button>
-          </div>
+          {/* Zona de perigo */}
+          <Card padding={20} style={{ borderColor: T.status.dangerLight }}>
+            <CabecalhoCard icon={Trash2} cor={T.status.danger} titulo="Zona de perigo" sub="Ação irreversível" />
 
-          {/* Card deletar conta — danger zone */}
-          <div style={{ ...cardStyle, border: `1px solid ${tokens.status.dangerLight}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: tokens.status.dangerBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="2">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                </svg>
-              </div>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: tokens.status.danger, margin: 0 }}>Zona de perigo</h3>
-            </div>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 16px' }}>Ação irreversível</p>
-
-            <div style={{ background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-              <p style={{ fontSize: 12, color: tokens.status.dangerDark, margin: 0, lineHeight: 1.5 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: T.status.dangerBg, borderRadius: T.radius.input, padding: '12px 14px', marginBottom: 16 }}>
+              <TriangleAlert size={16} strokeWidth={1.6} color={T.status.danger} style={{ flexShrink: 0, marginTop: 1 }} />
+              <p style={{ fontSize: 12.5, color: T.status.dangerDark, margin: 0, lineHeight: 1.5 }}>
                 Ao deletar sua conta, <strong>todos os dados</strong> serão apagados permanentemente: pacientes, consultas, agendamentos e configurações. Não há como recuperar.
               </p>
             </div>
 
-            <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, display: 'block', marginBottom: 6 }}>
-              Digite <strong style={{ color: tokens.text.primary }}>{medico.email}</strong> para confirmar
-            </label>
-            <input
-              value={confirmDelete}
-              onChange={e => setConfirmDelete(e.target.value)}
-              placeholder="seu@email.com"
-              style={{
-                width: '100%', padding: '10px 14px',
-                borderRadius: 10, border: `1px solid ${tokens.status.dangerLight}`,
-                outline: 'none', fontSize: 14, marginBottom: 12,
-                color: tokens.text.primary, background: 'white',
-                boxSizing: 'border-box',
-              }}
-            />
+            <Field label={`Digite ${medico.email} para confirmar`}>
+              <Input
+                value={confirmDelete}
+                onChange={e => setConfirmDelete(e.target.value)}
+                placeholder="seu@email.com"
+              />
+            </Field>
 
-            <button
+            <Button
+              variant="dangerSolid"
+              icon={Trash2}
               onClick={deletarConta}
-              disabled={deletando || confirmDelete !== medico?.email}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '11px 20px', borderRadius: 10, border: 'none',
-                background: confirmDelete === medico?.email ? tokens.status.danger : tokens.bg.hoverStrong,
-                color: confirmDelete === medico?.email ? 'white' : tokens.text.tertiary,
-                fontSize: 13, fontWeight: 600,
-                cursor: confirmDelete === medico?.email && !deletando ? 'pointer' : 'not-allowed',
-              }}
+              disabled={deletando || !emailConfere}
+              style={{ marginTop: 12 }}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-              </svg>
-              {deletando ? 'Deletando...' : 'Deletar minha conta permanentemente'}
-            </button>
-          </div>
+              {deletando ? 'Deletando…' : 'Deletar minha conta permanentemente'}
+            </Button>
+          </Card>
         </div>
       </div>
-    </main>
+    </div>
+  )
+}
+
+const itemLista: React.CSSProperties = {
+  display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 12px',
+  background: T.bg.cardSubtle, border: `1px solid ${T.border.muted}`, borderRadius: T.radius.input,
+}
+
+function CabecalhoCard({ icon, titulo, sub, cor = T.brand.primary }: { icon: LucideIcon; titulo: string; sub: string; cor?: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+      <IconTile icon={icon} color={cor} size={36} radius={11} />
+      <div style={{ minWidth: 0 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: cor === T.brand.primary ? T.text.primary : cor, margin: 0, letterSpacing: '-.01em' }}>{titulo}</h3>
+        <p style={{ fontSize: 12.5, color: T.text.quaternary, margin: '2px 0 0' }}>{sub}</p>
+      </div>
+    </div>
   )
 }

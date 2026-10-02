@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { SenhaStrength, senhaEhForte } from '@/components/SenhaStrength'
 import { tokens } from '@/lib/design-tokens'
 
+import { Marca } from '@/components/Marca'
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { Input, Button } from '@/components/ui'
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
 const BG = tokens.bg.page
@@ -15,20 +18,8 @@ function ToggleSenha({ show, onToggle }: { show: boolean; onToggle: () => void }
       position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
       background: 'none', border: 'none', cursor: 'pointer', color: tokens.text.tertiary,
       padding: 0, display: 'flex', alignItems: 'center',
-    }}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        {show ? (
-          <>
-            <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
-            <line x1="1" y1="1" x2="23" y2="23"/>
-          </>
-        ) : (
-          <>
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </>
-        )}
-      </svg>
+    }} aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}>
+      {show ? <EyeOff size={16} strokeWidth={1.6} /> : <Eye size={16} strokeWidth={1.6} />}
     </button>
   )
 }
@@ -108,17 +99,8 @@ export default function CadastroPage() {
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '12px 14px',
-    fontSize: 14,
-    borderRadius: 10,
-    border: `1px solid ${tokens.border.default}`,
-    background: 'white',
-    outline: 'none',
-    boxSizing: 'border-box',
-    color: tokens.text.primary,
-  }
+  // Input do DS (raio 12, borda #EBEAEF, foco lilás) — só ajusta altura/fonte
+  const inputStyle: React.CSSProperties = { minHeight: 44, fontSize: 14 }
 
   const labelStyle: React.CSSProperties = {
     fontSize: 12,
@@ -133,21 +115,11 @@ export default function CadastroPage() {
       <div style={{ width: '100%', maxWidth: 460 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 12,
-            background: ACCENT, display: 'inline-flex',
-            alignItems: 'center', justifyContent: 'center',
-            marginBottom: 12,
-          }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-            </svg>
-          </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Clinical 360</h1>
+          <Marca altura={30} style={{ margin: '0 auto 10px' }} />
           <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Prontuário inteligente com IA</p>
         </div>
 
-        <div style={{ background: 'white', borderRadius: 16, padding: 32 }}>
+        <div style={{ background: 'white', border: `1px solid ${tokens.border.subtle}`, borderRadius: 20, padding: 32 }}>
           {/* Indicador de etapa */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
             <div style={{
@@ -169,10 +141,9 @@ export default function CadastroPage() {
 
           {erro && (
             <div style={{
-              padding: '11px 14px', borderRadius: 10,
-              background: tokens.status.dangerBg, color: tokens.status.dangerDark,
+              padding: '10px 12px', borderRadius: 12,
+              background: tokens.status.dangerBg, color: tokens.status.danger,
               fontSize: 13, marginBottom: 16,
-              border: `1px solid ${tokens.status.dangerLight}`,
             }}>
               {erro}
             </div>
@@ -180,36 +151,31 @@ export default function CadastroPage() {
 
           {etapa === 1 && (
             <>
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Vamos começar</h2>
-              <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 24px' }}>Conta sobre você e sua clínica</p>
+              <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-.02em', color: tokens.text.primary, margin: '0 0 4px' }}>Vamos começar</h2>
+              <p style={{ fontSize: 13.5, color: tokens.text.quaternary, margin: '0 0 24px' }}>Conta sobre você e sua clínica</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Nome completo *</label>
-                  <input value={form.nome} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))} placeholder="Dr. João Silva" style={inputStyle} autoFocus/>
+                  <Input value={form.nome} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))} placeholder="Dr. João Silva" style={inputStyle} autoFocus/>
                 </div>
                 <div>
                   <label style={labelStyle}>Email *</label>
-                  <input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value.toLowerCase().trim() }))} placeholder="seu@email.com" style={inputStyle}/>
+                  <Input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value.toLowerCase().trim() }))} placeholder="seu@email.com" style={inputStyle}/>
                 </div>
                 <div>
                   <label style={labelStyle}>Telefone</label>
-                  <input value={form.telefone} onChange={e => setForm(p => ({ ...p, telefone: e.target.value }))} placeholder="(11) 99999-9999" style={inputStyle}/>
+                  <Input value={form.telefone} onChange={e => setForm(p => ({ ...p, telefone: e.target.value }))} placeholder="(11) 99999-9999" style={inputStyle}/>
                 </div>
                 <div>
                   <label style={labelStyle}>Nome fantasia da clínica *</label>
-                  <input value={form.nome_clinica} onChange={e => setForm(p => ({ ...p, nome_clinica: e.target.value }))} placeholder="Ex: Clínica São Paulo" style={inputStyle}/>
+                  <Input value={form.nome_clinica} onChange={e => setForm(p => ({ ...p, nome_clinica: e.target.value }))} placeholder="Ex: Clínica São Paulo" style={inputStyle}/>
                 </div>
               </div>
 
-              <button onClick={avancar} style={{
-                width: '100%', padding: 14, marginTop: 24,
-                background: ACCENT, color: 'white',
-                border: 'none', borderRadius: 10,
-                fontSize: 14, fontWeight: 700, cursor: 'pointer',
-              }}>
+              <Button size="lg" block onClick={avancar} style={{ marginTop: 24 }}>
                 Continuar
-              </button>
+              </Button>
 
               <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '20px 0 0', textAlign: 'center' }}>
                 Já tem conta? <a href="/login" style={{ color: ACCENT, fontWeight: 600, textDecoration: 'none' }}>Entrar</a>
@@ -219,18 +185,18 @@ export default function CadastroPage() {
 
           {etapa === 2 && (
             <>
-              <button onClick={() => setEtapa(1)} style={{ background: 'none', border: 'none', color: tokens.text.secondary, fontSize: 12, cursor: 'pointer', marginBottom: 12, padding: 0 }}>
-                ← Voltar
+              <button onClick={() => setEtapa(1)} style={{ background: 'none', border: 'none', color: tokens.text.secondary, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', marginBottom: 12, padding: 0, display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: 'inherit' }}>
+                <ArrowLeft size={14} strokeWidth={1.6} /> Voltar
               </button>
 
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Crie uma senha segura</h2>
-              <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 24px' }}>Você vai usar pra acessar a plataforma</p>
+              <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-.02em', color: tokens.text.primary, margin: '0 0 4px' }}>Crie uma senha segura</h2>
+              <p style={{ fontSize: 13.5, color: tokens.text.quaternary, margin: '0 0 24px' }}>Você vai usar pra acessar a plataforma</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Senha *</label>
                   <div style={{ position: 'relative' }}>
-                    <input
+                    <Input
                       type={showSenha ? 'text' : 'password'}
                       value={form.senha}
                       onChange={e => setForm(p => ({ ...p, senha: e.target.value }))}
@@ -245,7 +211,7 @@ export default function CadastroPage() {
                 <div>
                   <label style={labelStyle}>Confirmar senha *</label>
                   <div style={{ position: 'relative' }}>
-                    <input
+                    <Input
                       type={showSenha ? 'text' : 'password'}
                       value={form.senha_confirma}
                       onChange={e => setForm(p => ({ ...p, senha_confirma: e.target.value }))}
@@ -254,6 +220,7 @@ export default function CadastroPage() {
                         ...inputStyle, paddingRight: 40,
                         borderColor: form.senha_confirma && form.senha !== form.senha_confirma ? tokens.status.dangerLightAlt : tokens.border.default,
                       }}
+                      onBlur={e => { if (form.senha_confirma && form.senha !== form.senha_confirma) e.currentTarget.style.borderColor = tokens.status.dangerLightAlt }}
                     />
                   </div>
                   {form.senha_confirma && form.senha !== form.senha_confirma && (
@@ -262,14 +229,9 @@ export default function CadastroPage() {
                 </div>
               </div>
 
-              <button onClick={cadastrar} disabled={salvando} style={{
-                width: '100%', padding: 14, marginTop: 24,
-                background: salvando ? tokens.text.tertiary : ACCENT, color: 'white',
-                border: 'none', borderRadius: 10,
-                fontSize: 14, fontWeight: 700, cursor: salvando ? 'not-allowed' : 'pointer',
-              }}>
-                {salvando ? 'Criando sua conta...' : 'Criar conta'}
-              </button>
+              <Button size="lg" block onClick={cadastrar} disabled={salvando} style={{ marginTop: 24 }}>
+                {salvando ? 'Criando sua conta…' : 'Criar conta'}
+              </Button>
             </>
           )}
         </div>

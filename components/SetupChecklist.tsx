@@ -18,7 +18,7 @@ type Passo = {
   ctaLabel: string
 }
 
-export function SetupChecklist() {
+export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sidebar' } = {}) {
   const router = useRouter()
   const [passos, setPassos] = useState<Passo[]>([])
   const [carregando, setCarregando] = useState(true)
@@ -98,7 +98,7 @@ export function SetupChecklist() {
           label: 'Conecte o WhatsApp',
           desc: whatsappConectado ? 'Integração ativa' : 'Configure o WhatsApp Business pra atender pelo chat',
           completo: whatsappConectado,
-          href: '/whatsapp-app',
+          href: '/chat',
           ctaLabel: whatsappConectado ? 'Ver conversas' : 'Conectar',
         },
         {
@@ -134,6 +134,31 @@ export function SetupChecklist() {
   const pendentes = total - completos
   const tudoPronto = completos === total
   const progressoPct = (completos / total) * 100
+
+  // Card no menu lateral (design v2): progresso + próximo passo + "Continuar"
+  if (variante === 'sidebar') {
+    if (tudoPronto) return null
+    const proximo = passos.find(p => !p.completo)!
+    return (
+      <div style={{ padding: 14, borderRadius: 14, background: '#fff', border: `1px solid ${tokens.border.default}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary }}>Configurar clínica</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: ACCENT }}>{completos} de {total}</span>
+        </div>
+        <div style={{ height: 6, borderRadius: 99, background: tokens.brand.primaryLight, overflow: 'hidden' }}>
+          <div style={{ width: `${progressoPct}%`, height: '100%', background: ACCENT, borderRadius: 99, transition: 'width .4s' }} />
+        </div>
+        <div style={{ fontSize: 12, color: tokens.text.quaternary, lineHeight: 1.4 }}>Próximo: {proximo.label.charAt(0).toLowerCase() + proximo.label.slice(1)}</div>
+        <button
+          onClick={() => router.push(proximo.href)}
+          style={{ display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontSize: 12.5, fontWeight: 600, color: ACCENT, fontFamily: 'inherit' }}
+        >
+          Continuar
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    )
+  }
 
   return (
     <>

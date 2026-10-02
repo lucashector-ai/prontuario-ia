@@ -1,14 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import type { LucideIcon } from 'lucide-react'
+import {
+  SlidersHorizontal, ClipboardList, Stethoscope, Clock, Wallet, Hand, BarChart3, Check, Bot,
+  Building2, Monitor, Repeat, MessageCircle, Mail, Send, X, Plus,
+} from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import { tokens } from '@/lib/design-tokens'
+import { Badge, Button, Card, Chip, Field, Icon, IconButton, Input, Switch, Textarea } from '@/components/ui'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = tokens.bg.hover
-const CARD_RADIUS = 16
+const T = tokens
 
 const DIAS = [
   { key: 'seg', label: 'Segunda' },
@@ -20,15 +23,17 @@ const DIAS = [
   { key: 'dom', label: 'Domingo' },
 ]
 
-const SECOES = [
-  { id: 'comportamento', label: 'Comportamento', icon: '⚙' },
-  { id: 'pre-atendimento', label: 'Pré-atendimento', icon: '📋' },
-  { id: 'tipos', label: 'Tipos de consulta', icon: '🩺' },
-  { id: 'horarios', label: 'Horários', icon: '🕐' },
-  { id: 'precos', label: 'Valores', icon: '💰' },
-  { id: 'saudacao', label: 'Saudação', icon: '👋' },
-  { id: 'relatorio', label: 'Relatório diário', icon: '📊' },
+const SECOES: Array<{ id: string; label: string; icon: LucideIcon }> = [
+  { id: 'comportamento', label: 'Comportamento', icon: SlidersHorizontal },
+  { id: 'pre-atendimento', label: 'Pré-atendimento', icon: ClipboardList },
+  { id: 'tipos', label: 'Tipos de consulta', icon: Stethoscope },
+  { id: 'horarios', label: 'Horários', icon: Clock },
+  { id: 'precos', label: 'Valores', icon: Wallet },
+  { id: 'saudacao', label: 'Saudação', icon: Hand },
+  { id: 'relatorio', label: 'Relatório diário', icon: BarChart3 },
 ]
+
+const FAIXA = /^\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*$/
 
 export function Sofia() {
   const router = useRouter()
@@ -39,6 +44,8 @@ export function Sofia() {
   const [novoPrecoLabel, setNovoPrecoLabel] = useState('')
   const [novoPrecoValor, setNovoPrecoValor] = useState('')
   const [secaoAtiva, setSecaoAtiva] = useState('comportamento')
+  // Lembra o último horário de cada dia para restaurar ao religar o switch
+  const horariosAnteriores = useRef<Record<string, string>>({})
 
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
@@ -91,359 +98,269 @@ export function Sofia() {
 
   if (!medico || !config) {
     return (
-      <div style={{ padding: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: `3px solid ${ACCENT_LIGHT}`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
+        {[0, 1, 2].map(i => <div key={i} className="c360-skel" style={{ height: 120, borderRadius: 16 }} />)}
       </div>
     )
   }
 
-  const inputBase: React.CSSProperties = {
-    padding: '10px 14px', borderRadius: 10, border: `1px solid ${tokens.border.default}`,
-    fontSize: 14, fontFamily: 'inherit', color: tokens.text.primary,
-    background: 'white', outline: 'none', boxSizing: 'border-box',
-  }
+  const setHorario = (dia: string, valor: string | null) => setConfig((c: any) => ({
+    ...c,
+    horario_funcionamento: { ...(c.horario_funcionamento || {}), [dia]: valor || null },
+  }))
 
   return (
-    <div style={{ padding: '0 4px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Sofia · Configurações</h1>
-        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Personalize como a Sofia atende seus pacientes no WhatsApp</p>
-      </div>
-
-      {/* Grid horizontal 2 colunas */}
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 20, alignItems: 'start' }}>
-
-        {/* COLUNA ESQUERDA — Status + Navegação */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, position: 'sticky' as const, top: 0 }}>
-          {/* Card status Sofia */}
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20, textAlign: 'center' as const, border: `1px solid ${tokens.border.subtle}` }}>
-            <div style={{
-              width: 72, height: 72, borderRadius: 18,
-              background: config.ativa ? ACCENT : tokens.text.tertiary,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 12px',
-            }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="white">
-                <path d="M20.52 3.45c-2.14-2.11-5.04-3.45-8.12-3.45C6.37 0 1.45 4.92 1.45 11c0 1.95.5 3.85 1.45 5.55L1 23l6.6-1.73c1.6.9 3.5 1.36 5.4 1.36 6.03 0 10.95-4.92 10.95-11 0-2.96-1.14-5.76-3.43-8.18z"/>
-              </svg>
-            </div>
-            <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Sofia</p>
+    <div className="mc-sofia-grid">
+      {/* Coluna esquerda — status + navegação */}
+      <div className="mc-sofia-nav" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Card padding={16}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{
-              fontSize: 11, fontWeight: 700,
-              padding: '3px 10px', borderRadius: 20,
-              background: config.ativa ? tokens.status.successBgSoft : tokens.status.dangerBg,
-              color: config.ativa ? tokens.status.successText : tokens.status.dangerDark,
-            }}>
-              {config.ativa ? '● Ativa' : '● Inativa'}
-            </span>
-            <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '10px 0 0' }}>
-              {config.autonomia === 'auto' ? 'Modo automático' : 'Modo supervisionado'}
-            </p>
+              width: 44, height: 44, borderRadius: 14, flexShrink: 0, display: 'grid', placeItems: 'center',
+              background: config.ativa ? T.brand.primary : T.border.strong, color: '#fff',
+            }}><Icon icon={Bot} size={22} /></span>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: T.text.primary }}>Sofia</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <Badge tone={config.ativa ? 'success' : 'neutral'} dot>{config.ativa ? 'Ativa' : 'Inativa'}</Badge>
+                <span style={{ fontSize: 12, color: T.text.quaternary }}>{config.autonomia === 'auto' ? 'Automática' : 'Supervisionada'}</span>
+              </span>
+            </div>
           </div>
+        </Card>
 
-          {/* Navegação de seções */}
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 8, border: `1px solid ${tokens.border.subtle}` }}>
-            {SECOES.map(s => (
+        <Card padding={6}>
+          {SECOES.map(s => {
+            const on = secaoAtiva === s.id
+            return (
               <button
                 key={s.id}
                 onClick={() => irParaSecao(s.id)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  width: '100%', padding: '10px 12px',
-                  borderRadius: 10, border: 'none',
-                  background: secaoAtiva === s.id ? ACCENT_LIGHT : 'transparent',
-                  color: secaoAtiva === s.id ? ACCENT : tokens.text.strong,
-                  fontSize: 13, fontWeight: secaoAtiva === s.id ? 600 : 500,
-                  cursor: 'pointer', textAlign: 'left' as const,
-                  transition: 'background 0.12s',
+                  display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 10px',
+                  borderRadius: 10, border: 'none', fontFamily: 'inherit', textAlign: 'left',
+                  background: on ? T.brand.primarySubtle : 'transparent',
+                  color: on ? T.brand.primary : T.text.strong,
+                  fontSize: 13, fontWeight: on ? 600 : 500, cursor: 'pointer', transition: 'background .12s',
                 }}
-                onMouseEnter={e => { if (secaoAtiva !== s.id) e.currentTarget.style.background = tokens.bg.muted }}
-                onMouseLeave={e => { if (secaoAtiva !== s.id) e.currentTarget.style.background = 'transparent' }}
+                onMouseEnter={e => { if (!on) e.currentTarget.style.background = T.bg.hover }}
+                onMouseLeave={e => { if (!on) e.currentTarget.style.background = 'transparent' }}
               >
-                <span style={{ fontSize: 15 }}>{s.icon}</span>
+                <Icon icon={s.icon} size={16} active={on} />
                 {s.label}
               </button>
-            ))}
-          </div>
+            )
+          })}
+        </Card>
 
-          {/* Botão salvar sticky */}
-          <button onClick={salvar} disabled={salvando}
-            style={{
-              padding: '12px 20px', borderRadius: 12,
-              border: 'none', background: salvando ? tokens.text.tertiary : ACCENT,
-              color: 'white', fontSize: 13, fontWeight: 700,
-              cursor: salvando ? 'not-allowed' : 'pointer',
-            }}>
-            {salvando ? 'Salvando...' : '✓ Salvar tudo'}
-          </button>
-        </div>
+        <Button icon={Check} block onClick={salvar} disabled={salvando}>
+          {salvando ? 'Salvando…' : 'Salvar tudo'}
+        </Button>
+      </div>
 
-        {/* COLUNA DIREITA — Cards de configuração */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Coluna direita — seções */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
 
-          {/* Comportamento */}
-          <div id="secao-comportamento" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Comportamento geral</h2>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Define se a Sofia está ativa e como ela age</p>
-
-            <ToggleRow
-              label="Sofia ativa"
-              desc="Quando desligada, a Sofia não responde no WhatsApp"
-              value={config.ativa}
-              onChange={v => setConfig({ ...config, ativa: v })}
-            />
-            <div style={{ marginTop: 20 }}>
-              <Label>Autonomia</Label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {[['auto', 'Automática', 'Sofia age sozinha'], ['supervisionado', 'Supervisionada', 'Você confirma cada ação']].map(([v, t, d]) => (
+        <Secao id="comportamento" titulo="Comportamento geral" descricao="Define se a Sofia está ativa e como ela age">
+          <Linha>
+            <Switch label="Sofia ativa" descricao="Quando desligada, a Sofia não responde no WhatsApp"
+              checked={!!config.ativa} onChange={v => setConfig({ ...config, ativa: v })} />
+          </Linha>
+          <Field label="Autonomia" style={{ marginTop: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+              {[['auto', 'Automática', 'Sofia age sozinha'], ['supervisionado', 'Supervisionada', 'Você confirma cada ação']].map(([v, t, d]) => {
+                const sel = config.autonomia === v
+                return (
                   <button key={v} onClick={() => setConfig({ ...config, autonomia: v })}
                     style={{
-                      padding: '14px 16px', borderRadius: 12, textAlign: 'left' as const,
-                      border: `1.5px solid ${config.autonomia === v ? ACCENT : tokens.border.default}`,
-                      background: config.autonomia === v ? ACCENT_LIGHT : 'white',
-                      cursor: 'pointer',
+                      padding: '12px 14px', borderRadius: 12, textAlign: 'left', fontFamily: 'inherit', cursor: 'pointer',
+                      border: `1px solid ${sel ? T.brand.primary : T.border.default}`,
+                      background: sel ? T.brand.primarySoftBg : '#fff', transition: 'all .15s',
                     }}>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: config.autonomia === v ? ACCENT : tokens.text.primary }}>{t}</p>
-                    <p style={{ margin: '2px 0 0', fontSize: 11, color: tokens.text.secondary }}>{d}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Pré-atendimento */}
-          <div id="secao-pre-atendimento" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Pré-atendimento</h2>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia coleta informações antes da consulta pra agilizar</p>
-
-            <ToggleRow
-              label="Pré-atendimento ativo"
-              desc="Sofia pode coletar informações antes da consulta"
-              value={config.pre_atendimento_ativo}
-              onChange={v => setConfig({ ...config, pre_atendimento_ativo: v })}
-            />
-            <ToggleRow
-              label="Disparo automático após agendamento"
-              desc="Quando um agendamento é criado, Sofia pergunta se pode fazer pré-atendimento"
-              value={config.pre_atendimento_automatico}
-              onChange={v => setConfig({ ...config, pre_atendimento_automatico: v })}
-            />
-            <div style={{ marginTop: 20 }}>
-              <Label>Instruções extras para a IA gerar perguntas</Label>
-              <p style={{ margin: '0 0 6px', fontSize: 11, color: tokens.text.tertiary }}>
-                Ex: "sempre pergunte sobre ciclo menstrual para consultas ginecológicas"
-              </p>
-              <textarea
-                value={config.pre_atendimento_prompt_extra || ''}
-                onChange={e => setConfig({ ...config, pre_atendimento_prompt_extra: e.target.value })}
-                rows={3}
-                style={{ ...inputBase, width: '100%', resize: 'vertical' as const }}
-              />
-            </div>
-          </div>
-
-          {/* Tipos de consulta */}
-          <div id="secao-tipos" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Tipos de consulta oferecidos</h2>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia pergunta ao paciente qual ele prefere</p>
-
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
-              {(['presencial', 'online', 'hibrido'] as const).map(tipo => {
-                const tipos: string[] = config.tipos_consulta_aceitos || ['presencial']
-                const ativo = tipos.includes(tipo)
-                const labels: Record<string, string> = {
-                  presencial: '🏥 Presencial',
-                  online: '💻 Online',
-                  hibrido: '🔄 Híbrido',
-                }
-                return (
-                  <button key={tipo}
-                    onClick={() => {
-                      const novos = ativo ? tipos.filter(t => t !== tipo) : [...tipos, tipo]
-                      if (novos.length === 0) return
-                      setConfig({ ...config, tipos_consulta_aceitos: novos })
-                    }}
-                    style={{
-                      padding: '10px 18px', borderRadius: 10,
-                      border: `1.5px solid ${ativo ? ACCENT : tokens.border.default}`,
-                      background: ativo ? ACCENT_LIGHT : 'white',
-                      color: ativo ? ACCENT : tokens.text.secondary,
-                      fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    }}>
-                    {labels[tipo]}
+                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: sel ? T.brand.primary : T.text.primary }}>{t}</span>
+                    <span style={{ display: 'block', marginTop: 2, fontSize: 12, color: T.text.quaternary }}>{d}</span>
                   </button>
                 )
               })}
             </div>
-            <div style={{ marginTop: 20 }}>
-              <Label>Lembrete da teleconsulta (min antes)</Label>
-              <p style={{ margin: '0 0 8px', fontSize: 11, color: tokens.text.tertiary }}>
-                Sofia envia link da sala esse tanto de minutos antes
-              </p>
-              <input type="number" min={5} max={60}
+          </Field>
+        </Secao>
+
+        <Secao id="pre-atendimento" titulo="Pré-atendimento" descricao="Sofia coleta informações antes da consulta para agilizar">
+          <Linha>
+            <Switch label="Pré-atendimento ativo" descricao="Sofia pode coletar informações antes da consulta"
+              checked={!!config.pre_atendimento_ativo} onChange={v => setConfig({ ...config, pre_atendimento_ativo: v })} />
+          </Linha>
+          <Linha>
+            <Switch label="Disparo automático após agendamento" descricao="Quando um agendamento é criado, Sofia pergunta se pode fazer pré-atendimento"
+              checked={!!config.pre_atendimento_automatico} onChange={v => setConfig({ ...config, pre_atendimento_automatico: v })} />
+          </Linha>
+          <Field label="Instruções extras para a IA gerar perguntas" hint='Ex.: "sempre pergunte sobre ciclo menstrual para consultas ginecológicas"' style={{ marginTop: 14 }}>
+            <Textarea
+              value={config.pre_atendimento_prompt_extra || ''}
+              onChange={e => setConfig({ ...config, pre_atendimento_prompt_extra: e.target.value })}
+              rows={3}
+            />
+          </Field>
+        </Secao>
+
+        <Secao id="tipos" titulo="Tipos de consulta oferecidos" descricao="Sofia pergunta ao paciente qual ele prefere">
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {([['presencial', 'Presencial', Building2], ['online', 'Online', Monitor], ['hibrido', 'Híbrido', Repeat]] as const).map(([tipo, label, ic]) => {
+              const tipos: string[] = config.tipos_consulta_aceitos || ['presencial']
+              const ativo = tipos.includes(tipo)
+              return (
+                <Chip key={tipo} ativo={ativo} icon={ic}
+                  onClick={() => {
+                    const novos = ativo ? tipos.filter(t => t !== tipo) : [...tipos, tipo]
+                    if (novos.length === 0) return
+                    setConfig({ ...config, tipos_consulta_aceitos: novos })
+                  }}>
+                  {label}
+                </Chip>
+              )
+            })}
+          </div>
+          <Field label="Lembrete da teleconsulta" hint="Sofia envia o link da sala esse tanto de minutos antes" style={{ marginTop: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Input type="number" min={5} max={60}
                 value={config.lembrete_teleconsulta_min || 10}
                 onChange={e => setConfig({ ...config, lembrete_teleconsulta_min: Number(e.target.value) })}
-                style={{ ...inputBase, width: 120 }}/>
-              <span style={{ marginLeft: 8, fontSize: 13, color: tokens.text.tertiary }}>minutos</span>
+                style={{ width: 100 }} />
+              <span style={{ fontSize: 13, color: T.text.quaternary }}>minutos antes</span>
             </div>
-          </div>
+          </Field>
+        </Secao>
 
-          {/* Horários */}
-          <div id="secao-horarios" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Horários de funcionamento</h2>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia só oferece agendamento nesses horários. Deixe vazio pra fechado.</p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {DIAS.map(d => (
-                <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ width: 80, fontSize: 13, color: tokens.text.strong, fontWeight: 500 }}>{d.label}</span>
-                  <input
-                    value={config.horario_funcionamento?.[d.key] || ''}
-                    onChange={e => setConfig({
-                      ...config,
-                      horario_funcionamento: {
-                        ...(config.horario_funcionamento || {}),
-                        [d.key]: e.target.value || null,
-                      }
-                    })}
-                    placeholder="08:00-18:00"
-                    style={{ ...inputBase, flex: 1, padding: '8px 12px', fontSize: 13 }}
+        <Secao id="horarios" titulo="Horário de funcionamento" descricao="Sofia só oferece agendamento nesses horários.">
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {DIAS.map((d, i) => {
+              const valor: string = config.horario_funcionamento?.[d.key] || ''
+              const aberto = !!valor
+              const m = valor.match(FAIXA)
+              return (
+                <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderTop: i ? `1px solid ${T.border.muted}` : 'none', flexWrap: 'wrap', minHeight: 34 }}>
+                  <Switch
+                    checked={aberto}
+                    onChange={v => {
+                      if (v) setHorario(d.key, horariosAnteriores.current[d.key] || '08:00-18:00')
+                      else { horariosAnteriores.current[d.key] = valor; setHorario(d.key, null) }
+                    }}
                   />
+                  <span style={{ width: 80, fontSize: 13.5, fontWeight: 600, color: aberto ? T.text.primary : T.text.tertiary }}>{d.label}</span>
+                  {!aberto ? (
+                    <span style={{ fontSize: 13, color: T.text.tertiary }}>Fechado</span>
+                  ) : m ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Input type="time" className="mono" value={m[1].padStart(5, '0')}
+                        onChange={e => setHorario(d.key, `${e.target.value}-${m[2]}`)}
+                        style={{ width: 104, minHeight: 34, padding: '5px 10px', textAlign: 'center', fontSize: 12.5, fontFamily: T.font.mono }} />
+                      <span style={{ color: T.text.tertiary }}>–</span>
+                      <Input type="time" value={m[2].padStart(5, '0')}
+                        onChange={e => setHorario(d.key, `${m[1]}-${e.target.value}`)}
+                        style={{ width: 104, minHeight: 34, padding: '5px 10px', textAlign: 'center', fontSize: 12.5, fontFamily: T.font.mono }} />
+                    </div>
+                  ) : (
+                    <Input value={valor} placeholder="08:00-18:00"
+                      onChange={e => setHorario(d.key, e.target.value)}
+                      style={{ flex: 1, minWidth: 160, minHeight: 34, padding: '5px 10px', fontSize: 12.5, fontFamily: T.font.mono }} />
+                  )}
                 </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 20 }}>
-              <Label>Duração padrão da consulta (min)</Label>
-              <input type="number" value={config.duracao_consulta_padrao}
-                onChange={e => setConfig({ ...config, duracao_consulta_padrao: Number(e.target.value) })}
-                style={{ ...inputBase, width: 140 }}/>
-            </div>
+              )
+            })}
           </div>
+          <Field label="Duração padrão da consulta (min)" style={{ marginTop: 14 }}>
+            <Input type="number" value={config.duracao_consulta_padrao}
+              onChange={e => setConfig({ ...config, duracao_consulta_padrao: Number(e.target.value) })}
+              style={{ width: 120 }} />
+          </Field>
+        </Secao>
 
-          {/* Preços */}
-          <div id="secao-precos" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Valores de consulta</h2>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia cita esses valores quando o paciente perguntar</p>
+        <Secao id="precos" titulo="Valores de consulta" descricao="Sofia cita esses valores quando o paciente perguntar">
+          <Field label="Consulta padrão (R$)">
+            <Input type="number" value={config.preco_consulta || ''}
+              onChange={e => setConfig({ ...config, preco_consulta: Number(e.target.value) || null })}
+              placeholder="250" style={{ width: 180 }} />
+          </Field>
 
-            <div style={{ marginBottom: 20 }}>
-              <Label>Consulta padrão</Label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 13, color: tokens.text.tertiary }}>R$</span>
-                <input type="number" value={config.preco_consulta || ''}
-                  onChange={e => setConfig({ ...config, preco_consulta: Number(e.target.value) || null })}
-                  placeholder="250"
-                  style={{ ...inputBase, width: 180 }}/>
+          <Field label="Valores por tipo (opcional)" style={{ marginTop: 16 }}>
+            {Object.keys(config.precos_tipos || {}).length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', border: `1px solid ${T.border.default}`, borderRadius: 12, overflow: 'hidden' }}>
+                {Object.entries(config.precos_tipos || {}).map(([k, v], i) => (
+                  <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 8px 8px 14px', borderTop: i ? `1px solid ${T.border.muted}` : 'none' }}>
+                    <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: T.text.strong }}>{k}</span>
+                    <span style={{ fontSize: 13.5, fontWeight: 700, color: T.text.primary, fontVariantNumeric: 'tabular-nums' }}>R$ {v as number}</span>
+                    <IconButton icon={X} size={28} tone="danger" onClick={() => removePreco(k)} aria-label="Remover" />
+                  </div>
+                ))}
               </div>
+            )}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Input value={novoPrecoLabel} onChange={e => setNovoPrecoLabel(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addPreco() }}
+                placeholder="Ex.: Retorno" style={{ flex: 1, minWidth: 140 }} />
+              <Input type="number" value={novoPrecoValor} onChange={e => setNovoPrecoValor(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addPreco() }}
+                placeholder="Valor" style={{ width: 120 }} />
+              <Button variant="secondary" icon={Plus} onClick={addPreco} style={{ height: 40 }}>Adicionar</Button>
             </div>
+          </Field>
+        </Secao>
 
-            <Label>Valores por tipo (opcional)</Label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-              {Object.entries(config.precos_tipos || {}).map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: tokens.bg.muted, borderRadius: 10 }}>
-                  <span style={{ flex: 1, fontSize: 13, color: tokens.text.strong, fontWeight: 500 }}>{k}</span>
-                  <span style={{ fontSize: 13, color: tokens.text.primary, fontWeight: 700 }}>R$ {v as number}</span>
-                  <button onClick={() => removePreco(k)} style={{ border: 'none', background: 'transparent', color: tokens.status.danger, fontSize: 18, cursor: 'pointer', padding: 0, width: 24, height: 24 }}>×</button>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input value={novoPrecoLabel} onChange={e => setNovoPrecoLabel(e.target.value)}
-                placeholder="Ex: Retorno"
-                style={{ ...inputBase, flex: 1, padding: '9px 12px', fontSize: 13 }}/>
-              <input type="number" value={novoPrecoValor} onChange={e => setNovoPrecoValor(e.target.value)}
-                placeholder="Valor"
-                style={{ ...inputBase, width: 120, padding: '9px 12px', fontSize: 13 }}/>
-              <button onClick={addPreco}
-                style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: ACCENT, color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                Adicionar
-              </button>
-            </div>
-          </div>
-
-          {/* Saudação */}
-          <div id="secao-saudacao" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Saudação personalizada</h2>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Mensagem inicial que a Sofia envia ao abrir conversa</p>
-
-            <textarea
+        <Secao id="saudacao" titulo="Saudação personalizada" descricao="Mensagem inicial que a Sofia envia ao abrir conversa">
+          <Field label="Mensagem" hint="Deixe em branco para a Sofia usar a saudação padrão.">
+            <Textarea
               value={config.saudacao || ''}
               onChange={e => setConfig({ ...config, saudacao: e.target.value })}
               rows={4}
-              placeholder="Ex: Olá! Sou a Sofia, assistente da Clínica São Luís. Como posso te ajudar hoje?"
-              style={{ ...inputBase, width: '100%', resize: 'vertical' as const }}
+              placeholder="Ex.: Olá! Sou a Sofia, assistente da Clínica São Luís. Como posso te ajudar hoje?"
             />
-            <p style={{ margin: '8px 0 0', fontSize: 11, color: tokens.text.tertiary }}>
-              Deixe em branco para a Sofia usar a saudação padrão.
-            </p>
+          </Field>
+        </Secao>
+
+        <Secao id="relatorio" titulo="Relatório diário" descricao="Sofia envia um resumo das consultas do dia toda manhã">
+          <Linha>
+            <Switch label="Relatório diário ativo" descricao="Sofia envia resumo das consultas do dia"
+              checked={config.relatorio_diario_ativo !== false} onChange={v => setConfig({ ...config, relatorio_diario_ativo: v })} />
+          </Linha>
+          <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+            <Field label="Horário de envio" hint="Envio aproximado (pode variar em até 30 min)">
+              <Input type="time" value={config.relatorio_diario_horario || '07:00'}
+                onChange={e => setConfig({ ...config, relatorio_diario_horario: e.target.value })}
+                style={{ fontFamily: T.font.mono }} />
+            </Field>
+            <Field label="WhatsApp do médico">
+              <Input type="tel" value={config.relatorio_whatsapp || ''}
+                onChange={e => setConfig({ ...config, relatorio_whatsapp: e.target.value })}
+                placeholder="+55 47 99999-9999" />
+            </Field>
+            <Field label="E-mail do médico" style={{ gridColumn: '1 / -1' }}>
+              <Input type="email" value={config.relatorio_email || ''}
+                onChange={e => setConfig({ ...config, relatorio_email: e.target.value })}
+                placeholder="medico@clinica.com" />
+            </Field>
           </div>
 
-          {/* Relatório diário */}
-          <div id="secao-relatorio" style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Relatório diário</h2>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Sofia envia resumo das consultas do dia toda manhã</p>
-
-            <ToggleRow
-              label="Relatório diário ativo"
-              desc="Sofia envia resumo das consultas do dia"
-              value={config.relatorio_diario_ativo !== false}
-              onChange={v => setConfig({ ...config, relatorio_diario_ativo: v })}
-            />
-            <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div>
-                <Label>Horário de envio</Label>
-                <input type="time" value={config.relatorio_diario_horario || '07:00'}
-                  onChange={e => setConfig({ ...config, relatorio_diario_horario: e.target.value })}
-                  style={{ ...inputBase, width: '100%' }}/>
-                <p style={{ margin: '4px 0 0', fontSize: 11, color: tokens.text.tertiary }}>
-                  Envio aproximado (pode variar em até 30min)
-                </p>
-              </div>
-              <div>
-                <Label>WhatsApp do médico</Label>
-                <input type="tel" value={config.relatorio_whatsapp || ''}
-                  onChange={e => setConfig({ ...config, relatorio_whatsapp: e.target.value })}
-                  placeholder="+55 47 99999-9999"
-                  style={{ ...inputBase, width: '100%' }}/>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <Label>E-mail do médico</Label>
-                <input type="email" value={config.relatorio_email || ''}
-                  onChange={e => setConfig({ ...config, relatorio_email: e.target.value })}
-                  placeholder="medico@clinica.com"
-                  style={{ ...inputBase, width: '100%' }}/>
-              </div>
+          <Field label="Canais de envio" style={{ marginTop: 14 }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {(['whatsapp', 'email'] as const).map(canal => {
+                const canais: string[] = config.relatorio_diario_canais || ['whatsapp']
+                const ativo = canais.includes(canal)
+                return (
+                  <Chip key={canal} ativo={ativo} icon={canal === 'whatsapp' ? MessageCircle : Mail}
+                    onClick={() => {
+                      const novos = ativo ? canais.filter(c => c !== canal) : [...canais, canal]
+                      setConfig({ ...config, relatorio_diario_canais: novos })
+                    }}>
+                    {canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'}
+                  </Chip>
+                )
+              })}
             </div>
+          </Field>
 
-            <div style={{ marginTop: 20 }}>
-              <Label>Canais de envio</Label>
-              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-                {(['whatsapp', 'email'] as const).map(canal => {
-                  const canais: string[] = config.relatorio_diario_canais || ['whatsapp']
-                  const ativo = canais.includes(canal)
-                  return (
-                    <button key={canal}
-                      onClick={() => {
-                        const novos = ativo ? canais.filter(c => c !== canal) : [...canais, canal]
-                        setConfig({ ...config, relatorio_diario_canais: novos })
-                      }}
-                      style={{
-                        padding: '10px 18px', borderRadius: 10,
-                        border: `1.5px solid ${ativo ? ACCENT : tokens.border.default}`,
-                        background: ativo ? ACCENT_LIGHT : 'white',
-                        color: ativo ? ACCENT : tokens.text.secondary,
-                        fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                        textTransform: 'capitalize' as const,
-                      }}>
-                      {canal === 'whatsapp' ? '💬 WhatsApp' : '📧 E-mail'}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <button onClick={async () => {
+          <div style={{ marginTop: 16 }}>
+            <Button variant="secondary" icon={Send} onClick={async () => {
               if (!medico) return
               const r = await fetch('/api/sofia/relatorio-diario', {
                 method: 'POST',
@@ -453,49 +370,40 @@ export function Sofia() {
               const d = await r.json()
               if (d.error) toast('Erro: ' + d.error, 'error')
               else toast('Relatório de teste enviado!')
-            }}
-              style={{ marginTop: 20, padding: '10px 18px', borderRadius: 10, background: 'white', color: tokens.text.strong, border: `1px solid ${tokens.border.default}`, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-              📤 Enviar relatório de teste agora
-            </button>
+            }}>
+              Enviar relatório de teste agora
+            </Button>
           </div>
+        </Secao>
+      </div>
 
+      <style>{`
+        .mc-sofia-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start; }
+        .mc-sofia-nav { position: sticky; top: 0; }
+        @media (max-width: 860px) {
+          .mc-sofia-grid { grid-template-columns: minmax(0, 1fr); }
+          .mc-sofia-nav { position: static; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+/** Seção da Sofia: Card com título 15/700 + subtítulo, âncora para a navegação lateral. */
+function Secao({ id, titulo, descricao, children }: { id: string; titulo: string; descricao?: string; children: React.ReactNode }) {
+  return (
+    <div id={`secao-${id}`} style={{ scrollMarginTop: 12 }}>
+      <Card>
+        <div style={{ marginBottom: 14, marginTop: -2 }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>{titulo}</h3>
+          {descricao && <p style={{ margin: '3px 0 0', fontSize: 12.5, color: T.text.quaternary }}>{descricao}</p>}
         </div>
-      </div>
+        {children}
+      </Card>
     </div>
   )
 }
 
-function Label({ children }: { children: React.ReactNode }) {
-  return (
-    <label style={{
-      display: 'block', fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
-      textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6,
-    }}>
-      {children}
-    </label>
-  )
-}
-
-function ToggleRow({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
-      <div style={{ flex: 1, paddingRight: 16 }}>
-        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: tokens.text.primary }}>{label}</p>
-        <p style={{ margin: '2px 0 0', fontSize: 12, color: tokens.text.tertiary }}>{desc}</p>
-      </div>
-      <button onClick={() => onChange(!value)}
-        style={{
-          width: 44, height: 24, borderRadius: 12, border: 'none',
-          background: value ? tokens.brand.primary : tokens.border.strong,
-          cursor: 'pointer', position: 'relative' as const, flexShrink: 0,
-        }}>
-        <span style={{
-          position: 'absolute' as const, top: 2,
-          left: value ? 22 : 2,
-          width: 20, height: 20, borderRadius: '50%',
-          background: 'white', transition: 'left .2s',
-        }}/>
-      </button>
-    </div>
-  )
+function Linha({ children }: { children: React.ReactNode }) {
+  return <div style={{ padding: '10px 0', borderTop: `1px solid ${T.border.muted}` }}>{children}</div>
 }

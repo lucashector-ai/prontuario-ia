@@ -1,22 +1,49 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import type { LucideIcon } from 'lucide-react'
+import {
+  Video, ChevronDown, Zap, CalendarPlus, Link2, Keyboard, Lock, Sparkles, Smartphone, MessageCircle,
+  Plus, FileText, PhoneOff, VideoOff, CalendarClock,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
+import { Avatar, Icon, IconButton, EmptyState, Button } from '@/components/ui'
+import { confirmar } from '@/components/ui/dialogos'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = 'transparent'
-const CARD_RADIUS = 16
+const T = tokens
+
+const linkSala = (salaId: string) => window.location.origin + '/sala/' + salaId
+const codigoSala = (salaId: string) => (salaId || '').slice(0, 3).toUpperCase() + '-' + (salaId || '').slice(3, 7).toUpperCase()
+const hora = (iso: string) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+
+function rotuloDia(iso: string) {
+  const d = new Date(iso), hoje = new Date()
+  const amanha = new Date(); amanha.setDate(hoje.getDate() + 1)
+  if (d.toDateString() === hoje.toDateString()) return 'HOJE'
+  if (d.toDateString() === amanha.toDateString()) return 'AMANHÃ'
+  return d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' }).replace('.', '').toUpperCase()
+}
+
+function quandoComeca(iso: string) {
+  const min = Math.round((new Date(iso).getTime() - Date.now()) / 60000)
+  if (min <= 0) return 'agora'
+  if (min < 60) return `em ${min} min`
+  if (new Date(iso).toDateString() === new Date().toDateString()) return `hoje · ${hora(iso)}`
+  return `${rotuloDia(iso).toLowerCase()} · ${hora(iso)}`
+}
 
 export default function Teleconsulta() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
-  const [consultas, setConsultas] = useState<any[]>([])
-  const [pacientes, setPacientes] = useState<any[]>([])
-  const [criandoAgora, setCriandoAgora] = useState(false)
-  const [linkCopiado, setLinkCopiado] = useState<string | null>(null)
-  const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro', texto: string } | null>(null)
+  const [salas, setSalas] = useState<any[]>([])
+  const [agendadas, setAgendadas] = useState<any[]>([])
+  const [carregando, setCarregando] = useState(true)
+  const [criando, setCriando] = useState(false)
+  const [menuNovo, setMenuNovo] = useState(false)
+  const [codigo, setCodigo] = useState('')
+  const [toast, setToast] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     (async () => {
@@ -32,326 +59,359 @@ export default function Teleconsulta() {
         if (!primeiroMedico) { router.push('/admin'); return }
         setMedico(primeiroMedico)
         carregar(primeiroMedico.id)
-        supabase.from('pacientes').select('id,nome').eq('medico_id', primeiroMedico.id).order('nome').then(({ data }) => setPacientes(data || []))
         return
       }
       const m = localStorage.getItem('medico')
       if (!m) { router.push('/login'); return }
       const med = JSON.parse(m); setMedico(med)
       carregar(med.id)
-      supabase.from('pacientes').select('id,nome').eq('medico_id', med.id).order('nome').then(({ data }) => setPacientes(data || []))
     })()
   }, [router])
 
+  useEffect(() => {
+    if (!menuNovo) return
+    const h = (e: MouseEvent) => { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuNovo(false) }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [menuNovo])
+
   const carregar = useCallback(async (mid: string) => {
-    const r = await fetch('/api/teleconsulta?medico_id=' + mid)
-    const d = await r.json()
-    setConsultas((d.teleconsultas || []).filter((c: any) => c.status !== 'encerrada'))
+    const [r, ags] = await Promise.all([
+      fetch('/api/teleconsulta?medico_id=' + mid).then(x => x.json()).catch(() => ({})),
+      supabase.from('agendamentos').select('id, data_hora, motivo, meet_link, status, pacientes:paciente_id(nome, telefone)')
+        .eq('medico_id', mid).not('meet_link', 'is', null).neq('status', 'cancelado')
+        .gte('data_hora', new Date(Date.now() - 30 * 60000).toISOString()).order('data_hora').limit(6),
+    ])
+    setSalas(r.teleconsultas || [])
+    setAgendadas(ags.data || [])
+    setCarregando(false)
   }, [])
 
-  const mostrarMsg = (tipo: 'ok' | 'erro', texto: string) => {
-    setMsg({ tipo, texto })
-    setTimeout(() => setMsg(null), 3500)
+  const avisar = (texto: string) => {
+    setToast(texto)
+    setTimeout(() => setToast(null), 2600)
   }
 
-  const criarAgora = async () => {
-    if (!medico || criandoAgora) return
-    setCriandoAgora(true)
-    const codigo = Math.random().toString(36).slice(-4).toUpperCase()
+  const criarSala = async (abrir: boolean) => {
+    if (!medico || criando) return
+    setCriando(true); setMenuNovo(false)
+    const cod = Math.random().toString(36).slice(-4).toUpperCase()
     const r = await fetch('/api/teleconsulta', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ medico_id: medico.id, titulo: 'Consulta - ' + codigo })
+      body: JSON.stringify({ medico_id: medico.id, titulo: 'Consulta - ' + cod })
     })
     const d = await r.json()
     if (d.teleconsulta) {
-      const link = window.location.origin + '/sala/' + d.teleconsulta.sala_id
-      navigator.clipboard.writeText(link).catch(() => {})
-      setLinkCopiado(link)
+      navigator.clipboard.writeText(linkSala(d.teleconsulta.sala_id)).catch(() => {})
       await carregar(medico.id)
-      window.open('/sala/' + d.teleconsulta.sala_id, '_blank')
+      if (abrir) window.open('/sala/' + d.teleconsulta.sala_id, '_blank')
+      avisar(abrir ? 'Sala criada · link copiado' : 'Link criado · copiado para enviar ao paciente')
+    } else {
+      avisar('Não foi possível criar a sala')
     }
-    setCriandoAgora(false)
+    setCriando(false)
   }
 
-  const abrirAgendamento = () => router.push('/agenda?nova_teleconsulta=1')
-
-  const entrar = (salaId: string) => window.open('/sala/' + salaId, '_blank')
-
-  const copiar = (salaId: string) => {
-    const link = window.location.origin + '/sala/' + salaId
-    navigator.clipboard.writeText(link)
-    setLinkCopiado(link)
-    setTimeout(() => setLinkCopiado(null), 3000)
-    mostrarMsg('ok', 'Link copiado!')
+  const entrarComCodigo = () => {
+    const v = codigo.trim()
+    if (!v) return
+    // Aceita link completo (…/sala/<id>) ou o próprio id da sala
+    const m = v.match(/\/sala\/([^/?#\s]+)/)
+    const id = m ? m[1] : v.replace(/\s/g, '')
+    window.open('/sala/' + id, '_blank')
+    setCodigo('')
   }
 
-  const enviarWpp = async (consulta: any) => {
-    const link = window.location.origin + '/sala/' + consulta.sala_id
+  const copiar = (link: string) => {
+    navigator.clipboard.writeText(link).catch(() => {})
+    avisar('Link copiado')
+  }
+
+  const enviarWpp = async (nomeTelefone: { telefone?: string } | undefined, link: string) => {
     const msgTxt = 'Olá! Dr(a). ' + medico.nome + ' te convidou para uma teleconsulta.\n\nAcesse pelo link (não precisa instalar nada):\n' + link
-    if (consulta.pacientes?.telefone) {
+    if (nomeTelefone?.telefone) {
       await fetch('/api/whatsapp/enviar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telefone: consulta.pacientes.telefone, texto: msgTxt, medico_id: medico.id })
+        body: JSON.stringify({ telefone: nomeTelefone.telefone, texto: msgTxt, medico_id: medico.id })
       })
-      mostrarMsg('ok', 'Enviado por WhatsApp!')
+      avisar('Convite enviado por WhatsApp')
     } else {
-      navigator.clipboard.writeText(msgTxt)
-      mostrarMsg('ok', 'Mensagem copiada (paciente sem telefone)')
+      navigator.clipboard.writeText(msgTxt).catch(() => {})
+      avisar('Mensagem copiada · paciente sem telefone')
     }
   }
 
   const encerrar = async (id: string) => {
-    if (!confirm('Encerrar esta sala?')) return
+    if (!(await confirmar({ titulo: 'Encerrar esta sala?', mensagem: 'O link deixa de funcionar e quem estiver na chamada é desconectado.', confirmar: 'Encerrar sala', perigo: true }))) return
     await supabase.from('teleconsultas').update({ status: 'encerrada', encerrada_em: new Date().toISOString() }).eq('id', id)
     carregar(medico.id)
-    mostrarMsg('ok', 'Sala encerrada')
+    avisar('Sala encerrada')
   }
 
-  const statusInfo = (s: string): { txt: string; bg: string; cor: string } => {
-    const map: Record<string, { txt: string; bg: string; cor: string }> = {
-      aguardando: { txt: 'Aguardando', bg: tokens.status.warningLightSoft, cor: tokens.status.warningText },
-      em_andamento: { txt: 'Em andamento', bg: ACCENT_LIGHT, cor: ACCENT },
-    }
-    return map[s] || { txt: s, bg: tokens.bg.hoverStrong, cor: tokens.text.secondary }
-  }
+  if (!medico) return null
 
-  const fmtData = (iso: string) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+  const ativas = salas.filter(s => s.status !== 'encerrada')
+  const seteDias = Date.now() - 7 * 86400000
+  const encerradas = salas.filter(s => s.status === 'encerrada' && new Date(s.encerrada_em || s.criado_em).getTime() > seteDias).slice(0, 6)
+  const proxima = agendadas[0]
 
-  const emAndamento = consultas.filter(c => c.status === 'em_andamento').length
-  const aguardando = consultas.filter(c => c.status === 'aguardando').length
+  const opcoesNovo: { icon: LucideIcon; label: string; desc: string; fn: () => void }[] = [
+    { icon: Zap, label: 'Iniciar agora', desc: 'Abre a sala e copia o link', fn: () => criarSala(true) },
+    { icon: CalendarPlus, label: 'Agendar para depois', desc: 'Marca na agenda com link de vídeo', fn: () => router.push('/agenda?nova_teleconsulta=1') },
+    { icon: Link2, label: 'Criar link para enviar', desc: 'Gera a sala sem entrar agora', fn: () => criarSala(false) },
+  ]
 
   return (
-    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Teleconsulta</h1>
-        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Vídeo em tempo real — o paciente entra pelo link, sem precisar instalar nada</p>
-      </div>
-
-      {/* Toast */}
-      {msg && (
-        <div style={{
-          position: 'fixed', top: 24, right: 24, zIndex: 200,
-          padding: '12px 20px', borderRadius: 10,
-          background: msg.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
-          color: msg.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
-          fontSize: 13, fontWeight: 600,
-          border: `1px solid ${msg.tipo === 'ok' ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-        }}>
-          {msg.texto}
-        </div>
-      )}
-
-      {/* Grid horizontal: 360px esquerda (botões) + resto direita (lista) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 20, alignItems: 'start' }}>
-
-        {/* COLUNA ESQUERDA: 2 botões empilhados */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <button
-            onClick={criarAgora}
-            disabled={criandoAgora}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 16,
-              padding: 24, background: ACCENT, color: 'white',
-              border: 'none', borderRadius: CARD_RADIUS,
-              cursor: criandoAgora ? 'not-allowed' : 'pointer',
-              opacity: criandoAgora ? 0.7 : 1,
-              textAlign: 'left' as const,
-              boxShadow: '0 2px 12px rgba(96,67,193,0.15)',
-            }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-            </svg>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>
-                {criandoAgora ? 'Criando sala...' : 'Nova consulta agora'}
-              </p>
-              <p style={{ fontSize: 12, margin: 0, opacity: 0.9, lineHeight: 1.5 }}>
-                Cria sala, copia o link e abre em nova aba
-              </p>
-            </div>
-          </button>
-
-          <button
-            onClick={abrirAgendamento}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 16,
-              padding: 24, background: 'white', color: tokens.text.primary,
-              border: `1px solid ${tokens.border.subtle}`, borderRadius: CARD_RADIUS,
-              cursor: 'pointer', textAlign: 'left' as const,
-            }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" style={{ flexShrink: 0 }}>
-              <rect x="3" y="4" width="18" height="18" rx="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>Agendar teleconsulta</p>
-              <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>
-                Programa no calendário e envia o link no horário
-              </p>
-            </div>
-          </button>
-        </div>
-
-        {/* COLUNA DIREITA: banner + lista de salas */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-          {/* Banner de confirmação após criar */}
-          {linkCopiado && (
-            <div style={{
-              background: ACCENT_LIGHT, borderRadius: 12,
-              padding: '14px 18px',
-              display: 'flex', alignItems: 'center', gap: 12,
-            }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: '50%', background: ACCENT,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 13, color: ACCENT, fontWeight: 700, margin: '0 0 3px' }}>Sala criada!</p>
-                <p style={{ fontSize: 12, color: ACCENT, margin: 0, opacity: 0.8 }}>
-                  Link copiado e sala aberta em nova aba.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Header da seção */}
-          <div>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 2px' }}>Salas ativas</h2>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0 }}>
-              {consultas.length === 0
-                ? 'Nenhuma sala ativa no momento'
-                : `${consultas.length} sala${consultas.length !== 1 ? 's' : ''} — ${emAndamento} em andamento, ${aguardando} aguardando`
-              }
+    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 26 }}>
+      {/* Hero */}
+      <div className="tele-hero" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.25fr) minmax(0,1fr)', gap: 24, alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <h2 className="tele-titulo" style={{ margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-.03em', lineHeight: 1.15, textWrap: 'balance' as any, color: T.text.primary }}>
+              Atenda por vídeo com o prontuário pronto no final
+            </h2>
+            <p style={{ margin: 0, fontSize: 14, color: T.text.quaternary, lineHeight: 1.55, maxWidth: 520 }}>
+              Inicie uma sala agora, agende para depois ou entre com o código enviado ao paciente.
             </p>
           </div>
 
-          {/* Lista */}
-          {consultas.length === 0 ? (
-            <div style={{
-              background: 'white', borderRadius: CARD_RADIUS,
-              padding: 48, textAlign: 'center' as const, border: `1px solid ${tokens.border.subtle}`,
-            }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: 14,
-                background: tokens.bg.hover, color: tokens.text.tertiary,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 14px',
-              }}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-                </svg>
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Nenhuma sala ativa</p>
-              <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>
-                Crie uma consulta nos cards ao lado pra começar
-              </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div ref={menuRef} style={{ position: 'relative' }}>
+              <Button size="lg" icon={Video} iconRight={ChevronDown} onClick={() => setMenuNovo(!menuNovo)} disabled={criando}>
+                {criando ? 'Criando sala…' : 'Nova teleconsulta'}
+              </Button>
+              {menuNovo && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 8px)', left: 0, width: 290, background: '#fff', zIndex: 50,
+                  border: `1px solid ${T.border.default}`, borderRadius: 14, boxShadow: T.shadow.lg, padding: 6,
+                }}>
+                  {opcoesNovo.map(o => (
+                    <button key={o.label} onClick={o.fn} style={{
+                      display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: 10, borderRadius: 10,
+                      border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                    }}
+                      onMouseEnter={e => e.currentTarget.style.background = T.bg.hover}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <span style={{ width: 34, height: 34, borderRadius: 10, background: T.brand.primarySubtle, color: T.brand.primary, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                        <Icon icon={o.icon} size={16} />
+                      </span>
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: T.text.primary }}>{o.label}</span>
+                        <span style={{ fontSize: 12, color: T.text.quaternary }}>{o.desc}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
+            <label style={{
+              flex: '1 1 220px', minWidth: 0, maxWidth: 340, display: 'flex', alignItems: 'center', gap: 8, height: 44,
+              padding: '0 6px 0 14px', borderRadius: 12, border: `1px solid ${T.border.default}`, color: T.text.tertiary, cursor: 'text',
+            }}>
+              <Keyboard size={17} strokeWidth={1.6} />
+              <input
+                value={codigo} onChange={e => setCodigo(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') entrarComCodigo() }}
+                placeholder="Código ou link da sala"
+                style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', padding: 0, minHeight: 0, boxShadow: 'none', fontSize: 13.5, color: T.text.primary }}
+              />
+              <button onClick={entrarComCodigo} disabled={!codigo.trim()} style={{
+                border: 'none', background: 'transparent', padding: '7px 10px', borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+                color: codigo.trim() ? T.brand.primary : T.text.tertiary, cursor: codigo.trim() ? 'pointer' : 'default',
+              }}>Entrar</button>
+            </label>
+          </div>
+
+          <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', fontSize: 12.5, color: T.text.secondary }}>
+            {([[Lock, 'Criptografia ponta a ponta'], [Sparkles, 'Prontuário gerado por IA'], [Smartphone, 'Paciente entra sem instalar nada']] as [LucideIcon, string][]).map(([I, t]) => (
+              <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><I size={14} strokeWidth={1.6} color={T.brand.primary} />{t}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Próxima teleconsulta (card escuro) */}
+        <div style={{ borderRadius: 20, background: T.night[800], color: '#fff', padding: 22, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0, minHeight: 190 }}>
+          {proxima ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#A8A5B8', flex: 1 }}>Próxima teleconsulta</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#4ADE80', background: 'rgba(74,222,128,.12)', padding: '4px 10px', borderRadius: 99 }}>{quandoComeca(proxima.data_hora)}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <span style={{ width: 52, height: 52, borderRadius: '50%', background: T.night[600], color: '#D9D2FF', display: 'grid', placeItems: 'center', fontSize: 17, fontWeight: 700, flexShrink: 0 }}>
+                  {(proxima.pacientes?.nome || 'P').split(' ').slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()}
+                </span>
+                <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <span style={{ fontSize: 18, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{proxima.pacientes?.nome || 'Paciente'}</span>
+                  <span style={{ fontSize: 12.5, color: '#A8A5B8' }}>{proxima.motivo || 'Teleconsulta'} · {hora(proxima.data_hora)}</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <BotaoEscuro primario onClick={() => window.open(proxima.meet_link, '_blank')}><Video size={16} strokeWidth={1.6} />Entrar na sala</BotaoEscuro>
+                <BotaoEscuro titulo="Copiar link" onClick={() => copiar(proxima.meet_link)}><Link2 size={16} strokeWidth={1.6} /></BotaoEscuro>
+                <BotaoEscuro titulo="Enviar lembrete por WhatsApp" onClick={() => enviarWpp(proxima.pacientes, proxima.meet_link)}><MessageCircle size={16} strokeWidth={1.6} /></BotaoEscuro>
+              </div>
+            </>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {consultas.map(c => {
-                const st = statusInfo(c.status)
-                const ehAndamento = c.status === 'em_andamento'
-                return (
-                  <div key={c.id} style={{
-                    background: 'white', borderRadius: CARD_RADIUS,
-                    padding: '16px 20px',
-                    display: 'flex', alignItems: 'center', gap: 16,
-                    border: ehAndamento ? `1px solid ${ACCENT}` : `1px solid ${tokens.border.subtle}`,
-                  }}>
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 12,
-                      background: ehAndamento ? ACCENT_LIGHT : tokens.bg.hover,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0,
-                    }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke={ehAndamento ? ACCENT : tokens.text.tertiary} strokeWidth="2">
-                        <path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-                      </svg>
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' as const }}>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{c.titulo}</p>
-                        <span style={{
-                          fontSize: 10, fontWeight: 700,
-                          color: st.cor, background: st.bg,
-                          padding: '3px 10px', borderRadius: 20,
-                          textTransform: 'uppercase' as const, letterSpacing: '0.04em',
-                        }}>
-                          {st.txt}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>
-                        {c.pacientes?.nome ? c.pacientes.nome + ' · ' : ''}
-                        Criada em {fmtData(c.criado_em)}
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      <button onClick={() => copiar(c.sala_id)} style={{
-                        padding: '8px 12px', borderRadius: 9,
-                        background: 'white', border: `1px solid ${tokens.border.default}`,
-                        fontSize: 12, color: tokens.text.strong, fontWeight: 500,
-                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
-                      }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="9" y="9" width="13" height="13" rx="2"/>
-                          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                        </svg>
-                        Copiar
-                      </button>
-                      <button onClick={() => enviarWpp(c)} style={{
-                        padding: '8px 12px', borderRadius: 9,
-                        background: tokens.status.successBgSoft, color: tokens.status.successHover,
-                        border: `1px solid ${tokens.status.successLightAlt}`,
-                        fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 5,
-                      }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                        </svg>
-                        WhatsApp
-                      </button>
-                      <button onClick={() => entrar(c.sala_id)} style={{
-                        padding: '8px 16px', borderRadius: 9,
-                        background: ACCENT, color: 'white', border: 'none',
-                        fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                      }}>
-                        Entrar
-                      </button>
-                      <button onClick={() => encerrar(c.id)} title="Encerrar sala" style={{
-                        padding: '8px 10px', borderRadius: 9,
-                        background: tokens.status.dangerBg, color: tokens.status.danger,
-                        border: `1px solid ${tokens.status.dangerLight}`,
-                        fontSize: 12, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center',
-                      }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="18" y1="6" x2="6" y2="18"/>
-                          <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
+              <span style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(255,255,255,.08)', display: 'grid', placeItems: 'center', color: '#D9D2FF' }}>
+                <CalendarClock size={20} strokeWidth={1.6} />
+              </span>
+              <span style={{ fontSize: 16, fontWeight: 700 }}>Nenhuma teleconsulta agendada</span>
+              <span style={{ fontSize: 12.5, color: '#A8A5B8', lineHeight: 1.5 }}>Agende pela agenda marcando “com vídeo” — o link é enviado ao paciente automaticamente.</span>
+              <div><BotaoEscuro onClick={() => router.push('/agenda?nova_teleconsulta=1')}><CalendarPlus size={16} strokeWidth={1.6} />Agendar teleconsulta</BotaoEscuro></div>
             </div>
           )}
         </div>
       </div>
-    </main>
+
+      {/* Salas ativas */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em' }}>Salas ativas</h3>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: T.status.success, background: T.status.successBg, padding: '2px 8px', borderRadius: 99 }}>{ativas.length}</span>
+        </div>
+        {carregando ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+            {[0, 1].map(i => <div key={i} className="c360-skel" style={{ height: 150, borderRadius: 16 }} />)}
+          </div>
+        ) : ativas.length === 0 ? (
+          <div style={{ border: `1px dashed #E4E2EA`, borderRadius: 16 }}>
+            <EmptyState icon={VideoOff} titulo="Nenhuma sala aberta" descricao="Crie uma sala em “Nova teleconsulta” — ela aparece aqui enquanto estiver ativa." />
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+            {ativas.map(s => <CartaoSala key={s.id} sala={s} medico={medico} onEntrar={() => window.open('/sala/' + s.sala_id, '_blank')}
+              onCopiar={() => copiar(linkSala(s.sala_id))} onWpp={() => enviarWpp(s.pacientes, linkSala(s.sala_id))} onEncerrar={() => encerrar(s.id)} />)}
+          </div>
+        )}
+      </div>
+
+      {/* Agendadas + Encerradas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, alignItems: 'start' }}>
+        <div style={lista}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', flex: 1 }}>Agendadas</h3>
+            <button onClick={() => router.push('/agenda?nova_teleconsulta=1')} style={linkBtn}
+              onMouseEnter={e => e.currentTarget.style.background = T.brand.primarySubtle} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              <Plus size={14} />Agendar
+            </button>
+          </div>
+          {agendadas.length === 0 ? (
+            <div style={{ padding: '14px 0', borderTop: `1px solid ${T.border.muted}`, fontSize: 13, color: T.text.quaternary }}>Nenhuma teleconsulta nos próximos dias.</div>
+          ) : agendadas.map(a => (
+            <div key={a.id} style={linha}>
+              <div style={{ width: 52, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '6px 0', borderRadius: 10, background: T.bg.page }}>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: '#9A98A5' }}>{rotuloDia(a.data_hora)}</span>
+                <span className="mono" style={{ fontSize: 12.5 }}>{hora(a.data_hora)}</span>
+              </div>
+              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.35 }}>
+                <span style={nomeLinha}>{a.pacientes?.nome || 'Paciente'}</span>
+                <span style={{ fontSize: 12, color: T.text.quaternary }}>{a.motivo || 'Teleconsulta'}</span>
+              </span>
+              <IconButton icon={Link2} size={32} title="Copiar link" onClick={() => copiar(a.meet_link)} />
+              <Button variant="secondary" size="sm" onClick={() => window.open(a.meet_link, '_blank')}>Iniciar</Button>
+            </div>
+          ))}
+        </div>
+
+        <div style={lista}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', flex: 1 }}>Encerradas</h3>
+            <span style={{ fontSize: 12, color: T.text.tertiary }}>últimos 7 dias</span>
+          </div>
+          {encerradas.length === 0 ? (
+            <div style={{ padding: '14px 0', borderTop: `1px solid ${T.border.muted}`, fontSize: 13, color: T.text.quaternary }}>Nenhuma teleconsulta encerrada na última semana.</div>
+          ) : encerradas.map(e => {
+            const dur = e.duracao_segundos ? `${Math.max(1, Math.round(e.duracao_segundos / 60))} min` : null
+            const quando = new Date(e.encerrada_em || e.criado_em).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '')
+            return (
+              <div key={e.id} style={linha}>
+                <span style={{ width: 36, height: 36, borderRadius: '50%', background: T.border.muted, color: T.text.secondary, display: 'grid', placeItems: 'center', fontSize: 11.5, fontWeight: 700, flexShrink: 0 }}>
+                  {(e.pacientes?.nome || e.titulo || '?').split(' ').slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()}
+                </span>
+                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.35 }}>
+                  <span style={nomeLinha}>{e.pacientes?.nome || e.titulo || 'Teleconsulta'}</span>
+                  <span style={{ fontSize: 12, color: T.text.quaternary }}>{[dur, quando].filter(Boolean).join(' · ')}</span>
+                </span>
+                <button onClick={() => window.open('/sala/' + e.sala_id + '/historico', '_blank')} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: T.brand.primary,
+                  background: T.brand.primarySubtle, padding: '5px 9px', borderRadius: 99, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit',
+                }}>
+                  <FileText size={12} />Registro
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 300,
+          background: T.night[800], color: '#fff', padding: '10px 18px', borderRadius: 99, fontSize: 13, fontWeight: 600,
+          boxShadow: T.shadow.lg,
+        }}>{toast}</div>
+      )}
+
+      <style>{`@media (max-width: 980px) { .tele-hero { grid-template-columns: minmax(0,1fr) !important; } } @media (max-width: 759px) { .tele-titulo { font-size: 22px !important; } }`}</style>
+    </div>
+  )
+}
+
+const lista: React.CSSProperties = { border: `1px solid ${T.border.default}`, borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 2 }
+const linha: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: `1px solid ${T.border.muted}` }
+const nomeLinha: React.CSSProperties = { fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: T.text.primary }
+const linkBtn: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 600, color: T.brand.primary, padding: '5px 8px',
+  borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit',
+}
+
+function BotaoEscuro({ children, onClick, primario, titulo }: { children: React.ReactNode; onClick: () => void; primario?: boolean; titulo?: string }) {
+  const [h, setH] = useState(false)
+  return (
+    <button title={titulo} onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{
+      flex: primario ? 1 : 'none', minWidth: primario ? 150 : 42, height: 42, padding: primario || !titulo ? '0 16px' : 0, borderRadius: 12,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: 'none', cursor: 'pointer', color: '#fff',
+      fontSize: 13.5, fontWeight: 600, fontFamily: 'inherit',
+      background: primario ? (h ? '#6A4FE0' : T.brand.primary) : h ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.1)',
+    }}>{children}</button>
+  )
+}
+
+function CartaoSala({ sala, medico, onEntrar, onCopiar, onWpp, onEncerrar }: {
+  sala: any; medico: any; onEntrar: () => void; onCopiar: () => void; onWpp: () => void; onEncerrar: () => void
+}) {
+  const [h, setH] = useState(false)
+  const andamento = sala.status === 'em_andamento'
+  const desde = Math.max(1, Math.round((Date.now() - new Date(sala.iniciada_em || sala.criado_em).getTime()) / 60000))
+  return (
+    <div onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{
+      border: `1px solid ${h ? 'transparent' : T.border.default}`, borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 14,
+      boxShadow: h ? '0 10px 28px -12px rgba(40,30,80,.22)' : 'none', transition: 'box-shadow .2s, border-color .2s', background: '#fff',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: andamento ? T.status.success : '#D9A23B' }} />
+        <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: andamento ? T.status.success : '#8A6A1F' }}>{andamento ? 'Em andamento' : 'Aguardando paciente'}</span>
+        <span className="mono" style={{ fontSize: 11.5, color: T.text.tertiary }}>{codigoSala(sala.sala_id)}</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex' }}>
+          <span style={{ marginRight: -8, border: '2px solid #fff', borderRadius: '50%', display: 'inline-flex' }}><Avatar nome={medico?.nome} size={34} /></span>
+          {sala.pacientes?.nome && <span style={{ border: '2px solid #fff', borderRadius: '50%', display: 'inline-flex' }}><Avatar nome={sala.pacientes.nome} size={34} tom="pink" /></span>}
+        </div>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 8 }}>
+          <span style={nomeLinha}>{sala.pacientes?.nome || sala.titulo || 'Sala sem paciente'}</span>
+          <span style={{ fontSize: 12, color: T.text.quaternary }}>{andamento ? `há ${desde} min` : `criada há ${desde} min`}</span>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <Button icon={Video} onClick={onEntrar} style={{ flex: 1 }}>{andamento ? 'Voltar à sala' : 'Entrar'}</Button>
+        <IconButton icon={Link2} variant="outline" title="Copiar link" onClick={onCopiar} />
+        <IconButton icon={MessageCircle} variant="outline" title="Enviar por WhatsApp" onClick={onWpp} />
+        <IconButton icon={PhoneOff} variant="outline" tone="danger" title="Encerrar sala" onClick={onEncerrar} />
+      </div>
+    </div>
   )
 }

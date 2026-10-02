@@ -4,7 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
+import { Mic, FileSignature, Bot, Users, UserPlus, Check, CircleCheck, CircleAlert, ChevronLeft, ArrowRight, Stethoscope, Building2 } from 'lucide-react'
+import { Marca } from '@/components/Marca'
+import { Button, Field, Input, IconTile, ProgressBar } from '@/components/ui'
 
+import { primeiroNome } from '@/lib/nome'
 type TipoConta = 'clinica' | 'medico'
 
 type Passo =
@@ -228,37 +232,22 @@ export default function OnboardingPage() {
 
   if (!tipo || !passo) return null
 
+  const T = tokens
+  const overline: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: T.brand.primary, textTransform: 'uppercase', letterSpacing: '.05em', margin: '0 0 14px' }
+  const titulo: React.CSSProperties = { fontSize: 30, fontWeight: 700, letterSpacing: '-.03em', lineHeight: 1.15, margin: '0 0 12px', color: T.text.primary }
+  const tituloGrande: React.CSSProperties = { ...titulo, fontSize: 34, lineHeight: 1.1, margin: '0 0 14px' }
+  const descricao: React.CSSProperties = { fontSize: 15, color: T.text.secondary, lineHeight: 1.6, margin: '0 0 28px' }
+  const campo = { minHeight: 44 }
+  const iconeFeature = { mic: Mic, memed: FileSignature, sofia: Bot } as const
+
   return (
-    <div style={{ minHeight: '100vh', background: 'white', display: 'flex', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100dvh', background: T.bg.card, display: 'flex', overflow: 'hidden' }}>
       <style>{`
         .ob-left { display: flex; }
         .ob-right { flex: 1; }
         @media (max-width: 900px) {
           .ob-left { display: none !important; }
-          .ob-right { width: 100% !important; }
-        }
-        .ob-input {
-          width: 100%;
-          padding: 14px 16px;
-          background: white;
-          border: 1px solid ${tokens.neutral[200]};
-          border-radius: 12px;
-          font-size: 15px;
-          color: ${tokens.neutral[900]};
-          outline: none;
-          transition: border-color 0.15s, box-shadow 0.15s;
-          box-sizing: border-box;
-        }
-        .ob-input:focus {
-          border-color: ${tokens.brand.primary};
-          box-shadow: 0 0 0 4px ${tokens.brand.primaryLight};
-        }
-        .ob-label {
-          display: block;
-          font-size: 13px;
-          font-weight: 600;
-          color: ${tokens.neutral[700]};
-          margin-bottom: 8px;
+          .ob-right { width: 100% !important; padding: 24px 16px !important; }
         }
         .ob-fadein { animation: fadein 0.4s ease; }
         @keyframes fadein {
@@ -269,9 +258,9 @@ export default function OnboardingPage() {
 
       <aside className="ob-left" style={{
         width: '42%',
-        background: `linear-gradient(160deg, ${tokens.brand.primary} 0%, ${tokens.accent.violet} 55%, ${tokens.brand.primaryDark || tokens.brand.primary} 100%)`,
+        background: `linear-gradient(160deg, ${T.brand.primary} 0%, ${T.brand.primaryDark} 100%)`,
         color: 'white',
-        padding: '56px 48px',
+        padding: '48px',
         flexDirection: 'column',
         justifyContent: 'space-between',
         position: 'relative',
@@ -281,15 +270,15 @@ export default function OnboardingPage() {
         <div style={{ position: 'absolute', bottom: -150, left: -100, width: 380, height: 380, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', filter: 'blur(30px)' }}/>
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <img src="/logo-clinical-360.svg" alt="Clinical 360" style={{ height: 30, filter: 'brightness(0) invert(1)' }}/>
+          <Marca altura={28} style={{ filter: 'brightness(0) invert(1)' }} />
         </div>
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.8, margin: '0 0 18px' }}>Configuração inicial</p>
-          <h2 style={{ fontSize: 38, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 18px' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', opacity: 0.8, margin: '0 0 16px' }}>Configuração inicial</p>
+          <h2 style={{ fontSize: 36, fontWeight: 700, letterSpacing: '-.03em', lineHeight: 1.1, margin: '0 0 16px' }}>
             Vamos configurar sua {tipo === 'clinica' ? 'clínica' : 'conta'} em poucos minutos.
           </h2>
-          <p style={{ fontSize: 16, lineHeight: 1.55, opacity: 0.85, maxWidth: 360, margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.6, opacity: 0.85, maxWidth: 360, margin: 0 }}>
             Você conhece o essencial pra começar a atender com IA, prescrever via Memed e atender pacientes no WhatsApp.
           </p>
         </div>
@@ -303,29 +292,30 @@ export default function OnboardingPage() {
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        padding: '48px 56px',
+        padding: '40px 56px',
         maxWidth: 720,
         margin: '0 auto',
         width: '100%',
         boxSizing: 'border-box',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 48 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 48, minHeight: 36 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 80 }}>
             {passoIdx > 0 && (
-              <button onClick={voltar} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', gap: 4, color: tokens.text.muted, fontSize: 13, fontWeight: 500 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+              <Button variant="ghost" size="sm" icon={ChevronLeft} onClick={voltar} style={{ color: T.text.muted }}>
                 Voltar
-              </button>
+              </Button>
             )}
           </div>
-          <div style={{ flex: 1, maxWidth: 280, margin: '0 24px', height: 4, background: tokens.neutral[150], borderRadius: 2, overflow: 'hidden' }}>
-            <div style={{ height: '100%', background: tokens.brand.primary, width: `${progresso}%`, transition: 'width 0.4s ease' }}/>
+          <div style={{ flex: 1, maxWidth: 280, margin: '0 24px' }}>
+            <ProgressBar valor={progresso} altura={4} />
           </div>
-          {!isPassoObrigatorio && (
-            <button onClick={pularTudo} disabled={salvando} style={{ background: 'none', border: 'none', cursor: salvando ? 'wait' : 'pointer', fontSize: 13, color: tokens.text.tertiary, fontWeight: 500 }}>
-              Pular tudo
-            </button>
-          )}
+          <div style={{ minWidth: 80, display: 'flex', justifyContent: 'flex-end' }}>
+            {!isPassoObrigatorio && (
+              <Button variant="ghost" size="sm" onClick={pularTudo} disabled={salvando} style={{ color: T.text.tertiary }}>
+                Pular tudo
+              </Button>
+            )}
+          </div>
         </div>
 
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -333,11 +323,9 @@ export default function OnboardingPage() {
 
             {passo.kind === 'welcome' && (
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Bem-vindo, {usuario?.nome?.split(' ')[0] || 'doutor(a)'}</p>
-                <h1 style={{ fontSize: 36, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 16px', color: tokens.neutral[900] }}>
-                  Tudo pronto pra começar.
-                </h1>
-                <p style={{ fontSize: 16, color: tokens.text.muted, lineHeight: 1.6, margin: '0 0 36px' }}>
+                <p style={overline}>Bem-vindo, {primeiroNome(usuario?.nome, 'doutor(a)')}</p>
+                <h1 style={tituloGrande}>Tudo pronto pra começar.</h1>
+                <p style={{ ...descricao, fontSize: 16, margin: '0 0 36px' }}>
                   {tipo === 'clinica'
                     ? 'Vamos configurar 2 coisas essenciais e te mostrar 3 funcionalidades que vão mudar como sua clínica atende. Leva 3 minutos.'
                     : 'Vamos configurar seu perfil e te mostrar 3 funcionalidades que vão mudar como você atende. Leva 2 minutos.'
@@ -348,33 +336,32 @@ export default function OnboardingPage() {
 
             {passo.kind === 'perfil' && (
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Perfil</p>
-                <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 12px', color: tokens.neutral[900] }}>
-                  Como você atua?
-                </h1>
-                <p style={{ fontSize: 15, color: tokens.text.muted, lineHeight: 1.55, margin: '0 0 28px' }}>
-                  Isso personaliza sua experiência no Clinical 360.
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <p style={overline}>Perfil</p>
+                <h1 style={titulo}>Como você atua?</h1>
+                <p style={descricao}>Isso personaliza sua experiência no Clinical 360.</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {([
-                    { key: 'autonomo', titulo: 'Sou médico autônomo', sub: 'Atendo meus próprios pacientes' },
-                    { key: 'clinica', titulo: 'Tenho uma clínica com equipe', sub: 'Gerencio médicos e recepcionistas' },
+                    { key: 'autonomo', titulo: 'Sou médico autônomo', sub: 'Atendo meus próprios pacientes', icone: Stethoscope },
+                    { key: 'clinica', titulo: 'Tenho uma clínica com equipe', sub: 'Gerencio médicos e recepcionistas', icone: Building2 },
                   ] as const).map(op => {
                     const sel = perfil === op.key
                     return (
                       <button key={op.key} type="button" onClick={() => { setPerfil(op.key); setErro('') }}
                         style={{
-                          textAlign: 'left' as const, padding: '18px 20px', borderRadius: 14, cursor: 'pointer',
-                          border: `1.5px solid ${sel ? tokens.brand.primary : tokens.neutral[200]}`,
-                          background: sel ? tokens.brand.primaryLight : 'white',
-                          transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 14,
+                          textAlign: 'left' as const, padding: '16px 18px', borderRadius: 16, cursor: 'pointer',
+                          border: `1px solid ${sel ? T.brand.primary : T.border.default}`,
+                          background: sel ? T.brand.primarySoftBg : T.bg.card,
+                          boxShadow: sel ? T.shadow.focusRing : 'none',
+                          transition: 'border-color .15s, background .15s, box-shadow .15s',
+                          display: 'flex', alignItems: 'center', gap: 14, fontFamily: 'inherit',
                         }}>
-                        <span style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, border: `2px solid ${sel ? tokens.brand.primary : tokens.neutral[300]}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {sel && <span style={{ width: 10, height: 10, borderRadius: '50%', background: tokens.brand.primary }} />}
+                        <IconTile icon={op.icone} size={40} active={sel} />
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: 'block', fontSize: 15, fontWeight: 600, color: T.text.primary }}>{op.titulo}</span>
+                          <span style={{ display: 'block', fontSize: 13, color: T.text.quaternary, marginTop: 2 }}>{op.sub}</span>
                         </span>
-                        <span>
-                          <span style={{ display: 'block', fontSize: 16, fontWeight: 600, color: tokens.neutral[900] }}>{op.titulo}</span>
-                          <span style={{ display: 'block', fontSize: 13, color: tokens.text.muted, marginTop: 2 }}>{op.sub}</span>
+                        <span style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, border: `1.5px solid ${sel ? T.brand.primary : T.border.strong}`, background: sel ? T.brand.primary : 'transparent', color: '#fff', display: 'grid', placeItems: 'center' }}>
+                          {sel && <Check size={12} strokeWidth={2.4} />}
                         </span>
                       </button>
                     )
@@ -385,27 +372,22 @@ export default function OnboardingPage() {
 
             {passo.kind === 'medico-form' && (
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Sobre você</p>
-                <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 12px', color: tokens.neutral[900] }}>
-                  Quem aparece nos prontuários?
-                </h1>
-                <p style={{ fontSize: 15, color: tokens.text.muted, lineHeight: 1.55, margin: '0 0 28px' }}>
+                <p style={overline}>Sobre você</p>
+                <h1 style={titulo}>Quem aparece nos prontuários?</h1>
+                <p style={descricao}>
                   Esses dados aparecem no rodapé de prontuários, prescrições Memed e PDFs gerados pela clínica.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div>
-                    <label className="ob-label">Nome completo</label>
-                    <input className="ob-input" value={formMedico.nome} onChange={e => setFormMedico({ ...formMedico, nome: e.target.value })} placeholder="Ex: Dr. João Silva" />
-                  </div>
+                  <Field label="Nome completo">
+                    <Input style={campo} value={formMedico.nome} onChange={e => setFormMedico({ ...formMedico, nome: e.target.value })} placeholder="Ex: Dr. João Silva" />
+                  </Field>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div>
-                      <label className="ob-label">CRM</label>
-                      <input className="ob-input" value={formMedico.crm} onChange={e => setFormMedico({ ...formMedico, crm: e.target.value })} placeholder="12345-SP" />
-                    </div>
-                    <div>
-                      <label className="ob-label">Especialidade</label>
-                      <input className="ob-input" value={formMedico.especialidade} onChange={e => setFormMedico({ ...formMedico, especialidade: e.target.value })} placeholder="Cardiologia" />
-                    </div>
+                    <Field label="CRM">
+                      <Input style={campo} value={formMedico.crm} onChange={e => setFormMedico({ ...formMedico, crm: e.target.value })} placeholder="12345-SP" />
+                    </Field>
+                    <Field label="Especialidade">
+                      <Input style={campo} value={formMedico.especialidade} onChange={e => setFormMedico({ ...formMedico, especialidade: e.target.value })} placeholder="Cardiologia" />
+                    </Field>
                   </div>
                 </div>
               </div>
@@ -413,44 +395,36 @@ export default function OnboardingPage() {
 
             {passo.kind === 'clinica-form' && (
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Sua clínica</p>
-                <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 12px', color: tokens.neutral[900] }}>
-                  Dados da clínica
-                </h1>
-                <p style={{ fontSize: 15, color: tokens.text.muted, lineHeight: 1.55, margin: '0 0 28px' }}>
+                <p style={overline}>Sua clínica</p>
+                <h1 style={titulo}>Dados da clínica</h1>
+                <p style={descricao}>
                   Aparece em documentos, no WhatsApp da Sofia e na sala de teleconsulta personalizada.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div>
-                    <label className="ob-label">Nome da clínica</label>
-                    <input className="ob-input" value={formClinica.nome} onChange={e => setFormClinica({ ...formClinica, nome: e.target.value })} placeholder="Ex: Clínica São Paulo" />
-                  </div>
-                  <div>
-                    <label className="ob-label">Telefone</label>
-                    <input className="ob-input" value={formClinica.telefone} onChange={e => setFormClinica({ ...formClinica, telefone: e.target.value })} placeholder="(11) 99999-9999" />
-                  </div>
-                  <div>
-                    <label className="ob-label">Endereço</label>
-                    <input className="ob-input" value={formClinica.endereco} onChange={e => setFormClinica({ ...formClinica, endereco: e.target.value })} placeholder="Av. Paulista, 1000 — São Paulo/SP" />
-                  </div>
+                  <Field label="Nome da clínica">
+                    <Input style={campo} value={formClinica.nome} onChange={e => setFormClinica({ ...formClinica, nome: e.target.value })} placeholder="Ex: Clínica São Paulo" />
+                  </Field>
+                  <Field label="Telefone">
+                    <Input style={campo} value={formClinica.telefone} onChange={e => setFormClinica({ ...formClinica, telefone: e.target.value })} placeholder="(11) 99999-9999" />
+                  </Field>
+                  <Field label="Endereço">
+                    <Input style={campo} value={formClinica.endereco} onChange={e => setFormClinica({ ...formClinica, endereco: e.target.value })} placeholder="Av. Paulista, 1000 — São Paulo/SP" />
+                  </Field>
                 </div>
               </div>
             )}
 
             {passo.kind === 'feature' && (
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>{passo.eyebrow}</p>
-                <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 16px', color: tokens.neutral[900] }}>
-                  {passo.titulo}
-                </h1>
-                <p style={{ fontSize: 16, color: tokens.text.muted, lineHeight: 1.6, margin: '0 0 28px' }}>
-                  {passo.descricao}
-                </p>
+                <IconTile icon={iconeFeature[passo.icon]} size={48} radius={15} style={{ marginBottom: 20 }} />
+                <p style={overline}>{passo.eyebrow}</p>
+                <h1 style={{ ...titulo, margin: '0 0 14px' }}>{passo.titulo}</h1>
+                <p style={{ ...descricao, fontSize: 16 }}>{passo.descricao}</p>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {passo.bullets.map((b, i) => (
-                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, color: tokens.neutral[700] }}>
-                      <span style={{ width: 22, height: 22, borderRadius: 6, background: tokens.brand.primaryLight, color: tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, color: T.text.strong }}>
+                      <span style={{ width: 22, height: 22, borderRadius: 7, background: T.brand.primaryLight, color: T.brand.primary, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                        <Check size={13} strokeWidth={2} />
                       </span>
                       {b}
                     </li>
@@ -461,38 +435,33 @@ export default function OnboardingPage() {
 
             {passo.kind === 'equipe' && (
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 16px' }}>Sua equipe</p>
-                <h1 style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 12px', color: tokens.neutral[900] }}>
-                  Adicione sua equipe
-                </h1>
-                <p style={{ fontSize: 15, color: tokens.text.muted, lineHeight: 1.6, margin: '0 0 8px' }}>
+                <IconTile icon={Users} size={48} radius={15} style={{ marginBottom: 20 }} />
+                <p style={overline}>Sua equipe</p>
+                <h1 style={titulo}>Adicione sua equipe</h1>
+                <p style={{ ...descricao, margin: '0 0 8px' }}>
                   Cadastre médicos e recepcionistas — cada um recebe uma senha provisória pra acessar o sistema.
                 </p>
-                <p style={{ fontSize: 14, color: tokens.text.tertiary, lineHeight: 1.55, margin: '0 0 28px' }}>
+                <p style={{ fontSize: 14, color: T.text.tertiary, lineHeight: 1.55, margin: '0 0 28px' }}>
                   Você pode fazer isso agora ou depois, quando quiser.
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <button type="button" onClick={() => concluir('/admin?add=medico')} disabled={salvando}
-                    style={{ padding: '14px 24px', background: salvando ? tokens.neutral[400] : tokens.brand.primary, color: 'white', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}>
-                    {salvando ? 'Salvando...' : 'Adicionar equipe agora'}
-                  </button>
-                  <button type="button" onClick={() => concluir()} disabled={salvando}
-                    style={{ padding: '14px 24px', background: 'transparent', color: tokens.text.muted, border: `1px solid ${tokens.neutral[200]}`, borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <Button size="lg" block icon={UserPlus} onClick={() => concluir('/admin?add=medico')} disabled={salvando}>
+                    {salvando ? 'Salvando…' : 'Adicionar equipe agora'}
+                  </Button>
+                  <Button size="lg" block variant="secondary" onClick={() => concluir()} disabled={salvando}>
                     Pular, adiciono depois
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
 
             {passo.kind === 'done' && (
               <div style={{ textAlign: 'center' as const }}>
-                <div style={{ width: 80, height: 80, borderRadius: 24, background: tokens.brand.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                <div style={{ width: 72, height: 72, borderRadius: 22, background: T.status.successBg, color: T.status.success, display: 'grid', placeItems: 'center', margin: '0 auto 24px' }}>
+                  <CircleCheck size={34} strokeWidth={1.6} />
                 </div>
-                <h1 style={{ fontSize: 36, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 16px', color: tokens.neutral[900] }}>
-                  Tudo pronto.
-                </h1>
-                <p style={{ fontSize: 16, color: tokens.text.muted, lineHeight: 1.6, margin: '0 0 8px', maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
+                <h1 style={tituloGrande}>Tudo pronto.</h1>
+                <p style={{ ...descricao, fontSize: 16, margin: '0 auto 8px', maxWidth: 380 }}>
                   {tipo === 'clinica'
                     ? 'No painel administrativo você cadastra sua equipe e configura a Sofia no WhatsApp.'
                     : 'Comece sua primeira consulta com IA quando quiser.'}
@@ -501,7 +470,8 @@ export default function OnboardingPage() {
             )}
 
             {erro && (
-              <div style={{ marginTop: 20, padding: '10px 14px', background: tokens.status.dangerBg, color: tokens.status.dangerDark, borderRadius: 8, fontSize: 13, fontWeight: 500 }}>
+              <div style={{ marginTop: 20, padding: '10px 12px', background: T.status.dangerBg, color: T.status.danger, borderRadius: 12, fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <CircleAlert size={15} strokeWidth={1.6} style={{ flexShrink: 0 }} />
                 {erro}
               </div>
             )}
@@ -511,32 +481,13 @@ export default function OnboardingPage() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 32 }}>
           {/* No step de equipe os botões ficam no conteúdo (Adicionar / Pular), então some o do rodapé */}
           {passo.kind !== 'equipe' && (
-          <button
-            onClick={avancar}
-            disabled={salvando}
-            style={{
-              padding: '14px 28px',
-              background: salvando ? tokens.neutral[400] : tokens.neutral[900],
-              color: 'white',
-              border: 'none',
-              borderRadius: 10,
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: salvando ? 'wait' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            {salvando ? 'Salvando...' : (
-              passo.kind === 'welcome' ? 'Vamos começar' :
-              passo.kind === 'done' ? ((tipo === 'clinica' && perfil === 'clinica') ? 'Ir pro painel' : 'Ir pro dashboard') :
-              'Continuar'
-            )}
-            {!salvando && (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-            )}
-          </button>
+            <Button size="lg" onClick={avancar} disabled={salvando} iconRight={salvando ? undefined : ArrowRight} style={{ padding: '0 24px' }}>
+              {salvando ? 'Salvando…' : (
+                passo.kind === 'welcome' ? 'Vamos começar' :
+                passo.kind === 'done' ? ((tipo === 'clinica' && perfil === 'clinica') ? 'Ir pro painel' : 'Ir pro dashboard') :
+                'Continuar'
+              )}
+            </Button>
           )}
         </div>
       </main>

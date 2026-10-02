@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { tokens } from '@/lib/design-tokens'
+import { Stethoscope } from 'lucide-react'
+import { EmptyState } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import { useMedicoLogado } from '@/lib/agenda-publica/use-medico'
 import { CONFIG_DEFAULT, parseConfig, type AgendaConfig } from '@/lib/agenda-publica/slots'
@@ -9,6 +10,7 @@ import { normalizarSlug, validarFormatoSlug } from '@/lib/agenda-publica/slug'
 import { listarTemplatesClinica } from '@/lib/formularios/templates'
 import type { Template } from '@/lib/formularios/types'
 import Conteudo from './Conteudo'
+import { confirmar } from '@/components/ui/dialogos'
 
 type SolicitacaoPendente = {
   id: string
@@ -202,7 +204,7 @@ export default function AgendaPublicaPage() {
   }
 
   async function rejeitarSolicitacao(s: SolicitacaoPendente) {
-    if (!confirm('Rejeitar essa solicitação? O paciente será notificado.')) return
+    if (!(await confirmar({ titulo: 'Rejeitar esta solicitação?', mensagem: 'O paciente será avisado de que o horário não foi confirmado.', confirmar: 'Rejeitar', perigo: true }))) return
     try {
       await supabase
         .from('agenda_publica_solicitacoes')
@@ -240,31 +242,26 @@ export default function AgendaPublicaPage() {
   // Loading inicial
   if (loadingAuth) {
     return (
-      <div style={{ padding: '64px 0', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: '2px solid ' + tokens.brand.primary, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
-      </div>
+      <Carregando />
     )
   }
 
   // Admin sem médicos
   if (tipo === 'admin' && medicosDisponiveis.length === 0) {
     return (
-      <div style={{ maxWidth: 640, margin: '64px auto', textAlign: 'center', padding: 32, background: '#fff', borderRadius: 16, border: '1px solid ' + tokens.border.default }}>
-        <h2 style={{ fontSize: 22, fontWeight: 600, color: tokens.text.primary, marginBottom: 8 }}>Nenhum médico cadastrado</h2>
-        <p style={{ fontSize: 14, color: tokens.text.secondary, lineHeight: 1.5 }}>
-          Cadastre médicos no Painel admin antes de configurar a agenda pública.
-        </p>
+      <div style={{ padding: 20 }}>
+        <EmptyState
+          icon={Stethoscope}
+          titulo="Nenhum médico cadastrado"
+          descricao="Cadastre médicos no Painel admin antes de configurar a agenda pública."
+        />
       </div>
     )
   }
 
   if (!medicoAtivo) {
     return (
-      <div style={{ padding: '64px 0', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: '2px solid ' + tokens.brand.primary, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
-      </div>
+      <Carregando />
     )
   }
 
@@ -298,5 +295,16 @@ export default function AgendaPublicaPage() {
       rejeitarSolicitacao={rejeitarSolicitacao}
       templates={templates}
     />
+  )
+}
+
+
+function Carregando() {
+  return (
+    <div style={{ padding: 20, display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: 16 }}>
+      <div className="c360-skel" style={{ height: 40, width: 360, maxWidth: '100%', borderRadius: 10 }} />
+      <div className="c360-skel" style={{ height: 120, borderRadius: 16 }} />
+      <div className="c360-skel" style={{ height: 260, borderRadius: 16 }} />
+    </div>
   )
 }

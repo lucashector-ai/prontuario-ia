@@ -1,12 +1,12 @@
 "use client"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import type { LucideIcon } from "lucide-react"
+import { RefreshCw, CalendarCheck, Star, FileText, FileDown, Send, Lightbulb, Check, Sparkles, Clock, UserRoundCheck } from "lucide-react"
 import { tokens } from '@/lib/design-tokens'
+import { Badge, Button, Card, Icon, IconTile, SegmentedControl } from '@/components/ui'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = tokens.bg.hover
-const CARD_RADIUS = 16
+const T = tokens
 
 type Tab = "followup" | "confirmacao" | "nps" | "relatorio" | "pdf"
 
@@ -49,108 +49,85 @@ export function Automacoes() {
     }
   }
 
-  const ABAS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "followup", label: "Follow-up", icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-      </svg>
-    )},
-    { id: "confirmacao", label: "Confirmação", icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-    )},
-    { id: "nps", label: "Avaliação NPS", icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-      </svg>
-    )},
-    { id: "relatorio", label: "Relatório semanal", icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
-        <line x1="16" y1="17" x2="8" y2="17"/>
-      </svg>
-    )},
-    { id: "pdf", label: "Relatório PDF", icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-    )},
+  const ABAS: { id: Tab; label: string; icon: LucideIcon }[] = [
+    { id: "followup", label: "Follow-up", icon: RefreshCw },
+    { id: "confirmacao", label: "Confirmação", icon: CalendarCheck },
+    { id: "nps", label: "Avaliação NPS", icon: Star },
+    { id: "relatorio", label: "Relatório semanal", icon: FileText },
+    { id: "pdf", label: "Relatório PDF", icon: FileDown },
   ]
 
-  const h3Style: React.CSSProperties = { fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: "0 0 4px" }
-  const pDescStyle: React.CSSProperties = { fontSize: 13, color: tokens.text.secondary, margin: 0, lineHeight: 1.6 }
-
-  const card = (titulo: string, desc: string, acao: string, body: any, extra?: React.ReactNode) => (
-    <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24, display: "flex", flexDirection: "column" as const, gap: 16, border: `1px solid ${tokens.border.subtle}` }}>
-      <div>
-        <h3 style={h3Style}>{titulo}</h3>
-        <p style={pDescStyle}>{desc}</p>
+  const card = (titulo: string, desc: string, acao: string, body: any, icon: LucideIcon, cor: string) => (
+    <Card style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+        <IconTile icon={icon} color={cor} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: "-.01em", color: T.text.primary }}>{titulo}</h3>
+          <p style={{ margin: "4px 0 0", fontSize: 13, color: T.text.secondary, lineHeight: 1.55 }}>{desc}</p>
+        </div>
       </div>
-      {extra}
-      <button onClick={() => chamarAPI(acao, body)} disabled={carregando}
-        style={{
-          alignSelf: "flex-start" as const, padding: "10px 20px", borderRadius: 10, border: "none",
-          background: carregando ? tokens.text.tertiary : ACCENT, color: "white",
-          fontSize: 13, fontWeight: 600, cursor: carregando ? "not-allowed" : "pointer",
-        }}>
-        {carregando ? "Enviando..." : "Enviar agora"}
-      </button>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <Button icon={Send} onClick={() => chamarAPI(acao, body)} disabled={carregando}>
+          {carregando ? "Enviando…" : "Enviar agora"}
+        </Button>
+      </div>
+    </Card>
+  )
+
+  const dica = (titulo: string, children: React.ReactNode) => (
+    <div style={{ display: "flex", gap: 12, padding: "14px 16px", borderRadius: 16, border: `1px solid ${T.border.default}`, background: T.bg.page }}>
+      <span style={{ color: T.status.warning, display: "inline-grid", paddingTop: 1 }}><Icon icon={Lightbulb} size={16} /></span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: T.text.strong, margin: "0 0 4px" }}>{titulo}</p>
+        <p style={{ fontSize: 12.5, color: T.text.secondary, margin: 0, lineHeight: 1.55 }}>{children}</p>
+      </div>
     </div>
   )
 
-  return (
-    <div style={{ padding: '0 4px' }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, gap: 16 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: "0 0 4px" }}>Automações</h1>
-          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Mensagens e relatórios automáticos pra seus pacientes via WhatsApp</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: "white", borderRadius: 20 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: tokens.status.success }} />
-          <span style={{ fontSize: 12, color: tokens.text.strong, fontWeight: 500 }}>WhatsApp ativo</span>
-        </div>
-      </div>
+  const codigo = (txt: string) => (
+    <code className="mono" style={{ background: "#fff", border: `1px solid ${T.border.default}`, padding: "1px 6px", borderRadius: 6, fontSize: 11.5, color: T.text.strong }}>{txt}</code>
+  )
 
+  const resultadoCard = (rotulo: string, valor: React.ReactNode) => (
+    <Card titulo="Resultado">
+      <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: T.text.secondary }}>
+        <IconTile icon={UserRoundCheck} color={T.data.green} size={32} radius={10} />
+        <span>{rotulo}: <strong style={{ color: T.text.primary }}>{valor}</strong></span>
+      </div>
+    </Card>
+  )
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Toast flutuante */}
       {msg && (
         <div style={{
-          position: "fixed", top: 24, right: 24, zIndex: 200,
-          padding: "12px 20px", borderRadius: 10,
-          background: msg.tipo === "ok" ? tokens.status.successBgSoft : tokens.status.dangerBg,
-          color: msg.tipo === "ok" ? tokens.status.successText : tokens.status.dangerDark,
-          fontSize: 13, fontWeight: 600,
-          border: `1px solid ${msg.tipo === "ok" ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          maxWidth: 400,
+          position: "fixed", top: 24, right: 24, zIndex: 200, maxWidth: 400,
+          padding: "11px 16px", borderRadius: 12, display: "flex", alignItems: "center", gap: 8,
+          background: "#fff", border: `1px solid ${T.border.default}`, boxShadow: T.shadow.lg,
+          color: msg.tipo === "ok" ? T.status.success : T.status.danger, fontSize: 13, fontWeight: 600,
         }}>
+          {msg.tipo === "ok" && <Icon icon={Check} size={15} />}
           {msg.texto}
         </div>
       )}
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, background: "white", borderRadius: 12, padding: 4, marginBottom: 20, width: "fit-content" }}>
-        {ABAS.map(a => (
-          <button key={a.id} onClick={() => { setAba(a.id); setResultado(null); setMsg(null) }}
-            style={{
-              padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontSize: 13, fontWeight: aba === a.id ? 600 : 500,
-              background: aba === a.id ? ACCENT_LIGHT : "transparent",
-              color: aba === a.id ? ACCENT : tokens.text.secondary,
-              display: "flex", alignItems: "center", gap: 8,
-              transition: "all 0.12s",
-            }}>
-            {a.icon}
-            {a.label}
-          </button>
-        ))}
+      {/* Sub-navegação + status */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 0, overflowX: "auto", scrollbarWidth: "none" }}>
+          <SegmentedControl
+            value={aba}
+            onChange={(v) => { setAba(v); setResultado(null); setMsg(null) }}
+            options={ABAS.map(a => ({
+              value: a.id,
+              label: <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Icon icon={a.icon} size={14} />{a.label}</span>,
+            }))}
+          />
+        </div>
+        <Badge tone="success" dot>WhatsApp ativo</Badge>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column" as const, gap: 16, maxWidth: 760 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 760 }}>
 
         {/* FOLLOW-UP */}
         {aba === "followup" && (<>
@@ -158,19 +135,19 @@ export function Automacoes() {
             "Check-in de pacientes inativos",
             "Envia uma mensagem calorosa para pacientes que não tiveram contato há mais de 7 dias. A Sofia pergunta como estão se sentindo e oferece ajuda.",
             "/api/whatsapp-checkin",
-            { dias_sem_contato: 7 }
+            { dias_sem_contato: 7 },
+            RefreshCw, T.data.purple,
           )}
           {card(
             "Follow-up pós-consulta (3 dias)",
             "Envia uma mensagem 3 dias após a consulta perguntando sobre a evolução do paciente. Se detectar piora, alerta o médico automaticamente.",
             "/api/whatsapp-checkin",
-            { dias_sem_contato: 3 }
+            { dias_sem_contato: 3 },
+            Clock, T.data.blue,
           )}
-          {resultado?.enviados !== undefined && (
-            <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 20, border: `1px solid ${tokens.border.subtle}` }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: "0 0 8px" }}>Resultado</p>
-              <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Pacientes contatados: <strong style={{ color: ACCENT }}>{resultado.enviados}</strong> de {resultado.total || resultado.enviados}</p>
-            </div>
+          {resultado?.enviados !== undefined && resultadoCard(
+            "Pacientes contatados",
+            <>{resultado.enviados} de {resultado.total || resultado.enviados}</>,
           )}
         </>)}
 
@@ -180,14 +157,12 @@ export function Automacoes() {
             "Confirmar consultas das próximas 24h",
             "Envia mensagem de confirmação para todos os pacientes com consulta agendada nas próximas 24 horas. O paciente pode confirmar, remarcar ou cancelar diretamente pelo WhatsApp.",
             "/api/whatsapp-confirmacao",
-            {}
+            {},
+            CalendarCheck, T.data.green,
           )}
-          <div style={{ background: tokens.status.warningBgAlt, border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: CARD_RADIUS, padding: 20 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: tokens.status.warningText, margin: "0 0 6px" }}>Dica — configure um cron job</p>
-            <p style={{ fontSize: 12, color: tokens.status.warningText, margin: 0, lineHeight: 1.6 }}>
-              Para enviar automaticamente todo dia às 18h, configure um cron job apontando para <code style={{ background: tokens.status.warningLightSoft, padding: "1px 6px", borderRadius: 4, fontSize: 11 }}>POST /api/whatsapp-confirmacao</code> com seu medico_id.
-            </p>
-          </div>
+          {dica("Dica — configure um cron job", <>
+            Para enviar automaticamente todo dia às 18h, configure um cron job apontando para {codigo("POST /api/whatsapp-confirmacao")} com seu medico_id.
+          </>)}
         </>)}
 
         {/* NPS */}
@@ -196,24 +171,26 @@ export function Automacoes() {
             "Enviar pesquisa de satisfação (NPS)",
             "Envia uma pesquisa de satisfação para pacientes atendidos hoje. O paciente avalia o atendimento de 0 a 10 diretamente pelo WhatsApp.",
             "/api/whatsapp-nps",
-            {}
+            {},
+            Star, T.data.orange,
           )}
-          {resultado && (
-            <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 20, border: `1px solid ${tokens.border.subtle}` }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: "0 0 8px" }}>Resultado</p>
-              <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Pesquisas enviadas: <strong style={{ color: ACCENT }}>{resultado.enviados ?? 0}</strong></p>
-            </div>
-          )}
+          {resultado && resultadoCard("Pesquisas enviadas", resultado.enviados ?? 0)}
         </>)}
 
         {/* PDF MENSAL */}
         {aba === "pdf" && (<>
-          <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
-            <h3 style={h3Style}>Relatório mensal completo em PDF</h3>
-            <p style={{ ...pDescStyle, marginBottom: 16 }}>
-              Gera um PDF completo do mês atual com consultas, crescimento, diagnósticos mais frequentes, próximos agendamentos e análise por IA. Ideal para arquivar ou compartilhar com a gestão da clínica.
-            </p>
-            <button onClick={async () => {
+          <Card style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+              <IconTile icon={FileDown} color={T.data.pink} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: "-.01em", color: T.text.primary }}>Relatório mensal completo em PDF</h3>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: T.text.secondary, lineHeight: 1.55 }}>
+                  Gera um PDF completo do mês atual com consultas, crescimento, diagnósticos mais frequentes, próximos agendamentos e análise por IA. Ideal para arquivar ou compartilhar com a gestão da clínica.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <Button icon={FileDown} onClick={async () => {
               if (!medico) return
               setCarregando(true)
               setMsg(null)
@@ -233,21 +210,14 @@ export function Automacoes() {
                 }
               } catch { setMsg({ tipo: "erro", texto: "Erro de conexão" }) }
               finally { setCarregando(false) }
-            }} disabled={carregando}
-              style={{
-                padding: "10px 20px", borderRadius: 10, border: "none",
-                background: carregando ? tokens.text.tertiary : ACCENT, color: "white",
-                fontSize: 13, fontWeight: 600, cursor: carregando ? "not-allowed" : "pointer",
-              }}>
-              {carregando ? "Gerando..." : "Gerar relatório do mês"}
-            </button>
-          </div>
-          <div style={{ background: tokens.status.warningBgAlt, border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: CARD_RADIUS, padding: 20 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: tokens.status.warningText, margin: "0 0 6px" }}>Dica — relatório mensal automático</p>
-            <p style={{ fontSize: 12, color: tokens.status.warningText, margin: 0, lineHeight: 1.6 }}>
-              Configure um cron job para gerar e enviar o relatório automaticamente no primeiro dia de cada mês. Endpoint: <code style={{ background: tokens.status.warningLightSoft, padding: "1px 6px", borderRadius: 4, fontSize: 11 }}>POST /api/pdf-relatorio-mensal</code>
-            </p>
-          </div>
+            }} disabled={carregando}>
+                {carregando ? "Gerando…" : "Gerar relatório do mês"}
+              </Button>
+            </div>
+          </Card>
+          {dica("Dica — relatório mensal automático", <>
+            Configure um cron job para gerar e enviar o relatório automaticamente no primeiro dia de cada mês. Endpoint: {codigo("POST /api/pdf-relatorio-mensal")}
+          </>)}
         </>)}
 
         {/* RELATÓRIO SEMANAL */}
@@ -256,29 +226,32 @@ export function Automacoes() {
             "Relatório semanal da clínica",
             "Gera e exibe um resumo da semana com consultas realizadas, alertas pendentes, próximos agendamentos e novos pacientes no WhatsApp.",
             "/api/whatsapp-relatorio",
-            {}
+            {},
+            FileText, T.data.purple,
           )}
           {resultado?.periodo && (
-            <div style={{ background: "white", borderRadius: CARD_RADIUS, padding: 24, display: "flex", flexDirection: "column" as const, gap: 16, border: `1px solid ${tokens.border.subtle}` }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Período {resultado.periodo.inicio} — {resultado.periodo.fim}</p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+            <Card titulo={`Período ${resultado.periodo.inicio} — ${resultado.periodo.fim}`} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 {[
-                  { label: "Consultas", valor: resultado.consultas_semana ?? 0, cor: ACCENT },
-                  { label: "Alertas pendentes", valor: resultado.alertas_pendentes?.length ?? 0, cor: tokens.status.danger },
-                  { label: "Novos no WhatsApp", valor: resultado.novos_pacientes_wpp ?? 0, cor: tokens.status.success },
+                  { label: "Consultas", valor: resultado.consultas_semana ?? 0, cor: T.data.purple },
+                  { label: "Alertas pendentes", valor: resultado.alertas_pendentes?.length ?? 0, cor: T.status.danger },
+                  { label: "Novos no WhatsApp", valor: resultado.novos_pacientes_wpp ?? 0, cor: T.data.green },
                 ].map(m => (
-                  <div key={m.label} style={{ background: tokens.bg.hover, borderRadius: 12, padding: "16px 14px", textAlign: "center" as const }}>
-                    <p style={{ fontSize: 22, fontWeight: 800, color: m.cor, margin: "0 0 4px", lineHeight: 1 }}>{m.valor}</p>
-                    <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{m.label}</p>
+                  <div key={m.label} style={{ border: `1px solid ${T.border.default}`, borderRadius: 12, padding: "14px 14px" }}>
+                    <p style={{ fontSize: 12.5, fontWeight: 600, color: T.text.secondary, margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: m.cor }} />{m.label}
+                    </p>
+                    <p style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-.03em", color: T.text.primary, margin: "8px 0 0", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{m.valor}</p>
                   </div>
                 ))}
               </div>
               {resultado.resumo_ia && (
-                <div style={{ background: ACCENT_LIGHT, borderRadius: 12, padding: "14px 16px" }}>
-                  <p style={{ fontSize: 12, color: tokens.brand.primaryDark, margin: 0, lineHeight: 1.6 }}>{resultado.resumo_ia}</p>
+                <div style={{ marginTop: 10, display: "flex", gap: 10, background: T.brand.primarySoftBg, border: `1px solid ${T.brand.primaryAccentLight}`, borderRadius: 12, padding: "12px 14px" }}>
+                  <span style={{ color: T.brand.primary, display: "inline-grid", paddingTop: 1 }}><Icon icon={Sparkles} size={15} /></span>
+                  <p style={{ fontSize: 13, color: T.text.strong, margin: 0, lineHeight: 1.55 }}>{resultado.resumo_ia}</p>
                 </div>
               )}
-            </div>
+            </Card>
           )}
         </>)}
 

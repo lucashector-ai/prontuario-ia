@@ -1,6 +1,8 @@
 'use client'
 import Link from 'next/link'
 import { tokens } from '@/lib/design-tokens'
+import { Eye, EyeOff } from 'lucide-react'
+import { Input } from '@/components/ui'
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -107,7 +109,7 @@ function LoginForm() {
 
           {/* Título */}
           <div style={{ textAlign: 'center' as const, marginBottom: 28 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 600, color: tokens.neutral[900], margin: '0 0 8px', letterSpacing: '-0.02em' as const }}>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px', letterSpacing: '-0.03em' as const }}>
               Bem-vindo de volta
             </h1>
             <p style={{ fontSize: 14, color: tokens.text.quaternary, margin: 0 }}>
@@ -117,12 +119,12 @@ function LoginForm() {
 
           {/* Mensagens */}
           {sucesso && (
-            <div style={{ background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, color: tokens.status.successHover, padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 16 }}>
+            <div style={{ background: tokens.status.successBg, color: tokens.status.success, padding: '10px 12px', borderRadius: 12, fontSize: 13, marginBottom: 16 }}>
               {sucesso}
             </div>
           )}
           {erro && (
-            <div style={{ background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, color: tokens.status.dangerHover, padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 16 }}>
+            <div style={{ background: tokens.status.dangerBg, color: tokens.status.danger, padding: '10px 12px', borderRadius: 12, fontSize: 13, marginBottom: 16 }}>
               {erro}
             </div>
           )}
@@ -132,8 +134,8 @@ function LoginForm() {
             onClick={handleGoogle}
             disabled={carregandoGoogle}
             style={{
-              width: '100%', padding: '12px 16px', borderRadius: 10,
-              background: 'white', color: tokens.neutral[900], border: `1px solid ${tokens.neutral[200]}`,
+              width: '100%', height: 44, padding: '0 16px', borderRadius: 12, fontFamily: 'inherit',
+              background: 'white', color: tokens.text.primary, border: `1px solid ${tokens.border.default}`,
               fontSize: 14, fontWeight: 600, cursor: carregandoGoogle ? 'wait' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
               transition: 'all 0.15s' as const, marginBottom: 16
@@ -152,44 +154,30 @@ function LoginForm() {
 
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
-            <div style={{ flex: 1, height: 1, background: tokens.neutral[200] }}/>
-            <span style={{ fontSize: 12, color: tokens.neutral[400], fontWeight: 500 }}>ou</span>
-            <div style={{ flex: 1, height: 1, background: tokens.neutral[200] }}/>
+            <div style={{ flex: 1, height: 1, background: tokens.border.default }}/>
+            <span style={{ fontSize: 12, color: tokens.text.tertiary, fontWeight: 500 }}>ou</span>
+            <div style={{ flex: 1, height: 1, background: tokens.border.default }}/>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit}>
-            <input
+            <Input
               type="email"
               placeholder="seu@email.com"
               value={form.email}
               onChange={e => setForm({ ...form, email: e.target.value })}
               required
-              style={{
-                width: '100%', padding: '12px 14px', borderRadius: 10,
-                border: `1px solid ${tokens.neutral[200]}`, fontSize: 14, color: tokens.neutral[900],
-                marginBottom: 12, outline: 'none', boxSizing: 'border-box' as const,
-                transition: 'border 0.15s' as const,
-              }}
-              onFocus={e => e.target.style.borderColor = tokens.neutral[900]}
-              onBlur={e => e.target.style.borderColor = tokens.neutral[200]}
+              style={{ minHeight: 44, fontSize: 14, marginBottom: 12 }}
             />
 
             <div style={{ position: 'relative' as const, marginBottom: 6 }}>
-              <input
+              <Input
                 type={showSenha ? 'text' : 'password'}
                 placeholder="Senha"
                 value={form.senha}
                 onChange={e => setForm({ ...form, senha: e.target.value })}
                 required
-                style={{
-                  width: '100%', padding: '12px 44px 12px 14px', borderRadius: 10,
-                  border: `1px solid ${tokens.neutral[200]}`, fontSize: 14, color: tokens.neutral[900],
-                  outline: 'none', boxSizing: 'border-box' as const,
-                  transition: 'border 0.15s' as const,
-                }}
-                onFocus={e => e.target.style.borderColor = tokens.neutral[900]}
-                onBlur={e => e.target.style.borderColor = tokens.neutral[200]}
+                style={{ minHeight: 44, fontSize: 14, paddingRight: 44 }}
               />
               <button
                 type="button"
@@ -201,17 +189,13 @@ function LoginForm() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                {showSenha ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.text.quaternary} strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.text.quaternary} strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                )}
+                {showSenha ? <EyeOff size={18} strokeWidth={1.6} color={tokens.text.quaternary} /> : <Eye size={18} strokeWidth={1.6} color={tokens.text.quaternary} />}
               </button>
             </div>
 
             {/* Esqueceu */}
             <div style={{ textAlign: 'right' as const, marginBottom: 18 }}>
-              <Link href="/esqueci-senha" style={{ fontSize: 12, color: tokens.brand.primary, textDecoration: 'none', fontWeight: 500 }}>
+              <Link href="/forgot-password" style={{ fontSize: 12.5, color: tokens.brand.primary, textDecoration: 'none', fontWeight: 600 }}>
                 Esqueceu a senha?
               </Link>
             </div>
@@ -220,8 +204,9 @@ function LoginForm() {
               type="submit"
               disabled={carregando}
               style={{
-                width: '100%', padding: '13px', borderRadius: 10,
-                background: tokens.neutral[900], color: 'white', border: 'none',
+                width: '100%', height: 44, padding: '0 18px', borderRadius: 12, fontFamily: 'inherit',
+                background: carregando ? tokens.brand.primaryAccent : tokens.brand.primary, color: 'white', border: 'none',
+                boxShadow: carregando ? 'none' : tokens.shadow.accent,
                 fontSize: 14, fontWeight: 600, cursor: carregando ? 'wait' : 'pointer',
                 transition: 'all 0.15s' as const, marginBottom: 18,
               }}
@@ -239,7 +224,7 @@ function LoginForm() {
           </p>
 
           {/* Termos */}
-          <p style={{ textAlign: 'center' as const, fontSize: 11, color: tokens.neutral[400], margin: 0, lineHeight: 1.5 }}>
+          <p style={{ textAlign: 'center' as const, fontSize: 11, color: tokens.text.tertiary, margin: 0, lineHeight: 1.5 }}>
             Ao entrar, você aceita nossos{' '}
             <Link href="/termos" style={{ color: tokens.text.quaternary, textDecoration: 'underline' }}>Termos</Link>
             {' '}e{' '}

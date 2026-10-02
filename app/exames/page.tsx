@@ -4,12 +4,14 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
-import { PageHeader } from '@/components/ui'
-
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = 'transparent'
-const CARD_RADIUS = 16
+import {
+  Badge, Button, EmptyState, Field, Icon, IconButton, IconTile, Modal, Select, Textarea,
+  type BadgeTone,
+} from '@/components/ui'
+import {
+  AlertTriangle, Check, FileDown, FileText, FileUp, Image as ImageIcon, Paperclip,
+  Save, ScanSearch, Sparkles, Upload, Users, X,
+} from 'lucide-react'
 
 export default function Exames() {
   const router = useRouter()
@@ -22,6 +24,8 @@ export default function Exames() {
   const [erro, setErro] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const [loadingMsg, setLoadingMsg] = useState('Recebendo o exame...')
+  const [arrastando, setArrastando] = useState(false)
+  const [hoverDrop, setHoverDrop] = useState(false)
 
   // Mensagens rotativas durante a análise (pra parecer ativo)
   useEffect(() => {
@@ -191,442 +195,266 @@ export default function Exames() {
     setSalvandoConsulta(false)
   }
 
-  const statusCor = (s: string) => {
-    if (s === 'critico') return { badge: tokens.status.danger, badgeBg: tokens.status.dangerBg, border: tokens.status.dangerLight }
-    if (s === 'alterado') return { badge: tokens.status.warningAlt, badgeBg: tokens.status.warningBgAlt, border: tokens.status.warningLightAlt }
-    return { badge: ACCENT, badgeBg: ACCENT_LIGHT, border: tokens.brand.primaryAccentSoft }
+  // Status do parâmetro (API: critico | alterado | normal) → Badge + cor do valor
+  const statusParam = (s: string): { label: string; tone: BadgeTone; cor: string } => {
+    if (s === 'critico') return { label: 'Crítico', tone: 'danger', cor: tokens.status.danger }
+    if (s === 'alterado') return { label: 'Alterado', tone: 'warning', cor: tokens.status.warning }
+    return { label: 'Normal', tone: 'success', cor: tokens.text.primary }
   }
 
+  const ehPdf = imagem?.type === 'application/pdf'
+  const temAtencao = !!analise && ((analise.alertas?.length ?? 0) > 0 || (analise.valores || []).some((v: any) => v.status && v.status !== 'normal'))
+  const statusArquivo: { label: string; tone: BadgeTone } = analisando
+    ? { label: 'Lendo…', tone: 'pending' }
+    : analise
+      ? (temAtencao ? { label: 'Atenção', tone: 'danger' } : { label: 'Normal', tone: 'success' })
+      : { label: 'Aguardando', tone: 'neutral' }
+  const tamanhoArquivo = imagem ? (imagem.size / 1024 / 1024 >= 1 ? (imagem.size / 1024 / 1024).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(imagem.size / 1024)) + ' KB') : ''
+  const tituloExame = analise?.tipo || analise?.tipo_exame || 'Resultado da análise'
+  const salvouErro = salvouMsg.startsWith('Erro')
+
   return (
-    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
-      {/* Header */}
-      <PageHeader titulo="Análise de exames" descricao="Envie um exame ou laudo e a IA interpreta pra você em segundos" />
-
-
-      {/* Grid 2 colunas quando tem análise, 1 coluna caso contrário */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: analise ? '1fr 1fr' : '1fr',
-        gap: 20,
-        maxWidth: 'none',
-      }}>
-
-        {/* COLUNA ESQUERDA — upload + contexto + botão */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-          {/* Dropzone */}
-          <div
-            onDrop={handleDrop}
-            onDragOver={e => e.preventDefault()}
-            onClick={() => !preview && inputRef.current?.click()}
-            style={{
-              background: 'white',
-              border: `2px dashed ${preview ? ACCENT : tokens.border.default}`,
-              borderRadius: CARD_RADIUS,
-              overflow: 'hidden',
-              cursor: preview ? 'default' : 'pointer',
-              minHeight: 300,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              transition: 'border-color 0.15s',
-            }}
-            onMouseEnter={e => { if (!preview) e.currentTarget.style.borderColor = ACCENT }}
-            onMouseLeave={e => { if (!preview) e.currentTarget.style.borderColor = tokens.border.default }}
-          >
-            {preview ? (
-              <div style={{ position: 'relative', width: '100%' }}>
-                {imagem?.type === 'application/pdf' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, background: tokens.status.dangerBg, borderRadius: 12, border: `1px solid ${tokens.status.dangerLight}` }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="1.5">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                </svg>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: tokens.status.dangerDark, margin: '0 0 2px' }}>PDF carregado</p>
-                  <p style={{ fontSize: 12, color: tokens.status.dangerDarker, margin: 0 }}>{imagem.name}</p>
-                </div>
-              </div>
-            ) : (
-              <img src={preview} alt="Exame" style={{ width: '100%', maxHeight: 400, objectFit: 'contain', display: 'block' }}/>
-            )}
-                <button onClick={e => { e.stopPropagation(); setImagem(null); setPreview(null); setAnalise(null) }}
-                  style={{
-                    position: 'absolute', top: 12, right: 12,
-                    background: 'white', border: `1px solid ${tokens.border.default}`,
-                    borderRadius: 10, padding: '6px 12px',
-                    fontSize: 12, fontWeight: 600, color: tokens.text.strong,
-                    cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                  }}>
-                  Trocar imagem
-                </button>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: 40 }}>
-                <div style={{
-                  width: 64, height: 64, borderRadius: 16,
-                  background: ACCENT_LIGHT,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '0 auto 16px',
-                }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="1.8">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                  </svg>
-                </div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Enviar exame ou laudo</p>
-                <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 14px' }}>Arraste a imagem aqui ou clique pra selecionar</p>
-                <span style={{
-                  fontSize: 11, fontWeight: 500, color: tokens.text.secondary,
-                  background: tokens.bg.hoverStrong, padding: '4px 12px', borderRadius: 20,
-                }}>
-                  JPG, PNG, PDF · Máx. 10MB
-                </span>
-              </div>
-            )}
-          </div>
-          <input ref={inputRef} type="file" accept="image/*,application/pdf" style={{ display: 'none' }}
-            onChange={e => { const f = e.target.files?.[0]; if (f) handleImagem(f) }}/>
-
-          {/* Contexto clínico */}
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
-            <label style={{
-              fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
-              display: 'block', marginBottom: 8,
-              textTransform: 'uppercase' as const, letterSpacing: '0.04em',
-            }}>
-              Contexto clínico <span style={{ fontWeight: 400, textTransform: 'none' as const }}>(opcional)</span>
-            </label>
-            <textarea
-              value={contexto}
-              onChange={e => setContexto(e.target.value)}
-              placeholder="Ex: Paciente com diabetes e hipertensão, 58 anos, em acompanhamento por dislipidemia..."
-              style={{
-                width: '100%', minHeight: 90, fontSize: 13,
-                borderRadius: 10, padding: '10px 14px',
-                border: `1px solid ${tokens.border.default}`, outline: 'none',
-                resize: 'vertical' as const, color: tokens.text.strong,
-                lineHeight: 1.6, fontFamily: 'inherit', boxSizing: 'border-box' as const,
-              }}
-            />
-            <p style={{ margin: '8px 0 0', fontSize: 11, color: tokens.text.tertiary, lineHeight: 1.5 }}>
-              Quanto mais contexto, melhor a análise. A IA usa pra comparar valores com o histórico do paciente.
-            </p>
-          </div>
-
-          {erro && (
-            <div style={{
-              background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`,
-              borderRadius: 10, padding: '12px 14px',
-            }}>
-              <p style={{ fontSize: 13, color: tokens.status.dangerDark, margin: 0, fontWeight: 500 }}>{erro}</p>
-            </div>
-          )}
-
-          <button
-            onClick={handleAnalisar}
-            disabled={!imagem || analisando}
-            style={{
-              padding: 14, borderRadius: 10, border: 'none',
-              cursor: imagem && !analisando ? 'pointer' : 'not-allowed',
-              background: !imagem ? tokens.bg.hoverStrong : analisando ? tokens.text.tertiary : ACCENT,
-              color: !imagem ? tokens.text.tertiary : 'white',
-              fontSize: 14, fontWeight: 700,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}
-          >
-            {analisando ? (
-              <>
-                <svg style={{ animation: 'spin 0.8s linear infinite' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M2 12h4M18 12h4"/>
-                </svg>
-                Analisando exame com IA...
-              </>
-            ) : (
-              <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="M21 21l-4.35-4.35"/>
-                </svg>
-                Analisar exame
-              </>
-            )}
-          </button>
-          {analisando && (
-            <div style={{ background: ACCENT_LIGHT, borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 4 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="16" x2="12" y2="12"/>
-                <line x1="12" y1="8" x2="12.01" y2="8"/>
-              </svg>
-              <div>
-                <p style={{ fontSize: 12, fontWeight: 700, color: ACCENT, margin: '0 0 2px' }}>A IA está analisando com cuidado</p>
-                <p style={{ fontSize: 11, color: ACCENT, margin: 0, opacity: 0.8, lineHeight: 1.5 }}>
-                  Pode levar até 30 segundos. Estamos identificando especialidade, comparando valores com referências e consultando diretrizes médicas.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* COLUNA DIREITA — resultado da análise */}
-        {analise && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* Barra de ações: Exportar PDF + Adicionar ao prontuário */}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
-              <button onClick={exportarPDF} style={{
-                flex: 1, padding: '10px 14px', borderRadius: 9, border: `1px solid ${tokens.border.default}`,
-                background: 'white', color: tokens.text.strong, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                </svg>
-                Exportar PDF
-              </button>
-              <button onClick={abrirModalPaciente} style={{
-                flex: 1, padding: '10px 14px', borderRadius: 9, border: 'none',
-                background: ACCENT, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19"/>
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Adicionar ao prontuário
-              </button>
-            </div>
-
-            {salvouMsg && (
-              <div style={{
-                background: salvouMsg.startsWith('Erro') ? tokens.status.dangerBg : tokens.status.successBgSoft,
-                border: '1px solid ' + (salvouMsg.startsWith('Erro') ? tokens.status.dangerLight : tokens.status.successLightAlt),
-                color: salvouMsg.startsWith('Erro') ? tokens.status.dangerDark : tokens.status.successText,
-                padding: '10px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-              }}>{salvouMsg}</div>
-            )}
-
-
-            {/* Card: tipo + resumo */}
-            <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 3px' }}>{analise.tipo_exame}</p>
-                  {analise.data_exame && (
-                    <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0 }}>Data do exame: {analise.data_exame}</p>
-                  )}
-                </div>
-                <span style={{
-                  fontSize: 11, color: ACCENT, background: ACCENT_LIGHT,
-                  padding: '4px 12px', borderRadius: 20, fontWeight: 700,
-                  flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4,
-                }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  Analisado pela IA
-                </span>
-              </div>
-              <div style={{ background: tokens.bg.muted, borderRadius: 10, padding: '12px 14px' }}>
-                <p style={{ fontSize: 13, color: tokens.text.strong, margin: 0, lineHeight: 1.6 }}>{analise.resumo}</p>
-              </div>
-            </div>
-
-            {/* Card: alertas críticos */}
-            {analise.alertas?.length > 0 && (
-              <div style={{
-                background: tokens.status.dangerBg,
-                border: `1px solid ${tokens.status.dangerLight}`,
-                borderLeft: `4px solid ${tokens.status.danger}`,
-                borderRadius: CARD_RADIUS,
-                padding: 20,
-              }}>
-                <p style={{
-                  fontSize: 11, fontWeight: 700, color: tokens.status.danger,
-                  margin: '0 0 10px',
-                  textTransform: 'uppercase' as const, letterSpacing: '0.06em',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
-                  Achados importantes
-                </p>
-                {analise.alertas.map((a: string, i: number) => (
-                  <p key={i} style={{
-                    fontSize: 13, color: tokens.status.dangerDark, margin: '4px 0',
-                    display: 'flex', gap: 8, lineHeight: 1.5,
-                  }}>
-                    <span style={{ fontWeight: 700 }}>•</span>
-                    {a}
-                  </p>
-                ))}
-              </div>
-            )}
-
-            {/* Card: valores */}
-            {analise.valores?.length > 0 && (
-              <div style={{ background: 'white', borderRadius: CARD_RADIUS, overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
-                  <p style={{
-                    fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, margin: 0,
-                    textTransform: 'uppercase' as const, letterSpacing: '0.06em',
-                  }}>
-                    Valores encontrados
-                  </p>
-                </div>
-                {analise.valores.map((v: any, i: number) => {
-                  const c = statusCor(v.status)
-                  return (
-                    <div key={i} style={{
-                      padding: '14px 20px',
-                      borderBottom: i < analise.valores.length - 1 ? `1px solid ${tokens.bg.hoverStrong}` : 'none',
-                      display: 'flex', alignItems: 'flex-start', gap: 12,
-                    }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' as const }}>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{v.nome}</p>
-                          <span style={{
-                            fontSize: 10, fontWeight: 700,
-                            color: c.badge, background: c.badgeBg,
-                            padding: '2px 8px', borderRadius: 10,
-                            border: `1px solid ${c.border}`,
-                            textTransform: 'uppercase' as const,
-                          }}>
-                            {v.status}
-                          </span>
-                        </div>
-                        <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>{v.interpretacao}</p>
-                      </div>
-                      <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
-                        <p style={{ fontSize: 16, fontWeight: 800, color: c.badge, margin: '0 0 2px' }}>{v.valor}</p>
-                        <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: 0 }}>Ref: {v.referencia}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Card: conclusão */}
-            <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
-              <p style={{
-                fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, margin: '0 0 10px',
-                textTransform: 'uppercase' as const, letterSpacing: '0.06em',
-              }}>
-                Conclusão clínica
-              </p>
-              <p style={{ fontSize: 14, color: tokens.text.strong, margin: 0, lineHeight: 1.7 }}>{analise.conclusao}</p>
-            </div>
-
-            {/* Card: recomendações */}
-            {analise.recomendacoes?.length > 0 && (
-              <div style={{ background: ACCENT_LIGHT, borderRadius: CARD_RADIUS, padding: 20 }}>
-                <p style={{
-                  fontSize: 11, fontWeight: 700, color: ACCENT, margin: '0 0 12px',
-                  textTransform: 'uppercase' as const, letterSpacing: '0.06em',
-                }}>
-                  Recomendações
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {analise.recomendacoes.map((r: string, i: number) => (
-                    <div key={i} style={{ display: 'flex', gap: 10 }}>
-                      <div style={{
-                        width: 20, height: 20, borderRadius: '50%',
-                        background: ACCENT,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0, marginTop: 2,
-                      }}>
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5">
-                          <path d="M20 6L9 17l-5-5"/>
-                        </svg>
-                      </div>
-                      <p style={{ fontSize: 13, color: tokens.brand.primaryHover, margin: 0, lineHeight: 1.6, flex: 1 }}>{r}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+    <main style={{ minHeight: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {/* Dropzone */}
+      <div
+        onDrop={handleDrop}
+        onDragOver={e => { e.preventDefault(); if (!arrastando) setArrastando(true) }}
+        onDragLeave={() => setArrastando(false)}
+        onDropCapture={() => setArrastando(false)}
+        onClick={() => inputRef.current?.click()}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 18, padding: '22px 24px', borderRadius: 18,
+          border: `1.5px dashed ${arrastando ? tokens.brand.primary : tokens.brand.primaryAccentSoft}`,
+          background: arrastando || hoverDrop ? '#F8F6FF' : '#FCFBFF', cursor: 'pointer', flexWrap: 'wrap',
+          transition: 'background .15s, border-color .15s',
+        }}
+        onMouseEnter={() => setHoverDrop(true)}
+        onMouseLeave={() => setHoverDrop(false)}
+      >
+        <IconTile icon={FileUp} size={52} iconSize={24} radius={16} />
+        <span style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary }}>
+            {imagem ? 'Arraste outro exame aqui ou selecione um novo arquivo' : 'Arraste o exame aqui ou selecione um arquivo'}
+          </span>
+          <span style={{ fontSize: 12.5, color: tokens.text.quaternary }}>JPG, PNG ou PDF até 10 MB · a leitura leva poucos segundos</span>
+        </span>
+        <Button icon={Upload} onClick={e => { e.stopPropagation(); inputRef.current?.click() }}>
+          {imagem ? 'Trocar arquivo' : 'Selecionar arquivo'}
+        </Button>
       </div>
+      <input ref={inputRef} type="file" accept="image/*,application/pdf" style={{ display: 'none' }}
+        onChange={e => { const f = e.target.files?.[0]; if (f) handleImagem(f); e.target.value = '' }}/>
 
+      <div className="exames-grid">
+        {/* COLUNA ESQUERDA — arquivo + contexto + botão */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: tokens.text.secondary, padding: '0 4px' }}>Exame selecionado</span>
 
-      {/* Modal: escolher paciente para adicionar análise ao prontuário */}
-      {modalPaciente && (
-        <div onClick={() => setModalPaciente(false)} style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-        }}>
-          <div onClick={e => e.stopPropagation()} style={{
-            background: 'white', borderRadius: 14, width: '100%', maxWidth: 420,
-            display: 'flex', flexDirection: 'column', maxHeight: '80vh',
-          }}>
-            <div style={{ padding: '18px 22px', borderBottom: `1px solid ${tokens.bg.hoverStrong}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Selecionar paciente</h3>
-                <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '3px 0 0' }}>A análise será adicionada ao histórico</p>
+          {imagem ? (
+            <div style={{ border: `1px solid ${tokens.brand.primary}`, background: tokens.brand.primarySoftBg, borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12 }}>
+                <span style={{ width: 38, height: 38, borderRadius: 12, background: tokens.bg.page, color: tokens.text.secondary, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <Icon icon={ehPdf ? FileText : ImageIcon} size={17} />
+                </span>
+                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: tokens.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{imagem.name}</span>
+                  <span style={{ fontSize: 12, color: tokens.text.quaternary }}>{ehPdf ? 'PDF' : 'Imagem'} · {tamanhoArquivo}</span>
+                </span>
+                <Badge tone={statusArquivo.tone}>{statusArquivo.label}</Badge>
+                <IconButton icon={X} size={30} aria-label="Remover exame" title="Remover exame"
+                  onClick={() => { setImagem(null); setPreview(null); setAnalise(null) }} />
               </div>
-              <button onClick={() => setModalPaciente(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: tokens.text.tertiary, cursor: 'pointer', lineHeight: 1 }}>✕</button>
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-              {pacientesList.length === 0 ? (
-                <p style={{ fontSize: 13, color: tokens.text.tertiary, textAlign: 'center' as const, padding: 24 }}>Nenhum paciente cadastrado</p>
-              ) : (
-                <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Paciente</label>
-                    <select
-                      value={pacienteSelecionadoId}
-                      onChange={e => setPacienteSelecionadoId(e.target.value)}
-                      style={{
-                        width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 8,
-                        border: `1px solid ${tokens.border.default}`, outline: 'none', background: 'white', color: tokens.text.primary,
-                      }}
-                    >
-                      <option value="">Selecionar paciente...</option>
-                      {pacientesList.map((p: any) => (
-                        <option key={p.id} value={p.id}>{p.nome}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <button
-                    onClick={adicionarAoPaciente}
-                    disabled={salvandoConsulta || !pacienteSelecionadoId}
-                    style={{
-                      width: '100%', padding: '11px', borderRadius: 9, border: 'none',
-                      background: ACCENT, color: 'white', fontSize: 13, fontWeight: 700,
-                      cursor: (salvandoConsulta || !pacienteSelecionadoId) ? 'default' : 'pointer',
-                      opacity: (salvandoConsulta || !pacienteSelecionadoId) ? 0.5 : 1,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    }}
-                  >
-                    {salvandoConsulta ? (
-                      <>
-                        <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', animation: 'spin 0.8s linear infinite' }}/>
-                        Salvando...
-                      </>
-                    ) : (
-                      <>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-                          <polyline points="17 21 17 13 7 13 7 21"/>
-                          <polyline points="7 3 7 8 15 8"/>
-                        </svg>
-                        Salvar no histórico
-                      </>
-                    )}
-                  </button>
+              {preview && !ehPdf && (
+                <div style={{ borderTop: `1px solid ${tokens.border.muted}`, background: '#fff', padding: 8 }}>
+                  <img src={preview} alt="Exame" style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block', borderRadius: 8 }}/>
                 </div>
               )}
             </div>
-          </div>
+          ) : (
+            <div style={{ border: `1px solid ${tokens.border.default}`, borderRadius: 14, padding: '18px 14px', fontSize: 12.5, color: tokens.text.quaternary, textAlign: 'center', lineHeight: 1.5 }}>
+              Nenhum arquivo selecionado ainda.
+            </div>
+          )}
+
+          <Field label="Contexto clínico (opcional)" hint="Quanto mais contexto, melhor a análise. A IA usa para comparar valores com o histórico do paciente.">
+            <Textarea
+              value={contexto}
+              onChange={e => setContexto(e.target.value)}
+              placeholder="Ex.: paciente com diabetes e hipertensão, 58 anos, em acompanhamento por dislipidemia…"
+              style={{ minHeight: 96, fontSize: 13 }}
+            />
+          </Field>
+
+          {erro && (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', background: tokens.status.dangerBg, borderRadius: 12, padding: '10px 12px', fontSize: 13, color: tokens.status.danger, fontWeight: 500, lineHeight: 1.45 }}>
+              <Icon icon={AlertTriangle} size={15} style={{ marginTop: 1, flexShrink: 0 }} />
+              {erro}
+            </div>
+          )}
+
+          <Button block size="lg" icon={analisando ? undefined : ScanSearch} onClick={handleAnalisar} disabled={!imagem || analisando}>
+            {analisando ? (<><span className="exames-spin" />Analisando exame com IA…</>) : 'Analisar exame'}
+          </Button>
         </div>
+
+        {/* COLUNA DIREITA — resultado */}
+        <div style={{ border: `1px solid ${tokens.border.default}`, borderRadius: 16, minWidth: 0 }}>
+          {analisando ? (
+            <div style={{ padding: '48px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
+              <IconTile icon={ScanSearch} size={52} iconSize={22} radius={16} active />
+              <span style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary }}>Lendo o exame…</span>
+              <span style={{ fontSize: 12.5, color: tokens.text.quaternary }}>{loadingMsg}</span>
+              <span style={{ fontSize: 12, color: tokens.text.tertiary, maxWidth: 380, lineHeight: 1.5 }}>
+                Pode levar até 30 segundos. Estamos identificando a especialidade, comparando valores com referências e consultando diretrizes médicas.
+              </span>
+            </div>
+          ) : !analise ? (
+            <EmptyState
+              icon={ScanSearch}
+              titulo="Nenhum exame analisado"
+              descricao="Envie um exame ou laudo e clique em “Analisar exame”. A leitura organizada aparece aqui."
+            />
+          ) : (
+            <>
+              {/* Cabeçalho do resultado */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '18px 20px', borderBottom: `1px solid ${tokens.border.muted}`, flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-.01em', color: tokens.text.primary }}>{tituloExame}</span>
+                  <span style={{ fontSize: 12.5, color: tokens.text.quaternary }}>
+                    {[imagem?.name, analise.data_exame ? 'Data do exame: ' + analise.data_exame : null, 'Analisado pela IA'].filter(Boolean).join(' · ')}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <Button variant="secondary" icon={FileDown} onClick={exportarPDF}>Exportar PDF</Button>
+                  <Button icon={Paperclip} onClick={abrirModalPaciente}>Adicionar ao prontuário</Button>
+                </div>
+              </div>
+
+              <div style={{ padding: '18px 20px 22px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {salvouMsg && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+                    background: salvouErro ? tokens.status.dangerBg : tokens.status.successBg,
+                    color: salvouErro ? tokens.status.danger : tokens.status.success,
+                  }}>
+                    <Icon icon={salvouErro ? AlertTriangle : Check} size={15} />
+                    {salvouMsg}
+                  </div>
+                )}
+
+                {/* Resumo IA */}
+                {analise.resumo && (
+                  <div style={{ display: 'flex', gap: 12, padding: '14px 16px', borderRadius: 14, background: tokens.brand.primarySoftBg, border: '1px solid #ECE8FB' }}>
+                    <Icon icon={Sparkles} size={17} color={tokens.brand.primary} style={{ marginTop: 2, flexShrink: 0 }} />
+                    <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: tokens.text.strong, textWrap: 'pretty' } as React.CSSProperties}>{analise.resumo}</p>
+                  </div>
+                )}
+
+                {/* Tabela de parâmetros */}
+                {analise.valores?.length > 0 && (
+                  <div style={{ border: `1px solid ${tokens.border.default}`, borderRadius: 14, overflow: 'auto' }}>
+                    <div style={{ minWidth: 560 }}>
+                      <div style={{ ...gridTabela, padding: '10px 14px', background: tokens.bg.muted, fontSize: 11, fontWeight: 700, letterSpacing: '.05em', color: '#9A98A5' }}>
+                        <span>PARÂMETRO</span><span>RESULTADO</span><span>REFERÊNCIA</span><span>STATUS</span>
+                      </div>
+                      {analise.valores.map((v: any, i: number) => {
+                        const st = statusParam(v.status)
+                        return (
+                          <div key={i} style={{ ...gridTabela, alignItems: 'start', padding: '11px 14px', borderTop: `1px solid ${tokens.border.muted}`, fontSize: 13 }}>
+                            <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+                              <span style={{ fontWeight: 600, color: tokens.text.primary }}>{v.nome}</span>
+                              {v.interpretacao && <span style={{ fontSize: 12, color: tokens.text.quaternary, lineHeight: 1.45 }}>{v.interpretacao}</span>}
+                            </span>
+                            <span className="mono" style={{ fontSize: 12.5, fontWeight: 500, color: st.cor, wordBreak: 'break-word' }}>{v.valor}</span>
+                            <span style={{ color: tokens.text.quaternary, fontSize: 12.5, wordBreak: 'break-word' }}>{v.referencia}</span>
+                            <span><Badge tone={st.tone}>{st.label}</Badge></span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pontos de atenção (alertas da IA) */}
+                {analise.alertas?.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '.05em', color: '#9A98A5' }}>PONTOS DE ATENÇÃO</span>
+                    {analise.alertas.map((a: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, lineHeight: 1.5, color: tokens.text.strong }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: tokens.status.dangerStrong, marginTop: 7, flexShrink: 0 }} />
+                        {a}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Conclusão clínica */}
+                {analise.conclusao && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '.05em', color: '#9A98A5' }}>CONCLUSÃO CLÍNICA</span>
+                    <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.65, color: tokens.text.strong, whiteSpace: 'pre-wrap' }}>{analise.conclusao}</p>
+                  </div>
+                )}
+
+                {/* Recomendações */}
+                {analise.recomendacoes?.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '.05em', color: '#9A98A5' }}>RECOMENDAÇÕES</span>
+                    {analise.recomendacoes.map((r: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, lineHeight: 1.5, color: tokens.text.strong }}>
+                        <span style={{ width: 18, height: 18, borderRadius: 6, background: tokens.brand.primaryLight, color: tokens.brand.primary, display: 'grid', placeItems: 'center', flexShrink: 0, marginTop: 1 }}>
+                          <Icon icon={Check} size={12} strokeWidth={2} />
+                        </span>
+                        {r}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Modal: escolher paciente para adicionar análise ao prontuário */}
+      {modalPaciente && (
+        <Modal
+          titulo="Adicionar ao prontuário"
+          largura={440}
+          onClose={() => setModalPaciente(false)}
+          rodape={pacientesList.length > 0 ? (
+            <>
+              <Button variant="secondary" onClick={() => setModalPaciente(false)}>Cancelar</Button>
+              <Button icon={salvandoConsulta ? undefined : Save} onClick={adicionarAoPaciente} disabled={salvandoConsulta || !pacienteSelecionadoId}>
+                {salvandoConsulta ? (<><span className="exames-spin" />Salvando…</>) : 'Salvar no histórico'}
+              </Button>
+            </>
+          ) : undefined}
+        >
+          <p style={{ fontSize: 12.5, color: tokens.text.quaternary, margin: '0 0 14px' }}>A análise será adicionada ao histórico do paciente.</p>
+          {pacientesList.length === 0 ? (
+            <EmptyState icon={Users} titulo="Nenhum paciente cadastrado" />
+          ) : (
+            <Field label="Paciente">
+              <Select value={pacienteSelecionadoId} onChange={e => setPacienteSelecionadoId(e.target.value)}>
+                <option value="">Selecionar paciente…</option>
+                {pacientesList.map((p: any) => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+              </Select>
+            </Field>
+          )}
+        </Modal>
       )}
 
-            <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+      <style>{`
+        .exames-grid { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 20px; align-items: start; }
+        @media (max-width: 900px) { .exames-grid { grid-template-columns: minmax(0, 1fr); } }
+        .exames-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; animation: exames-spin .8s linear infinite; display: inline-block; }
+        @keyframes exames-spin { to { transform: rotate(360deg) } }
+      `}</style>
     </main>
   )
 }
+
+const gridTabela: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1.6fr 1fr 1.2fr 96px', gap: 12 }

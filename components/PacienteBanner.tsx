@@ -1,8 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { UserRoundX } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
+import { Avatar, Icon } from '@/components/ui'
+
+import { normalizarConvenio } from '@/lib/convenios'
+const T = tokens
 
 type Props = {
   pacienteId: string | null
@@ -11,6 +16,17 @@ type Props = {
   acoes?: React.ReactNode
 }
 
+const barra = (borda: string): React.CSSProperties => ({
+  background: T.bg.card, border: `1px solid ${borda}`, borderRadius: 18, padding: '14px 16px',
+  display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+})
+
+const linkAcao: React.CSSProperties = {
+  background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit',
+  fontSize: 12.5, fontWeight: 600, color: T.brand.primary,
+}
+
+/** Barra do paciente da nova consulta (avulsa ou vinculada). */
 export function PacienteBanner({ pacienteId, medicoId, onTrocar, acoes }: Props) {
   const [paciente, setPaciente] = useState<any>(null)
   const [ultimaConsulta, setUltimaConsulta] = useState<any>(null)
@@ -33,31 +49,35 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar, acoes }: Props)
     return () => { cancelado = true }
   }, [pacienteId, medicoId])
 
+  const blocoAcoes = acoes ? <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginLeft: 'auto' }}>{acoes}</div> : null
+
   if (!pacienteId) {
     return (
-      <div style={{ padding: '14px 18px', background: 'white', borderRadius: 12, border: `1px solid ${tokens.status.warningLightAlt}`, display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ width: 48, height: 48, borderRadius: '50%', background: tokens.status.warningLightSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={tokens.status.warningStrong} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div style={barra(T.status.warningOrangePeach)}>
+        <span style={{ width: 42, height: 42, borderRadius: 13, background: T.status.warningBg, color: T.status.warning, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+          <Icon icon={UserRoundX} size={19} />
+        </span>
+        <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ fontSize: 14.5, fontWeight: 700, color: T.text.primary }}>Consulta avulsa</span>
+          <span style={{ fontSize: 12.5, color: T.text.quaternary, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            Não vinculada a um paciente.
+            {onTrocar && <button onClick={onTrocar} style={linkAcao}>Vincular paciente</button>}
+          </span>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 600, color: tokens.text.primary }}>Consulta avulsa</p>
-          <p style={{ margin: 0, fontSize: 12, color: tokens.status.warningText }}>
-            Não vinculada a um paciente. {onTrocar && <button onClick={onTrocar} style={{ background: 'none', border: 'none', color: tokens.brand.primary, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontSize: 12, padding: 0 }}>Vincular paciente</button>}
-          </p>
-        </div>
-        {acoes && <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>{acoes}</div>}
+        {blocoAcoes}
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div style={{ padding: '16px 18px', background: 'white', borderRadius: 12, border: `1px solid ${tokens.neutral[150]}`, height: 68, display: 'flex', alignItems: 'center' }}>
-        <div style={{ width: 48, height: 48, borderRadius: '50%', background: tokens.bg.hoverStrong }}/>
-        <div style={{ marginLeft: 12, flex: 1 }}>
-          <div style={{ height: 12, width: 140, background: tokens.bg.hoverStrong, borderRadius: 4, marginBottom: 6 }}/>
-          <div style={{ height: 10, width: 200, background: tokens.bg.hoverStrong, borderRadius: 4 }}/>
+      <div style={barra(T.border.default)}>
+        <div className="c360-skel" style={{ width: 42, height: 42, borderRadius: '50%' }} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className="c360-skel" style={{ height: 13, width: 160, borderRadius: 6 }} />
+          <div className="c360-skel" style={{ height: 11, width: 240, borderRadius: 6 }} />
         </div>
+        {blocoAcoes}
       </div>
     )
   }
@@ -73,66 +93,36 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar, acoes }: Props)
   }
 
   const idade = calcIdade(paciente.data_nascimento)
-  const alergias = paciente.alergias ? (Array.isArray(paciente.alergias) ? paciente.alergias : String(paciente.alergias).split(',').map((s: string) => s.trim()).filter(Boolean)) : []
   const cidsCronicos = paciente.cids_cronicos ? (Array.isArray(paciente.cids_cronicos) ? paciente.cids_cronicos : []) : []
-  const ultimaCidStr = ultimaConsulta?.criado_em ? new Date(ultimaConsulta.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : null
-
-  const iniciais = paciente.nome?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || '?'
+  const ultimaStr = ultimaConsulta?.criado_em ? new Date(ultimaConsulta.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : null
+  const meta = [
+    idade !== null ? idade + ' anos' : null,
+    paciente.genero || null,
+    paciente.telefone || null,
+    paciente.convenio ? normalizarConvenio(paciente.convenio) : null,
+    ultimaStr ? 'última consulta ' + ultimaStr : null,
+  ].filter(Boolean).join(' · ')
 
   return (
-    <div style={{ padding: '14px 18px', background: 'white', borderRadius: 12, border: `1px solid ${tokens.neutral[150]}`, display: 'flex', alignItems: 'center', gap: 14 }}>
-      {/* Avatar */}
-      <div style={{
-        width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
-        background: paciente.foto_url ? `url(${paciente.foto_url}) center/cover` : tokens.brand.primaryLighter,
-        border: `2px solid ${tokens.brand.primaryAccent}`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 15, fontWeight: 700, color: tokens.brand.primary,
-      }}>
-        {!paciente.foto_url && iniciais}
-      </div>
-
-      {/* Nome + dados básicos */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3 }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: tokens.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {paciente.nome}
-          </h2>
-          {paciente.genero && (
-            <span style={{ fontSize: 11, color: tokens.text.secondary, background: tokens.bg.hoverStrong, padding: '1px 7px', borderRadius: 10, fontWeight: 500 }}>
-              {paciente.genero}
-            </span>
-          )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: tokens.text.secondary, flexWrap: 'wrap' }}>
-          {idade !== null && <span>{idade} anos</span>}
-          {paciente.telefone && <><span>·</span><span>{paciente.telefone}</span></>}
-          {paciente.convenio && <><span>·</span><span>{paciente.convenio}</span></>}
-          {ultimaCidStr && <><span>·</span><span>Última consulta: {ultimaCidStr}</span></>}
-        </div>
-      </div>
-
-      {/* CIDs crônicos */}
-      {cidsCronicos.length > 0 && (
-        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+    <div style={barra(T.border.default)}>
+      <Avatar nome={paciente.nome} src={paciente.foto_url} size={42} />
+      <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <span style={{ fontSize: 14.5, fontWeight: 700, color: T.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{paciente.nome}</span>
           {cidsCronicos.slice(0, 3).map((c: any, i: number) => (
-            <span key={i} title={c.descricao || c.codigo || c}
-              style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, background: tokens.brand.primaryLighter, color: tokens.brand.primary, padding: '3px 7px', borderRadius: 5 }}>
+            <span key={i} className="mono" title={c.descricao || c.codigo || c}
+              style={{ fontSize: 11, fontWeight: 500, background: T.brand.primarySubtle, color: T.brand.primary, padding: '2px 6px', borderRadius: 6, flexShrink: 0 }}>
               {c.codigo || c}
             </span>
           ))}
-          {cidsCronicos.length > 3 && <span style={{ fontSize: 10, color: tokens.text.tertiary, alignSelf: 'center' }}>+{cidsCronicos.length - 3}</span>}
-        </div>
-      )}
-
-      {onTrocar && (
-        <button onClick={onTrocar}
-          style={{ height: 32, padding: '0 12px', borderRadius: 8, background: 'transparent', border: 'none', color: tokens.text.secondary, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, fontSize: 12, fontWeight: 500 }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
-          Trocar paciente
-        </button>
-      )}
-      {acoes && <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 'auto' }}>{acoes}</div>}
+          {cidsCronicos.length > 3 && <span style={{ fontSize: 11, color: T.text.tertiary }}>+{cidsCronicos.length - 3}</span>}
+        </span>
+        <span style={{ fontSize: 12.5, color: T.text.quaternary, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          {meta}{meta && onTrocar ? ' ·' : ''}
+          {onTrocar && <button onClick={onTrocar} style={linkAcao}>Trocar</button>}
+        </span>
+      </div>
+      {blocoAcoes}
     </div>
   )
 }

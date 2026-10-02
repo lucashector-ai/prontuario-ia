@@ -1,8 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { LucideIcon } from 'lucide-react'
+import {
+  ArrowRight, CalendarDays, ChevronLeft, ChevronRight, CircleAlert, CircleCheck,
+  ClipboardList, Clock, Lock, ShieldCheck, UserRound,
+} from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { supabase } from '@/lib/supabase'
+import { notificar } from '@/components/ui/dialogos'
+import { Button, EmptyState, Field, Icon, IconButton, IconTile, Input, Modal, Textarea } from '@/components/ui'
+import { CascaPublica, Spinner, cartaoPublico } from '@/components/publico/CascaPublica'
+
+const T = tokens
 
 type Props = {
   medicoSlug: string
@@ -26,7 +36,7 @@ type Clinica = {
 
 const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 const MESES_PT_CURTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
-const DIAS_SEMANA_CURTO = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+const DIAS_SEMANA_CURTO = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']
 const DIAS_SEMANA_FULL = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
 function formatarTelefone(v: string) {
@@ -191,10 +201,10 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
         setUrlFormulario(data.urlFormulario || null)
         setMostrandoSucesso(true)
       } else {
-        alert(data.erro || 'Erro ao agendar')
+        notificar(data.erro || 'Erro ao agendar', 'erro')
       }
     } catch (e: any) {
-      alert(e.message || 'Erro ao agendar')
+      notificar(e.message || 'Erro ao agendar', 'erro')
     } finally {
       setEnviando(false)
     }
@@ -202,174 +212,123 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: tokens.bg.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: '2.5px solid ' + tokens.brand.primaryLight, borderTopColor: tokens.brand.primary, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
-      </div>
+      <CascaPublica>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
+          <Spinner tamanho={28} />
+        </div>
+      </CascaPublica>
     )
   }
 
   if (erro || !medico) {
     return (
-      <div style={{ minHeight: '100vh', background: tokens.bg.page, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <div style={{ maxWidth: 420, textAlign: 'center' }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-          </div>
-          <h2 style={{ fontSize: 22, fontWeight: 600, color: tokens.text.primary, marginBottom: 8 }}>Página indisponível</h2>
-          <p style={{ fontSize: 15, color: tokens.text.secondary, lineHeight: 1.5 }}>{erro}</p>
+      <CascaPublica>
+        <div style={{ ...cartao, maxWidth: 440, margin: '0 auto', padding: '36px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <IconTile icon={CircleAlert} color={T.status.danger} size={52} radius={16} />
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text.primary, margin: '6px 0 0', letterSpacing: '-.01em' }}>Página indisponível</h2>
+          <p style={{ fontSize: 14, color: T.text.secondary, lineHeight: 1.5, margin: 0 }}>{erro}</p>
         </div>
-      </div>
+      </CascaPublica>
     )
   }
 
-  // SUCESSO - tela full overlay
+  // SUCESSO - tela cheia
   if (mostrandoSucesso && dataSelecionada && horarioSelecionado) {
     return <TelaSucesso resultado={resultadoEnvio} urlFormulario={urlFormulario} data={dataSelecionada} horario={horarioSelecionado} medico={medico} clinica={clinica} />
   }
 
   const duracao = configMedico?.duracao_consulta_min || 30
+  const hojeISO = hojeData.toISOString().split('T')[0]
+  const voltarDesabilitado = (() => {
+    const hoje = new Date()
+    return mesAtual.ano <= hoje.getFullYear() && mesAtual.mes <= hoje.getMonth() + 1
+  })()
+  const iniciais = medico.nome.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase()
 
   return (
-    <div style={{ minHeight: '100vh', background: tokens.bg.page, padding: '24px 16px' }}>
+    <CascaPublica clinica={clinica}>
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg) } }
-        .agenda-grid { display: grid; gap: 0; }
+        .ap-corpo { display: grid; grid-template-columns: 1fr; }
+        .ap-col-horarios { border-top: 1px solid ${T.border.muted}; }
         @media (min-width: 768px) {
-          .agenda-grid {
-            grid-template-columns: 280px 1fr ${dataSelecionada ? '280px' : '0'};
-            transition: grid-template-columns 0.3s;
-          }
-          .agenda-grid-2 {
-            grid-template-columns: 280px 1fr 0;
-          }
+          .ap-corpo { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+          .ap-col-horarios { border-top: none; border-left: 1px solid ${T.border.muted}; }
         }
       `}</style>
 
-      <div style={{
-        maxWidth: dataSelecionada ? 980 : 760,
-        margin: '0 auto',
-        background: '#fff',
-        borderRadius: 20,
-        border: `1px solid ${tokens.border.subtle}`,
-        overflow: 'hidden',
-        transition: 'max-width 0.3s',
-      }}>
-        <div className={'agenda-grid' + (dataSelecionada ? '' : ' agenda-grid-2')}>
-          {/* COLUNA 1 — Info do médico */}
-          <div style={{
-            padding: '32px 24px',
-            borderRight: '1px solid ' + tokens.border.subtle,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 20,
-          }}>
-            <div style={{
-              width: 56,
-              height: 56,
-              borderRadius: 14,
-              background: 'linear-gradient(135deg, ' + tokens.brand.primary + ' 0%, ' + (tokens.brand.primaryDark || tokens.brand.primary) + ' 100%)',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 22,
-              fontWeight: 700,
-            }}>
-              {medico.nome.charAt(0).toUpperCase()}
-            </div>
-
-            <div>
-              {clinica && (
-                <div style={{ fontSize: 12, color: tokens.text.tertiary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
-                  {clinica.nome}
-                </div>
-              )}
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
-                {medico.nome}
-              </h1>
-              {medico.especialidade && (
-                <div style={{ fontSize: 14, color: tokens.text.secondary, marginTop: 4 }}>
-                  {medico.especialidade}
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 16, borderTop: '1px solid ' + tokens.border.subtle }}>
-              <InfoLinha
-                icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
-                text={duracao + ' minutos'}
-              />
-              {medico.crm && (
-                <InfoLinha
-                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>}
-                  text={'CRM ' + medico.crm}
-                />
-              )}
-              {configMedico?.modo_aprovacao === 'manual' && (
-                <InfoLinha
-                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-6 0v4"/><rect x="3" y="11" width="18" height="11" rx="2"/></svg>}
-                  text="Requer confirmação"
-                />
-              )}
-            </div>
+      <div style={{ ...cartao, maxWidth: 880, margin: '0 auto', overflow: 'hidden' }}>
+        {/* Cabeçalho — profissional */}
+        <div style={{ padding: '20px 20px 18px', background: T.brand.primarySoftBg, borderBottom: `1px solid ${T.border.muted}`, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          {medico.foto_url ? (
+            <img src={medico.foto_url} alt="" style={{ width: 52, height: 52, borderRadius: 15, objectFit: 'cover', flexShrink: 0 }} />
+          ) : (
+            <span style={{ width: 52, height: 52, borderRadius: 15, background: T.night[800], color: T.text.inverse, display: 'grid', placeItems: 'center', fontSize: 17, fontWeight: 700, flexShrink: 0 }}>
+              {iniciais || <Icon icon={UserRound} size={20} />}
+            </span>
+          )}
+          <div style={{ flex: '1 1 200px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <h1 style={{ fontSize: 19, fontWeight: 700, color: T.text.primary, margin: 0, letterSpacing: '-.01em', lineHeight: 1.25 }}>{medico.nome}</h1>
+            <span style={{ fontSize: 13, color: T.text.quaternary }}>
+              {[medico.especialidade, medico.crm ? 'CRM ' + medico.crm : null].filter(Boolean).join(' · ') || 'Agendamento online'}
+            </span>
           </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <InfoPilula icon={Clock}>{duracao} min</InfoPilula>
+            {configMedico?.modo_aprovacao === 'manual' && <InfoPilula icon={ShieldCheck}>Requer confirmação</InfoPilula>}
+          </div>
+        </div>
 
-          {/* COLUNA 2 — Calendário */}
-          <div style={{
-            padding: '32px 24px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 16, fontWeight: 600, color: tokens.text.primary }}>
-                <span style={{ fontWeight: 400, color: tokens.text.secondary }}>{MESES_PT_CURTO[mesAtual.mes - 1]}</span>{' '}
-                {mesAtual.ano}
+        <div className="ap-corpo">
+          {/* 1. Dia */}
+          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={rotuloEtapa}>1. Escolha o dia</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: T.text.primary }}>
+                  {MESES_PT[mesAtual.mes - 1]} <span style={{ fontWeight: 500, color: T.text.quaternary }}>{mesAtual.ano}</span>
+                </span>
               </div>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <NavBtn 
-                  disabled={(() => {
-                    const hoje = new Date()
-                    return mesAtual.ano <= hoje.getFullYear() && mesAtual.mes <= hoje.getMonth() + 1
-                  })()}
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                {carregandoMes && <Spinner tamanho={14} />}
+                <IconButton
+                  icon={ChevronLeft}
+                  variant="outline"
+                  size={34}
+                  aria-label="Mês anterior"
+                  disabled={voltarDesabilitado}
+                  style={voltarDesabilitado ? { opacity: 0.4, cursor: 'default' } : undefined}
                   onClick={() => {
+                    if (voltarDesabilitado) return
                     let m = mesAtual.mes - 1, a = mesAtual.ano
                     if (m < 1) { m = 12; a-- }
                     setMesAtual({ ano: a, mes: m })
                     setDataSelecionada(null)
                   }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
-                </NavBtn>
-                <NavBtn 
-                  disabled={false}
+                />
+                <IconButton
+                  icon={ChevronRight}
+                  variant="outline"
+                  size={34}
+                  aria-label="Próximo mês"
                   onClick={() => {
                     let m = mesAtual.mes + 1, a = mesAtual.ano
                     if (m > 12) { m = 1; a++ }
                     setMesAtual({ ano: a, mes: m })
                     setDataSelecionada(null)
                   }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
-                </NavBtn>
+                />
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 5 }}>
               {DIAS_SEMANA_CURTO.map((d, i) => (
-                <div key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: tokens.text.tertiary, padding: '6px 0', textTransform: 'uppercase' }}>
+                <div key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: T.text.tertiary, padding: '4px 0', letterSpacing: '.05em' }}>
                   {d}
                 </div>
               ))}
               {(() => {
                 const primeiroDia = new Date(mesAtual.ano, mesAtual.mes - 1, 1).getDay()
                 const ultimoDia = new Date(mesAtual.ano, mesAtual.mes, 0).getDate()
-                const hojeISO = hojeData.toISOString().split('T')[0]
                 const dias: (number | null)[] = []
                 for (let i = 0; i < primeiroDia; i++) dias.push(null)
                 for (let d = 1; d <= ultimoDia; d++) dias.push(d)
@@ -384,104 +343,66 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
                   const ehSelecionada = dataISO === dataSelecionada
 
                   return (
-                    <button
+                    <DiaBotao
                       key={idx}
-                      type="button"
-                      disabled={desabilitado}
+                      dia={dia}
+                      hoje={ehHoje}
+                      passado={ehPassado}
+                      disponivel={!desabilitado}
+                      selecionado={ehSelecionada}
                       onClick={() => setDataSelecionada(dataISO)}
-                      style={{
-                        aspectRatio: '1',
-                        border: 'none',
-                        borderRadius: 10,
-                        background: ehSelecionada ? tokens.brand.primary : (temVagas && !ehPassado ? tokens.brand.primaryLight : 'transparent'),
-                        color: ehSelecionada ? '#fff' : (desabilitado ? tokens.text.tertiary : tokens.text.primary),
-                        fontSize: 14,
-                        fontWeight: ehSelecionada || temVagas ? 600 : 500,
-                        cursor: desabilitado ? 'default' : 'pointer',
-                        position: 'relative',
-                        transition: 'all 0.15s',
-                        opacity: ehPassado ? 0.3 : 1,
-                        outline: ehHoje && !ehSelecionada ? '1.5px solid ' + tokens.brand.primary : 'none',
-                        outlineOffset: -1,
-                      }}
-                    >
-                      {dia}
-                    </button>
+                    />
                   )
                 })
               })()}
             </div>
           </div>
 
-          {/* COLUNA 3 — Horários (só aparece quando data selecionada) */}
-          {dataSelecionada && (
-            <div style={{
-              padding: '32px 24px',
-              borderLeft: '1px solid ' + tokens.border.subtle,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 12,
-              maxHeight: 580,
-            }}>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: tokens.text.primary }}>
-                  {(() => {
-                    const d = new Date(dataSelecionada + 'T12:00:00')
-                    return DIAS_SEMANA_FULL[d.getDay()] + ', ' + d.getDate() + ' ' + MESES_PT_CURTO[d.getMonth()]
-                  })()}
-                </div>
-                <div style={{ fontSize: 12, color: tokens.text.tertiary, marginTop: 2 }}>
-                  {slots.length} {slots.length === 1 ? 'horário disponível' : 'horários disponíveis'}
-                </div>
-              </div>
-
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {carregandoSlots ? (
-                  <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
-                    <div style={{ width: 20, height: 20, border: '2px solid ' + tokens.border.default, borderTopColor: tokens.brand.primary, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                  </div>
-                ) : slots.length === 0 ? (
-                  <div style={{ fontSize: 13, color: tokens.text.tertiary, textAlign: 'center', padding: 24 }}>
-                    Nenhum horário livre.
-                  </div>
-                ) : (
-                  slots.map((h: string) => (
-                    <button
-                      key={h}
-                      type="button"
-                      onClick={() => {
-                        setHorarioSelecionado(h)
-                        setMostrandoForm(true)
-                      }}
-                      style={{
-                        padding: '12px',
-                        border: '1px solid ' + tokens.border.default,
-                        borderRadius: 8,
-                        background: '#fff',
-                        color: tokens.text.primary,
-                        fontSize: 14,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 0.12s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = tokens.brand.primary
-                        e.currentTarget.style.background = tokens.brand.primaryLight
-                        e.currentTarget.style.color = tokens.brand.primary
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = tokens.border.default
-                        e.currentTarget.style.background = '#fff'
-                        e.currentTarget.style.color = tokens.text.primary
-                      }}
-                    >
-                      {h}
-                    </button>
-                  ))
-                )}
-              </div>
+          {/* 2. Horário */}
+          <div className="ap-col-horarios" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={rotuloEtapa}>2. Escolha o horário</span>
+              {dataSelecionada ? (
+                <>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: T.text.primary }}>
+                    {(() => {
+                      const d = new Date(dataSelecionada + 'T12:00:00')
+                      return DIAS_SEMANA_FULL[d.getDay()] + ', ' + d.getDate() + ' ' + MESES_PT_CURTO[d.getMonth()]
+                    })()}
+                  </span>
+                  {!carregandoSlots && (
+                    <span style={{ fontSize: 12.5, color: T.text.quaternary }}>
+                      {slots.length} {slots.length === 1 ? 'horário disponível' : 'horários disponíveis'}
+                    </span>
+                  )}
+                </>
+              ) : null}
             </div>
-          )}
+
+            {!dataSelecionada ? (
+              <EmptyState icon={CalendarDays} titulo="Selecione um dia" descricao="Os dias destacados no calendário têm horários livres." />
+            ) : carregandoSlots ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
+                <Spinner tamanho={22} />
+              </div>
+            ) : slots.length === 0 ? (
+              <EmptyState icon={Clock} titulo="Nenhum horário livre" descricao="Escolha outro dia no calendário." />
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(82px, 1fr))', gap: 8, maxHeight: 420, overflowY: 'auto', paddingBottom: 2 }}>
+                {slots.map((h: string) => (
+                  <HorarioBotao
+                    key={h}
+                    horario={h}
+                    selecionado={horarioSelecionado === h && mostrandoForm}
+                    onClick={() => {
+                      setHorarioSelecionado(h)
+                      setMostrandoForm(true)
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -508,239 +429,219 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
           onFechar={() => setMostrandoForm(false)}
         />
       )}
-
-      <div style={{ textAlign: 'center', marginTop: 32, fontSize: 12, color: tokens.text.tertiary }}>
-        Powered by <span style={{ fontWeight: 600, color: tokens.text.secondary }}>Clinical 360</span>
-      </div>
-    </div>
+    </CascaPublica>
   )
+}
+
+const cartao = cartaoPublico
+
+const rotuloEtapa: React.CSSProperties = {
+  fontSize: 12, fontWeight: 600, color: T.text.secondary,
 }
 
 // ─── Tela de sucesso ───
 function TelaSucesso({ resultado, urlFormulario, data, horario, medico, clinica }: any) {
   const aguardando = resultado === 'aguardando_confirmacao'
   const dataObj = new Date(data + 'T12:00:00')
-  const dataLabel = dataObj.getDate() + ' de ' + MESES_PT[dataObj.getMonth()] + ' às ' + horario
+  const dataLabel = dataObj.getDate() + ' de ' + MESES_PT[dataObj.getMonth()].toLowerCase()
 
   return (
-    <div style={{ minHeight: '100vh', background: tokens.bg.page, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{
-        maxWidth: 480,
-        width: '100%',
-        background: '#fff',
-        borderRadius: 20,
-        padding: '40px 32px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-        textAlign: 'center',
-      }}>
-        <div style={{
-          width: 72,
-          height: 72,
-          borderRadius: '50%',
-          background: aguardando ? '#FEF3C7' : '#D1FAE5',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 24px',
-        }}>
-          {aguardando ? (
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          ) : (
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          )}
-        </div>
+    <CascaPublica clinica={clinica}>
+      <div style={{ ...cartao, maxWidth: 480, margin: '0 auto', padding: '32px 22px 24px', textAlign: 'center' }}>
+        <IconTile
+          icon={aguardando ? Clock : CircleCheck}
+          color={aguardando ? T.status.warning : T.status.success}
+          size={60}
+          radius={18}
+          style={{ margin: '0 auto 18px', background: aguardando ? T.status.warningBg : T.status.successBg }}
+        />
 
-        <h2 style={{ fontSize: 24, fontWeight: 700, color: tokens.text.primary, margin: 0, marginBottom: 12, letterSpacing: '-0.01em' }}>
-          {aguardando ? 'Solicitação enviada!' : 'Consulta confirmada!'}
+        <h2 style={{ fontSize: 21, fontWeight: 700, color: T.text.primary, margin: '0 0 8px', letterSpacing: '-.01em' }}>
+          {aguardando ? 'Solicitação enviada' : 'Consulta confirmada'}
         </h2>
 
-        <p style={{ fontSize: 15, color: tokens.text.secondary, lineHeight: 1.5, margin: '0 0 24px' }}>
+        <p style={{ fontSize: 14, color: T.text.secondary, lineHeight: 1.55, margin: '0 0 22px' }}>
           {aguardando
             ? 'O médico vai analisar e confirmar em breve. Você receberá uma mensagem no WhatsApp informado.'
             : 'Sua consulta foi confirmada e adicionada à agenda. Você receberá um lembrete antes do horário.'}
         </p>
 
-        <div style={{
-          padding: 16,
-          background: tokens.bg.cardSubtle,
-          borderRadius: 12,
-          textAlign: 'left',
-        }}>
-          {urlFormulario && (
-            <div style={{
-              marginBottom: 16,
-              padding: 16,
-              background: tokens.brand.primaryLight,
-              borderRadius: 12,
-              borderLeft: '3px solid ' + tokens.brand.primary,
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Último passo
+        {urlFormulario && (
+          <div style={{
+            marginBottom: 14, padding: 16, textAlign: 'left', borderRadius: T.radius['2xl'],
+            background: T.brand.primarySoftBg, border: `1px solid ${T.brand.primaryAccentSoft}`,
+            display: 'flex', flexDirection: 'column', gap: 10,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <IconTile icon={ClipboardList} size={34} radius={10} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: T.text.primary }}>Último passo</div>
+                <div style={{ fontSize: 12.5, color: T.text.secondary, lineHeight: 1.45 }}>Preencha esse formulário rápido para agilizar sua consulta.</div>
               </div>
-              <div style={{ fontSize: 14, color: tokens.text.primary, fontWeight: 500, marginBottom: 12, lineHeight: 1.5 }}>
-                Preencha esse formulário rápido pra agilizar sua consulta:
-              </div>
-              <a
-                href={urlFormulario}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '10px 16px',
-                  background: tokens.brand.primary,
-                  color: '#fff',
-                  borderRadius: 10,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                }}
-              >
-                Preencher formulário
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14"/>
-                  <polyline points="12 5 19 12 12 19"/>
-                </svg>
-              </a>
             </div>
-          )}
+            <a
+              href={urlFormulario}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 40, padding: '0 16px',
+                background: T.brand.primary, color: T.text.inverse, borderRadius: 10, fontSize: 13.5, fontWeight: 600, textDecoration: 'none',
+              }}
+            >
+              Preencher formulário
+              <Icon icon={ArrowRight} size={15} />
+            </a>
+          </div>
+        )}
+
+        <div style={{ padding: '4px 16px', borderRadius: T.radius['2xl'], border: `1px solid ${T.border.default}`, textAlign: 'left' }}>
           <Linha label="Profissional" valor={medico.nome} />
           {medico.especialidade && <Linha label="Especialidade" valor={medico.especialidade} />}
           {clinica && <Linha label="Clínica" valor={clinica.nome} />}
-          <Linha label="Data" valor={dataLabel} ultimo />
+          <Linha label="Data" valor={dataLabel} />
+          <Linha label="Horário" valor={<span className="mono">{horario}</span>} ultimo />
         </div>
       </div>
-    </div>
+    </CascaPublica>
   )
 }
 
-// ─── Modal de dados (overlay) ───
+// ─── Modal de dados ───
 function ModalDados(props: any) {
-  const { data, horario, medico, clinica, duracao, nome, setNome, telefone, setTelefone, email, setEmail, motivo, setMotivo, primeiraConsulta, setPrimeiraConsulta, enviando, onConfirmar, onFechar } = props
-  
+  const { data, horario, duracao, nome, setNome, telefone, setTelefone, email, setEmail, motivo, setMotivo, primeiraConsulta, setPrimeiraConsulta, enviando, onConfirmar, onFechar } = props
+
   const dataObj = new Date(data + 'T12:00:00')
   const dataLabel = DIAS_SEMANA_FULL[dataObj.getDay()] + ', ' + dataObj.getDate() + ' de ' + MESES_PT[dataObj.getMonth()].toLowerCase()
   const valido = nome.trim().length >= 2 && telefone.replace(/\D/g, '').length >= 10
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0,0,0,0.5)',
-      backdropFilter: 'blur(4px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 16,
-      zIndex: 50,
-    }}
-    onClick={(e) => { if (e.target === e.currentTarget) onFechar() }}
-    >
+    <Modal titulo="Confirmar agendamento" onClose={onFechar} largura={460}>
       <div style={{
-        background: '#fff',
-        borderRadius: 16,
-        padding: 32,
-        maxWidth: 480,
-        width: '100%',
-        maxHeight: '90vh',
-        overflowY: 'auto',
+        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: T.radius.input,
+        border: `1.5px solid ${T.brand.primary}`, background: T.brand.primarySoftBg, marginBottom: 18,
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-          <div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: tokens.text.primary, margin: 0, letterSpacing: '-0.01em' }}>
-              Confirmar agendamento
-            </h2>
-            <p style={{ fontSize: 14, color: tokens.text.secondary, margin: '6px 0 0' }}>
-              {dataLabel} às {horario} · {duracao}min
-            </p>
-          </div>
-          <button type="button" onClick={onFechar} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: tokens.text.tertiary }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 24 }}>
-          <InputField label="Nome completo" value={nome} onChange={setNome} required placeholder="Como você quer ser chamado(a)" />
-          <InputField label="WhatsApp" value={telefone} onChange={setTelefone} required placeholder="(11) 99999-9999" type="tel" />
-          <InputField label="Email (opcional)" value={email} onChange={setEmail} placeholder="seu@email.com" type="email" />
-          <InputField label="Motivo da consulta (opcional)" value={motivo} onChange={setMotivo} placeholder="Ex: avaliação inicial, retorno, dor recorrente" textarea />
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 2 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary }}>É sua primeira consulta?</label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <ChipRadio ativo={primeiraConsulta === true} onClick={() => setPrimeiraConsulta(true)} label="Sim" />
-              <ChipRadio ativo={primeiraConsulta === false} onClick={() => setPrimeiraConsulta(false)} label="Já consultei antes" />
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={onConfirmar}
-          disabled={!valido || enviando}
-          style={{
-            marginTop: 24,
-            width: '100%',
-            padding: '14px',
-            border: 'none',
-            borderRadius: 12,
-            background: (!valido || enviando) ? tokens.text.tertiary : tokens.brand.primary,
-            color: '#fff',
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: (!valido || enviando) ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {enviando ? 'Confirmando...' : 'Confirmar agendamento'}
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, fontSize: 12, color: tokens.text.tertiary, justifyContent: 'center' }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-          Seus dados são protegidos.
-        </div>
+        <Icon icon={CalendarDays} size={16} color={T.brand.primary} />
+        <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: T.text.primary }}>
+          {dataLabel} às <span className="mono">{horario}</span>
+        </span>
+        <span style={{ fontSize: 12, color: T.text.quaternary }}>{duracao} min</span>
       </div>
-    </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Field label="Nome completo *">
+          <Input value={nome} onChange={e => setNome(e.target.value)} placeholder="Como você quer ser chamado(a)" autoComplete="name" />
+        </Field>
+        <Field label="WhatsApp *">
+          <Input type="tel" inputMode="tel" value={telefone} onChange={e => setTelefone(e.target.value)} placeholder="(11) 99999-9999" autoComplete="tel" />
+        </Field>
+        <Field label="E-mail (opcional)">
+          <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" autoComplete="email" />
+        </Field>
+        <Field label="Motivo da consulta (opcional)">
+          <Textarea rows={3} value={motivo} onChange={e => setMotivo(e.target.value)} placeholder="Ex: avaliação inicial, retorno, dor recorrente" />
+        </Field>
+
+        <Field label="É sua primeira consulta?">
+          <div style={{ display: 'flex', gap: 8 }}>
+            <OpcaoSelecao ativo={primeiraConsulta === true} onClick={() => setPrimeiraConsulta(true)}>Sim</OpcaoSelecao>
+            <OpcaoSelecao ativo={primeiraConsulta === false} onClick={() => setPrimeiraConsulta(false)}>Já consultei antes</OpcaoSelecao>
+          </div>
+        </Field>
+      </div>
+
+      <Button size="lg" block onClick={onConfirmar} disabled={!valido || enviando} style={{ marginTop: 22 }}>
+        {enviando ? 'Confirmando…' : 'Confirmar agendamento'}
+      </Button>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, fontSize: 12, color: T.text.tertiary, justifyContent: 'center' }}>
+        <Icon icon={Lock} size={12} />
+        Seus dados são protegidos.
+      </div>
+    </Modal>
   )
 }
 
 // ─── Auxiliares ───
-function InfoLinha({ icon, text }: any) {
+function InfoPilula({ icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: tokens.text.secondary }}>
-      <div style={{ color: tokens.text.tertiary, display: 'flex' }}>{icon}</div>
-      {text}
-    </div>
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6, height: 28, padding: '0 10px', borderRadius: 99,
+      background: T.bg.card, border: `1px solid ${T.border.default}`, fontSize: 12, fontWeight: 600, color: T.text.muted,
+    }}>
+      <Icon icon={icon} size={13} color={T.text.tertiary} />
+      {children}
+    </span>
   )
 }
 
-function NavBtn({ children, onClick, disabled }: any) {
+function DiaBotao({ dia, hoje, passado, disponivel, selecionado, onClick }: {
+  dia: number; hoje: boolean; passado: boolean; disponivel: boolean; selecionado: boolean; onClick: () => void
+}) {
+  const [h, setH] = useState(false)
+  const on = selecionado
+  return (
+    <button
+      type="button"
+      disabled={!disponivel}
+      onClick={onClick}
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
+      aria-pressed={on}
+      style={{
+        position: 'relative', aspectRatio: '1', minHeight: 38, borderRadius: 11, fontFamily: 'inherit',
+        display: 'grid', placeItems: 'center', fontSize: 14, fontVariantNumeric: 'tabular-nums',
+        fontWeight: on || disponivel ? 700 : 500,
+        cursor: disponivel ? 'pointer' : 'default',
+        border: `1.5px solid ${on ? T.brand.primary : disponivel ? (h ? T.brand.primaryAccent : T.border.default) : 'transparent'}`,
+        background: on ? T.brand.primarySoftBg : disponivel ? (h ? T.brand.primarySoftBg : T.bg.card) : 'transparent',
+        color: on ? T.brand.primary : disponivel ? T.text.primary : T.text.tertiary,
+        opacity: passado ? 0.4 : 1,
+        transition: 'background .15s, border-color .15s, color .15s',
+      }}
+    >
+      {dia}
+      {hoje && (
+        <span style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: T.brand.primary }} />
+      )}
+    </button>
+  )
+}
+
+function HorarioBotao({ horario, selecionado, onClick }: { horario: string; selecionado: boolean; onClick: () => void }) {
+  const [h, setH] = useState(false)
+  const realce = selecionado || h
+  return (
+    <button
+      type="button"
+      className="mono"
+      onClick={onClick}
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
+      style={{
+        height: 42, borderRadius: 10, fontSize: 13.5, fontWeight: 500, cursor: 'pointer', textAlign: 'center',
+        border: `1.5px solid ${realce ? T.brand.primary : T.border.default}`,
+        background: realce ? T.brand.primarySoftBg : T.bg.card,
+        color: realce ? T.brand.primary : T.text.strong,
+        transition: 'background .15s, border-color .15s, color .15s',
+      }}
+    >
+      {horario}
+    </button>
+  )
+}
+
+function OpcaoSelecao({ ativo, onClick, children }: { ativo: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
+      aria-pressed={ativo}
       style={{
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        border: 'none',
-        background: disabled ? 'transparent' : tokens.bg.cardSubtle,
-        color: disabled ? tokens.text.tertiary : tokens.text.primary,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: disabled ? 'default' : 'pointer',
-        opacity: disabled ? 0.4 : 1,
-        transition: 'background 0.12s',
+        flex: 1, height: 42, padding: '0 12px', borderRadius: T.radius.input, fontFamily: 'inherit',
+        border: `1.5px solid ${ativo ? T.brand.primary : T.border.default}`,
+        background: ativo ? T.brand.primarySoftBg : T.bg.card,
+        color: ativo ? T.brand.primary : T.text.strong,
+        fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s',
       }}
     >
       {children}
@@ -748,71 +649,14 @@ function NavBtn({ children, onClick, disabled }: any) {
   )
 }
 
-function InputField({ label, value, onChange, required, placeholder, type = 'text', textarea }: any) {
-  const Tag: any = textarea ? 'textarea' : 'input'
-  return (
-    <div>
-      <label style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, display: 'block', marginBottom: 6 }}>
-        {label} {required && <span style={{ color: '#EF4444' }}>*</span>}
-      </label>
-      <Tag
-        type={type}
-        value={value}
-        onChange={(e: any) => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={textarea ? 3 : undefined}
-        style={{
-          width: '100%',
-          padding: '11px 14px',
-          fontSize: 14,
-          color: tokens.text.primary,
-          border: '1px solid ' + tokens.border.default,
-          borderRadius: 10,
-          background: '#fff',
-          outline: 'none',
-          fontFamily: 'inherit',
-          resize: textarea ? 'vertical' : undefined,
-          boxSizing: 'border-box',
-        }}
-      />
-    </div>
-  )
-}
-
-function ChipRadio({ ativo, onClick, label }: any) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        flex: 1,
-        padding: '10px 14px',
-        borderRadius: 10,
-        border: '1.5px solid ' + (ativo ? tokens.brand.primary : tokens.border.default),
-        background: ativo ? tokens.brand.primaryLight : '#fff',
-        color: ativo ? tokens.brand.primary : tokens.text.primary,
-        fontSize: 13,
-        fontWeight: 600,
-        cursor: 'pointer',
-        transition: 'all 0.12s',
-      }}
-    >
-      {label}
-    </button>
-  )
-}
-
-function Linha({ label, valor, ultimo }: any) {
+function Linha({ label, valor, ultimo }: { label: string; valor: React.ReactNode; ultimo?: boolean }) {
   return (
     <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      gap: 16,
-      padding: '8px 0',
-      borderBottom: ultimo ? 'none' : '1px solid ' + tokens.border.subtle,
+      display: 'flex', justifyContent: 'space-between', gap: 16, padding: '10px 0',
+      borderBottom: ultimo ? 'none' : `1px solid ${T.border.muted}`,
     }}>
-      <span style={{ fontSize: 13, color: tokens.text.secondary, fontWeight: 500 }}>{label}</span>
-      <span style={{ fontSize: 13, color: tokens.text.primary, fontWeight: 600, textAlign: 'right' }}>{valor}</span>
+      <span style={{ fontSize: 13, color: T.text.quaternary, fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: 13, color: T.text.primary, fontWeight: 600, textAlign: 'right' }}>{valor}</span>
     </div>
   )
 }

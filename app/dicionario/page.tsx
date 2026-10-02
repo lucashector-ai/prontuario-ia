@@ -5,15 +5,17 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { tokens } from '@/lib/design-tokens'
+import { usePageHeader } from '@/components/shell/header-context'
+import { BookOpen, Info, Plus, Trash2, X } from 'lucide-react'
+import { Badge, Button, Card, Chip, EmptyState, Field, IconButton, IconTile, Input, SearchInput, Select, type BadgeTone } from '@/components/ui'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = tokens.bg.page
-const CARD_RADIUS = 16
+import { confirmar } from '@/components/ui/dialogos'
+const T = tokens
 
 const CATEGORIAS = ['Medicamento', 'Patologia', 'Procedimento', 'Anatomia', 'Sigla', 'Outro']
 
 export default function Dicionario() {
+  usePageHeader('Dicionário clínico', 'Termos personalizados pra melhorar a transcrição da IA e gerar prontuários mais precisos')
   const router = useRouter()
   const { toast } = useToast()
   const [medico, setMedico] = useState<any>(null)
@@ -63,6 +65,7 @@ export default function Dicionario() {
   }
 
   const handleDeletar = async (id: string) => {
+    if (!(await confirmar({ titulo: 'Remover este termo?', mensagem: 'A IA deixa de usar este termo nas próximas transcrições.', confirmar: 'Remover', perigo: true }))) return
     await supabase.from('dicionario_clinico').delete().eq('id', id)
     setTermos(prev => prev.filter(t => t.id !== id))
     toast('Termo removido', 'info')
@@ -76,271 +79,152 @@ export default function Dicionario() {
     return txtOk && catOk
   })
 
-  const corCategoria: Record<string, string> = {
-    'Medicamento': tokens.status.infoStrong, 'Patologia': tokens.status.danger, 'Procedimento': ACCENT,
-    'Anatomia': tokens.status.successHover, 'Sigla': tokens.status.warningAlt, 'Outro': tokens.text.secondary
-  }
-  const bgCategoria: Record<string, string> = {
-    'Medicamento': tokens.status.infoBg, 'Patologia': tokens.status.dangerBg, 'Procedimento': ACCENT_LIGHT,
-    'Anatomia': tokens.status.successBg, 'Sigla': tokens.status.warningBgAlt, 'Outro': tokens.bg.hover
+  const tomCategoria: Record<string, BadgeTone> = {
+    'Medicamento': 'info', 'Patologia': 'danger', 'Procedimento': 'accent',
+    'Anatomia': 'success', 'Sigla': 'warning', 'Outro': 'neutral',
   }
 
   // Contagem por categoria pra chips de filtro
   const contagem: Record<string, number> = { todas: termos.length }
   for (const cat of CATEGORIAS) contagem[cat] = termos.filter(t => t.categoria === cat).length
 
-  const inputBase: React.CSSProperties = {
-    width: '100%', padding: '10px 14px', fontSize: 14,
-    borderRadius: 10, border: `1px solid ${tokens.border.default}`,
-    outline: 'none', fontFamily: 'inherit', color: tokens.text.primary,
-    background: 'white', boxSizing: 'border-box',
-  }
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
-    display: 'block', marginBottom: 6,
-    textTransform: 'uppercase' as const, letterSpacing: '0.04em',
-  }
-
   return (
-    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Dicionário clínico</h1>
-          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Termos personalizados pra melhorar a transcrição da IA e gerar prontuários mais precisos</p>
-        </div>
-        <span style={{
-          fontSize: 12, color: ACCENT, background: ACCENT_LIGHT,
-          padding: '6px 14px', borderRadius: 20, fontWeight: 700,
-          flexShrink: 0,
-        }}>
-          {termos.length} {termos.length === 1 ? 'termo' : 'termos'}
-        </span>
-      </div>
+    <div style={{ padding: 20 }}>
+      <style>{`
+        .dic-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+        @media (min-width: 960px) { .dic-grid { grid-template-columns: 340px minmax(0, 1fr); } }
+      `}</style>
 
-      {/* Grid horizontal 2 colunas */}
-      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20, alignItems: 'start' }}>
-
+      <div className="dic-grid">
         {/* COLUNA ESQUERDA — adicionar + info */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 24 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Adicionar termo</h2>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 20px' }}>Amplie o vocabulário da IA</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Card padding={20} titulo="Adicionar termo" acao={<Badge tone="accent">{termos.length} {termos.length === 1 ? 'termo' : 'termos'}</Badge>}>
+            <p style={{ fontSize: 12.5, color: T.text.quaternary, margin: '-6px 0 16px' }}>Amplie o vocabulário da IA</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={labelStyle}>Termo *</label>
-                <input
+              <Field label="Termo *">
+                <Input
                   value={novoTermo}
                   onChange={e => setNovoTermo(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAdicionar()}
                   placeholder="Ex: BDZ, Quetiapina, PCR..."
-                  style={inputBase}
                 />
-              </div>
-              <div>
-                <label style={labelStyle}>Descrição</label>
-                <input
+              </Field>
+              <Field label="Descrição">
+                <Input
                   value={novaDescricao}
                   onChange={e => setNovaDescricao(e.target.value)}
                   placeholder="Ex: Benzodiazepínico"
-                  style={inputBase}
                 />
-              </div>
-              <div>
-                <label style={labelStyle}>Categoria</label>
-                <select
-                  value={novaCategoria}
-                  onChange={e => setNovaCategoria(e.target.value)}
-                  style={{ ...inputBase, cursor: 'pointer' }}
-                >
+              </Field>
+              <Field label="Categoria">
+                <Select value={novaCategoria} onChange={e => setNovaCategoria(e.target.value)} style={{ cursor: 'pointer' }}>
                   {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <button
-                onClick={handleAdicionar}
-                disabled={salvando}
-                style={{
-                  padding: 12, borderRadius: 10, border: 'none',
-                  background: salvando ? tokens.text.tertiary : ACCENT,
-                  color: 'white', fontSize: 13, fontWeight: 700,
-                  cursor: salvando ? 'not-allowed' : 'pointer',
-                  marginTop: 4,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M12 5v14M5 12h14"/>
-                </svg>
-                {salvando ? 'Salvando...' : 'Adicionar ao dicionário'}
-              </button>
+                </Select>
+              </Field>
+              <Button icon={Plus} block onClick={handleAdicionar} disabled={salvando} style={{ marginTop: 4 }}>
+                {salvando ? 'Salvando…' : 'Adicionar ao dicionário'}
+              </Button>
             </div>
-          </div>
+          </Card>
 
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: 10,
-                background: ACCENT_LIGHT, color: ACCENT,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="16" x2="12" y2="12"/>
-                  <line x1="12" y1="8" x2="12.01" y2="8"/>
-                </svg>
-              </div>
+          <Card padding={18}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <IconTile icon={Info} size={34} radius={10} />
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Como funciona</p>
-                <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.6 }}>
+                <p style={{ fontSize: 13.5, fontWeight: 700, color: T.text.primary, margin: '0 0 4px' }}>Como funciona</p>
+                <p style={{ fontSize: 12.5, color: T.text.secondary, margin: 0, lineHeight: 1.55 }}>
                   Os termos aqui cadastrados são usados pela IA pra corrigir a transcrição da consulta e gerar prontuários mais precisos pra sua especialidade.
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* COLUNA DIREITA — busca + chips + grid de termos */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-          {/* Barra de busca */}
-          <div style={{
-            background: 'white', borderRadius: 12,
-            padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10,
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="M21 21l-4.35-4.35"/>
-            </svg>
-            <input
-              value={filtro}
-              onChange={e => setFiltro(e.target.value)}
-              placeholder="Buscar termo..."
-              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 14, outline: 'none', color: tokens.text.strong }}
-            />
-            {filtro && (
-              <button onClick={() => setFiltro('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: tokens.text.tertiary, padding: 0, display: 'flex' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            )}
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+          <SearchInput
+            value={filtro}
+            onChange={setFiltro}
+            placeholder="Buscar termo…"
+            trailing={filtro ? <IconButton icon={X} size={26} onClick={() => setFiltro('')} aria-label="Limpar busca" /> : undefined}
+          />
 
           {/* Chips de categoria */}
-          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {['todas', ...CATEGORIAS].map(cat => {
               const ativo = filtroCategoria === cat
               const count = contagem[cat] || 0
+              const vazio = count === 0 && cat !== 'todas'
               const label = cat === 'todas' ? 'Todas' : cat
               return (
-                <button
+                <Chip
                   key={cat}
-                  onClick={() => setFiltroCategoria(cat)}
-                  disabled={count === 0 && cat !== 'todas'}
-                  style={{
-                    padding: '6px 12px', borderRadius: 20,
-                    border: `1px solid ${ativo ? ACCENT : tokens.border.default}`,
-                    background: ativo ? ACCENT : 'white',
-                    color: ativo ? 'white' : (count === 0 && cat !== 'todas' ? tokens.border.strong : tokens.text.strong),
-                    fontSize: 12, fontWeight: 600,
-                    cursor: count === 0 && cat !== 'todas' ? 'not-allowed' : 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                  }}
+                  ativo={ativo}
+                  onClick={vazio ? undefined : () => setFiltroCategoria(cat)}
+                  style={vazio ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
                 >
                   {label}
                   <span style={{
-                    fontSize: 10,
-                    padding: '1px 6px', borderRadius: 10,
-                    background: ativo ? 'rgba(255,255,255,0.25)' : tokens.bg.hover,
-                    color: ativo ? 'white' : tokens.text.tertiary,
-                    fontWeight: 700,
+                    fontSize: 11, padding: '1px 6px', borderRadius: 99, fontWeight: 700,
+                    background: ativo ? T.bg.card : T.bg.hover,
+                    color: ativo ? T.brand.primary : T.text.tertiary,
                   }}>{count}</span>
-                </button>
+                </Chip>
               )
             })}
           </div>
 
           {/* Lista */}
           {carregando ? (
-            <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 60, display: 'flex', justifyContent: 'center' }}>
-              <div style={{ width: 28, height: 28, border: `3px solid ${ACCENT_LIGHT}`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+              {[0, 1, 2, 3].map(i => <div key={i} className="c360-skel" style={{ height: 72, borderRadius: T.radius['2xl'] }} />)}
             </div>
           ) : termosFiltrados.length === 0 ? (
-            <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 48, textAlign: 'center' as const }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: 14,
-                background: tokens.bg.hover, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 12px', color: tokens.text.tertiary,
-              }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
-                </svg>
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>
-                {termos.length === 0 ? 'Nenhum termo cadastrado' : 'Nenhum resultado'}
-              </p>
-              <p style={{ fontSize: 13, color: tokens.text.tertiary, margin: 0 }}>
-                {termos.length === 0 ? 'Adicione termos específicos da sua especialidade no formulário ao lado' : 'Tente outro filtro ou busca'}
-              </p>
-            </div>
+            <Card padding={8}>
+              <EmptyState
+                icon={BookOpen}
+                titulo={termos.length === 0 ? 'Nenhum termo cadastrado' : 'Nenhum resultado'}
+                descricao={termos.length === 0 ? 'Adicione termos específicos da sua especialidade no formulário ao lado.' : 'Tente outro filtro ou busca.'}
+              />
+            </Card>
           ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-              gap: 12,
-            }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
               {termosFiltrados.map(t => (
-                <div key={t.id} style={{
-                  background: 'white', borderRadius: 12, padding: 14,
-                  display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10,
-                  transition: 'transform 0.15s',
-                }}>
+                <Card key={t.id} padding="14px 12px 14px 16px" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' as const }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary }}>{t.termo}</span>
-                      <span style={{
-                        fontSize: 10, fontWeight: 700,
-                        color: corCategoria[t.categoria] || tokens.text.secondary,
-                        background: bgCategoria[t.categoria] || tokens.bg.hover,
-                        padding: '2px 8px', borderRadius: 10, flexShrink: 0,
-                        textTransform: 'uppercase' as const, letterSpacing: '0.02em',
-                      }}>
-                        {t.categoria}
-                      </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: T.text.primary }}>{t.termo}</span>
+                      <Badge tone={tomCategoria[t.categoria] || 'neutral'}>{t.categoria}</Badge>
                     </div>
                     {t.descricao && (
-                      <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>{t.descricao}</p>
+                      <p style={{ fontSize: 12.5, color: T.text.secondary, margin: 0, lineHeight: 1.5 }}>{t.descricao}</p>
                     )}
                   </div>
-                  <button
-                    onClick={() => handleDeletar(t.id)}
-                    title="Remover"
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      color: tokens.border.strong, padding: 4, flexShrink: 0,
-                      display: 'flex', alignItems: 'center',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.color = tokens.status.danger)}
-                    onMouseLeave={e => (e.currentTarget.style.color = tokens.border.strong)}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                    </svg>
-                  </button>
-                </div>
+                  <BotaoRemover onClick={() => handleDeletar(t.id)} />
+                </Card>
               ))}
             </div>
           )}
         </div>
       </div>
+    </div>
+  )
+}
 
-      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
-    </main>
+/** Lixeira cinza em repouso, vermelha no hover. */
+function BotaoRemover({ onClick }: { onClick: () => void }) {
+  const [h, setH] = useState(false)
+  return (
+    <IconButton
+      icon={Trash2}
+      tone={h ? 'danger' : 'default'}
+      size={30}
+      title="Remover"
+      aria-label="Remover termo"
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
+      onClick={onClick}
+    />
   )
 }

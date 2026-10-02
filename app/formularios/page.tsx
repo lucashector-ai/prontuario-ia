@@ -1,14 +1,22 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { tokens } from '@/lib/design-tokens'
-import { PageHeader, Tabs, Button } from '@/components/ui'
+import { Plus, FileText, Pencil, Trash2, Eye } from 'lucide-react'
+import { tokens, tint } from '@/lib/design-tokens'
+import {
+  Tabs, Button, IconButton, SearchInput, SegmentedControl, Card, EmptyState, Drawer, Icon,
+} from '@/components/ui'
+import { usePageHeader } from '@/components/shell/header-context'
 import { listarTemplatesClinica, deletarTemplate } from '@/lib/formularios/templates'
-import type { Template } from '@/lib/formularios/types'
+import type { Template, Campo } from '@/lib/formularios/types'
 import { useToast } from '@/components/Toast'
 import ModalNovoTemplate from './ModalNovoTemplate'
 import ListaEnvios from './ListaEnvios'
+import { TIPOS_FORMULARIO, tipoDoTemplate, normalizarBusca, type TipoFormulario } from './tipos'
+import { confirmar } from '@/components/ui/dialogos'
+
+const T = tokens
 
 type Auth = {
   tipo: 'medico' | 'admin' | null
@@ -16,15 +24,20 @@ type Auth = {
   loading: boolean
 }
 
+type FiltroTipo = 'Todos' | TipoFormulario
+
 export default function FormulariosPage() {
   const router = useRouter()
   const { toast } = useToast()
+  usePageHeader('Formulários', 'Anamnese, consentimentos e pré-consulta')
   const [auth, setAuth] = useState<Auth>({ tipo: null, clinicaId: null, loading: true })
   const [templates, setTemplates] = useState<Template[]>([])
   const [loadingTemplates, setLoadingTemplates] = useState(true)
   const [busca, setBusca] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('Todos')
   const [modalAberto, setModalAberto] = useState(false)
   const [aba, setAba] = useState<'modelos' | 'envios'>('modelos')
+  const [previa, setPrevia] = useState<Template | null>(null)
 
   useEffect(() => {
     try {
@@ -58,15 +71,22 @@ export default function FormulariosPage() {
   }
 
   async function handleDeletar(t: Template) {
-    if (!confirm('Excluir o formulário "' + t.nome + '"? Essa ação não pode ser desfeita.')) return
+    if (!(await confirmar({ titulo: `Excluir o formulário “${t.nome}”?`, mensagem: 'Essa ação não pode ser desfeita.', confirmar: 'Excluir', perigo: true }))) return
     const { erro } = await deletarTemplate(t.id)
     if (erro) {
       toast(erro, 'error')
     } else {
       toast('Formulário excluído.', 'success')
+      if (previa?.id === t.id) setPrevia(null)
       if (auth.clinicaId) carregarTemplates(auth.clinicaId)
     }
   }
+
+  // Tipos presentes nos dados (para o filtro segmentado)
+  const tiposPresentes = useMemo(() => {
+    const set = new Set(templates.map(tipoDoTemplate))
+    return (Object.keys(TIPOS_FORMULARIO) as TipoFormulario[]).filter(k => set.has(k))
+  }, [templates])
 
   if (auth.loading) {
     return (
@@ -76,106 +96,86 @@ export default function FormulariosPage() {
     )
   }
 
-  const templatesFiltrados = busca
-    ? templates.filter(t => 
-        t.nome.toLowerCase().includes(busca.toLowerCase()) ||
-        (t.especialidade || '').toLowerCase().includes(busca.toLowerCase())
-      )
-    : templates
+  const q = normalizarBusca(busca.trim())
+  const templatesFiltrados = templates.filter(t =>
+    (filtroTipo === 'Todos' || tipoDoTemplate(t) === filtroTipo) &&
+    (!q || normalizarBusca(t.nome).includes(q) || normalizarBusca(t.especialidade || '').includes(q))
+  )
 
   return (
-    <div style={{ padding: 24 }}>
-      <div>
-        {/* Header */}
-        <PageHeader
-          titulo="Formulários"
-          descricao="Crie formulários pra enviar ao paciente antes da consulta. A IA gera um resumo das respostas pra você ler em 30 segundos."
-          acao={
-            <Button variant="primary" onClick={() => setModalAberto(true)} style={{ flexShrink: 0 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Novo formulário
-            </Button>
-          }
-        />
+    <div style={{ padding: 20 }}>
+      <Tabs
+        ativa={aba}
+        onChange={(id) => setAba(id as 'modelos' | 'envios')}
+        style={{ marginBottom: 16 }}
+        tabs={[
+          { id: 'modelos', label: 'Meus formulários' },
+          { id: 'envios', label: 'Envios' },
+        ]}
+      />
 
-        {/* Tabs */}
-        <Tabs
-          ativa={aba}
-          onChange={(id) => setAba(id as 'modelos' | 'envios')}
-          tabs={[
-            { id: 'modelos', label: 'Meus formulários' },
-            { id: 'envios', label: 'Envios' },
-          ]}
-        />
+      {aba === 'envios' && auth.clinicaId && (
+        <ListaEnvios clinicaId={auth.clinicaId} />
+      )}
 
-        {aba === 'envios' && auth.clinicaId && (
-          <ListaEnvios clinicaId={auth.clinicaId} />
-        )}
-
-        {aba === 'modelos' && <>
-
-        {/* Busca */}
-        {templates.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '10px 14px',
-              background: '#fff',
-              borderRadius: 10,
-              border: `1px solid ${tokens.border.subtle}`,
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                value={busca}
-                onChange={e => setBusca(e.target.value)}
-                placeholder="Buscar por nome ou especialidade"
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: 14,
-                  background: 'transparent',
-                  color: tokens.text.primary,
-                }}
-              />
+      {aba === 'modelos' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Barra de ferramentas */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+              <SearchInput value={busca} onChange={setBusca} placeholder="Buscar formulário" />
             </div>
+            {tiposPresentes.length > 1 && (
+              <div style={{ maxWidth: '100%', overflowX: 'auto', scrollbarWidth: 'none' }}>
+                <SegmentedControl<FiltroTipo>
+                  options={['Todos', ...tiposPresentes]}
+                  value={filtroTipo}
+                  onChange={setFiltroTipo}
+                />
+              </div>
+            )}
+            <Button icon={Plus} onClick={() => setModalAberto(true)}>Novo formulário</Button>
           </div>
-        )}
 
-        {/* Lista */}
-        {loadingTemplates ? (
-          <div style={{ padding: 64, display: 'flex', justifyContent: 'center' }}>
-            <Spinner />
-          </div>
-        ) : templates.length === 0 ? (
-          <EstadoVazio onClick={() => setModalAberto(true)} />
-        ) : templatesFiltrados.length === 0 ? (
-          <div style={{ padding: 48, textAlign: 'center', color: tokens.text.tertiary, fontSize: 14 }}>
-            Nenhum formulário encontrado.
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-            {templatesFiltrados.map(t => (
-              <CardTemplate
-                key={t.id}
-                template={t}
-                onEditar={() => router.push('/formularios/' + t.id)}
-                onDeletar={() => handleDeletar(t)}
+          {/* Lista */}
+          {loadingTemplates ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+              {[0, 1, 2].map(i => <div key={i} className="c360-skel" style={{ height: 168, borderRadius: 16 }} />)}
+            </div>
+          ) : templates.length === 0 ? (
+            <Card padding={0}>
+              <EmptyState
+                icon={FileText}
+                titulo="Nenhum formulário ainda"
+                descricao="Crie seu primeiro formulário para enviar aos pacientes antes das consultas. Você pode começar a partir de modelos prontos."
+                acao={<Button icon={Plus} onClick={() => setModalAberto(true)}>Criar primeiro formulário</Button>}
               />
-            ))}
-          </div>
-        )}
-        </>}
-      </div>
+            </Card>
+          ) : templatesFiltrados.length === 0 ? (
+            <EmptyState icon={FileText} titulo="Nenhum formulário encontrado" descricao="Tente outro termo ou tipo." />
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+              {templatesFiltrados.map(t => (
+                <CardTemplate
+                  key={t.id}
+                  template={t}
+                  onVisualizar={() => setPrevia(t)}
+                  onDeletar={() => handleDeletar(t)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {previa && (
+        <DrawerPrevia
+          template={previa}
+          onClose={() => setPrevia(null)}
+          onEditar={() => router.push('/formularios/' + previa.id)}
+          onDeletar={() => handleDeletar(previa)}
+        />
+      )}
 
       {modalAberto && auth.clinicaId && (
         <ModalNovoTemplate
@@ -195,150 +195,132 @@ function Spinner() {
   return (
     <>
       <div style={{
-        width: 28,
-        height: 28,
-        border: '2.5px solid ' + tokens.brand.primaryLight,
-        borderTopColor: tokens.brand.primary,
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite',
+        width: 28, height: 28, border: '2.5px solid ' + T.brand.primaryLight, borderTopColor: T.brand.primary,
+        borderRadius: '50%', animation: 'spin 0.8s linear infinite',
       }} />
       <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
     </>
   )
 }
 
-function EstadoVazio({ onClick }: { onClick: () => void }) {
+function formatarDataCurta(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+  } catch {
+    return ''
+  }
+}
+
+function CardTemplate({ template, onVisualizar, onDeletar }: { template: Template; onVisualizar: () => void; onDeletar: () => void }) {
+  const numCampos = Array.isArray(template.campos) ? template.campos.length : 0
+  const tipo = tipoDoTemplate(template)
+  const { cor, icon } = TIPOS_FORMULARIO[tipo]
+
   return (
-    <div style={{
-      background: '#fff',
-      borderRadius: 16,
-      padding: '48px 32px',
-      textAlign: 'center',
-      border: `1px solid ${tokens.border.subtle}`,
-    }}>
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={tokens.text.secondary} strokeWidth="1.5" style={{ display: 'block', margin: '0 auto 20px' }}>
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-      </svg>
-      <h2 style={{ fontSize: 19, fontWeight: 600, color: tokens.text.primary, margin: '0 0 8px' }}>
-        Nenhum formulário ainda
-      </h2>
-      <p style={{ fontSize: 14, color: tokens.text.secondary, margin: '0 auto 24px', maxWidth: 380, lineHeight: 1.5 }}>
-        Crie seu primeiro formulário pra começar a enviar pra pacientes antes das consultas. Você pode começar a partir de modelos prontos.
-      </p>
-      <button
-        type="button"
-        onClick={onClick}
-        style={{
-          padding: '12px 24px',
-          background: tokens.brand.primary,
-          color: '#fff',
-          border: 'none',
-          borderRadius: 10,
-          fontSize: 14,
-          fontWeight: 600,
-          cursor: 'pointer',
-        }}
-      >
-        Criar primeiro formulário
-      </button>
-    </div>
+    <Card onClick={onVisualizar} padding={16} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <span style={{ width: 40, height: 40, borderRadius: 12, display: 'grid', placeItems: 'center', background: tint(cor, 0.12), color: cor, flexShrink: 0 }}>
+          <Icon icon={icon} size={18} />
+        </span>
+        <span style={{ flex: 1 }} />
+        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 99, background: tint(cor, 0.12), color: cor }}>{tipo}</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+        <span style={{ fontSize: 14.5, fontWeight: 700, color: T.text.primary }}>{template.nome}</span>
+        <span style={{ fontSize: 12.5, color: T.text.quaternary }}>
+          {numCampos} {numCampos === 1 ? 'pergunta' : 'perguntas'}
+          {template.especialidade ? ' · ' + template.especialidade : ''}
+        </span>
+        {template.descricao && (
+          <span style={{ fontSize: 12.5, color: T.text.secondary, lineHeight: 1.4, marginTop: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {template.descricao}
+          </span>
+        )}
+      </div>
+      <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 6, paddingTop: 10, borderTop: `1px solid ${T.border.muted}` }}>
+        <span style={{ flex: 1, fontSize: 11.5, color: T.text.tertiary }}>
+          {template.criado_em ? 'Criado em ' + formatarDataCurta(template.criado_em) : ''}
+        </span>
+        <IconButton
+          icon={Trash2}
+          size={30}
+          aria-label="Excluir"
+          title="Excluir"
+          onClick={(e) => { e.stopPropagation(); onDeletar() }}
+        />
+        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onVisualizar() }}>Visualizar</Button>
+      </div>
+    </Card>
   )
 }
 
-function CardTemplate({ template, onEditar, onDeletar }: { template: Template; onEditar: () => void; onDeletar: () => void }) {
-  const numCampos = Array.isArray(template.campos) ? template.campos.length : 0
-  
+// ── Drawer de pré-visualização ────────────────────────────────────────────────
+
+function DrawerPrevia({ template, onClose, onEditar, onDeletar }: {
+  template: Template
+  onClose: () => void
+  onEditar: () => void
+  onDeletar: () => void
+}) {
+  const campos: Campo[] = Array.isArray(template.campos) ? template.campos : []
+  const tipo = tipoDoTemplate(template)
   return (
-    <div style={{
-      background: '#fff',
-      borderRadius: 14,
-      padding: 20,
-      border: `1px solid ${tokens.border.subtle}`,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12,
-      transition: 'box-shadow 0.15s',
-      cursor: 'pointer',
-    }}
-    onClick={onEditar}
-    onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)'}
-    onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+    <Drawer
+      titulo={<span style={{ fontSize: 13, fontWeight: 600, color: T.text.quaternary }}>Pré-visualização</span>}
+      onClose={onClose}
+      rodape={
+        <>
+          <Button variant="danger" icon={Trash2} onClick={onDeletar}>Excluir</Button>
+          <Button icon={Pencil} onClick={onEditar} style={{ flex: 1 }}>Editar</Button>
+        </>
+      }
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-        <div style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          background: tokens.brand.primaryLight,
-          color: tokens.brand.primary,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 18, fontWeight: 700, color: T.text.primary }}>{template.nome}</span>
+          <span style={{ fontSize: 12.5, color: T.text.quaternary }}>
+            {tipo} · {campos.length} {campos.length === 1 ? 'pergunta' : 'perguntas'}
+            {template.especialidade ? ' · ' + template.especialidade : ''}
+          </span>
         </div>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onDeletar() }}
-          aria-label="Excluir"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 6,
-            color: tokens.text.tertiary,
-            borderRadius: 6,
-            display: 'flex',
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-          </svg>
-        </button>
-      </div>
-      <div>
-        <h3 style={{ fontSize: 15, fontWeight: 600, color: tokens.text.primary, margin: 0, marginBottom: 4 }}>
-          {template.nome}
-        </h3>
-        {template.especialidade && (
-          <div style={{ fontSize: 12, color: tokens.text.secondary }}>
-            {template.especialidade}
+        {campos.length === 0 ? (
+          <EmptyState icon={Eye} titulo="Sem perguntas" descricao="Abra o editor para adicionar as perguntas deste formulário." />
+        ) : campos.map((c, i) => (
+          <div key={c.id || i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary }}>
+              {i + 1}. {c.label}{c.obrigatorio && <span style={{ color: T.status.danger }}> *</span>}
+            </span>
+            {c.descricao && <span style={{ fontSize: 12, color: T.text.quaternary, marginTop: -4 }}>{c.descricao}</span>}
+            <PreviaCampo campo={c} />
           </div>
-        )}
+        ))}
       </div>
-      {template.descricao && (
-        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-          {template.descricao}
-        </p>
-      )}
-      <div style={{
-        marginTop: 'auto',
-        paddingTop: 12,
-        borderTop: '1px solid ' + tokens.border.subtle,
-        fontSize: 12,
-        color: tokens.text.tertiary,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-      }}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="8" y1="6" x2="21" y2="6" />
-          <line x1="8" y1="12" x2="21" y2="12" />
-          <line x1="8" y1="18" x2="21" y2="18" />
-          <line x1="3" y1="6" x2="3.01" y2="6" />
-          <line x1="3" y1="12" x2="3.01" y2="12" />
-          <line x1="3" y1="18" x2="3.01" y2="18" />
-        </svg>
-        {numCampos} {numCampos === 1 ? 'pergunta' : 'perguntas'}
-      </div>
+    </Drawer>
+  )
+}
+
+function PreviaCampo({ campo }: { campo: Campo }) {
+  const caixa = (h: number) => (
+    <div style={{ height: h, borderRadius: 10, border: `1px solid ${T.border.default}`, background: T.bg.cardSubtle }} />
+  )
+  const opcoes = (lista: string[]) => (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      {lista.map((o, i) => (
+        <span key={i} style={{ padding: '6px 11px', borderRadius: 9, border: `1px solid ${T.border.default}`, fontSize: 12.5, color: T.text.muted }}>{o}</span>
+      ))}
     </div>
   )
+  switch (campo.tipo) {
+    case 'textarea': return caixa(76)
+    case 'select':
+    case 'multipla': return opcoes(campo.opcoes || [])
+    case 'sim_nao': return opcoes(['Sim', 'Não'])
+    case 'escala': {
+      const min = campo.min ?? 0, max = campo.max ?? 10, passo = campo.passo || 1
+      const nums: string[] = []
+      for (let n = min; n <= max && nums.length < 21; n += passo) nums.push(String(n))
+      return opcoes(nums)
+    }
+    default: return caixa(38)
+  }
 }

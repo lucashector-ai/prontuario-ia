@@ -5,6 +5,7 @@ import { tokens } from '@/lib/design-tokens'
 import { gerarIdCampo, TIPOS_CAMPO_LABELS } from '@/lib/formularios/templates'
 import type { Campo, TipoCampo } from '@/lib/formularios/types'
 import EditorCampo from './EditorCampo'
+import { confirmar } from '@/components/ui/dialogos'
 
 type Props = {
   campos: Campo[]
@@ -39,8 +40,8 @@ export default function BuilderCampos({ campos, onChange }: Props) {
     onChange(lista)
   }
 
-  function removerCampo(idx: number) {
-    if (!confirm('Remover essa pergunta?')) return
+  async function removerCampo(idx: number) {
+    if (!(await confirmar({ titulo: 'Remover esta pergunta?', confirmar: 'Remover', perigo: true }))) return
     onChange(campos.filter((_, i) => i !== idx))
   }
 

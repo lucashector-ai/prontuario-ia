@@ -1,19 +1,26 @@
 'use client'
 import { log } from '@/lib/logger'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
 import { CamposPessoaisMedico } from '@/components/CamposPessoaisMedico'
 import { tokens } from '@/lib/design-tokens'
-import { MetricCard, Tabs, EmptyState } from '@/components/ui'
+import {
+  UserRound, Headset, Users, CalendarCheck, UserPlus, Ellipsis, Pencil, Power, RotateCcw, Trash2,
+  Check, Copy, Info, TriangleAlert,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import {
+  KpiCard, Tabs, EmptyState, Button, Card, Avatar, Badge, Field, Input, Select, Modal, ModalAcoes,
+  SegmentedControl, IconButton, Icon, Overline, PageHeader,
+} from '@/components/ui'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = 'transparent'
-const CARD_RADIUS = 16
+const T = tokens
+const TONS = ['purple', 'pink', 'blue', 'green'] as const
+const FORM_VAZIO = { nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: tokens.brand.primary as string, comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' }
 
 const PALETA_CORES = [
   tokens.brand.primary, tokens.status.infoStrong, tokens.status.successHover, tokens.status.warningAlt, tokens.external.instagramPink,
@@ -38,7 +45,6 @@ function Admin() {
   const [carregando, setCarregando] = useState(true)
 
   const [aba, setAba] = useState<'medicos' | 'recepcionistas'>('medicos')
-  const [novoDropdownOpen, setNovoDropdownOpen] = useState(false)
   const [modalNovoTipo, setModalNovoTipo] = useState<'medico' | 'recepcionista' | null>(null)
   const [modalEditar, setModalEditar] = useState<any>(null)
   const [modalExcluir, setModalExcluir] = useState<any>(null)
@@ -48,7 +54,7 @@ function Admin() {
   const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: tokens.brand.primary as string, comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
   const [formEditar, setFormEditar] = useState({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cargo: 'medico', comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
   const [salvando, setSalvando] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [menuAberto, setMenuAberto] = useState<string | null>(null)
 
   useEffect(() => {
     const ca = localStorage.getItem('clinica_admin')
@@ -76,14 +82,6 @@ function Admin() {
     else if (tab === 'recepcionistas') setAba('recepcionistas')
     else if (tab === 'medicos') setAba('medicos')
   }, [searchParams])
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setNovoDropdownOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
 
   const carregarDados = async (clinicaId: string) => {
     setCarregando(true)
@@ -168,7 +166,7 @@ function Admin() {
       if (data.medico && data.senha_provisoria_gerada) {
         const tipoSalvo = modalNovoTipo!
         setModalNovoTipo(null)
-        setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: tokens.brand.primary, comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' })
+        setForm({ ...FORM_VAZIO })
         setSenhaGerada({ pessoa: data.medico, senha: data.senha_provisoria_gerada, tipo: tipoSalvo })
         await carregarDados(medico.clinica_id)
       } else throw new Error(data.error || 'Erro ao criar')
@@ -257,388 +255,373 @@ function Admin() {
   const listaMedicos = medicos.filter(m => m.cargo !== 'recepcionista')
   const listaRecepcionistas = medicos.filter(m => m.cargo === 'recepcionista')
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 14px', fontSize: 14,
-    borderRadius: 10, border: `1px solid ${tokens.border.default}`,
-    background: 'white', outline: 'none', boxSizing: 'border-box', color: tokens.text.primary,
-  }
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: 12, fontWeight: 600, color: tokens.text.secondary,
-    display: 'block', marginBottom: 6,
-  }
-
   const listaAtual = aba === 'medicos' ? listaMedicos : listaRecepcionistas
   const labelAba = aba === 'medicos' ? 'médico' : 'recepcionista'
   const labelPlural = aba === 'medicos' ? 'médicos' : 'recepcionistas'
 
+  const abrirNovo = (tipo: 'medico' | 'recepcionista') => {
+    setModalNovoTipo(tipo)
+    setForm({ ...FORM_VAZIO })
+  }
+
+  const ROLE: Record<string, { label: string; tone: 'accent' | 'info' | 'warning' }> = {
+    admin: { label: 'Admin', tone: 'accent' },
+    medico: { label: 'Médico', tone: 'info' },
+    recepcionista: { label: 'Recepção', tone: 'warning' },
+  }
+
   return (
-    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Painel administrativo</h1>
-          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>
-            {listaMedicos.length} médico{listaMedicos.length !== 1 ? 's' : ''} · {listaRecepcionistas.length} recepcionista{listaRecepcionistas.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <div ref={dropdownRef} style={{ position: 'relative' }}>
-          <button onClick={() => setNovoDropdownOpen(!novoDropdownOpen)} style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            padding: '10px 18px', borderRadius: 10, border: 'none',
-            background: ACCENT, color: 'white',
-            fontSize: 13, fontWeight: 600, cursor: 'pointer',
-          }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 5v14M5 12h14"/>
-            </svg>
-            Novo
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-          {novoDropdownOpen && (
-            <div style={{
-              position: 'absolute', top: 44, right: 0, width: 200,
-              background: 'white', borderRadius: 10, zIndex: 50,
-              padding: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-            }}>
-              <button
-                onClick={() => { setModalNovoTipo('medico'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: tokens.brand.primary, comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
-                style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: tokens.text.strong, background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
-                onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                + Médico
-              </button>
-              <button
-                onClick={() => { setModalNovoTipo('recepcionista'); setNovoDropdownOpen(false); setForm({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: tokens.brand.primary, comissao_tipo: 'sem', comissao_valor: '', comissao_base: 'receita' }) }}
-                style={{ display: 'block', width: '100%', padding: '9px 12px', fontSize: 13, color: tokens.text.strong, background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left' as const }}
-                onMouseEnter={e => e.currentTarget.style.background = tokens.bg.hover}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                + Recepcionista
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
-        {[
-          { label: 'Médicos ativos', valor: listaMedicos.filter(m => m.ativo).length, sub: `${listaMedicos.length} total` },
-          { label: 'Recepcionistas', valor: listaRecepcionistas.filter(m => m.ativo).length, sub: 'atendentes WhatsApp' },
-          { label: 'Pacientes cadastrados', valor: kpis.totalPacientes, sub: 'na clínica' },
-          { label: 'Consultas este mês', valor: kpis.consultasMes, sub: 'todos os médicos' },
-        ].map(k => (
-          <MetricCard key={k.label} label={k.label} valor={k.valor} sublabel={k.sub} />
-        ))}
-      </div>
-
-      {/* Tabs */}
-      <Tabs
-        style={{ marginBottom: 16 }}
-        ativa={aba}
-        onChange={(id) => setAba(id as 'medicos' | 'recepcionistas')}
-        tabs={[
-          { id: 'medicos', label: `Médicos (${listaMedicos.length})` },
-          { id: 'recepcionistas', label: `Recepcionistas (${listaRecepcionistas.length})` },
-        ]}
+    <main style={{ height: '100%', overflow: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <PageHeader
+        titulo="Painel admin"
+        descricao={`${listaMedicos.length} médico${listaMedicos.length !== 1 ? 's' : ''} · ${listaRecepcionistas.length} recepcionista${listaRecepcionistas.length !== 1 ? 's' : ''}`}
       />
 
-      {/* Lista */}
-      {carregando ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-          <div style={{ width: 32, height: 32, border: `3px solid ${ACCENT_LIGHT}`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        </div>
-      ) : listaAtual.length === 0 ? (
-        <EmptyState titulo={`Nenhum ${labelAba} cadastrado ainda.`} />
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {listaAtual.map(m => {
-            const s = stats[m.id] || { consultas: 0, consultasMes: 0, pacientes: 0 }
-            const iniciais = m.nome.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
-            const isRecep = m.cargo === 'recepcionista'
-            return (
-              <div key={m.id} style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20, opacity: m.ativo ? 1 : 0.6, border: `1px solid ${tokens.border.subtle}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: isRecep ? 0 : 16 }}>
-                  {m.foto_url ? (
-                    <img src={m.foto_url} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}/>
-                  ) : (
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: ACCENT_LIGHT, color: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, flexShrink: 0 }}>
-                      {iniciais}
-                    </div>
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
-                      <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{m.nome}</p>
-                      {isRecep && <span style={{ fontSize: 10, fontWeight: 700, color: tokens.status.info, background: tokens.status.infoBg, padding: '2px 8px', borderRadius: 10 }}>recepcionista</span>}
-                      {!m.ativo && <span style={{ fontSize: 10, fontWeight: 700, color: tokens.status.danger, background: tokens.status.dangerBg, padding: '2px 8px', borderRadius: 10, border: `1px solid ${tokens.status.dangerLight}` }}>inativo</span>}
-                    </div>
-                    <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>
-                      {isRecep ? m.email : (m.especialidade || 'Sem especialidade') + (m.crm ? ' · CRM ' + m.crm : '') + ' · ' + m.email}
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                    <button onClick={() => abrirEditar(m)} style={{ padding: '8px 12px', borderRadius: 9, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.strong, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>Editar</button>
-                    {m.id !== medico.id && (
-                      <>
-                        <button onClick={() => toggleAtivo(m.id, m.ativo)} style={{
-                          padding: '8px 12px', borderRadius: 9,
-                          border: m.ativo ? `1px solid ${tokens.status.dangerLight}` : `1px solid ${tokens.status.successLight}`,
-                          background: m.ativo ? tokens.status.dangerBg : tokens.status.successBg,
-                          color: m.ativo ? tokens.status.danger : tokens.status.success,
-                          fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                        }}>{m.ativo ? 'Desativar' : 'Reativar'}</button>
-                        <button onClick={() => setModalExcluir(m)} style={{ padding: '8px 10px', borderRadius: 9, border: `1px solid ${tokens.status.dangerLight}`, background: tokens.status.dangerBg, color: tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                          </svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
+      {/* KPIs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
+        <KpiCard label="Médicos ativos" valor={listaMedicos.filter(m => m.ativo).length} icon={UserRound} cor={T.data.purple} carregando={carregando} />
+        <KpiCard label="Recepcionistas" valor={listaRecepcionistas.filter(m => m.ativo).length} icon={Headset} cor={T.data.blue} carregando={carregando} />
+        <KpiCard label="Pacientes cadastrados" valor={kpis.totalPacientes} icon={Users} cor={T.data.green} carregando={carregando} />
+        <KpiCard label="Consultas este mês" valor={kpis.consultasMes} icon={CalendarCheck} cor={T.data.orange} carregando={carregando} />
+      </div>
 
-                {!isRecep && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, paddingTop: 16, borderTop: `1px solid ${tokens.bg.hoverStrong}` }}>
-                    <div>
-                      <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Pacientes</p>
-                      <p style={{ fontSize: 20, fontWeight: 700, color: tokens.text.primary, margin: 0, lineHeight: 1 }}>{s.pacientes}</p>
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Consultas totais</p>
-                      <p style={{ fontSize: 20, fontWeight: 700, color: tokens.text.primary, margin: 0, lineHeight: 1 }}>{s.consultas}</p>
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Este mês</p>
-                      <p style={{ fontSize: 20, fontWeight: 700, color: ACCENT, margin: 0, lineHeight: 1 }}>{s.consultasMes}</p>
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Cadastrado em</p>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.strong, margin: 0 }}>{fmt(m.criado_em)}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Modal Novo (médico ou recepcionista) */}
-      {modalNovoTipo && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalNovoTipo(null) }}>
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 28, width: 460 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>
-              Novo {modalNovoTipo === 'medico' ? 'médico' : 'recepcionista'}
-            </h2>
-            <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 20px' }}>
-              {modalNovoTipo === 'medico' ? 'Cadastre um novo profissional na clínica' : 'Cadastre um atendente pra gerenciar agenda e WhatsApp'}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={labelStyle}>Nome completo *</label>
-                <input value={form.nome} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))}
-                  placeholder={modalNovoTipo === 'medico' ? 'Dr. João Silva' : 'Maria Santos'} style={inputStyle}/>
-              </div>
-              <div>
-                <label style={labelStyle}>E-mail *</label>
-                <input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                  placeholder="email@clinica.com.br" style={inputStyle}/>
-              </div>
-              {modalNovoTipo === 'medico' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label style={labelStyle}>CRM</label>
-                    <input value={form.crm} onChange={e => setForm(p => ({ ...p, crm: e.target.value }))} placeholder="CRM/SP 123456" style={inputStyle}/>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Especialidade</label>
-                    <EspecialidadeSelect value={form.especialidade} onChange={v => setForm(p => ({ ...p, especialidade: v }))} />
-                  </div>
-                </div>
-              )}
-              {modalNovoTipo === 'medico' && (
-                <CamposPessoaisMedico
-                  cpf={form.cpf}
-                  data_nascimento={form.data_nascimento}
-                  onChange={(campo, valor) => setForm(p => ({ ...p, [campo]: valor }))}
-                />
-              )}
-              {modalNovoTipo === 'medico' && (
-                <div>
-                  <label style={labelStyle}>Cor na agenda</label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
-                    {PALETA_CORES.map(cor => {
-                      const selecionada = form.cor === cor
-                      return (
-                        <button
-                          key={cor}
-                          type="button"
-                          onClick={() => setForm(p => ({ ...p, cor }))}
-                          title={cor}
-                          style={{
-                            width: 36, height: 36, borderRadius: '50%',
-                            background: cor, cursor: 'pointer',
-                            border: selecionada ? `3px solid ${tokens.text.primary}` : '3px solid transparent',
-                            transform: selecionada ? 'scale(1.1)' : 'scale(1)',
-                            transition: 'all 0.15s',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}
-                        >
-                          {selecionada && (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                              <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '8px 0 0' }}>
-                    Essa cor aparece nos agendamentos do médico na agenda.
-                  </p>
-                </div>
-              )}
-              <div style={{ background: tokens.status.infoSkyBgSoft, border: `1px solid ${tokens.status.infoSkyMid}`, borderRadius: 10, padding: '10px 14px', fontSize: 12, color: tokens.status.infoSkyDark, lineHeight: 1.5 }}>
-                ℹ Uma senha provisória será gerada. No primeiro login, {modalNovoTipo === 'medico' ? 'o médico' : 'a pessoa'} precisa criar uma senha própria.
-              </div>
-            </div>
-            {modalNovoTipo === 'medico' && <CamposComissao form={form} setForm={setForm}/>}
-            <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
-              <button onClick={() => setModalNovoTipo(null)} style={{ padding: '10px 18px', borderRadius: 10, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={handleCriar} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? tokens.text.tertiary : ACCENT, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                {salvando ? 'Criando...' : 'Criar ' + (modalNovoTipo === 'medico' ? 'médico' : 'recepcionista')}
-              </button>
-            </div>
+      <div className="adm-grid">
+        {/* Equipe */}
+        <Card padding={0} style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 18px 4px', flexWrap: 'wrap' }}>
+            <h3 style={{ margin: 0, flex: 1, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>Equipe</h3>
+            <Button icon={UserPlus} onClick={() => abrirNovo(aba === 'medicos' ? 'medico' : 'recepcionista')}>Adicionar membro</Button>
           </div>
-        </div>
+          <Tabs
+            style={{ padding: '0 10px', marginBottom: 0, borderBottom: 'none' }}
+            ativa={aba}
+            onChange={(id) => setAba(id as 'medicos' | 'recepcionistas')}
+            tabs={[
+              { id: 'medicos', label: `Médicos (${listaMedicos.length})` },
+              { id: 'recepcionistas', label: `Recepcionistas (${listaRecepcionistas.length})` },
+            ]}
+          />
+
+          {carregando ? (
+            <div style={{ padding: '8px 18px 18px', display: 'flex', flexDirection: 'column', gap: 10, borderTop: `1px solid ${T.border.muted}` }}>
+              {[0, 1, 2].map(i => <div key={i} className="c360-skel" style={{ height: 44, borderRadius: 10 }} />)}
+            </div>
+          ) : listaAtual.length === 0 ? (
+            <div style={{ borderTop: `1px solid ${T.border.muted}` }}>
+              <EmptyState
+                icon={UserPlus}
+                titulo={`Nenhum ${labelAba} cadastrado ainda`}
+                descricao={aba === 'medicos'
+                  ? 'Adicione os médicos da clínica — cada um recebe um acesso próprio com agenda e prontuários.'
+                  : 'Adicione recepcionistas para cuidar da agenda e do atendimento no WhatsApp.'}
+                acao={
+                  <Button variant="secondary" icon={UserPlus} onClick={() => abrirNovo(aba === 'medicos' ? 'medico' : 'recepcionista')}>
+                    Adicionar {labelAba}
+                  </Button>
+                }
+              />
+            </div>
+          ) : (
+            <div>
+              {listaAtual.map((m, i) => {
+                const isRecep = m.cargo === 'recepcionista'
+                const role = ROLE[m.cargo] || ROLE.medico
+                const proprio = m.id === medico.id
+                const meta = isRecep ? m.email : [m.especialidade || 'Sem especialidade', m.crm ? 'CRM ' + m.crm : '', m.email].filter(Boolean).join(' · ')
+                const acoes: Array<{ icon: LucideIcon; label: string; danger?: boolean; onClick: () => void }> = [
+                  { icon: Pencil, label: 'Editar', onClick: () => abrirEditar(m) },
+                  ...(!proprio ? [
+                    { icon: m.ativo ? Power : RotateCcw, label: m.ativo ? 'Desativar' : 'Reativar', onClick: () => toggleAtivo(m.id, m.ativo) },
+                    { icon: Trash2, label: 'Excluir', danger: true, onClick: () => setModalExcluir(m) },
+                  ] : []),
+                ]
+                return (
+                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderTop: `1px solid ${T.border.muted}`, flexWrap: 'wrap', opacity: m.ativo ? 1 : 0.65 }}>
+                    <Avatar nome={(m.nome || '').replace(/^Dra?\.\s*/, '')} src={m.foto_url} size={36} tom={TONS[i % TONS.length]} />
+                    <span style={{ flex: 1, minWidth: 160, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: T.text.primary }}>
+                        {m.nome}{proprio && <span style={{ fontWeight: 500, color: T.text.quaternary }}> (você)</span>}
+                      </span>
+                      <span style={{ fontSize: 12, color: T.text.quaternary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{meta}</span>
+                    </span>
+                    <Badge tone={role.tone}>{role.label}</Badge>
+                    <span style={{ width: 70, fontSize: 12, fontWeight: 600, color: m.ativo ? T.status.success : T.text.tertiary }}>{m.ativo ? 'Ativo' : 'Inativo'}</span>
+                    <div style={{ position: 'relative' }}>
+                      <IconButton icon={Ellipsis} size={32} aria-label="Ações" active={menuAberto === m.id}
+                        onClick={() => setMenuAberto(menuAberto === m.id ? null : m.id)} />
+                      {menuAberto === m.id && (
+                        <>
+                          <div onClick={() => setMenuAberto(null)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+                          <div style={{
+                            position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 200, zIndex: 50,
+                            background: '#fff', border: `1px solid ${T.border.default}`, borderRadius: 14, boxShadow: T.shadow.lg, padding: 6,
+                          }}>
+                            {acoes.map(a => (
+                              <MenuItem key={a.label} icon={a.icon} danger={a.danger} onClick={() => { setMenuAberto(null); a.onClick() }}>{a.label}</MenuItem>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </Card>
+
+        {/* Desempenho por médico (dados reais de consultas/pacientes) */}
+        <Card titulo="Desempenho dos médicos" style={{ minWidth: 0 }}>
+          {carregando ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[0, 1].map(i => <div key={i} className="c360-skel" style={{ height: 56, borderRadius: 10 }} />)}
+            </div>
+          ) : listaMedicos.length === 0 ? (
+            <span style={{ fontSize: 12.5, color: T.text.quaternary }}>Os números aparecem aqui assim que houver médicos cadastrados.</span>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {listaMedicos.map((m, i) => {
+                const s = stats[m.id] || { consultas: 0, consultasMes: 0, pacientes: 0 }
+                return (
+                  <div key={m.id} style={{ padding: '10px 0', borderTop: i ? `1px solid ${T.border.muted}` : 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: m.cor || T.brand.primary, flexShrink: 0 }} />
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 700, color: T.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.nome}</span>
+                      {m.criado_em && <span style={{ fontSize: 11.5, color: T.text.tertiary }}>desde {fmt(m.criado_em)}</span>}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                      {[
+                        { l: 'Pacientes', v: s.pacientes },
+                        { l: 'Consultas', v: s.consultas },
+                        { l: 'Este mês', v: s.consultasMes, destaque: true },
+                      ].map(x => (
+                        <div key={x.l} style={{ background: T.bg.page, borderRadius: 10, padding: '8px 10px' }}>
+                          <Overline style={{ fontSize: 10 }}>{x.l}</Overline>
+                          <div style={{ marginTop: 3, fontSize: 16, fontWeight: 700, color: x.destaque ? T.brand.primary : T.text.primary, fontVariantNumeric: 'tabular-nums' }}>{x.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Modal Adicionar membro (médico ou recepcionista) */}
+      {modalNovoTipo && (
+        <Modal titulo="Adicionar membro" onClose={() => setModalNovoTipo(null)} largura={500}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Field label="Função">
+              <SegmentedControl
+                value={modalNovoTipo}
+                onChange={(v) => setModalNovoTipo(v)}
+                options={[{ value: 'medico', label: 'Médico' }, { value: 'recepcionista', label: 'Recepção' }]}
+              />
+              <span style={{ fontSize: 12.5, color: T.text.quaternary, lineHeight: 1.45 }}>
+                {modalNovoTipo === 'medico'
+                  ? 'Agenda própria, prontuários, prescrições e exames.'
+                  : 'Agenda, cadastro de pacientes e WhatsApp.'}
+              </span>
+            </Field>
+            <Field label="Nome completo *">
+              <Input value={form.nome} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))}
+                placeholder={modalNovoTipo === 'medico' ? 'Dr. João Silva' : 'Maria Santos'} />
+            </Field>
+            <Field label="E-mail *">
+              <Input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                placeholder="nome@clinica.com" />
+            </Field>
+            {modalNovoTipo === 'medico' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+                <Field label="CRM">
+                  <Input value={form.crm} onChange={e => setForm(p => ({ ...p, crm: e.target.value }))} placeholder="CRM/SP 123456" />
+                </Field>
+                <Field label="Especialidade">
+                  <EspecialidadeSelect value={form.especialidade} onChange={v => setForm(p => ({ ...p, especialidade: v }))} />
+                </Field>
+              </div>
+            )}
+            {modalNovoTipo === 'medico' && (
+              <CamposPessoaisMedico
+                cpf={form.cpf}
+                data_nascimento={form.data_nascimento}
+                onChange={(campo, valor) => setForm(p => ({ ...p, [campo]: valor }))}
+              />
+            )}
+            {modalNovoTipo === 'medico' && (
+              <Field label="Cor na agenda" hint="Essa cor aparece nos agendamentos do médico na agenda.">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {PALETA_CORES.map(cor => {
+                    const selecionada = form.cor === cor
+                    return (
+                      <button
+                        key={cor}
+                        type="button"
+                        onClick={() => setForm(p => ({ ...p, cor }))}
+                        title={cor}
+                        aria-label={`Cor ${cor}`}
+                        style={{
+                          width: 30, height: 30, borderRadius: '50%', flexShrink: 0, padding: 0,
+                          background: cor, cursor: 'pointer', border: 'none', color: '#fff',
+                          boxShadow: selecionada ? `0 0 0 2px #fff, 0 0 0 4px ${cor}` : 'none',
+                          transition: 'box-shadow .15s', display: 'grid', placeItems: 'center',
+                        }}
+                      >
+                        {selecionada && <Check size={15} strokeWidth={3} />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </Field>
+            )}
+            <Aviso icon={Info}>
+              Uma senha provisória será gerada. No primeiro login, {modalNovoTipo === 'medico' ? 'o médico' : 'a pessoa'} precisa criar uma senha própria.
+            </Aviso>
+          </div>
+          {modalNovoTipo === 'medico' && <CamposComissao form={form} setForm={setForm} />}
+          <ModalAcoes>
+            <Button variant="secondary" onClick={() => setModalNovoTipo(null)}>Cancelar</Button>
+            <Button onClick={handleCriar} disabled={salvando}>
+              {salvando ? 'Criando…' : 'Criar ' + (modalNovoTipo === 'medico' ? 'médico' : 'recepcionista')}
+            </Button>
+          </ModalAcoes>
+        </Modal>
       )}
 
       {/* Modal Editar */}
       {modalEditar && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalEditar(null) }}>
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 28, width: 460 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Editar {modalEditar.cargo === 'recepcionista' ? 'recepcionista' : 'médico'}</h2>
-            <p style={{ fontSize: 12, color: tokens.text.secondary, margin: '0 0 20px' }}>Atualize informações</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={labelStyle}>Nome completo</label>
-                <input value={formEditar.nome} onChange={e => setFormEditar(p => ({ ...p, nome: e.target.value }))} style={inputStyle}/>
-              </div>
-              <div>
-                <label style={labelStyle}>E-mail</label>
-                <input value={formEditar.email} onChange={e => setFormEditar(p => ({ ...p, email: e.target.value }))} style={inputStyle}/>
-              </div>
-              {modalEditar.cargo !== 'recepcionista' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label style={labelStyle}>CRM</label>
-                    <input value={formEditar.crm} onChange={e => setFormEditar(p => ({ ...p, crm: e.target.value }))} style={inputStyle}/>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Especialidade</label>
-                    <EspecialidadeSelect value={formEditar.especialidade} onChange={v => setFormEditar(p => ({ ...p, especialidade: v }))} />
-                  </div>
-                </div>
-              )}
-              <div>
-                <label style={labelStyle}>Cargo</label>
-                <select value={formEditar.cargo} onChange={e => setFormEditar(p => ({ ...p, cargo: e.target.value }))} style={inputStyle}>
-                  <option value="medico">Médico</option>
-                  <option value="recepcionista">Recepcionista</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-            </div>
-            {modalEditar?.cargo === 'medico' && (
-              <div style={{ marginTop: 12 }}>
-                <CamposPessoaisMedico
-                  cpf={formEditar.cpf}
-                  data_nascimento={formEditar.data_nascimento}
-                  onChange={(campo, valor) => setFormEditar(p => ({ ...p, [campo]: valor }))}
-                />
+        <Modal titulo={`Editar ${modalEditar.cargo === 'recepcionista' ? 'recepcionista' : 'médico'}`} onClose={() => setModalEditar(null)} largura={480}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Field label="Nome completo">
+              <Input value={formEditar.nome} onChange={e => setFormEditar(p => ({ ...p, nome: e.target.value }))} />
+            </Field>
+            <Field label="E-mail">
+              <Input value={formEditar.email} onChange={e => setFormEditar(p => ({ ...p, email: e.target.value }))} />
+            </Field>
+            {modalEditar.cargo !== 'recepcionista' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+                <Field label="CRM">
+                  <Input value={formEditar.crm} onChange={e => setFormEditar(p => ({ ...p, crm: e.target.value }))} />
+                </Field>
+                <Field label="Especialidade">
+                  <EspecialidadeSelect value={formEditar.especialidade} onChange={v => setFormEditar(p => ({ ...p, especialidade: v }))} />
+                </Field>
               </div>
             )}
-            {modalEditar?.cargo === 'medico' && <CamposComissao form={formEditar} setForm={setFormEditar}/>}
-            <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
-              <button onClick={() => setModalEditar(null)} style={{ padding: '10px 18px', borderRadius: 10, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={handleEditar} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? tokens.text.tertiary : ACCENT, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                {salvando ? 'Salvando...' : 'Salvar'}
-              </button>
-            </div>
+            <Field label="Cargo">
+              <Select value={formEditar.cargo} onChange={e => setFormEditar(p => ({ ...p, cargo: e.target.value }))}>
+                <option value="medico">Médico</option>
+                <option value="recepcionista">Recepcionista</option>
+                <option value="admin">Admin</option>
+              </Select>
+            </Field>
+            {modalEditar?.cargo === 'medico' && (
+              <CamposPessoaisMedico
+                cpf={formEditar.cpf}
+                data_nascimento={formEditar.data_nascimento}
+                onChange={(campo, valor) => setFormEditar(p => ({ ...p, [campo]: valor }))}
+              />
+            )}
           </div>
-        </div>
+          {modalEditar?.cargo === 'medico' && <CamposComissao form={formEditar} setForm={setFormEditar} />}
+          <ModalAcoes>
+            <Button variant="secondary" onClick={() => setModalEditar(null)}>Cancelar</Button>
+            <Button onClick={handleEditar} disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar'}</Button>
+          </ModalAcoes>
+        </Modal>
       )}
 
       {/* Modal Excluir */}
       {modalExcluir && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalExcluir(null) }}>
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 28, width: 420 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.status.danger, margin: '0 0 8px' }}>Excluir?</h2>
-            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 20px', lineHeight: 1.6 }}>
-              Você está prestes a excluir <strong style={{ color: tokens.text.primary }}>{modalExcluir.nome}</strong> permanentemente.
-            </p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button onClick={() => setModalExcluir(null)} style={{ padding: '10px 18px', borderRadius: 10, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={handleExcluir} disabled={salvando} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: salvando ? tokens.text.tertiary : tokens.status.danger, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                {salvando ? 'Excluindo...' : 'Excluir'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <Modal titulo={`Excluir ${modalExcluir.nome}?`} onClose={() => setModalExcluir(null)} largura={420}>
+          <p style={{ fontSize: 13.5, color: T.text.secondary, margin: 0, lineHeight: 1.55 }}>
+            Você está prestes a excluir <strong style={{ color: T.text.primary }}>{modalExcluir.nome}</strong> permanentemente. Essa ação não pode ser desfeita.
+          </p>
+          <ModalAcoes>
+            <Button variant="secondary" onClick={() => setModalExcluir(null)}>Cancelar</Button>
+            <Button variant="dangerSolid" icon={Trash2} onClick={handleExcluir} disabled={salvando}>
+              {salvando ? 'Excluindo…' : 'Excluir'}
+            </Button>
+          </ModalAcoes>
+        </Modal>
       )}
 
-      {/* Modal de senha gerada */}
+      {/* Modal de senha gerada — só fecha pelo botão "Pronto" */}
       {senhaGerada && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 32, width: '100%', maxWidth: 480 }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: ACCENT_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>
-              {senhaGerada.tipo === 'medico' ? 'Médico' : 'Recepcionista'} cadastrado!
-            </h2>
-            <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 20px', lineHeight: 1.6 }}>
-              Envie essas credenciais para <strong style={{ color: tokens.text.primary }}>{senhaGerada.pessoa.nome}</strong>. No primeiro login, {senhaGerada.tipo === 'medico' ? 'ele' : 'ela'} vai precisar criar uma senha própria.
-            </p>
+        <Modal onClose={() => {}} largura={480}>
+          <span style={{ width: 48, height: 48, borderRadius: 15, background: T.status.successBg, color: T.status.success, display: 'grid', placeItems: 'center', marginBottom: 14 }}>
+            <Icon icon={Check} size={22} />
+          </span>
+          <h2 style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary, margin: '0 0 6px' }}>
+            {senhaGerada.tipo === 'medico' ? 'Médico' : 'Recepcionista'} cadastrado
+          </h2>
+          <p style={{ fontSize: 13, color: T.text.secondary, margin: '0 0 18px', lineHeight: 1.55 }}>
+            Envie essas credenciais para <strong style={{ color: T.text.primary }}>{senhaGerada.pessoa.nome}</strong>. No primeiro login, {senhaGerada.tipo === 'medico' ? 'ele' : 'ela'} vai precisar criar uma senha própria.
+          </p>
 
-            <div style={{ background: tokens.bg.hover, borderRadius: 12, padding: 16, marginBottom: 16 }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: tokens.text.secondary, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email</p>
-              <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 12px', wordBreak: 'break-all' }}>{senhaGerada.pessoa.email}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: tokens.text.secondary, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Senha provisória</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'white', borderRadius: 8, padding: '8px 12px' }}>
-                <code style={{ flex: 1, fontSize: 15, fontWeight: 700, color: ACCENT, fontFamily: 'monospace', letterSpacing: '0.02em', wordBreak: 'break-all' }}>{senhaGerada.senha}</code>
-                <button onClick={copiarSenha} style={{ padding: '5px 10px', borderRadius: 6, background: senhaCopiada ? tokens.status.success : ACCENT, color: 'white', border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
-                  {senhaCopiada ? '✓ Copiado' : 'Copiar'}
-                </button>
+          <div style={{ border: `1px solid ${T.border.default}`, borderRadius: 14, padding: 14, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <Overline>E-mail</Overline>
+              <p style={{ fontSize: 13.5, fontWeight: 600, color: T.text.primary, margin: '4px 0 0', wordBreak: 'break-all' }}>{senhaGerada.pessoa.email}</p>
+            </div>
+            <div>
+              <Overline>Senha provisória</Overline>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, background: T.bg.page, borderRadius: 10, padding: '6px 6px 6px 12px' }}>
+                <code className="mono" style={{ flex: 1, fontSize: 14, fontWeight: 600, color: T.brand.primary, wordBreak: 'break-all' }}>{senhaGerada.senha}</code>
+                <Button size="sm" variant={senhaCopiada ? 'secondary' : 'primary'} icon={senhaCopiada ? Check : Copy} onClick={copiarSenha}>
+                  {senhaCopiada ? 'Copiado' : 'Copiar'}
+                </Button>
               </div>
             </div>
-
-            <div style={{ background: tokens.status.warningBgAlt, border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
-              <p style={{ fontSize: 12, color: tokens.status.warningText, margin: 0, lineHeight: 1.5 }}>
-                ⚠ Esta senha <strong>só aparece agora</strong>. Anote ou copie antes de fechar.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={copiarCredenciais} style={{ flex: 1, padding: '11px', borderRadius: 10, background: 'white', color: tokens.text.strong, border: `1px solid ${tokens.border.default}`, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                Copiar tudo
-              </button>
-              <button onClick={() => { setSenhaGerada(null); setSenhaCopiada(false); toast('Cadastrado com sucesso!') }} style={{ flex: 1, padding: '11px', borderRadius: 10, background: ACCENT, color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                Pronto
-              </button>
-            </div>
           </div>
-        </div>
+
+          <Aviso icon={TriangleAlert} tom="warning">
+            Esta senha <strong>só aparece agora</strong>. Anote ou copie antes de fechar.
+          </Aviso>
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+            <Button variant="secondary" block icon={Copy} onClick={copiarCredenciais}>Copiar tudo</Button>
+            <Button block onClick={() => { setSenhaGerada(null); setSenhaCopiada(false); toast('Cadastrado com sucesso!') }}>Pronto</Button>
+          </div>
+        </Modal>
       )}
 
-      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+      <style>{`
+        .adm-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+        @media (max-width: 960px) { .adm-grid { grid-template-columns: minmax(0, 1fr); } }
+      `}</style>
+    </main>
+  )
+}
 
-</main>
+function MenuItem({ icon, danger, onClick, children }: { icon: LucideIcon; danger?: boolean; onClick: () => void; children: React.ReactNode }) {
+  const [h, setH] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 9,
+        border: 'none', background: h ? T.bg.hover : 'transparent', cursor: 'pointer', fontFamily: 'inherit',
+        fontSize: 13, textAlign: 'left', color: danger ? T.status.danger : T.text.strong,
+      }}
+    >
+      <Icon icon={icon} size={15} />
+      {children}
+    </button>
+  )
+}
+
+function Aviso({ icon, tom = 'info', children }: { icon: LucideIcon; tom?: 'info' | 'warning'; children: React.ReactNode }) {
+  const cor = tom === 'warning' ? T.status.warning : T.brand.primary
+  const bg = tom === 'warning' ? T.status.warningBg : T.brand.primarySoftBg
+  return (
+    <div style={{ display: 'flex', gap: 10, padding: '11px 13px', borderRadius: 12, background: bg, fontSize: 12.5, lineHeight: 1.5, color: T.text.strong }}>
+      <span style={{ color: cor, display: 'inline-grid', paddingTop: 1 }}><Icon icon={icon} size={15} /></span>
+      <span style={{ flex: 1, minWidth: 0 }}>{children}</span>
+    </div>
   )
 }
 
@@ -648,57 +631,52 @@ function Admin() {
 
 function CamposComissao({ form, setForm }: any) {
   const tipo = form.comissao_tipo || 'sem'
+  const base = form.comissao_base || 'receita'
   return (
-    <div style={{ marginTop: 18, padding: 16, background: tokens.bg.page, borderRadius: 10, border: `1px solid ${tokens.neutral[150]}` }}>
-      <p style={{ fontSize: 12, fontWeight: 700, color: tokens.text.muted, textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: '0 0 12px' }}>Comissão</p>
+    <div style={{ marginTop: 16, padding: 14, borderRadius: 14, border: `1px solid ${T.border.default}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <Overline>Comissão</Overline>
 
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: tokens.text.strong, marginBottom: 6 }}>Tipo</label>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginBottom: 12 }}>
-        {[
-          { v: 'sem', l: 'Sem comissão' },
-          { v: 'percentual', l: 'Percentual %' },
-          { v: 'fixo_consulta', l: 'R$ por consulta' },
-          { v: 'fixo_mensal', l: 'R$ fixo/mês' },
-        ].map(o => (
-          <button key={o.v} type="button" onClick={() => setForm((f: any) => ({ ...f, comissao_tipo: o.v }))} style={{
-            padding: '9px', borderRadius: 8, border: 'none',
-            background: tipo === o.v ? tokens.neutral[900] : 'white',
-            color: tipo === o.v ? 'white' : tokens.text.muted,
-            fontSize: 12, fontWeight: 600, cursor: 'pointer',
-            ...(tipo === o.v ? {} : { border: `1px solid ${tokens.border.default}` })
-          }}>{o.l}</button>
-        ))}
-      </div>
+      <Field label="Tipo">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+          {[
+            { v: 'sem', l: 'Sem comissão' },
+            { v: 'percentual', l: 'Percentual %' },
+            { v: 'fixo_consulta', l: 'R$ por consulta' },
+            { v: 'fixo_mensal', l: 'R$ fixo/mês' },
+          ].map(o => {
+            const sel = tipo === o.v
+            return (
+              <button key={o.v} type="button" onClick={() => setForm((f: any) => ({ ...f, comissao_tipo: o.v }))} style={{
+                height: 36, borderRadius: 10, fontFamily: 'inherit', cursor: 'pointer',
+                border: `1px solid ${sel ? T.brand.primary : T.border.default}`,
+                background: sel ? T.brand.primarySoftBg : '#fff',
+                color: sel ? T.brand.primary : T.text.muted,
+                fontSize: 12.5, fontWeight: 600, transition: 'all .15s',
+              }}>{o.l}</button>
+            )
+          })}
+        </div>
+      </Field>
 
       {tipo !== 'sem' && (
         <>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: tokens.text.strong, marginBottom: 6 }}>
-            {tipo === 'percentual' ? 'Percentual (%)' : 'Valor (R$)'}
-          </label>
-          <div style={{ position: 'relative' as const, marginBottom: 12 }}>
-            <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: tokens.text.tertiary, fontSize: 13 }}>{tipo === 'percentual' ? '%' : 'R$'}</span>
-            <input type="text" value={form.comissao_valor || ''} onChange={e => setForm((f: any) => ({ ...f, comissao_valor: e.target.value.replace(/[^0-9,]/g, '') }))} placeholder="0,00"
-              style={{ width: '100%', padding: '9px 12px 9px 36px', borderRadius: 8, border: `1px solid ${tokens.border.default}`, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, fontWeight: 600 }}/>
-          </div>
+          <Field label={tipo === 'percentual' ? 'Percentual (%)' : 'Valor (R$)'}>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.text.tertiary, fontSize: 13 }}>{tipo === 'percentual' ? '%' : 'R$'}</span>
+              <Input type="text" value={form.comissao_valor || ''} onChange={e => setForm((f: any) => ({ ...f, comissao_valor: e.target.value.replace(/[^0-9,]/g, '') }))} placeholder="0,00"
+                style={{ paddingLeft: 36, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }} />
+            </div>
+          </Field>
 
           {tipo === 'percentual' && (
-            <>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: tokens.text.strong, marginBottom: 6 }}>Base de cálculo</label>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {[
-                  { v: 'receita', l: 'Sobre receita' },
-                  { v: 'lucro', l: 'Sobre lucro' },
-                ].map(o => (
-                  <button key={o.v} type="button" onClick={() => setForm((f: any) => ({ ...f, comissao_base: o.v }))} style={{
-                    flex: 1, padding: '9px', borderRadius: 8, border: 'none',
-                    background: (form.comissao_base || 'receita') === o.v ? tokens.neutral[900] : 'white',
-                    color: (form.comissao_base || 'receita') === o.v ? 'white' : tokens.text.muted,
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    ...((form.comissao_base || 'receita') === o.v ? {} : { border: `1px solid ${tokens.border.default}` })
-                  }}>{o.l}</button>
-                ))}
-              </div>
-            </>
+            <Field label="Base de cálculo">
+              <SegmentedControl
+                stretch
+                value={base}
+                onChange={(v) => setForm((f: any) => ({ ...f, comissao_base: v }))}
+                options={[{ value: 'receita', label: 'Sobre receita' }, { value: 'lucro', label: 'Sobre lucro' }]}
+              />
+            </Field>
           )}
         </>
       )}

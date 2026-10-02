@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation'
 import { useGravador } from '@/lib/useGravador'
 import { useToast } from '@/components/Toast'
 import { tokens } from '@/lib/design-tokens'
+import { tint } from '@/lib/design-tokens'
+import { usePageHeader } from '@/components/shell/header-context'
+import { Check, CircleAlert, Copy, FileText, Loader2, Mic, PenLine, RotateCcw, Square } from 'lucide-react'
+import { Badge, Button, Card, Icon, IconTile, Overline, SegmentedControl } from '@/components/ui'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = tokens.bg.page
-const CARD_RADIUS = 16
+const T = tokens
 
 export default function Ditado() {
+  usePageHeader('Ditado livre', 'Dite ou escreva livremente — a IA estrutura em SOAP com CIDs sugeridos')
   const router = useRouter()
   const { toast } = useToast()
   const [medico, setMedico] = useState<any>(null)
@@ -85,144 +87,74 @@ export default function Ditado() {
   if (!medico) return null
 
   const campos = [
-    { key: 'subjetivo', label: 'Subjetivo', cor: tokens.status.infoStrong, bg: tokens.status.infoBg },
-    { key: 'objetivo', label: 'Objetivo', cor: ACCENT, bg: ACCENT_LIGHT },
-    { key: 'avaliacao', label: 'Avaliação', cor: tokens.status.warningAlt, bg: tokens.status.warningBgAlt },
-    { key: 'plano', label: 'Plano', cor: tokens.status.successHover, bg: tokens.status.successBg },
+    { key: 'subjetivo', label: 'Subjetivo', cor: T.data.blue },
+    { key: 'objetivo', label: 'Objetivo', cor: T.data.purple },
+    { key: 'avaliacao', label: 'Avaliação', cor: T.data.orange },
+    { key: 'plano', label: 'Plano', cor: T.data.green },
   ]
 
   return (
-    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16, flexWrap: 'wrap' as const }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Ditado livre</h1>
-          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Dite ou escreva livremente — a IA estrutura em SOAP com CIDs sugeridos</p>
-        </div>
+    <div style={{ padding: 20 }}>
+      <style>{`
+        .dit-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
+        @media (min-width: 1024px) { .dit-grid.com-prontuario { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+        @keyframes dit-spin { to { transform: rotate(360deg) } }
+        @keyframes dit-pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
+      `}</style>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          {/* Toggle modo */}
-          <div style={{ display: 'flex', background: 'white', borderRadius: 10, padding: 4 }}>
-            {(['gravar', 'digitar'] as const).map(m => (
-              <button key={m} onClick={() => setModo(m)} style={{
-                padding: '8px 16px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                fontSize: 12, fontWeight: 600,
-                background: modo === m ? ACCENT_LIGHT : 'transparent',
-                color: modo === m ? ACCENT : tokens.text.secondary,
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-              }}>
-                {m === 'gravar' ? (
-                  <>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-                      <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
-                    </svg>
-                    Gravar
-                  </>
-                ) : (
-                  <>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                    Digitar
-                  </>
-                )}
-              </button>
-            ))}
+      {/* Ações */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 10, flexWrap: 'wrap' }}>
+        <SegmentedControl
+          value={modo}
+          onChange={setModo}
+          options={[
+            { value: 'gravar', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Mic} size={14} />Gravar</span> },
+            { value: 'digitar', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={PenLine} size={14} />Digitar</span> },
+          ]}
+        />
+
+        {prontuario && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="secondary" icon={RotateCcw} onClick={reiniciar}>Novo ditado</Button>
+            <Button icon={Copy} onClick={copiarTudo}>Copiar tudo</Button>
           </div>
-
-          {prontuario && (
-            <>
-              <button onClick={copiarTudo} style={{
-                padding: '8px 16px', borderRadius: 10, border: 'none',
-                background: ACCENT, color: 'white',
-                fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                </svg>
-                Copiar tudo
-              </button>
-              <button onClick={reiniciar} style={{
-                padding: '8px 16px', borderRadius: 10,
-                background: 'white', color: tokens.text.strong, border: `1px solid ${tokens.border.default}`,
-                fontSize: 12, fontWeight: 500, cursor: 'pointer',
-              }}>
-                Novo ditado
-              </button>
-            </>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Grid — 2 colunas quando tem prontuário, 1 coluna (100%) quando não */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: prontuario ? '1fr 1fr' : '1fr',
-        gap: 20,
-        width: '100%',
-      }}>
+      <div className={'dit-grid' + (prontuario ? ' com-prontuario' : '')}>
 
         {/* Coluna esquerda — entrada (gravação ou texto) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ background: 'white', borderRadius: CARD_RADIUS, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+          <Card padding={0} style={{ overflow: 'hidden' }}>
             {modo === 'gravar' ? (
-              <div style={{ padding: 28 }}>
+              <div style={{ padding: 20 }}>
                 {/* Estado da gravação */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
                   {!gravando ? (
-                    <button
+                    <Button
+                      variant="dangerSolid"
+                      size="lg"
+                      icon={Mic}
                       onClick={async () => { limpar(); setTranscricao(''); await iniciarGravacao() }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '12px 24px', borderRadius: 12,
-                        border: 'none', background: tokens.status.danger, color: 'white',
-                        fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                        boxShadow: '0 2px 8px rgba(220,38,38,0.2)',
-                      }}
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-                        <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
-                      </svg>
                       Iniciar gravação
-                    </button>
+                    </Button>
                   ) : (
-                    <button
-                      onClick={() => pararGravacao()}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '12px 24px', borderRadius: 12,
-                        border: `2px solid ${tokens.status.danger}`, background: tokens.status.dangerBg,
-                        color: tokens.status.danger, fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="4" y="4" width="16" height="16" rx="3"/>
-                      </svg>
+                    <Button variant="danger" size="lg" icon={Square} onClick={() => pararGravacao()}>
                       Parar gravação
-                    </button>
+                    </Button>
                   )}
                   {gravando && (
-                    <span style={{
-                      fontSize: 12, fontWeight: 700, color: tokens.status.danger,
-                      background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`,
-                      padding: '4px 12px', borderRadius: 20,
-                      display: 'inline-flex', alignItems: 'center', gap: 6,
-                    }}>
-                      <span style={{
-                        width: 8, height: 8, borderRadius: '50%',
-                        background: tokens.status.danger, animation: 'pulse 1.2s infinite',
-                      }}/>
-                      GRAVANDO
-                    </span>
+                    <Badge tone="danger" style={{ height: 26, padding: '0 11px' }}>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: T.status.danger, animation: 'dit-pulse 1.2s infinite' }} />
+                      Gravando
+                    </Badge>
                   )}
                   {transcrevendo && (
-                    <span style={{ fontSize: 12, color: tokens.text.secondary, fontWeight: 500 }}>
-                      Transcrevendo áudio...
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: T.text.secondary, fontWeight: 500 }}>
+                      <Loader2 size={14} strokeWidth={1.6} style={{ animation: 'dit-spin .8s linear infinite' }} />
+                      Transcrevendo áudio…
                     </span>
                   )}
                 </div>
@@ -230,37 +162,24 @@ export default function Ditado() {
                 {/* Área do texto transcrito */}
                 {transcricao ? (
                   <div style={{
-                    padding: 20, background: tokens.bg.muted, borderRadius: 12,
+                    padding: 18, background: T.bg.cardSubtle, border: `1px solid ${T.border.muted}`, borderRadius: T.radius.input,
                     minHeight: 200, maxHeight: 500, overflow: 'auto',
                   }}>
-                    <p style={{
-                      fontSize: 14, color: tokens.text.primary, lineHeight: 1.8,
-                      margin: 0, whiteSpace: 'pre-wrap' as const,
-                    }}>
+                    <p style={{ fontSize: 14, color: T.text.primary, lineHeight: 1.75, margin: 0, whiteSpace: 'pre-wrap' }}>
                       {transcricao}
                     </p>
                   </div>
                 ) : (
                   <div style={{
-                    padding: 40, background: tokens.bg.muted, borderRadius: 12,
-                    minHeight: 200, display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center', textAlign: 'center' as const,
+                    padding: 32, background: T.bg.cardSubtle, border: `1px solid ${T.border.muted}`, borderRadius: T.radius.input,
+                    minHeight: 200, display: 'flex', flexDirection: 'column', gap: 6,
+                    alignItems: 'center', justifyContent: 'center', textAlign: 'center',
                   }}>
-                    <div style={{
-                      width: 56, height: 56, borderRadius: 14,
-                      background: 'white', color: tokens.text.tertiary,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      marginBottom: 14,
-                    }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                        <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-                        <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
-                      </svg>
-                    </div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.strong, margin: '0 0 4px' }}>
-                      {gravando ? 'Aguardando fala...' : 'Pronto pra começar'}
+                    <IconTile icon={Mic} size={48} radius={15} color={gravando ? T.status.danger : T.brand.primary} style={{ marginBottom: 6 }} />
+                    <p style={{ fontSize: 14.5, fontWeight: 700, color: T.text.primary, margin: 0 }}>
+                      {gravando ? 'Aguardando fala…' : 'Pronto pra começar'}
                     </p>
-                    <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0, maxWidth: 340 }}>
+                    <p style={{ fontSize: 12.5, color: T.text.quaternary, margin: 0, maxWidth: 340, lineHeight: 1.45 }}>
                       {gravando
                         ? 'Fale naturalmente. Sua fala aparece aqui conforme você grava.'
                         : 'Clique em "Iniciar gravação" e dite o prontuário livremente.'}
@@ -269,152 +188,92 @@ export default function Ditado() {
                 )}
 
                 {erro && (
-                  <div style={{
-                    marginTop: 14, padding: '10px 14px',
-                    background: tokens.status.dangerBg, border: '1px solid #fecaca',
-                    borderRadius: 10, fontSize: 12, color: tokens.status.dangerDark,
+                  <div role="alert" style={{
+                    marginTop: 12, padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 8,
+                    background: T.status.dangerBg, borderRadius: T.radius.lg, fontSize: 12.5, color: T.status.danger, fontWeight: 500,
                   }}>
+                    <CircleAlert size={15} strokeWidth={1.6} style={{ flexShrink: 0, marginTop: 1 }} />
                     {erro}
                   </div>
                 )}
               </div>
             ) : (
-              <div style={{ padding: 0 }}>
-                <textarea
-                  value={textoDireto}
-                  onChange={e => setTextoDireto(e.target.value)}
-                  placeholder="Digite o relato da consulta livremente...&#10;&#10;A IA vai estruturar em formato SOAP (Subjetivo, Objetivo, Avaliação, Plano) e sugerir CIDs."
-                  style={{
-                    width: '100%', minHeight: 340, padding: 28,
-                    fontSize: 14, color: tokens.text.primary, lineHeight: 1.8,
-                    border: 'none', outline: 'none',
-                    resize: 'vertical' as const,
-                    fontFamily: 'inherit', boxSizing: 'border-box' as const,
-                  }}
-                />
-              </div>
+              <textarea
+                value={textoDireto}
+                onChange={e => setTextoDireto(e.target.value)}
+                placeholder="Digite o relato da consulta livremente...&#10;&#10;A IA vai estruturar em formato SOAP (Subjetivo, Objetivo, Avaliação, Plano) e sugerir CIDs."
+                style={{
+                  display: 'block', width: '100%', minHeight: 340, padding: 20,
+                  fontSize: 14, color: T.text.primary, lineHeight: 1.75,
+                  border: 'none', outline: 'none', background: 'transparent',
+                  resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box',
+                }}
+              />
             )}
-          </div>
+          </Card>
 
           {/* Botão estruturar */}
           {textoFinal.trim().length >= 20 && !gravando && (
-            <button
-              onClick={handleEstruturar}
-              disabled={processando}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                padding: 14, borderRadius: 12, border: 'none',
-                background: processando ? tokens.text.tertiary : ACCENT,
-                color: 'white', fontSize: 14, fontWeight: 700,
-                cursor: processando ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {processando ? (
-                <>
-                  <svg style={{ animation: 'spin 0.8s linear infinite' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
-                  </svg>
-                  Estruturando prontuário...
-                </>
-              ) : (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="9" y1="13" x2="15" y2="13"/>
-                    <line x1="9" y1="17" x2="15" y2="17"/>
-                  </svg>
-                  Estruturar prontuário
-                </>
-              )}
-            </button>
+            <Button size="lg" block icon={processando ? undefined : FileText} onClick={handleEstruturar} disabled={processando}>
+              {processando && <Loader2 size={16} strokeWidth={1.6} style={{ animation: 'dit-spin .8s linear infinite' }} />}
+              {processando ? 'Estruturando prontuário…' : 'Estruturar prontuário'}
+            </Button>
           )}
         </div>
 
         {/* Coluna direita — prontuário estruturado (só aparece após processar) */}
         {prontuario && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
             {campos.map(campo => prontuario[campo.key] && (
-              <div key={campo.key} style={{ background: 'white', borderRadius: CARD_RADIUS, overflow: 'hidden' }}>
+              <Card key={campo.key} padding={0} style={{ overflow: 'hidden' }}>
                 <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '14px 20px', background: campo.bg,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                  padding: '10px 12px 10px 18px', borderBottom: `1px solid ${T.border.muted}`,
                 }}>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const,
-                    letterSpacing: '0.06em', color: campo.cor,
-                  }}>
-                    {campo.label}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 3, background: campo.cor, boxShadow: `0 0 0 3px ${tint(campo.cor, 0.15)}` }} />
+                    <Overline style={{ color: T.text.secondary }}>{campo.label}</Overline>
                   </span>
-                  <button
+                  <Button
+                    variant={copiado === campo.key ? 'secondary' : 'ghost'}
+                    size="sm"
+                    icon={copiado === campo.key ? Check : Copy}
                     onClick={() => copiar(campo.key, prontuario[campo.key])}
-                    style={{
-                      fontSize: 11, fontWeight: 600,
-                      color: copiado === campo.key ? tokens.status.successHover : campo.cor,
-                      background: 'white',
-                      padding: '5px 12px', borderRadius: 7,
-                      border: 'none', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 5,
-                    }}
+                    style={copiado === campo.key ? { color: T.status.success } : undefined}
                   >
-                    {copiado === campo.key ? (
-                      <>
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        Copiado
-                      </>
-                    ) : 'Copiar'}
-                  </button>
+                    {copiado === campo.key ? 'Copiado' : 'Copiar'}
+                  </Button>
                 </div>
-                <p style={{
-                  fontSize: 14, color: tokens.text.primary, lineHeight: 1.8,
-                  margin: 0, padding: 20, whiteSpace: 'pre-wrap' as const,
-                }}>
+                <p style={{ fontSize: 14, color: T.text.primary, lineHeight: 1.75, margin: 0, padding: '14px 18px 16px', whiteSpace: 'pre-wrap' }}>
                   {prontuario[campo.key]}
                 </p>
-              </div>
+              </Card>
             ))}
 
             {prontuario.cids?.length > 0 && (
-              <div style={{ background: 'white', borderRadius: CARD_RADIUS, padding: 20 }}>
-                <p style={{
-                  fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const,
-                  letterSpacing: '0.06em', color: tokens.text.secondary, margin: '0 0 12px',
-                }}>
-                  CID-10 Sugeridos
-                </p>
+              <Card padding={18}>
+                <Overline style={{ marginBottom: 12 }}>CID-10 sugeridos</Overline>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {prontuario.cids.map((cid: any) => (
                     <div key={cid.codigo} style={{
                       display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '8px 12px', background: tokens.bg.muted, borderRadius: 10,
+                      padding: '8px 12px', background: T.bg.cardSubtle, border: `1px solid ${T.border.muted}`, borderRadius: T.radius.lg,
                     }}>
-                      <span style={{
-                        fontFamily: 'monospace', fontSize: 12, fontWeight: 700,
-                        color: ACCENT, background: ACCENT_LIGHT,
-                        padding: '3px 8px', borderRadius: 6,
-                        flexShrink: 0,
+                      <span className="mono" style={{
+                        fontSize: 12, fontWeight: 600, color: T.brand.primary, background: T.brand.primaryLight,
+                        padding: '3px 8px', borderRadius: T.radius.sm, flexShrink: 0,
                       }}>
                         {cid.codigo}
                       </span>
-                      <span style={{ fontSize: 13, color: tokens.text.strong }}>{cid.descricao}</span>
+                      <span style={{ fontSize: 13, color: T.text.strong }}>{cid.descricao}</span>
                     </div>
                   ))}
                 </div>
-              </div>
+              </Card>
             )}
           </div>
         )}
       </div>
-
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg) } }
-        @keyframes pulse {
-          0%, 100% { opacity: 1 }
-          50% { opacity: 0.4 }
-        }
-      `}</style>
-    </main>
+    </div>
   )
 }

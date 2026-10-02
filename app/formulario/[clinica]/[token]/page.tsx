@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import type { LucideIcon } from 'lucide-react'
+import { CircleAlert, CircleCheck, Link2Off, Send } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
+import { Button, IconTile, ProgressBar } from '@/components/ui'
+import { CascaPublica, Spinner, cartaoPublico } from '@/components/publico/CascaPublica'
 import RenderizadorCampo from './RenderizadorCampo'
+
+const T = tokens
 import type { Campo } from '@/lib/formularios/types'
 
 type Estado = 'loading' | 'preencher' | 'enviado' | 'erro' | 'ja_preenchido'
@@ -82,19 +88,26 @@ export default function FormularioPublicoPage() {
 
   // Estados
   if (estado === 'loading') {
-    return <TelaInfo icone="⏳" titulo="Carregando..." />
+    return (
+      <CascaPublica largura={640} rodape={false}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '64px 0', color: T.text.quaternary, fontSize: 13 }}>
+          <Spinner tamanho={28} />
+          Carregando formulário…
+        </div>
+      </CascaPublica>
+    )
   }
 
   if (estado === 'erro') {
-    return <TelaInfo icone="erro" titulo="Link inválido" descricao={mensagemErro || 'Este link expirou ou não é mais válido.'} />
+    return <TelaInfo icone={Link2Off} tom="erro" titulo="Link inválido" descricao={mensagemErro || 'Este link expirou ou não é mais válido.'} />
   }
 
   if (estado === 'ja_preenchido') {
-    return <TelaInfo icone="ok" titulo="Formulário já preenchido" descricao="Esse formulário já foi respondido. Se precisar enviar de novo, peça ao seu médico um novo link." />
+    return <TelaInfo icone={CircleCheck} tom="ok" titulo="Formulário já preenchido" descricao="Esse formulário já foi respondido. Se precisar enviar de novo, peça ao seu médico um novo link." />
   }
 
   if (estado === 'enviado') {
-    return <TelaInfo icone="ok" titulo="Respostas enviadas!" descricao="Obrigado! Suas respostas foram enviadas com sucesso. Seu médico vai analisar antes da consulta." />
+    return <TelaInfo icone={CircleCheck} tom="ok" clinica={dados?.clinica} titulo="Respostas enviadas" descricao="Obrigado! Suas respostas foram enviadas com sucesso. Seu médico vai analisar antes da consulta." />
   }
 
   // Estado: preencher
@@ -104,195 +117,109 @@ export default function FormularioPublicoPage() {
     const v = respostas[c.id]
     return v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)
   }).length
+  const progresso = totalCampos ? Math.round((totalPreenchidos / totalCampos) * 100) : 0
 
   return (
-    <div style={{ minHeight: '100vh', background: tokens.bg.page, padding: '24px 16px 80px' }}>
-      <div style={{ maxWidth: 640, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ marginBottom: 24, textAlign: 'center' }}>
-          <div style={{
-            width: 56,
-            height: 56,
-            margin: '0 auto 16px',
-            background: tokens.brand.primary,
-            color: '#fff',
-            borderRadius: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 22,
-            fontWeight: 700,
-            letterSpacing: '-0.01em',
-          }}>
-            {dados.clinica.nome.charAt(0).toUpperCase()}
-          </div>
-          <div style={{ fontSize: 13, color: tokens.text.tertiary, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-            {dados.clinica.nome}
-          </div>
+    <CascaPublica clinica={dados.clinica} largura={640}>
+      <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Cabeçalho do formulário */}
+        <div style={{ ...cartaoPublico, padding: '22px 20px 18px' }}>
           {dados.medico && (
-            <div style={{ fontSize: 14, color: tokens.text.secondary, marginTop: 4 }}>
+            <div style={{ fontSize: 12.5, color: T.text.quaternary, marginBottom: 6 }}>
               Dr(a). {dados.medico.nome}
               {dados.medico.especialidade && ' · ' + dados.medico.especialidade}
             </div>
           )}
-        </div>
-
-        {/* Card do formulário */}
-        <div style={{
-          background: '#fff',
-          borderRadius: 18,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-          overflow: 'hidden',
-        }}>
-          {/* Header do card */}
-          <div style={{ padding: '28px 24px 20px', borderBottom: '1px solid ' + tokens.border.subtle }}>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0, letterSpacing: '-0.01em' }}>
-              {dados.template.nome}
-            </h1>
-            {dados.template.descricao && (
-              <p style={{ fontSize: 14, color: tokens.text.secondary, margin: '8px 0 0', lineHeight: 1.5 }}>
-                {dados.template.descricao}
-              </p>
-            )}
-            <div style={{ marginTop: 16 }}>
-              <div style={{
-                height: 4,
-                background: tokens.bg.cardSubtle,
-                borderRadius: 100,
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: `${Math.round((totalPreenchidos / totalCampos) * 100)}%`,
-                  background: tokens.brand.primary,
-                  transition: 'width 0.3s',
-                }} />
-              </div>
-              <div style={{ fontSize: 12, color: tokens.text.tertiary, marginTop: 8 }}>
-                {totalPreenchidos} de {totalCampos} preenchidas
-              </div>
-            </div>
-          </div>
-
-          {/* Campos */}
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {dados.template.campos.map((campo, idx) => (
-              <div key={campo.id}>
-                <div style={{ marginBottom: 8 }}>
-                  <label style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, display: 'block' }}>
-                    <span style={{ color: tokens.text.tertiary, marginRight: 6 }}>{idx + 1}.</span>
-                    {campo.label}
-                    {campo.obrigatorio && <span style={{ color: '#EF4444', marginLeft: 4 }}>*</span>}
-                  </label>
-                  {campo.descricao && (
-                    <div style={{ fontSize: 13, color: tokens.text.tertiary, marginTop: 4 }}>
-                      {campo.descricao}
-                    </div>
-                  )}
-                </div>
-                <RenderizadorCampo
-                  campo={campo}
-                  valor={respostas[campo.id]}
-                  onChange={(v) => atualizarResposta(campo.id, v)}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Erro de validação */}
-          {erroValidacao && (
-            <div style={{
-              margin: '0 24px 16px',
-              padding: 12,
-              background: '#FEF2F2',
-              border: '1px solid #FECACA',
-              borderRadius: 10,
-              color: '#991B1B',
-              fontSize: 13,
-              fontWeight: 500,
-            }}>
-              {erroValidacao}
-            </div>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: T.text.primary, margin: 0, letterSpacing: '-.01em', lineHeight: 1.25 }}>
+            {dados.template.nome}
+          </h1>
+          {dados.template.descricao && (
+            <p style={{ fontSize: 14, color: T.text.secondary, margin: '8px 0 0', lineHeight: 1.5 }}>
+              {dados.template.descricao}
+            </p>
           )}
-
-          {/* Submit */}
-          <div style={{ padding: '0 24px 24px' }}>
-            <button
-              type="button"
-              onClick={enviar}
-              disabled={enviando}
-              style={{
-                width: '100%',
-                padding: '14px',
-                background: enviando ? tokens.text.tertiary : tokens.brand.primary,
-                color: '#fff',
-                border: 'none',
-                borderRadius: 12,
-                fontSize: 15,
-                fontWeight: 600,
-                cursor: enviando ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {enviando ? 'Enviando...' : 'Enviar respostas'}
-            </button>
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <ProgressBar valor={progresso} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: T.text.quaternary }}>
+              <span>{totalPreenchidos} de {totalCampos} preenchidas</span>
+              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{progresso}%</span>
+            </div>
           </div>
         </div>
 
-        {/* Rodapé */}
-        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: tokens.text.tertiary }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 6 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            Suas respostas são protegidas
+        {/* Perguntas — uma por card */}
+        {dados.template.campos.map((campo, idx) => (
+          <div key={campo.id} style={{ background: T.bg.card, border: `1px solid ${T.border.default}`, borderRadius: T.radius['2xl'], padding: '18px 18px 20px' }}>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 14.5, fontWeight: 600, color: T.text.primary, display: 'flex', gap: 8, lineHeight: 1.4 }}>
+                <span className="mono" style={{ color: T.text.tertiary, fontSize: 12.5, fontWeight: 500, paddingTop: 2, flexShrink: 0 }}>{String(idx + 1).padStart(2, '0')}</span>
+                <span>
+                  {campo.label}
+                  {campo.obrigatorio && <span style={{ color: T.status.danger, marginLeft: 4 }}>*</span>}
+                </span>
+              </label>
+              {campo.descricao && (
+                <div style={{ fontSize: 13, color: T.text.quaternary, marginTop: 4, lineHeight: 1.45 }}>
+                  {campo.descricao}
+                </div>
+              )}
+            </div>
+            <RenderizadorCampo
+              campo={campo}
+              valor={respostas[campo.id]}
+              onChange={(v) => atualizarResposta(campo.id, v)}
+            />
           </div>
-          Powered by <span style={{ fontWeight: 600, color: tokens.text.secondary }}>Clinical 360</span>
-        </div>
+        ))}
+
+        {/* Erro de validação */}
+        {erroValidacao && (
+          <div role="alert" style={{
+            display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px',
+            background: T.status.dangerBg, borderRadius: T.radius.input,
+            color: T.status.danger, fontSize: 13, fontWeight: 600, lineHeight: 1.45,
+          }}>
+            <CircleAlert size={16} strokeWidth={1.6} style={{ flexShrink: 0, marginTop: 1 }} />
+            {erroValidacao}
+          </div>
+        )}
+
+        {/* Enviar */}
+        <Button size="lg" block icon={Send} onClick={enviar} disabled={enviando} style={{ marginTop: 4 }}>
+          {enviando ? 'Enviando…' : 'Enviar respostas'}
+        </Button>
       </div>
-    </div>
+    </CascaPublica>
   )
 }
 
-function TelaInfo({ icone, titulo, descricao }: { icone: 'ok' | 'erro' | string; titulo: string; descricao?: string }) {
-  const cores = {
-    ok: { bg: '#D1FAE5', fg: '#059669' },
-    erro: { bg: '#FEE2E2', fg: '#DC2626' },
-  }
-  const c = icone === 'ok' ? cores.ok : icone === 'erro' ? cores.erro : { bg: tokens.brand.primaryLight, fg: tokens.brand.primary }
-
+function TelaInfo({ icone, tom, titulo, descricao, clinica }: {
+  icone: LucideIcon
+  tom: 'ok' | 'erro'
+  titulo: string
+  descricao?: string
+  clinica?: { nome: string; logo_url: string | null } | null
+}) {
+  const ok = tom === 'ok'
   return (
-    <div style={{ minHeight: '100vh', background: tokens.bg.page, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
-        <div style={{
-          width: 64,
-          height: 64,
-          margin: '0 auto 20px',
-          background: c.bg,
-          color: c.fg,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          {icone === 'ok' ? (
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
-          ) : icone === 'erro' ? (
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-          ) : (
-            <div style={{ width: 28, height: 28, border: '3px solid ' + tokens.brand.primaryLight, borderTopColor: tokens.brand.primary, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          )}
-        </div>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 12px', letterSpacing: '-0.01em' }}>
+    <CascaPublica clinica={clinica} largura={640}>
+      <div style={{ ...cartaoPublico, maxWidth: 440, margin: '0 auto', padding: '34px 24px 30px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+        <IconTile
+          icon={icone}
+          size={60}
+          radius={18}
+          color={ok ? T.status.success : T.status.danger}
+          style={{ marginBottom: 10, background: ok ? T.status.successBg : T.status.dangerBg }}
+        />
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text.primary, margin: 0, letterSpacing: '-.01em' }}>
           {titulo}
         </h2>
         {descricao && (
-          <p style={{ fontSize: 15, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: T.text.secondary, margin: 0, lineHeight: 1.55 }}>
             {descricao}
           </p>
         )}
-        <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
       </div>
-    </div>
+    </CascaPublica>
   )
 }

@@ -2,10 +2,12 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { MailCheck, Check, Copy, ArrowRight, Wrench } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
+import { TelaAcesso } from '@/components/TelaAcesso'
+import { Button } from '@/components/ui'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
+const T = tokens
 
 function Content() {
   const router = useRouter()
@@ -35,69 +37,49 @@ function Content() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: tokens.bg.hover, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ background: 'white', borderRadius: 16, padding: 40, maxWidth: 500, width: '100%', textAlign: 'center' }}>
-        <div style={{ width: 64, height: 64, borderRadius: '50%', background: ACCENT_LIGHT, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-            <polyline points="22,6 12,13 2,6"/>
-          </svg>
+    <TelaAcesso
+      largura={460}
+      titulo="Conta criada"
+      descricao={<>Enviamos um link de confirmação para <strong style={{ color: T.text.primary, fontWeight: 600, wordBreak: 'break-all' }}>{email}</strong></>}
+      icone={<MailCheck size={22} strokeWidth={1.6} />}
+      tomIcone="success"
+      rodape="O link expira em 48 horas"
+    >
+      <div style={{ background: T.status.warningBg, borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: T.status.warning }}>
+          <Wrench size={13} strokeWidth={1.6} /> Modo desenvolvimento
         </div>
-
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px' }}>Conta criada!</h1>
-        <p style={{ fontSize: 14, color: tokens.text.secondary, margin: '0 0 6px', lineHeight: 1.6 }}>
-          Enviamos um link de confirmação para
+        <p style={{ fontSize: 12.5, color: T.text.muted, margin: 0, lineHeight: 1.55 }}>
+          Ainda estamos integrando o envio de e-mail. Por enquanto, use o link abaixo para confirmar sua conta.
         </p>
-        <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 28px', wordBreak: 'break-all' }}>{email}</p>
-
-        <div style={{ background: tokens.status.warningBgAlt, border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'left' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: tokens.status.warningText, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>⚡ Modo desenvolvimento</p>
-          <p style={{ fontSize: 12, color: tokens.status.warningText, margin: '0 0 12px', lineHeight: 1.6 }}>
-            Ainda estamos integrando o envio de email. Por enquanto, use o link abaixo para confirmar sua conta:
-          </p>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              readOnly
-              value={linkVerificar}
-              style={{
-                flex: 1, padding: '8px 10px',
-                fontSize: 10, fontFamily: 'monospace',
-                border: `1px solid ${tokens.status.warningLightAlt}`, borderRadius: 6,
-                background: 'white', color: tokens.status.warningText,
-                outline: 'none', minWidth: 0,
-              }}
-            />
-            <button onClick={copiarLink} style={{
-              padding: '8px 12px', borderRadius: 6,
-              background: copiado ? tokens.status.success : tokens.status.warningText, color: 'white',
-              border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer',
-              flexShrink: 0,
-            }}>
-              {copiado ? '✓ Copiado' : 'Copiar'}
-            </button>
-          </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            readOnly
+            value={linkVerificar}
+            className="mono"
+            style={{
+              flex: 1, minWidth: 0, height: 32, padding: '0 10px', fontSize: 11,
+              border: `1px solid ${T.border.default}`, borderRadius: 9,
+              background: '#fff', color: T.text.secondary, outline: 'none',
+            }}
+          />
+          <Button size="sm" variant="secondary" icon={copiado ? Check : Copy} onClick={copiarLink}
+            style={copiado ? { color: T.status.success } : undefined}>
+            {copiado ? 'Copiado' : 'Copiar'}
+          </Button>
         </div>
-
-        <button onClick={irAgora} style={{
-          width: '100%', padding: '13px',
-          background: ACCENT, color: 'white',
-          border: 'none', borderRadius: 10,
-          fontSize: 14, fontWeight: 700, cursor: 'pointer',
-        }}>
-          Confirmar conta agora →
-        </button>
-
-        <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '20px 0 0' }}>
-          O link expira em 48 horas
-        </p>
       </div>
-    </div>
+
+      <Button size="lg" block iconRight={ArrowRight} onClick={irAgora}>
+        Confirmar conta agora
+      </Button>
+    </TelaAcesso>
   )
 }
 
 export default function CadastroSucesso() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Carregando...</div>}>
+    <Suspense fallback={<div style={{ minHeight: '100dvh', background: tokens.bg.page }} />}>
       <Content />
     </Suspense>
   )

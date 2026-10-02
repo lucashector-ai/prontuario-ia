@@ -4,19 +4,34 @@ import { log } from '@/lib/logger'
 
 import { Suspense, useEffect, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import {
+  Ban, Calendar, CalendarClock, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Copy,
+  Eye, EyeOff, Gift, Hourglass, MessageCircle, Mic, Plus, SlidersHorizontal, Trash2, Video, X,
+} from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
-import { Sidebar } from '@/components/Sidebar'
-import { IconGift } from '@/components/Icon'
-import { tokens } from '@/lib/design-tokens'
-import { Button, Input, Select, Textarea } from '@/components/ui'
+import { tokens, tint } from '@/lib/design-tokens'
+import {
+  Avatar, Badge, Button, Checkbox, Chip, Field, Icon, IconButton, IconTile, Input, Modal,
+  SearchInput, SegmentedControl, Select, Textarea,
+} from '@/components/ui'
+import type { BadgeTone } from '@/components/ui'
+import { confirmar, notificar } from '@/components/ui/dialogos'
 
+const T = tokens
+
+// Só a 1ª letra maiúscula ("Outubro de 2026", não "Outubro De 2026")
+const cap = (t: string) => t ? t.charAt(0).toUpperCase() + t.slice(1) : t
+
+// Tipos de atendimento — cores da paleta de dados (cheia na barra/hora, tint no fundo)
 const TIPOS = {
-  consulta: { label: 'Consulta', bg: tokens.brand.primaryLighter, text: tokens.brand.primaryDark, border: tokens.brand.primaryAccent, dot: tokens.brand.primary },
-  retorno:  { label: 'Retorno',  bg: tokens.appointment.retorno.bg, text: tokens.brand.primaryDarkText, border: tokens.appointment.retorno.border, dot: tokens.appointment.retorno.dot },
-  exame:    { label: 'Exame',    bg: tokens.appointment.exame.bg, text: tokens.appointment.exame.text, border: tokens.appointment.exame.border, dot: tokens.appointment.exame.dot },
-  urgencia: { label: 'Urgência', bg: tokens.status.dangerBgAlt, text: tokens.status.dangerDark, border: tokens.status.dangerLightAlt, dot: tokens.status.danger },
+  consulta: { label: 'Consulta', cor: T.data.purple },
+  retorno:  { label: 'Retorno',  cor: T.data.pink },
+  exame:    { label: 'Exame',    cor: T.data.green },
+  urgencia: { label: 'Urgência', cor: T.data.orange },
 }
+type TipoKey = keyof typeof TIPOS
+const tipoDe = (t: string) => TIPOS[t as TipoKey] || TIPOS.consulta
 
 const STATUS_OPTS = [
   { value: 'agendado',   label: 'Agendado' },
@@ -25,15 +40,33 @@ const STATUS_OPTS = [
   { value: 'realizado',  label: 'Realizado' },
 ]
 
+const STATUS_BADGE: Record<string, { label: string; tone: BadgeTone }> = {
+  agendado:   { label: 'Agendado',   tone: 'pending' },
+  confirmado: { label: 'Confirmado', tone: 'success' },
+  cancelado:  { label: 'Cancelado',  tone: 'danger' },
+  realizado:  { label: 'Realizado',  tone: 'neutral' },
+  faltou:     { label: 'Faltou',     tone: 'warning' },
+}
+
+// Cores de reserva para profissionais sem cor cadastrada
+const CORES_PROF = [T.data.purple, T.data.pink, T.data.blue, T.data.green, T.data.orange]
+
+// Grade de horas: 56px por hora (protótipo), cliques em fatias de 15 min
 const SLOT_MIN = 15
-const SLOT_PX = 20
+const HORA_PX = 56
+const PX_MIN = HORA_PX / 60
+const SLOT_PX = SLOT_MIN * PX_MIN
 const HORA_INI = 7
 const HORA_FIM = 21
-const TOTAL_SLOTS = ((HORA_FIM - HORA_INI) * 60) / SLOT_MIN
+const ALTURA_GRADE = (HORA_FIM - HORA_INI) * HORA_PX
 
-const toSlotIdx = (d: Date) => Math.floor(((d.getHours() - HORA_INI) * 60 + d.getMinutes()) / SLOT_MIN)
-const slotToPx = (idx: number) => idx * SLOT_PX
-const durToPx  = (dur: number) => (dur / SLOT_MIN) * SLOT_PX
+/** Minutos desde HORA_INI → px */
+const minToPx = (d: Date) => ((d.getHours() - HORA_INI) * 60 + d.getMinutes()) * PX_MIN
+
+const DIAS_CURTOS = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM']
+const DIAS_MINI = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
+const MESES_AB = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+const dowSeg = (d: Date) => (d.getDay() + 6) % 7
 
 function getWeekDays(date: Date) {
   const d = new Date(date)
@@ -47,13 +80,16 @@ function getWeekDays(date: Date) {
   })
 }
 
+/** Grade mensal começando na segunda; só as semanas necessárias (4–6). */
 function getMonthGrid(date: Date) {
   const first = new Date(date.getFullYear(), date.getMonth(), 1)
   const startDay = first.getDay()
   const offset = startDay === 0 ? -6 : 1 - startDay
   const start = new Date(first)
   start.setDate(first.getDate() + offset)
-  return Array.from({ length: 42 }, (_, i) => {
+  const diasNoMes = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  const semanas = Math.ceil((dowSeg(first) + diasNoMes) / 7)
+  return Array.from({ length: semanas * 7 }, (_, i) => {
     const nd = new Date(start)
     nd.setDate(start.getDate() + i)
     return nd
@@ -66,31 +102,56 @@ const isMesmoDia = (a: Date, b: Date) =>
 const fmtMesAno = (d: Date) =>
   d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/ De /, ' de ')
 
-const fmtDia = (d: Date) =>
-  d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
-
-function coresDerivadas(hex: string) {
-  const base = hex || tokens.brand.primary
-  // Remove # e converte pra RGB
-  const h = base.replace('#', '')
-  const r = parseInt(h.substring(0, 2), 16)
-  const g = parseInt(h.substring(2, 4), 16)
-  const b = parseInt(h.substring(4, 6), 16)
-  // Fundo: cor base com transparencia alta (hex alpha 1A = ~10%)
-  const bg = base + '1A'
-  // Texto: escurecer 30% para contraste
-  const darken = (v: number) => Math.max(0, Math.floor(v * 0.5))
-  const text = '#' + darken(r).toString(16).padStart(2, '0') + darken(g).toString(16).padStart(2, '0') + darken(b).toString(16).padStart(2, '0')
-  // Borda: cor base com alpha moderado
-  const border = base + '4D' // ~30%
-  return { bg, text, border, dot: base }
-}
+const fmtHora = (d: Date) => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 
 const ehAniversario = (nascStr: string | null | undefined, alvo: Date) => {
   if (!nascStr) return false
   const n = new Date(nascStr)
   if (isNaN(n.getTime())) return false
   return n.getMonth() === alvo.getMonth() && n.getDate() === alvo.getDate()
+}
+
+/** Distribui eventos sobrepostos em colunas (lanes) — mesmo algoritmo do protótipo. */
+function calcularLanes(ags: any[]) {
+  const itens = ags
+    .map(a => {
+      const d = new Date(a.data_hora)
+      const ini = d.getHours() * 60 + d.getMinutes()
+      return { ag: a, ini, fim: ini + (Number(a.duracao) || 30), l: 0, L: 1 }
+    })
+    .sort((a, b) => a.ini - b.ini)
+  let grupo: typeof itens = []
+  let fimGrupo = -1
+  const fechar = () => {
+    const lanes: number[] = []
+    grupo.forEach(it => {
+      let l = lanes.findIndex(f => f <= it.ini)
+      if (l < 0) { l = lanes.length; lanes.push(0) }
+      lanes[l] = it.fim
+      it.l = l
+    })
+    grupo.forEach(it => { it.L = lanes.length })
+    grupo = []
+  }
+  itens.forEach(it => {
+    if (it.ini >= fimGrupo) { fechar(); fimGrupo = -1 }
+    grupo.push(it)
+    fimGrupo = Math.max(fimGrupo, it.fim)
+  })
+  fechar()
+  return itens
+}
+
+/** Botão-ícone pequeno de navegação (‹ ›) */
+function BotaoNav({ dir, onClick, size = 34 }: { dir: -1 | 1; onClick: () => void; size?: number }) {
+  return (
+    <IconButton
+      icon={dir < 0 ? ChevronLeft : ChevronRight}
+      size={size}
+      onClick={onClick}
+      aria-label={dir < 0 ? 'Anterior' : 'Próximo'}
+    />
+  )
 }
 
 function AgendaContent() {
@@ -140,15 +201,18 @@ function AgendaContent() {
   const [mesVisualizado, setMesVisualizado] = useState<Date>(() => new Date(0))
 
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
-  const [filtroTipo, setFiltroTipo] = useState<string>('todos')
+  // Tipos e profissionais ocultos (checkbox/olho na coluna lateral)
+  const [tiposOff, setTiposOff] = useState<string[]>([])
   const [filtroPaciente, setFiltroPaciente] = useState<string>('')
-  const [filtroProfissional, setFiltroProfissional] = useState<string>('todos')
+  const [profsOff, setProfsOff] = useState<string[]>([])
 
   const [listaEsperaOpen, setListaEsperaOpen] = useState(false)
   const [listaEspera] = useState<any[]>([])
 
   const [modal, setModal] = useState<{ open: boolean; date?: Date; ag?: any }>({ open: false })
   const [submodalRealizado, setSubmodalRealizado] = useState(false)
+  // Agendamento existente abre em "Detalhes"; "Editar/Remarcar" troca para o formulário
+  const [editando, setEditando] = useState(false)
   const [form, setForm] = useState({ paciente_id: '', medico_id: '', procedimento_id: '', data_hora: '', tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
   const [salvando, setSalvando] = useState(false)
 
@@ -179,6 +243,9 @@ function AgendaContent() {
       const params = new URLSearchParams(window.location.search)
       if (params.get('nova_teleconsulta') === '1') {
         setComVideo(true)
+        setModal({ open: true })
+        window.history.replaceState({}, '', '/agenda')
+      } else if (params.get('novo') === '1') {
         setModal({ open: true })
         window.history.replaceState({}, '', '/agenda')
       }
@@ -243,15 +310,15 @@ function AgendaContent() {
   const agendamentosFiltrados = useMemo(() => {
     return agendamentos.filter(a => {
       if (filtroStatus !== 'todos' && a.status !== filtroStatus) return false
-      if (filtroTipo !== 'todos' && a.tipo !== filtroTipo) return false
+      if (tiposOff.includes(a.tipo || 'consulta')) return false
       if (filtroPaciente) {
         const nome = (a.pacientes?.nome || a.paciente_nome || '').toLowerCase()
         if (!nome.includes(filtroPaciente.toLowerCase())) return false
       }
-      if (filtroProfissional !== 'todos' && a.profissional_id && a.profissional_id !== filtroProfissional) return false
+      if (a.medico_id && profsOff.includes(a.medico_id)) return false
       return true
     })
-  }, [agendamentos, filtroStatus, filtroTipo, filtroPaciente, filtroProfissional])
+  }, [agendamentos, filtroStatus, tiposOff, filtroPaciente, profsOff])
 
   const getBloqueiosDia = (dia: Date) => {
     const diaSemana = dia.getDay().toString()
@@ -292,16 +359,28 @@ function AgendaContent() {
   const navegarMes = (dir: number) => {
     const nd = new Date(mesVisualizado); nd.setMonth(nd.getMonth() + dir); setMesVisualizado(nd)
   }
+  // ‹ › da toolbar: anda 1 dia, 1 semana ou 1 mês conforme a visão
+  const navegar = (dir: number) => {
+    if (viewMode === 'mes') { navegarMes(dir); return }
+    if (viewMode === 'dia') {
+      const nd = new Date(diaSelecionado); nd.setDate(nd.getDate() + dir)
+      setDiaSelecionado(nd); setSemana(nd); setMesVisualizado(nd)
+      return
+    }
+    navegarSemana(dir)
+  }
+  const irParaHoje = () => { setSemana(new Date()); setDiaSelecionado(new Date()); setMesVisualizado(new Date()) }
+  const alternar = (lista: string[], v: string) => lista.includes(v) ? lista.filter(x => x !== v) : [...lista, v]
 
   const limparFiltros = () => {
-    setFiltroStatus('todos'); setFiltroTipo('todos'); setFiltroPaciente(''); setFiltroProfissional('todos')
+    setFiltroStatus('todos'); setTiposOff([]); setFiltroPaciente(''); setProfsOff([])
   }
 
   const filtrosAtivos =
     (filtroStatus !== 'todos' ? 1 : 0) +
-    (filtroTipo !== 'todos' ? 1 : 0) +
+    (tiposOff.length > 0 ? 1 : 0) +
     (filtroPaciente ? 1 : 0) +
-    (filtroProfissional !== 'todos' ? 1 : 0)
+    (profsOff.length > 0 ? 1 : 0)
 
   // useEffect: abre modal quando ?ag=ID na URL e agendamentos carregaram
   useEffect(() => {
@@ -342,7 +421,7 @@ function AgendaContent() {
   // }
 
   const abrirModal = (date?: Date, ag?: any) => {
-    setPreConsultaEnviada(false); setComVideo(false); setSalaLink(''); setSalaId('')
+    setPreConsultaEnviada(false); setComVideo(false); setSalaLink(''); setSalaId(''); setEditando(false)
     if (ag) {
       const d = new Date(ag.data_hora)
       const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
@@ -505,7 +584,7 @@ function AgendaContent() {
   }
 
   const deletar = async (id: string) => {
-    if (!confirm('Deletar este agendamento?')) return
+    if (!(await confirmar({ titulo: 'Excluir este agendamento?', mensagem: 'Se quiser manter o registro, use “Cancelar” em vez de excluir.', confirmar: 'Excluir', perigo: true }))) return
     await supabase.from('agendamentos').delete().eq('id', id)
     setAgendamentos(prev => prev.filter(a => a.id !== id))
     setModal({ open: false })
@@ -527,7 +606,7 @@ function AgendaContent() {
       } else {
         toast(data.error || 'Erro ao enviar pré-atendimento', 'error')
       }
-    } catch (e) { alert('Erro de conexao') }
+    } catch (e) { notificar('Erro de conexão', 'erro') }
     finally { setEnviandoPreConsulta(false) }
   }
 
@@ -600,7 +679,7 @@ function AgendaContent() {
   }
 
   const removerBloqueio = async (id: string) => {
-    if (!confirm('Remover este bloqueio?')) return
+    if (!(await confirmar({ titulo: 'Remover este bloqueio?', mensagem: 'O horário volta a ficar disponível para agendamentos.', confirmar: 'Remover' }))) return
     await fetch('/api/bloqueios?id=' + id, { method: 'DELETE' })
     setBloqueios(prev => prev.filter(b => b.id !== id))
     toast('Bloqueio removido')
@@ -611,345 +690,465 @@ function AgendaContent() {
     if (data) setAgendamentos(prev => prev.map(a => a.id === id ? data : a))
   }
 
-  const labelStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 700, color: tokens.text.secondary, display: 'block', marginBottom: 6,
-    textTransform: 'uppercase', letterSpacing: '0.06em',
-  }
-  const selectStyle: React.CSSProperties = {
-    width: '100%', padding: '8px 10px', fontSize: 12, borderRadius: 7, background: 'white', color: tokens.text.primary, cursor: 'pointer',
-  }
+  // ── Apresentação ──────────────────────────────────────────────────────────
 
-  const renderHeader = () => {
-    const labelData = viewMode === 'mes'
-      ? fmtMesAno(mesVisualizado)
-      : viewMode === 'dia'
-        ? diaSelecionado.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
-        : `${diasSemana[0].getDate()} – ${diasSemana[6].getDate()} ${fmtMesAno(diasSemana[6])}`
+  const fecharModal = () => setModal({ open: false })
 
+  // Profissionais (checkbox colorido) — cor cadastrada do médico ou paleta de reserva
+  const profs = medicosClinica.map((m: any, i: number) => ({
+    id: m.id as string,
+    nome: (m.nome || 'Profissional') as string,
+    cor: (m.cor || mapaCoresMedicos[m.id] || CORES_PROF[i % CORES_PROF.length]) as string,
+  }))
+  const multiProf = profs.length > 1
+  const nomeMedico = (id: string) => profs.find(p => p.id === id)?.nome || ''
+
+  // Dias visíveis (para contadores por profissional)
+  const diasVisiveis = viewMode === 'dia' ? [diaSelecionado]
+    : viewMode === 'semana' ? diasSemana
+    : getMonthGrid(mesVisualizado).filter(d => d.getMonth() === mesVisualizado.getMonth())
+  const chavesVisiveis = diasVisiveis.map(d => d.toDateString())
+  const contarProf = (id: string) => agendamentos.filter(a => a.medico_id === id && chavesVisiveis.indexOf(new Date(a.data_hora).toDateString()) >= 0).length
+
+  const tituloIntervalo = (() => {
+    if (viewMode === 'mes') return cap(fmtMesAno(mesVisualizado))
+    if (viewMode === 'dia') {
+      const d = diaSelecionado
+      return cap(d.toLocaleDateString('pt-BR', { weekday: 'long' })) + ', ' + d.getDate() + ' de ' + d.toLocaleDateString('pt-BR', { month: 'long' })
+    }
+    const a = diasSemana[0], b = diasSemana[6]
+    return `${a.getDate()} ${MESES_AB[a.getMonth()]} – ${b.getDate()} ${MESES_AB[b.getMonth()]} ${b.getFullYear()}`
+  })()
+
+  const hoverLinha = {
+    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = T.bg.page },
+    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = 'transparent' },
+  }
+  const linhaFiltro: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 10, padding: '7px 8px', borderRadius: 9, border: 'none',
+    background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, color: T.text.strong,
+    textAlign: 'left', width: '100%', transition: 'background .15s, opacity .15s',
+  }
+  const tituloSecao: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: T.text.secondary, marginBottom: 4 }
+
+  // ── Mini calendário ──
+  const renderMiniCal = (mobile: boolean) => {
+    const grid = getMonthGrid(mesVisualizado)
+    const mesAtual = mesVisualizado.getMonth()
+    const ini = diasSemana[0], fim = diasSemana[6]
+    const iniT = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate()).getTime()
+    const fimT = new Date(fim.getFullYear(), fim.getMonth(), fim.getDate()).getTime()
     return (
-      <div style={{ padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => { setSemana(new Date()); setDiaSelecionado(new Date()); setMesVisualizado(new Date()) }}
-            style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, background: 'white', padding: '5px 14px', borderRadius: 7, cursor: 'pointer' }}>
-            Hoje
-          </button>
-          <div style={{ display: 'flex', gap: 1 }}>
-            <button onClick={() => viewMode === 'mes' ? navegarMes(-1) : navegarSemana(-1)}
-              style={{ width: 28, height: 28, background: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', color: tokens.text.strong, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
-            <button onClick={() => viewMode === 'mes' ? navegarMes(1) : navegarSemana(1)}
-              style={{ width: 28, height: 28, background: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', color: tokens.text.strong, display: 'flex', alignItems: 'center', justifyContent: 'center', borderLeft: 'none' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
-            </button>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: T.text.primary }}>{cap(fmtMesAno(mesVisualizado))}</span>
+          <div style={{ display: 'flex', gap: 2 }}>
+            <BotaoNav dir={-1} size={28} onClick={() => navegarMes(-1)} />
+            <BotaoNav dir={1} size={28} onClick={() => navegarMes(1)} />
           </div>
-          <h1 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0, textTransform: 'capitalize' }}>{labelData}</h1>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <button onClick={() => setListaEsperaOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: 'white', fontSize: 12, color: tokens.text.strong, fontWeight: 600, cursor: 'pointer' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Lista de espera
-            {listaEspera.length > 0 && <span style={{ background: tokens.brand.primary, color: 'white', borderRadius: 10, padding: '0 6px', fontSize: 10 }}>{listaEspera.length}</span>}
-          </button>
-          {isMobile && (
-            <button
-              onClick={() => setFiltrosMobileOpen(true)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                padding: '6px 10px', fontSize: 12, fontWeight: 600,
-                background: 'white', color: tokens.text.strong,
-                border: `1px solid ${tokens.border.default}`, borderRadius: 7, cursor: 'pointer',
-              }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="4" y1="6" x2="20" y2="6"/>
-                <line x1="7" y1="12" x2="17" y2="12"/>
-                <line x1="10" y1="18" x2="14" y2="18"/>
-              </svg>
-              Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
-            </button>
-          )}
-          <div className="agenda-view-modes" style={{ display: 'flex', borderRadius: 7, overflow: 'hidden', background: 'white' }}>
-            {(['dia', 'semana', 'mes'] as const).map((v, i) => (
-              <button key={v} onClick={() => setViewMode(v)}
-                style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: viewMode === v ? tokens.brand.primary : 'white', color: viewMode === v ? 'white' : tokens.text.secondary, border: 'none', borderLeft: i > 0 ? `1px solid ${tokens.border.default}` : 'none' }}>
-                {v === 'dia' ? 'Dia' : v === 'semana' ? 'Semana' : 'Mês'}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 2 }}>
+          {DIAS_MINI.map((l, i) => (
+            <span key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: T.text.tertiary, padding: '4px 0' }}>{l}</span>
+          ))}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', rowGap: 2 }}>
+          {grid.map((d, i) => {
+            const fora = d.getMonth() !== mesAtual
+            const hoje = isHoje(d)
+            const sel = isMesmoDia(d, diaSelecionado)
+            const t = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+            const naSemana = viewMode === 'semana' && t >= iniT && t <= fimT
+            const dow = dowSeg(d)
+            const temAgs = agendamentosFiltrados.some(a => new Date(a.data_hora).toDateString() === d.toDateString())
+            const raio = naSemana && !sel ? (dow === 0 ? '9px 0 0 9px' : dow === 6 ? '0 9px 9px 0' : '0') : '9px'
+            const bgBase = sel ? T.brand.primary : naSemana ? T.brand.primarySubtle : 'transparent'
+            return (
+              <button key={i} type="button"
+                onClick={() => { setDiaSelecionado(d); setSemana(d); if (mobile) setFiltrosMobileOpen(false) }}
+                onMouseEnter={e => { if (!sel) e.currentTarget.style.background = T.brand.primaryLight }}
+                onMouseLeave={e => { e.currentTarget.style.background = bgBase }}
+                style={{
+                  height: mobile ? 38 : 32, border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1,
+                  fontSize: 12.5, fontWeight: sel || hoje ? 700 : 500,
+                  color: sel ? '#fff' : hoje ? T.brand.primary : fora ? '#C3C1CC' : T.text.strong,
+                  background: bgBase, borderRadius: raio, transition: 'background .12s',
+                }}>
+                {d.getDate()}
+                <span style={{ width: 4, height: 4, borderRadius: '50%', background: temAgs && !sel ? T.brand.primaryAccent : 'transparent' }} />
               </button>
-            ))}
-          </div>
-          <Button variant="secondary" size="sm" onClick={abrirModalBloqueio} title="Bloquear horario">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-            </svg>
-            Bloquear
-          </Button>
-          <Button variant="primary" size="sm" onClick={() => abrirModal()}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-            Novo
-          </Button>
+            )
+          })}
         </div>
       </div>
     )
   }
 
-  const renderPainel = () => {
-    const monthGrid = getMonthGrid(mesVisualizado)
-    const mesAtual = mesVisualizado.getMonth()
-    return (
-      <aside style={{ width: 260, background: 'white', borderRight: `1px solid ${tokens.bg.hoverStrong}`, padding: 16, overflow: 'auto', flexShrink: 0, display: isMobile ? 'none' : 'block' }}>
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0, textTransform: 'capitalize' }}>{fmtMesAno(mesVisualizado)}</h3>
-            <div style={{ display: 'flex', gap: 2 }}>
-              <button onClick={() => navegarMes(-1)} style={{ width: 22, height: 22, border: 'none', background: 'transparent', cursor: 'pointer', color: tokens.text.secondary, borderRadius: 4 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+  // ── Coluna de filtros (desktop) / conteúdo do bottom sheet (mobile) ──
+  const renderFiltros = (mobile: boolean) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
+      {renderMiniCal(mobile)}
+      <div style={{ height: 1, background: T.border.muted }} />
+
+      <SearchInput value={filtroPaciente} onChange={setFiltroPaciente} placeholder="Buscar paciente" />
+
+      {multiProf && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={tituloSecao}>Profissionais</span>
+          {profs.map(p => {
+            const on = !profsOff.includes(p.id)
+            const n = contarProf(p.id)
+            return (
+              <button key={p.id} type="button" onClick={() => setProfsOff(l => alternar(l, p.id))} style={linhaFiltro} {...hoverLinha}>
+                <span style={{
+                  width: 16, height: 16, borderRadius: 5, flexShrink: 0, display: 'grid', placeItems: 'center',
+                  background: on ? p.cor : '#fff', border: `1.5px solid ${p.cor}`, color: '#fff',
+                }}>{on && <Check size={11} strokeWidth={3} />}</span>
+                <span style={{ flex: 1, minWidth: 0, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nome}</span>
+                <span style={{ fontSize: 12, color: T.text.tertiary }}>{n || ''}</span>
               </button>
-              <button onClick={() => navegarMes(1)} style={{ width: 22, height: 22, border: 'none', background: 'transparent', cursor: 'pointer', color: tokens.text.secondary, borderRadius: 4 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
-              </button>
+            )
+          })}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={tituloSecao}>Tipos de atendimento</span>
+        {(Object.keys(TIPOS) as TipoKey[]).map(k => {
+          const on = !tiposOff.includes(k)
+          return (
+            <button key={k} type="button" onClick={() => setTiposOff(l => alternar(l, k))} style={{ ...linhaFiltro, opacity: on ? 1 : 0.45 }} {...hoverLinha}>
+              <span style={{ width: 10, height: 10, borderRadius: 4, flexShrink: 0, background: TIPOS[k].cor }} />
+              <span style={{ flex: 1, fontWeight: 500 }}>{TIPOS[k].label}</span>
+              <Icon icon={on ? Eye : EyeOff} size={14} color={T.text.tertiary} />
+            </button>
+          )
+        })}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={tituloSecao}>Status</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <Chip ativo={filtroStatus === 'todos'} onClick={() => setFiltroStatus('todos')} style={{ height: 28, padding: '0 10px', fontSize: 12 }}>Todos</Chip>
+          {STATUS_OPTS.map(s => (
+            <Chip key={s.value} ativo={filtroStatus === s.value} onClick={() => setFiltroStatus(s.value)} style={{ height: 28, padding: '0 10px', fontSize: 12 }}>{s.label}</Chip>
+          ))}
+        </div>
+      </div>
+
+      {filtrosAtivos > 0 && (
+        <Button variant="ghost" size="sm" onClick={limparFiltros} style={{ alignSelf: 'flex-start' }}>
+          Limpar filtros ({filtrosAtivos})
+        </Button>
+      )}
+    </div>
+  )
+
+  // ── Toolbar ──
+  const renderToolbar = () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: isMobile ? 'wrap' : 'nowrap', flexShrink: 0, minWidth: 0 }}>
+      <Button variant="secondary" onClick={irParaHoje}>Hoje</Button>
+      <div style={{ display: 'flex', gap: 2 }}>
+        <BotaoNav dir={-1} onClick={() => navegar(-1)} />
+        <BotaoNav dir={1} onClick={() => navegar(1)} />
+      </div>
+      <h2 style={{ margin: 0, flex: 1, minWidth: 0, fontSize: 17, fontWeight: 700, letterSpacing: '-.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: T.text.primary }}>{tituloIntervalo}</h2>
+      {isMobile && (
+        <Button variant="secondary" icon={SlidersHorizontal} onClick={() => setFiltrosMobileOpen(true)}>
+          Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
+        </Button>
+      )}
+      <div style={{ position: 'relative' }}>
+        <Button variant="secondary" icon={Hourglass} onClick={() => setListaEsperaOpen(o => !o)}>
+          Lista de espera
+          {listaEspera.length > 0 && (
+            <span style={{
+              minWidth: 18, height: 18, padding: '0 5px', boxSizing: 'border-box', borderRadius: 9,
+              background: T.brand.primaryLight, color: T.brand.primary, fontSize: 11, fontWeight: 700, lineHeight: '18px', textAlign: 'center',
+            }}>{listaEspera.length}</span>
+          )}
+        </Button>
+        {listaEsperaOpen && (
+          <>
+            <div onClick={() => setListaEsperaOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 49 }} />
+            <div style={{
+              position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 300, maxWidth: 'calc(100vw - 32px)',
+              background: '#fff', border: `1px solid ${T.border.default}`, borderRadius: T.radius.xl,
+              boxShadow: T.shadow.lg, padding: 8, zIndex: 50,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, padding: '6px 8px 8px', color: T.text.primary }}>Lista de espera</div>
+              {listaEspera.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '18px 12px 20px', textAlign: 'center' }}>
+                  <IconTile icon={Hourglass} size={36} />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary, marginTop: 4 }}>Ninguém aguardando</span>
+                  <span style={{ fontSize: 12, color: T.text.quaternary, lineHeight: 1.45 }}>Pacientes aguardando encaixe aparecem aqui.</span>
+                </div>
+              ) : listaEspera.map((w: any, i: number) => {
+                const nome = w.pacientes?.nome || w.paciente_nome || w.nome || 'Paciente'
+                return (
+                  <div key={w.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10 }} {...hoverLinha}>
+                    <Avatar nome={nome} size={30} />
+                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary }}>{nome}</span>
+                      {(w.observacao || w.observacoes) && <span style={{ fontSize: 11.5, color: T.text.quaternary }}>{w.observacao || w.observacoes}</span>}
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={() => {
+                      setListaEsperaOpen(false)
+                      abrirModal()
+                      if (w.paciente_id) setForm(f => ({ ...f, paciente_id: w.paciente_id }))
+                    }}>Encaixar</Button>
+                  </div>
+                )
+              })}
             </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
-            {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((l, i) => (
-              <div key={i} style={{ fontSize: 10, color: tokens.text.tertiary, textAlign: 'center', fontWeight: 700, padding: '4px 0' }}>{l}</div>
-            ))}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
-            {monthGrid.map((d, i) => {
-              const noMes = d.getMonth() === mesAtual
-              const hoje = isHoje(d)
-              const selecionado = isMesmoDia(d, diaSelecionado)
-              const temAgs = agendamentosFiltrados.some(a => new Date(a.data_hora).toDateString() === d.toDateString())
+          </>
+        )}
+      </div>
+      {!isMobile && (
+        <SegmentedControl
+          options={[{ value: 'dia', label: 'Dia' }, { value: 'semana', label: 'Semana' }, { value: 'mes', label: 'Mês' }]}
+          value={viewMode}
+          onChange={v => setViewMode(v)}
+        />
+      )}
+      <IconButton icon={Ban} variant="outline" onClick={abrirModalBloqueio} title="Bloquear horário" />
+      <Button icon={Plus} onClick={() => abrirModal()}>Novo</Button>
+    </div>
+  )
+
+  // ── Bloco de evento na grade ──
+  const renderEvento = (it: { ag: any; l: number; L: number }) => {
+    const { ag, l, L } = it
+    const d = new Date(ag.data_hora)
+    const dur = Number(ag.duracao) || 30
+    const fim = new Date(d.getTime() + dur * 60000)
+    const tipo = tipoDe(ag.tipo)
+    const cancelado = ag.status === 'cancelado'
+    const apagado = cancelado || ag.status === 'realizado' || ag.status === 'faltou'
+    const cor = cancelado ? T.text.tertiary : tipo.cor
+    const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Encaixe'
+    const h = dur * PX_MIN
+    const umaLinha = h < 34
+    const sub = (ag.motivo || tipo.label) + (multiProf && ag.medico_id ? ' · ' + nomeMedico(ag.medico_id) : '')
+    const temIndicadores = !!(ag.meet_link || ag.pre_consulta_enviada || ag.confirmacao_24h_enviada || ag.confirmacao_24h_status === 'confirmado')
+    return (
+      <div key={ag.id} style={{
+        position: 'absolute', top: minToPx(d), height: h, left: `${(l / L) * 100}%`, width: `${100 / L}%`,
+        padding: '1px 2px', boxSizing: 'border-box', zIndex: 10,
+      }}>
+        <button type="button"
+          onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
+          title={`${fmtHora(d)} – ${fmtHora(fim)} · ${pacNome}`}
+          onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 16px -8px rgba(28,27,34,.35)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+          onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
+          style={{
+            position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', overflow: 'hidden',
+            display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
+            padding: umaLinha ? '2px 6px 2px 7px' : '5px 7px 5px 8px', borderRadius: 9,
+            background: cancelado ? T.bg.hover : tint(tipo.cor, 0.12),
+            border: `1px solid ${cancelado ? T.border.default : tint(tipo.cor, 0.22)}`,
+            borderLeft: `3px solid ${cor}`,
+            opacity: cancelado ? 0.55 : apagado ? 0.65 : 1,
+            transition: 'transform .15s, box-shadow .15s',
+          }}>
+          <span className="mono" style={{
+            fontSize: 11, fontWeight: 700, color: cor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            paddingRight: temIndicadores ? 30 : 0, lineHeight: umaLinha ? '14px' : 1.3,
+          }}>
+            {umaLinha ? `${fmtHora(d)} · ${pacNome.split(' ')[0]}` : `${fmtHora(d)} – ${fmtHora(fim)}`}
+          </span>
+          {!umaLinha && (
+            <span style={{
+              fontSize: 12, fontWeight: 600, color: T.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              textDecoration: cancelado ? 'line-through' : 'none',
+            }}>{pacNome}</span>
+          )}
+          {h >= 50 && (
+            <span style={{ fontSize: 11, color: T.text.secondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</span>
+          )}
+          {temIndicadores && (
+            <span style={{ position: 'absolute', top: umaLinha ? 2 : 5, right: 5, display: 'flex', gap: 3 }}>
+              {ag.meet_link && <span title="Teleconsulta" style={{ display: 'inline-grid' }}><Video size={12} strokeWidth={1.8} color={cor} /></span>}
+              {ag.pre_consulta_enviada && <span title="Pré-consulta enviada no WhatsApp" style={{ display: 'inline-grid' }}><MessageCircle size={12} strokeWidth={1.8} color={T.whatsapp.green} /></span>}
+              {ag.confirmacao_24h_status === 'confirmado'
+                ? <span title="Paciente confirmou a consulta" style={{ display: 'inline-grid' }}><CheckCircle2 size={12} strokeWidth={1.8} color={T.status.success} /></span>
+                : ag.confirmacao_24h_enviada
+                  ? <span title="Aguardando confirmação do paciente" style={{ display: 'inline-grid' }}><Clock size={12} strokeWidth={1.8} color={T.status.warningAlt} /></span>
+                  : null}
+            </span>
+          )}
+        </button>
+      </div>
+    )
+  }
+
+  // ── Faixa de bloqueio na grade ──
+  const renderBloqueio = (b: any, dia: Date) => {
+    const dIni = new Date(b.data_inicio)
+    const dFim = new Date(b.data_fim)
+    // Se o bloqueio cobre o dia inteiro, ocupa a grade toda
+    const ehDiaInteiro = dIni.getHours() === 0 && dFim.getHours() === 23 && dFim.getMinutes() === 59
+    const top = ehDiaInteiro ? 0 : Math.max(0, minToPx(dIni))
+    const fimPx = ehDiaInteiro ? ALTURA_GRADE : Math.min(ALTURA_GRADE, minToPx(dFim))
+    const altura = fimPx - top
+    if (altura <= 0) return null
+    return (
+      <div key={'blq-' + b.id + '-' + dia.toISOString()}
+        title={b.motivo || 'Horário bloqueado'}
+        onClick={e => { e.stopPropagation(); removerBloqueio(b.id) }}
+        style={{
+          position: 'absolute', left: 0, right: 0, top, height: altura, zIndex: 5, cursor: 'pointer', overflow: 'hidden',
+          background: `repeating-linear-gradient(45deg, ${T.bg.hover}, ${T.bg.hover} 6px, ${T.border.muted} 6px, ${T.border.muted} 12px)`,
+          borderTop: `1px solid ${T.border.default}`, borderBottom: `1px solid ${T.border.default}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, boxSizing: 'border-box',
+        }}>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5, maxWidth: '100%', boxSizing: 'border-box',
+          fontSize: 11, fontWeight: 600, color: T.text.secondary, background: '#fff',
+          padding: '3px 9px', borderRadius: 99, border: `1px solid ${T.border.default}`, whiteSpace: 'nowrap', overflow: 'hidden',
+        }}>
+          <Ban size={12} strokeWidth={1.6} style={{ flexShrink: 0 }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.motivo || 'Bloqueado'}</span>
+        </span>
+      </div>
+    )
+  }
+
+  // ── Grade de horas (dia e semana) ──
+  const renderGrade = (dias: Date[]) => {
+    const horas = Array.from({ length: HORA_FIM - HORA_INI + 1 }, (_, i) => HORA_INI + i)
+    const totalSlots = ((HORA_FIM - HORA_INI) * 60) / SLOT_MIN
+    const agoraTop = agora ? minToPx(agora) : -1
+    const mostrarAgora = agora !== null && agoraTop >= 0 && agoraTop <= ALTURA_GRADE
+    return (
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', border: `1px solid ${T.border.default}`, borderRadius: T.radius['2xl'], overflow: 'hidden', background: '#fff' }}>
+        {/* Cabeçalho dos dias */}
+        <div style={{ display: 'flex', borderBottom: `1px solid ${T.border.default}`, background: '#fff', flexShrink: 0 }}>
+          <div style={{ width: 56, flexShrink: 0 }} />
+          {dias.map((dia, i) => {
+            const hoje = isHoje(dia)
+            const aniversariantes = pacientes.filter(p => ehAniversario(p.data_nascimento, dia)).length
+            const nAgs = viewMode === 'dia' ? getAgsDia(dia).length : 0
+            return (
+              <button key={i} type="button"
+                onClick={() => { setDiaSelecionado(dia); setSemana(dia); setViewMode('dia') }}
+                style={{
+                  flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                  padding: '10px 0', border: 'none', borderLeft: `1px solid ${T.border.muted}`, cursor: 'pointer', fontFamily: 'inherit',
+                  background: hoje ? T.brand.primarySoftBg : '#fff',
+                }}>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', color: hoje ? T.brand.primary : '#9A98A5' }}>{DIAS_CURTOS[dowSeg(dia)]}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{
+                    width: 32, height: 32, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 16, fontWeight: 700,
+                    background: hoje ? T.brand.primary : 'transparent', color: hoje ? '#fff' : T.text.primary,
+                  }}>{dia.getDate()}</span>
+                  {aniversariantes > 0 && (
+                    <span title={`${aniversariantes} aniversariante(s)`} style={{ display: 'inline-grid', color: T.data.pink }}>
+                      <Gift size={14} strokeWidth={1.6} />
+                    </span>
+                  )}
+                </span>
+                {viewMode === 'dia' && (
+                  <span style={{ fontSize: 11.5, color: T.text.quaternary }}>{nAgs} agendamento{nAgs !== 1 ? 's' : ''}</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Corpo rolável */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+          <div style={{ display: 'flex', position: 'relative', height: ALTURA_GRADE, margin: '8px 0' }}>
+            <div style={{ width: 56, flexShrink: 0, position: 'relative' }}>
+              {horas.map((h, i) => (
+                <span key={h} className="mono" style={{
+                  position: 'absolute', top: i * HORA_PX, right: 10, fontSize: 11, color: T.text.tertiary, transform: 'translateY(-50%)',
+                }}>{String(h).padStart(2, '0')}:00</span>
+              ))}
+            </div>
+            {dias.map((dia, di) => {
+              const hoje = isHoje(dia)
               return (
-                <button key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
-                  style={{ aspectRatio: '1', border: 'none', background: selecionado ? tokens.brand.primary : (hoje ? tokens.brand.primaryLighter : 'transparent'), color: selecionado ? 'white' : (!noMes ? tokens.border.strong : (hoje ? tokens.brand.primary : tokens.text.strong)), fontSize: 11, fontWeight: hoje || selecionado ? 700 : 500, borderRadius: 6, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {d.getDate()}
-                  {temAgs && !selecionado && <span style={{ position: 'absolute', bottom: 2, width: 3, height: 3, borderRadius: '50%', background: hoje ? tokens.brand.primary : tokens.text.tertiary }}/>}
-                </button>
+                <div key={di} style={{
+                  flex: 1, minWidth: 0, position: 'relative', borderLeft: `1px solid ${T.border.muted}`,
+                  backgroundColor: hoje ? '#FBFAFF' : '#fff',
+                  backgroundImage: `repeating-linear-gradient(to bottom, ${T.border.muted} 0 1px, transparent 1px ${HORA_PX}px)`,
+                  borderBottom: `1px solid ${T.border.muted}`,
+                }}>
+                  {/* Fatias clicáveis de 15 min → novo agendamento */}
+                  {Array.from({ length: totalSlots }, (_, i) => (
+                    <div key={i}
+                      onClick={() => { const d = new Date(dia); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
+                      onMouseOver={e => { e.currentTarget.style.background = tint(T.data.purple, 0.05) }}
+                      onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}
+                      style={{ height: SLOT_PX, cursor: 'pointer', transition: 'background .1s' }} />
+                  ))}
+                  {calcularLanes(getAgsDia(dia)).map(renderEvento)}
+                  {getBloqueiosDia(dia).map((b: any) => renderBloqueio(b, dia))}
+                  {hoje && mostrarAgora && (
+                    <div style={{ position: 'absolute', left: 0, right: 0, top: agoraTop, height: 2, background: T.brand.primary, zIndex: 20, pointerEvents: 'none' }}>
+                      <span style={{ position: 'absolute', left: -5, top: -4, width: 10, height: 10, borderRadius: '50%', background: T.brand.primary }} />
+                    </div>
+                  )}
+                </div>
               )
             })}
           </div>
         </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Filtros</h3>
-            {filtrosAtivos > 0 && <button onClick={limparFiltros} style={{ fontSize: 11, color: tokens.brand.primary, background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Limpar ({filtrosAtivos})</button>}
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Status</label>
-            <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={selectStyle}>
-              <option value="todos">Todos</option>
-              {STATUS_OPTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Tipo</label>
-            <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} style={selectStyle}>
-              <option value="todos">Todos</option>
-              {Object.entries(TIPOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-            </select>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Paciente</label>
-            <input type="text" value={filtroPaciente} onChange={e => setFiltroPaciente(e.target.value)} placeholder="Buscar por nome..." style={{ ...selectStyle, padding: '8px 10px' }}/>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Profissional</label>
-            <select value={filtroProfissional} onChange={e => setFiltroProfissional(e.target.value)} style={selectStyle}>
-              <option value="todos">Todos</option>
-              {medico && <option value={medico.id}>{medico.nome || 'Eu'}</option>}
-            </select>
-          </div>
-        </div>
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${tokens.bg.hoverStrong}` }}>
-          <h3 style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Legenda</h3>
-          {Object.entries(TIPOS).map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <div style={{ width: 10, height: 10, borderRadius: 3, background: v.bg, border: `1.5px solid ${v.border}`, borderLeft: `3px solid ${v.dot}` }}/>
-              <span style={{ fontSize: 12, color: tokens.text.secondary }}>{v.label}</span>
-            </div>
-          ))}
-        </div>
-      </aside>
-    )
-  }
-
-  const renderGridSemana = () => {
-    const agoraIdx = agora ? toSlotIdx(agora) : -1
-    const mostrarLinhaAgora = agora !== null && agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
-    return (
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', borderBottom: `1px solid ${tokens.bg.hoverStrong}`, flexShrink: 0 }}>
-          <div/>
-          {diasSemana.map((dia, i) => {
-            const ags = getAgsDia(dia)
-            const aniversariantes = pacientes.filter(p => ehAniversario(p.data_nascimento, dia)).length
-            return (
-              <div key={i} onClick={() => { setDiaSelecionado(dia); setViewMode('dia') }}
-                style={{ padding: '10px 8px', textAlign: 'center', borderLeft: `1px solid ${tokens.bg.hoverStrong}`, cursor: 'pointer', background: isHoje(dia) ? tokens.brand.primarySoftBg : 'white' }}>
-                <p style={{ fontSize: 10, color: isHoje(dia) ? tokens.brand.primary : tokens.text.tertiary, fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {dia.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: isHoje(dia) ? tokens.brand.primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: isHoje(dia) ? 'white' : tokens.text.primary, margin: 0 }}>{dia.getDate()}</p>
-                  </div>
-                  {aniversariantes > 0 && <span title={`${aniversariantes} aniversariante(s)`} style={{ fontSize: 12 }}><IconGift size={14} /></span>}
-                </div>
-                {ags.length > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 3 }}>
-                    {ags.slice(0, 4).map((ag, ai) => (
-                      <div key={ai} style={{ width: 4, height: 4, borderRadius: '50%', background: TIPOS[ag.tipo as keyof typeof TIPOS]?.dot || tokens.brand.primary }}/>
-                    ))}
-                    {ags.length > 4 && <span style={{ fontSize: 9, color: tokens.text.secondary }}>+{ags.length - 4}</span>}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-        <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', minHeight: `${TOTAL_SLOTS * SLOT_PX}px`, position: 'relative' }}>
-            <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5, paddingTop: 12, paddingBottom: 12 }}>
-              {Array.from({ length: HORA_FIM - HORA_INI }, (_, i) => (
-                <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
-                  <span style={{ position: 'absolute', top: -7, right: 8, fontSize: 10, color: tokens.text.tertiary, fontWeight: 600, background: 'white', padding: '0 2px' }}>
-                    {(HORA_INI + i).toString().padStart(2, '0')}:00
-                  </span>
-                </div>
-              ))}
-            </div>
-            {diasSemana.map((dia, di) => (
-              <div key={di} style={{ borderLeft: `1px solid ${tokens.bg.hoverStrong}`, background: isHoje(dia) ? tokens.brand.primarySoftBg : 'white', position: 'relative', paddingTop: 12, paddingBottom: 12 }}>
-                {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
-                  const isHoraCheia = i % 4 === 0
-                  const isMeia = i % 4 === 2
-                  const isUltimo = i === (HORA_FIM - HORA_INI) * 4 - 1
-                  return (
-                    <div key={i}
-                      onClick={() => { const d = new Date(dia); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
-                      style={{ height: SLOT_PX, borderTop: isHoraCheia ? `1px solid ${tokens.bg.hoverStrong}` : 'none', borderBottom: isUltimo ? `1px solid ${tokens.bg.hoverStrong}` : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
-                      onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
-                      onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
-                  )
-                })}
-                {getAgsDia(dia).map(ag => {
-                  const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
-                  const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || tokens.brand.primary)
-                  const d = new Date(ag.data_hora)
-                  const idx = toSlotIdx(d)
-                  const dur = Number(ag.duracao) || 30
-                  const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Encaixe'
-                  const cancelado = ag.status === 'cancelado'
-                  return (
-                    <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
-                      style={{ position: 'absolute', left: 3, right: 3, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: cancelado ? tokens.bg.hoverStrong : corMed.bg, border: `1px solid ${cancelado ? tokens.border.strong : corMed.border}`, borderLeft: `3px solid ${cancelado ? tokens.text.tertiary : corMed.dot}`, borderRadius: 6, padding: '3px 6px', cursor: 'pointer', zIndex: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', opacity: cancelado ? 0.6 : 1, textDecoration: cancelado ? 'line-through' : 'none' }}>
-                      {/* Indicadores no canto superior direito */}
-                      {(ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) && (
-                        <div style={{ position: 'absolute', top: 3, right: 3, display: 'flex', flexDirection: 'column' as const, gap: 2, zIndex: 2 }}>
-                          {ag.pre_consulta_enviada && (
-                            <span title="Pré-consulta enviada" style={{ width: 12, height: 12, borderRadius: '50%', background: tokens.whatsapp.greenLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <svg width="7" height="7" viewBox="0 0 24 24" fill="white"><path d="M20.52 3.45C18.38 1.34 15.48 0 12.4 0 6.37 0 1.45 4.92 1.45 11c0 1.95.5 3.85 1.45 5.55L1 23l6.6-1.73c1.6.9 3.5 1.36 5.4 1.36 6.03 0 10.95-4.92 10.95-11 0-2.96-1.14-5.76-3.43-8.18z"/></svg>
-                            </span>
-                          )}
-                          {ag.confirmacao_24h_status === 'confirmado' && (
-                            <span title="Paciente confirmou" style={{ width: 12, height: 12, borderRadius: '50%', background: tokens.status.success, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5"><polyline points="20 6 9 17 4 12"/></svg>
-                            </span>
-                          )}
-                          {ag.confirmacao_24h_enviada && ag.confirmacao_24h_status !== 'confirmado' && (
-                            <span title="Aguardando confirmação" style={{ width: 12, height: 12, borderRadius: '50%', background: tokens.status.warningAmber, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      <p style={{ fontSize: 11, fontWeight: 700, color: corMed.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: (ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) ? 16 : 0 }}>{pacNome}</p>
-                      {durToPx(dur) > 28 && (
-                        <p style={{ fontSize: 10, color: corMed.text, margin: '1px 0 0', opacity: 0.75, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ag.motivo || tipo.label}</p>
-                      )}
-                      {durToPx(dur) > 44 && (
-                        <p style={{ fontSize: 9, color: corMed.text, margin: 'auto 0 0', opacity: 0.65, fontWeight: 600 }}>
-                          {d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} – {new Date(d.getTime() + dur * 60000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      )}
-                    </div>
-                  )
-                })}
-                {/* Renderiza bloqueios */}
-                {getBloqueiosDia(dia).map((b: any) => {
-                  const dIni = new Date(b.data_inicio)
-                  const dFim = new Date(b.data_fim)
-                  // Se o bloqueio cobre o dia inteiro, renderiza de 0h a fim do grid
-                  const ehDiaInteiro = dIni.getHours() === 0 && dFim.getHours() === 23 && dFim.getMinutes() === 59
-                  const idx = ehDiaInteiro ? 0 : Math.max(0, toSlotIdx(dIni))
-                  const idxFim = ehDiaInteiro ? TOTAL_SLOTS : Math.min(TOTAL_SLOTS, toSlotIdx(dFim))
-                  const altura = (idxFim - idx) * SLOT_PX
-                  if (altura <= 0) return null
-                  return (
-                    <div key={'blq-' + b.id + '-' + dia.toISOString()}
-                      title={b.motivo || 'Horário bloqueado'}
-                      onClick={e => { e.stopPropagation(); if (confirm('Remover bloqueio?' + (b.motivo ? ' (' + b.motivo + ')' : ''))) removerBloqueio(b.id) }}
-                      style={{
-                        position: 'absolute' as const, left: 0, right: 0,
-                        top: slotToPx(idx), height: altura,
-                        background: `repeating-linear-gradient(45deg, ${tokens.bg.hoverStrong}, ${tokens.bg.hoverStrong} 6px, ${tokens.border.default} 6px, ${tokens.border.default} 12px)`,
-                        borderTop: `1px solid ${tokens.border.strong}`, borderBottom: `1px solid ${tokens.border.strong}`,
-                        zIndex: 5, cursor: 'pointer', overflow: 'hidden' as const,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4,
-                      }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em', background: 'white', padding: '2px 8px', borderRadius: 12 }}>
-                        🚫 {b.motivo || 'Bloqueado'}
-                      </span>
-                    </div>
-                  )
-                })}
-                {isHoje(dia) && mostrarLinhaAgora && (
-                  <div style={{ position: 'absolute', top: slotToPx(agoraIdx) + (agora.getMinutes() % SLOT_MIN) * (SLOT_PX / SLOT_MIN), left: 0, right: 0, height: 2, background: tokens.status.danger, zIndex: 20, pointerEvents: 'none' }}>
-                    <div style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: '50%', background: tokens.status.danger }}/>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     )
   }
 
+  // ── Visão mensal ──
   const renderGridMes = () => {
     const grid = getMonthGrid(mesVisualizado)
     const mesAtual = mesVisualizado.getMonth()
     return (
-      <div style={{ flex: 1, background: 'white', borderRadius: 12, margin: '0 16px 16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
-          {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((l, i) => (
-            <div key={i} style={{ padding: '12px 8px', fontSize: 11, fontWeight: 700, color: i === 0 || i === 6 ? tokens.brand.primary : tokens.text.strong, textAlign: 'center' as const, textTransform: 'uppercase' as const, letterSpacing: '0.08em', background: tokens.bg.muted }}>{l}</div>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'auto', border: `1px solid ${T.border.default}`, borderRadius: T.radius['2xl'], background: '#fff' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', borderBottom: `1px solid ${T.border.default}` }}>
+          {DIAS_CURTOS.map(l => (
+            <span key={l} style={{ padding: '10px 0', textAlign: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '.06em', color: '#9A98A5' }}>{l}</span>
           ))}
         </div>
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: '1fr' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
           {grid.map((d, i) => {
-            const ags = getAgsDia(d)
-            const noMes = d.getMonth() === mesAtual
+            const ags = [...getAgsDia(d)].sort((a, b) => new Date(a.data_hora).getTime() - new Date(b.data_hora).getTime())
+            const fora = d.getMonth() !== mesAtual
             const hoje = isHoje(d)
+            const bgBase = fora ? '#FBFBFC' : '#fff'
             return (
-              <div key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
-                style={{ borderTop: `1px solid ${tokens.bg.hoverStrong}`, borderLeft: i % 7 !== 0 ? `1px solid ${tokens.bg.hoverStrong}` : 'none', padding: 8, cursor: 'pointer', background: noMes ? 'white' : tokens.bg.hover, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 4, minHeight: 90, transition: 'background 0.12s' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 12, fontWeight: hoje ? 800 : 600, color: noMes ? (hoje ? 'white' : tokens.text.primary) : tokens.border.strong, background: hoje ? tokens.brand.primary : 'transparent', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{d.getDate()}</span>
-                  {ags.length > 2 && <span style={{ fontSize: 9, color: tokens.text.tertiary, fontWeight: 600 }}>+{ags.length - 2}</span>}
-                </div>
-                {ags.slice(0, 2).map(ag => {
-                  const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
-                  const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || tokens.brand.primary)
+              <div key={i}
+                onClick={() => { setDiaSelecionado(d); setSemana(d); setViewMode('dia') }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#FAF9FC' }}
+                onMouseLeave={e => { e.currentTarget.style.background = bgBase }}
+                style={{
+                  minHeight: 108, padding: 8, boxSizing: 'border-box', cursor: 'pointer', minWidth: 0,
+                  borderRight: i % 7 !== 6 ? `1px solid ${T.border.muted}` : 'none', borderBottom: `1px solid ${T.border.muted}`,
+                  display: 'flex', flexDirection: 'column', gap: 4, background: bgBase, transition: 'background .12s',
+                }}>
+                <span style={{
+                  alignSelf: 'flex-start', minWidth: 24, height: 24, padding: '0 4px', boxSizing: 'border-box', borderRadius: 12,
+                  display: 'grid', placeItems: 'center', fontSize: 12.5, fontWeight: hoje ? 700 : 500,
+                  background: hoje ? T.brand.primary : 'transparent', color: hoje ? '#fff' : fora ? '#C3C1CC' : T.text.strong,
+                }}>{d.getDate()}</span>
+                {ags.slice(0, 3).map(ag => {
+                  const cancelado = ag.status === 'cancelado'
                   return (
-                    <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
-                      style={{ fontSize: 10, padding: '2px 5px', borderRadius: 4, background: corMed.bg, color: corMed.text, borderLeft: `2px solid ${corMed.dot}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
-                      {new Date(ag.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} {ag.pacientes?.nome || 'Encaixe'}
-                    </div>
+                    <span key={ag.id}
+                      onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: T.text.strong, whiteSpace: 'nowrap', overflow: 'hidden',
+                        opacity: cancelado ? 0.55 : 1, textDecoration: cancelado ? 'line-through' : 'none', borderRadius: 4,
+                      }}>
+                      <span style={{ width: 6, height: 6, borderRadius: 2, flexShrink: 0, background: cancelado ? T.text.tertiary : tipoDe(ag.tipo).cor }} />
+                      <span className="mono" style={{ color: T.text.quaternary }}>{fmtHora(new Date(ag.data_hora))}</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{(ag.pacientes?.nome || ag.paciente_nome || 'Encaixe').split(' ')[0]}</span>
+                    </span>
                   )
                 })}
+                {ags.length > 3 && <span style={{ fontSize: 11, fontWeight: 600, color: T.brand.primary }}>+{ags.length - 3} mais</span>}
               </div>
             )
           })}
@@ -958,233 +1157,430 @@ function AgendaContent() {
     )
   }
 
-  const renderGridDia = () => {
-    const agoraIdx = agora ? toSlotIdx(agora) : -1
-    const mostrarLinhaAgora = agora !== null && isHoje(diaSelecionado) && agoraIdx >= 0 && agoraIdx < TOTAL_SLOTS
-    const ags = getAgsDia(diaSelecionado)
+  // ── Modal: detalhes da consulta ──
+  const renderDetalhes = () => {
+    const ag = modal.ag
+    const d = new Date(ag.data_hora)
+    const dur = Number(ag.duracao) || 30
+    const fim = new Date(d.getTime() + dur * 60000)
+    const tipo = tipoDe(ag.tipo)
+    const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Encaixe'
+    const st = STATUS_BADGE[ag.status] || { label: cap(ag.status || 'agendado'), tone: 'neutral' as BadgeTone }
+    const prof = nomeMedico(ag.medico_id)
+    const preOk = preConsultaEnviada || ag.pre_consulta_enviada
+    const tile: React.CSSProperties = { padding: 12, borderRadius: 12, background: T.bg.page, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }
+    const tileLabel: React.CSSProperties = { fontSize: 11.5, color: T.text.quaternary }
+    const tileValor: React.CSSProperties = { fontSize: 13.5, fontWeight: 600, color: T.text.primary }
     return (
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: 12, margin: '0 16px 16px' }}>
-        <div style={{ padding: '14px 20px', borderBottom: `1px solid ${tokens.bg.hoverStrong}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', background: isHoje(diaSelecionado) ? tokens.brand.primary : tokens.brand.primaryLighter, color: isHoje(diaSelecionado) ? 'white' : tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700 }}>
-            {diaSelecionado.getDate()}
-          </div>
-          <div>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: tokens.text.primary, textTransform: 'capitalize' }}>{diaSelecionado.toLocaleDateString('pt-BR', { weekday: 'long' })}</p>
-            <p style={{ margin: 0, fontSize: 12, color: tokens.text.secondary, textTransform: 'capitalize' }}>{fmtMesAno(diaSelecionado)} · {ags.length} agendamento{ags.length !== 1 ? 's' : ''}</p>
-          </div>
-        </div>
-        <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '72px 1fr', minHeight: `${TOTAL_SLOTS * SLOT_PX}px`, position: 'relative' }}>
-            <div style={{ position: 'sticky', left: 0, background: 'white', zIndex: 5 }}>
-              {Array.from({ length: HORA_FIM - HORA_INI }, (_, i) => (
-                <div key={i} style={{ height: SLOT_PX * 4, position: 'relative', borderBottom: `1px solid ${tokens.bg.hoverStrong}` }}>
-                  <span style={{ position: 'absolute', top: -7, right: 10, fontSize: 11, color: tokens.text.tertiary, fontWeight: 600, background: 'white', padding: '0 4px' }}>{(HORA_INI + i).toString().padStart(2, '0')}:00</span>
-                </div>
-              ))}
+      <Modal titulo="Detalhes da consulta" onClose={fecharModal} largura={480}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Avatar nome={pacNome} size={44} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: T.text.primary }}>{pacNome}</div>
+              <div style={{ fontSize: 12.5, color: T.text.quaternary, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: 3, background: tipo.cor, flexShrink: 0 }} />
+                {tipo.label}{prof ? ' · ' + prof : ''}
+              </div>
             </div>
-            <div style={{ borderLeft: `1px solid ${tokens.bg.hoverStrong}`, position: 'relative', paddingTop: 12, paddingBottom: 12 }}>
-              {Array.from({ length: (HORA_FIM - HORA_INI) * 4 }, (_, i) => {
-                const isHoraCheia = i % 4 === 0
-                const isMeia = i % 4 === 2
-                const isUltimo = i === (HORA_FIM - HORA_INI) * 4 - 1
-                return (
-                  <div key={i}
-                    onClick={() => { const d = new Date(diaSelecionado); d.setHours(HORA_INI + Math.floor(i / 4), (i % 4) * 15, 0, 0); abrirModal(d) }}
-                    style={{ height: SLOT_PX, borderTop: isHoraCheia ? `1px solid ${tokens.bg.hoverStrong}` : 'none', borderBottom: isUltimo ? `1px solid ${tokens.bg.hoverStrong}` : 'none', cursor: 'pointer' }}
-                    onMouseOver={e => { e.currentTarget.style.background = 'rgba(96,67,193,0.04)' }}
-                    onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}/>
-                )
-              })}
-              {ags.map(ag => {
-                const tipo = TIPOS[ag.tipo as keyof typeof TIPOS] || TIPOS.consulta
-                const corMed = coresDerivadas(mapaCoresMedicos[ag.medico_id] || tokens.brand.primary)
-                const d = new Date(ag.data_hora)
-                const idx = toSlotIdx(d)
-                const dur = Number(ag.duracao) || 30
-                const pacNome = ag.pacientes?.nome || ag.paciente_nome || 'Encaixe'
-                return (
-                  <div key={ag.id} onClick={e => { e.stopPropagation(); abrirModal(undefined, ag) }}
-                    style={{ position: 'absolute', left: 8, right: 8, top: slotToPx(idx) + 1, height: durToPx(dur) - 2, background: corMed.bg, border: `1px solid ${corMed.border}`, borderLeft: `3px solid ${corMed.dot}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', zIndex: 10, overflow: 'hidden' }}>
-                    {/* Indicadores no canto superior direito */}
-                    {(ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) && (
-                      <div style={{ position: 'absolute', top: 6, right: 8, display: 'flex', gap: 4, zIndex: 2 }}>
-                        {ag.pre_consulta_enviada && (
-                          <span title="Pré-consulta enviada no WhatsApp" style={{ width: 18, height: 18, borderRadius: '50%', background: tokens.whatsapp.greenLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M20.52 3.45C18.38 1.34 15.48 0 12.4 0 6.37 0 1.45 4.92 1.45 11c0 1.95.5 3.85 1.45 5.55L1 23l6.6-1.73c1.6.9 3.5 1.36 5.4 1.36 6.03 0 10.95-4.92 10.95-11 0-2.96-1.14-5.76-3.43-8.18z"/></svg>
-                          </span>
-                        )}
-                        {ag.confirmacao_24h_status === 'confirmado' ? (
-                          <span title="Paciente confirmou a consulta" style={{ width: 18, height: 18, borderRadius: '50%', background: tokens.status.success, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5"><polyline points="20 6 9 17 4 12"/></svg>
-                          </span>
-                        ) : ag.confirmacao_24h_enviada ? (
-                          <span title="Aguardando confirmação do paciente" style={{ width: 18, height: 18, borderRadius: '50%', background: tokens.status.warningAmber, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                          </span>
-                        ) : null}
-                      </div>
-                    )}
-                    <p style={{ fontSize: 13, fontWeight: 700, color: corMed.text, margin: 0, paddingRight: (ag.pre_consulta_enviada || ag.confirmacao_24h_enviada) ? 48 : 0 }}>{pacNome}</p>
-                    <p style={{ fontSize: 11, color: corMed.text, margin: '2px 0 0', opacity: 0.75 }}>
-                      {d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {ag.motivo || tipo.label}
-                    </p>
-                  </div>
-                )
-              })}
-              {/* Bloqueios no dia */}
-              {getBloqueiosDia(diaSelecionado).map((b: any) => {
-                const dIni = new Date(b.data_inicio)
-                const dFim = new Date(b.data_fim)
-                const ehDiaInteiro = dIni.getHours() === 0 && dFim.getHours() === 23 && dFim.getMinutes() === 59
-                const idx = ehDiaInteiro ? 0 : Math.max(0, toSlotIdx(dIni))
-                const idxFim = ehDiaInteiro ? TOTAL_SLOTS : Math.min(TOTAL_SLOTS, toSlotIdx(dFim))
-                const altura = (idxFim - idx) * SLOT_PX
-                if (altura <= 0) return null
-                return (
-                  <div key={'blq-' + b.id}
-                    title={b.motivo || 'Horário bloqueado'}
-                    onClick={e => { e.stopPropagation(); if (confirm('Remover bloqueio?' + (b.motivo ? ' (' + b.motivo + ')' : ''))) removerBloqueio(b.id) }}
-                    style={{
-                      position: 'absolute' as const, left: 0, right: 0,
-                      top: slotToPx(idx), height: altura,
-                      background: `repeating-linear-gradient(45deg, ${tokens.bg.hoverStrong}, ${tokens.bg.hoverStrong} 8px, ${tokens.border.default} 8px, ${tokens.border.default} 16px)`,
-                      borderTop: `1px solid ${tokens.border.strong}`, borderBottom: `1px solid ${tokens.border.strong}`,
-                      zIndex: 5, cursor: 'pointer', overflow: 'hidden' as const,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8,
-                    }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em', background: 'white', padding: '4px 14px', borderRadius: 20, border: `1px solid ${tokens.border.default}` }}>
-                      🚫 {b.motivo || 'Horário bloqueado'}
-                    </span>
-                  </div>
-                )
-              })}
-              {mostrarLinhaAgora && (
-                <div style={{ position: 'absolute', top: slotToPx(agoraIdx) + (agora.getMinutes() % SLOT_MIN) * (SLOT_PX / SLOT_MIN), left: 0, right: 0, height: 2, background: tokens.status.danger, zIndex: 20, pointerEvents: 'none' }}>
-                  <div style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: '50%', background: tokens.status.danger }}/>
-                </div>
+            <Badge tone={st.tone}>{st.label}</Badge>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+            <div style={tile}>
+              <span style={tileLabel}>Data</span>
+              <span style={tileValor}>{cap(d.toLocaleDateString('pt-BR', { weekday: 'long' }))}, {d.getDate()} {MESES_AB[d.getMonth()]}</span>
+            </div>
+            <div style={tile}>
+              <span style={tileLabel}>Horário</span>
+              <span className="mono" style={tileValor}>{fmtHora(d)} – {fmtHora(fim)}</span>
+            </div>
+            {ag.motivo && (
+              <div style={{ ...tile, gridColumn: '1 / -1' }}>
+                <span style={tileLabel}>Motivo</span>
+                <span style={{ ...tileValor, fontWeight: 500 }}>{ag.motivo}</span>
+              </div>
+            )}
+            {ag.observacoes && (
+              <div style={{ ...tile, gridColumn: '1 / -1' }}>
+                <span style={tileLabel}>Observações</span>
+                <span style={{ ...tileValor, fontWeight: 500, whiteSpace: 'pre-wrap' }}>{ag.observacoes}</span>
+              </div>
+            )}
+          </div>
+
+          {ag.meet_link && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: `1px solid ${T.border.default}` }}>
+              <IconTile icon={Video} size={32} radius={10} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text.primary }}>Teleconsulta</div>
+                <div style={{ fontSize: 11.5, color: T.text.quaternary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ag.meet_link}</div>
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => window.open(ag.meet_link, '_blank')}>Abrir sala</Button>
+            </div>
+          )}
+
+          {ag.paciente_id && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12,
+              background: preOk ? T.status.successBg : T.brand.primarySoftBg,
+              border: `1px solid ${preOk ? 'transparent' : T.brand.primaryAccentLight}`,
+            }}>
+              <IconTile icon={MessageCircle} size={32} radius={10} color={preOk ? T.status.success : T.brand.primary} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: preOk ? T.status.success : T.text.primary }}>Pré-consulta no WhatsApp</div>
+                <div style={{ fontSize: 11.5, color: T.text.quaternary }}>{preOk ? 'Perguntas enviadas ao paciente' : 'Enviar perguntas antes da consulta'}</div>
+              </div>
+              {!preOk && (
+                <Button variant="secondary" size="sm" onClick={() => enviarPreConsulta(ag.id)} disabled={enviandoPreConsulta}>
+                  {enviandoPreConsulta ? 'Enviando…' : 'Enviar'}
+                </Button>
               )}
             </div>
+          )}
+
+          {(ag.status !== 'confirmado' || (ag.status !== 'realizado' && ag.status !== 'faltou')) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: T.text.secondary, marginRight: 4 }}>Marcar como</span>
+              {ag.status !== 'confirmado' && (
+                <Chip onClick={() => { atualizarStatus(ag.id, 'confirmado'); setModal(m => ({ ...m, ag: { ...m.ag, status: 'confirmado' } })) }} icon={Check}>Confirmado</Chip>
+              )}
+              {ag.status !== 'realizado' && ag.status !== 'faltou' && (
+                <Chip onClick={() => setSubmodalRealizado(true)} icon={CheckCircle2}>Realizado</Chip>
+              )}
+              {ag.status !== 'realizado' && ag.status !== 'faltou' && ag.status !== 'cancelado' && (
+                <Chip onClick={() => { atualizarStatus(ag.id, 'faltou'); fecharModal() }} icon={X}>Faltou</Chip>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Button icon={Mic} style={{ flex: 1 }} onClick={() => {
+              const params = new URLSearchParams()
+              if (ag.paciente_id) params.set('paciente_id', ag.paciente_id)
+              if (ag.pacientes?.nome) params.set('paciente_nome', ag.pacientes.nome)
+              if (ag.pacientes?.telefone) params.set('paciente_tel', ag.pacientes.telefone || '')
+              router.push('/nova-consulta?' + params.toString())
+            }}>Iniciar consulta</Button>
+            <Button variant="secondary" icon={CalendarClock} onClick={() => setEditando(true)}>Remarcar</Button>
+            {ag.status !== 'cancelado' && ag.status !== 'realizado' && (
+              <Button variant="danger" onClick={() => { atualizarStatus(ag.id, 'cancelado'); fecharModal() }}>Cancelar</Button>
+            )}
+            <IconButton icon={Trash2} tone="danger" variant="outline" onClick={() => deletar(ag.id)} aria-label="Excluir agendamento" title="Excluir agendamento" />
           </div>
         </div>
-      </div>
+      </Modal>
     )
   }
 
+  // ── Modal: novo agendamento / editar ──
+  const renderFormulario = () => {
+    const ehAdminClinica = typeof window !== 'undefined' && !!localStorage.getItem('clinica_admin')
+    const duracoes = [
+      { value: '15', label: '15 min' }, { value: '30', label: '30 min' }, { value: '45', label: '45 min' },
+      { value: '60', label: '1 hora' }, { value: '90', label: '1h30' },
+    ]
+    const durAtual = String(form.duracao || '30')
+    if (!duracoes.some(o => o.value === durAtual)) duracoes.push({ value: durAtual, label: durAtual + ' min' })
+    return (
+      <Modal titulo={modal.ag ? 'Editar agendamento' : 'Novo agendamento'} onClose={fecharModal} largura={520}>
+        <form onSubmit={salvar} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Field label="Paciente" hint={!form.paciente_id ? 'Deixe em branco para criar um encaixe rápido' : undefined}>
+            <Select value={form.paciente_id} onChange={e => setForm(f => ({ ...f, paciente_id: e.target.value }))}>
+              <option value="">Selecionar paciente (opcional)</option>
+              {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+            </Select>
+          </Field>
+
+          <Field label="Tipo">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {(Object.keys(TIPOS) as TipoKey[]).map(k => {
+                const on = form.tipo === k
+                return (
+                  <button key={k} type="button" onClick={() => setForm(f => ({ ...f, tipo: k }))}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 12px', borderRadius: 10, cursor: 'pointer',
+                      fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, transition: 'all .15s',
+                      border: `1px solid ${on ? T.brand.primary : T.border.default}`,
+                      background: on ? T.brand.primary : '#fff', color: on ? '#fff' : T.text.muted,
+                    }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 3, background: on ? '#fff' : TIPOS[k].cor }} />
+                    {TIPOS[k].label}
+                  </button>
+                )
+              })}
+            </div>
+          </Field>
+
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <Field label="Data e hora" style={{ flex: '1 1 200px' }}>
+              <Input type="datetime-local" required value={form.data_hora} onChange={e => setForm(f => ({ ...f, data_hora: e.target.value }))} />
+            </Field>
+            <Field label="Duração">
+              <SegmentedControl size="sm" options={duracoes} value={durAtual} onChange={v => setForm(f => ({ ...f, duracao: v }))} style={{ padding: 4 }} />
+            </Field>
+          </div>
+
+          {/* Profissional — read-only se médico logado, lista se admin da clínica */}
+          {!ehAdminClinica ? (
+            <Field label="Profissional">
+              <div style={{
+                minHeight: 40, padding: '0 12px', fontSize: 13.5, borderRadius: T.radius.input, background: T.bg.page,
+                color: T.text.primary, border: `1px solid ${T.border.default}`, display: 'flex', alignItems: 'center', gap: 8, boxSizing: 'border-box',
+              }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: medico?.cor || T.brand.primary }} />
+                Dr(a). {medico?.nome || '...'}
+              </div>
+            </Field>
+          ) : (
+            <Field label="Profissional">
+              <Select value={form.medico_id} onChange={e => setForm(f => ({ ...f, medico_id: e.target.value }))}>
+                <option value="">Selecionar médico</option>
+                {medicosClinica.filter((m: any) => (m.cargo === 'medico' || m.cargo === 'admin' || !m.cargo) && m.ativo !== false).map((m: any) => (
+                  <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
+                ))}
+              </Select>
+            </Field>
+          )}
+
+          {procedimentos.length > 0 && (
+            <Field label="Procedimento">
+              <Select
+                value={form.procedimento_id}
+                onChange={e => {
+                  const procId = e.target.value
+                  const proc = procedimentos.find((p: any) => p.id === procId)
+                  // Auto-preenche duração se procedimento tem duração definida
+                  setForm(f => ({
+                    ...f,
+                    procedimento_id: procId,
+                    duracao: proc?.duracao ? String(proc.duracao) : f.duracao,
+                  }))
+                }}>
+                <option value="">Nenhum (consulta padrão)</option>
+                {procedimentos.map((p: any) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nome}{p.duracao ? ' · ' + p.duracao + 'min' : ''}{p.valor ? ' · R$ ' + Number(p.valor).toFixed(2).replace('.', ',') : ''}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
+
+          <Field label="Motivo">
+            <Input value={form.motivo} onChange={e => setForm(f => ({ ...f, motivo: e.target.value }))} placeholder="Ex.: consulta de rotina, dor abdominal…" />
+          </Field>
+          <Field label="Observações">
+            <Textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))}
+              style={{ minHeight: 64, resize: 'none' }} placeholder="Observações adicionais…" />
+          </Field>
+
+          {!modal.ag && !salaLink && (
+            <button type="button" onClick={criarSalaAgora}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = T.brand.primaryAccent; e.currentTarget.style.background = T.brand.primarySoftBg }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border.default; e.currentTarget.style.background = '#fff' }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', background: '#fff',
+                border: `1px solid ${T.border.default}`, borderRadius: 12, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', transition: 'all .15s',
+              }}>
+              <IconTile icon={Video} size={32} radius={10} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: T.brand.primary }}>Adicionar videoconferência</span>
+            </button>
+          )}
+          {!modal.ag && salaLink && (
+            <div style={{ background: T.brand.primarySoftBg, border: `1px solid ${T.brand.primaryAccentLight}`, borderRadius: 12, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <IconTile icon={Video} size={32} radius={10} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: T.brand.primary, margin: '0 0 2px' }}>Sala de vídeo criada</p>
+                  <p style={{ fontSize: 11.5, color: T.text.secondary, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salaLink}</p>
+                </div>
+                <IconButton icon={X} size={30} onClick={removerSala} title="Remover sala" aria-label="Remover sala" type="button" />
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <Button type="button" variant="secondary" size="sm" icon={Copy} onClick={copiarLinkSala} style={{ flex: 1 }}>Copiar link</Button>
+                <Button type="button" variant="secondary" size="sm" icon={MessageCircle} onClick={enviarSalaWhatsApp} style={{ flex: 1, color: T.status.success }}>WhatsApp</Button>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 4 }}>
+            <Button type="button" variant="secondary" onClick={() => modal.ag ? setEditando(false) : fecharModal()}>
+              {modal.ag ? 'Voltar' : 'Cancelar'}
+            </Button>
+            <Button type="submit" disabled={salvando} icon={modal.ag ? undefined : Calendar}>
+              {salvando ? 'Salvando…' : modal.ag ? 'Salvar alterações' : 'Criar agendamento'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+    )
+  }
+
+  // ── Modal: bloquear horário ──
+  const renderModalBloqueio = () => (
+    <Modal titulo="Bloquear horário" onClose={() => setModalBloqueio(false)} largura={520}
+      rodape={<>
+        <Button variant="secondary" onClick={() => setModalBloqueio(false)}>Cancelar</Button>
+        <Button icon={Ban} onClick={salvarBloqueio} disabled={salvandoBloqueio}>{salvandoBloqueio ? 'Bloqueando…' : 'Bloquear'}</Button>
+      </>}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <p style={{ margin: 0, fontSize: 12.5, color: T.text.quaternary }}>Impede agendamentos nesse período.</p>
+
+        <Field label="Médico">
+          <Select value={formBloqueio.medico_id} onChange={e => setFormBloqueio(p => ({ ...p, medico_id: e.target.value }))}>
+            <option value="">Selecionar médico</option>
+            {medicosClinica.map(m => <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>)}
+          </Select>
+        </Field>
+
+        <Field label="Tipo">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+            {([
+              { v: 'horario', label: 'Horário', sub: 'Só algumas horas' },
+              { v: 'dia', label: 'Dia inteiro', sub: 'O dia todo' },
+              { v: 'periodo', label: 'Período', sub: 'Vários dias' },
+            ] as const).map(t => {
+              const on = formBloqueio.tipo === t.v
+              return (
+                <button key={t.v} type="button" onClick={() => setFormBloqueio(p => ({ ...p, tipo: t.v }))}
+                  style={{
+                    padding: '10px 12px', borderRadius: 12, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
+                    border: `1px solid ${on ? T.brand.primary : T.border.default}`, background: on ? T.brand.primarySoftBg : '#fff',
+                    transition: 'all .15s',
+                  }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: on ? T.brand.primary : T.text.primary, margin: 0 }}>{t.label}</p>
+                  <p style={{ fontSize: 11.5, color: T.text.quaternary, margin: '2px 0 0' }}>{t.sub}</p>
+                </button>
+              )
+            })}
+          </div>
+        </Field>
+
+        {formBloqueio.tipo === 'horario' && (
+          <>
+            <Field label="Data">
+              <Input type="date" value={formBloqueio.data} onChange={e => setFormBloqueio(p => ({ ...p, data: e.target.value }))} />
+            </Field>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <Field label="Das">
+                <Input type="time" value={formBloqueio.hora_inicio} onChange={e => setFormBloqueio(p => ({ ...p, hora_inicio: e.target.value }))} />
+              </Field>
+              <Field label="Até">
+                <Input type="time" value={formBloqueio.hora_fim} onChange={e => setFormBloqueio(p => ({ ...p, hora_fim: e.target.value }))} />
+              </Field>
+            </div>
+          </>
+        )}
+
+        {formBloqueio.tipo === 'dia' && (
+          <Field label="Data" hint="Dia inteiro indisponível">
+            <Input type="date" value={formBloqueio.data} onChange={e => setFormBloqueio(p => ({ ...p, data: e.target.value }))} />
+          </Field>
+        )}
+
+        {formBloqueio.tipo === 'periodo' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <Field label="De">
+              <Input type="date" value={formBloqueio.data_inicio} onChange={e => setFormBloqueio(p => ({ ...p, data_inicio: e.target.value }))} />
+            </Field>
+            <Field label="Até">
+              <Input type="date" value={formBloqueio.data_fim} onChange={e => setFormBloqueio(p => ({ ...p, data_fim: e.target.value }))} />
+            </Field>
+          </div>
+        )}
+
+        <Field label="Motivo (opcional)">
+          <Input value={formBloqueio.motivo} onChange={e => setFormBloqueio(p => ({ ...p, motivo: e.target.value }))} placeholder="Ex.: almoço, reunião, férias…" />
+        </Field>
+
+        {/* Recorrência (só para horário/dia) */}
+        {(formBloqueio.tipo === 'horario' || formBloqueio.tipo === 'dia') && (
+          <div style={{ background: T.bg.page, borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Checkbox
+              checked={formBloqueio.recorrente}
+              onChange={v => setFormBloqueio(p => ({ ...p, recorrente: v }))}
+              label={<span style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary }}>Repetir semanalmente</span>
+                <span style={{ fontSize: 11.5, color: T.text.quaternary }}>Bloqueio toda semana nos dias escolhidos</span>
+              </span>}
+            />
+            {formBloqueio.recorrente && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {([
+                  { v: '1', label: 'S' }, { v: '2', label: 'T' }, { v: '3', label: 'Q' }, { v: '4', label: 'Q' },
+                  { v: '5', label: 'S' }, { v: '6', label: 'S' }, { v: '0', label: 'D' },
+                ] as const).map(d => {
+                  const ativo = formBloqueio.dias_semana.includes(d.v)
+                  return (
+                    <button key={d.v} type="button"
+                      onClick={() => setFormBloqueio(p => ({
+                        ...p,
+                        dias_semana: ativo ? p.dias_semana.filter(x => x !== d.v) : [...p.dias_semana, d.v],
+                      }))}
+                      style={{
+                        width: 36, height: 36, borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
+                        border: `1px solid ${ativo ? T.brand.primary : T.border.default}`,
+                        background: ativo ? T.brand.primary : '#fff', color: ativo ? '#fff' : T.text.secondary,
+                      }}>{d.label}</button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </Modal>
+  )
+
   return (
-    <div style={{ display: 'flex', height: '100%', background: 'transparent', overflow: 'hidden' }}>
-      {renderPainel()}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {renderHeader()}
-        {viewMode === 'semana' && renderGridSemana()}
-        {viewMode === 'dia'    && renderGridDia()}
-        {viewMode === 'mes'    && renderGridMes()}
-      </main>
+    <div style={{
+      height: '100%', boxSizing: 'border-box', padding: isMobile ? 12 : 20,
+      display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : '236px minmax(0, 1fr)', gridTemplateRows: 'minmax(0, 1fr)', gap: 24,
+    }}>
+      {!isMobile && (
+        <aside style={{ minWidth: 0, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+          {renderFiltros(false)}
+        </aside>
+      )}
+      <div style={{ minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {renderToolbar()}
+        {viewMode === 'semana' && renderGrade(diasSemana)}
+        {viewMode === 'dia' && renderGrade([diaSelecionado])}
+        {viewMode === 'mes' && renderGridMes()}
+      </div>
 
       {/* Bottom sheet de filtros (mobile) */}
       {filtrosMobileOpen && isMobile && (
         <>
-          <div onClick={() => setFiltrosMobileOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 80 }}/>
+          <div onClick={() => setFiltrosMobileOpen(false)} style={{ position: 'fixed', inset: 0, background: T.bg.overlay, zIndex: 80 }} />
           <div style={{
             position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 81,
-            background: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+            background: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, boxShadow: T.shadow.modal,
             maxHeight: '85vh', overflowY: 'auto',
-            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
             animation: 'slideUpAgenda 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
           }}>
-            {/* Drag handle */}
             <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: tokens.border.default }}/>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: T.border.strong }} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 20px 12px' }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Filtros & calendário</h3>
-              <button onClick={() => setFiltrosMobileOpen(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: tokens.text.tertiary, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 12px' }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: T.text.primary, margin: 0 }}>Filtros e calendário</h3>
+              <IconButton icon={X} size={32} onClick={() => setFiltrosMobileOpen(false)} aria-label="Fechar" />
             </div>
-            <div style={{ padding: '0 20px' }}>
-              {/* Mini-calendário */}
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <h4 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0, textTransform: 'capitalize' }}>{fmtMesAno(mesVisualizado)}</h4>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button onClick={() => navegarMes(-1)} style={{ width: 28, height: 28, border: 'none', background: tokens.bg.hoverStrong, cursor: 'pointer', color: tokens.text.secondary, borderRadius: 6 }}>‹</button>
-                    <button onClick={() => navegarMes(1)} style={{ width: 28, height: 28, border: 'none', background: tokens.bg.hoverStrong, cursor: 'pointer', color: tokens.text.secondary, borderRadius: 6 }}>›</button>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
-                  {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((l, i) => (
-                    <div key={i} style={{ fontSize: 10, color: tokens.text.tertiary, textAlign: 'center', fontWeight: 700, padding: '4px 0' }}>{l}</div>
-                  ))}
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-                  {getMonthGrid(mesVisualizado).map((d, i) => {
-                    const noMes = d.getMonth() === mesVisualizado.getMonth()
-                    const hoje = isHoje(d)
-                    const selecionado = isMesmoDia(d, diaSelecionado)
-                    const temAgs = agendamentosFiltrados.some(a => new Date(a.data_hora).toDateString() === d.toDateString())
-                    return (
-                      <button key={i} onClick={() => { setDiaSelecionado(d); setSemana(d); setFiltrosMobileOpen(false) }}
-                        style={{ aspectRatio: '1', border: 'none', background: selecionado ? tokens.brand.primary : (hoje ? tokens.brand.primaryLighter : 'transparent'), color: selecionado ? 'white' : (!noMes ? tokens.border.strong : (hoje ? tokens.brand.primary : tokens.text.strong)), fontSize: 13, fontWeight: hoje || selecionado ? 700 : 500, borderRadius: 8, cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {d.getDate()}
-                        {temAgs && !selecionado && <span style={{ position: 'absolute', bottom: 3, width: 4, height: 4, borderRadius: '50%', background: hoje ? tokens.brand.primary : tokens.text.tertiary }}/>}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Filtros */}
-              <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h4 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Filtros</h4>
-                {filtrosAtivos > 0 && <button onClick={limparFiltros} style={{ fontSize: 12, color: tokens.brand.primary, background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Limpar ({filtrosAtivos})</button>}
-              </div>
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Status</label>
-                <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} style={{ ...selectStyle, padding: '10px 12px', fontSize: 14 }}>
-                  <option value="todos">Todos</option>
-                  {STATUS_OPTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                </select>
-              </div>
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Tipo</label>
-                <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} style={{ ...selectStyle, padding: '10px 12px', fontSize: 14 }}>
-                  <option value="todos">Todos</option>
-                  {Object.entries(TIPOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                </select>
-              </div>
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Paciente</label>
-                <input type="text" value={filtroPaciente} onChange={e => setFiltroPaciente(e.target.value)} placeholder="Buscar por nome..." style={{ width: '100%', padding: '10px 12px', fontSize: 14, borderRadius: 8, border: `1px solid ${tokens.border.default}`, outline: 'none' }}/>
-              </div>
-              <div style={{ marginBottom: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Profissional</label>
-                <select value={filtroProfissional} onChange={e => setFiltroProfissional(e.target.value)} style={{ ...selectStyle, padding: '10px 12px', fontSize: 14 }}>
-                  <option value="todos">Todos</option>
-                  {medico && <option value={medico.id}>{medico.nome || 'Eu'}</option>}
-                </select>
-              </div>
+            <div style={{ padding: '0 16px' }}>
+              {renderFiltros(true)}
             </div>
             <style>{`@keyframes slideUpAgenda { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
           </div>
         </>
       )}
 
-            {listaEsperaOpen && (
-        <div onClick={() => setListaEsperaOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)', zIndex: 90 }}>
-          <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 360, background: 'white', boxShadow: '-8px 0 24px rgba(0,0,0,0.08)', padding: 20, overflow: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: tokens.text.primary }}>Lista de espera</h3>
-              <button onClick={() => setListaEsperaOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, color: tokens.text.tertiary }}>✕</button>
-            </div>
-            <div style={{ padding: '40px 0', textAlign: 'center', color: tokens.text.tertiary }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 12px', display: 'block' }}>
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-              </svg>
-              <p style={{ margin: 0, fontSize: 13 }}>Nenhum paciente na lista de espera.</p>
-              <p style={{ margin: '6px 0 0', fontSize: 11 }}>Pacientes aguardando encaixe aparecem aqui.</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {modalBloqueio && renderModalBloqueio()}
 
+      {modal.open && (modal.ag && !editando ? renderDetalhes() : renderFormulario())}
+
+      {/* Renderizado depois do modal principal para ficar por cima */}
       {submodalRealizado && modal.ag && (
         <SubModalRealizado
           ag={modal.ag}
@@ -1196,422 +1592,13 @@ function AgendaContent() {
           }}
         />
       )}
-      {modalBloqueio && (
-        <div onClick={e => { if (e.target === e.currentTarget) setModalBloqueio(false) }}
-          style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 520, maxHeight: '90vh', overflow: 'auto' }}>
-            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${tokens.bg.hoverStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: tokens.status.dangerBg, color: tokens.status.danger, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-                  </svg>
-                </div>
-                <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Bloquear horário</h3>
-                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>Impede agendamentos nesse período</p>
-                </div>
-              </div>
-              <button onClick={() => setModalBloqueio(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.text.tertiary, fontSize: 20, padding: 4 }}>✕</button>
-            </div>
-
-            <div style={{ padding: 24, display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
-              {/* Médico */}
-              <div>
-                <label style={labelStyle}>Médico</label>
-                <select value={formBloqueio.medico_id}
-                  onChange={e => setFormBloqueio(p => ({ ...p, medico_id: e.target.value }))}
-                  style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.primary, cursor: 'pointer' }}>
-                  <option value="">Selecionar médico</option>
-                  {medicosClinica.map(m => (
-                    <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Tipo de bloqueio */}
-              <div>
-                <label style={labelStyle}>Tipo</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                  {([
-                    { v: 'horario', label: 'Horário', sub: 'Só umas horas' },
-                    { v: 'dia', label: 'Dia inteiro', sub: 'Dia todo' },
-                    { v: 'periodo', label: 'Período', sub: 'Vários dias' },
-                  ] as const).map(t => (
-                    <button key={t.v} type="button"
-                      onClick={() => setFormBloqueio(p => ({ ...p, tipo: t.v }))}
-                      style={{
-                        padding: '10px 8px', borderRadius: 10, textAlign: 'left' as const,
-                        border: formBloqueio.tipo === t.v ? `1.5px solid ${tokens.status.danger}` : `1.5px solid ${tokens.border.default}`,
-                        background: formBloqueio.tipo === t.v ? tokens.status.dangerBg : 'white',
-                        cursor: 'pointer',
-                      }}>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: formBloqueio.tipo === t.v ? tokens.status.danger : tokens.text.primary, margin: 0 }}>{t.label}</p>
-                      <p style={{ fontSize: 10, color: tokens.text.tertiary, margin: '2px 0 0' }}>{t.sub}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Datas conforme tipo */}
-              {formBloqueio.tipo === 'horario' && (
-                <>
-                  <div>
-                    <label style={labelStyle}>Data</label>
-                    <input type="date" value={formBloqueio.data}
-                      onChange={e => setFormBloqueio(p => ({ ...p, data: e.target.value }))}
-                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <div>
-                      <label style={labelStyle}>Das</label>
-                      <input type="time" value={formBloqueio.hora_inicio}
-                        onChange={e => setFormBloqueio(p => ({ ...p, hora_inicio: e.target.value }))}
-                        style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Até</label>
-                      <input type="time" value={formBloqueio.hora_fim}
-                        onChange={e => setFormBloqueio(p => ({ ...p, hora_fim: e.target.value }))}
-                        style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {formBloqueio.tipo === 'dia' && (
-                <div>
-                  <label style={labelStyle}>Data</label>
-                  <input type="date" value={formBloqueio.data}
-                    onChange={e => setFormBloqueio(p => ({ ...p, data: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
-                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '6px 0 0' }}>Dia inteiro indisponível</p>
-                </div>
-              )}
-
-              {formBloqueio.tipo === 'periodo' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <div>
-                    <label style={labelStyle}>De</label>
-                    <input type="date" value={formBloqueio.data_inicio}
-                      onChange={e => setFormBloqueio(p => ({ ...p, data_inicio: e.target.value }))}
-                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Até</label>
-                    <input type="date" value={formBloqueio.data_fim}
-                      onChange={e => setFormBloqueio(p => ({ ...p, data_fim: e.target.value }))}
-                      style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
-                  </div>
-                </div>
-              )}
-
-              {/* Motivo */}
-              <div>
-                <label style={labelStyle}>Motivo (opcional)</label>
-                <input value={formBloqueio.motivo}
-                  onChange={e => setFormBloqueio(p => ({ ...p, motivo: e.target.value }))}
-                  placeholder="Ex: Almoço, Reunião, Férias..."
-                  style={{ width: '100%', padding: '10px 14px', fontSize: 14, borderRadius: 10, border: `1px solid ${tokens.border.default}` }}/>
-              </div>
-
-              {/* Recorrência (só pra tipo horário/dia) */}
-              {(formBloqueio.tipo === 'horario' || formBloqueio.tipo === 'dia') && (
-                <div style={{ background: tokens.bg.muted, borderRadius: 10, padding: 14 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                    <input type="checkbox" checked={formBloqueio.recorrente}
-                      onChange={e => setFormBloqueio(p => ({ ...p, recorrente: e.target.checked }))}
-                      style={{ width: 18, height: 18, cursor: 'pointer' }}/>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>Repetir semanalmente</p>
-                      <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '2px 0 0' }}>Bloqueio toda semana nos dias escolhidos</p>
-                    </div>
-                  </label>
-
-                  {formBloqueio.recorrente && (
-                    <div style={{ marginTop: 12 }}>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: tokens.text.secondary, textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 8 }}>Dias da semana</p>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        {([
-                          { v: '0', label: 'D' },
-                          { v: '1', label: 'S' },
-                          { v: '2', label: 'T' },
-                          { v: '3', label: 'Q' },
-                          { v: '4', label: 'Q' },
-                          { v: '5', label: 'S' },
-                          { v: '6', label: 'S' },
-                        ] as const).map(d => {
-                          const ativo = formBloqueio.dias_semana.includes(d.v)
-                          return (
-                            <button key={d.v} type="button"
-                              onClick={() => setFormBloqueio(p => ({
-                                ...p,
-                                dias_semana: ativo ? p.dias_semana.filter(x => x !== d.v) : [...p.dias_semana, d.v],
-                              }))}
-                              style={{
-                                width: 36, height: 36, borderRadius: 8,
-                                border: ativo ? `1.5px solid ${tokens.status.danger}` : `1.5px solid ${tokens.border.default}`,
-                                background: ativo ? tokens.status.danger : 'white',
-                                color: ativo ? 'white' : tokens.text.secondary,
-                                fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                              }}>{d.label}</button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Botões */}
-              <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-                <button onClick={() => setModalBloqueio(false)}
-                  style={{ padding: '11px 18px', borderRadius: 10, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.secondary, fontSize: 13, cursor: 'pointer' }}>
-                  Cancelar
-                </button>
-                <button onClick={salvarBloqueio} disabled={salvandoBloqueio}
-                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: salvandoBloqueio ? tokens.text.tertiary : tokens.status.danger, color: 'white', fontSize: 14, fontWeight: 700, cursor: salvandoBloqueio ? 'not-allowed' : 'pointer' }}>
-                  {salvandoBloqueio ? 'Bloqueando...' : 'Bloquear'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {modal.open && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 24 }}
-          onClick={e => { if (e.target === e.currentTarget) setModal({ open: false }) }}>
-          <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, overflow: 'hidden' }}>
-            <div style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: tokens.brand.primaryLighter, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                </div>
-                <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>{modal.ag ? 'Editar agendamento' : 'Novo agendamento'}</h3>
-                  {modal.date && <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{fmtDia(modal.date)}</p>}
-                </div>
-              </div>
-              {/* Botão "Gerar comanda" removido — módulo financeiro desligado pra rebuild. Sprint 1 pré-beta. */}
-              <button onClick={() => setModal({ open: false })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.text.tertiary, fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
-            </div>
-            <form onSubmit={salvar} style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={labelStyle}>Tipo</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
-                  {Object.entries(TIPOS).map(([k, v]) => (
-                    <button key={k} type="button" onClick={() => setForm(f => ({...f, tipo: k}))}
-                      style={{ padding: '7px 4px', borderRadius: 8, border: `1.5px solid ${form.tipo === k ? v.dot : tokens.border.default}`, background: form.tipo === k ? v.bg : 'white', color: form.tipo === k ? v.text : tokens.text.secondary, fontSize: 12, fontWeight: form.tipo === k ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}>
-                      {v.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {/* Profissional — read-only se médico logado, dropdown se clinica admin */}
-              {(() => {
-                const ehAdminClinica = typeof window !== 'undefined' && !!localStorage.getItem('clinica_admin')
-                if (!ehAdminClinica) {
-                  return (
-                    <div>
-                      <label style={labelStyle}>Profissional</label>
-                      <div style={{ padding: '9px 12px', fontSize: 13, borderRadius: 8, background: tokens.bg.muted, color: tokens.text.primary, border: `1px solid ${tokens.border.default}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: medico?.cor || tokens.brand.primary }}/>
-                        Dr(a). {medico?.nome || '...'}
-                      </div>
-                    </div>
-                  )
-                }
-                return (
-                  <div>
-                    <label style={labelStyle}>Profissional</label>
-                    <Select value={form.medico_id} onChange={e => setForm(f => ({...f, medico_id: e.target.value}))}>
-                      <option value="">Selecionar médico</option>
-                      {medicosClinica.filter((m: any) => (m.cargo === 'medico' || m.cargo === 'admin' || !m.cargo) && m.ativo !== false).map((m: any) => (
-                        <option key={m.id} value={m.id}>Dr(a). {m.nome}</option>
-                      ))}
-                    </Select>
-                  </div>
-                )
-              })()}
-              {procedimentos.length > 0 && (
-                <div>
-                  <label style={labelStyle}>Procedimento</label>
-                  <Select
-                    value={form.procedimento_id}
-                    onChange={e => {
-                      const procId = e.target.value
-                      const proc = procedimentos.find((p: any) => p.id === procId)
-                      // Auto-preenche duração se procedimento tem duração definida
-                      setForm(f => ({
-                        ...f,
-                        procedimento_id: procId,
-                        duracao: proc?.duracao ? String(proc.duracao) : f.duracao,
-                      }))
-                    }}
-                    >
-                    <option value="">Nenhum (consulta padrão)</option>
-                    {procedimentos.map((p: any) => (
-                      <option key={p.id} value={p.id}>
-                        {p.nome}{p.duracao ? ' · ' + p.duracao + 'min' : ''}{p.valor ? ' · R$ ' + Number(p.valor).toFixed(2).replace('.', ',') : ''}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-              )}
-              <div>
-                <label style={labelStyle}>Paciente</label>
-                <Select value={form.paciente_id} onChange={e => setForm(f => ({...f, paciente_id: e.target.value}))}>
-                  <option value="">Selecionar paciente (opcional)</option>
-                  {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                </Select>
-                {!form.paciente_id && (
-                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '5px 2px 0', fontStyle: 'italic' }}>
-                    Deixe em branco para criar um encaixe rápido
-                  </p>
-                )}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 10 }}>
-                <div>
-                  <label style={labelStyle}>Data e hora *</label>
-                  <Input type="datetime-local" required value={form.data_hora} onChange={e => setForm(f => ({...f, data_hora: e.target.value}))} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Duração</label>
-                  <Select value={form.duracao} onChange={e => setForm(f => ({...f, duracao: e.target.value}))}>
-                    <option value="15">15 min</option>
-                    <option value="30">30 min</option>
-                    <option value="45">45 min</option>
-                    <option value="60">1 hora</option>
-                    <option value="90">1h30</option>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <label style={labelStyle}>Motivo</label>
-                <Input value={form.motivo} onChange={e => setForm(f => ({...f, motivo: e.target.value}))}
-                  placeholder="Ex: Consulta de rotina, dor abdominal..."/>
-              </div>
-              <div>
-                <label style={labelStyle}>Observações</label>
-                <Textarea value={form.observacoes} onChange={e => setForm(f => ({...f, observacoes: e.target.value}))}
-                  style={{ minHeight: 56, resize: 'none' }}
-                  placeholder="Observações adicionais..."/>
-              </div>
-              {modal.ag && (
-                <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 12, color: tokens.text.secondary, fontWeight: 500 }}>Status atual: <strong style={{ color: tokens.text.primary }}>{modal.ag.status}</strong></span>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {modal.ag.status !== 'confirmado' && (
-                      <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'confirmado'); setModal(m => ({...m, ag: {...m.ag, status: 'confirmado'}})) }}
-                        style={{ fontSize: 11, color: tokens.status.success, background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Confirmar</button>
-                    )}
-                    {modal.ag.status !== 'cancelado' && modal.ag.status !== 'realizado' && (
-                      <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'cancelado'); setModal({ open: false }) }}
-                        style={{ fontSize: 11, color: tokens.status.danger, background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Cancelar</button>
-                    )}
-                    {modal.ag.status !== 'realizado' && modal.ag.status !== 'faltou' && (
-                      <button type="button" onClick={() => setSubmodalRealizado(true)}
-                        style={{ fontSize: 11, color: tokens.status.successHover, background: tokens.status.successBgAlt, border: `1px solid ${tokens.whatsapp.bubbleBorder}`, padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Realizado</button>
-                    )}
-                    {modal.ag.status !== 'realizado' && modal.ag.status !== 'faltou' && modal.ag.status !== 'cancelado' && (
-                      <button type="button" onClick={() => { atualizarStatus(modal.ag.id, 'faltou'); setModal({ open: false }) }}
-                        style={{ fontSize: 11, color: tokens.status.warningAmberStrong, background: tokens.status.warningLightSoft, border: `1px solid ${tokens.status.warningLightSofter}`, padding: '3px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Faltou</button>
-                    )}
-                  </div>
-                </div>
-              )}
-              {!modal.ag && !salaLink && (
-                <button type="button" onClick={criarSalaAgora}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', background: 'white', border: `1px solid ${tokens.border.default}`, borderRadius: 10, cursor: 'pointer', textAlign: 'left' as const }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: tokens.brand.primaryLighter, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                  </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: tokens.brand.primary }}>Adicionar videoconferência</span>
-                </button>
-              )}
-              {!modal.ag && salaLink && (
-                <div style={{ background: tokens.brand.primarySoftBg, border: `1px solid ${tokens.brand.primaryAccentLight}`, borderRadius: 10, padding: '10px 12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 8, background: tokens.brand.primaryLighter, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2"><path d="M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: tokens.brand.primary, margin: '0 0 2px' }}>Entrar na sala</p>
-                      <p style={{ fontSize: 11, color: tokens.text.secondary, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salaLink}</p>
-                    </div>
-                    <button type="button" onClick={removerSala} title="Remover sala"
-                      style={{ padding: 6, background: 'transparent', border: 'none', color: tokens.text.tertiary, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button type="button" onClick={copiarLinkSala}
-                      style={{ flex: 1, padding: '7px 10px', borderRadius: 8, background: 'white', border: `1px solid ${tokens.border.default}`, fontSize: 12, color: tokens.text.strong, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                      Copiar link
-                    </button>
-                    <button type="button" onClick={enviarSalaWhatsApp}
-                      style={{ flex: 1, padding: '7px 10px', borderRadius: 8, background: tokens.status.successBgSoft, color: tokens.status.successHover, border: `1px solid ${tokens.status.successLightAlt}`, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                      WhatsApp
-                    </button>
-                  </div>
-                </div>
-              )}
-              {modal.ag && modal.ag.paciente_id && (
-                <div style={{ background: preConsultaEnviada || modal.ag.pre_consulta_enviada ? tokens.status.successBg : tokens.brand.primaryLight, border: '1px solid ' + (preConsultaEnviada || modal.ag.pre_consulta_enviada ? tokens.status.successLight : tokens.brand.primaryAccent), borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={preConsultaEnviada || modal.ag.pre_consulta_enviada ? tokens.status.success : tokens.brand.primary} strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: preConsultaEnviada || modal.ag.pre_consulta_enviada ? tokens.status.success : tokens.brand.primary, margin: 0 }}>Pré-consulta WhatsApp</p>
-                      <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: 0 }}>{preConsultaEnviada || modal.ag.pre_consulta_enviada ? 'Perguntas enviadas ao paciente' : 'Enviar perguntas antes da consulta'}</p>
-                    </div>
-                  </div>
-                  {!(preConsultaEnviada || modal.ag.pre_consulta_enviada) && (
-                    <button type="button" onClick={() => enviarPreConsulta(modal.ag.id)} disabled={enviandoPreConsulta}
-                      style={{ fontSize: 12, color: tokens.brand.primary, background: 'white', padding: '5px 12px', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}>
-                      {enviandoPreConsulta ? 'Enviando...' : 'Enviar'}
-                    </button>
-                  )}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-                <Button type="submit" variant="primary" disabled={salvando} style={{ flex: 1 }}>
-                  {salvando ? 'Salvando...' : modal.ag ? 'Salvar alterações' : 'Criar agendamento'}
-                </Button>
-                {modal.ag && (
-                  <>
-                    <button type="button" onClick={() => {
-                      const ag = modal.ag
-                      const params = new URLSearchParams()
-                      if (ag.paciente_id) params.set('paciente_id', ag.paciente_id)
-                      if (ag.pacientes?.nome) params.set('paciente_nome', ag.pacientes.nome)
-                      if (ag.pacientes?.telefone) params.set('paciente_tel', ag.pacientes.telefone || '')
-                      router.push('/nova-consulta?' + params.toString())
-                    }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', background: tokens.status.successHover, color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
-                      Iniciar consulta
-                    </button>
-                    <button type="button" onClick={() => deletar(modal.ag.id)}
-                      style={{ padding: '11px 16px', borderRadius: 9, border: `1px solid ${tokens.status.dangerLight}`, background: tokens.status.dangerBg, color: tokens.status.danger, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                    </button>
-                  </>
-                )}
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
 
 export default function Agenda() {
   return (
-    <Suspense fallback={<div style={{ padding: 24 }}>Carregando agenda...</div>}>
+    <Suspense fallback={<div style={{ padding: 24, fontSize: 13.5, color: T.text.quaternary }}>Carregando agenda…</div>}>
       <AgendaContent />
     </Suspense>
   )
@@ -1714,74 +1701,53 @@ function SubModalRealizado({ ag, onClose, onSaved }: { ag: any; onClose: () => v
     onSaved()
   }
 
+
   return (
-    <div onClick={onClose} style={{ position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 440, padding: 26 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: tokens.status.successBgAlt, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.status.successHover} strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <Modal titulo="Marcar como realizada" onClose={onClose} largura={440}
+      rodape={<>
+        <Button variant="secondary" onClick={onClose} disabled={salvando}>Cancelar</Button>
+        <Button icon={Check} onClick={salvar} disabled={salvando}>{salvando ? 'Salvando…' : 'Confirmar e gerar receita'}</Button>
+      </>}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <p style={{ fontSize: 13, color: T.text.quaternary, margin: 0, lineHeight: 1.45 }}>Quanto foi cobrado nessa consulta? Vamos lançar no financeiro.</p>
+
+        <Field label="Valor cobrado" hint={valorSugestao !== null
+          ? `Valor sugerido pelo procedimento (R$ ${valorSugestao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`
+          : 'Vincule um procedimento ao agendamento para sugestão automática'}>
+          <div style={{ position: 'relative' }}>
+            <span className="mono" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.text.tertiary, fontSize: 13 }}>R$</span>
+            <Input type="text" value={valor} onChange={e => setValor(e.target.value.replace(/[^0-9,]/g, ''))}
+              placeholder={carregandoSugestao ? 'Carregando sugestão…' : '0,00'}
+              style={{ paddingLeft: 40, fontWeight: 600 }} autoFocus />
           </div>
-          <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>Marcar como realizada</h2>
-        </div>
-        <p style={{ fontSize: 13, color: tokens.text.quaternary, margin: '0 0 18px' }}>Quanto foi cobrado nessa consulta? Vamos lançar no financeiro.</p>
+        </Field>
 
-        {/* Valor */}
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: tokens.text.muted, marginBottom: 5 }}>Valor cobrado</label>
-        <div style={{ position: 'relative' as const, marginBottom: 4 }}>
-          <span style={{ position: 'absolute' as const, left: 12, top: '50%', transform: 'translateY(-50%)', color: tokens.text.tertiary, fontSize: 13 }}>R$</span>
-          <input type="text" value={valor} onChange={e => setValor(e.target.value.replace(/[^0-9,]/g, ''))} placeholder={carregandoSugestao ? 'Carregando sugestão...' : '0,00'}
-            style={{ width: '100%', padding: '10px 12px 10px 38px', borderRadius: 8, border: `1px solid ${tokens.neutral[200]}`, fontSize: 14, outline: 'none', boxSizing: 'border-box' as const, fontWeight: 600 }} autoFocus/>
-        </div>
-        {valorSugestao !== null ? (
-          <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '0 0 14px' }}>💡 Valor sugerido pelo procedimento ({valorSugestao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</p>
-        ) : (
-          <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '0 0 14px' }}>Vincule um procedimento ao agendamento para sugestão automática</p>
+        <Field label="Forma de pagamento">
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {[
+              { v: 'pix', l: 'PIX' },
+              { v: 'cartao_credito', l: 'Cartão crédito' },
+              { v: 'cartao_debito', l: 'Cartão débito' },
+              { v: 'dinheiro', l: 'Dinheiro' },
+              { v: 'transferencia', l: 'Transferência' },
+              { v: 'boleto', l: 'Boleto' },
+            ].map(o => (
+              <Chip key={o.v} ativo={metodoPag === o.v} onClick={() => setMetodoPag(o.v)}>{o.l}</Chip>
+            ))}
+          </div>
+        </Field>
+
+        <Field label="Status do pagamento">
+          <SegmentedControl stretch
+            options={[{ value: 'recebido', label: 'Já recebido' }, { value: 'pendente', label: 'Aguardando' }]}
+            value={statusPag}
+            onChange={v => setStatusPag(v)} />
+        </Field>
+
+        {erro && (
+          <div style={{ background: T.status.dangerBg, color: T.status.danger, padding: '10px 12px', borderRadius: 10, fontSize: 12.5 }}>{erro}</div>
         )}
-
-        {/* Forma pagamento */}
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: tokens.text.muted, marginBottom: 5 }}>Forma de pagamento</label>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' as const }}>
-          {[
-            { v: 'pix', l: 'PIX' },
-            { v: 'cartao_credito', l: 'Cartão crédito' },
-            { v: 'cartao_debito', l: 'Cartão débito' },
-            { v: 'dinheiro', l: 'Dinheiro' },
-            { v: 'transferencia', l: 'Transferência' },
-            { v: 'boleto', l: 'Boleto' },
-          ].map(o => (
-            <button key={o.v} type="button" onClick={() => setMetodoPag(o.v)} style={{
-              padding: '7px 12px', borderRadius: 7, border: 'none',
-              background: metodoPag === o.v ? tokens.neutral[900] : tokens.bg.hover,
-              color: metodoPag === o.v ? 'white' : tokens.text.muted,
-              fontSize: 12, fontWeight: 600, cursor: 'pointer'
-            }}>{o.l}</button>
-          ))}
-        </div>
-
-        {/* Status */}
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: tokens.text.muted, marginBottom: 5 }}>Status do pagamento</label>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
-          <button type="button" onClick={() => setStatusPag('recebido')} style={{
-            flex: 1, padding: '9px', borderRadius: 7, border: 'none',
-            background: statusPag === 'recebido' ? tokens.status.successBgAlt : tokens.bg.hover,
-            color: statusPag === 'recebido' ? tokens.status.successHover : tokens.text.muted,
-            fontSize: 12, fontWeight: 600, cursor: 'pointer'
-          }}>✓ Já recebido</button>
-          <button type="button" onClick={() => setStatusPag('pendente')} style={{
-            flex: 1, padding: '9px', borderRadius: 7, border: 'none',
-            background: statusPag === 'pendente' ? tokens.status.warningLightSoft : tokens.bg.hover,
-            color: statusPag === 'pendente' ? tokens.status.warningAmberStrong : tokens.text.muted,
-            fontSize: 12, fontWeight: 600, cursor: 'pointer'
-          }}>⏳ Aguardando</button>
-        </div>
-
-        {erro && <div style={{ background: tokens.status.dangerBgAlt, color: tokens.status.dangerHover, padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{erro}</div>}
-
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} disabled={salvando} style={{ padding: '10px 16px', borderRadius: 9, border: `1px solid ${tokens.neutral[200]}`, background: 'white', color: tokens.neutral[700], fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
-          <button onClick={salvar} disabled={salvando} style={{ padding: '10px 18px', borderRadius: 9, border: 'none', background: tokens.status.successHover, color: 'white', fontSize: 13, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}>{salvando ? 'Salvando...' : 'Confirmar e gerar receita'}</button>
-        </div>
       </div>
-    </div>
+    </Modal>
   )
 }

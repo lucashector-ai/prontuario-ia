@@ -3,14 +3,15 @@ import { log } from '@/lib/logger'
 
 import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import {
+  Mic, Zap, Pause, Play, Sparkles, AudioLines, CircleCheck, CircleDashed, LoaderCircle, CircleAlert,
+  Copy, Download, Check, Plus, FlaskConical, FileBadge, Printer, MessageCircle, RefreshCw, TriangleAlert, Lightbulb, Target,
+} from 'lucide-react'
 import { useGravador } from '@/lib/useGravador'
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
-import { ProntuarioCard } from '@/components/ProntuarioCard'
+import { ProntuarioCard, exportarProntuarioPdf } from '@/components/ProntuarioCard'
 import { PacienteBanner } from '@/components/PacienteBanner'
-import { PreConsultaCard } from '@/components/PreConsultaCard'
-import { Tabs } from '@/components/ui'
-import { HistoricoRapido } from '@/components/HistoricoRapido'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
 import { BotaoMemed } from '@/components/BotaoMemed'
 import { SidebarContextoPaciente } from '@/components/SidebarContextoPaciente'
@@ -18,9 +19,16 @@ import { ModalDadosPacienteAvulso } from '@/components/ModalDadosPacienteAvulso'
 import { ModalSelecionarPaciente } from '@/components/ModalSelecionarPaciente'
 // import ComandaDrawer from '@/components/financeiro/ComandaDrawer' // Financeiro desligado pra rebuild. Sprint 1 pré-beta.
 import { tokens } from '@/lib/design-tokens'
+import { Badge, Button, Card, Icon, IconButton, Input, Modal, Overline, ProgressBar, Textarea } from '@/components/ui'
+import { notificar } from '@/components/ui/dialogos'
+
+const T = tokens
+const ONDA = '#8B74E8' // roxo médio da onda de áudio (protótipo)
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
-type Aba = 'prontuario' | 'receita' | 'resumo' | 'documentos'
+type SecaoSoap = 'subjetivo' | 'objetivo' | 'avaliacao' | 'plano'
+
+const ETAPAS_GERACAO = ['Finalizando transcrição', 'Organizando no formato SOAP', 'Sugerindo CID-10', 'Identificando hipóteses e alertas']
 
 function SearchParamsReader({ onParams }: { onParams: (pid: string | null, pnome: string | null, ptel: string | null) => void }) {
   const searchParams = useSearchParams()
@@ -28,6 +36,66 @@ function SearchParamsReader({ onParams }: { onParams: (pid: string | null, pnome
     onParams(searchParams.get('paciente_id'), searchParams.get('paciente_nome'), searchParams.get('paciente_tel'))
   }, [searchParams, onParams])
   return null
+}
+
+const mmss = (s: number) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0')
+
+/** Onda de áudio decorativa (o gravador não expõe nível de áudio). */
+function OndaAudio({ ativa }: { ativa: boolean }) {
+  const barras = Array.from({ length: 84 }, (_, i) => {
+    const base = 0.35 + 0.65 * Math.abs(Math.sin(i * 1.7) * Math.cos(i / 5))
+    return { h: Math.round(6 + base * 22), d: ((i * 37) % 100) / 100, t: 0.7 + ((i * 53) % 60) / 100 }
+  })
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 2, height: 28, flex: 1, minWidth: 0, overflow: 'hidden' }}>
+      {barras.map((b, i) => (
+        <span key={i} style={{
+          width: 3, flexShrink: 0, borderRadius: 2,
+          height: ativa ? b.h : 3,
+          background: ativa ? (i > 72 ? T.brand.primaryAccent : ONDA) : T.border.strong,
+          transformOrigin: 'center',
+          animation: ativa ? `nc-onda ${b.t}s ease-in-out ${-b.d}s infinite alternate` : 'none',
+          transition: 'height .35s ease, background .2s',
+        }} />
+      ))}
+    </div>
+  )
+}
+
+/** Linha de documento do painel lateral (ícone, rótulo, estado). */
+function LinhaDocumento({ icon, label, estado, onClick, disabled, children }: {
+  icon: any
+  label: string
+  estado: 'novo' | 'gerando' | 'pronto'
+  onClick?: () => void
+  disabled?: boolean
+  children?: React.ReactNode
+}) {
+  const [h, setH] = useState(false)
+  const clicavel = !!onClick && !disabled
+  return (
+    <div style={{ border: `1px solid ${T.border.default}`, borderRadius: 10, overflow: 'hidden' }}>
+      <button
+        type="button"
+        onClick={clicavel ? onClick : undefined}
+        onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+        style={{
+          all: 'unset', boxSizing: 'border-box', width: '100%', cursor: clicavel ? 'pointer' : 'default',
+          display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', fontSize: 13, fontWeight: 600, color: T.text.strong,
+          background: clicavel && h ? T.bg.page : 'transparent', transition: 'background .15s',
+        }}
+      >
+        <Icon icon={icon} size={15} color={T.text.secondary} />
+        <span style={{ flex: 1 }}>{label}</span>
+        {estado === 'gerando'
+          ? <Icon icon={LoaderCircle} size={15} color={T.brand.primary} style={{ animation: 'spin .8s linear infinite' }} />
+          : estado === 'pronto'
+            ? <Icon icon={CircleCheck} size={15} color={T.status.success} />
+            : <Icon icon={Plus} size={15} color={T.text.tertiary} />}
+      </button>
+      {children && <div style={{ padding: '0 10px 10px' }}>{children}</div>}
+    </div>
+  )
 }
 
 export default function Home() {
@@ -38,8 +106,10 @@ export default function Home() {
   const [prontuario, setProntuario] = useState<any>(null)
   const [estado, setEstado] = useState<Estado>('idle')
   const [erroMsg, setErroMsg] = useState('')
-  const [aba, setAba] = useState<Aba>('prontuario')
   const [consultaSalva, setConsultaSalva] = useState(false)
+  const [consultaId, setConsultaId] = useState<string | null>(null)
+  const [editado, setEditado] = useState(false)
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false)
   const [copiloto, setCopiloto] = useState<any>(null)
   const [resumoPaciente, setResumoPaciente] = useState('')
   const [gerandoResumo, setGerandoResumo] = useState(false)
@@ -54,13 +124,14 @@ export default function Home() {
   const [carregandoSugestoes, setCarregandoSugestoes] = useState(false)
   const [modalPaciente, setModalPaciente] = useState(false)
   const [modalAvulso, setModalAvulso] = useState(false)
+  const [modalTranscricao, setModalTranscricao] = useState(false)
+  const [textoTranscricaoModal, setTextoTranscricaoModal] = useState('')
   const [pacienteAvulso, setPacienteAvulso] = useState<any>(null)
   const [pacientes, setPacientes] = useState<any[]>([])
   const [pacienteSelecionado, setPacienteSelecionado] = useState<any>(null)
   const [memedAberto, setMemedAberto] = useState(false)
-  const [buscaPaciente, setBuscaPaciente] = useState('')
-  const [buscaInputFocada, setBuscaInputFocada] = useState(false)
-  const [showDropdown, setShowDropdown] = useState(false)
+  const [segundos, setSegundos] = useState(0)
+  const [etapaGeracao, setEtapaGeracao] = useState(0)
 
   useEffect(() => {
     (async () => {
@@ -112,9 +183,24 @@ export default function Home() {
   const handleNovoTexto = useCallback((t: string) => setTranscricao(t), [])
   const { gravando, transcrevendo, iniciarGravacao, pararGravacao, pausarGravacao, gravandoPausado, limpar, erro } = useGravador(handleNovoTexto)
 
+  // Cronômetro da gravação (só visual)
+  useEffect(() => {
+    if (estado !== 'gravando' || !gravando || gravandoPausado) return
+    const t = setInterval(() => setSegundos(s => s + 1), 1000)
+    return () => clearInterval(t)
+  }, [estado, gravando, gravandoPausado])
+
+  // Etapas da geração (só visual — a API responde de uma vez)
+  useEffect(() => {
+    if (estado !== 'processando') return
+    setEtapaGeracao(0)
+    const t = setInterval(() => setEtapaGeracao(e => Math.min(e + 1, ETAPAS_GERACAO.length - 1)), 2200)
+    return () => clearInterval(t)
+  }, [estado])
+
   const handleIniciar = async () => {
     limpar(); setProntuario(null)
-    setConsultaSalva(false); setEstado('gravando')
+    setConsultaSalva(false); setConsultaId(null); setEditado(false); setSegundos(0); setEstado('gravando')
     await iniciarGravacao()
   }
 
@@ -129,29 +215,32 @@ export default function Home() {
     }, 500)
   }
 
-  const handleEstruturar = async () => {
-    if (!transcricao.trim()) return
+  const handleEstruturar = async (textoParam?: string) => {
+    const texto = textoParam ?? transcricao
+    if (!texto.trim()) return
     setEstado('processando'); setErroMsg('')
     try {
       const res = await fetch('/api/estruturar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcricao }),
+        body: JSON.stringify({ transcricao: texto }),
       })
       const data = await res.json()
       if (data.prontuario) {
-        setProntuario(data.prontuario); setEstado('pronto'); setAba('prontuario')
-        salvarConsulta(data.prontuario)
+        setProntuario(data.prontuario); setEstado('pronto'); setEditado(false)
+        salvarConsulta(data.prontuario, texto)
       } else throw new Error(data.error)
     } catch (e: any) { setEstado('erro'); setErroMsg(e.message) }
   }
 
-  const salvarConsulta = async (p: any) => {
+  const salvarConsulta = async (p: any, textoTranscricao: string = transcricao) => {
     if (!medico) return
     try {
-      await fetch('/api/consultas', {
+      const r = await fetch('/api/consultas', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ medico_id: medico.id, transcricao, paciente_id: pacienteSelecionado?.id || null, ...p }),
+        body: JSON.stringify({ medico_id: medico.id, transcricao: textoTranscricao, paciente_id: pacienteSelecionado?.id || null, ...p }),
       })
+      const d = await r.json().catch(() => null)
+      if (d?.id) setConsultaId(d.id)
       setConsultaSalva(true)
       toast('Consulta salva com sucesso!')
     if (p.paciente_id) {
@@ -162,6 +251,26 @@ export default function Home() {
       }).then(r => r.json()).then(d => setCopiloto(d)).catch(() => {})
     }
     } catch (e) { log.error(e) }
+  }
+
+  // Edição das seções SOAP depois de gerado (atualiza a consulta já salva)
+  const editarSecao = (key: SecaoSoap, valor: string) => {
+    setProntuario((p: any) => ({ ...p, [key]: valor }))
+    setEditado(true)
+  }
+
+  const salvarAlteracoes = async () => {
+    if (!prontuario) return
+    if (!consultaId) { await salvarConsulta(prontuario); setEditado(false); return }
+    setSalvandoEdicao(true)
+    const { error } = await supabase
+      .from('consultas')
+      .update({ subjetivo: prontuario.subjetivo, objetivo: prontuario.objetivo, avaliacao: prontuario.avaliacao, plano: prontuario.plano })
+      .eq('id', consultaId)
+    setSalvandoEdicao(false)
+    if (error) { toast('Erro ao salvar alterações', 'error'); return }
+    setEditado(false)
+    toast('Alterações salvas no histórico')
   }
 
 const handleCopiar = () => {
@@ -188,7 +297,7 @@ const handleCopiar = () => {
         body: JSON.stringify({ prontuario, medico })
       })
       const data = await res.json()
-      if (data.resumo) { setResumoPaciente(data.resumo); setAba('resumo') }
+      if (data.resumo) { setResumoPaciente(data.resumo) }
     } catch (e) { log.error(e) }
     finally { setGerandoResumo(false) }
   }
@@ -202,7 +311,7 @@ const handleCopiar = () => {
         body: JSON.stringify({ tipo: 'exames', prontuario, medico })
       })
       const data = await res.json()
-      if (data.exames) { setExames(data); setAba('documentos') }
+      if (data.exames) { setExames(data) }
     } catch (e) { log.error(e) }
     finally { setGerandoDoc(false) }
   }
@@ -216,7 +325,7 @@ const handleCopiar = () => {
         body: JSON.stringify({ tipo: 'atestado', prontuario, medico, paciente: null })
       })
       const data = await res.json()
-      if (data.dias !== undefined) { setAtestado({ ...data, dias: diasAtestado }); setAba('documentos') }
+      if (data.dias !== undefined) { setAtestado({ ...data, dias: diasAtestado }) }
     } catch (e) { log.error(e) }
     finally { setGerandoDoc(false) }
   }
@@ -257,25 +366,110 @@ const handleCopiar = () => {
   }, [transcricao, modoPerfeita])
 
   const enviarWhatsApp = async (tipo: string, conteudo: string) => {
-    if (!pacienteSelecionado?.telefone) { alert('Paciente sem telefone'); return }
+    if (!pacienteSelecionado?.telefone) { notificar('Paciente sem telefone cadastrado', 'erro'); return }
     const tel = pacienteSelecionado.telefone.replace(/[^0-9]/g, '')
     const telWpp = tel.startsWith('55') ? tel : '55' + tel
     const m = localStorage.getItem('medico')
     const med = m ? JSON.parse(m) : null
     await fetch('/api/whatsapp/enviar', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:telWpp,texto:conteudo,medico_id:med?.id})})
-    alert('Enviado pelo WhatsApp!')
+    notificar('Orientações enviadas pelo WhatsApp')
   }
 
   const handleNovo = () => {
     limpar(); setTranscricao(''); setProntuario(null)
     setEstado('idle'); setErroMsg(''); setConsultaSalva(false)
-    setPacienteSelecionado(null); setBuscaPaciente(''); setModalPaciente(true)
+    setConsultaId(null); setEditado(false); setSegundos(0)
+    setResumoPaciente(''); setExames(null); setAtestado(null); setCopiloto(null)
+    setPacienteSelecionado(null); setModalPaciente(true)
+  }
+
+  const abrirModalTranscricao = () => {
+    setTextoTranscricaoModal(transcricao)
+    setModalTranscricao(true)
+  }
+
+  const gerarDaTranscricao = () => {
+    const t = textoTranscricaoModal.trim()
+    if (!t) return
+    setModalTranscricao(false)
+    setProntuario(null); setConsultaSalva(false); setConsultaId(null); setSegundos(0)
+    setTranscricao(t)
+    handleEstruturar(t)
   }
 
   if (!medico) return null
 
+  const palavras = transcricao.split(' ').filter(Boolean).length
+  const temContexto = !!(pacienteSelecionado && medico)
+
+  // ── Cards reutilizados ───────────────────────────────────────────────────
+  const cardContexto = temContexto ? (
+    <Card titulo={<span style={{ fontSize: 14 }}>Contexto do paciente</span>} style={{ minWidth: 0 }}>
+      <SidebarContextoPaciente pacienteId={pacienteSelecionado.id} medicoId={medico.id} />
+    </Card>
+  ) : null
+
+  const cardSugestoes = (
+    <Card style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Icon icon={Sparkles} size={15} color={T.brand.primary} />
+        <h3 style={{ margin: 0, flex: 1, fontSize: 14, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>Sugestões da IA</h3>
+        {carregandoSugestoes && <Icon icon={LoaderCircle} size={14} color={T.brand.primary} style={{ animation: 'spin .8s linear infinite' }} />}
+      </div>
+      {!modoPerfeita ? (
+        <>
+          <span style={{ fontSize: 12.5, color: T.text.tertiary, lineHeight: 1.5 }}>
+            Ative o modo perfeita para receber foco, alertas e sugestões enquanto a consulta acontece.
+          </span>
+          <Button variant="secondary" size="sm" icon={Zap} onClick={() => setModoPerfeita(true)} style={{ alignSelf: 'flex-start' }}>Ativar modo perfeita</Button>
+        </>
+      ) : !(sugestoes.length > 0 || focoConsulta || alertasRT.length > 0) ? (
+        <span style={{ fontSize: 12.5, color: T.text.tertiary, lineHeight: 1.5 }}>
+          Foco, alertas e perguntas sugeridas aparecem aqui conforme a conversa avança.
+        </span>
+      ) : (
+        <>
+          {focoConsulta && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Overline>Foco</Overline>
+              <span style={{ display: 'flex', gap: 8, fontSize: 12.5, lineHeight: 1.5, color: T.brand.primaryDark, background: T.brand.primarySubtle, padding: '8px 10px', borderRadius: 8 }}>
+                <Icon icon={Target} size={14} style={{ marginTop: 2 }} />{focoConsulta}
+              </span>
+            </div>
+          )}
+          {alertasRT.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Overline>Alertas</Overline>
+              {alertasRT.map((a, i) => (
+                <span key={i} style={{ display: 'flex', gap: 8, fontSize: 12.5, lineHeight: 1.5, color: T.status.danger, background: T.status.dangerBg, padding: '8px 10px', borderRadius: 8 }}>
+                  <Icon icon={TriangleAlert} size={14} style={{ marginTop: 2 }} />{a}
+                </span>
+              ))}
+            </div>
+          )}
+          {sugestoes.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Overline>Sugestões</Overline>
+              {sugestoes.slice(0, 3).map((sug, i) => (
+                <span key={i} style={{ display: 'flex', gap: 8, fontSize: 12.5, lineHeight: 1.5, color: T.text.strong, background: T.bg.page, padding: '8px 10px', borderRadius: 8 }}>
+                  <Icon icon={Lightbulb} size={14} color={T.brand.primary} style={{ marginTop: 2 }} />{sug}
+                </span>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </Card>
+  )
+
+  const cardBase: React.CSSProperties = { background: T.bg.card, border: `1px solid ${T.border.default}`, borderRadius: 16, minWidth: 0 }
+  const cardCentro: React.CSSProperties = {
+    ...cardBase, padding: '40px 24px', minHeight: 520, boxSizing: 'border-box',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+  }
+
   return (
-    <div style={{ display: 'flex', height: '100%', minHeight: 0, overflow: 'hidden', background: tokens.bg.page }}>
+    <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Suspense fallback={null}>
         <SearchParamsReader onParams={handleSearchParams} />
       </Suspense>
@@ -291,287 +485,327 @@ const handleCopiar = () => {
           titulo={pacienteSelecionado ? 'Trocar paciente' : 'Selecionar paciente'}
         />
       )}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '14px 20px 18px', minWidth: 0 }}>
-        {/* Top header - PacienteBanner com acoes integradas */}
-        <div style={{ padding: '0 0 10px', flexShrink: 0 }}>
-          <PacienteBanner
-            pacienteId={pacienteSelecionado?.id || null}
-            medicoId={medico?.id || ''}
-            onTrocar={() => setModalPaciente(true)}
-            acoes={
-              <>
-                {consultaSalva && (
-                  <span style={{ fontSize: 11, color: tokens.status.success, background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, padding: '4px 9px', borderRadius: 20, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    Salvo
-                  </span>
-                )}
-                <button onClick={() => setModoPerfeita(m => !m)} style={{
-                  fontSize: 12, fontWeight: 600,
-                  color: modoPerfeita ? tokens.brand.primary : tokens.text.secondary,
-                  background: modoPerfeita ? tokens.brand.primaryLight : 'white',
-                  border: modoPerfeita ? `1px solid ${tokens.brand.primaryAccent}` : `1px solid ${tokens.border.default}`,
-                  padding: '7px 12px', borderRadius: 8, cursor: 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' as const
-                }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                  </svg>
-                  {modoPerfeita ? 'Modo perfeita ativo' : 'Modo perfeita'}
-                </button>
-                <BotaoMemed onClick={() => { if (pacienteSelecionado) { setMemedAberto(true) } else { setModalAvulso(true) } }} variant="primary" />
-                {estado === 'pronto' && (
-                  <button onClick={handleNovo} style={{ fontSize: 12, fontWeight: 500, color: tokens.text.secondary, background: 'white', border: `1px solid ${tokens.border.default}`, padding: '7px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
-                    + Nova
-                  </button>
-                )}
-              </>
-            }
+
+      {/* Modal: gerar a partir de transcrição */}
+      {modalTranscricao && (
+        <Modal
+          titulo="Gerar a partir de transcrição"
+          onClose={() => setModalTranscricao(false)}
+          largura={560}
+          rodape={<>
+            <Button variant="secondary" onClick={() => setModalTranscricao(false)}>Cancelar</Button>
+            <Button icon={Sparkles} onClick={gerarDaTranscricao} disabled={!textoTranscricaoModal.trim()}>Gerar prontuário</Button>
+          </>}
+        >
+          <p style={{ fontSize: 12.5, color: T.text.quaternary, lineHeight: 1.5, margin: '-4px 0 12px' }}>
+            Cole a transcrição de uma gravação anterior ou de outro aplicativo.
+          </p>
+          <Textarea
+            value={textoTranscricaoModal}
+            onChange={e => setTextoTranscricaoModal(e.target.value)}
+            placeholder={'Médico: Bom dia, o que trouxe você hoje?\nPaciente: …'}
+            autoFocus
+            style={{ minHeight: 200, fontSize: 13 }}
           />
-        </div>
+        </Modal>
+      )}
 
-        {/* Content */}
-        <div style={{ display: 'grid', gridTemplateColumns: pacienteSelecionado ? '340px 1fr' : '1fr', gap: 12, flex: 1, minHeight: 0 }}>
+      {/* Barra do paciente */}
+      <PacienteBanner
+        pacienteId={pacienteSelecionado?.id || null}
+        medicoId={medico?.id || ''}
+        onTrocar={() => setModalPaciente(true)}
+        acoes={
+          <>
+            {estado === 'gravando' && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 99, fontSize: 12.5, fontWeight: 700,
+                background: gravandoPausado ? T.status.warningBg : T.status.dangerBg,
+                color: gravandoPausado ? T.status.warning : T.status.dangerStrong,
+              }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'currentColor', animation: gravandoPausado ? 'none' : 'pulse-record 1.5s ease-in-out infinite' }} />
+                {gravandoPausado ? 'Pausado' : 'Gravando'}
+                <span className="mono" style={{ fontWeight: 500 }}>{mmss(segundos)}</span>
+              </span>
+            )}
+            {consultaSalva && <Badge tone="success" icon={Check}>Salvo</Badge>}
+            <Button
+              variant="secondary"
+              icon={Zap}
+              onClick={() => setModoPerfeita(m => !m)}
+              title="Sugestões da IA em tempo real durante a gravação"
+              style={modoPerfeita ? { background: T.brand.primarySubtle, color: T.brand.primary, borderColor: T.brand.primaryAccentSoft } : undefined}
+            >
+              {modoPerfeita ? 'Modo perfeita ativo' : 'Modo perfeita'}
+            </Button>
+            <BotaoMemed onClick={() => { if (pacienteSelecionado) { setMemedAberto(true) } else { setModalAvulso(true) } }} variant="primary" />
+          </>
+        }
+      />
 
-          {/* SIDEBAR - Contexto do paciente (isolado) */}
-          {pacienteSelecionado && medico && (
-            <div style={{ background: 'white', borderRadius: 14, border: `1px solid ${tokens.neutral[150]}`, padding: '14px 14px 16px', overflow: 'auto', minHeight: 0, maxHeight: '100%', alignSelf: 'stretch' as const }}>
-              <p style={{ fontSize: 9, color: tokens.text.tertiary, letterSpacing: '0.06em', fontWeight: 700, margin: '0 0 10px', textTransform: 'uppercase' as const }}>Contexto do paciente</p>
-              <SidebarContextoPaciente pacienteId={pacienteSelecionado.id} medicoId={medico.id} />
+      {/* ── Idle ─────────────────────────────────────────────────────────── */}
+      {estado === 'idle' && !prontuario && (
+        <div className={'nc-grid' + (temContexto ? '' : ' solo')}>
+          <div style={{ ...cardCentro, gap: 22 }}>
+            <span style={{
+              width: 76, height: 76, borderRadius: 24, background: T.brand.primarySubtle, color: T.brand.primary,
+              display: 'grid', placeItems: 'center', border: `1px solid ${T.brand.primaryAccentLight}`,
+            }}><Icon icon={Mic} size={32} /></span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-.025em', color: T.text.primary }}>Pronto para iniciar a consulta?</h2>
+              <p style={{ margin: 0, fontSize: 14, color: T.text.quaternary, lineHeight: 1.6, maxWidth: 460 }}>
+                Fale normalmente com o paciente. A IA transcreve em tempo real e, ao final, gera o prontuário SOAP, sugere CIDs e hipóteses diagnósticas.
+              </p>
             </div>
-          )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+              <Button
+                size="lg"
+                icon={Mic}
+                onClick={handleIniciar}
+                style={{ height: 50, padding: '0 28px', borderRadius: 14, fontSize: 15, boxShadow: T.shadow.accent }}
+              >
+                Iniciar gravação
+              </Button>
+              <Button variant="ghost" onClick={abrirModalTranscricao}>
+                {transcricao ? 'Tenho transcrição salva — gerar prontuário' : 'Já tenho uma transcrição — gerar prontuário'}
+              </Button>
+            </div>
+          </div>
+          {cardContexto && <div className="nc-lateral">{cardContexto}</div>}
+        </div>
+      )}
 
-          {/* AREA PRINCIPAL - card unico que muda por estado */}
-          <div style={{ background: 'white', borderRadius: 14, border: `1px solid ${tokens.neutral[150]}`, display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', minHeight: 0 }}>
+      {/* ── Gravando ─────────────────────────────────────────────────────── */}
+      {estado === 'gravando' && !prontuario && (
+        <div className="nc-grid">
+          <div style={{ ...cardBase, height: 'max(520px, calc(100vh - 300px))', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: `1px solid ${T.border.muted}` }}>
+              <OndaAudio ativa={gravando && !gravandoPausado} />
+              {transcrevendo && <span style={{ fontSize: 12, color: T.text.tertiary, whiteSpace: 'nowrap' }}>Transcrevendo…</span>}
+              <span style={{ fontSize: 12, fontWeight: 600, color: T.text.quaternary, background: T.bg.page, padding: '4px 10px', borderRadius: 99, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                {palavras} palavras
+              </span>
+            </div>
 
-            {estado === 'idle' && !prontuario && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 18, padding: 32, overflow: 'auto', minHeight: 0 }}>
-                <div style={{ width: 64, height: 64, borderRadius: 16, background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="1.8">
-                    <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-                    <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
-                  </svg>
+            <div style={{ flex: 1, overflow: 'auto', padding: '20px 22px', background: T.bg.cardSubtle, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {erro && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: T.status.dangerBg, color: T.status.danger, fontSize: 13 }}>
+                  <Icon icon={CircleAlert} size={16} />
+                  <span style={{ flex: 1 }}>{erro}</span>
+                  <Button variant="secondary" size="sm" onClick={() => { pararGravacao(); setEstado('idle') }}>Voltar</Button>
                 </div>
-                <div style={{ textAlign: 'center' as const, maxWidth: 380 }}>
-                  <p style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Pronto para iniciar a consulta?</p>
-                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0, lineHeight: 1.6 }}>
-                    Fale normalmente durante a consulta. A IA vai transcrever em tempo real e gerar prontuário SOAP, CIDs, receita e mais ao final.
-                  </p>
-                </div>
-                <button onClick={handleIniciar} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 9,
-                  padding: '12px 28px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                  background: tokens.status.danger, color: 'white', fontSize: 14, fontWeight: 600
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-                    <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
-                  </svg>
-                  Iniciar gravação
-                </button>
-                {transcricao && (
-                  <button onClick={handleEstruturar} style={{ padding: '8px 18px', borderRadius: 8, border: `1px solid ${tokens.brand.primary}`, background: 'white', color: tokens.brand.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                    Tenho transcrição salva — gerar prontuário
-                  </button>
-                )}
-              </div>
-            )}
+              )}
+              {transcricao ? (
+                <p style={{ fontSize: 14, color: T.text.primary, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{transcricao}</p>
+              ) : null}
+              {!gravandoPausado && !erro && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: T.text.tertiary }}>
+                  <Icon icon={AudioLines} size={15} color={ONDA} />
+                  {transcricao ? 'Ouvindo…' : 'Aguardando fala do paciente…'}
+                </span>
+              )}
+            </div>
 
-            {estado === 'gravando' && !prontuario && (
-              <>
-                <div style={{ padding: '16px 24px', borderBottom: `1px solid ${tokens.bg.hoverStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.status.danger, animation: 'pulse 1.5s ease-in-out infinite' as const }}/>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: tokens.status.danger, margin: 0, letterSpacing: '0.04em' as const }}>GRAVANDO</p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {transcrevendo && (
-                      <span style={{ fontSize: 11, color: tokens.text.tertiary }}>Transcrevendo...</span>
-                    )}
-                    {transcricao && (
-                      <span style={{ fontSize: 11, color: tokens.text.tertiary, background: tokens.bg.hoverStrong, padding: '3px 9px', borderRadius: 12, fontVariantNumeric: 'tabular-nums' as const }}>
-                        {transcricao.split(' ').filter(Boolean).length} palavras
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', background: tokens.bg.page }}>
-                  {transcricao ? (
-                    <p style={{ fontSize: 14, color: tokens.neutral.gray800, lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' as const }}>{transcricao}</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, opacity: 0.5 }}>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="1.5">
-                        <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-                        <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
-                      </svg>
-                      <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0 }}>Aguardando fala do paciente...</p>
-                    </div>
-                  )}
-                </div>
-
-                {modoPerfeita && (sugestoes.length > 0 || focoConsulta || alertasRT.length > 0) && (
-                  <div style={{ padding: '14px 22px', background: tokens.brand.primaryLight, borderTop: `1px solid ${tokens.neutral.purplePastel}`, flexShrink: 0, maxHeight: 200, overflow: 'auto' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tokens.brand.primary} strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Sugestão IA</span>
-                    </div>
-                    {focoConsulta && (
-                      <p style={{ fontSize: 12, color: tokens.brand.primaryDarker, margin: '0 0 6px', lineHeight: 1.5 }}>
-                        <strong style={{ fontWeight: 600 }}>Foco:</strong> {focoConsulta}
-                      </p>
-                    )}
-                    {alertasRT.map((a, i) => (
-                      <p key={i} style={{ fontSize: 12, color: tokens.status.dangerHover, margin: i === 0 ? 0 : '6px 0 0', lineHeight: 1.5 }}>⚠ {a}</p>
-                    ))}
-                    {sugestoes.slice(0, 3).map((sug, i) => (
-                      <p key={i} style={{ fontSize: 12, color: tokens.brand.primaryDarker, margin: '6px 0 0', lineHeight: 1.5 }}>{sug}</p>
-                    ))}
-                  </div>
-                )}
-
-                <div style={{ padding: '14px 24px', borderTop: `1px solid ${tokens.bg.hoverStrong}`, display: 'flex', gap: 10, flexShrink: 0 }}>
-                  <button onClick={pausarGravacao} style={{ flex: 1, padding: '11px', borderRadius: 9, border: '1px solid ' + (gravandoPausado ? tokens.status.warningAlt : tokens.status.dangerLight), background: gravandoPausado ? tokens.status.warningBgAlt : 'white', color: gravandoPausado ? tokens.status.warningAlt : tokens.status.danger, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    {gravandoPausado ? 'Retomar' : 'Pausar'}
-                  </button>
-                  <button onClick={handleParar} style={{ flex: 2, padding: '11px', borderRadius: 9, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-                    Encerrar e gerar prontuário
-                  </button>
-                </div>
-              </>
-            )}
-
-            {estado === 'processando' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32, overflow: 'auto', minHeight: 0 }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', border: `3px solid ${tokens.brand.primaryLighter}`, borderTopColor: tokens.brand.primary, animation: 'spin 0.8s linear infinite' as const }}/>
-                <div style={{ textAlign: 'center' as const }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 4px' }}>Analisando consulta</p>
-                  <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Estruturando prontuário SOAP com IA...</p>
-                </div>
-              </div>
-            )}
-
-            {estado === 'erro' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 32, overflow: 'auto', minHeight: 0 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: tokens.status.dangerBg, border: `1px solid ${tokens.status.dangerLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={tokens.status.danger} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                </div>
-                <div style={{ textAlign: 'center' as const }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 4px' }}>Erro ao processar</p>
-                  <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>{erroMsg || 'Tente novamente.'}</p>
-                </div>
-                <button onClick={handleNovo} style={{ padding: '8px 18px', borderRadius: 8, border: `1px solid ${tokens.border.default}`, background: 'white', color: tokens.text.strong, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
-                  Recomeçar
-                </button>
-              </div>
-            )}
-
-            {estado === 'pronto' && prontuario && (
-              <>
-                <Tabs
-                  style={{ padding: '0 20px', marginBottom: 0, flexShrink: 0 }}
-                  ativa={aba}
-                  onChange={(id) => setAba(id as Aba)}
-                  tabs={[
-                    { id: 'prontuario', label: 'Prontuário' },
-                    { id: 'receita', label: 'Receita' },
-                    { id: 'resumo', label: 'Resumo' },
-                    { id: 'documentos', label: 'Documentos' },
-                  ]}
-                />
-
-                <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
-                  {aba === 'prontuario' && (
-                    <ProntuarioCard prontuario={prontuario} onCopiar={handleCopiar} nomeMedico={medico?.nome} crm={medico?.crm} insights={copiloto?.insights} padroes={copiloto?.padroes} totalConsultas={copiloto?.total_consultas} />
-                  )}
-                  {aba === 'receita' && (
-                    <div style={{ textAlign: 'center' as const, padding: '60px 24px' }}>
-                      <div style={{ width: 56, height: 56, borderRadius: 14, background: tokens.status.infoTealBg, border: `1px solid ${tokens.status.infoTealLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                        <img src="/memed-logo.svg" alt="Memed" width={28} height={28} />
-                      </div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>Prescrição digital</p>
-                      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 20px', maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>Crie receitas com validade legal ICP-Brasil e envio direto pra farmácia, via Memed.</p>
-                      <BotaoMemed onClick={() => setMemedAberto(true)} disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" />
-                    </div>
-                  )}
-                  {aba === 'resumo' && (
-                    <div>
-                      {!resumoPaciente ? (
-                        <div style={{ textAlign: 'center' as const, padding: '60px 24px' }}>
-                          <div style={{ width: 48, height: 48, borderRadius: 12, background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={tokens.status.success} strokeWidth="1.5"><path d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
-                          </div>
-                          <p style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>Resumo para o paciente</p>
-                          <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 20px' }}>Explica a consulta em linguagem simples e acolhedora.</p>
-                          <button onClick={handleGerarResumo} disabled={gerandoResumo} style={{ padding: '9px 22px', borderRadius: 8, border: 'none', background: tokens.status.success, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                            {gerandoResumo ? 'Gerando...' : 'Gerar resumo'}
-                          </button>
-                        </div>
-                      ) : (
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                            <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Resumo para o paciente</p>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                              <button onClick={() => { navigator.clipboard.writeText(resumoPaciente) }} style={{ fontSize: 11, color: tokens.text.secondary, background: tokens.bg.hoverStrong, border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Copiar</button>
-                              <button onClick={() => setResumoPaciente('')} style={{ fontSize: 11, color: tokens.text.secondary, background: tokens.bg.hoverStrong, border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Regenerar</button>
-                              <button onClick={() => enviarWhatsApp('resumo', resumoPaciente)} style={{ fontSize: 11, color: 'white', background: tokens.whatsapp.greenLight, border: 'none', padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>Enviar WA</button>
-                            </div>
-                          </div>
-                          <div style={{ background: tokens.status.successBg, border: `1px solid ${tokens.status.successLight}`, borderRadius: 12, padding: '16px 18px' }}>
-                            <p style={{ fontSize: 13, color: tokens.status.successDark, lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' as const }}>{resumoPaciente}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {aba === 'documentos' && (
-                    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
-                      <div style={{ background: 'white', borderRadius: 12, padding: '16px', border: `1px solid ${tokens.neutral[150]}` }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 12px' }}>Pedido de exames</p>
-                        {!exames ? (
-                          <button onClick={handleGerarExames} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: `1px dashed ${tokens.border.strong}`, background: tokens.bg.hover, color: tokens.text.secondary, fontSize: 12, cursor: 'pointer' }}>
-                            {gerandoDoc ? 'Gerando...' : 'Gerar pedido de exames'}
-                          </button>
-                        ) : (
-                          <div>
-                            {exames.exames?.map((e: any, i: number) => (
-                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '8px 0', borderBottom: `1px solid ${tokens.bg.hover}` }}>
-                                <div>
-                                  <p style={{ fontSize: 13, fontWeight: 600, color: tokens.text.primary, margin: 0 }}>{e.nome}</p>
-                                  <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '2px 0 0' }}>{e.indicacao}</p>
-                                </div>
-                                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: e.urgencia === 'urgente' ? tokens.status.dangerBg : tokens.status.successBg, color: e.urgencia === 'urgente' ? tokens.status.danger : tokens.status.success }}>{e.urgencia}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ background: 'white', borderRadius: 12, padding: '16px', border: `1px solid ${tokens.neutral[150]}` }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 12px' }}>Atestado médico</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                          <label style={{ fontSize: 12, color: tokens.text.secondary }}>Dias:</label>
-                          <input type="number" min={1} max={30} value={diasAtestado} onChange={e => setDiasAtestado(Number(e.target.value))} style={{ width: 60, padding: '5px 8px', borderRadius: 6, fontSize: 13, textAlign: 'center' as const }} />
-                        </div>
-                        {!atestado ? (
-                          <button onClick={handleGerarAtestado} disabled={gerandoDoc} style={{ width: '100%', padding: '10px', borderRadius: 8, border: `1px dashed ${tokens.border.strong}`, background: tokens.bg.hover, color: tokens.text.secondary, fontSize: 12, cursor: 'pointer' }}>
-                            {gerandoDoc ? 'Gerando...' : 'Gerar atestado'}
-                          </button>
-                        ) : (
-                          <button onClick={imprimirAtestado} style={{ width: '100%', padding: '9px', borderRadius: 8, background: tokens.brand.primary, color: 'white', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                            Imprimir atestado
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
+            <div style={{ display: 'flex', gap: 10, padding: '14px 18px', borderTop: `1px solid ${T.border.muted}`, flexWrap: 'wrap' }}>
+              <Button
+                variant="secondary"
+                icon={gravandoPausado ? Play : Pause}
+                onClick={pausarGravacao}
+                style={{ height: 46, flex: '1 1 140px', borderRadius: 12, fontSize: 14 }}
+              >
+                {gravandoPausado ? 'Retomar' : 'Pausar'}
+              </Button>
+              <Button onClick={handleParar} style={{ height: 46, flex: '3 1 260px', borderRadius: 12, fontSize: 14 }}>
+                <span style={{ width: 11, height: 11, borderRadius: 3, background: '#fff' }} />
+                Encerrar e gerar prontuário
+              </Button>
+            </div>
+          </div>
+          <div className="nc-lateral">
+            {cardSugestoes}
+            {cardContexto}
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ── Gerando ──────────────────────────────────────────────────────── */}
+      {estado === 'processando' && (
+        <div style={{ ...cardCentro, gap: 20 }}>
+          <span style={{ width: 64, height: 64, borderRadius: 20, background: T.brand.primaryLight, color: T.brand.primary, display: 'grid', placeItems: 'center' }}>
+            <Icon icon={Sparkles} size={28} active />
+          </span>
+          <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>Gerando o prontuário…</span>
+          <div style={{ width: 'min(340px, 100%)', display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left' }}>
+            {ETAPAS_GERACAO.map((label, i) => {
+              const feita = etapaGeracao > i, atual = etapaGeracao === i
+              return (
+                <span key={label} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5,
+                  color: feita ? T.status.success : atual ? T.text.primary : T.text.tertiary, fontWeight: atual ? 600 : 500,
+                }}>
+                  <Icon
+                    icon={feita ? CircleCheck : atual ? LoaderCircle : CircleDashed}
+                    size={17}
+                    style={atual ? { animation: 'spin 1s linear infinite' } : undefined}
+                  />
+                  {label}
+                </span>
+              )
+            })}
+          </div>
+          <div style={{ width: 'min(340px, 100%)' }}>
+            <ProgressBar valor={etapaGeracao / ETAPAS_GERACAO.length * 100 + 8} />
+          </div>
+        </div>
+      )}
+
+      {/* ── Erro ─────────────────────────────────────────────────────────── */}
+      {estado === 'erro' && (
+        <div style={{ ...cardCentro, gap: 14 }}>
+          <span style={{ width: 48, height: 48, borderRadius: 15, background: T.status.dangerBg, color: T.status.danger, display: 'grid', placeItems: 'center' }}>
+            <Icon icon={CircleAlert} size={22} />
+          </span>
+          <div>
+            <p style={{ fontSize: 14.5, fontWeight: 700, color: T.text.primary, margin: '0 0 4px' }}>Erro ao processar</p>
+            <p style={{ fontSize: 12.5, color: T.text.quaternary, margin: 0 }}>{erroMsg || 'Tente novamente.'}</p>
+          </div>
+          <Button variant="secondary" onClick={handleNovo}>Recomeçar</Button>
+        </div>
+      )}
+
+      {/* ── Pronto ───────────────────────────────────────────────────────── */}
+      {estado === 'pronto' && prontuario && (
+        <div className="nc-grid">
+          <div style={{ ...cardBase, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: `1px solid ${T.border.muted}`, flexWrap: 'wrap' }}>
+              <Badge tone="success" icon={CircleCheck} style={{ fontSize: 12.5, fontWeight: 700, padding: '6px 12px' }}>Prontuário pronto</Badge>
+              <span style={{ fontSize: 12.5, color: T.text.quaternary }}>
+                {[segundos > 0 ? mmss(segundos) + ' de gravação' : null, palavras + ' palavras', 'edite o texto direto nas seções'].filter(Boolean).join(' · ')}
+              </span>
+              <span style={{ flex: 1 }} />
+              <IconButton icon={Copy} variant="outline" title="Copiar texto" aria-label="Copiar texto" onClick={handleCopiar} />
+              <IconButton icon={Download} variant="outline" title="Exportar PDF" aria-label="Exportar PDF" onClick={() => exportarProntuarioPdf(prontuario, { nome: medico?.nome, crm: medico?.crm })} />
+            </div>
+            <div style={{ padding: '0 20px 12px' }}>
+              <ProntuarioCard
+                prontuario={prontuario}
+                nomeMedico={medico?.nome}
+                crm={medico?.crm}
+                insights={copiloto?.insights}
+                padroes={copiloto?.padroes}
+                totalConsultas={copiloto?.total_consultas}
+                onEditarSecao={editarSecao}
+              />
+            </div>
+          </div>
+
+          <div className="nc-lateral">
+            {/* Prescrição (Memed) */}
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>Prescrição</h3>
+              <span style={{ fontSize: 12.5, color: T.text.quaternary, lineHeight: 1.5 }}>
+                Receita digital com validade ICP-Brasil e envio direto para a farmácia, via Memed.
+              </span>
+              <div>
+                <BotaoMemed onClick={() => setMemedAberto(true)} disabled={!pacienteSelecionado} disabledReason="Selecione um paciente primeiro" />
+              </div>
+            </Card>
+
+            {/* Documentos */}
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <h3 style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>Documentos</h3>
+              <LinhaDocumento
+                icon={FlaskConical}
+                label="Pedido de exames"
+                estado={exames ? 'pronto' : gerandoDoc ? 'gerando' : 'novo'}
+                onClick={!exames ? handleGerarExames : undefined}
+                disabled={gerandoDoc}
+              >
+                {exames?.exames?.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {exames.exames.map((e: any, i: number) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, padding: '8px 0', borderTop: `1px solid ${T.border.muted}` }}>
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontSize: 12.5, fontWeight: 600, color: T.text.primary, margin: 0 }}>{e.nome}</p>
+                          {e.indicacao && <p style={{ fontSize: 11.5, color: T.text.quaternary, margin: '2px 0 0', lineHeight: 1.4 }}>{e.indicacao}</p>}
+                        </div>
+                        {e.urgencia && <Badge tone={e.urgencia === 'urgente' ? 'danger' : 'success'}>{e.urgencia}</Badge>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </LinhaDocumento>
+              <LinhaDocumento icon={FileBadge} label="Atestado" estado={atestado ? 'pronto' : 'novo'}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <Input
+                    type="number" min={1} max={30} value={diasAtestado}
+                    onChange={e => setDiasAtestado(Number(e.target.value))}
+                    aria-label="Dias de atestado"
+                    style={{ width: 64, minHeight: 32, height: 32, padding: '4px 8px', textAlign: 'center', fontSize: 13, borderRadius: 9 }}
+                  />
+                  <span style={{ fontSize: 12.5, color: T.text.secondary, flex: 1 }}>dia{diasAtestado !== 1 ? 's' : ''}</span>
+                  {!atestado ? (
+                    <Button variant="secondary" size="sm" onClick={handleGerarAtestado} disabled={gerandoDoc}>{gerandoDoc ? 'Gerando…' : 'Gerar'}</Button>
+                  ) : (
+                    <Button size="sm" icon={Printer} onClick={imprimirAtestado}>Imprimir</Button>
+                  )}
+                </div>
+              </LinhaDocumento>
+            </Card>
+
+            {/* Resumo / orientações ao paciente */}
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <h3 style={{ margin: 0, flex: 1, fontSize: 14, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>Orientações ao paciente</h3>
+                {resumoPaciente && (
+                  <>
+                    <IconButton icon={Copy} size={30} title="Copiar" aria-label="Copiar" onClick={() => { navigator.clipboard.writeText(resumoPaciente) }} />
+                    <IconButton icon={RefreshCw} size={30} title="Regenerar" aria-label="Regenerar" onClick={() => setResumoPaciente('')} />
+                  </>
+                )}
+              </div>
+              {!resumoPaciente ? (
+                <>
+                  <span style={{ fontSize: 12.5, color: T.text.quaternary, lineHeight: 1.5 }}>Explica a consulta em linguagem simples e acolhedora.</span>
+                  <Button variant="secondary" icon={Sparkles} onClick={handleGerarResumo} disabled={gerandoResumo} style={{ alignSelf: 'flex-start' }}>
+                    {gerandoResumo ? 'Gerando…' : 'Gerar resumo'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p style={{ margin: 0, fontSize: 12.5, color: T.text.strong, lineHeight: 1.6, whiteSpace: 'pre-wrap', background: T.bg.page, borderRadius: 12, padding: '10px 12px', maxHeight: 260, overflow: 'auto' }}>
+                    {resumoPaciente}
+                  </p>
+                  <Button variant="secondary" icon={MessageCircle} onClick={() => enviarWhatsApp('resumo', resumoPaciente)} block>
+                    Enviar por WhatsApp
+                  </Button>
+                </>
+              )}
+            </Card>
+
+            {/* Salvar / nova */}
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {!consultaSalva ? (
+                <Button icon={Check} onClick={() => salvarConsulta(prontuario)} style={{ height: 44, borderRadius: 12, fontSize: 14 }}>
+                  Salvar no histórico
+                </Button>
+              ) : editado ? (
+                <Button icon={Check} onClick={salvarAlteracoes} disabled={salvandoEdicao} style={{ height: 44, borderRadius: 12, fontSize: 14 }}>
+                  {salvandoEdicao ? 'Salvando…' : 'Salvar alterações no histórico'}
+                </Button>
+              ) : (
+                <span style={{ height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: T.status.success, background: T.status.successBg }}>
+                  <Icon icon={CircleCheck} size={16} />Salvo no histórico
+                </span>
+              )}
+              <Button variant="secondary" icon={Plus} onClick={handleNovo} style={{ height: 40, borderRadius: 12 }}>Nova consulta</Button>
+            </Card>
+
+            {cardContexto}
+          </div>
+        </div>
+      )}
+
       {modalAvulso && (
         <ModalDadosPacienteAvulso
           onFechar={() => setModalAvulso(false)}
@@ -621,6 +855,14 @@ const handleCopiar = () => {
           }}
         />
       )}
+
+      <style>{`
+        .nc-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; align-items: start; }
+        .nc-grid.solo { grid-template-columns: minmax(0, 1fr); }
+        .nc-lateral { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+        @media (max-width: 1100px) { .nc-grid { grid-template-columns: minmax(0, 1fr); } }
+        @keyframes nc-onda { from { transform: scaleY(.25); } to { transform: scaleY(1); } }
+      `}</style>
     </div>
   )
 }

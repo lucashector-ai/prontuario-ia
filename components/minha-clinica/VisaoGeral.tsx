@@ -1,12 +1,12 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Check, ImageIcon, Users, UserRound, CalendarDays, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
+import { Avatar, Button, Card, Field, Icon, IconTile, Input, Textarea, Badge } from '@/components/ui'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = tokens.bg.hover
+const T = tokens
 
 function formatarTelefone(v: string) {
   const nums = v.replace(/\D/g, '').slice(0, 11)
@@ -17,42 +17,30 @@ function formatarTelefone(v: string) {
 }
 
 type CampoKey = 'nome' | 'telefone' | 'endereco' | 'site' | 'horarios' | 'descricao'
-
-const CAMPOS: Array<{
-  key: CampoKey
-  label: string
-  placeholder: string
-  textarea?: boolean
-  gridSpan?: 'half' | 'full'
-  mascara?: (v: string) => string
-}> = [
-  { key: 'nome', label: 'Nome fantasia', placeholder: 'Ex: Clínica São Lucas', gridSpan: 'half' },
-  { key: 'telefone', label: 'Telefone', placeholder: '(11) 99999-9999', gridSpan: 'half', mascara: formatarTelefone },
-  { key: 'endereco', label: 'Endereço', placeholder: 'Rua das Flores, 123 - Centro, São Paulo/SP', gridSpan: 'full' },
-  { key: 'site', label: 'Site', placeholder: 'www.suaclinica.com.br', gridSpan: 'half' },
-  { key: 'horarios', label: 'Horários de funcionamento', placeholder: 'Seg-Sex 8h-18h, Sáb 8h-12h', gridSpan: 'half' },
-  { key: 'descricao', label: 'Descrição / Especialidades', placeholder: 'Clínica especializada em cardiologia e medicina geral...', textarea: true, gridSpan: 'full' },
-]
+const CHAVES: CampoKey[] = ['nome', 'telefone', 'endereco', 'site', 'horarios', 'descricao']
+const TONS = ['purple', 'pink', 'blue', 'green'] as const
 
 export function VisaoGeral() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
+  const [ehAdmin, setEhAdmin] = useState(false)
   const [clinica, setClinica] = useState<any>(null)
   const [form, setForm] = useState<Record<CampoKey, string>>({
     nome: '', endereco: '', telefone: '', site: '', horarios: '', descricao: '',
   })
-  const [editando, setEditando] = useState<CampoKey | null>(null)
-  const [valorOriginal, setValorOriginal] = useState<string>('')
   const [salvando, setSalvando] = useState(false)
-  const [msg, setMsg] = useState<{tipo:'ok'|'erro', texto:string}|null>(null)
+  const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro', texto: string } | null>(null)
   const [uploadandoLogo, setUploadandoLogo] = useState(false)
   const [stats, setStats] = useState({ medicos: 0, pacientes: 0 })
+  const [profissionais, setProfissionais] = useState<any[]>([])
+  const logoRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
     const med = JSON.parse(m); setMedico(med)
+    setEhAdmin(!!ca_ || med.cargo === 'admin')
     carregar(med.clinica_id || med.id)
   }, [router])
 
@@ -68,43 +56,41 @@ export function VisaoGeral() {
         horarios: data.horarios || '',
         descricao: data.descricao || '',
       })
-      // Carrega stats
-      const [{ count: nMedicos }, { count: nPacientes }] = await Promise.all([
+      const [{ count: nMedicos }, { count: nPacientes }, { data: pros }] = await Promise.all([
         supabase.from('medicos').select('*', { count: 'exact', head: true }).eq('clinica_id', clinicaId).eq('cargo', 'medico').eq('ativo', true),
         supabase.from('pacientes').select('*', { count: 'exact', head: true }).eq('clinica_id', clinicaId).then(r => r.error ? { count: 0 } : r),
+        supabase.from('medicos').select('id, nome, especialidade, crm, foto_url, cargo').eq('clinica_id', clinicaId).eq('ativo', true).neq('cargo', 'recepcionista').order('criado_em'),
       ])
       setStats({ medicos: nMedicos || 0, pacientes: nPacientes || 0 })
+      setProfissionais(pros || [])
     }
   }
 
-  const iniciarEdicao = (key: CampoKey) => {
-    setValorOriginal(form[key])
-    setEditando(key)
-    setMsg(null)
-  }
+  // Campos alterados em relação ao que está salvo
+  const alterados = CHAVES.filter(k => (clinica?.[k] || '') !== form[k])
 
-  const cancelarEdicao = () => {
-    if (editando) {
-      setForm(p => ({ ...p, [editando]: valorOriginal }))
-    }
-    setEditando(null)
-  }
-
-  const salvarCampo = async (key: CampoKey) => {
-    if (!clinica) return
+  const salvarTudo = async () => {
+    if (!clinica || alterados.length === 0) return
     setSalvando(true); setMsg(null)
-    const update: any = { [key]: form[key] }
+    const update: any = {}
+    alterados.forEach(k => { update[k] = form[k] })
     const { error } = await supabase.from('clinicas').update(update).eq('id', clinica.id)
     if (error) {
       setMsg({ tipo: 'erro', texto: error.message })
-      setForm(p => ({ ...p, [key]: valorOriginal }))
     } else {
-      setMsg({ tipo: 'ok', texto: 'Atualizado!' })
-      setClinica({ ...clinica, [key]: form[key] })
-      setEditando(null)
+      setMsg({ tipo: 'ok', texto: 'Alterações salvas' })
+      setClinica({ ...clinica, ...update })
       setTimeout(() => setMsg(null), 2500)
     }
     setSalvando(false)
+  }
+
+  const descartar = () => {
+    if (!clinica) return
+    setForm({
+      nome: clinica.nome || '', endereco: clinica.endereco || '', telefone: clinica.telefone || '',
+      site: clinica.site || '', horarios: clinica.horarios || '', descricao: clinica.descricao || '',
+    })
   }
 
   const uploadLogo = async (file: File) => {
@@ -113,218 +99,167 @@ export function VisaoGeral() {
     reader.onload = async (e) => {
       const base64 = e.target?.result as string
       await supabase.from('clinicas').update({ logo_url: base64 }).eq('id', clinica.id)
-      setClinica((p: any) => ({...p, logo_url: base64}))
+      setClinica((p: any) => ({ ...p, logo_url: base64 }))
       setUploadandoLogo(false)
     }
     reader.readAsDataURL(file)
   }
 
-  const handleChange = (key: CampoKey, valor: string) => {
-    const campo = CAMPOS.find(c => c.key === key)
-    const valorFinal = campo?.mascara ? campo.mascara(valor) : valor
-    setForm(p => ({ ...p, [key]: valorFinal }))
+  const set = (key: CampoKey, valor: string) => {
+    setForm(p => ({ ...p, [key]: key === 'telefone' ? formatarTelefone(valor) : valor }))
   }
 
   if (!medico) return null
 
-  const iniciais = clinica?.nome?.split(' ').map((n:string)=>n[0]).slice(0,2).join('').toUpperCase() || '??'
-  const fmtData = clinica?.criado_em ? new Date(clinica.criado_em).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : ''
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 14px', fontSize: 14,
-    borderRadius: 10, border: `1px solid ${tokens.border.default}`,
-    outline: 'none', fontFamily: 'inherit', color: tokens.text.primary,
-    background: 'white', boxSizing: 'border-box',
-  }
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
-    display: 'block', marginBottom: 6,
-    textTransform: 'uppercase' as const, letterSpacing: '0.04em',
-  }
-
-  const valorStyle: React.CSSProperties = {
-    fontSize: 14, color: tokens.text.primary, fontWeight: 500,
-    padding: '10px 14px', background: tokens.bg.muted,
-    borderRadius: 10, minHeight: 22,
-  }
+  const iniciais = clinica?.nome?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || ''
+  const fmtData = clinica?.criado_em ? new Date(clinica.criado_em).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }) : ''
+  const grid2: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }
 
   return (
-    <div style={{ padding: '0 4px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Minha Clínica</h1>
-        <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>Configure as informações da sua clínica que aparecem nos prontuários e atendimentos</p>
-      </div>
-
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       {/* Toast */}
       {msg && (
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 200,
-          padding: '12px 20px', borderRadius: 10,
-          background: msg.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
-          color: msg.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
-          fontSize: 13, fontWeight: 600,
-          border: `1px solid ${msg.tipo === 'ok' ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          padding: '11px 16px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8,
+          background: '#fff', border: `1px solid ${T.border.default}`, boxShadow: T.shadow.lg,
+          color: msg.tipo === 'ok' ? T.status.success : T.status.danger, fontSize: 13, fontWeight: 600,
         }}>
+          {msg.tipo === 'ok' && <Icon icon={Check} size={15} />}
           {msg.texto}
         </div>
       )}
 
-      {/* Grid 2 colunas */}
-      <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 20, alignItems: 'start' }}>
+      {/* Barra de ações */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <span style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: T.text.quaternary }}>
+          As alterações valem para toda a equipe e aparecem nos prontuários e atendimentos.
+        </span>
+        {alterados.length > 0 && (
+          <Button variant="secondary" onClick={descartar} disabled={salvando}>Descartar</Button>
+        )}
+        <Button icon={Check} onClick={salvarTudo} disabled={salvando || alterados.length === 0}>
+          {salvando ? 'Salvando…' : 'Salvar alterações'}
+        </Button>
+      </div>
 
-        {/* COLUNA ESQUERDA */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-          {/* Card logo + nome */}
-          <div style={{ background: 'white', borderRadius: 16, padding: 24, textAlign: 'center', border: `1px solid ${tokens.border.subtle}` }}>
-            <div style={{ position: 'relative', cursor: 'pointer', width: 120, height: 120, margin: '0 auto 16px' }}
-              onClick={() => (document.getElementById('logo-input') as HTMLInputElement)?.click()}>
-              {clinica?.logo_url ? (
-                <img src={clinica.logo_url} style={{ width: 120, height: 120, borderRadius: 20, objectFit: 'cover' }} />
-              ) : (
-                <div style={{ width: 120, height: 120, borderRadius: 20, background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 700, color: 'white' }}>
-                  {iniciais}
-                </div>
-              )}
-              <div style={{ position: 'absolute', bottom: -4, right: -4, width: 32, height: 32, background: ACCENT, borderRadius: '50%', border: '3px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                  <circle cx="12" cy="13" r="4"/>
-                </svg>
+      <div className="mc-visao-grid">
+        {/* Coluna principal */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+          <Card padding={18} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+                {clinica?.logo_url ? (
+                  <img src={clinica.logo_url} alt="" style={{ width: 60, height: 60, borderRadius: 16, objectFit: 'cover', border: `1px solid ${T.border.default}` }} />
+                ) : (
+                  <span style={{ width: 60, height: 60, borderRadius: 16, background: T.night[800], color: '#fff', display: 'grid', placeItems: 'center', fontSize: 18, fontWeight: 700 }}>
+                    {iniciais || 'C'}
+                  </span>
+                )}
+                {uploadandoLogo && (
+                  <span style={{ position: 'absolute', inset: 0, borderRadius: 16, background: 'rgba(255,255,255,.8)', display: 'grid', placeItems: 'center', color: T.brand.primary }}>
+                    <Loader2 size={20} strokeWidth={1.6} style={{ animation: 'spin .8s linear infinite' }} />
+                  </span>
+                )}
               </div>
-              {uploadandoLogo && (
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 24, height: 24, border: `3px solid ${ACCENT}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/>
-                </div>
-              )}
+              <div style={{ flex: 1, minWidth: 140, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: T.text.primary }}>{clinica?.nome || 'Sua clínica'}</span>
+                <span style={{ fontSize: 12.5, color: T.text.quaternary }}>
+                  Plano Starter{fmtData ? ` · desde ${fmtData.replace('.', '')}` : ''}
+                </span>
+              </div>
+              <Button variant="secondary" icon={ImageIcon} onClick={() => logoRef.current?.click()} disabled={uploadandoLogo || !clinica}>
+                Alterar logo
+              </Button>
+              <input ref={logoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadLogo(e.target.files[0])} />
             </div>
-            <input id="logo-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadLogo(e.target.files[0])}/>
 
-            <p style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>{clinica?.nome || 'Sua Clínica'}</p>
-            <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 12px' }}>Clique na logo para editar</p>
-
-            <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 20, background: ACCENT_LIGHT, color: ACCENT, fontWeight: 600 }}>
-              Plano Starter
-            </span>
-          </div>
-
-          {/* Card stats */}
-          <div style={{ background: 'white', borderRadius: 16, padding: 24, border: `1px solid ${tokens.border.subtle}` }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary, margin: '0 0 16px' }}>Visão geral</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: tokens.text.secondary }}>Médicos ativos</span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: tokens.text.primary }}>{stats.medicos}</span>
-              </div>
-              <div style={{ height: 1, background: tokens.bg.hoverStrong }}/>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: tokens.text.secondary }}>Pacientes cadastrados</span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: tokens.text.primary }}>{stats.pacientes}</span>
-              </div>
-              {fmtData && (
-                <>
-                  <div style={{ height: 1, background: tokens.bg.hoverStrong }}/>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: tokens.text.secondary }}>Cadastrada em</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: tokens.text.strong, textTransform: 'capitalize' as const }}>{fmtData}</span>
-                  </div>
-                </>
-              )}
+            <div style={grid2}>
+              <Field label="Nome fantasia">
+                <Input value={form.nome} onChange={e => set('nome', e.target.value)} placeholder="Ex.: Clínica São Lucas" />
+              </Field>
+              <Field label="Telefone">
+                <Input value={form.telefone} onChange={e => set('telefone', e.target.value)} placeholder="(11) 99999-9999" maxLength={15} />
+              </Field>
+              <Field label="Site">
+                <Input value={form.site} onChange={e => set('site', e.target.value)} placeholder="www.suaclinica.com.br" />
+              </Field>
             </div>
-          </div>
+            <Field label="Endereço">
+              <Input value={form.endereco} onChange={e => set('endereco', e.target.value)} placeholder="Rua das Flores, 123 - Centro, São Paulo/SP" />
+            </Field>
+          </Card>
+
+          <Card titulo="Horário de funcionamento">
+            <Field label="Dias e horários" hint="Aparece para a equipe e nas mensagens aos pacientes.">
+              <Input value={form.horarios} onChange={e => set('horarios', e.target.value)} placeholder="Seg-Sex 8h-18h, Sáb 8h-12h" />
+            </Field>
+          </Card>
+
+          <Card titulo="Sobre a clínica e especialidades">
+            <Textarea
+              rows={4}
+              value={form.descricao}
+              onChange={e => set('descricao', e.target.value)}
+              placeholder="Clínica especializada em cardiologia e medicina geral..."
+            />
+          </Card>
         </div>
 
-        {/* COLUNA DIREITA — formulário */}
-        <div style={{ background: 'white', borderRadius: 16, padding: 28, border: `1px solid ${tokens.border.subtle}` }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>Informações da clínica</h2>
-          <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: '0 0 24px' }}>Clique no lápis ao lado de cada campo pra editar</p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            {CAMPOS.map(campo => {
-              const ehEditando = editando === campo.key
-              const valor = form[campo.key]
-              const span = campo.gridSpan === 'full' ? '1 / -1' : 'auto'
-
-              return (
-                <div key={campo.key} style={{ gridColumn: span, position: 'relative' }}>
-                  <label style={labelStyle}>{campo.label}</label>
-
-                  {ehEditando ? (
-                    <div>
-                      {campo.textarea ? (
-                        <textarea
-                          value={valor}
-                          onChange={e => handleChange(campo.key, e.target.value)}
-                          placeholder={campo.placeholder}
-                          rows={3}
-                          autoFocus
-                          style={{ ...inputStyle, resize: 'vertical' as const }}
-                        />
-                      ) : (
-                        <input
-                          value={valor}
-                          onChange={e => handleChange(campo.key, e.target.value)}
-                          placeholder={campo.placeholder}
-                          autoFocus
-                          style={inputStyle}
-                          maxLength={campo.key === 'telefone' ? 15 : undefined}
-                        />
-                      )}
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                        <button onClick={() => salvarCampo(campo.key)} disabled={salvando}
-                          style={{ padding: '6px 14px', borderRadius: 8, background: ACCENT, color: 'white', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                          {salvando ? 'Salvando...' : 'Salvar'}
-                        </button>
-                        <button onClick={cancelarEdicao} disabled={salvando}
-                          style={{ padding: '6px 14px', borderRadius: 8, background: 'white', color: tokens.text.secondary, border: `1px solid ${tokens.border.default}`, fontSize: 12, cursor: 'pointer' }}>
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ ...valorStyle, paddingRight: 44, color: valor ? tokens.text.primary : tokens.text.tertiary, whiteSpace: campo.textarea ? 'pre-wrap' as const : 'nowrap' as const, overflow: campo.textarea ? 'visible' as const : 'hidden' as const, textOverflow: 'ellipsis' }}>
-                        {valor || campo.placeholder}
-                      </div>
-                      <button
-                        onClick={() => iniciarEdicao(campo.key)}
-                        title="Editar"
-                        style={{
-                          position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
-                          width: 30, height: 30, borderRadius: '50%',
-                          background: 'white', border: `1px solid ${tokens.border.default}`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', color: tokens.text.secondary,
-                          transition: 'all 0.15s',
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = ACCENT_LIGHT
-                          e.currentTarget.style.color = ACCENT
-                          e.currentTarget.style.borderColor = ACCENT
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = 'white'
-                          e.currentTarget.style.color = tokens.text.secondary
-                          e.currentTarget.style.borderColor = tokens.border.default
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                        </svg>
-                      </button>
-                    </div>
-                  )}
+        {/* Coluna lateral */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+          <Card titulo="Visão geral">
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {[
+                { icon: UserRound, cor: T.data.purple, label: 'Médicos ativos', valor: String(stats.medicos) },
+                { icon: Users, cor: T.data.blue, label: 'Pacientes cadastrados', valor: String(stats.pacientes) },
+                ...(fmtData ? [{ icon: CalendarDays, cor: T.data.green, label: 'Cadastrada em', valor: fmtData.replace('.', '') }] : []),
+              ].map((l, i) => (
+                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: i ? `1px solid ${T.border.muted}` : 'none' }}>
+                  <IconTile icon={l.icon} color={l.cor} size={32} radius={10} />
+                  <span style={{ flex: 1, fontSize: 13, color: T.text.secondary }}>{l.label}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: T.text.primary, fontVariantNumeric: 'tabular-nums' }}>{l.valor}</span>
                 </div>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card
+            titulo="Profissionais"
+            acao={ehAdmin ? (
+              <button onClick={() => router.push('/admin')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, color: T.brand.primary }}>
+                Gerenciar equipe
+              </button>
+            ) : undefined}
+          >
+            {profissionais.length === 0 ? (
+              <span style={{ fontSize: 12.5, color: T.text.quaternary }}>Nenhum profissional ativo.</span>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {profissionais.map((p, i) => (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Avatar nome={(p.nome || '').replace(/^Dra?\.\s*/, '')} src={p.foto_url} size={34} tom={TONS[i % TONS.length]} />
+                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: T.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nome}</span>
+                      <span style={{ fontSize: 12, color: T.text.quaternary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {[p.especialidade, p.crm ? `CRM ${p.crm}` : ''].filter(Boolean).join(' · ') || 'Sem especialidade'}
+                      </span>
+                    </span>
+                    {p.cargo === 'admin' && <Badge tone="accent">Admin</Badge>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
         </div>
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        .mc-visao-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+        @media (max-width: 900px) { .mc-visao-grid { grid-template-columns: minmax(0, 1fr); } }
+      `}</style>
     </div>
   )
 }

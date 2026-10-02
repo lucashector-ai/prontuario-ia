@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Send, Inbox, ChevronRight } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { supabase } from '@/lib/supabase'
+import { Avatar, Badge, Card, EmptyState, Icon, SegmentedControl, type BadgeTone } from '@/components/ui'
+
+const T = tokens
 
 type Envio = {
   id: string
@@ -17,11 +21,11 @@ type Envio = {
   template: { nome: string } | null
 }
 
-const STATUS_LABEL: Record<string, { label: string; cor: string; bg: string }> = {
-  pendente: { label: 'Aguardando resposta', cor: '#D97706', bg: '#FEF3C7' },
-  preenchido: { label: 'Preenchido', cor: '#059669', bg: '#D1FAE5' },
-  expirado: { label: 'Expirado', cor: '#6B7280', bg: '#F3F4F6' },
-  cancelado: { label: 'Cancelado', cor: '#DC2626', bg: '#FEE2E2' },
+const STATUS_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
+  pendente: { label: 'Aguardando resposta', tone: 'pending' },
+  preenchido: { label: 'Preenchido', tone: 'success' },
+  expirado: { label: 'Expirado', tone: 'neutral' },
+  cancelado: { label: 'Cancelado', tone: 'danger' },
 }
 
 const ORIGEM_LABEL: Record<string, string> = {
@@ -30,11 +34,13 @@ const ORIGEM_LABEL: Record<string, string> = {
   agendamento_interno: 'Via agendamento',
 }
 
+type FiltroStatus = 'todos' | 'pendente' | 'preenchido' | 'expirado'
+
 export default function ListaEnvios({ clinicaId }: { clinicaId: string }) {
   const router = useRouter()
   const [envios, setEnvios] = useState<Envio[]>([])
   const [loading, setLoading] = useState(true)
-  const [filtroStatus, setFiltroStatus] = useState<string>('todos')
+  const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todos')
 
   useEffect(() => {
     async function carregar() {
@@ -58,11 +64,11 @@ export default function ListaEnvios({ clinicaId }: { clinicaId: string }) {
     carregar()
   }, [clinicaId])
 
-  const filtrados = filtroStatus === 'todos' 
-    ? envios 
+  const filtrados = filtroStatus === 'todos'
+    ? envios
     : envios.filter(e => e.status === filtroStatus)
 
-  const contadores = {
+  const contadores: Record<FiltroStatus, number> = {
     todos: envios.length,
     pendente: envios.filter(e => e.status === 'pendente').length,
     preenchido: envios.filter(e => e.status === 'preenchido').length,
@@ -71,151 +77,87 @@ export default function ListaEnvios({ clinicaId }: { clinicaId: string }) {
 
   if (loading) {
     return (
-      <div style={{ padding: 64, display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: 28, height: 28, border: '2.5px solid ' + tokens.brand.primaryLight, borderTopColor: tokens.brand.primary, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {[0, 1, 2, 3].map(i => <div key={i} className="c360-skel" style={{ height: 64, borderRadius: 12 }} />)}
       </div>
     )
   }
 
   if (envios.length === 0) {
     return (
-      <div style={{
-        background: '#fff',
-        borderRadius: 16,
-        padding: '48px 32px',
-        textAlign: 'center',
-        border: `1px solid ${tokens.border.subtle}`,
-      }}>
-        <div style={{
-          width: 56, height: 56, margin: '0 auto 16px',
-          background: tokens.brand.primaryLight, color: tokens.brand.primary,
-          borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 2L11 13" />
-            <path d="M22 2l-7 20-4-9-9-4z" />
-          </svg>
-        </div>
-        <h3 style={{ fontSize: 17, fontWeight: 600, color: tokens.text.primary, margin: '0 0 6px' }}>
-          Nenhum envio ainda
-        </h3>
-        <p style={{ fontSize: 14, color: tokens.text.secondary, margin: 0, maxWidth: 340, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
-          Quando você enviar formulários pra pacientes, eles aparecem aqui.
-        </p>
-      </div>
+      <Card padding={0}>
+        <EmptyState
+          icon={Send}
+          titulo="Nenhum envio ainda"
+          descricao="Quando você enviar formulários para pacientes, eles aparecem aqui."
+        />
+      </Card>
     )
   }
 
+  const rotulo = (k: FiltroStatus, l: string) => (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      {l}
+      <span style={{ fontSize: 11, fontWeight: 700, color: T.text.tertiary, fontVariantNumeric: 'tabular-nums' }}>{contadores[k]}</span>
+    </span>
+  )
+
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Filtros */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {[
-          { key: 'todos', label: 'Todos' },
-          { key: 'pendente', label: 'Aguardando' },
-          { key: 'preenchido', label: 'Preenchidos' },
-          { key: 'expirado', label: 'Expirados' },
-        ].map(f => {
-          const ativo = filtroStatus === f.key
-          const count = (contadores as any)[f.key]
-          return (
-            <button
-              key={f.key}
-              type="button"
-              onClick={() => setFiltroStatus(f.key)}
-              style={{
-                padding: '8px 14px',
-                border: 'none',
-                borderRadius: 8,
-                background: ativo ? tokens.brand.primary : '#fff',
-                color: ativo ? '#fff' : tokens.text.primary,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                boxShadow: ativo ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
-              }}
-            >
-              {f.label}
-              <span style={{
-                fontSize: 11,
-                background: ativo ? 'rgba(255,255,255,0.25)' : tokens.bg.cardSubtle,
-                padding: '2px 6px',
-                borderRadius: 100,
-                fontWeight: 700,
-              }}>
-                {count}
-              </span>
-            </button>
-          )
-        })}
+      <div style={{ maxWidth: '100%', overflowX: 'auto', scrollbarWidth: 'none' }}>
+        <SegmentedControl<FiltroStatus>
+          value={filtroStatus}
+          onChange={setFiltroStatus}
+          options={[
+            { value: 'todos', label: rotulo('todos', 'Todos') },
+            { value: 'pendente', label: rotulo('pendente', 'Aguardando') },
+            { value: 'preenchido', label: rotulo('preenchido', 'Preenchidos') },
+            { value: 'expirado', label: rotulo('expirado', 'Expirados') },
+          ]}
+        />
       </div>
 
       {/* Lista */}
-      <div style={{
-        background: '#fff',
-        borderRadius: 14,
-        overflow: 'hidden',
-        border: `1px solid ${tokens.border.subtle}`,
-      }}>
+      <div style={{ border: `1px solid ${T.border.default}`, borderRadius: 16, overflow: 'hidden', background: '#fff' }}>
         {filtrados.length === 0 ? (
-          <div style={{ padding: 48, textAlign: 'center', color: tokens.text.tertiary, fontSize: 14 }}>
-            Nenhum envio com esse filtro.
-          </div>
+          <EmptyState icon={Inbox} titulo="Nenhum envio com esse filtro" />
         ) : (
           filtrados.map((e, idx) => {
             const statusInfo = STATUS_LABEL[e.status] || STATUS_LABEL.pendente
-            const ultimo = idx === filtrados.length - 1
             const clicavel = e.status === 'preenchido'
             return (
               <div
                 key={e.id}
                 onClick={() => clicavel && router.push('/formularios/respostas/' + e.id)}
                 style={{
-                  padding: '16px 20px',
-                  borderBottom: ultimo ? 'none' : '1px solid ' + tokens.border.subtle,
+                  padding: '14px 18px',
+                  borderTop: idx === 0 ? 'none' : '1px solid ' + T.border.muted,
                   cursor: clicavel ? 'pointer' : 'default',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 16,
+                  gap: 14,
                   transition: 'background 0.12s',
                 }}
-                onMouseEnter={(ev) => { if (clicavel) ev.currentTarget.style.background = tokens.bg.cardSubtle }}
+                onMouseEnter={(ev) => { if (clicavel) ev.currentTarget.style.background = T.bg.hover }}
                 onMouseLeave={(ev) => { ev.currentTarget.style.background = 'transparent' }}
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: tokens.text.primary, marginBottom: 4 }}>
+                <Avatar nome={e.nome_paciente} size={36} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 600, color: T.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {e.nome_paciente}
-                  </div>
-                  <div style={{ fontSize: 12, color: tokens.text.secondary }}>
-                    {e.template?.nome || 'Formulário'} · {ORIGEM_LABEL[e.origem] || e.origem}
-                  </div>
-                  <div style={{ fontSize: 11, color: tokens.text.tertiary, marginTop: 4 }}>
-                    Enviado em {formatarData(e.enviado_em)}
-                    {e.preenchido_em && ' · Respondido em ' + formatarData(e.preenchido_em)}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    padding: '4px 10px',
-                    borderRadius: 100,
-                    background: statusInfo.bg,
-                    color: statusInfo.cor,
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {statusInfo.label}
                   </span>
-                  {clicavel && (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth="2">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  )}
+                  <span style={{ fontSize: 12.5, color: T.text.secondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {e.template?.nome || 'Formulário'} · {ORIGEM_LABEL[e.origem] || e.origem}
+                  </span>
+                  <span style={{ fontSize: 11.5, color: T.text.tertiary }}>
+                    Enviado em <span className="mono">{formatarData(e.enviado_em)}</span>
+                    {e.preenchido_em && <> · Respondido em <span className="mono">{formatarData(e.preenchido_em)}</span></>}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                  <Badge tone={statusInfo.tone} dot>{statusInfo.label}</Badge>
+                  {clicavel && <Icon icon={ChevronRight} size={16} color={T.text.tertiary} />}
                 </div>
               </div>
             )

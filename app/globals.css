@@ -5,55 +5,55 @@
 /* ── Design Tokens (espelhados em lib/design-tokens.ts) ──────────────── */
 :root {
   /* Backgrounds */
-  --bg-page: #FAFAFA;
+  --bg-page: #F7F7F8;
   --bg-card: #FFFFFF;
-  --bg-card-subtle: #FAFAFA;
-  --bg-hover: #F5F5F5;
-  --bg-hover-strong: #F3F4F6;
-  --bg-overlay: rgba(0,0,0,0.4);
-  --bg-muted: #F9FAFB;
+  --bg-card-subtle: #FAFAFB;
+  --bg-hover: #F5F5F7;
+  --bg-hover-strong: #F0F0F3;
+  --bg-overlay: rgba(28,27,34,0.32);
+  --bg-muted: #FAFAFB;
 
   /* Borders */
-  --border-default: #E5E7EB;
-  --border-subtle: #F3F4F6;
-  --border-strong: #D1D5DB;
-  --border-focus: #6043C1;
+  --border-default: #EBEAEF;
+  --border-subtle: #F3F2F6;
+  --border-strong: #DCDAE3;
+  --border-focus: #5B3FD0;
 
   /* Text */
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
-  --text-tertiary: #9CA3AF;
+  --text-primary: #1C1B22;
+  --text-secondary: #6B6977;
+  --text-tertiary: #A09EAB;
   --text-inverse: #FFFFFF;
-  --text-strong: #374151;
+  --text-strong: #2E2C36;
 
   /* Brand */
-  --brand-primary: #6043C1;
-  --brand-primary-hover: #4C2F9F;
-  --brand-primary-dark: #4C1D95;
-  --brand-primary-light: #F0EBFF;
-  --brand-primary-lighter: #EDE9FB;
-  --brand-primary-accent: #B9A9EF;
+  --brand-primary: #5B3FD0;
+  --brand-primary-hover: #4C32BD;
+  --brand-primary-dark: #3B2A96;
+  --brand-primary-light: #EFECFB;
+  --brand-primary-lighter: #EFECFB;
+  --brand-primary-accent: #CFC8F2;
 
   /* Status */
-  --status-success: #16A34A;
-  --status-success-bg: #F0FDF4;
-  --status-warning: #EA580C;
-  --status-warning-bg: #FFF7ED;
-  --status-danger: #DC2626;
-  --status-danger-bg: #FEF2F2;
+  --status-success: #1F8A5B;
+  --status-success-bg: #E7F5EE;
+  --status-warning: #9A5B00;
+  --status-warning-bg: #FDF1E0;
+  --status-danger: #C2413B;
+  --status-danger-bg: #FDECEA;
   --status-info: #3B82F6;
   --status-info-bg: #EFF6FF;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 2px rgba(28,27,34,0.05);
   --shadow-md: 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 18px 44px -14px rgba(28,27,34,0.22);
   --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-island: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-island: none;
 
   /* Radii */
   --radius-sm: 6px;
-  --radius-md: 8px;
+  --radius-md: 12px;
   --radius-lg: 10px;
   --radius-xl: 14px;
   --radius-2xl: 16px;
@@ -77,7 +77,7 @@
 body {
   background: var(--bg-page);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-family: var(--font-sans), 'Manrope', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -89,14 +89,17 @@ body {
 .fade-in { animation: fade-in 0.2s ease-out; }
 .pulse-record { animation: pulse-record 1.2s ease-in-out infinite; }
 
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 4px; }
 
+/* Padrão de campos — SEM !important, pra que o estilo inline vença.
+   Antes o !important forçava borda em inputs que ficam dentro de uma barra
+   com borda (buscas, composer), gerando o "stroke duplo" dentro da barra. */
 input, textarea, select {
-  background: var(--bg-card) !important;
-  border: 1px solid var(--border-default) !important;
-  color: var(--text-primary) !important;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
   border-radius: var(--radius-md);
   font-family: inherit;
 }
@@ -104,7 +107,14 @@ input::placeholder, textarea::placeholder { color: var(--text-tertiary) !importa
 input:focus, textarea:focus, select:focus {
   border-color: var(--border-focus) !important;
   outline: none !important;
-  box-shadow: 0 0 0 3px rgba(22,163,74,0.1) !important;
+  box-shadow: 0 0 0 4px rgba(91,63,208,0.1) !important;
+}
+/* Campo sem borda dentro de uma barra: o foco aparece na barra, não no campo */
+input[style*="border:none"]:focus, textarea[style*="border:none"]:focus {
+  box-shadow: none !important;
+}
+*:has(> input[style*="border:none"]:focus) {
+  border-color: var(--border-focus) !important;
 }
 
 .nav-item:hover { background: var(--bg-hover) !important; }
@@ -224,4 +234,14 @@ input:focus, textarea:focus, select:focus {
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ── Clinical 360 — design system v2 (handoff) ───────────────────────── */
+.mono, code, kbd { font-family: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+@keyframes c360-shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }
+.c360-skel {
+  background: #F3F2F6 linear-gradient(90deg, #F3F2F6 0, #FAFAFB 50%, #F3F2F6 100%) no-repeat;
+  background-size: 200px 100%;
+  animation: c360-shimmer 1.2s ease-in-out infinite;
 }

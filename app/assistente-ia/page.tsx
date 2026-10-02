@@ -3,11 +3,14 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { tokens } from '@/lib/design-tokens'
+import { Button, Icon, IconButton } from '@/components/ui'
+import { MessageSquare, PanelLeftClose, Plus, Trash2 } from 'lucide-react'
 import {
   listarConversas, criarConversa, listarMensagens, deletarConversa,
   type Conversa, type Mensagem,
 } from '@/lib/ai/assistente'
 import ChatAssistente from './ChatAssistente'
+import { confirmar } from '@/components/ui/dialogos'
 
 type Auth = {
   medicoId: string | null
@@ -38,6 +41,8 @@ export default function AssistenteIAPage() {
         router.replace('/login')
         return
       }
+      // Em telas estreitas a lista de conversas começa recolhida
+      if (window.innerWidth < 900) setSidebarAberta(false)
       setAuth({
         medicoId: med.id,
         clinicaId: med.clinica_id || null,
@@ -68,7 +73,7 @@ export default function AssistenteIAPage() {
 
   async function handleDeletar(conversaId: string, e: React.MouseEvent) {
     e.stopPropagation()
-    if (!confirm('Excluir esta conversa?')) return
+    if (!(await confirmar({ titulo: 'Excluir esta conversa?', mensagem: 'O histórico desta conversa com o assistente será apagado.', confirmar: 'Excluir', perigo: true }))) return
     await deletarConversa(conversaId)
     if (auth.medicoId) {
       const lista = await listarConversas(auth.medicoId)
@@ -104,115 +109,41 @@ export default function AssistenteIAPage() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
-      {/* Sidebar de conversas */}
-      <div style={{
-        width: sidebarAberta ? 280 : 0,
-        flexShrink: 0,
-        borderRight: sidebarAberta ? '1px solid ' + tokens.border.subtle : 'none',
-        background: '#fff',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        transition: 'width 0.2s',
-      }}>
-        <div style={{ padding: 16 }}>
-          <button
-            type="button"
-            onClick={novaConversa}
-            style={{
-              width: '100%',
-              padding: '11px 14px',
-              background: tokens.brand.primary,
-              color: '#fff',
-              border: 'none',
-              borderRadius: 10,
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Nova conversa
-          </button>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 16px' }}>
-          {conversas.length === 0 ? (
-            <div style={{ padding: '24px 12px', fontSize: 13, color: tokens.text.tertiary, textAlign: 'center', lineHeight: 1.5 }}>
-              Suas conversas aparecem aqui.
-            </div>
-          ) : (
-            conversas.map(c => {
-              const ativa = conversaAtiva === c.id
-              return (
-                <div
+    <div className={'ia-grid' + (sidebarAberta ? '' : ' ia-grid--fechada')}>
+      {/* Conversas recentes */}
+      {sidebarAberta && (
+        <div className="ia-lista" style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0, minHeight: 0 }}>
+          <Button icon={Plus} block onClick={novaConversa}>Nova conversa</Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0 0 6px' }}>
+            <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#9A98A5' }}>Recentes</span>
+            <IconButton icon={PanelLeftClose} size={28} onClick={() => setSidebarAberta(false)} aria-label="Ocultar conversas" title="Ocultar conversas" />
+          </div>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {conversas.length === 0 ? (
+              <div style={{ padding: '18px 10px', fontSize: 12.5, color: tokens.text.tertiary, lineHeight: 1.5 }}>
+                Suas conversas aparecem aqui.
+              </div>
+            ) : (
+              conversas.map(c => (
+                <ItemConversa
                   key={c.id}
-                  onClick={() => abrirConversa(c.id)}
-                  style={{
-                    padding: '10px 12px',
-                    marginBottom: 2,
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    background: ativa ? tokens.brand.primaryLight : 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    transition: 'background 0.12s',
-                  }}
-                  onMouseEnter={(e) => { if (!ativa) e.currentTarget.style.background = tokens.bg.cardSubtle }}
-                  onMouseLeave={(e) => { if (!ativa) e.currentTarget.style.background = 'transparent' }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ativa ? tokens.brand.primary : tokens.text.tertiary} strokeWidth="2" style={{ flexShrink: 0 }}>
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                  <span style={{
-                    flex: 1,
-                    fontSize: 13,
-                    fontWeight: ativa ? 600 : 500,
-                    color: ativa ? tokens.brand.primaryDarkText : tokens.text.primary,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {c.titulo}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => handleDeletar(c.id, e)}
-                    aria-label="Excluir conversa"
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: 2,
-                      color: tokens.text.tertiary,
-                      display: 'flex',
-                      flexShrink: 0,
-                      opacity: 0.6,
-                    }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                  </button>
-                </div>
-              )
-            })
-          )}
+                  titulo={c.titulo}
+                  quando={quandoConversa(c.atualizado_em || c.criado_em)}
+                  ativa={conversaAtiva === c.id}
+                  onAbrir={() => abrirConversa(c.id)}
+                  onDeletar={(e) => handleDeletar(c.id, e)}
+                />
+              ))
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Área do chat */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: tokens.bg.page }}>
+      <div style={{
+        border: '1px solid ' + tokens.border.default, borderRadius: 18, minWidth: 0, minHeight: 0,
+        display: 'flex', flexDirection: 'column', overflow: 'hidden', background: tokens.bg.card,
+      }}>
         <ChatAssistente
           medicoId={auth.medicoId!}
           clinicaId={auth.clinicaId}
@@ -226,6 +157,79 @@ export default function AssistenteIAPage() {
           onTituloAtualizado={onTituloAtualizado}
         />
       </div>
+
+      <style>{`
+        .ia-grid {
+          height: 100%; min-height: 480px; box-sizing: border-box; padding: 20px;
+          display: grid; grid-template-columns: 250px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 20px;
+        }
+        .ia-grid--fechada { grid-template-columns: minmax(0, 1fr); }
+        @media (max-width: 900px) {
+          .ia-grid { padding: 14px; gap: 14px; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+          .ia-grid--fechada { grid-template-rows: minmax(0, 1fr); }
+          .ia-lista { max-height: 38vh; }
+        }
+      `}</style>
     </div>
   )
+}
+
+function ItemConversa({ titulo, quando, ativa, onAbrir, onDeletar }: {
+  titulo: string
+  quando: string
+  ativa: boolean
+  onAbrir: () => void
+  onDeletar: (e: React.MouseEvent) => void
+}) {
+  const [h, setH] = useState(false)
+  return (
+    <div
+      onClick={onAbrir}
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 10, cursor: 'pointer',
+        background: ativa ? tokens.brand.primarySubtle : h ? tokens.bg.hover : 'transparent',
+        transition: 'background .12s',
+      }}
+    >
+      <Icon icon={MessageSquare} size={14} color={ativa ? tokens.brand.primary : tokens.text.tertiary} style={{ flexShrink: 0 }} />
+      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{
+          fontSize: 13, fontWeight: 600, color: ativa ? tokens.brand.primaryDarkText : tokens.text.strong,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>{titulo}</span>
+        {quando && <span style={{ fontSize: 11.5, color: tokens.text.tertiary }}>{quando}</span>}
+      </span>
+      <button
+        type="button"
+        onClick={onDeletar}
+        aria-label="Excluir conversa"
+        title="Excluir conversa"
+        style={{
+          width: 26, height: 26, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer',
+          display: 'grid', placeItems: 'center', flexShrink: 0, color: tokens.text.tertiary,
+          opacity: h || ativa ? 1 : 0, transition: 'opacity .12s, color .12s',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = tokens.status.danger }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = tokens.text.tertiary }}
+      >
+        <Icon icon={Trash2} size={14} />
+      </button>
+    </div>
+  )
+}
+
+/** "14:32" (hoje), "ontem", "seg" (últimos 7 dias) ou "22 set". */
+function quandoConversa(iso?: string) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  const hoje = new Date()
+  const inicio = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const dias = Math.round((inicio(hoje) - inicio(d)) / 86400000)
+  if (dias <= 0) return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  if (dias === 1) return 'ontem'
+  if (dias < 7) return d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
+  return d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '').replace(' de ', ' ')
 }

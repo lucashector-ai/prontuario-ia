@@ -1,10 +1,21 @@
 'use client'
 import { log } from '@/lib/logger'
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { supabase as sb } from '@/lib/supabase'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
 import { BotaoMemed } from '@/components/BotaoMemed'
 import { tokens } from '@/lib/design-tokens'
+import {
+  Avatar, Badge, Button, Field, Icon, IconButton, IconTile, Overline, ProgressBar,
+  SegmentedControl, Select, Switch, Textarea,
+} from '@/components/ui'
+import type { LucideIcon } from 'lucide-react'
+import {
+  Activity, CalendarPlus, Check, CircleX, Copy, FileText, History, Lightbulb, Link as LinkIcon, Lock,
+  MessageSquare, Mic, MicOff, Paperclip, PhoneOff, Save, Send, Sparkles, Square, Target, TriangleAlert,
+  UserRound, Users, Video, VideoOff, X,
+} from 'lucide-react'
+import { notificar } from '@/components/ui/dialogos'
 
 const ICE = { iceServers: [
   { urls: 'stun:stun.l.google.com:19302' },
@@ -677,7 +688,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       const d = await r.json()
       if (d.id) {
         setSalvado(true)
-        setTimeout(() => { window.location.href = '/histórico' }, 1500)
+        setTimeout(() => { window.location.href = '/historico' }, 1500)
       }
     } catch (err) { log.error('Erro salvar:', err) }
     setSalvando(false)
@@ -771,7 +782,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       } else {
         // Não-imagem: valida tamanho antes de codificar
         if (file.size > 400 * 1024) {
-          alert('Arquivo muito grande (max 400KB para PDF/outros). Tente comprimir ou enviar como imagem.')
+          notificar('Arquivo muito grande (máx. 400 KB). Comprima ou envie como imagem.', 'erro')
           setEnviandoAnexo(false)
           return
         }
@@ -780,7 +791,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
       // Verifica tamanho final do base64 antes de mandar
       if (base64.length > 500_000) {
-        alert('Arquivo ainda muito grande após compressão. Tente uma imagem menor.')
+        notificar('Arquivo ainda muito grande após compressão. Tente uma imagem menor.', 'erro')
         setEnviandoAnexo(false)
         return
       }
@@ -792,7 +803,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       if (!chatAberto) { setChatAberto(true); setNaoLidas(0) }
     } catch (err) {
       log.error('Erro ao enviar anexo:', err)
-      alert('Erro ao enviar anexo. Tente novamente.')
+      notificar('Erro ao enviar anexo. Tente novamente.', 'erro')
     }
     setEnviandoAnexo(false)
   }
@@ -825,632 +836,631 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     if (tela === 'precall') carregarDispositivos()
   }, [tela])
 
+
+  // ── Apresentação: painel lateral da chamada (IA / Chat / Pessoas) ──────────
+  // `chatAberto` continua sendo a fonte de verdade de "chat visível" (usado nos
+  // handlers); `abaPainel` só controla qual aba do painel está aberta.
+  const [abaPainel, setAbaPainel] = useState<AbaPainel | null>(null)
+  const [linkCopiado, setLinkCopiado] = useState(false)
+
+  useEffect(() => {
+    if (chatAberto) setAbaPainel('chat')
+  }, [chatAberto])
+
+  // Médico entra na chamada com a aba IA aberta (como no protótipo)
+  useEffect(() => {
+    if (tela === 'chamada' && isMedico) setAbaPainel(a => a ?? 'ia')
+  }, [tela, isMedico])
+
+  // Mensagens que chegam com o chat visível não contam como não lidas
+  useEffect(() => {
+    if (abaPainel === 'chat' && naoLidas > 0) setNaoLidas(0)
+  }, [abaPainel, naoLidas])
+
+  const selecionarAba = (a: AbaPainel) => {
+    setAbaPainel(a)
+    setChatAberto(a === 'chat')
+    if (a === 'chat') setNaoLidas(0)
+  }
+  const alternarAba = (a: AbaPainel) => {
+    if (abaPainel === a) fecharPainel()
+    else selecionarAba(a)
+  }
+  const fecharPainel = () => { setAbaPainel(null); setChatAberto(false) }
+
+  const copiarLink = () => {
+    try {
+      navigator.clipboard?.writeText(window.location.href)
+      setLinkCopiado(true)
+      setTimeout(() => setLinkCopiado(false), 2000)
+    } catch {}
+  }
+
+  const T = tokens
+  const N = T.night
+  const codigoSala = String(sala_id).slice(-4).toUpperCase()
+
   if (tela === 'carregando') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.text.slate900 }}>
-      <div style={{ width: 48, height: 48, borderRadius: '50%', border: `3px solid ${tokens.brand.primary}`, borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center', justifyContent: 'center', background: N[900], color: '#fff' }}>
+      <Spinner size={40} cor={T.brand.primaryAccent} trilho={branco(0.12)} />
+      <span style={{ fontSize: 13, color: TXT_ESCURO.secundario }}>Preparando a sala…</span>
+      <style>{ESTILOS_BASE}</style>
     </div>
   )
 
   if (tela === 'erro') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.text.slate900, flexDirection: 'column', gap: 16, padding: 24 }}>
-      <div style={{ width: 56, height: 56, borderRadius: 14, background: tokens.status.dangerDarker, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={tokens.status.dangerLightAlt} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: N[900], padding: 16 }}>
+      <div style={{ width: 'min(400px, 100%)', background: N[800], border: `1px solid ${branco(0.08)}`, borderRadius: T.radius['3xl'], padding: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
+        <span style={{ width: 52, height: 52, borderRadius: 16, display: 'grid', placeItems: 'center', background: 'rgba(229,72,77,.16)', color: '#FF8A8E' }}>
+          <Icon icon={CircleX} size={24} />
+        </span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Não foi possível entrar na sala</span>
+        <span style={{ fontSize: 13.5, color: TXT_ESCURO.secundario, lineHeight: 1.5 }}>{erro}</span>
       </div>
-      <p style={{ fontSize: 16, color: 'white', fontWeight: 600, margin: 0, textAlign: 'center', maxWidth: 320 }}>{erro}</p>
+      <style>{ESTILOS_BASE}</style>
     </div>
   )
 
   if (tela === 'encerrada_paciente') return (
-    <div style={{ minHeight:'100dvh', background:tokens.text.slate900, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:24, gap:20 }}>
-      <div style={{ width:80, height:80, borderRadius:'50%', background:`linear-gradient(135deg,${tokens.brand.primary},${tokens.appointment.exame.dot})`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 8px 32px rgba(96,67,193,0.4)' }}>
-        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
+    <div style={{ minHeight: '100dvh', background: N[900], display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ width: 'min(420px, 100%)', background: N[800], border: `1px solid ${branco(0.08)}`, borderRadius: T.radius['3xl'], padding: '32px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
+        <span style={{ width: 64, height: 64, borderRadius: '50%', display: 'grid', placeItems: 'center', background: N[600], color: '#D9D2FF' }}>
+          <Icon icon={Check} size={28} />
+        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>Consulta finalizada</span>
+          <span style={{ fontSize: 14, color: TXT_ESCURO.primario, lineHeight: 1.5 }}>Obrigado por usar nossa plataforma.</span>
+          <span style={{ fontSize: 13, color: TXT_ESCURO.secundario, lineHeight: 1.5 }}>O médico encerrou esta videoconsulta. Você já pode fechar esta janela com segurança.</span>
+        </div>
+        <Button size="lg" onClick={() => { try { window.close() } catch {} }} style={{ marginTop: 4 }}>Fechar janela</Button>
+        <span style={{ fontSize: 12, color: TXT_ESCURO.terciario, marginTop: 8 }}>Se tiver dúvidas, entre em contato com a clínica.</span>
       </div>
-      <div style={{ textAlign:'center' as const, maxWidth: 340 }}>
-        <h1 style={{ color:'white', fontSize:24, fontWeight:700, margin:'0 0 8px' }}>Consulta finalizada</h1>
-        <p style={{ color:tokens.text.slate400, fontSize:15, margin:'0 0 4px', lineHeight:1.5 }}>Obrigado por usar nossa plataforma.</p>
-        <p style={{ color:tokens.text.slate500, fontSize:13, margin:0, lineHeight:1.5 }}>O médico encerrou esta videoconsulta. Você já pode fechar esta janela com segurança.</p>
-      </div>
-      <div style={{ display:'flex', gap:10, marginTop:8, flexWrap:'wrap' as const, justifyContent:'center' }}>
-        <button onClick={() => { try { window.close() } catch {} }}
-          style={{ padding:'12px 24px', borderRadius:10, border:'none', background:tokens.brand.primary, color:'white', fontSize:14, fontWeight:600, cursor:'pointer' }}>
-          Fechar janela
-        </button>
-      </div>
-      <p style={{ color:tokens.text.slate600, fontSize:11, margin:'24px 0 0', textAlign:'center' as const }}>Se tiver dúvidas, entre em contato com a clínica.</p>
+      <style>{ESTILOS_BASE}</style>
     </div>
   )
 
-  if (tela === 'encerrado') return (
-    <div style={{ minHeight:'100dvh', background:tokens.text.slate900, overflowY:'auto' }}>
-      <div style={{ maxWidth:760, margin:'0 auto', padding:'32px 16px' }}>
-        {/* Header */}
-        <div style={{ textAlign:'center', marginBottom:28 }}>
-          <div style={{ width:56, height:56, borderRadius:'50%', background:tokens.brand.primary, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <h1 style={{ color:'white', fontSize:22, fontWeight:700, margin:'0 0 4px' }}>Consulta encerrada</h1>
-          <p style={{ color:tokens.text.slate500, fontSize:13, margin:0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}</p>
-          {timer > 0 && <p style={{ color:tokens.text.slate600, fontSize:12, margin:'4px 0 0' }}>Duração: {fmtTimer(timer)}</p>}
-        </div>
-
-        {/* Processando */}
-        {processando && !prontuarioData && (
-          <div style={{ background:tokens.text.slate800, borderRadius:12, padding:24, marginBottom:16, border:`1px solid ${tokens.text.slate700}`, textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:12 }}>
-            <div style={{ width:20, height:20, borderRadius:'50%', border:'2px solid rgba(234,179,8,0.4)', borderTopColor:tokens.accent.yellow, animation:'spin 0.8s linear infinite' }}/>
-            <p style={{ color:tokens.status.warningOrange, fontSize:14, margin:0, fontWeight:600 }}>Gerando prontuário com IA...</p>
-          </div>
-        )}
-
-        {/* Transcrição */}
-        {transcricao ? (
-          <div style={{ background:tokens.text.slate800, borderRadius:12, padding:20, marginBottom:16, border:`1px solid ${tokens.text.slate700}` }}>
-            <h2 style={{ color:tokens.status.infoBlue, fontSize:11, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.08em', margin:'0 0 12px' }}>Transcrição da consulta</h2>
-            <p style={{ color:tokens.text.slate200, fontSize:14, lineHeight:1.7, margin:0, whiteSpace:'pre-wrap' as const, maxHeight:200, overflow:'auto' }}>{transcricao}</p>
-          </div>
-        ) : !processando && (
-          <div style={{ background:tokens.text.slate800, borderRadius:12, padding:16, marginBottom:16, border:`1px solid ${tokens.text.slate700}`, textAlign:'center' }}>
-            <p style={{ color:tokens.text.slate500, fontSize:13, margin:0 }}>Nenhuma transcrição disponível (Modo Perfeita não foi ativado)</p>
-          </div>
-        )}
-
-        {/* Prontuário SOAP editável */}
-        {prontuarioData && (() => {
-          const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
-          return (
-            <div style={{ background:tokens.text.slate800, borderRadius:12, padding:20, marginBottom:16, border:`1px solid ${tokens.text.slate700}` }}>
-              <h2 style={{ color:tokens.accent.emeraldMid, fontSize:11, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.08em', margin:'0 0 16px' }}>Prontuário gerado pela IA — edite antes de salvar</h2>
-              {(['subjetivo','objetivo','avaliacao','plano'] as const).map(campo => {
-                const val = pd[campo] ?? ''
-                if (!val) return null
-                const label = campo === 'subjetivo' ? 'S · Subjetivo' : campo === 'objetivo' ? 'O · Objetivo' : campo === 'avaliacao' ? 'A · Avaliação / CID' : 'P · Plano'
-                return (
-                  <div key={campo} style={{ marginBottom:12 }}>
-                    <p style={{ color:tokens.text.slate400, fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 4px', letterSpacing:'0.05em' }}>{label}</p>
-                    <textarea defaultValue={val} rows={3} onChange={e => { camposRef.current[campo] = e.target.value }}
-                      style={{ width:'100%', padding:'10px 12px', fontSize:13, borderRadius:8, border:`1px solid ${tokens.text.slate700}`, background:tokens.text.slate900, color:tokens.text.slate200, resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
-                  </div>
-                )
-              })}
-              {Array.isArray(pd.cids) && pd.cids.length > 0 && (
-                <div style={{ marginBottom:8 }}>
-                  <p style={{ color:tokens.text.slate400, fontSize:11, fontWeight:700, textTransform:'uppercase' as const, margin:'0 0 6px', letterSpacing:'0.05em' }}>CIDs sugeridos</p>
-                  <div style={{ display:'flex', flexWrap:'wrap' as const, gap:6 }}>
-                    {pd.cids.map((cid: any, i: number) => (
-                      <span key={i} style={{ fontSize:11, padding:'5px 10px', borderRadius:6, background:tokens.text.slate700, color:tokens.text.slate200, border:`1px solid ${tokens.text.slate600}` }}>
-                        {cid.codigo} — {cid.descricao}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+  if (tela === 'encerrado') {
+    const pd = prontuarioData ? (prontuarioData?.prontuario ?? prontuarioData ?? {}) : null
+    const palavras = transcricao ? transcricao.trim().split(/\s+/).length : 0
+    return (
+      <div style={{ minHeight: '100dvh', background: N[900], overflowY: 'auto', padding: '32px 16px' }}>
+        <div style={{ width: 'min(680px, 100%)', margin: '0 auto', background: T.bg.card, borderRadius: T.radius['3xl'], boxShadow: T.shadow.modal, overflow: 'hidden' }}>
+          {/* Cabeçalho */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 22px 14px' }}>
+            <IconTile icon={Check} color={T.status.success} size={40} />
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: T.text.primary }}>Teleconsulta encerrada</span>
+              <span style={{ fontSize: 12.5, color: T.text.quaternary }}>Consulta <span className="mono">{codigoSala}</span>{pacienteSala?.nome ? ' · ' + pacienteSala.nome : ''}</span>
             </div>
-          )
-        })()}
+          </div>
 
-        {/* Botões de ação */}
-        <div style={{ display:'flex', gap:10, flexWrap:'wrap' as const, justifyContent:'center', marginTop:8 }}>
-          {prontuarioData && (
-            <button onClick={salvarProntuario} disabled={salvando || salvado}
-              style={{ padding:'12px 24px', borderRadius:9, border:'none', background: salvado ? tokens.status.successDarker : tokens.brand.primary, color:'white', fontSize:14, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', gap:8 }}>
-              {salvado
-                ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Salvo! Abrindo histórico...</>
-                : salvando
-                ? <><div style={{ width:14, height:14, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'white', animation:'spin 0.8s linear infinite' }}/>Salvando...</>
-                : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Salvar no histórico</>
-              }
-            </button>
-          )}
-          <button onClick={() => window.location.href = '/agenda'}
-            style={{ padding:'10px 20px', borderRadius:8, border:`1px solid ${tokens.text.slate700}`, background:'transparent', color:tokens.text.slate400, fontSize:14, cursor:'pointer' }}>
-            Agendar retorno
-          </button>
-          <button onClick={() => window.location.href = '/historico'}
-            style={{ padding:'10px 20px', borderRadius:8, border:`1px solid ${tokens.text.slate700}`, background:'transparent', color:tokens.text.slate400, fontSize:14, cursor:'pointer' }}>
-            Ver histórico
-          </button>
-          <button onClick={() => window.location.href = '/teleconsulta'}
-            style={{ padding:'10px 20px', borderRadius:8, border:`1px solid ${tokens.text.slate700}`, background:'transparent', color:tokens.text.slate400, fontSize:14, cursor:'pointer' }}>
-            Nova consulta
-          </button>
-        </div>
-      </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  )
+          <div style={{ padding: '0 22px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {/* Resumo */}
+            <div className="sala-resumo" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              <ResumoItem label="Duração" valor={<span className="mono" style={{ fontSize: 15 }}>{fmtTimer(timer)}</span>} />
+              <ResumoItem label="Paciente" valor={pacienteSala?.nome || '—'} />
+              <ResumoItem label="Transcrição" valor={palavras > 0 ? `${palavras} palavras` : 'Indisponível'} />
+            </div>
 
-    if (tela === 'precall') return (
-    <div style={{ minHeight: '100dvh', background: tokens.bg.hover, display: 'flex', flexDirection: 'column' }}>
-      {/* Header Clinical 360 */}
-      <div style={{ background: 'white', borderBottom: `1px solid ${tokens.border.default}`, padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 8, background: tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>
-        </div>
-        <div>
-          <p style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Clinical 360</p>
-          <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>Consulta - {String(sala_id).slice(-4).toUpperCase()}{pacienteSala?.nome ? ' · ' + pacienteSala.nome : ''}</p>
-        </div>
-      </div>
-      {/* Conteudo */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px' }}>
-        <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 900 }}>
-          {/* Preview camera */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ width: 'min(460px,90vw)', aspectRatio: '4/3', borderRadius: 12, overflow: 'hidden', background: tokens.neutral.gray800, position: 'relative' }}>
-              <video ref={esperaRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
-              {!camOn && (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.neutral.gray800 }}>
-                  <div style={{ width: 72, height: 72, borderRadius: '50%', background: tokens.text.strong, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke={tokens.text.tertiary} strokeWidth='1.5'><path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>
-                  </div>
-                </div>
-              )}
-              {/* Botoes mic/cam sobre o video */}
-              <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
-                <button onClick={toggleMic}
-                  style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.2)' : tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
-                  <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-                    {micOn ? (<><path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/><path d='M19 10v2a7 7 0 01-14 0v-2'/><line x1='12' y1='19' x2='12' y2='23'/></>) : (<><line x1='1' y1='1' x2='23' y2='23'/><path d='M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6'/></>)}
-                  </svg>
-                </button>
-                <button onClick={toggleCam}
-                  style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.2)' : tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
-                  <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-                    {camOn ? (<path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/>) : (<><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>)}
-                  </svg>
-                </button>
+            {/* Processando */}
+            {processando && !prontuarioData && (
+              <NotaIA>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                  <Spinner size={14} cor={T.brand.primary} trilho={T.brand.primaryAccent} />
+                  <b style={{ fontWeight: 600 }}>Gerando prontuário com IA…</b>
+                </span>
+              </NotaIA>
+            )}
+
+            {/* Transcrição */}
+            {transcricao ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Overline>Transcrição da consulta</Overline>
+                <div style={{ background: T.bg.page, borderRadius: 12, padding: '12px 14px', fontSize: 13, lineHeight: 1.65, color: T.text.strong, whiteSpace: 'pre-wrap', maxHeight: 200, overflow: 'auto' }}>{transcricao}</div>
               </div>
-            </div>
-          </div>
-          {/* Painel direito */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 260, maxWidth: 340 }}>
-            <div>
-              <h1 style={{ fontSize: 24, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>Pronto para entrar?</h1>
-              <p style={{ fontSize: 14, color: tokens.text.secondary, margin: 0 }}>Verifique camera e microfone antes de iniciar</p>
-            </div>
-            {/* Selecao de dispositivos */}
-            {audioInputs.length > 0 && (
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Microfone</label>
-                <select onChange={e => setAudioInputId(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${tokens.border.strong}`, fontSize: 13, color: tokens.text.primary, background: 'white', outline: 'none' }}>
-                  {audioInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Microfone ' + d.deviceId.slice(0,4)}</option>)}
-                </select>
+            ) : !processando && (
+              <div style={{ background: T.bg.page, borderRadius: 12, padding: '12px 14px', fontSize: 13, color: T.text.quaternary, textAlign: 'center' }}>
+                Nenhuma transcrição disponível (Modo Perfeita não foi ativado)
               </div>
             )}
-            {videoInputs.length > 0 && (
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: tokens.text.strong, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Camera</label>
-                <select onChange={e => setVideoInputId(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${tokens.border.strong}`, fontSize: 13, color: tokens.text.primary, background: 'white', outline: 'none' }}>
-                  {videoInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Camera ' + d.deviceId.slice(0,4)}</option>)}
-                </select>
+
+            {/* Prontuário SOAP editável */}
+            {pd && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <Icon icon={Sparkles} size={16} color={T.brand.primary} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: T.text.primary }}>Prontuário gerado pela IA</span>
+                  <span style={{ fontSize: 12, color: T.text.quaternary }}>edite antes de salvar</span>
+                </div>
+                {(['subjetivo', 'objetivo', 'avaliacao', 'plano'] as const).map(campo => {
+                  const val = pd[campo] ?? ''
+                  if (!val) return null
+                  return (
+                    <Field key={campo} label={ROTULO_SOAP[campo]}>
+                      <Textarea defaultValue={val} rows={3} onChange={e => { camposRef.current[campo] = e.target.value }} style={{ fontSize: 13 }} />
+                    </Field>
+                  )
+                })}
+                {Array.isArray(pd.cids) && pd.cids.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <Overline>CIDs sugeridos</Overline>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {pd.cids.map((cid: any, i: number) => (
+                        <Badge key={i} tone="accent"><span className="mono">{cid.codigo}</span> — {cid.descricao}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-            {/* Status */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: micOn ? tokens.brand.primary : tokens.status.danger, background: micOn ? tokens.brand.primaryLighter : tokens.status.dangerBg, padding: '4px 10px', borderRadius: 20, border: '1px solid', borderColor: micOn ? tokens.brand.primaryAccent : tokens.status.dangerLight }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }}/>
-                {micOn ? 'Mic ativo' : 'Mic desligado'}
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: camOn ? tokens.brand.primary : tokens.status.danger, background: camOn ? tokens.brand.primaryLighter : tokens.status.dangerBg, padding: '4px 10px', borderRadius: 20, border: '1px solid', borderColor: camOn ? tokens.brand.primaryAccent : tokens.status.dangerLight }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }}/>
-                {camOn ? 'Camera ativa' : 'Camera desligada'}
-              </span>
-            </div>
-            {/* Botao entrar */}
-            <button onClick={() => { pararEspera(); entrarNaChamada() }}
-              style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: tokens.brand.primary, color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer', width: '100%' }}>
-              Entrar na consulta
-            </button>
+          </div>
+
+          {/* Ações */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', padding: '14px 22px', borderTop: `1px solid ${T.border.muted}` }}>
+            <Button variant="secondary" icon={CalendarPlus} onClick={() => window.location.href = '/agenda'}>Agendar retorno</Button>
+            <Button variant="secondary" icon={History} onClick={() => window.location.href = '/historico'}>Ver histórico</Button>
+            <Button variant="secondary" icon={Video} onClick={() => window.location.href = '/teleconsulta'}>Nova consulta</Button>
+            {prontuarioData && <BotaoSalvar salvando={salvando} salvado={salvado} onClick={salvarProntuario} />}
           </div>
         </div>
+        <style>{ESTILOS_BASE + `@media (max-width: 520px) { .sala-resumo { grid-template-columns: 1fr !important; } }`}</style>
       </div>
-    </div>
-  )
+    )
+  }
 
-
-
-  if (tela === 'espera') return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: tokens.text.slate900, gap: 20, padding: 24 }}>
-      {papelRef.current === 'paciente' ? (
-        <>
-          <div style={{ width: 96, height: 96, borderRadius: '50%', background: `linear-gradient(135deg,${tokens.status.infoDark},${tokens.appointment.retorno.dot})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width='44' height='44' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='1.5'><path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ color: 'white', fontSize: 20, fontWeight: 700, margin: '0 0 8px' }}>Aguardando o medico</p>
-            <p style={{ color: tokens.text.slate500, fontSize: 14, margin: 0 }}>O medico entrara em breve. Por favor, aguarde.</p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.accent.emerald }}/>
-            <span style={{ color: tokens.accent.emerald, fontSize: 13, fontWeight: 600 }}>Conectado</span>
-          </div>
-        </>
-      ) : (
-        <>
-          <div style={{ width: 72, height: 72, borderRadius: '50%', background: tokens.text.slate800, border: `2px solid ${tokens.text.slate700}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke={tokens.text.slate500} strokeWidth='1.5'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ color: 'white', fontSize: 20, fontWeight: 700, margin: '0 0 8px' }}>Sala de espera</p>
-            <p style={{ color: tokens.text.slate500, fontSize: 14, margin: 0 }}>Aguardando o paciente conectar...</p>
-          </div>
-        </>
-      )}
-    </div>
-  )
-
-  //  TELA DA CHAMADA 
-  return (
-    <div style={{ width: '100vw', height: '100dvh', background: tokens.text.slate900, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-      {/* Header */}
-      <div style={{ background: tokens.text.slate800, padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: `1px solid ${tokens.text.slate700}`, minHeight: 48 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 26, height: 26, borderRadius: 6, background: tokens.brand.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Consulta - {String(sala_id).slice(-4).toUpperCase()}{pacienteSala?.nome ? ' · ' + pacienteSala.nome : ''}
-            </p>
-            {sala?.titulo && <p style={{ fontSize: 11, color: tokens.text.slate400, margin: 0, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{sala.titulo}</p>}
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {tela === 'chamada' && isMedico && (
-            <BotaoMemed onClick={() => setMemedAberto(true)} variant="compact" disabled={!medicoSala || !pacienteSala} disabledReason="Aguardando dados do paciente" />
-          )}
-          {tela === 'chamada' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: tokens.text.slate900, padding: '3px 10px', borderRadius: 20, border: `1px solid ${tokens.status.successDeep}` }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: tokens.accent.emerald, display: 'inline-block' }}/>
-              <span style={{ fontSize: 12, color: tokens.accent.emerald, fontWeight: 700, fontFamily: 'monospace' }}>{fmtTimer(timer)}</span>
-            </div>
-          )}
-          {isMedico && tela === 'chamada' && (
-            <button onClick={toggleGravação}
-              style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer',
-                background: gravando ? 'rgba(220,38,38,0.15)' : 'rgba(22,163,74,0.15)',
-                color: gravando ? tokens.status.dangerSoft : tokens.whatsapp.bubbleBorder }}>
-              <span style={{ width:7, height:7, borderRadius:'50%', background: gravando ? tokens.status.dangerStrong : tokens.accent.emerald, display:'inline-block',
-                animation: gravando ? 'pulse 1s infinite' : 'none' }}/>
-              <span style={{ fontSize:11, fontWeight:600 }}>{gravando ? 'Gravando...' : 'Gravar'}</span>
-            </button>
-          )}
-          {isMedico && tela === 'chamada' && (
-            <button onClick={() => setModoPerfeita(v => !v)}
-              style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer',
-                background: modoPerfeita ? 'rgba(96,67,193,0.2)' : 'rgba(148,163,184,0.12)',
-                color: modoPerfeita ? tokens.accent.violetSoft : tokens.text.slate400 }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/>
-              </svg>
-              <span style={{ fontSize:11, fontWeight:600 }}>
-                {modoPerfeita ? (carregandoSugestoes ? 'Analisando...' : 'Modo Perfeita') : 'Modo Perfeita'}
-              </span>
-            </button>
-          )}
-          {isMedico && processando && (
-            <div style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, background:'rgba(234,179,8,0.15)' }}>
-              <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid rgba(234,179,8,0.4)', borderTopColor:tokens.accent.yellow, animation:'spin 0.8s linear infinite' }}/>
-              <span style={{ fontSize:11, color:tokens.status.warningOrange, fontWeight:600 }}>Gerando prontuario...</span>
-            </div>
-          )}
-          <span style={{ fontSize: 10, color: tokens.text.slate600, background: tokens.text.slate900, border: `1px solid ${tokens.text.slate800}`, padding: '3px 8px', borderRadius: 6 }}>
-            {isMedico ? ' Medico' : ' Paciente'}
+  if (tela === 'precall') return (
+    <div style={{ minHeight: '100dvh', background: T.bg.page, display: 'flex', flexDirection: 'column' }}>
+      {/* Cabeçalho */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px' }}>
+        <span style={{ width: 32, height: 32, borderRadius: 10, background: T.brand.primary, color: '#fff', display: 'grid', placeItems: 'center' }}>
+          <Icon icon={Activity} size={16} />
+        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25, minWidth: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: T.text.primary }}>Clinical 360</span>
+          <span style={{ fontSize: 12, color: T.text.quaternary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            Consulta <span className="mono">{codigoSala}</span>{pacienteSala?.nome ? ' · ' + pacienteSala.nome : ''}
           </span>
         </div>
       </div>
 
-      {/* Corpo: video + chat */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
-
-        {/* Area de video  usa letterbox para video portrait no desktop */}
-        <div style={{ flex: 1, position: 'relative', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', minWidth: 0 }}>
-          {/* Video remoto: object-fit:contain garante letterbox para mobile portrait */}
-          <video ref={remoteRef} autoPlay playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', maxWidth: '100%', maxHeight: '100%' }}/>
-
-          {/* Overlay aguardando */}
-          {!remoteConectado && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.text.slate900, flexDirection: 'column', gap: 16 }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', border: `3px solid ${tokens.brand.primary}`, borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}/>
-              <p style={{ fontSize: 15, color: 'white', fontWeight: 600, margin: 0 }}>
-                {isMedico ? 'Aguardando paciente entrar...' : 'Conectando...'}
-              </p>
+      {/* Conteúdo */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 16px 32px' }}>
+        <div style={{ width: 'min(940px, 100%)', background: T.bg.card, border: `1px solid ${T.border.default}`, borderRadius: T.radius['3xl'], padding: 20, display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'stretch' }}>
+          {/* Preview da câmera */}
+          <div style={{ flex: '1 1 380px', minWidth: 0, aspectRatio: '16/10', borderRadius: T.radius['2xl'], overflow: 'hidden', background: `radial-gradient(circle at 50% 42%, #2f2a46, ${N[800]} 72%)`, position: 'relative' }}>
+            <video ref={esperaRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', display: 'block' }} />
+            {!camOn && (
+              <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: N[800] }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: TXT_ESCURO.primario }}>
+                  <Icon icon={VideoOff} size={16} />Câmera desligada
+                </span>
+              </div>
+            )}
+            <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
+              <BotaoRedondo icon={micOn ? Mic : MicOff} desligado={!micOn} onClick={toggleMic} title="Microfone" size={44} />
+              <BotaoRedondo icon={camOn ? Video : VideoOff} desligado={!camOn} onClick={toggleCam} title="Câmera" size={44} />
             </div>
-          )}
+          </div>
 
-          {/* Video local PiP  canto inferior direito */}
-          {(tela === 'chamada' || entrando) && (
-            <div style={{ position: 'absolute', bottom: 72, right: 12, width: 'clamp(100px, 22vw, 160px)', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', border: `2px solid ${tokens.text.slate800}`, background: '#111', zIndex: 10 }}>
-              <video ref={localRef} autoPlay playsInline muted
-                style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}/>
-              {!camOn && (
-                <div style={{ position: 'absolute', inset: 0, background: tokens.text.slate800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={tokens.text.slate600} strokeWidth="1.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8"/></svg>
+          {/* Painel direito */}
+          <div style={{ flex: '1 1 260px', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 16, justifyContent: 'center', padding: '4px 0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Overline>Teleconsulta</Overline>
+              <span style={{ fontSize: 22, fontWeight: 700, color: T.text.primary, letterSpacing: '-.02em' }}>Pronto para entrar?</span>
+              <span style={{ fontSize: 13.5, color: T.text.quaternary, lineHeight: 1.5 }}>Verifique câmera e microfone antes de iniciar.</span>
+            </div>
+
+            {audioInputs.length > 0 && (
+              <Field label="Microfone">
+                <Select onChange={e => setAudioInputId(e.target.value)}>
+                  {audioInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Microfone ' + d.deviceId.slice(0, 4)}</option>)}
+                </Select>
+              </Field>
+            )}
+            {micOkEspera && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: T.text.secondary }}>Nível do microfone</span>
+                <ProgressBar valor={micVol} altura={6} />
+              </div>
+            )}
+            {videoInputs.length > 0 && (
+              <Field label="Câmera">
+                <Select onChange={e => setVideoInputId(e.target.value)}>
+                  {videoInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Câmera ' + d.deviceId.slice(0, 4)}</option>)}
+                </Select>
+              </Field>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Badge tone={micOn ? 'accent' : 'danger'} icon={micOn ? Mic : MicOff}>{micOn ? 'Microfone ativo' : 'Microfone desligado'}</Badge>
+              <Badge tone={camOn ? 'accent' : 'danger'} icon={camOn ? Video : VideoOff}>{camOn ? 'Câmera ativa' : 'Câmera desligada'}</Badge>
+            </div>
+
+            <Button size="lg" block icon={Video} onClick={() => { pararEspera(); entrarNaChamada() }}>Entrar na consulta</Button>
+          </div>
+        </div>
+      </div>
+      <style>{ESTILOS_BASE}</style>
+    </div>
+  )
+
+  if (tela === 'espera') return (
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: N[900], gap: 18, padding: 24, textAlign: 'center' }}>
+      <span style={{ width: 96, height: 96, borderRadius: '50%', background: N[600], color: '#D9D2FF', display: 'grid', placeItems: 'center', animation: 'salaAnel 2.4s ease-in-out infinite' }}>
+        <Icon icon={papelRef.current === 'paciente' ? UserRound : Users} size={38} />
+      </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <span style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>{papelRef.current === 'paciente' ? 'Aguardando o médico' : 'Sala de espera'}</span>
+        <span style={{ color: TXT_ESCURO.secundario, fontSize: 14 }}>{papelRef.current === 'paciente' ? 'O médico entrará em breve. Por favor, aguarde.' : 'Aguardando o paciente conectar…'}</span>
+      </div>
+      {papelRef.current === 'paciente' && (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 12px', borderRadius: 99, background: branco(0.08), fontSize: 12.5, fontWeight: 600, color: '#4ADE80' }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ADE80' }} />Conectado
+        </span>
+      )}
+      <style>{ESTILOS_BASE}</style>
+    </div>
+  )
+
+  // ── TELA DA CHAMADA ─────────────────────────────────────────────────────────
+  const nomeOutro = isMedico ? (pacienteSala?.nome || 'Paciente') : (medicoSala?.nome || 'Médico')
+  const nomeVoce = isMedico ? (medicoSala?.nome || 'Você') : (pacienteSala?.nome || 'Você')
+  const tituloChamada = isMedico && pacienteSala?.nome ? 'Teleconsulta com ' + pacienteSala.nome : 'Teleconsulta'
+  const subtituloChamada = sala?.titulo || ('Consulta ' + codigoSala)
+  const abas: { value: AbaPainel; label: string }[] = isMedico
+    ? [{ value: 'ia', label: 'IA' }, { value: 'chat', label: 'Chat' }, { value: 'pessoas', label: 'Pessoas' }]
+    : [{ value: 'chat', label: 'Chat' }, { value: 'pessoas', label: 'Pessoas' }]
+  const botoesPainel: { aba: AbaPainel; icon: LucideIcon; title: string; badge?: boolean }[] = [
+    ...(isMedico ? [{ aba: 'ia' as AbaPainel, icon: Sparkles, title: 'Transcrição e IA', badge: modoPerfeita && toastsIA.length > 0 && abaPainel !== 'ia' }] : []),
+    { aba: 'chat', icon: MessageSquare, title: 'Chat', badge: naoLidas > 0 && abaPainel !== 'chat' },
+    { aba: 'pessoas', icon: Users, title: 'Participantes' },
+  ]
+  const sair = () => {
+    if (papelRef.current === 'paciente') {
+      streamRef.current?.getTracks().forEach(t => t.stop()); pcRef.current?.close(); channelRef.current?.unsubscribe()
+      try { window.close() } catch (e) {}
+      window.location.href = '/login'
+    } else {
+      encerrar()
+    }
+  }
+  const itensChat = [...chat.map(m => ({ ...m, _tipo: 'msg' })), ...anexos.map(a => ({ ...a, _tipo: 'anexo' }))]
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: N[900], color: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+      {/* Cabeçalho */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', flexWrap: 'wrap', flexShrink: 0 }}>
+        <span style={{ width: 30, height: 30, borderRadius: 9, background: N[700], display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+          <Icon icon={Activity} size={15} />
+        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25, minWidth: 0, flex: '1 1 160px' }}>
+          <span style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tituloChamada}</span>
+          <span style={{ fontSize: 12, color: TXT_ESCURO.secundario, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{subtituloChamada}</span>
+        </div>
+        {isMedico && (
+          <BotaoMemed onClick={() => setMemedAberto(true)} variant="compact" disabled={!medicoSala || !pacienteSala} disabledReason="Aguardando dados do paciente" />
+        )}
+        {isMedico && processando && (
+          <PilulaEscura cor="#FDE68A" fundo="rgba(234,179,8,.14)">
+            <Spinner size={11} cor="#FDE68A" trilho="rgba(253,230,138,.3)" />Gerando prontuário…
+          </PilulaEscura>
+        )}
+        {isMedico && (
+          <PilulaEscura
+            onClick={toggleGravação}
+            title={gravando ? 'Parar gravação' : 'Iniciar gravação'}
+            cor={gravando ? '#FFB3B3' : TXT_ESCURO.primario}
+            fundo={gravando ? 'rgba(255,107,107,.14)' : branco(0.08)}
+          >
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: gravando ? '#FF6B6B' : TXT_ESCURO.terciario, animation: gravando ? 'salaPulso 1.2s infinite' : 'none' }} />
+            {gravando ? 'Gravando' : 'Gravar'}
+          </PilulaEscura>
+        )}
+        <PilulaEscura cor="#fff" fundo={branco(0.08)}>
+          <Icon icon={Lock} size={13} color="#4ADE80" />
+          <span className="mono" style={{ fontSize: 12.5 }}>{fmtTimer(timer)}</span>
+        </PilulaEscura>
+      </div>
+
+      {/* Corpo: palco de vídeo + painel lateral */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 14, padding: '0 16px', position: 'relative' }}>
+
+        {/* Palco */}
+        <div style={{ flex: 1, minWidth: 0, position: 'relative', borderRadius: T.radius['3xl'], overflow: 'hidden', background: `radial-gradient(circle at 50% 42%, #2f2a46, ${N[800]} 72%)` }}>
+          {/* Vídeo remoto: contain = letterbox para vídeo em retrato */}
+          <video ref={remoteRef} autoPlay playsInline
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: 'transparent' }} />
+
+          {/* Aguardando o outro participante */}
+          {!remoteConectado && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, padding: 20, background: `radial-gradient(circle at 50% 42%, #2f2a46, ${N[800]} 72%)` }}>
+              <span style={{ width: 132, height: 132, borderRadius: '50%', background: N[600], color: '#D9D2FF', display: 'grid', placeItems: 'center', fontSize: 42, fontWeight: 700, animation: 'salaAnel 2.4s ease-in-out infinite' }}>
+                {iniciais(nomeOutro) || <Icon icon={UserRound} size={48} />}
+              </span>
+              <span style={{ fontSize: 15, fontWeight: 600 }}>{isMedico ? 'Aguardando paciente entrar…' : 'Conectando…'}</span>
+              {isMedico && (
+                <div style={{ width: 'min(380px, 100%)', background: '#fff', color: T.text.primary, borderRadius: 18, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700 }}>Sua sala está pronta</span>
+                  <span style={{ fontSize: 13, color: T.text.secondary, lineHeight: 1.5 }}>Envie o link para o paciente. Ele entra pelo navegador, sem instalar nada.</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, padding: '0 5px 0 12px', borderRadius: 11, background: T.bg.page }}>
+                    <span className="mono" style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: T.text.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {typeof window !== 'undefined' ? window.location.host + window.location.pathname : ''}
+                    </span>
+                    <IconButton icon={linkCopiado ? Check : Copy} size={30} onClick={copiarLink} title="Copiar link" aria-label="Copiar link" />
+                  </div>
                 </div>
               )}
-              <p style={{ position: 'absolute', bottom: 3, left: 0, right: 0, textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.7)', margin: 0 }}>Voce</p>
             </div>
           )}
 
-          {/* Botao flutuante do chat */}
-          {/* MODO PERFEITA: Toasts flutuantes no canto superior direito */}
-          {tela === 'chamada' && modoPerfeita && isMedico && toastsIA.length > 0 && (
-            <div style={{ position: 'fixed', top: 70, right: 16, width: 300, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 45, pointerEvents: 'none' }}>
+          {/* Nome do participante remoto */}
+          {remoteConectado && (
+            <span style={{ position: 'absolute', left: 16, bottom: 16, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 10, background: 'rgba(0,0,0,.45)', fontSize: 13, fontWeight: 600, maxWidth: 'calc(100% - 280px)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <Icon icon={Mic} size={14} color="#4ADE80" />{nomeOutro}
+            </span>
+          )}
+
+          {/* Self-view (PiP) */}
+          {(tela === 'chamada' || entrando) && (
+            <div style={{ position: 'absolute', right: 16, bottom: 16, width: 'min(220px, 32%)', minWidth: 110, aspectRatio: '16/10', borderRadius: 14, overflow: 'hidden', background: camOn ? '#2B2840' : '#24232B', border: `1px solid ${branco(0.1)}`, zIndex: 10 }}>
+              <video ref={localRef} autoPlay playsInline muted
+                style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', display: 'block' }} />
+              {!camOn && (
+                <div style={{ position: 'absolute', inset: 0, background: '#24232B', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 12, color: '#C3C1CC' }}>
+                  <Icon icon={VideoOff} size={15} />Câmera desligada
+                </div>
+              )}
+              <span style={{ position: 'absolute', left: 8, bottom: 8, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 7, background: 'rgba(0,0,0,.45)', fontSize: 11.5, fontWeight: 600 }}>
+                <Icon icon={micOn ? Mic : MicOff} size={12} />Você
+              </span>
+            </div>
+          )}
+
+          {/* Modo Perfeita: insights novos flutuando no topo do palco */}
+          {modoPerfeita && isMedico && toastsIA.length > 0 && abaPainel !== 'ia' && (
+            <div style={{ position: 'absolute', top: 16, right: 16, width: 'min(300px, calc(100% - 32px))', display: 'flex', flexDirection: 'column', gap: 8, zIndex: 15, pointerEvents: 'none' }}>
               {toastsIA.map(t => {
-                const cfg = t.tipo === 'foco'
-                  ? { icon: '🎯', label: 'Foco', bg: 'rgba(59,130,246,0.95)', cor: 'white' }
-                  : t.tipo === 'alerta'
-                  ? { icon: '⚠️', label: 'Alerta', bg: 'rgba(220,38,38,0.95)', cor: 'white' }
-                  : { icon: '💡', label: 'Sugestão', bg: 'rgba(96,67,193,0.95)', cor: 'white' }
+                const cfg = CFG_INSIGHT[t.tipo]
                 return (
-                  <div key={t.id} style={{ background: cfg.bg, borderRadius: 12, padding: '10px 14px', backdropFilter: 'blur(8px)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)', animation: 'slideInToast 0.3s ease-out', pointerEvents: 'auto' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                      <span style={{ fontSize: 12 }}>{cfg.icon}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: cfg.cor, letterSpacing: '0.04em', textTransform: 'uppercase' as const, opacity: 0.9 }}>{cfg.label}</span>
-                      <span style={{ fontSize: 9, color: cfg.cor, marginLeft: 'auto', opacity: 0.75, fontVariantNumeric: 'tabular-nums' as const }}>{t.hora}</span>
+                  <div key={t.id} style={{ background: N[800], border: `1px solid ${branco(0.1)}`, borderRadius: 14, padding: '10px 12px', display: 'flex', gap: 10, animation: 'salaToast .3s ease-out', pointerEvents: 'auto', boxShadow: '0 12px 30px -12px rgba(0,0,0,.6)' }}>
+                    <span style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, display: 'grid', placeItems: 'center', background: cfg.fundoEscuro, color: cfg.corEscura }}>
+                      <Icon icon={cfg.icon} size={14} />
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ display: 'flex', fontSize: 11.5, fontWeight: 700, color: cfg.corEscura }}>
+                        {cfg.label}<span className="mono" style={{ marginLeft: 'auto', fontWeight: 500, color: TXT_ESCURO.terciario }}>{t.hora}</span>
+                      </span>
+                      <span style={{ fontSize: 13, lineHeight: 1.45, color: '#fff' }}>{t.texto}</span>
                     </div>
-                    <p style={{ fontSize: 13, color: cfg.cor, margin: 0, lineHeight: 1.4, fontWeight: 500 }}>{t.texto}</p>
                   </div>
                 )
               })}
             </div>
           )}
+        </div>
 
-          {/* MODO PERFEITA: Botão de histórico flutuante (quando tem pelo menos 1 msg) */}
-          {tela === 'chamada' && modoPerfeita && isMedico && mensagensIA.length > 0 && (
-            <button onClick={() => setHistoricoIAAberto(true)}
-              style={{ position: 'fixed', top: 70, right: 16 + (toastsIA.length > 0 ? 308 : 0), background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(96,67,193,0.4)', color: tokens.accent.violetSoft, padding: '6px 10px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, zIndex: 46, backdropFilter: 'blur(8px)', transition: 'right 0.3s' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              {mensagensIA.length} insights
-            </button>
-          )}
+        {/* Input de arquivo oculto */}
+        <input ref={anexoInputRef} type="file" accept="image/*,.pdf" style={{ display: 'none' }}
+          onChange={e => { const f = e.target.files?.[0]; if (f) enviarAnexo(f); e.target.value = '' }} />
 
-          {/* MODO PERFEITA: Modal de histórico completo */}
-          {historicoIAAberto && (
-            <div onClick={() => setHistoricoIAAberto(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-              <div onClick={e => e.stopPropagation()} style={{ background: 'rgba(15,23,42,0.98)', borderRadius: 16, border: '1px solid rgba(96,67,193,0.4)', width: 480, maxWidth: '100%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderBottom: '1px solid rgba(148,163,184,0.18)' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.accent.violetSoft} strokeWidth="2">
-                    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/>
-                  </svg>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: tokens.accent.violetSoft, margin: 0 }}>Modo Perfeita — Histórico</p>
-                    <p style={{ fontSize: 11, color: tokens.text.slate500, margin: '2px 0 0' }}>{mensagensIA.length} insights nesta consulta</p>
+        {/* Painel lateral */}
+        {abaPainel && (
+          <div className="sala-painel" style={{ width: 340, maxWidth: '44vw', flexShrink: 0, background: T.bg.card, color: T.text.primary, borderRadius: T.radius['3xl'], display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'salaPainel .2s ease' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 14px 10px' }}>
+              <SegmentedControl<AbaPainel> options={abas} value={abaPainel} onChange={selecionarAba} stretch size="sm" style={{ flex: 1 }} />
+              <IconButton icon={X} size={32} onClick={fecharPainel} aria-label="Fechar painel" />
+            </div>
+
+            {/* Aba IA (só médico) */}
+            {abaPainel === 'ia' && isMedico && (
+              <div ref={chatIARef} style={{ flex: 1, overflow: 'auto', padding: '4px 16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Gravação */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: `1px solid ${T.border.default}` }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: gravando ? T.status.dangerStrong : T.text.tertiary, animation: gravando ? 'salaPulso 1.2s infinite' : 'none' }} />
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{gravando ? 'Gravando a consulta' : 'Gravação parada'}</span>
+                    <span style={{ fontSize: 12, color: T.text.quaternary }}>{gravando ? 'O prontuário é gerado ao encerrar' : 'Inicie para gerar o prontuário'}</span>
                   </div>
-                  <button onClick={() => setHistoricoIAAberto(false)} style={{ background: 'transparent', border: 'none', color: tokens.text.slate400, cursor: 'pointer', padding: 4, display: 'flex' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </button>
+                  <Button size="sm" variant={gravando ? 'danger' : 'secondary'} icon={gravando ? Square : Mic} onClick={toggleGravação}>{gravando ? 'Parar' : 'Gravar'}</Button>
                 </div>
-                <div ref={chatIARef} style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {mensagensIA.map((m, i) => {
-                    const cfg = m.tipo === 'foco'
-                      ? { icon: '🎯', label: 'Foco', bg: 'rgba(59,130,246,0.14)', border: 'rgba(59,130,246,0.3)', cor: tokens.status.infoBlueLight }
-                      : m.tipo === 'alerta'
-                      ? { icon: '⚠️', label: 'Alerta', bg: 'rgba(220,38,38,0.14)', border: 'rgba(220,38,38,0.35)', cor: tokens.status.dangerLightAlt }
-                      : { icon: '💡', label: 'Sugestão', bg: 'rgba(96,67,193,0.14)', border: 'rgba(96,67,193,0.3)', cor: tokens.accent.violetSoft }
-                    return (
-                      <div key={i} style={{ background: cfg.bg, border: '1px solid ' + cfg.border, borderRadius: 10, padding: '10px 12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                          <span style={{ fontSize: 11 }}>{cfg.icon}</span>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: cfg.cor, letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>{cfg.label}</span>
-                          <span style={{ fontSize: 9, color: tokens.text.slate500, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' as const }}>{m.hora}</span>
+
+                {/* Modo Perfeita */}
+                <div style={{ padding: '10px 12px', borderRadius: 12, border: `1px solid ${modoPerfeita ? T.brand.primaryAccentSoft : T.border.default}`, background: modoPerfeita ? T.brand.primarySoftBg : T.bg.card }}>
+                  <Switch
+                    checked={modoPerfeita}
+                    onChange={v => setModoPerfeita(v)}
+                    label={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Sparkles} size={14} color={T.brand.primary} />Modo Perfeita{modoPerfeita && carregandoSugestoes ? <span style={{ fontSize: 12, fontWeight: 500, color: T.brand.primary }}>· analisando…</span> : null}</span>}
+                    descricao="A IA acompanha a conversa e sugere focos, perguntas e alertas."
+                  />
+                </div>
+
+                {processando && (
+                  <NotaIA>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                      <Spinner size={13} cor={T.brand.primary} trilho={T.brand.primaryAccent} />Gerando prontuário…
+                    </span>
+                  </NotaIA>
+                )}
+                {prontuarioData && !processando && (
+                  <Button variant="secondary" icon={FileText} onClick={() => setProntuarioModal(true)}>Revisar prontuário</Button>
+                )}
+
+                {/* Insights */}
+                {modoPerfeita && (
+                  <>
+                    <Overline style={{ color: '#9A98A5' }}>Insights da IA{mensagensIA.length > 0 ? ` · ${mensagensIA.length}` : ''}</Overline>
+                    {mensagensIA.length === 0 ? (
+                      <NotaIA>Ouvindo a consulta… as sugestões aparecem em instantes.</NotaIA>
+                    ) : mensagensIA.map((m, i) => {
+                      const cfg = CFG_INSIGHT[m.tipo]
+                      return (
+                        <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 12px', borderRadius: 12, background: cfg.fundo, border: `1px solid ${cfg.borda}` }}>
+                          <Icon icon={cfg.icon} size={15} color={cfg.cor} style={{ marginTop: 2 }} />
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <span style={{ display: 'flex', fontSize: 11.5, fontWeight: 700, color: cfg.cor }}>
+                              {cfg.label}<span className="mono" style={{ marginLeft: 'auto', fontWeight: 500, color: T.text.tertiary }}>{m.hora}</span>
+                            </span>
+                            <span style={{ fontSize: 13, lineHeight: 1.5, color: T.text.strong }}>{m.texto}</span>
+                          </div>
                         </div>
-                        <p style={{ fontSize: 13, color: tokens.text.slate200, margin: 0, lineHeight: 1.45 }}>{m.texto}</p>
+                      )
+                    })}
+                  </>
+                )}
+
+                {/* Transcrição ao vivo */}
+                <Overline style={{ color: '#9A98A5' }}>Transcrição ao vivo</Overline>
+                {transcricao ? (
+                  <span style={{ fontSize: 13, lineHeight: 1.55, color: T.text.strong, whiteSpace: 'pre-wrap' }}>{transcricao}</span>
+                ) : (
+                  <span style={{ fontSize: 12.5, color: T.text.quaternary, lineHeight: 1.5 }}>
+                    {gravando ? 'A transcrição aparece aqui conforme a conversa acontece.' : 'Inicie a gravação para transcrever a consulta.'}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Aba Chat */}
+            {abaPainel === 'chat' && (
+              <>
+                <div style={{ flex: 1, overflow: 'auto', padding: '4px 16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontSize: 12, color: T.text.quaternary, textAlign: 'center', padding: '6px 0' }}>
+                    {itensChat.length === 0 ? 'Nenhuma mensagem ainda' : 'As mensagens ficam visíveis só durante a chamada'}
+                  </span>
+                  {itensChat.map((item, i) => {
+                    const meu = item.de === 'Voce'
+                    const bolha: React.CSSProperties = {
+                      maxWidth: '82%', padding: '8px 12px', fontSize: 13, lineHeight: 1.45,
+                      borderRadius: meu ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+                      background: meu ? T.brand.primary : T.border.muted, color: meu ? '#fff' : T.text.primary,
+                    }
+                    return (
+                      <div key={(item._tipo === 'anexo' ? 'a' : 'm') + i} style={{ display: 'flex', flexDirection: 'column', alignItems: meu ? 'flex-end' : 'flex-start', gap: 3 }}>
+                        <span style={{ fontSize: 11, color: T.text.tertiary }}>{meu ? 'Você' : item.de === 'Medico' ? 'Médico' : item.de} · <span className="mono">{item.hora}</span></span>
+                        {item._tipo === 'anexo' ? (
+                          (item as any).tipo?.startsWith('image/') ? (
+                            <a href={(item as any).url} download={(item as any).nome || 'imagem'} style={{ ...bolha, padding: 4, textDecoration: 'none', display: 'block' }}
+                              onClick={e => { e.preventDefault(); const link = document.createElement('a'); link.href = (item as any).url; link.download = (item as any).nome || 'imagem'; document.body.appendChild(link); link.click(); document.body.removeChild(link) }}>
+                              <img src={(item as any).url} alt={(item as any).nome} style={{ width: '100%', borderRadius: 9, cursor: 'pointer', maxHeight: 160, objectFit: 'cover', display: 'block' }} />
+                              <span style={{ display: 'block', fontSize: 11.5, padding: '4px 6px 2px', opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(item as any).nome}</span>
+                            </a>
+                          ) : (
+                            <a href={(item as any).url} download={(item as any).nome} style={{ ...bolha, display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+                              <Icon icon={FileText} size={16} />
+                              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                                <span style={{ fontSize: 12.5, fontWeight: 600, maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(item as any).nome}</span>
+                                <span style={{ fontSize: 11, opacity: 0.75 }}>Clique para baixar</span>
+                              </span>
+                            </a>
+                          )
+                        ) : (
+                          <div style={bolha}>{(item as any).msg}</div>
+                        )}
                       </div>
                     )
                   })}
+                  <div ref={endRef} />
                 </div>
-              </div>
-            </div>
-          )}
-
-          {tela === 'chamada' && remoteConectado && (
-            <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
-              style={{ position: 'absolute', bottom: 72, left: 12, width: 44, height: 44, borderRadius: '50%', border: 'none', background: chatAberto ? tokens.brand.primary : 'rgba(30,41,59,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-              {naoLidas > 0 && !chatAberto && (
-                <span style={{ position: 'absolute', top: -2, right: -2, width: 18, height: 18, borderRadius: '50%', background: tokens.status.dangerStrong, fontSize: 10, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{naoLidas}</span>
-              )}
-            </button>
-          )}
-
-          {/* Controles */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(transparent, rgba(5,10,25,0.95))', zIndex: 20 }}>
-            {/* Centro: Mic | Cam | Config | Encerrar */}
-            <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', display: 'flex', gap: 12 }}>
-              <button onClick={toggleMic}
-                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: micOn ? 'rgba(255,255,255,0.18)' : tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-                  {micOn ? <><path d='M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'/><path d='M19 10v2a7 7 0 01-14 0v-2'/><line x1='12' y1='19' x2='12' y2='23'/><line x1='8' y1='23' x2='16' y2='23'/></> : <><line x1='1' y1='1' x2='23' y2='23'/><path d='M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6'/><path d='M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23'/><line x1='12' y1='19' x2='12' y2='23'/><line x1='8' y1='23' x2='16' y2='23'/></> }
-                </svg>
-              </button>
-              <button onClick={toggleCam}
-                style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: camOn ? 'rgba(255,255,255,0.18)' : tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'>
-                  {camOn ? (<path d='M23 7l-7 5 7 5V7zM1 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5z'/>) : (<><line x1='1' y1='1' x2='23' y2='23'/><path d='M21 21H3a2 2 0 01-2-2V8m4-4h12a2 2 0 012 2v9.34'/></>)}
-                </svg>
-              </button>
-              <button onClick={() => { if (papelRef.current === 'paciente') { streamRef.current?.getTracks().forEach(t => t.stop()); pcRef.current?.close(); channelRef.current?.unsubscribe(); try { window.close() } catch(e) {} window.location.href = '/login' } else { encerrar() } }} style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: tokens.status.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>
-              </button>
-            </div>
-            {/* Chat - direito */}
-            <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)' }}>
-              <button onClick={() => { setChatAberto(o => !o); setNaoLidas(0) }}
-                style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: chatAberto ? tokens.brand.primary : 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>
-                {naoLidas > 0 && <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: tokens.status.dangerStrong }}/>}
-              </button>
-            </div>
-            {/* Painel config */}
-            {configAberto && (
-              <div style={{ position: 'absolute', bottom: 88, left: '50%', transform: 'translateX(-50%)', background: tokens.text.slate800, borderRadius: 12, border: `1px solid ${tokens.text.slate700}`, padding: 16, minWidth: 260, zIndex: 30 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <p style={{ color: 'white', fontWeight: 700, fontSize: 13, margin: 0 }}>Configuracoes</p>
-                  <button onClick={() => setConfigAberto(false)} style={{ background: 'none', border: 'none', color: tokens.text.slate500, cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>x</button>
+                <div style={{ padding: 12, borderTop: `1px solid ${T.border.muted}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: 5, borderRadius: 12, border: `1px solid ${T.border.default}` }}>
+                    <IconButton icon={enviandoAnexo ? undefined : Paperclip} size={32} onClick={() => anexoInputRef.current?.click()} disabled={enviandoAnexo} title="Enviar arquivo" aria-label="Enviar arquivo">
+                      {enviandoAnexo ? <Spinner size={13} cor={T.brand.primary} trilho={T.brand.primaryAccent} /> : null}
+                    </IconButton>
+                    <input value={msgInput} onChange={e => setMsgInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarChat()}
+                      placeholder="Enviar mensagem"
+                      style={{ flex: 1, minWidth: 0, height: 32, border: 'none', outline: 'none', background: 'transparent', fontSize: 13, fontFamily: 'inherit', color: T.text.primary }} />
+                    <button onClick={enviarChat} aria-label="Enviar" style={{ width: 32, height: 32, borderRadius: 9, border: 'none', background: T.brand.primary, color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                      <Icon icon={Send} size={14} />
+                    </button>
+                  </div>
                 </div>
-                {audioInputs.length > 0 && (
-                  <div style={{ marginBottom: 10 }}>
-                    <p style={{ fontSize: 11, color: tokens.text.slate500, margin: '0 0 4px', textTransform: 'uppercase', fontWeight: 600 }}>Microfone</p>
-                    <select style={{ width: '100%', background: tokens.text.slate900, border: `1px solid ${tokens.text.slate700}`, borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
-                      {audioInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Microfone'}</option>)}
-                    </select>
-                  </div>
-                )}
-                {videoInputs.length > 0 && (
-                  <div>
-                    <p style={{ fontSize: 11, color: tokens.text.slate500, margin: '0 0 4px', textTransform: 'uppercase', fontWeight: 600 }}>Camera</p>
-                    <select style={{ width: '100%', background: tokens.text.slate900, border: `1px solid ${tokens.text.slate700}`, borderRadius: 6, color: 'white', padding: '6px 8px', fontSize: 12 }}>
-                      {videoInputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Camera'}</option>)}
-                    </select>
-                  </div>
+              </>
+            )}
+
+            {/* Aba Pessoas */}
+            {abaPainel === 'pessoas' && (
+              <div style={{ flex: 1, overflow: 'auto', padding: '4px 16px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <Participante nome={nomeVoce} papel={isMedico ? 'Você · médico' : 'Você · paciente'} tom="purple" icone={micOn ? Mic : MicOff} status={<Badge tone="success" dot>Conectado</Badge>} />
+                <Participante nome={nomeOutro} papel={isMedico ? 'Paciente' : 'Médico'} tom="pink"
+                  status={remoteConectado ? <Badge tone="success" dot>Conectado</Badge> : <Badge tone="pending" dot>Aguardando</Badge>} />
+                {isMedico && (
+                  <Button variant="secondary" icon={linkCopiado ? Check : LinkIcon} onClick={copiarLink} style={{ marginTop: 8 }}>
+                    {linkCopiado ? 'Link copiado' : 'Copiar link da sala'}
+                  </Button>
                 )}
               </div>
             )}
           </div>
-        </div>
-
-        {/* Input de arquivo oculto */}
-        <input ref={anexoInputRef} type="file" accept="image/*,.pdf" style={{ display:'none' }}
-          onChange={e => { const f = e.target.files?.[0]; if (f) enviarAnexo(f); e.target.value = '' }}/>
-
-      {/* Painel de chat  desliza da direita */}
-        {chatAberto && (
-          <div style={{ width: 'clamp(260px, 30vw, 320px)', background: tokens.text.slate800, display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${tokens.text.slate700}`, flexShrink: 0, animation: 'slideIn 0.2s ease' }}>
-            <div style={{ padding: '10px 14px', borderBottom: `1px solid ${tokens.text.slate700}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0 }}>Chat</p>
-              <button onClick={() => setChatAberto(false)} style={{ background: 'none', border: 'none', color: tokens.text.slate600, cursor: 'pointer', padding: 4 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-            <div style={{ flex: 1, overflow: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {chat.length === 0 && anexos.length === 0 && <p style={{ fontSize: 12, color: tokens.text.slate600, textAlign: 'center', marginTop: 20 }}>Nenhuma mensagem</p>}
-              {/* Mescla chat e anexos por hora */}
-              {[...chat.map(m => ({...m, _tipo:'msg'})), ...anexos.map(a => ({...a, _tipo:'anexo'}))].map((item, i) => (
-                item._tipo === 'anexo' ? (
-                  <div key={'a'+i} style={{ background: tokens.text.slate900, borderRadius: 8, padding: '8px 10px' }}>
-                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? tokens.brand.primary : tokens.status.infoBlue, fontWeight: 700, margin: '0 0 5px' }}>{item.de}  {item.hora}</p>
-                    {(item as any).tipo?.startsWith('image/') ? (
-                      <a href={(item as any).url} download={(item as any).nome || "imagem"} onClick={e => { e.preventDefault(); const link = document.createElement("a"); link.href = (item as any).url; link.download = (item as any).nome || "imagem"; document.body.appendChild(link); link.click(); document.body.removeChild(link) }}>
-                        <img src={(item as any).url} alt={(item as any).nome} style={{ width: '100%', borderRadius: 6, cursor: 'pointer', maxHeight: 160, objectFit: 'cover' }}/>
-                        <p style={{ fontSize: 11, color: tokens.text.slate600, margin: '4px 0 0' }}>{(item as any).nome}</p>
-                      </a>
-                    ) : (
-                      <a href={(item as any).url} download={(item as any).nome} style={{ display: 'flex', alignItems: 'center', gap: 8, background: tokens.text.slate800, padding: '8px 10px', borderRadius: 6, textDecoration: 'none' }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.text.slate500} strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        <div>
-                          <p style={{ fontSize: 11, color: tokens.text.slate300, margin: 0, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(item as any).nome}</p>
-                          <p style={{ fontSize: 10, color: tokens.text.slate600, margin: 0 }}>Clique para baixar</p>
-                        </div>
-                      </a>
-                    )}
-                  </div>
-                ) : (
-                  <div key={'m'+i} style={{ background: tokens.text.slate900, borderRadius: 8, padding: '8px 10px' }}>
-                    <p style={{ fontSize: 10, color: item.de === 'Voce' ? tokens.brand.primary : tokens.status.infoBlue, fontWeight: 700, margin: '0 0 3px' }}>{item.de}  {item.hora}</p>
-                    <p style={{ fontSize: 12, color: tokens.text.slate300, margin: 0, lineHeight: 1.5 }}>{(item as any).msg}</p>
-                  </div>
-                )
-              ))}
-
-              <div ref={endRef}/>
-            </div>
-            <div style={{ padding: '10px', borderTop: `1px solid ${tokens.text.slate700}`, display: 'flex', gap: 6 }}>
-              <button onClick={() => anexoInputRef.current?.click()} disabled={enviandoAnexo}
-                style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${tokens.text.slate700}`, background: tokens.text.slate900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                title="Enviar arquivo">
-                {enviandoAnexo
-                  ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: `2px solid ${tokens.text.slate600}`, borderTopColor: tokens.brand.primary, animation: 'spin 0.8s linear infinite' }}/>
-                  : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tokens.text.slate500} strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-                }
-              </button>
-              <input value={msgInput} onChange={e => setMsgInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarChat()}
-                style={{ flex: 1, padding: '8px 10px', fontSize: 12, borderRadius: 8, border: `1px solid ${tokens.text.slate700}`, background: tokens.text.slate900, color: 'white', outline: 'none' }} placeholder="Mensagem..."/>
-              <button onClick={enviarChat} style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: tokens.brand.primary, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-              </button>
-            </div>
-          </div>
         )}
       </div>
 
-      {/* Modal prontuario pos-consulta */}
+      {/* Controles */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px 18px', flexWrap: 'wrap', flexShrink: 0 }}>
+        <span className="mono sala-rodape-info" style={{ flex: '1 1 160px', fontSize: 12.5, color: TXT_ESCURO.secundario, whiteSpace: 'nowrap' }}>
+          {fmtTimer(timer)} · {codigoSala}
+        </span>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', margin: '0 auto' }}>
+          <BotaoRedondo icon={micOn ? Mic : MicOff} desligado={!micOn} onClick={toggleMic} title="Microfone" />
+          <BotaoRedondo icon={camOn ? Video : VideoOff} desligado={!camOn} onClick={toggleCam} title="Câmera" />
+          <BotaoEncerrar onClick={sair} label={isMedico ? 'Encerrar' : 'Sair'} />
+        </div>
+        <div style={{ flex: '1 1 160px', display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+          {botoesPainel.map(b => (
+            <BotaoPainel key={b.aba} icon={b.icon} title={b.title} ativo={abaPainel === b.aba} badge={!!b.badge} onClick={() => alternarAba(b.aba)} />
+          ))}
+        </div>
+      </div>
+
+      {/* Modal prontuário pós-consulta */}
       {prontuarioModal && prontuarioData && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:999, padding:16 }}>
-          <div style={{ background:tokens.text.slate800, borderRadius:16, width:'100%', maxWidth:600, maxHeight:'85vh', display:'flex', flexDirection:'column', border:`1px solid ${tokens.text.slate700}` }}>
-            <div style={{ padding:'16px 20px', borderBottom:`1px solid ${tokens.text.slate700}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                <div style={{ width:32, height:32, borderRadius:8, background:tokens.status.successDarker, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tokens.whatsapp.bubbleBorder} strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                </div>
-                <div>
-                  <p style={{ fontSize:14, fontWeight:700, color:'white', margin:0 }}>Prontuário gerado pela IA</p>
-                  <p style={{ fontSize:11, color:tokens.text.slate500, margin:0 }}>Baseado na transcricao da consulta  revise antes de salvar</p>
-                </div>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999, padding: 16 }}>
+          <div style={{ background: T.bg.card, color: T.text.primary, borderRadius: T.radius['3xl'], width: 'min(600px, 100%)', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: T.shadow.modal, overflow: 'hidden' }}>
+            <div style={{ padding: '18px 20px 14px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+              <IconTile icon={FileText} color={T.brand.primary} size={36} />
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 16, fontWeight: 700 }}>Prontuário gerado pela IA</span>
+                <span style={{ fontSize: 12.5, color: T.text.quaternary }}>Baseado na transcrição da consulta · revise antes de salvar</span>
               </div>
-              <button onClick={() => setProntuarioModal(false)} style={{ background:'none', border:'none', color:tokens.text.slate600, cursor:'pointer' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
+              <IconButton icon={X} size={32} onClick={() => setProntuarioModal(false)} aria-label="Fechar" />
             </div>
-            <div style={{ flex:1, overflow:'auto', padding:'16px 20px', display:'flex', flexDirection:'column', gap:14 }}>
-              {/* Transcrio */}
+            <div style={{ flex: 1, overflow: 'auto', padding: '0 20px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {transcricao && (
-                <div>
-                  <p style={{ fontSize:11, fontWeight:600, color:tokens.text.slate500, textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 6px' }}>Transcrição</p>
-                  <div style={{ background:tokens.text.slate900, borderRadius:8, padding:'10px 12px', fontSize:12, color:tokens.text.slate400, lineHeight:1.6, maxHeight:80, overflow:'auto' }}>
-                    {transcricao}
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <Overline>Transcrição</Overline>
+                  <div style={{ background: T.bg.page, borderRadius: 12, padding: '10px 12px', fontSize: 12.5, color: T.text.muted, lineHeight: 1.6, maxHeight: 80, overflow: 'auto' }}>{transcricao}</div>
                 </div>
               )}
-              {/* Campos do pronturio */}
-              {['subjetivo','objetivo','avaliacao','plano'].map(campo => {
+              {(['subjetivo', 'objetivo', 'avaliacao', 'plano'] as const).map(campo => {
                 const pd = prontuarioData?.prontuario ?? prontuarioData ?? {}
                 const val = pd[campo] ?? ''
                 if (!val) return null
-                const label = campo === 'subjetivo' ? 'S  Subjetivo' : campo === 'objetivo' ? 'O  Objetivo' : campo === 'avaliacao' ? 'A  Avaliacao / CID' : 'P  Plano'
                 return (
-                  <div key={campo}>
-                    <p style={{ fontSize:11, fontWeight:600, color:tokens.text.slate500, textTransform:'uppercase' as const, letterSpacing:'0.05em', margin:'0 0 6px' }}>{label}</p>
-                    <textarea defaultValue={val} rows={3} onChange={e => { camposRef.current[campo] = e.target.value }}
-                      style={{ width:'100%', padding:'10px 12px', fontSize:12, borderRadius:8, border:`1px solid ${tokens.text.slate700}`, background:tokens.text.slate900, color:tokens.text.slate200, resize:'vertical' as const, outline:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
-                  </div>
+                  <Field key={campo} label={ROTULO_SOAP[campo]}>
+                    <Textarea defaultValue={val} rows={3} onChange={e => { camposRef.current[campo] = e.target.value }} style={{ fontSize: 13 }} />
+                  </Field>
                 )
               })}
             </div>
-            <div style={{ padding:'14px 20px', borderTop:`1px solid ${tokens.text.slate700}`, display:'flex', gap:10, flexShrink:0 }}>
-              <button onClick={salvarProntuario} disabled={salvando || salvado}
-                style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background: salvado ? tokens.status.successDarker : tokens.brand.primary, color:'white', fontSize:13, fontWeight:700, cursor: (salvando||salvado) ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                {salvado
-                  ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Salvo! Abrindo histórico...</>
-                  : salvando
-                  ? <><div style={{ width:14, height:14, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'white', animation:'spin 0.8s linear infinite' }}/>Salvando...</>
-                  : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Salvar no histórico</>
-                }
-              </button>
-              <button onClick={() => setProntuarioModal(false)} style={{ padding:'10px 18px', borderRadius:9, border:`1px solid ${tokens.text.slate700}`, background:'transparent', color:tokens.text.slate500, fontSize:13, cursor:'pointer' }}>
-                Fechar
-              </button>
+            <div style={{ padding: '14px 20px', borderTop: `1px solid ${T.border.muted}`, display: 'flex', gap: 8, justifyContent: 'flex-end', flexShrink: 0 }}>
+              <Button variant="secondary" onClick={() => setProntuarioModal(false)}>Fechar</Button>
+              <BotaoSalvar salvando={salvando} salvado={salvado} onClick={salvarProntuario} />
             </div>
           </div>
         </div>
       )}
 
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slideInToast { from { opacity: 0; transform: translateX(30px) } to { opacity: 1; transform: translateX(0) } } @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; background: ${tokens.text.slate900}; overflow: hidden; }
-        @media (max-width: 640px) {
+      <style>{ESTILOS_BASE + `
+        @keyframes salaToast { from { opacity: 0; transform: translateX(24px) } to { opacity: 1; transform: none } }
+        @keyframes salaPainel { from { opacity: 0; transform: translateX(16px) } to { opacity: 1; transform: none } }
+        html, body { margin: 0; padding: 0; background: ${N[900]}; overflow: hidden; }
+        @media (max-width: 720px) {
           html, body { height: 100dvh; }
+          .sala-painel { position: absolute; top: 0; bottom: 0; left: 12px; right: 12px; width: auto !important; max-width: none !important; z-index: 30; box-shadow: ${T.shadow.modal}; }
+          .sala-rodape-info { display: none; }
         }
       `}</style>
+
       {memedAberto && medicoSala && pacienteSala && (
         <MemedPrescricao
           medicoId={medicoSala.id}
@@ -1481,9 +1491,167 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           }}
         />
       )}
-
-
     </div>
   )
 }
 
+// ── Apresentação (componentes locais da sala) ────────────────────────────────
+
+type AbaPainel = 'ia' | 'chat' | 'pessoas'
+
+const branco = (a: number) => `rgba(255,255,255,${a})`
+
+/** Texto sobre superfícies escuras (night). */
+const TXT_ESCURO = { primario: '#D6D4DE', secundario: '#A8A5B8', terciario: '#7D7A8C' }
+
+const ROTULO_SOAP: Record<'subjetivo' | 'objetivo' | 'avaliacao' | 'plano', string> = {
+  subjetivo: 'S · Subjetivo',
+  objetivo: 'O · Objetivo',
+  avaliacao: 'A · Avaliação / CID',
+  plano: 'P · Plano',
+}
+
+const CFG_INSIGHT: Record<'foco' | 'sugestao' | 'alerta', {
+  icon: LucideIcon; label: string; cor: string; fundo: string; borda: string; corEscura: string; fundoEscuro: string
+}> = {
+  foco: { icon: Target, label: 'Foco', cor: tokens.status.infoStrong, fundo: tokens.status.infoBg, borda: '#DCE8FD', corEscura: '#93C5FD', fundoEscuro: 'rgba(96,165,250,.16)' },
+  sugestao: { icon: Lightbulb, label: 'Sugestão', cor: tokens.brand.primary, fundo: tokens.brand.primarySoftBg, borda: '#ECE8FB', corEscura: '#C4B5FD', fundoEscuro: 'rgba(167,139,250,.18)' },
+  alerta: { icon: TriangleAlert, label: 'Alerta', cor: tokens.status.danger, fundo: tokens.status.dangerBg, borda: '#F8D6D3', corEscura: '#FF9A9E', fundoEscuro: 'rgba(229,72,77,.18)' },
+}
+
+const ESTILOS_BASE = `
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes salaPulso { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+  @keyframes salaAnel {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(167,139,250,0); }
+    50% { box-shadow: 0 0 0 6px rgba(167,139,250,.35), 0 0 0 14px rgba(167,139,250,.12); }
+  }
+  * { box-sizing: border-box; }
+`
+
+function iniciais(nome: string) {
+  return (nome || '').split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase()
+}
+
+function Spinner({ size = 16, cor, trilho }: { size?: number; cor: string; trilho: string }) {
+  return (
+    <span style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0, display: 'inline-block',
+      border: `${size >= 24 ? 3 : 2}px solid ${trilho}`, borderTopColor: cor, animation: 'spin .8s linear infinite',
+    }} />
+  )
+}
+
+/** Controle redondo da chamada (mic/câmera) — branco translúcido; vermelho quando desligado. */
+function BotaoRedondo({ icon, desligado, onClick, title, size = 48 }: {
+  icon: LucideIcon; desligado?: boolean; onClick: () => void; title: string; size?: number
+}) {
+  const [h, setH] = useState(false)
+  return (
+    <button type="button" onClick={onClick} title={title} aria-label={title} aria-pressed={desligado}
+      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+      style={{
+        width: size, height: size, borderRadius: '50%', border: 'none', cursor: 'pointer', flexShrink: 0,
+        display: 'grid', placeItems: 'center', color: '#fff',
+        background: desligado ? tokens.status.dangerStrong : branco(h ? 0.14 : 0.1),
+        filter: desligado && h ? 'brightness(1.1)' : 'none', transition: 'background .15s, filter .15s',
+      }}>
+      <Icon icon={icon} size={size >= 48 ? 20 : 18} />
+    </button>
+  )
+}
+
+function BotaoEncerrar({ onClick, label }: { onClick: () => void; label: string }) {
+  const [h, setH] = useState(false)
+  return (
+    <button type="button" onClick={onClick} title={label}
+      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+      style={{
+        height: 48, padding: '0 22px', borderRadius: 99, border: 'none', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600,
+        color: '#fff', background: h ? '#D63C41' : tokens.status.dangerStrong, transition: 'background .15s',
+      }}>
+      <Icon icon={PhoneOff} size={18} />{label}
+    </button>
+  )
+}
+
+/** Botão quadrado que abre uma aba do painel lateral. */
+function BotaoPainel({ icon, title, ativo, badge, onClick }: {
+  icon: LucideIcon; title: string; ativo: boolean; badge?: boolean; onClick: () => void
+}) {
+  const [h, setH] = useState(false)
+  return (
+    <button type="button" onClick={onClick} title={title} aria-label={title} aria-pressed={ativo}
+      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+      style={{
+        position: 'relative', width: 42, height: 42, borderRadius: 12, border: 'none', cursor: 'pointer',
+        display: 'grid', placeItems: 'center', flexShrink: 0,
+        background: ativo ? tokens.brand.primaryLight : branco(h ? 0.14 : 0.08),
+        color: ativo ? tokens.brand.primary : '#fff', transition: 'background .15s',
+      }}>
+      <Icon icon={icon} size={18} active={ativo} />
+      {badge && <span style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: tokens.accent.violet }} />}
+    </button>
+  )
+}
+
+/** Pílula do cabeçalho escuro (timer, gravação, status). */
+function PilulaEscura({ children, cor, fundo, onClick, title }: {
+  children: React.ReactNode; cor: string; fundo: string; onClick?: () => void; title?: string
+}) {
+  const estilo: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 7, height: 30, padding: '0 12px', borderRadius: 99,
+    background: fundo, color: cor, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', border: 'none', fontFamily: 'inherit',
+  }
+  if (onClick) return <button type="button" onClick={onClick} title={title} style={{ ...estilo, cursor: 'pointer' }}>{children}</button>
+  return <span style={estilo}>{children}</span>
+}
+
+function NotaIA({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', gap: 10, padding: 12, borderRadius: 12, background: tokens.brand.primarySoftBg, border: '1px solid #ECE8FB', fontSize: 12.5, lineHeight: 1.5, color: tokens.text.strong }}>
+      <Icon icon={Sparkles} size={16} color={tokens.brand.primary} style={{ marginTop: 1 }} />
+      <span style={{ flex: 1, minWidth: 0 }}>{children}</span>
+    </div>
+  )
+}
+
+function ResumoItem({ label, valor }: { label: string; valor: React.ReactNode }) {
+  return (
+    <div style={{ padding: 12, borderRadius: 12, background: tokens.bg.page, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+      <span style={{ fontSize: 11.5, color: tokens.text.quaternary }}>{label}</span>
+      <span style={{ fontSize: 13.5, fontWeight: 700, color: tokens.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{valor}</span>
+    </div>
+  )
+}
+
+function Participante({ nome, papel, tom, icone, status }: {
+  nome: string; papel: string; tom: 'purple' | 'pink'; icone?: LucideIcon; status?: React.ReactNode
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0' }}>
+      <Avatar nome={nome} size={34} tom={tom} />
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
+        <span style={{ fontSize: 13.5, fontWeight: 600, color: tokens.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nome}</span>
+        <span style={{ fontSize: 12, color: tokens.text.quaternary }}>{papel}</span>
+      </div>
+      {status}
+      {icone && <Icon icon={icone} size={15} color={tokens.text.tertiary} />}
+    </div>
+  )
+}
+
+function BotaoSalvar({ salvando, salvado, onClick }: { salvando: boolean; salvado: boolean; onClick: () => void }) {
+  return (
+    <Button
+      onClick={onClick}
+      disabled={salvando}
+      icon={salvado ? Check : salvando ? undefined : Save}
+      style={salvado ? { background: tokens.status.success, borderColor: tokens.status.success, cursor: 'default' } : undefined}
+    >
+      {salvando && <Spinner size={14} cor="#fff" trilho="rgba(255,255,255,.3)" />}
+      {salvado ? 'Salvo! Abrindo histórico…' : salvando ? 'Salvando…' : 'Salvar no histórico'}
+    </Button>
+  )
+}

@@ -1,7 +1,15 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { KeyRound, MailCheck, ArrowLeft } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
+import { TelaAcesso } from '@/components/TelaAcesso'
+import { Field, Input, Button } from '@/components/ui'
+
+const linkVoltar: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center',
+  color: tokens.brand.primary, fontSize: 13.5, fontWeight: 600, textDecoration: 'none',
+}
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -25,44 +33,36 @@ export default function ForgotPasswordPage() {
     finally { setLoading(false) }
   }
 
+  if (enviado) {
+    return (
+      <TelaAcesso
+        titulo="E-mail enviado"
+        descricao="Verifique sua caixa de entrada e a pasta de spam para redefinir sua senha."
+        icone={<MailCheck size={22} strokeWidth={1.6} />}
+        tomIcone="success"
+      >
+        <Link href="/login" style={linkVoltar}><ArrowLeft size={15} strokeWidth={1.6} /> Voltar ao login</Link>
+      </TelaAcesso>
+    )
+  }
+
   return (
-    <div style={{ minHeight: '100vh', background: tokens.bg.hover, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
-      <div style={{ background: 'white', borderRadius: 16, border: `1px solid ${tokens.neutral[150]}`, padding: '40px 36px', width: '100%', maxWidth: 380 }}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ width: 48, height: 48, background: tokens.brand.primaryLight, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-            <svg width="22" height="22" fill="none" stroke={tokens.brand.primary} strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-            </svg>
-          </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.text.primary, margin: 0 }}>Recuperar senha</h1>
-          <p style={{ fontSize: 14, color: tokens.text.secondary, margin: '6px 0 0' }}>Enviaremos um link para seu email</p>
-        </div>
-        {enviado ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 64, height: 64, background: tokens.status.successBg, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <svg width="32" height="32" fill="none" stroke={tokens.status.success} strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-            </div>
-            <p style={{ fontSize: 16, fontWeight: 600, color: tokens.text.primary, margin: '0 0 4px' }}>Email enviado!</p>
-            <p style={{ fontSize: 14, color: tokens.text.secondary, margin: '0 0 20px' }}>Verifique sua caixa de entrada e spam.</p>
-            <Link href="/login" style={{ color: tokens.brand.primary, fontSize: 14, textDecoration: 'none' }}>← Voltar ao login</Link>
-          </div>
-        ) : (
-          <>
-            <input type="email" placeholder="seu@email.com" value={email}
-              onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && enviar()}
-              style={{ width: '100%', padding: '12px 16px', fontSize: 14, borderRadius: 10, border: `1.5px solid ${tokens.border.default}`, background: 'white', color: tokens.text.primary, boxSizing: 'border-box', marginBottom: 12 }} />
-            {erro && <p style={{ fontSize: 13, color: tokens.status.danger, margin: '0 0 12px' }}>{erro}</p>}
-            <button onClick={enviar} disabled={loading}
-              style={{ width: '100%', padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', background: loading ? tokens.brand.primaryAccent : tokens.brand.primary, color: 'white', fontSize: 15, fontWeight: 700, marginBottom: 12 }}>
-              {loading ? 'Enviando...' : 'Enviar link de recuperacao'}
-            </button>
-            <div style={{ textAlign: 'center' }}>
-              <Link href="/login" style={{ color: tokens.text.secondary, fontSize: 14, textDecoration: 'none' }}>← Voltar ao login</Link>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+    <TelaAcesso
+      titulo="Recuperar senha"
+      descricao="Enviaremos um link de recuperação para o seu e-mail."
+      icone={<KeyRound size={22} strokeWidth={1.6} />}
+      rodape={<Link href="/login" style={linkVoltar}><ArrowLeft size={15} strokeWidth={1.6} /> Voltar ao login</Link>}
+    >
+      <Field label="E-mail">
+        <Input type="email" placeholder="seu@email.com" value={email} autoFocus
+          onChange={e => setEmail(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && enviar()}
+          style={{ minHeight: 44 }} />
+      </Field>
+      {erro && <p style={{ fontSize: 13, color: tokens.status.danger, margin: 0 }}>{erro}</p>}
+      <Button size="lg" block onClick={enviar} disabled={loading}>
+        {loading ? 'Enviando…' : 'Enviar link de recuperação'}
+      </Button>
+    </TelaAcesso>
   )
 }

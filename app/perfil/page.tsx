@@ -3,13 +3,12 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { EspecialidadeSelect } from '@/components/EspecialidadeSelect'
+import { Camera, KeyRound, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
-import { PageHeader, Input, Textarea, Button } from '@/components/ui'
+import { Input, Textarea, Button, Card, Field, Avatar, Badge, Icon, IconTile } from '@/components/ui'
+import { usePageHeader } from '@/components/shell/header-context'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = 'transparent'
-const CARD_RADIUS = 16
+const T = tokens
 
 export default function PerfilPage() {
   const router = useRouter()
@@ -21,6 +20,8 @@ export default function PerfilPage() {
   const [salvandoSenha, setSalvandoSenha] = useState(false)
   const [uploadandoFoto, setUploadandoFoto] = useState(false)
   const fotoInputRef = useRef<HTMLInputElement>(null)
+  const [senhaAberta, setSenhaAberta] = useState(false)
+  usePageHeader('Meu perfil', 'Seus dados e preferências')
 
   useEffect(() => {
     const ca = localStorage.getItem('clinica_admin')
@@ -95,6 +96,7 @@ export default function PerfilPage() {
       if (!data.ok) throw new Error(data.error)
       mostrarMsg('ok', 'Senha alterada com sucesso')
       setSenhaForm({ atual: '', nova: '', confirma: '' })
+      setSenhaAberta(false)
     } catch (e: any) {
       mostrarMsg('erro', e.message || 'Erro ao alterar senha')
     }
@@ -103,182 +105,150 @@ export default function PerfilPage() {
 
   if (!medico) return null
 
-  const iniciais = medico.nome?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || '??'
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: 12,
-    fontWeight: 600,
-    color: tokens.text.secondary,
-    display: 'block',
-    marginBottom: 6,
-    letterSpacing: '0.02em',
-  }
-
-  const cardStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: CARD_RADIUS,
-    padding: 24,
-  }
-
-  const h3Style: React.CSSProperties = {
-    fontSize: 14,
-    fontWeight: 700,
-    color: tokens.text.primary,
-    margin: '0 0 4px',
-  }
-
-  const pSubStyle: React.CSSProperties = {
-    fontSize: 12,
-    color: tokens.text.tertiary,
-    margin: '0 0 20px',
-  }
+  const ehAdmin = !!localStorage.getItem('clinica_admin')
 
   return (
-    <main style={{ height: '100%', overflow: 'auto', padding: 24, background: BG }}>
-        {/* Header */}
-        <PageHeader titulo="Meu perfil" descricao="Gerencie suas informações pessoais e de acesso" />
+    <div style={{ padding: 20 }}>
+      <style>{`
+        .c360-perfil-grid { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; align-items: start; }
+        @media (max-width: 900px) { .c360-perfil-grid { grid-template-columns: minmax(0, 1fr); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
 
+      {/* Toast de mensagem */}
+      {msg && (
+        <div style={{
+          position: 'fixed', top: 24, right: 24, zIndex: 300,
+          padding: '12px 16px', borderRadius: T.radius.xl, background: '#fff',
+          boxShadow: T.shadow.lg, border: `1px solid ${T.border.default}`,
+          display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 600,
+          color: msg.tipo === 'ok' ? T.status.success : T.status.danger,
+        }}>
+          <Icon icon={msg.tipo === 'ok' ? CheckCircle2 : AlertCircle} size={16} />
+          <span style={{ color: T.text.primary }}>{msg.texto}</span>
+        </div>
+      )}
 
-        {/* Toast de mensagem */}
-        {msg && (
-          <div style={{
-            position: 'fixed', top: 24, right: 24, zIndex: 200,
-            padding: '12px 20px', borderRadius: 10,
-            background: msg.tipo === 'ok' ? tokens.status.successBgSoft : tokens.status.dangerBg,
-            color: msg.tipo === 'ok' ? tokens.status.successText : tokens.status.dangerDark,
-            fontSize: 13, fontWeight: 600,
-            border: `1px solid ${msg.tipo === 'ok' ? tokens.status.successLightAlt : tokens.status.dangerLight}`,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          }}>
-            {msg.texto}
-          </div>
-        )}
-
-        {/* Grid 2 colunas */}
-        <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 20, alignItems: 'start' }}>
-          
-          {/* COLUNA ESQUERDA */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            
-            {/* Card de perfil com foto grande */}
-            <div style={cardStyle}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                <div style={{ position: 'relative', cursor: 'pointer', marginBottom: 16 }}
-                  onClick={() => fotoInputRef.current?.click()}>
-                  {medico.foto_url ? (
-                    <img src={medico.foto_url} style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: 120, height: 120, borderRadius: '50%', background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 700, color: 'white' }}>
-                      {iniciais}
-                    </div>
-                  )}
-                  <div style={{
-                    position: 'absolute', bottom: 4, right: 4,
-                    width: 32, height: 32, borderRadius: '50%',
-                    background: ACCENT, border: '3px solid white',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                      <circle cx="12" cy="13" r="4"/>
-                    </svg>
-                  </div>
-                  {uploadandoFoto && (
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <div style={{ width: 24, height: 24, border: `3px solid ${ACCENT}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}/>
-                    </div>
-                  )}
-                </div>
-                <input ref={fotoInputRef} type="file" accept="image/*" style={{ display: 'none' }}
-                  onChange={e => e.target.files?.[0] && uploadFoto(e.target.files[0])}/>
-                
-                <p style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>{medico.nome || 'Sem nome'}</p>
-                <p style={{ fontSize: 13, color: tokens.text.secondary, margin: '0 0 2px' }}>{medico.email}</p>
-                {medico.especialidade && (
-                  <p style={{ fontSize: 12, color: ACCENT, background: ACCENT_LIGHT, padding: '4px 12px', borderRadius: 20, margin: '8px 0 0', fontWeight: 600 }}>
-                    {medico.especialidade}
-                  </p>
-                )}
+      <div className="c360-perfil-grid">
+        {/* COLUNA ESQUERDA — identidade */}
+        <Card padding="24px 18px" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
+          <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => fotoInputRef.current?.click()} title="Alterar foto">
+            <Avatar nome={medico.nome} src={medico.foto_url} size={88} />
+            {uploadandoFoto && (
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', borderRadius: '50%', display: 'grid', placeItems: 'center' }}>
+                <div style={{ width: 22, height: 22, border: `2.5px solid ${T.brand.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
               </div>
-            </div>
-
-            {/* Card de alterar senha */}
-            <div style={cardStyle}>
-              <h3 style={h3Style}>Alterar senha</h3>
-              <p style={pSubStyle}>Atualize sua senha periodicamente</p>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div>
-                  <label style={labelStyle}>Senha atual</label>
-                  <Input type="password" value={senhaForm.atual}
-                    onChange={e => setSenhaForm(p => ({ ...p, atual: e.target.value }))}
-                    placeholder="••••••••" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Nova senha</label>
-                  <Input type="password" value={senhaForm.nova}
-                    onChange={e => setSenhaForm(p => ({ ...p, nova: e.target.value }))}
-                    placeholder="Mínimo 6 caracteres" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Confirmar nova senha</label>
-                  <Input type="password" value={senhaForm.confirma}
-                    onChange={e => setSenhaForm(p => ({ ...p, confirma: e.target.value }))}
-                    placeholder="••••••••" />
-                </div>
-                <Button onClick={salvarSenha} disabled={salvandoSenha} style={{ marginTop: 4 }}>
-                  {salvandoSenha ? 'Alterando...' : 'Alterar senha'}
-                </Button>
-              </div>
-            </div>
+            )}
           </div>
+          <input ref={fotoInputRef} type="file" accept="image/*" style={{ display: 'none' }}
+            onChange={e => e.target.files?.[0] && uploadFoto(e.target.files[0])} />
 
-          {/* COLUNA DIREITA */}
-          <div style={cardStyle}>
-            <h3 style={h3Style}>Informações profissionais</h3>
-            <p style={pSubStyle}>Seus dados aparecem nos prontuários e para seus pacientes</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0, maxWidth: '100%' }}>
+            <span style={{ fontSize: 17, fontWeight: 700, color: T.text.primary }}>{medico.nome || 'Sem nome'}</span>
+            <span style={{ fontSize: 12.5, color: T.text.quaternary }}>
+              {[medico.especialidade, medico.crm ? 'CRM ' + medico.crm : null].filter(Boolean).join(' · ') || medico.email}
+            </span>
+            {medico.email && (medico.especialidade || medico.crm) && (
+              <span style={{ fontSize: 12, color: T.text.tertiary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{medico.email}</span>
+            )}
+          </div>
+          <Badge tone="accent">{ehAdmin ? 'Administrador' : 'Médico'}</Badge>
+          <Button variant="secondary" icon={Camera} disabled={uploadandoFoto} onClick={() => fotoInputRef.current?.click()} style={{ marginTop: 4 }}>
+            {uploadandoFoto ? 'Enviando...' : 'Alterar foto'}
+          </Button>
+        </Card>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div>
-                <label style={labelStyle}>Nome completo</label>
+        {/* COLUNA DIREITA */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+          <Card
+            titulo="Dados profissionais"
+            acao={
+              <Button onClick={salvarPerfil} disabled={salvando}>
+                {salvando ? 'Salvando...' : 'Salvar'}
+              </Button>
+            }
+          >
+            <p style={{ fontSize: 12.5, color: T.text.quaternary, margin: '-6px 0 16px' }}>
+              Seus dados aparecem nos prontuários e para seus pacientes.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+              <Field label="Nome completo">
                 <Input value={form.nome} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))}
                   placeholder="Dr. João Silva" />
-              </div>
-              <div>
-                <label style={labelStyle}>Especialidade</label>
+              </Field>
+              <Field label="Especialidade">
                 <EspecialidadeSelect value={form.especialidade} onChange={v => setForm(p => ({ ...p, especialidade: v }))} />
-              </div>
-              <div>
-                <label style={labelStyle}>CRM</label>
+              </Field>
+              <Field label="CRM">
                 <Input value={form.crm} onChange={e => setForm(p => ({ ...p, crm: e.target.value }))}
-                  placeholder="Ex: 12345-SP" />
-              </div>
-              <div>
-                <label style={labelStyle}>Telefone</label>
+                  placeholder="Ex.: 12345-SP" />
+              </Field>
+              <Field label="Telefone">
                 <Input value={form.telefone} onChange={e => setForm(p => ({ ...p, telefone: e.target.value }))}
                   placeholder="(11) 99999-9999" />
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Nome da clínica</label>
+              </Field>
+              <Field label="Nome da clínica" style={{ gridColumn: '1 / -1' }}>
                 <Input value={form.clinica} onChange={e => setForm(p => ({ ...p, clinica: e.target.value }))}
-                  placeholder="Ex: Clínica São Paulo" />
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Bio / Apresentação</label>
+                  placeholder="Ex.: Clínica São Paulo" />
+              </Field>
+              <Field label="Bio / apresentação" style={{ gridColumn: '1 / -1' }}>
                 <Textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))}
                   placeholder="Breve descrição sobre você, sua abordagem clínica e experiência..."
                   rows={4} />
-              </div>
+              </Field>
             </div>
+          </Card>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20, paddingTop: 20, borderTop: `1px solid ${tokens.bg.hoverStrong}` }}>
-              <Button onClick={salvarPerfil} disabled={salvando}>
-                {salvando ? 'Salvando...' : 'Salvar alterações'}
+          <Card titulo="Segurança">
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', paddingTop: 2 }}>
+              <IconTile icon={KeyRound} size={34} radius={10} />
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 13.5, fontWeight: 600, color: T.text.primary }}>Senha</span>
+                <span style={{ fontSize: 12.5, color: T.text.quaternary }}>Atualize sua senha periodicamente.</span>
+              </div>
+              <Button variant="secondary" onClick={() => setSenhaAberta(v => !v)}>
+                {senhaAberta ? 'Cancelar' : 'Alterar'}
               </Button>
             </div>
-          </div>
+
+            {senhaAberta && (
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${T.border.muted}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+                  <Field label="Senha atual">
+                    <Input type="password" value={senhaForm.atual}
+                      onChange={e => setSenhaForm(p => ({ ...p, atual: e.target.value }))}
+                      placeholder="••••••••" />
+                  </Field>
+                  <Field label="Nova senha">
+                    <Input type="password" value={senhaForm.nova}
+                      onChange={e => setSenhaForm(p => ({ ...p, nova: e.target.value }))}
+                      placeholder="Mínimo 6 caracteres" />
+                  </Field>
+                  <Field label="Confirmar nova senha">
+                    <Input type="password" value={senhaForm.confirma}
+                      onChange={e => setSenhaForm(p => ({ ...p, confirma: e.target.value }))}
+                      placeholder="••••••••" />
+                  </Field>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button onClick={salvarSenha} disabled={salvandoSenha}>
+                    {salvandoSenha ? 'Alterando...' : 'Alterar senha'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 14, paddingTop: 14, borderTop: `1px solid ${T.border.muted}` }}>
+              <IconTile icon={ShieldCheck} size={34} radius={10} color={T.status.success} />
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 13.5, fontWeight: 600, color: T.text.primary }}>Privacidade e dados (LGPD)</span>
+                <span style={{ fontSize: 12.5, color: T.text.quaternary }}>Exporte seus dados ou solicite a exclusão da conta.</span>
+              </div>
+              <Button variant="secondary" onClick={() => router.push('/lgpd')}>Abrir</Button>
+            </div>
+          </Card>
         </div>
-      <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </main>
+      </div>
+    </div>
   )
 }

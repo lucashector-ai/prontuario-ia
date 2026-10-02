@@ -2,252 +2,252 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import type { LucideIcon } from 'lucide-react'
+import {
+  LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, Sparkles, MessageCircle,
+  Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, PanelLeftClose, PanelLeftOpen,
+} from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
+import { Icon, Avatar } from '@/components/ui'
+import { SetupChecklist } from '@/components/SetupChecklist'
+import { Marca } from '@/components/Marca'
+import { useChatNaoLidas } from '@/components/shell/useChatNaoLidas'
 
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const TEXT_DEFAULT = tokens.text.strong
-const TEXT_MUTED = tokens.text.tertiary
+import { ehAtendente, sairDaConta } from '@/lib/sessao'
+const T = tokens
 
-export function Sidebar() {
+type Item = { href: string; label: string; icon: LucideIcon; emBreve?: boolean; novaAba?: boolean }
+
+/**
+ * Menu lateral (204px). Recolhido (`rail`) vira uma faixa de 52px só com ícones —
+ * o usuário alterna pelo botão do topo, como no ChatGPT (no modo recolhido o logo
+ * vira o botão de abrir ao passar o mouse). Abaixo de 760px o AppShell usa a BottomNav.
+ */
+export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAlternar?: () => void }) {
   const router = useRouter()
   const pathname = usePathname()
   const [medico, setMedico] = useState<any>(null)
   const [clinicaAdmin, setClinicaAdmin] = useState<any>(null)
+  const [hover, setHover] = useState<string | null>(null)
+  const [hoverLogo, setHoverLogo] = useState(false)
+  const chatNaoLidas = useChatNaoLidas()
 
   useEffect(() => {
     const ca = localStorage.getItem('clinica_admin')
-    if (ca) {
-      setClinicaAdmin(JSON.parse(ca))
-      return
-    }
+    if (ca) { setClinicaAdmin(JSON.parse(ca)); return }
     const m = localStorage.getItem('medico')
     if (m) setMedico(JSON.parse(m))
   }, [])
 
-  // Clínica admin vê TUDO (incluindo Painel admin + Minha clínica)
   const isClinicaAdmin = !!clinicaAdmin
   const isRecepcionista = medico?.cargo === 'recepcionista'
-  const isMedicoAdmin = medico?.cargo === 'admin' // médico com cargo admin (legado)
-
-  // Mostra painel admin e configurações administrativas se for clínica admin OU médico admin
+  const [ehAtendenteLocal, setEhAtendenteLocal] = useState(false)
+  useEffect(() => { setEhAtendenteLocal(ehAtendente()) }, [])
+  const isMedicoAdmin = medico?.cargo === 'admin'
   const temAcessoAdmin = isClinicaAdmin || isMedicoAdmin
 
-  const grupos = [
+  const atendente = ehAtendenteLocal
+  const grupos: { label: string; items: Item[] }[] = atendente ? [
+    { label: 'Atendimento', items: [{ href: '/chat', label: 'Chat', icon: MessageCircle }] },
+  ] : [
     {
-      // GRUPO 1 — Fluxo do dia
+      label: 'Menu principal',
       items: [
-        { href: '/dashboard', label: 'Dashboard', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <rect x='3' y='3' width='7' height='7'/><rect x='14' y='3' width='7' height='7'/>
-            <rect x='3' y='14' width='7' height='7'/><rect x='14' y='14' width='7' height='7'/>
-          </svg>
-        )},
-        { href: '/agenda', label: 'Agenda', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <rect x='3' y='4' width='18' height='18' rx='2'/>
-            <line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/>
-            <line x1='3' y1='10' x2='21' y2='10'/>
-          </svg>
-        )},
-        { href: '/pacientes', label: 'Pacientes', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75'/>
-          </svg>
-        )},
-        ...(!isRecepcionista ? [{ href: '/historico', label: 'Histórico', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'/>
-          </svg>
-        )}] : []),
+        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/agenda', label: 'Agenda', icon: Calendar },
+        { href: '/pacientes', label: 'Pacientes', icon: Users },
+        ...(!isRecepcionista ? [{ href: '/historico', label: 'Histórico', icon: Clock }] : []),
       ],
     },
     {
-      // GRUPO 2 — Atendimento
+      label: 'Atendimento',
       items: [
-        ...(!isRecepcionista ? [{ href: '/nova-consulta', label: 'Nova consulta', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M12 5v14M5 12h14'/>
-          </svg>
-        )}] : []),
-        ...(!isRecepcionista ? [{ href: '/teleconsulta', label: 'Teleconsulta', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M15 10l4.553-2.169A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14v-4zM3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z'/>
-          </svg>
-        )}] : []),
-        ...(!isRecepcionista ? [{ href: '/exames', label: 'Analisar exames', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18'/>
-          </svg>
-        )}] : []),
-        ...(!isRecepcionista ? [{ href: '/assistente-ia', label: 'Assistente IA', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0-3 3 3 3 0 0 0 0 6 3 3 0 0 0 3 3v1a3 3 0 0 0 6 0v-1a3 3 0 0 0 3-3 3 3 0 0 0 0-6 3 3 0 0 0-3-3V5a3 3 0 0 0-3-3z'/>
-          </svg>
-        )}] : []),
-        // Financeiro desligado pra rebuild (Financeiro 2.0). Sprint 1 pré-beta.
-        // { href: '/financeiro', label: 'Financeiro', icon: (
-        //   <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-        //     <line x1='12' y1='1' x2='12' y2='23'/>
-        //     <path d='M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'/>
-        //   </svg>
-        // )},
-        { href: '/whatsapp-app', label: 'WhatsApp', emBreve: true, icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/>
-          </svg>
-        )},
+        ...(!isRecepcionista ? [
+          { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
+          { href: '/teleconsulta', label: 'Teleconsulta', icon: Video },
+          { href: '/exames', label: 'Analisar exames', icon: ScanSearch },
+          { href: '/assistente-ia', label: 'Assistente IA', icon: Sparkles },
+        ] : []),
+        { href: '/chat', label: 'Chat', icon: MessageCircle },
       ],
     },
     {
-      // GRUPO 3 — Configurações
+      label: 'Clínica',
       items: [
         ...(temAcessoAdmin ? [
-          { href: '/minha-clinica', label: 'Minha clínica', icon: (
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-              <path d='M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z'/>
-              <polyline points='9 22 9 12 15 12 15 22'/>
-            </svg>
-          )},
-          { href: '/admin', label: 'Painel admin', icon: (
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-              <path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/>
-              <path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/>
-            </svg>
-          )},
+          { href: '/minha-clinica', label: 'Minha clínica', icon: Hospital },
+          { href: '/admin', label: 'Painel admin', icon: SlidersHorizontal },
         ] : []),
-        { href: '/formularios', label: 'Formulários', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/>
-            <polyline points='14 2 14 8 20 8'/>
-            <line x1='16' y1='13' x2='8' y2='13'/>
-            <line x1='16' y1='17' x2='8' y2='17'/>
-            <polyline points='10 9 9 9 8 9'/>
-          </svg>
-        )},
-        { href: '/configuracoes/agenda-publica', label: 'Agenda pública', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <rect x='3' y='4' width='18' height='18' rx='2' ry='2'/>
-            <line x1='16' y1='2' x2='16' y2='6'/>
-            <line x1='8' y1='2' x2='8' y2='6'/>
-            <line x1='3' y1='10' x2='21' y2='10'/>
-            <path d='M8 14h.01'/><path d='M12 14h.01'/><path d='M16 14h.01'/>
-          </svg>
-        )},
-        { href: '/perfil', label: 'Perfil', icon: (
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z'/>
-          </svg>
-        )},
+        { href: '/formularios', label: 'Formulários', icon: ClipboardList },
+        { href: '/configuracoes/agenda-publica', label: 'Agenda pública', icon: CalendarCheck },
+        { href: '/perfil', label: 'Perfil', icon: UserRound },
       ],
     },
   ]
 
-  const sair = () => {
-    localStorage.removeItem('medico')
-    localStorage.removeItem('clinica_admin')
-    localStorage.removeItem('clinica')
-    router.push('/login')
-  }
+  const usuario = clinicaAdmin || medico
+  const sair = () => router.push(sairDaConta())
+
+  // Animação: só a largura do <aside> muda. Ícones ficam sempre na mesma posição
+  // (padding fixo), e textos/cards somem com fade — nada "pula" ao abrir/fechar.
+  const EASE = 'cubic-bezier(.2,.8,.2,1)'
+  const DUR = '.42s'
+  const fade = (visivel: boolean, atraso = 0.12): React.CSSProperties => ({
+    opacity: visivel ? 1 : 0,
+    transition: `opacity ${visivel ? '.3s' : '.16s'} ease ${visivel ? atraso : 0}s`,
+    pointerEvents: visivel ? 'auto' : 'none',
+    whiteSpace: 'nowrap',
+  })
 
   return (
     <aside style={{
-      width: 240,
-      height: '100%',
-      background: tokens.bg.page,
-      display: 'flex',
-      flexDirection: 'column',
-      flexShrink: 0,
-      padding: '20px 14px',
+      width: rail ? 52 : 204, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14,
+      height: '100%', transition: `width ${DUR} ${EASE}`, overflow: 'hidden',
     }}>
-      {/* Logo no topo */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '4px 10px', marginBottom: 24,
-      }}>
-        <img src="/logo-clinical-360.svg" alt="Clinical 360" style={{ height: 28, width: 'auto', objectFit: 'contain' as const }}/>
+      {/* Marca — logo fixo em x=11; wordmark e botão de fechar com fade */}
+      <div style={{ position: 'relative', height: 36, flexShrink: 0, display: 'flex', alignItems: 'center', paddingLeft: 11, gap: 10 }}>
+        <button
+          onClick={rail ? onAlternar : undefined}
+          title={rail ? 'Abrir menu' : undefined}
+          aria-label={rail ? 'Abrir menu' : undefined}
+          onMouseEnter={() => setHoverLogo(true)} onMouseLeave={() => setHoverLogo(false)}
+          style={{
+            position: 'relative', width: 30, height: 30, borderRadius: 9, border: 'none', padding: 0, flexShrink: 0,
+            cursor: rail ? 'pointer' : 'default', background: 'transparent', display: 'grid', placeItems: 'center',
+          }}
+        >
+          <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', transition: 'opacity .15s', opacity: rail && hoverLogo ? 0 : 1 }}>
+            <Marca simbolo size={28} />
+          </span>
+          <span style={{
+            position: 'absolute', inset: -3, borderRadius: 10, display: 'grid', placeItems: 'center', background: T.bg.hoverStrong,
+            color: T.text.secondary, transition: 'opacity .15s', opacity: rail && hoverLogo ? 1 : 0,
+          }}>
+            <PanelLeftOpen size={18} strokeWidth={1.6} />
+          </span>
+        </button>
+        <span style={{ flex: 1, display: 'flex', alignItems: 'center', minWidth: 0, ...fade(!rail) }}>
+          <img src="/logo-texto.svg" alt="Clinical 360" style={{ height: 17, width: 'auto', display: 'block' }} />
+        </span>
+        {onAlternar && (
+          <button
+            onClick={onAlternar} title="Fechar menu" aria-label="Fechar menu" tabIndex={rail ? -1 : 0}
+            style={{
+              width: 32, height: 32, borderRadius: 9, border: 'none', cursor: 'pointer', display: 'grid', placeItems: 'center', flexShrink: 0,
+              background: 'transparent', color: T.text.tertiary, ...fade(!rail),
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.bg.hoverStrong; e.currentTarget.style.color = T.text.secondary }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.text.tertiary }}
+          >
+            <PanelLeftClose size={18} strokeWidth={1.6} />
+          </button>
+        )}
       </div>
 
-      {/* Grupos de navegação */}
-      <nav style={{ flex: 1, overflow: 'auto', overscrollBehavior: 'contain' as const }}>
-        {grupos.map((grupo, gi) => {
-          if (grupo.items.length === 0) return null
-          return (
-            <div key={gi} style={{ marginBottom: 22 }}>
-              {gi > 0 && (
-                <div style={{
-                  height: 1, background: tokens.bg.hoverStrong,
-                  margin: '6px 10px 14px',
-                }} />
-              )}
-              {grupo.items.map(item => {
-                const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
-                return (
-                  <button
-                    key={item.href}
-                    onClick={() => {
-                      // EM BREVE: bloqueia clique
-                      if ((item as any).emBreve) { return }
-                      // WhatsApp abre em nova aba (atendimento como ferramenta separada)
-                      if (item.href === '/whatsapp-app') {
-                        window.open(item.href, '_blank')
-                      } else {
-                        router.push(item.href)
-                      }
-                    }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 11,
-                      padding: '9px 12px', borderRadius: 10,
-                      marginBottom: 2, cursor: (item as any).emBreve ? 'not-allowed' : 'pointer',
-                      width: '100%', textAlign: 'left' as const,
-                      background: active ? tokens.brand.primaryLight : 'transparent',
-                      color: (item as any).emBreve ? tokens.text.tertiary : (active ? tokens.brand.primary : TEXT_DEFAULT),
-                      opacity: (item as any).emBreve ? 0.7 : 1,
-                      fontSize: 13, fontWeight: active ? 600 : 500,
-                      border: 'none',
-                      transition: 'background 0.12s',
-                    }}
-                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = tokens.bg.card }}
-                    onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
-                  >
-                    <span style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }}>{item.icon}</span>
-                    {item.label}
-                    {(item as any).emBreve && (
-                      <span style={{
-                        marginLeft: 'auto', fontSize: 9, fontWeight: 700,
-                        background: tokens.status.warningLightSoft, color: tokens.status.warningText,
-                        padding: '2px 7px', borderRadius: 10,
-                        textTransform: 'uppercase', letterSpacing: '0.05em'
-                      }}>Em breve</span>
-                    )}
-                  </button>
-                )
-              })}
+      {/* Navegação */}
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' }}>
+        {grupos.map(g => g.items.length === 0 ? null : (
+          <div key={g.label} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {/* rótulo do grupo e divisória ocupam a mesma altura — troca por fade */}
+            <div style={{ position: 'relative', height: 18, flexShrink: 0 }}>
+              <div style={{ fontSize: 12, color: '#9A98A5', padding: '0 10px', ...fade(!rail) }}>{g.label}</div>
+              <div style={{ position: 'absolute', left: 10, width: 32, top: 9, height: 1, background: T.border.default, ...fade(rail) }} />
             </div>
-          )
-        })}
+            {g.items.map(item => {
+              const ativo = pathname === item.href || pathname.startsWith(item.href + '/')
+              const hv = !item.emBreve && hover === item.href
+              const realce = ativo || hv
+              const contador = item.href === '/chat' ? chatNaoLidas : 0
+              return (
+                <button
+                  key={item.href}
+                  title={item.label}
+                  onMouseEnter={() => setHover(item.href)}
+                  onMouseLeave={() => setHover(null)}
+                  onClick={() => {
+                    if (item.emBreve) return
+                    if (item.novaAba) window.open(item.href, '_blank')
+                    else router.push(item.href)
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 11, overflow: 'hidden', flexShrink: 0,
+                    padding: '0 10px 0 16px', height: 34, borderRadius: 9, fontSize: 13.5, fontFamily: 'inherit', textAlign: 'left',
+                    fontWeight: ativo ? 600 : 500,
+                    color: ativo || hv ? T.text.primary : '#5A5865',
+                    background: ativo ? '#fff' : hv ? '#ECECF0' : 'transparent',
+                    transition: 'background .15s, color .15s',
+                    border: `1px solid ${ativo ? T.border.default : 'transparent'}`,
+                    boxShadow: ativo ? T.shadow.sm : 'none',
+                    opacity: item.emBreve ? 0.5 : 1,
+                    cursor: item.emBreve ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <span style={{
+                    position: 'relative', display: 'inline-grid', flexShrink: 0, color: realce ? T.brand.primary : 'inherit',
+                    transition: `transform .35s ${T.motion.spring}, color .25s`,
+                    transform: hv ? 'rotate(-8deg) scale(1.06)' : 'none',
+                  }}>
+                    <Icon icon={item.icon} size={18} active={realce} />
+                    {/* Recolhido: selo pequeno sobre o ícone */}
+                    {contador > 0 && (
+                      <span style={{
+                        position: 'absolute', top: -6, right: -8, minWidth: 15, height: 15, padding: '0 4px', boxSizing: 'border-box',
+                        borderRadius: 99, background: T.brand.primary, color: '#fff', fontSize: 9.5, fontWeight: 700, lineHeight: '15px',
+                        textAlign: 'center', border: `2px solid ${T.bg.page}`, opacity: rail ? 1 : 0, transition: 'opacity .2s',
+                      }}>{contador > 9 ? '9+' : contador}</span>
+                    )}
+                  </span>
+                  <span style={{ flex: 1, ...fade(!rail) }}>{item.label}</span>
+                  {contador > 0 && (
+                    <span title={`${contador} conversa${contador === 1 ? '' : 's'} com mensagens não lidas`} style={{
+                      minWidth: 20, height: 20, padding: '0 6px', boxSizing: 'border-box', borderRadius: 99, textAlign: 'center',
+                      background: T.brand.primary, color: '#fff', fontSize: 11, fontWeight: 700, lineHeight: '20px', ...fade(!rail),
+                    }}>{contador > 99 ? '99+' : contador}</span>
+                  )}
+                  {item.emBreve && (
+                    <span style={{ fontSize: 10, fontWeight: 600, color: '#8A6A1F', background: '#FBF3DF', padding: '2px 7px', borderRadius: 99, ...fade(!rail) }}>Em breve</span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        ))}
       </nav>
 
-      {/* Logout separado embaixo */}
-      <div style={{ borderTop: `1px solid ${tokens.bg.hoverStrong}`, paddingTop: 14, marginTop: 'auto' }}>
-        <button
-          onClick={sair}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 11,
-            padding: '9px 12px', borderRadius: 9,
-            cursor: 'pointer', width: '100%', textAlign: 'left' as const,
-            background: 'transparent', color: tokens.status.danger,
-            fontSize: 13, fontWeight: 500, border: 'none',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = tokens.status.dangerBg}
-          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-        >
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-            <path d='M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9'/>
-          </svg>
-          Sair
-        </button>
-      </div>
+      {/* Card de configuração: recolhe altura + fade (some no modo recolhido) */}
+      {temAcessoAdmin && (
+        <div style={{
+          display: 'grid', gridTemplateRows: rail ? '0fr' : '1fr', marginTop: rail ? -18 : 0,
+          transition: `grid-template-rows ${DUR} ${EASE}, margin-top ${DUR} ${EASE}`, flexShrink: 0,
+        }}>
+          <div style={{ overflow: 'hidden', minWidth: 180, ...fade(!rail) }}>
+            <SetupChecklist variante="sidebar" />
+          </div>
+        </div>
+      )}
+
+      {/* Usuário — avatar fixo; borda/fundo e textos com fade */}
+      {usuario && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 14, flexShrink: 0, overflow: 'hidden',
+          background: rail ? 'rgba(255,255,255,0)' : '#fff', border: `1px solid ${rail ? 'rgba(235,234,239,0)' : T.border.default}`,
+          transition: `background ${DUR} ease, border-color ${DUR} ease`,
+        }}>
+          <Avatar nome={usuario.nome} size={34} src={usuario.foto_url} />
+          <div style={{ flex: 1, minWidth: 0, lineHeight: 1.3, ...fade(!rail) }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: T.text.primary, overflow: 'hidden', textOverflow: 'ellipsis' }}>{usuario.nome}</div>
+            <div style={{ fontSize: 12, color: T.text.quaternary, overflow: 'hidden', textOverflow: 'ellipsis' }}>{usuario.email}</div>
+          </div>
+          <button
+            title="Sair" onClick={sair} tabIndex={rail ? -1 : 0}
+            style={{ width: 30, height: 30, flexShrink: 0, borderRadius: 8, border: 'none', display: 'grid', placeItems: 'center', color: T.status.danger, background: 'transparent', cursor: 'pointer', ...fade(!rail) }}
+            onMouseEnter={e => e.currentTarget.style.background = '#FDF2F1'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <LogOut size={16} strokeWidth={1.6} />
+          </button>
+        </div>
+      )}
     </aside>
   )
 }

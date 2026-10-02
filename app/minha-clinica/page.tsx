@@ -1,53 +1,34 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Building2, Stethoscope, Bot, Zap, ShieldCheck } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { VisaoGeral } from '@/components/minha-clinica/VisaoGeral'
 import { Procedimentos } from '@/components/minha-clinica/Procedimentos'
 import { Lgpd } from '@/components/minha-clinica/Lgpd'
 import { Automacoes } from '@/components/minha-clinica/Automacoes'
 import { Sofia } from '@/components/minha-clinica/Sofia'
-import { tokens } from '@/lib/design-tokens'
-import { PageHeader, Tabs } from '@/components/ui'
-
-const ACCENT = tokens.brand.primary
-const ACCENT_LIGHT = tokens.brand.primaryLighter
-const BG = 'transparent'
+import { Icon, PageHeader, Tabs } from '@/components/ui'
 
 type TabKey = 'visao' | 'procedimentos' | 'sofia' | 'automacoes' | 'lgpd'
 
-const TABS: Array<{ key: TabKey; label: string; icon: React.ReactNode }> = [
-  { key: 'visao', label: 'Visão geral', icon: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-      <polyline points="9 22 9 12 15 12 15 22"/>
-    </svg>
-  )},
-  { key: 'procedimentos', label: 'Procedimentos', icon: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M9 11H1l8-8v6h6v6"/><path d="M15 13h8l-8 8v-6H9V9"/>
-    </svg>
-  )},
-  { key: 'sofia', label: 'Sofia · IA', icon: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 8V4H8"/><rect x="4" y="12" width="16" height="8" rx="2"/>
-      <path d="M2 14h2M20 14h2M15 13v2M9 13v2"/>
-    </svg>
-  )},
-  { key: 'automacoes', label: 'Automações', icon: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-    </svg>
-  )},
-  { key: 'lgpd', label: 'Privacidade & LGPD', icon: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-    </svg>
-  )},
+const TABS: Array<{ key: TabKey; label: string; icon: LucideIcon }> = [
+  { key: 'visao', label: 'Visão geral', icon: Building2 },
+  { key: 'procedimentos', label: 'Procedimentos', icon: Stethoscope },
+  { key: 'sofia', label: 'Sofia · IA', icon: Bot },
+  { key: 'automacoes', label: 'Automações', icon: Zap },
+  { key: 'lgpd', label: 'Privacidade & LGPD', icon: ShieldCheck },
 ]
 
 export default function MinhaClinicaPage() {
   const router = useRouter()
   const [tab, setTab] = useState<TabKey>('visao')
+
+  // Abre direto numa aba: /minha-clinica?aba=procedimentos|sofia|automacoes|lgpd
+  useEffect(() => {
+    const aba = new URLSearchParams(window.location.search).get('aba') as TabKey | null
+    if (aba && ['visao', 'procedimentos', 'sofia', 'automacoes', 'lgpd'].includes(aba)) setTab(aba)
+  }, [])
 
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
@@ -56,41 +37,21 @@ export default function MinhaClinicaPage() {
   }, [router])
 
   return (
-    <div style={{ minHeight: '100%', background: BG, padding: 24 }}>
-      {/* Header */}
-      <PageHeader titulo="Minha Clínica" descricao="Configurações, equipe, automações e privacidade — tudo no mesmo lugar" />
+    <div style={{ minHeight: '100%', padding: 20 }}>
+      <PageHeader titulo="Minha clínica" descricao="Dados, equipe, automações e privacidade — tudo no mesmo lugar" />
 
-      {/* Tabs horizontais */}
       <Tabs
-        style={{ overflowX: 'auto', flexWrap: 'nowrap' }}
+        style={{ overflowX: 'auto', flexWrap: 'nowrap', marginBottom: 18 }}
         ativa={tab}
         onChange={(id) => setTab(id as TabKey)}
-        tabs={TABS.map(t => ({ id: t.key, label: t.label, icon: t.icon }))}
+        tabs={TABS.map(t => ({ id: t.key, label: t.label, icon: <Icon icon={t.icon} size={15} /> }))}
       />
 
-      {/* Conteúdo da tab ativa */}
       {tab === 'visao' && <VisaoGeral />}
       {tab === 'procedimentos' && <Procedimentos />}
       {tab === 'sofia' && <Sofia />}
       {tab === 'automacoes' && <Automacoes />}
       {tab === 'lgpd' && <Lgpd />}
-    </div>
-  )
-}
-
-function Placeholder({ titulo, descricao }: { titulo: string; descricao: string }) {
-  return (
-    <div style={{ background: 'white', borderRadius: 16, padding: 48, textAlign: 'center' as const }}>
-      <div style={{ width: 56, height: 56, borderRadius: 14, background: 'transparent', color: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-      </div>
-      <p style={{ fontSize: 15, fontWeight: 700, color: tokens.text.primary, margin: '0 0 6px' }}>{titulo}</p>
-      <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0 }}>{descricao}</p>
-      <p style={{ fontSize: 11, color: tokens.text.tertiary, margin: '14px 0 0', fontStyle: 'italic' as const }}>Em breve nesta aba</p>
     </div>
   )
 }

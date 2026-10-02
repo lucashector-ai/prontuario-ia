@@ -5,18 +5,37 @@ import { usePathname } from 'next/navigation'
 import { Topbar } from './Topbar'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
+import { HeaderProvider } from './shell/header-context'
+import { AvisoConexao } from './shell/AvisoConexao'
 import { tokens } from '@/lib/design-tokens'
 
-const ROTAS_PUBLICAS = ['/login', '/login-atendente', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/whatsapp-app', '/privacidade', '/termos', '/sobre', '/contato']
-const PREFIXOS_PUBLICOS = ['/sala/', '/pre-consulta/', '/paciente-publico/', '/agenda/']
+const ROTAS_PUBLICAS = ['/login', '/login-atendente', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/privacidade', '/termos', '/sobre', '/contato', '/dev-login']
+const PREFIXOS_PUBLICOS = ['/sala/', '/pre-consulta/', '/paciente-publico/', '/agenda/', '/formulario/']
 
+type Layout = 'desktop' | 'rail' | 'mobile'
+
+/**
+ * Casca do app (design v2):
+ *   fundo #F7F7F8, padding 16, gap 16
+ *   ├─ Sidebar 204px, recolhível para 52px pelo botão do topo (some < 760px → BottomNav)
+ *   └─ coluna: cabeçalho (título + busca + atalhos) + painel branco (raio 20) com a página
+ */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const [isMobile, setIsMobile] = useState(false)
+  const [layout, setLayout] = useState<Layout>('desktop')
+  // Menu recolhido: escolha do usuário (lembrada no navegador). Telas < 1180px começam recolhidas.
+  const [recolhido, setRecolhido] = useState(false)
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
+    const check = () => {
+      const w = window.innerWidth
+      setLayout(w < 760 ? 'mobile' : w < 1180 ? 'rail' : 'desktop')
+    }
     check()
+    try {
+      const salvo = localStorage.getItem('c360-menu-recolhido')
+      setRecolhido(salvo !== null ? salvo === '1' : window.innerWidth < 1180)
+    } catch { setRecolhido(window.innerWidth < 1180) }
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
@@ -26,85 +45,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     ROTAS_PUBLICAS.includes(pathname) ||
     PREFIXOS_PUBLICOS.some(p => pathname.startsWith(p))
 
-  if (ehPublica) return <>{children}</>
+  const alternarMenu = () => {
+    setRecolhido(r => {
+      try { localStorage.setItem('c360-menu-recolhido', r ? '0' : '1') } catch {}
+      return !r
+    })
+  }
 
-  // ===== MOBILE LAYOUT =====
-  if (isMobile) {
+  if (ehPublica) return <HeaderProvider>{children}</HeaderProvider>
+
+  const painel: React.CSSProperties = {
+    flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain',
+    background: tokens.bg.card, border: `1px solid ${tokens.border.default}`, borderRadius: tokens.radius['3xl'],
+  }
+
+  if (layout === 'mobile') {
     return (
-      <div style={{
-        height: '100dvh',
-        background: tokens.bg.page,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}>
-        <Topbar />
-        <main style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          overscrollBehavior: 'contain',
-          minHeight: 0,
-          paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
-        }}>
-          {children}
-        </main>
-        <BottomNav />
-      </div>
+      <HeaderProvider>
+        <div style={{ height: '100dvh', background: tokens.bg.page, display: 'flex', flexDirection: 'column', gap: 12, padding: 12, paddingBottom: 'calc(76px + env(safe-area-inset-bottom, 0px))', overflow: 'hidden' }}>
+          <Topbar compacto />
+          <AvisoConexao />
+          <main className="appshell-main" style={painel}>{children}</main>
+          <BottomNav />
+        </div>
+      </HeaderProvider>
     )
   }
 
-  // ===== DESKTOP LAYOUT — modelo B (sidebar fundida, topbar ilha) =====
   return (
-    <div style={{
-      height: '100vh',
-      background: tokens.bg.page,
-      display: 'flex',
-      overflow: 'hidden',
-    }}>
-      {/* Sidebar — funde no fundo, sem card */}
-      <div style={{
-        flexShrink: 0,
-        background: tokens.bg.page,
-      }}>
-        <Sidebar />
-      </div>
-
-      {/* Coluna direita — Topbar (ilha) + Conteúdo */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: 0,
-        padding: '16px 16px 16px 0',
-        gap: 16,
-        overflow: 'hidden',
-      }}>
-        {/* Topbar — ilha branca separada */}
-        <div style={{
-          background: tokens.bg.card,
-          borderRadius: 16,
-          flexShrink: 0,
-          boxShadow: tokens.shadow.island,
-          overflow: 'visible',
-        }}>
+    <HeaderProvider>
+      <div style={{ height: '100vh', background: tokens.bg.page, display: 'flex', gap: 12, padding: 12, overflow: 'hidden' }}>
+        <Sidebar rail={recolhido} onAlternar={alternarMenu} />
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <Topbar />
+          <AvisoConexao />
+          <main className="appshell-main" style={painel}>{children}</main>
         </div>
-
-        {/* Área de conteúdo — superfície branca (ilha) */}
-        <main className="appshell-main" style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          overscrollBehavior: 'contain',
-          minHeight: 0,
-          borderRadius: 16,
-          background: tokens.bg.card,
-          boxShadow: tokens.shadow.island,
-        }}>
-          {children}
-        </main>
       </div>
-    </div>
+    </HeaderProvider>
   )
 }
