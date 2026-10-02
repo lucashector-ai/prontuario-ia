@@ -15,8 +15,18 @@ export async function GET(req: NextRequest) {
     .neq('status', 'desconectado')
     .order('conectado_em')
   const tabelaAusente = !!error && /canais_conectados/.test(error.message)
+
+  // WhatsApp configurado do jeito antigo (direto em whatsapp_config, sem passar pelo botão)
+  const conectados = (data || []) as any[]
+  const { data: legados } = await db.from('whatsapp_config').select('medico_id, phone_number_id, phone_number, ativo')
+    .in('medico_id', e.medicoIds.length ? e.medicoIds : ['00000000-0000-0000-0000-000000000000'])
+  for (const w of (legados || []) as any[]) {
+    if (!w.phone_number_id || w.ativo === false) continue
+    if (conectados.some(c => c.canal === 'whatsapp' && c.conta_id === w.phone_number_id)) continue
+    conectados.push({ id: 'legado-' + w.phone_number_id, canal: 'whatsapp', conta_id: w.phone_number_id, nome: w.phone_number || 'Número configurado', foto_url: null, status: 'ativo', erro: null, conectado_em: null, medico_id: w.medico_id, detalhe: { legado: true } })
+  }
   return NextResponse.json({
-    canais: (data || []).map((c: any) => ({ ...c, detalhe: { waba_id: c.detalhe?.waba_id, page_id: c.detalhe?.page_id, username: c.detalhe?.username } })),
+    canais: conectados.map((c: any) => ({ ...c, detalhe: { waba_id: c.detalhe?.waba_id, page_id: c.detalhe?.page_id, username: c.detalhe?.username, legado: !!c.detalhe?.legado } })),
     medicos: e.medicos,
     configurado: metaConfigurada(),
     app_id: process.env.NEXT_PUBLIC_META_APP_ID || null,
@@ -31,8 +41,13 @@ export async function GET(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const e = await escopoCanais(req)
   if (!e) return NextResponse.json({ error: 'Sessão expirada' }, { status: 401 })
-  const id = req.nextUrl.searchParams.get('id')
-  const { data: c } = await db.from('canais_conectados').select('*').eq('id', id || '').maybeSingle()
+  const id = req.nextUrl.searchParams.get('id') || ''
+  if (id.startsWith('legado-')) {
+    // WhatsApp antigo: desliga a configuração
+    await db.from('whatsapp_config').update({ ativo: false }).eq('phone_number_id', id.slice(7)).in('medico_id', e.medicoIds)
+    return NextResponse.json({ ok: true })
+  }
+  const { data: c } = await db.from('canais_conectados').select('*').eq('id', id).maybeSingle()
   if (!c || !e.medicoIds.includes((c as any).medico_id)) return NextResponse.json({ error: 'Canal não encontrado' }, { status: 404 })
   const canal = c as any
   try {

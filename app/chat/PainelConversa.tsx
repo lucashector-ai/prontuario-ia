@@ -375,8 +375,75 @@ const chipBtn: React.CSSProperties = {
   display: 'flex', alignItems: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: '4px 6px', borderRadius: 9,
 }
 
-/** Estado vazio (nenhuma conversa aberta). */
+type StatusCanal = { canal: 'whatsapp' | 'instagram' | 'messenger'; contas: string[]; erro: boolean }
+
+/** Canais da clínica (o que está conectado). null = carregando ou sem acesso. */
+function useStatusCanais(): StatusCanal[] | null {
+  const [st, setSt] = useState<StatusCanal[] | null>(null)
+  useEffect(() => {
+    const demo = new URLSearchParams(window.location.search).get('demo') === '1'
+    const montar = (lista: { canal: string; nome: string | null; status: string }[]) =>
+      (['whatsapp', 'instagram', 'messenger'] as const).map(canal => {
+        const doCanal = lista.filter(c => c.canal === canal)
+        return { canal, contas: doCanal.map(c => c.nome || '').filter(Boolean), erro: doCanal.some(c => c.status === 'erro') }
+      })
+    if (demo) {
+      setSt(montar([{ canal: 'whatsapp', nome: '+55 11 98765-4321', status: 'ativo' }, { canal: 'instagram', nome: '@clinicabemviver', status: 'ativo' }]))
+      return
+    }
+    fetch('/api/canais').then(r => r.ok ? r.json() : null).then(j => { if (j?.canais) setSt(montar(j.canais)) }).catch(() => {})
+  }, [])
+  return st
+}
+
+/** Estado vazio (nenhuma conversa aberta). Sem canais: apresenta o Chat. Com canais: mostra o status de cada um. */
 export function ChatVazio({ nome }: { nome: string }) {
+  const status = useStatusCanais()
+  const algumConectado = !!status?.some(s => s.contas.length)
+  const nomeCanal = (id: string) => CANAIS.find(k => k.id === id)?.label || id
+
+  if (algumConectado && status) {
+    return (
+      <div style={{ height: '100%', display: 'grid', placeItems: 'center', background: '#FAFAFB', padding: 24 }}>
+        <div style={{ width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <span style={{ width: 52, height: 52, borderRadius: 16, background: T.brand.primaryLight, color: T.brand.primary, display: 'grid', placeItems: 'center' }}>
+            <SendHorizontal size={22} strokeWidth={1.6} />
+          </span>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-.01em' }}>Chat {nome ? `da ${nome}` : 'da clínica'}</div>
+            <div style={{ fontSize: 13, color: T.text.quaternary, marginTop: 4 }}>Escolha uma conversa ao lado para começar.</div>
+          </div>
+          <div style={{ width: '100%', background: '#fff', border: `1px solid ${T.border.default}`, borderRadius: 16, overflow: 'hidden' }}>
+            {status.map((s, i) => {
+              const conectado = s.contas.length > 0
+              return (
+                <div key={s.canal} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: i ? `1px solid ${T.border.muted}` : 'none' }}>
+                  <CanalIcone canal={s.canal} size={26} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.text.primary }}>{nomeCanal(s.canal)}</div>
+                    {conectado && (
+                      <div style={{ fontSize: 12, color: T.text.tertiary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.contas.join(' · ')}</div>
+                    )}
+                  </div>
+                  {s.erro ? (
+                    <a href="/minha-clinica?aba=canais" style={{ fontSize: 12.5, fontWeight: 600, color: T.status.danger, textDecoration: 'none' }}>Reconectar</a>
+                  ) : conectado ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: T.status.success, background: T.status.successBg, padding: '4px 10px', borderRadius: 99 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: 99, background: T.status.success }} />Conectado
+                    </span>
+                  ) : (
+                    <a href="/minha-clinica?aba=canais" style={{ fontSize: 12.5, fontWeight: 600, color: T.brand.primary, textDecoration: 'none', padding: '5px 12px', borderRadius: 9, border: `1px solid ${T.brand.primaryAccent}` }}>Conectar</a>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          <a href="/minha-clinica?aba=canais" style={{ fontSize: 12.5, color: T.text.tertiary, textDecoration: 'none' }}>Gerenciar canais</a>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ height: '100%', display: 'grid', placeItems: 'center', background: '#FAFAFB', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 460, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -393,8 +460,8 @@ export function ChatVazio({ nome }: { nome: string }) {
           WhatsApp, Instagram Direct e Messenger chegam aqui. A Sofia IA responde sozinha; quando precisar, assuma a conversa,
           transfira para alguém da equipe e acompanhe tudo no Kanban.
         </div>
-        <a href="/minha-clinica?aba=canais" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: T.brand.primary, textDecoration: 'none', padding: '8px 14px', borderRadius: 10, border: `1px solid ${T.brand.primaryAccent}`, background: T.bg.card }}>
-          Conectar ou gerenciar canais
+        <a href="/minha-clinica?aba=canais" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#fff', textDecoration: 'none', padding: '9px 16px', borderRadius: 10, background: T.brand.primary }}>
+          Conectar canais
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: T.text.tertiary }}><Lock size={13} />Notas internas ficam só para a equipe</div>
       </div>

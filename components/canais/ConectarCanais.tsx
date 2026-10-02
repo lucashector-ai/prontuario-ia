@@ -18,7 +18,7 @@ import { confirmar, notificar } from '@/components/ui/dialogos'
 import { CanalIcone } from '@/app/chat/pecas'
 
 type Canal = 'whatsapp' | 'instagram' | 'messenger'
-type Conectado = { id: string; canal: Canal; conta_id: string; nome: string | null; foto_url: string | null; status: string; erro: string | null; conectado_em: string; medico_id: string }
+type Conectado = { id: string; canal: Canal; conta_id: string; nome: string | null; foto_url: string | null; status: string; erro: string | null; conectado_em: string | null; medico_id: string }
 type Pagina = { id: string; nome: string; foto: string | null; instagram: { id: string; username: string; foto: string | null } | null }
 type Estado = {
   canais: Conectado[]; medicos: { id: string; nome: string }[]; configurado: boolean
@@ -290,7 +290,7 @@ export default function ConectarCanais() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: T.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nome || c.conta_id}</div>
                         <div style={{ fontSize: 11.5, color: c.status === 'erro' ? T.status.danger : T.text.tertiary }}>
-                          {c.status === 'erro' ? 'Precisa reconectar' : (estado.medicos.length > 1 && nomeMedico(c.medico_id)) || `Desde ${new Date(c.conectado_em).toLocaleDateString('pt-BR')}`}
+                          {c.status === 'erro' ? 'Precisa reconectar' : (estado.medicos.length > 1 && nomeMedico(c.medico_id)) || (c.conectado_em ? `Desde ${new Date(c.conectado_em).toLocaleDateString('pt-BR')}` : 'Configurado manualmente')}
                         </div>
                       </div>
                       <Button size="sm" variant="ghost" icon={Unplug} onClick={() => desconectar(c)} aria-label={`Desconectar ${c.nome}`}>Desconectar</Button>

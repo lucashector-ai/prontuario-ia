@@ -16,6 +16,8 @@ const env = Object.fromEntries(
 )
 const EMAIL = (process.env.EMAIL || '').trim().toLowerCase()
 const SENHA = process.env.SENHA || ''
+const NOME_MEDICO = process.env.NOME_MEDICO || 'Dr. Lucas Hector'
+const NOME_CLINICA = process.env.NOME_CLINICA || 'Clínica Clinical 360'
 if (!EMAIL || !SENHA) { console.error('Informe EMAIL e SENHA'); process.exit(1) }
 
 const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
@@ -35,17 +37,17 @@ if (admin) {
   medico = meds?.[0]
   if (!medico) {
     medico = ok(await db.from('medicos').insert({
-      clinica_id: clinica.id, nome: 'Dr. Lucas Hector', email: null, especialidade: 'Clínica Médica',
+      clinica_id: clinica.id, nome: NOME_MEDICO, email: null, especialidade: 'Clínica Médica',
       cargo: 'medico', ativo: true, verificado: true, onboarding_concluido: true,
     }).select().single(), 'medicos')
   }
 } else {
   clinica = ok(await db.from('clinicas').insert({
-    nome: 'Clínica Clinical 360', tipo: 'autonomo', telefone: '(00) 3000-0000',
+    nome: NOME_CLINICA, tipo: 'autonomo', telefone: '(00) 3000-0000',
     endereco: 'Av. Paulista, 1000 — São Paulo/SP', horarios: 'Seg a Sex 8h–18h',
   }).select().single(), 'clinicas')
   medico = ok(await db.from('medicos').insert({
-    clinica_id: clinica.id, nome: 'Dr. Lucas Hector', email: EMAIL,
+    clinica_id: clinica.id, nome: NOME_MEDICO, email: EMAIL,
     senha_hash: await bcrypt.hash(SENHA, 10), crm: '123456', especialidade: 'Clínica Médica',
     empresa_nome: clinica.nome, cargo: 'admin', ativo: true, verificado: true, onboarding_concluido: true,
   }).select().single(), 'medicos')
