@@ -1,20 +1,22 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Stethoscope, Bot, Zap, ShieldCheck } from 'lucide-react'
+import { Building2, Stethoscope, Bot, Zap, ShieldCheck, Plug } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { VisaoGeral } from '@/components/minha-clinica/VisaoGeral'
 import { Procedimentos } from '@/components/minha-clinica/Procedimentos'
 import { Lgpd } from '@/components/minha-clinica/Lgpd'
 import { Automacoes } from '@/components/minha-clinica/Automacoes'
 import PainelAuditoria from '@/components/auditoria/PainelAuditoria'
+import ConectarCanais from '@/components/canais/ConectarCanais'
 import { Sofia } from '@/components/minha-clinica/Sofia'
 import { Icon, PageHeader, Tabs } from '@/components/ui'
 
-type TabKey = 'visao' | 'procedimentos' | 'sofia' | 'automacoes' | 'lgpd'
+type TabKey = 'visao' | 'canais' | 'procedimentos' | 'sofia' | 'automacoes' | 'lgpd'
 
 const TABS: Array<{ key: TabKey; label: string; icon: LucideIcon }> = [
   { key: 'visao', label: 'Visão geral', icon: Building2 },
+  { key: 'canais', label: 'Canais', icon: Plug },
   { key: 'procedimentos', label: 'Procedimentos', icon: Stethoscope },
   { key: 'sofia', label: 'Sofia · IA', icon: Bot },
   { key: 'automacoes', label: 'Automações', icon: Zap },
@@ -25,10 +27,10 @@ export default function MinhaClinicaPage() {
   const router = useRouter()
   const [tab, setTab] = useState<TabKey>('visao')
 
-  // Abre direto numa aba: /minha-clinica?aba=procedimentos|sofia|automacoes|lgpd
+  // Abre direto numa aba: /minha-clinica?aba=canais|procedimentos|sofia|automacoes|lgpd
   useEffect(() => {
     const aba = new URLSearchParams(window.location.search).get('aba') as TabKey | null
-    if (aba && ['visao', 'procedimentos', 'sofia', 'automacoes', 'lgpd'].includes(aba)) setTab(aba)
+    if (aba && ['visao', 'canais', 'procedimentos', 'sofia', 'automacoes', 'lgpd'].includes(aba)) setTab(aba)
   }, [])
 
   useEffect(() => {
@@ -49,6 +51,7 @@ export default function MinhaClinicaPage() {
       />
 
       {tab === 'visao' && <VisaoGeral />}
+      {tab === 'canais' && <ConectarCanais />}
       {tab === 'procedimentos' && <Procedimentos />}
       {tab === 'sofia' && <Sofia />}
       {tab === 'automacoes' && <Automacoes />}

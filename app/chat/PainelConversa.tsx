@@ -393,6 +393,9 @@ export function ChatVazio({ nome }: { nome: string }) {
           WhatsApp, Instagram Direct e Messenger chegam aqui. A Sofia IA responde sozinha; quando precisar, assuma a conversa,
           transfira para alguém da equipe e acompanhe tudo no Kanban.
         </div>
+        <a href="/minha-clinica?aba=canais" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: T.brand.primary, textDecoration: 'none', padding: '8px 14px', borderRadius: 10, border: `1px solid ${T.brand.primaryAccent}`, background: T.bg.card }}>
+          Conectar ou gerenciar canais
+        </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: T.text.tertiary }}><Lock size={13} />Notas internas ficam só para a equipe</div>
       </div>
     </div>

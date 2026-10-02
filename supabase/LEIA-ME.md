@@ -25,6 +25,7 @@ Rode **sempre em ordem numérica**, de `0000` até a última:
 | `0012_faturamento_tiss.sql` | Faturamento de convênios no padrão TISS (operadoras, guias, lotes). |
 | `0013_auditoria_acessos.sql` | Registro de acessos ao prontuário (LGPD/CFM): quem viu/editou/exportou o quê. |
 | `0014_modelos_prontuario.sql` | Modelos de prontuário personalizados por especialidade. |
+| `0017_canais_conectados.sql` | Canais conectados por clínica (WhatsApp/Instagram/Messenger pelo botão "Conectar"). |
 | `0016_seguranca_rls.sql` | **Segurança**: liga o RLS em todas as tabelas com acesso por clínica (exige `SUPABASE_JWT_SECRET` no app). |
 | `0015_automacoes_estado.sql` | Controle das automações a cada 15 min (evita disparo duplicado com várias abas abertas). |
 
