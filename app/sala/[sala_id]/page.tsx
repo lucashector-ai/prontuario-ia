@@ -19,6 +19,7 @@ import {
 import { notificar } from '@/components/ui/dialogos'
 
 import { registrarAcesso } from '@/lib/auditoria'
+import ConversaConsulta from '@/components/ia/ConversaConsulta'
 const ICE = { iceServers: [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
@@ -805,7 +806,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             {transcricao ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <Overline>Transcrição da consulta</Overline>
-                <div style={{ background: T.bg.page, borderRadius: 12, padding: '12px 14px', fontSize: 13, lineHeight: 1.65, color: T.text.strong, whiteSpace: 'pre-wrap', maxHeight: 200, overflow: 'auto' }}>{transcricao}</div>
+                <div style={{ background: T.bg.page, borderRadius: 12, padding: '12px 14px', maxHeight: 260, overflow: 'auto' }}><ConversaConsulta texto={transcricao} compacto /></div>
               </div>
             ) : !processando && (
               <div style={{ background: T.bg.page, borderRadius: 12, padding: '12px 14px', fontSize: 13, color: T.text.quaternary, textAlign: 'center' }}>

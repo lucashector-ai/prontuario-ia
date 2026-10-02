@@ -27,6 +27,7 @@ import { modeloParaRequisicao, type ModeloProntuario } from '@/lib/ai/modelos-pr
 import CardAgendarRetorno from '@/components/retornos/CardAgendarRetorno'
 import { BotaoGerarGuia } from '@/components/tiss/BotaoGerarGuia'
 import { registrarAcesso } from '@/lib/auditoria'
+import ConversaConsulta from '@/components/ia/ConversaConsulta'
 
 const T = tokens
 const ONDA = '#8B74E8' // roxo médio da onda de áudio (protótipo)
@@ -87,23 +88,6 @@ function StatusConexao({ conexao, fase }: { conexao: string; fase: string }) {
   )
 }
 
-/** Transcrição com "Falante N:" destacado em cada troca de falante. */
-function TextoTranscricao({ texto, parcial }: { texto: string; parcial?: string }) {
-  const linhas = texto ? texto.split('\n') : []
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {linhas.map((l, i) => {
-        const m = /^(Falante \d+):\s*(.*)$/.exec(l)
-        return (
-          <p key={i} style={{ fontSize: 14, color: T.text.primary, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
-            {m ? <><b style={{ fontWeight: 650, color: T.brand.primary }}>{m[1]}:</b> {m[2]}</> : l}
-          </p>
-        )
-      })}
-      {parcial ? <p style={{ fontSize: 14, color: T.text.tertiary, lineHeight: 1.7, margin: 0, fontStyle: 'italic' }}>{parcial}</p> : null}
-    </div>
-  )
-}
 
 /** Linha de documento do painel lateral (ícone, rótulo, estado). */
 function LinhaDocumento({ icon, label, estado, onClick, disabled, children }: {
@@ -661,11 +645,11 @@ const handleCopiar = () => {
                   <span>O som está chegando bem baixo. Estamos amplificando, mas aproxime o microfone se puder.</span>
                 </div>
               )}
-              {(transcricao || parcial) ? <TextoTranscricao texto={transcricao} parcial={gravandoPausado ? '' : parcial} /> : null}
+              {(transcricao || parcial) ? <ConversaConsulta texto={transcricao} parcial={gravandoPausado ? '' : parcial} /> : null}
               {transcrevendo ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: T.text.secondary }}>
                   <Icon icon={LoaderCircle} size={15} color={ONDA} style={{ animation: 'spin 1s linear infinite' }} />
-                  {fase === 'revisando' ? 'Revisando o áudio inteiro para máxima precisão…' : 'Finalizando as últimas frases…'}
+                  {fase === 'identificando' ? 'Identificando quem é o médico e quem é o paciente…' : fase === 'revisando' ? 'Revisando o áudio inteiro para máxima precisão…' : 'Finalizando as últimas frases…'}
                 </span>
               ) : !gravandoPausado && !erro && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: T.text.tertiary }}>

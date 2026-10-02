@@ -21,7 +21,7 @@ import { supabase } from '@/lib/supabase'
 import { PARAMS_DEEPGRAM, TERMOS_MEDICOS_BASE, paramsTermos, textoComFalantes } from '@/lib/transcricao/termos'
 
 export type Conexao = 'parado' | 'conectando' | 'ao_vivo' | 'reconectando' | 'sem_ao_vivo'
-export type Fase = 'parado' | 'gravando' | 'finalizando' | 'revisando'
+export type Fase = 'parado' | 'gravando' | 'finalizando' | 'revisando' | 'identificando'
 
 type Palavra = { word: string; punctuated_word?: string; speaker?: number }
 
@@ -48,6 +48,8 @@ export type OpcoesTranscricao = {
   revisaoFinal?: boolean
   /** Usa um microfone já aberto (ex.: teleconsulta) em vez de pedir outro. Não é encerrado no fim. */
   obterStream?: () => MediaStream | null
+  /** false = não pedir à IA para identificar médico/paciente no fim */
+  identificarPapeis?: boolean
 }
 
 export function useTranscricao(onTexto: (texto: string) => void, opcoes: OpcoesTranscricao = {}) {
@@ -298,6 +300,7 @@ export function useTranscricao(onTexto: (texto: string) => void, opcoes: OpcoesT
     setNivel(0); setVozBaixa(false); setConexao('parado')
 
     const textoAoVivo = textoDasPalavras(palavrasRef.current)
+    let textoBase = textoAoVivo
 
     // 3. Revisão final do áudio inteiro
     const duracao = (Date.now() - inicioRef.current) / 1000
@@ -318,18 +321,27 @@ export function useTranscricao(onTexto: (texto: string) => void, opcoes: OpcoesT
         }).then(r => r.json())
         const final = String(f.texto || '').trim()
         // Usa a revisão se ela não "perdeu" fala em relação ao ao vivo
-        if (final && final.length >= textoAoVivo.length * 0.6) {
-          setTexto(final)
-          onTextoRef.current(final)
-          setFase('parado')
-          return final
-        }
+        if (final && final.length >= textoAoVivo.length * 0.6) textoBase = final
       } catch (e: any) {
         log.warn('[transcricao] revisão final falhou, mantendo o texto ao vivo:', e?.message || e)
       }
     }
+
+    // 4. IA identifica quem é o médico, o paciente e o acompanhante (sem mudar o texto)
+    if (opcoesRef.current.identificarPapeis !== false && textoBase.length > 60) {
+      setFase('identificando')
+      try {
+        const r = await fetch('/api/transcrever/papeis', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ texto: textoBase }),
+        }).then(x => x.json())
+        if (r.identificado && r.texto) textoBase = String(r.texto)
+      } catch { /* mantém sem papéis */ }
+    }
+
+    if (textoBase !== textoAoVivo) { setTexto(textoBase); onTextoRef.current(textoBase) }
     setFase('parado')
-    return textoAoVivo
+    return textoBase
   }, [])
 
   /**
@@ -365,7 +377,7 @@ export function useTranscricao(onTexto: (texto: string) => void, opcoes: OpcoesT
     // compatível com o useGravador antigo
     gravando,
     gravandoPausado: pausado,
-    transcrevendo: fase === 'finalizando' || fase === 'revisando',
+    transcrevendo: fase === 'finalizando' || fase === 'revisando' || fase === 'identificando',
     transcricaoAcumulada: texto,
     iniciarGravacao,
     pararGravacao,

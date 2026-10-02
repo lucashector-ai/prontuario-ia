@@ -12,6 +12,7 @@ import { confirmar } from '@/components/ui/dialogos'
 import { registrarAcesso } from '@/lib/auditoria'
 import CardAgendarRetorno from '@/components/retornos/CardAgendarRetorno'
 import { BotaoGerarGuia } from '@/components/tiss/BotaoGerarGuia'
+import ConversaConsulta from '@/components/ia/ConversaConsulta'
 
 const T = tokens
 
@@ -369,10 +370,12 @@ export default function Historico() {
 
               {abaAtiva === 'tx' && temTranscricao && (
                 <div style={{ padding: '18px 20px 22px' }}>
-                  <p style={{
-                    margin: 0, padding: '14px 16px', borderRadius: 12, background: T.bg.cardSubtle, border: `1px solid ${T.border.muted}`,
-                    fontSize: 13.5, lineHeight: 1.7, color: T.text.strong, whiteSpace: 'pre-wrap', maxHeight: 520, overflow: 'auto',
-                  }}>{selecionada.transcricao}</p>
+                  <div style={{
+                    padding: '14px 16px', borderRadius: 12, background: T.bg.cardSubtle, border: `1px solid ${T.border.muted}`,
+                    maxHeight: 520, overflow: 'auto',
+                  }}>
+                    <ConversaConsulta texto={selecionada.transcricao} compacto />
+                  </div>
                 </div>
               )}
 
