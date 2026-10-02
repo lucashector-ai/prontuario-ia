@@ -9,51 +9,62 @@ import Anthropic from '@anthropic-ai/sdk'
 import { MODELOS } from '@/lib/ai/models'
 import { log } from '@/lib/logger'
 import { supabaseServidor as db } from '@/lib/servidor'
-import { canalPorConta, graph, marcarErroCanal } from '@/lib/meta/graph'
+import { GRAPH_IG, canalPorConta, graph, marcarErroCanal } from '@/lib/meta/graph'
 
 export type CanalSocial = 'instagram' | 'messenger'
+/** 'instagram' = conta conectada pelo login do Instagram (graph.instagram.com); 'facebook' = pela página */
+export type ApiSocial = 'facebook' | 'instagram'
+export type AcessoSocial = { token: string; api: ApiSocial }
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 /** Conta e token para um canal: conectado pela clínica ou legado (variáveis de ambiente). */
 async function resolverConta(canal: CanalSocial, contaId: string) {
   const c = await canalPorConta(canal, contaId)
-  if (c?.access_token) return { canalId: c.id, medicoId: c.medico_id, token: c.access_token }
+  if (c?.access_token) return { canalId: c.id, medicoId: c.medico_id, token: c.access_token, api: (c.detalhe?.api === 'instagram' ? 'instagram' : 'facebook') as ApiSocial }
   // Legado: uma conta fixa configurada na Vercel — só se o médico também estiver fixado
   const medicoLegado = process.env.WHATSAPP_MEDICO_ID
   const tokenLegado = canal === 'instagram' ? process.env.INSTAGRAM_TOKEN : (process.env.MESSENGER_TOKEN || process.env.WHATSAPP_TOKEN)
   const paginaLegada = process.env.MESSENGER_PAGE_ID
   if (medicoLegado && tokenLegado && (canal === 'instagram' || !paginaLegada || paginaLegada === contaId)) {
-    return { canalId: null, medicoId: medicoLegado, token: tokenLegado }
+    return { canalId: null, medicoId: medicoLegado, token: tokenLegado, api: 'facebook' as ApiSocial }
   }
   return null
 }
 
 /** Envia texto ao contato (PSID do Messenger ou IGSID do Instagram) usando o token da página. */
-export async function enviarMensagemSocial(token: string, destinatario: string, texto: string) {
+export async function enviarMensagemSocial(token: string, destinatario: string, texto: string, api: ApiSocial = 'facebook') {
   return graph('me/messages', {
-    token,
+    token, ...(api === 'instagram' ? { base: GRAPH_IG } : {}),
     corpo: { recipient: { id: destinatario }, message: { text: texto.slice(0, 1990) }, messaging_type: 'RESPONSE' },
   })
 }
 
 /** Token para responder uma conversa do Chat (pela conta por onde ela chegou). */
-export async function tokenDaConversa(conversa: { canal?: string | null; canal_conta_id?: string | null; medico_id: string }) {
+export async function tokenDaConversa(conversa: { canal?: string | null; canal_conta_id?: string | null; medico_id: string }): Promise<AcessoSocial | null> {
   const canal = (conversa.canal || '') as CanalSocial
   if (canal !== 'instagram' && canal !== 'messenger') return null
   if (conversa.canal_conta_id) {
     const r = await resolverConta(canal, conversa.canal_conta_id)
-    if (r) return r.token
+    if (r) return { token: r.token, api: r.api }
   }
   // Conversa antiga sem conta registrada: única conta deste canal do médico
-  const { data } = await db.from('canais_conectados').select('access_token')
+  const { data } = await db.from('canais_conectados').select('access_token, detalhe')
     .eq('canal', canal).eq('medico_id', conversa.medico_id).eq('status', 'ativo').limit(2)
-  if (data?.length === 1) return (data[0] as any).access_token as string
-  return canal === 'instagram' ? (process.env.INSTAGRAM_TOKEN || null) : (process.env.MESSENGER_TOKEN || process.env.WHATSAPP_TOKEN || null)
+  if (data?.length === 1) {
+    const c = data[0] as any
+    return { token: c.access_token, api: c.detalhe?.api === 'instagram' ? 'instagram' : 'facebook' }
+  }
+  const legado = canal === 'instagram' ? process.env.INSTAGRAM_TOKEN : (process.env.MESSENGER_TOKEN || process.env.WHATSAPP_TOKEN)
+  return legado ? { token: legado, api: 'facebook' } : null
 }
 
-async function nomeDoContato(canal: CanalSocial, token: string, id: string) {
+async function nomeDoContato(canal: CanalSocial, token: string, id: string, api: ApiSocial) {
   try {
+    if (api === 'instagram') {
+      const p = await graph<any>(id, { token, base: GRAPH_IG, params: { fields: 'name,username' } })
+      return p.name || (p.username ? '@' + p.username : null)
+    }
     if (canal === 'messenger') {
       const p = await graph<any>(id, { token, params: { fields: 'first_name,last_name' } })
       return [p.first_name, p.last_name].filter(Boolean).join(' ') || null
@@ -77,7 +88,7 @@ export async function receberMensagemSocial(p: { canal: CanalSocial; contaId: st
     .eq('telefone', p.remetente).eq('medico_id', conta.medicoId).eq('canal', p.canal).maybeSingle()
 
   if (!conversa) {
-    const nome = await nomeDoContato(p.canal, conta.token, p.remetente)
+    const nome = await nomeDoContato(p.canal, conta.token, p.remetente, conta.api)
     const nova_ = {
       medico_id: conta.medicoId, telefone: p.remetente, nome_contato: nome || p.remetente,
       modo: 'ia', status: 'ativa', canal: p.canal, canal_conta_id: p.contaId, ultimo_contato: new Date().toISOString(),
@@ -126,7 +137,7 @@ export async function receberMensagemSocial(p: { canal: CanalSocial; contaId: st
 
   let erroEnvio: string | null = null
   try {
-    await enviarMensagemSocial(conta.token, p.remetente, resposta)
+    await enviarMensagemSocial(conta.token, p.remetente, resposta, conta.api)
   } catch (e: any) {
     erroEnvio = e?.message || 'falha ao enviar'
     log.error(`[${p.canal}] envio`, erroEnvio)

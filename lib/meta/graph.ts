@@ -11,14 +11,16 @@ import { supabaseServidor as db } from '@/lib/servidor'
 
 export const GRAPH_VERSAO = process.env.META_GRAPH_VERSION || 'v23.0'
 export const GRAPH = `https://graph.facebook.com/${GRAPH_VERSAO}`
+/** API do Instagram com login do Instagram (tokens "IG…"). */
+export const GRAPH_IG = `https://graph.instagram.com/${GRAPH_VERSAO}`
 
 export class ErroMeta extends Error {
   constructor(msg: string, public codigo?: number, public detalhe?: any) { super(msg) }
 }
 
 /** Chamada à Graph API com token. Lança ErroMeta com a mensagem da Meta. */
-export async function graph<T = any>(caminho: string, opcoes: { token?: string; metodo?: string; corpo?: any; params?: Record<string, string> } = {}): Promise<T> {
-  const url = new URL(caminho.startsWith('http') ? caminho : `${GRAPH}/${caminho.replace(/^\//, '')}`)
+export async function graph<T = any>(caminho: string, opcoes: { token?: string; metodo?: string; corpo?: any; params?: Record<string, string>; base?: string } = {}): Promise<T> {
+  const url = new URL(caminho.startsWith('http') ? caminho : `${opcoes.base || GRAPH}/${caminho.replace(/^\//, '')}`)
   for (const [k, v] of Object.entries(opcoes.params || {})) url.searchParams.set(k, v)
   const r = await fetch(url, {
     method: opcoes.metodo || (opcoes.corpo ? 'POST' : 'GET'),
@@ -65,12 +67,15 @@ export async function tokenLongo(tokenUsuario: string): Promise<string> {
 
 /** Confere X-Hub-Signature-256 dos webhooks. Sem META_APP_SECRET, aceita (modo legado). */
 export function assinaturaValida(corpoBruto: string, cabecalho: string | null): boolean {
-  const segredo = process.env.META_APP_SECRET
-  if (!segredo) return true
+  // Webhooks do app da Meta e do "login do Instagram" são assinados com segredos diferentes
+  const segredos = [process.env.META_APP_SECRET, process.env.INSTAGRAM_APP_SECRET].filter(Boolean) as string[]
+  if (!segredos.length) return true
   if (!cabecalho?.startsWith('sha256=')) return false
-  const esperado = createHmac('sha256', segredo).update(corpoBruto).digest('hex')
-  const a = Buffer.from(cabecalho.slice(7)), b = Buffer.from(esperado)
-  return a.length === b.length && timingSafeEqual(a, b)
+  const recebido = Buffer.from(cabecalho.slice(7))
+  return segredos.some(seg => {
+    const esperado = Buffer.from(createHmac('sha256', seg).update(corpoBruto).digest('hex'))
+    return recebido.length === esperado.length && timingSafeEqual(recebido, esperado)
+  })
 }
 
 export type CanalConectado = {

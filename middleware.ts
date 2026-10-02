@@ -16,6 +16,8 @@ const API_PUBLICA_EXATA = new Set([
   '/api/superadmin', '/api/public',
   '/api/agenda-publica/slots', '/api/agenda-publica/solicitar', '/api/agenda-publica/perfil',
   '/api/formularios/buscar', '/api/formularios/responder',
+  '/api/canais/instagram/desautorizar', '/api/canais/instagram/exclusao',
+  '/api/canais/instagram/callback',   // protegido pelo "state" assinado
 ])
 const API_PUBLICA_PREFIXO = ['/api/cron/', '/api/sala/']
 

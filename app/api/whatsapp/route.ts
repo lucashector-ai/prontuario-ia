@@ -473,11 +473,42 @@ export async function GET(req: NextRequest) {
   return new NextResponse('Forbidden', { status: 403 })
 }
 
+/** Grava no Chat o que a equipe respondeu pelo celular e tira a conversa da Sofia (uma pessoa assumiu). */
+async function registrarEcosDoCelular(medicoId: string, ecos: any[]) {
+  for (const e of ecos) {
+    const texto = e.text?.body || (e.type && e.type !== 'text' ? `[${e.type}]` : '')
+    const tel = String(e.to || '').replace(/\D/g, '')
+    if (!texto || !tel) continue
+    let { data: conv } = await supabase.from('whatsapp_conversas').select('id').eq('medico_id', medicoId).eq('telefone', tel).maybeSingle()
+    if (!conv) {
+      const { data: nova } = await supabase.from('whatsapp_conversas').insert({
+        medico_id: medicoId, telefone: tel, modo: 'humano', status: 'ativa', canal: 'whatsapp', ultimo_contato: new Date().toISOString(),
+      }).select('id').single()
+      conv = nova
+    }
+    if (!conv) continue
+    await supabase.from('whatsapp_mensagens').insert({
+      conversa_id: (conv as any).id, tipo: 'enviada', conteudo: texto, lida: true,
+      metadata: { celular: true, wamid: e.id },
+    })
+    await supabase.from('whatsapp_conversas').update({ modo: 'humano', ultimo_contato: new Date().toISOString() }).eq('id', (conv as any).id)
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    const value = body.entry?.[0]?.changes?.[0]?.value
+    const mudanca = body.entry?.[0]?.changes?.[0]
+    const value = mudanca?.value
+
+    // Coexistência: mensagens que a clínica enviou pelo app WhatsApp Business do celular
+    if (mudanca?.field === 'smb_message_echoes' && value?.message_echoes?.length) {
+      const medicoEco = await getMedicoId(value.metadata?.phone_number_id)
+      if (medicoEco) await registrarEcosDoCelular(medicoEco, value.message_echoes)
+      return NextResponse.json({ ok: true })
+    }
+
     if (!value || value.statuses) return NextResponse.json({ ok: true })
 
     const messages = value?.messages

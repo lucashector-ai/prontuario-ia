@@ -26,11 +26,11 @@ export async function POST(req: NextRequest) {
     const canal = conversa.canal || 'whatsapp'
 
     if (canal === 'instagram' || canal === 'messenger') {
-      const token = await tokenDaConversa(conversa as any)
+      const acesso = await tokenDaConversa(conversa as any)
       const nomeCanal = canal === 'instagram' ? 'Instagram' : 'Messenger'
-      if (!token) return NextResponse.json({ error: `${nomeCanal} não conectado. Conecte em Minha clínica → Canais.` }, { status: 400 })
+      if (!acesso) return NextResponse.json({ error: `${nomeCanal} não conectado. Conecte em Minha clínica → Canais.` }, { status: 400 })
       try {
-        const data = await enviarMensagemSocial(token, conversa.telefone, texto)
+        const data = await enviarMensagemSocial(acesso.token, conversa.telefone, texto, acesso.api)
         return NextResponse.json({ ok: true, canal, data })
       } catch (e: any) {
         const m = String(e?.message || '')

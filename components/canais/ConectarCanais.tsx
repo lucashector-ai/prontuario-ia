@@ -11,7 +11,7 @@
  * ?demo=1 mostra canais de exemplo e não grava nada.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, CircleAlert, LoaderCircle, Plug, ShieldCheck, Unplug, Clock, Info } from 'lucide-react'
+import { CheckCircle2, CircleAlert, LoaderCircle, Plug, ShieldCheck, Unplug, Clock, Info, QrCode } from 'lucide-react'
 import { tokens as T, tint } from '@/lib/design-tokens'
 import { Badge, Button, Card, Checkbox, EmptyState, Icon, Modal, Select } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
@@ -22,19 +22,19 @@ type Conectado = { id: string; canal: Canal; conta_id: string; nome: string | nu
 type Pagina = { id: string; nome: string; foto: string | null; instagram: { id: string; username: string; foto: string | null } | null }
 type Estado = {
   canais: Conectado[]; medicos: { id: string; nome: string }[]; configurado: boolean
-  app_id: string | null; config_whatsapp: string | null; config_paginas: string | null; aviso?: string
+  app_id: string | null; config_whatsapp: string | null; config_paginas: string | null; instagram_login?: boolean; aviso?: string
 }
 
 const INFO: Record<Canal, { nome: string; cor: string; descricao: string; requisito: string }> = {
   whatsapp: {
     nome: 'WhatsApp', cor: '#25D366',
     descricao: 'Receba e responda pacientes no Chat, com a Sofia, confirmações e lembretes automáticos.',
-    requisito: 'Um número que ainda não esteja no aplicativo WhatsApp do celular (ou que você aceite migrar para a API).',
+    requisito: 'Já usa o WhatsApp Business no celular? Escaneie o QR code e continue usando o app normalmente.',
   },
   instagram: {
     nome: 'Instagram', cor: '#E1306C',
     descricao: 'Mensagens diretas (Direct) do perfil da clínica chegam no Chat.',
-    requisito: 'Conta profissional do Instagram vinculada a uma página do Facebook.',
+    requisito: 'Conta profissional do Instagram (comercial ou de criador).',
   },
   messenger: {
     nome: 'Messenger', cor: '#0084FF',
@@ -46,6 +46,11 @@ const INFO: Record<Canal, { nome: string; cor: string; descricao: string; requis
 const ESCOPOS_PAGINAS = 'pages_show_list,pages_messaging,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_manage_messages,business_management'
 
 declare global { interface Window { FB?: any; fbAsyncInit?: () => void } }
+
+const linkSecundario: React.CSSProperties = {
+  border: 'none', background: 'transparent', padding: '4px 0', cursor: 'pointer', font: 'inherit',
+  fontSize: 12.5, fontWeight: 600, color: T.brand.primary, textAlign: 'center',
+}
 
 let sdkCarregando: Promise<void> | null = null
 function carregarSdkMeta(appId: string): Promise<void> {
@@ -66,7 +71,7 @@ function carregarSdkMeta(appId: string): Promise<void> {
 }
 
 const DEMO: Estado = {
-  configurado: true, app_id: 'demo', config_whatsapp: 'demo', config_paginas: null,
+  configurado: true, app_id: 'demo', config_whatsapp: 'demo', config_paginas: null, instagram_login: true,
   medicos: [{ id: 'm1', nome: 'Dra. Helena Prado' }, { id: 'm2', nome: 'Dr. Rafael Montenegro' }],
   canais: [
     { id: 'c1', canal: 'whatsapp', conta_id: '1', nome: '+55 11 98765-4321', foto_url: null, status: 'ativo', erro: null, conectado_em: new Date(Date.now() - 12 * 864e5).toISOString(), medico_id: 'm1' },
@@ -94,12 +99,23 @@ export default function ConectarCanais() {
   }, [demo])
   useEffect(() => { carregar() }, [carregar])
 
+  // Volta do login do Instagram (?conectado=instagram&conta=@x ou ?erro=…)
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    const ok = q.get('conectado'), erro = q.get('erro')
+    if (!ok && !erro) return
+    if (ok === 'instagram') notificar(`Instagram ${q.get('conta') || ''} conectado`.trim())
+    if (erro) notificar(erro, 'erro')
+    for (const k of ['conectado', 'conta', 'erro']) q.delete(k)
+    window.history.replaceState({}, '', window.location.pathname + (q.toString() ? '?' + q : ''))
+  }, [])
+
   const conectadosDe = (c: Canal) => (estado?.canais || []).filter(x => x.canal === c)
   const nomeMedico = (id: string) => estado?.medicos.find(m => m.id === id)?.nome
 
   // ── WhatsApp: cadastro incorporado ──────────────────────────────────────
-  async function conectarWhatsApp() {
-    if (demo) { notificar('Modo demonstração: abriria a janela oficial da Meta para escolher o número', 'info'); return }
+  async function conectarWhatsApp(modo: 'coexistencia' | 'novo') {
+    if (demo) { notificar(modo === 'coexistencia' ? 'Modo demonstração: abriria a janela da Meta com o QR code do WhatsApp Business' : 'Modo demonstração: abriria a janela oficial da Meta para escolher o número', 'info'); return }
     if (!estado?.app_id || !estado.config_whatsapp) { notificar('Conexão do WhatsApp ainda não liberada para esta conta', 'erro'); return }
     setOcupado('whatsapp')
     try {
@@ -120,7 +136,8 @@ export default function ConectarCanais() {
       const code: string | null = await new Promise(ok => {
         window.FB.login((r: any) => ok(r?.authResponse?.code || null), {
           config_id: estado.config_whatsapp, response_type: 'code', override_default_response_type: true,
-          extras: { setup: {}, featureType: '', sessionInfoVersion: '3' },
+          // whatsapp_business_app_onboarding = coexistência: escaneia o QR no app WhatsApp Business do celular
+          extras: { setup: {}, featureType: modo === 'coexistencia' ? 'whatsapp_business_app_onboarding' : '', sessionInfoVersion: '3' },
         })
       })
       // os dados do número às vezes chegam logo depois do login
@@ -133,15 +150,22 @@ export default function ConectarCanais() {
       }
       const r = await fetch('/api/canais/meta/whatsapp', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, waba_id: s.waba_id, phone_number_id: s.phone_number_id, medico_id: medicoId }),
+        body: JSON.stringify({ code, waba_id: s.waba_id, phone_number_id: s.phone_number_id, medico_id: medicoId, modo }),
       })
       const j = await r.json()
       if (!r.ok) throw new Error(j.error)
-      notificar(`WhatsApp ${j.numero} conectado`)
+      notificar(j.coexistencia ? `WhatsApp ${j.numero} conectado — continua funcionando no celular também` : `WhatsApp ${j.numero} conectado`)
       carregar()
     } catch (e: any) {
       notificar(e?.message || 'Não foi possível conectar o WhatsApp', 'erro')
     } finally { setOcupado(null) }
+  }
+
+  // ── Instagram: login direto pelo Instagram (sai e volta para esta tela) ──
+  function entrarComInstagram() {
+    if (demo) { notificar('Modo demonstração: abriria o login do Instagram', 'info'); return }
+    setOcupado('instagram')
+    window.location.href = '/api/canais/instagram/iniciar' + (medicoId ? `?medico_id=${encodeURIComponent(medicoId)}` : '')
   }
 
   // ── Instagram / Messenger: login → escolher a página ───────────────────
@@ -166,6 +190,18 @@ export default function ConectarCanais() {
       const j = await r.json()
       if (!r.ok) throw new Error(j.error)
       if (!j.paginas?.length) { notificar('Nenhuma página do Facebook encontrada nesta conta. Você precisa ser administrador da página.', 'erro'); return }
+      // Uma página só e pedido de Messenger: conecta direto, sem perguntar
+      if (j.paginas.length === 1 && foco === 'messenger') {
+        const r2 = await fetch('/api/canais/meta/conectar', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token_usuario: token, page_id: j.paginas[0].id, canais: ['messenger'], medico_id: medicoId }),
+        })
+        const j2 = await r2.json()
+        if (!r2.ok) throw new Error(j2.error)
+        notificar(`Página ${j2.pagina} conectada ao Messenger`)
+        carregar()
+        return
+      }
       setPaginas({ token, lista: j.paginas, foco })
     } catch (e: any) {
       notificar(e?.message || 'Não foi possível entrar na Meta', 'erro')
@@ -206,7 +242,7 @@ export default function ConectarCanais() {
           <div style={{ flex: '1 1 320px', minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 650, color: T.text.primary }}>Conecte seus canais em poucos minutos</div>
             <p style={{ margin: '4px 0 0', fontSize: 13, lineHeight: 1.6, color: T.text.secondary }}>
-              Clique em conectar, entre com a sua conta do Facebook e escolha o número ou a página. A janela é oficial da Meta — a Clinical 360 nunca vê sua senha.
+              WhatsApp pelo QR code do celular, Instagram com a própria conta do Instagram e Messenger com o Facebook. As janelas são oficiais da Meta — a Clinical 360 nunca vê sua senha.
             </p>
           </div>
           {estado.medicos.length > 1 && (
@@ -267,16 +303,33 @@ export default function ConectarCanais() {
                 <span style={{ display: 'flex', gap: 6, fontSize: 11.5, lineHeight: 1.5, color: T.text.tertiary }}>
                   <Icon icon={Info} size={13} style={{ flexShrink: 0, marginTop: 2 }} />{info.requisito}
                 </span>
-                <Button
-                  variant={lista.length ? 'secondary' : 'primary'}
-                  disabled={carregando || indisponivel}
-                  onClick={() => canal === 'whatsapp' ? conectarWhatsApp() : conectarPagina(canal)}
-                  style={{ width: '100%' }}
-                >
-                  {carregando
-                    ? <><Icon icon={LoaderCircle} size={16} style={{ animation: 'spin 1s linear infinite' }} />Aguardando a Meta…</>
-                    : lista.length ? `Conectar outra conta` : `Conectar ${info.nome}`}
-                </Button>
+                {carregando ? (
+                  <Button variant="secondary" disabled style={{ width: '100%' }}>
+                    <Icon icon={LoaderCircle} size={16} style={{ animation: 'spin 1s linear infinite' }} />Aguardando a Meta…
+                  </Button>
+                ) : canal === 'whatsapp' ? (
+                  <>
+                    <Button variant={lista.length ? 'secondary' : 'primary'} icon={QrCode} disabled={indisponivel} onClick={() => conectarWhatsApp('coexistencia')} style={{ width: '100%' }}>
+                      {lista.length ? 'Conectar outro número (QR code)' : 'Conectar com QR code'}
+                    </Button>
+                    <button type="button" disabled={indisponivel} onClick={() => conectarWhatsApp('novo')} style={linkSecundario}>
+                      Usar um número novo, que não está no celular
+                    </button>
+                  </>
+                ) : canal === 'instagram' && estado.instagram_login ? (
+                  <>
+                    <Button variant={lista.length ? 'secondary' : 'primary'} onClick={entrarComInstagram} style={{ width: '100%' }}>
+                      {lista.length ? 'Conectar outra conta' : 'Entrar com Instagram'}
+                    </Button>
+                    <button type="button" disabled={!estado.configurado} onClick={() => conectarPagina('instagram')} style={linkSecundario}>
+                      Ou conectar pela página do Facebook
+                    </button>
+                  </>
+                ) : (
+                  <Button variant={lista.length ? 'secondary' : 'primary'} disabled={indisponivel} onClick={() => conectarPagina(canal)} style={{ width: '100%' }}>
+                    {lista.length ? 'Conectar outra conta' : canal === 'messenger' ? 'Entrar com Facebook' : `Conectar ${info.nome}`}
+                  </Button>
+                )}
               </div>
             </Card>
           )

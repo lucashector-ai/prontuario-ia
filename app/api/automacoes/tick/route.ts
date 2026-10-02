@@ -3,6 +3,7 @@ import { supabaseServidor as db } from '@/lib/servidor'
 import { log } from '@/lib/logger'
 import { GET as cronConfirmacoes } from '@/app/api/cron/confirmacoes/route'
 import { GET as cronRetornos } from '@/app/api/cron/retornos/route'
+import { GET as cronCanais } from '@/app/api/cron/canais/route'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,7 @@ export const maxDuration = 60
 const AUTOMACOES: { chave: string; intervaloMin: number; executar: (req: NextRequest) => Promise<Response> }[] = [
   { chave: 'confirmacoes', intervaloMin: 14, executar: cronConfirmacoes },
   { chave: 'retornos', intervaloMin: 180, executar: cronRetornos },
+  { chave: 'canais', intervaloMin: 720, executar: cronCanais },
 ]
 
 // Fallback quando a migration 0015 não foi rodada: trava só por instância do servidor.

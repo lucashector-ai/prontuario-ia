@@ -31,15 +31,25 @@ export async function POST(req: NextRequest) {
 
     await graph(`${wabaId}/subscribed_apps`, { token, metodo: 'POST' })
 
-    // Registro na Cloud API. PIN de verificação em duas etapas novo (guardado para reconexões).
+    // Coexistência (QR code): o número continua no app WhatsApp Business do celular —
+    // não registra de novo; pede à Meta para sincronizar contatos e conversas recentes.
+    const coexistencia = corpo.modo === 'coexistencia'
     const pin = String(randomInt(100000, 999999))
     let avisoRegistro: string | null = null
-    try {
-      await graph(`${phoneId}/register`, { token, corpo: { messaging_product: 'whatsapp', pin } })
-    } catch (err: any) {
-      // Número já registrado (ou com PIN definido pelo cliente) não impede o uso
-      avisoRegistro = err?.message || 'registro não confirmado'
-      log.warn('[canais/whatsapp] register:', avisoRegistro)
+    if (!coexistencia) {
+      // Número novo: registro na Cloud API com PIN de verificação em duas etapas (guardado para reconexões)
+      try {
+        await graph(`${phoneId}/register`, { token, corpo: { messaging_product: 'whatsapp', pin } })
+      } catch (err: any) {
+        // Número já registrado (ou com PIN definido pelo cliente) não impede o uso
+        avisoRegistro = err?.message || 'registro não confirmado'
+        log.warn('[canais/whatsapp] register:', avisoRegistro)
+      }
+    } else {
+      for (const sync_type of ['smb_app_state_sync', 'history']) {
+        try { await graph(`${phoneId}/smb_app_data`, { token, corpo: { messaging_product: 'whatsapp', sync_type } }) }
+        catch (err: any) { log.warn(`[canais/whatsapp] sync ${sync_type}:`, err?.message) }
+      }
     }
 
     const info = await graph<{ display_phone_number?: string; verified_name?: string; quality_rating?: string }>(
@@ -50,7 +60,7 @@ export async function POST(req: NextRequest) {
     const { error } = await db.from('canais_conectados').upsert({
       clinica_id: e.clinicaId, medico_id: e.medicoId, canal: 'whatsapp', conta_id: phoneId,
       nome: info.display_phone_number || phoneId,
-      detalhe: { waba_id: wabaId, verified_name: info.verified_name, quality: info.quality_rating, pin, aviso_registro: avisoRegistro },
+      detalhe: { waba_id: wabaId, verified_name: info.verified_name, quality: info.quality_rating, modo: coexistencia ? 'coexistencia' : 'cloud', ...(coexistencia ? {} : { pin }), aviso_registro: avisoRegistro },
       access_token: token, status: 'ativo', erro: null, atualizado_em: agora,
     }, { onConflict: 'canal,conta_id' })
     if (error) throw new Error(error.message)
@@ -64,7 +74,7 @@ export async function POST(req: NextRequest) {
     if (existente) await db.from('whatsapp_config').update(cfg).eq('id', (existente as any).id)
     else await db.from('whatsapp_config').insert(cfg)
 
-    return NextResponse.json({ ok: true, numero: info.display_phone_number || phoneId, nome: info.verified_name || null })
+    return NextResponse.json({ ok: true, numero: info.display_phone_number || phoneId, nome: info.verified_name || null, coexistencia })
   } catch (err: any) {
     log.error('[canais/whatsapp]', err?.message, err instanceof ErroMeta ? err.detalhe : '')
     return NextResponse.json({ error: traduzir(err) }, { status: 502 })

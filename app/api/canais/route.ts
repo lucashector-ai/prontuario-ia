@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServidor as db } from '@/lib/servidor'
 import { escopoCanais } from '@/lib/meta/escopo'
 import { graph, metaConfigurada } from '@/lib/meta/graph'
+import { instagramConfigurado } from '@/lib/meta/instagram'
 import { log } from '@/lib/logger'
 
 /** Canais conectados da clínica (sem tokens) + se a integração com a Meta está configurada. */
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest) {
     app_id: process.env.NEXT_PUBLIC_META_APP_ID || null,
     config_whatsapp: process.env.NEXT_PUBLIC_META_CONFIG_WHATSAPP || null,
     config_paginas: process.env.NEXT_PUBLIC_META_CONFIG_PAGINAS || null,
+    instagram_login: instagramConfigurado(),
     ...(tabelaAusente ? { aviso: 'Rode a migration 0017_canais_conectados.sql' } : {}),
   })
 }
