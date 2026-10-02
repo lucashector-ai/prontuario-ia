@@ -170,11 +170,11 @@ export default function ChatPage() {
         }}>{api.toast}</div>
       )}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 1599px) { .chat-rotulo-canal { display: none; } }
         @media (max-width: 1279px) { .chat-rotulo-respostas { display: none; } }
         @media (max-width: 899px) { .chat-rotulo-visao { display: none; } }
-      `}</style>
+      ` }} />
 
       {modal === 'respostas' && <ModalRespostas api={api} onFechar={() => setModal(null)} />}
       {modal === 'nova' && <ModalNovaConversa onFechar={() => setModal(null)} onCriar={async (tel, nome, texto) => { await api.novaConversa(tel, nome, texto); setModal(null); trocarVisao('conversas') }} />}

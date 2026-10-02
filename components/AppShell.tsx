@@ -7,6 +7,7 @@ import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { HeaderProvider } from './shell/header-context'
 import { AvisoConexao } from './shell/AvisoConexao'
+import { BatimentoAutomacoes } from './shell/BatimentoAutomacoes'
 import { tokens } from '@/lib/design-tokens'
 
 const ROTAS_PUBLICAS = ['/login', '/login-atendente', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/privacidade', '/termos', '/sobre', '/contato', '/dev-login']
@@ -65,6 +66,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div style={{ height: '100dvh', background: tokens.bg.page, display: 'flex', flexDirection: 'column', gap: 12, padding: 12, paddingBottom: 'calc(76px + env(safe-area-inset-bottom, 0px))', overflow: 'hidden' }}>
           <Topbar compacto />
           <AvisoConexao />
+          <BatimentoAutomacoes />
           <main className="appshell-main" style={painel}>{children}</main>
           <BottomNav />
         </div>
@@ -79,6 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <Topbar />
           <AvisoConexao />
+          <BatimentoAutomacoes />
           <main className="appshell-main" style={painel}>{children}</main>
         </div>
       </div>

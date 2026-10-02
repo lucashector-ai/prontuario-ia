@@ -23,6 +23,8 @@ import { usePageHeader } from '@/components/shell/header-context'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 
 import { normalizarConvenio } from '@/lib/convenios'
+import { registrarAcesso } from '@/lib/auditoria'
+import AcessosDoPaciente from '@/components/auditoria/AcessosDoPaciente'
 const T = tokens
 
 type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario' | 'timeline' | 'financeiro'
@@ -190,9 +192,24 @@ export default function PacienteDetalhe() {
     setSalvando(true)
     const r = await fetch('/api/pacientes/' + id, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(editForm)})
     const d = await r.json()
-    if (d.paciente) { setPaciente(d.paciente); setEditando(false) }
+    if (d.paciente) {
+      setPaciente(d.paciente); setEditando(false)
+      const campos = Object.keys(editForm).filter(k => (editForm[k] ?? '') !== (paciente?.[k] ?? ''))
+      registrarAcesso({ acao: 'editou', recurso: 'paciente', recursoId: id, pacienteId: id, detalhes: { campos } })
+    }
     setSalvando(false)
   }
+
+  // Auditoria (LGPD/CFM): abrir a ficha e abrir uma consulta
+  useEffect(() => {
+    if (paciente?.id) registrarAcesso({ acao: 'visualizou', recurso: 'paciente', recursoId: paciente.id, pacienteId: paciente.id })
+  }, [paciente?.id])
+  useEffect(() => {
+    if (consultaAberta?.id) registrarAcesso({ acao: 'visualizou', recurso: 'prontuario', recursoId: consultaAberta.id, pacienteId: id })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consultaAberta?.id])
+  const auditarPdf = (consultaId: string) =>
+    registrarAcesso({ acao: 'exportou', recurso: 'prontuario', recursoId: consultaId, pacienteId: id, detalhes: { formato: 'PDF' } })
 
   const salvarAg = async (e: React.FormEvent) => {
     e.preventDefault(); setSalvandoAg(true)
@@ -405,6 +422,8 @@ export default function PacienteDetalhe() {
                   <ResumoClinico paciente={paciente} />
                 </Card>
               )}
+
+              {paciente?.id && !editando && <AcessosDoPaciente pacienteId={paciente.id} />}
             </div>
 
             <div style={{ flex: '999 1 420px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -546,7 +565,7 @@ export default function PacienteDetalhe() {
                       variant="primary"
                       icon={Download}
                       title="Baixar PDF"
-                      onClick={() => window.open('/api/pdf-prontuario?consulta_id=' + consultaAberta.id + '&medico_id=' + (consultaAberta.medico_id || ''), '_blank')}
+                      onClick={() => { auditarPdf(consultaAberta.id); window.open('/api/pdf-prontuario?consulta_id=' + consultaAberta.id + '&medico_id=' + (consultaAberta.medico_id || ''), '_blank') }}
                     >
                       PDF
                     </Button>
@@ -707,6 +726,7 @@ export default function PacienteDetalhe() {
                 <div style={{ padding: '10px 18px 14px', borderTop: `1px solid ${T.border.muted}`, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <a
                     href={'/api/pdf-prontuario?consulta_id=' + c.id + '&medico_id=' + (c.medico_id || medico?.id)}
+                    onClick={() => auditarPdf(c.id)}
                     target="_blank" rel="noreferrer"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 11px', borderRadius: 9, border: `1px solid ${T.border.default}`, background: T.bg.card, color: T.text.strong, fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}
                   >
@@ -759,6 +779,7 @@ export default function PacienteDetalhe() {
                           </div>
                           <a
                             href={'/api/pdf-prontuario?consulta_id=' + c.id + '&medico_id=' + (c.medico_id || medico?.id)}
+                            onClick={() => auditarPdf(c.id)}
                             target="_blank" rel="noreferrer"
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: T.brand.primary, fontWeight: 600, textDecoration: 'none' }}
                           >
@@ -957,7 +978,7 @@ export default function PacienteDetalhe() {
           }}
         />
       )}
-      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes spin{to{transform:rotate(360deg)}}' }} />
     </div>
   )
 }

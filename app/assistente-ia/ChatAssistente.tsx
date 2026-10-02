@@ -388,7 +388,7 @@ export default function ChatAssistente({
         </div>
       </div>
 
-      <style>{'@keyframes spin { to { transform: rotate(360deg) } } @keyframes piscar { 0%,50% { opacity: 1 } 50.01%,100% { opacity: 0 } }'}</style>
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes spin { to { transform: rotate(360deg) } } @keyframes piscar { 0%,50% { opacity: 1 } 50.01%,100% { opacity: 0 } }' }} />
     </div>
   )
 }

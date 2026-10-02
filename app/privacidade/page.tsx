@@ -8,7 +8,7 @@ export default function PrivacidadePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'white', color: tokens.neutral[900] }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .priv-nav-back { display: inline-flex; align-items: center; gap: 6px; }
         .priv-section { padding: 48px 24px; }
         .priv-content h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 40px 0 12px; color: ${tokens.neutral[900]}; }
@@ -30,7 +30,7 @@ export default function PrivacidadePage() {
           .priv-content table { font-size: 12px; }
           .priv-content th, .priv-content td { padding: 8px 10px; }
         }
-      `}</style>
+      ` }} />
 
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${tokens.neutral[150]}` }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

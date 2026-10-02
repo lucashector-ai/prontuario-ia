@@ -21,6 +21,7 @@ import { confirmar } from '@/components/ui/dialogos'
 import { CONVENIOS, normalizarConvenio } from '@/lib/convenios'
 import { ConvenioBadge } from '@/components/ConvenioBadge'
 import { primeiroNome } from '@/lib/nome'
+import { registrarAcesso } from '@/lib/auditoria'
 const T = tokens
 
 const CONVENIOS_LISTA = CONVENIOS
@@ -176,6 +177,7 @@ export default function Pacientes() {
     if (!(await confirmar({ titulo: `Excluir ${selecionados.size} paciente${selecionados.size !== 1 ? 's' : ''}?`, mensagem: 'Todas as consultas e agendamentos desses pacientes também serão removidos. Essa ação não pode ser desfeita.', confirmar: 'Excluir', perigo: true }))) return
     setDeletandoLote(true)
     const ids = Array.from(selecionados)
+    ids.forEach(id => registrarAcesso({ acao: 'excluiu', recurso: 'paciente', recursoId: id, pacienteId: id, forcar: true }))
     const resultados = await Promise.all(
       ids.map(id => fetch('/api/pacientes?id=' + id, { method: 'DELETE' }))
     )
@@ -220,6 +222,7 @@ export default function Pacientes() {
       mostrarMsg('erro', 'Nenhum paciente pra exportar')
       return
     }
+    registrarAcesso({ acao: 'exportou', recurso: 'paciente', detalhes: { quantidade: pacientes.length } })
     // Helper pra escapar CSV
     const esc = (v: any) => {
       if (v === null || v === undefined) return ''
@@ -254,6 +257,7 @@ export default function Pacientes() {
   const deletar = async (e: React.MouseEvent, p: any) => {
     e.stopPropagation()
     if (!(await confirmar({ titulo: `Excluir ${p.nome}?`, mensagem: 'Todas as consultas e agendamentos do paciente também serão removidos. Essa ação não pode ser desfeita.', confirmar: 'Excluir', perigo: true }))) return
+    registrarAcesso({ acao: 'excluiu', recurso: 'paciente', recursoId: p.id, pacienteId: p.id, detalhes: { nome: p.nome }, forcar: true })
     await fetch(`/api/pacientes?id=${p.id}`, { method: 'DELETE' })
     setPacientes(prev => prev.filter(x => x.id !== p.id))
     mostrarMsg('ok', 'Paciente removido')

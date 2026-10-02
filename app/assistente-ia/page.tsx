@@ -103,7 +103,7 @@ export default function AssistenteIAPage() {
     return (
       <div style={{ padding: 64, display: 'flex', justifyContent: 'center' }}>
         <div style={{ width: 28, height: 28, border: '2.5px solid ' + tokens.brand.primaryLight, borderTopColor: tokens.brand.primary, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
+        <style dangerouslySetInnerHTML={{ __html: '@keyframes spin { to { transform: rotate(360deg) } }' }} />
       </div>
     )
   }
@@ -158,7 +158,7 @@ export default function AssistenteIAPage() {
         />
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .ia-grid {
           height: 100%; min-height: 480px; box-sizing: border-box; padding: 20px;
           display: grid; grid-template-columns: 250px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 20px;
@@ -169,7 +169,7 @@ export default function AssistenteIAPage() {
           .ia-grid--fechada { grid-template-rows: minmax(0, 1fr); }
           .ia-lista { max-height: 38vh; }
         }
-      `}</style>
+      ` }} />
     </div>
   )
 }

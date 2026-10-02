@@ -163,7 +163,7 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
   return (
     <>
       {/* FAB no canto inferior direito */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .setup-fab {
           bottom: 24px;
         }
@@ -173,7 +173,7 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
             right: 16px !important;
           }
         }
-      `}</style>
+      ` }} />
       <button
         onClick={() => setAberto(true)}
         className="setup-fab"
@@ -345,10 +345,8 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
               ))}
             </div>
 
-            <style>{
-              '@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } } ' +
-              '@keyframes slideIn { from { transform: translateX(100%) } to { transform: translateX(0) } }'
-            }</style>
+            <style dangerouslySetInnerHTML={{ __html: '@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } } ' +
+              '@keyframes slideIn { from { transform: translateX(100%) } to { transform: translateX(0) } }' }} />
           </div>
         </>
       )}

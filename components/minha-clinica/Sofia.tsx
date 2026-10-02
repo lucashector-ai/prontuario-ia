@@ -377,14 +377,14 @@ export function Sofia() {
         </Secao>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .mc-sofia-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start; }
         .mc-sofia-nav { position: sticky; top: 0; }
         @media (max-width: 860px) {
           .mc-sofia-grid { grid-template-columns: minmax(0, 1fr); }
           .mc-sofia-nav { position: static; }
         }
-      `}</style>
+      ` }} />
     </div>
   )
 }

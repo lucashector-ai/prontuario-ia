@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { enviarWhatsApp } from '@/lib/whatsapp/enviar'
 
 /**
  * Envio unificado do Chat: decide o canal pela conversa.
@@ -35,22 +36,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, canal, data })
     }
 
-    // WhatsApp (padrão)
-    const { data: config } = await supabase
-      .from('whatsapp_config').select('access_token, phone_number_id')
-      .eq('medico_id', conversa.medico_id).eq('ativo', true).maybeSingle()
-    const token = config?.access_token || process.env.WHATSAPP_TOKEN
-    const phoneId = config?.phone_number_id || process.env.WHATSAPP_PHONE_ID
-    if (!token || !phoneId) return NextResponse.json({ error: 'WhatsApp não configurado' }, { status: 400 })
-
-    const r = await fetch('https://graph.facebook.com/v20.0/' + phoneId + '/messages', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messaging_product: 'whatsapp', to: conversa.telefone, type: 'text', text: { body: texto } }),
-    })
-    const data = await r.json()
-    if (!r.ok) return NextResponse.json({ error: data?.error?.message || 'Falha ao enviar' }, { status: 502 })
-    return NextResponse.json({ ok: true, canal: 'whatsapp', data })
+    // WhatsApp (padrão) — helper compartilhado (credenciais da clínica ou env)
+    const r = await enviarWhatsApp({ medicoId: conversa.medico_id, telefone: conversa.telefone, texto })
+    if (!r.ok) return NextResponse.json({ error: r.erro || 'Falha ao enviar' }, { status: r.erro === 'WhatsApp não configurado' ? 400 : 502 })
+    return NextResponse.json({ ok: true, canal: 'whatsapp', wamid: r.wamid })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }

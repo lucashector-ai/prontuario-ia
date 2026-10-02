@@ -109,11 +109,11 @@ export default function PerfilPage() {
 
   return (
     <div style={{ padding: 20 }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .c360-perfil-grid { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; align-items: start; }
         @media (max-width: 900px) { .c360-perfil-grid { grid-template-columns: minmax(0, 1fr); } }
         @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
+      ` }} />
 
       {/* Toast de mensagem */}
       {msg && (

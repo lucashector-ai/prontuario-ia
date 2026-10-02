@@ -4,8 +4,9 @@ import Anthropic from '@anthropic-ai/sdk'
 import { iniciarPreAtendimento, registrarRespostaEAvancar, getPreConsultaAtiva, marcarPermissaoConcedida, marcarPermissaoNegada } from '@/lib/sofia/preatendimento'
 import { getSofiaConfig } from '@/lib/sofia/config'
 import { transcreverAudioWhatsApp } from '@/lib/sofia/transcribe'
-import { dispararConfirmacoes24h, detectarRespostaConfirmacao24h, notificarMedico } from '@/lib/sofia/confirmacao'
+import { dispararConfirmacoes24h, detectarRespostaConfirmacao24h, notificarMedico, marcarConfirmadoVia, tratarRespostaListaEspera } from '@/lib/sofia/confirmacao'
 import { createClient } from '@supabase/supabase-js'
+import { MODELOS } from '@/lib/ai/models'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -387,7 +388,7 @@ async function processarIA(mensagem: string, historico: any[]) {
   msgs.push({ role: 'user', content: mensagem })
 
   const res = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514', max_tokens: 400,
+    model: MODELOS.apoio, max_tokens: 400,
     system: PROMPT_SOFIA, messages: msgs
   })
 
@@ -712,6 +713,13 @@ export async function POST(req: NextRequest) {
         }
       }
       
+      // === LISTA DE ESPERA: resposta à oferta de horário ('Quero esse horário' | 'Não posso') ===
+      try {
+        if (await tratarRespostaListaEspera(telefone, MEDICO_ID, texto)) continue
+      } catch (e) {
+        log.error('Interceptador lista de espera erro:', e)
+      }
+
       // === INTERCEPTADOR CONFIRMAÇÃO 24H ===
       try {
         const agConf = await detectarRespostaConfirmacao24h(telefone, MEDICO_ID)
@@ -730,6 +738,7 @@ export async function POST(req: NextRequest) {
                 confirmacao_24h_resposta_em: new Date().toISOString() 
               })
               .eq('id', agConf.id)
+            await marcarConfirmadoVia(agConf.id, 'whatsapp')
 
             const credsC = await getWppCredentials(MEDICO_ID)
             const msgC = 'Show! Tá confirmado então 💜 Até amanhã!'

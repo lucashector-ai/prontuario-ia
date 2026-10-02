@@ -10,6 +10,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
 import { usePageHeader } from '@/components/shell/header-context'
+import { CardConfirmacoesPendentes } from '@/components/confirmacoes/CardConfirmacoesPendentes'
 import { Button, KpiCard, SegmentedControl, Icon, EmptyState } from '@/components/ui'
 
 import { corConvenio, normalizarConvenio } from '@/lib/convenios'
@@ -305,18 +306,21 @@ export default function Dashboard() {
       </div>
 
       {/* KPIs — 2 por linha no celular */}
-      <style>{`@media (max-width: 759px) {
+      <style dangerouslySetInnerHTML={{ __html: `@media (max-width: 759px) {
         .dash-kpis > div { flex: 1 1 calc(50% - 6px) !important; padding: 14px !important; }
         .dash-kpis > div > div:first-child > span:first-child { padding-top: 6px !important; font-size: 12.5px !important; white-space: normal !important; }
         .dash-kpis > div > div:nth-child(2) { font-size: 24px !important; margin-top: 10px !important; }
         .dash-kpis > div > div:nth-child(3) > span:last-child { display: none; }
-      }`}</style>
+      }` }} />
       <div className="dash-kpis" style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
         <KpiCard label="Consultas" icon={Stethoscope} cor={T.data.purple} valor={kpis.consultas[0]} {...vC} comparacao={textoComparacao} carregando={carregando} />
         <KpiCard label="Pacientes novos" icon={UserPlus} cor={T.data.pink} valor={kpis.novos[0]} {...vN} comparacao={textoComparacao} carregando={carregando} />
         <KpiCard label="Teleconsultas" icon={Video} cor={T.data.orange} valor={kpis.tele[0]} {...vT} comparacao={textoComparacao} carregando={carregando} />
         <KpiCard label="Comparecimento" icon={CircleCheck} cor={T.data.green} valor={comp === null ? '—' : `${comp}%`} delta={vComp.delta} tendencia={vComp.tendencia} comparacao={textoComparacao} carregando={carregando} />
       </div>
+
+      {/* Confirmações das próximas 48h (lembretes automáticos pelo WhatsApp) */}
+      <CardConfirmacoesPendentes medicoIds={medicoIds} />
 
       {/* Atendimentos por mês */}
       <GraficoMeses dados={porMes} ano={ref.getFullYear()} carregando={carregando} vazio={semDados} onAgendar={() => router.push('/agenda?novo=1')} />

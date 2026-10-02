@@ -25,7 +25,7 @@ export function CascaPublica({ clinica, largura = 880, rodape = true, children }
 }) {
   return (
     <div style={{ minHeight: '100dvh', background: T.bg.page, padding: '20px 16px 40px', boxSizing: 'border-box' }}>
-      <style>{'@keyframes c360-pub-spin { to { transform: rotate(360deg) } }'}</style>
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes c360-pub-spin { to { transform: rotate(360deg) } }' }} />
       <header style={{ maxWidth: largura, margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 32 }}>
         {clinica?.logo_url ? (
           <img src={clinica.logo_url} alt={clinica.nome} style={{ height: 32, width: 'auto', maxWidth: 180, objectFit: 'contain', display: 'block' }} />

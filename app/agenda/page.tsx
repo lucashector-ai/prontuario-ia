@@ -2,11 +2,11 @@
 import { log } from '@/lib/logger'
 
 
-import { Suspense, useEffect, useState, useMemo } from 'react'
+import { Suspense, useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  Ban, Calendar, CalendarClock, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Copy,
-  Eye, EyeOff, Gift, Hourglass, MessageCircle, Mic, Plus, SlidersHorizontal, Trash2, Video, X,
+  Ban, Calendar, CalendarClock, Check, CheckCircle2, ChevronLeft, ChevronRight, Copy,
+  Eye, EyeOff, Gift, Hourglass, MessageCircle, Mic, Plus, Send, SlidersHorizontal, Trash2, TriangleAlert, Video, X,
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui'
 import type { BadgeTone } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
+import { DIAS_SEMANA_CURTOS, PERIODOS, periodoDaHora } from '@/components/confirmacoes/modelos'
 
 const T = tokens
 
@@ -67,6 +68,84 @@ const DIAS_CURTOS = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM']
 const DIAS_MINI = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 const MESES_AB = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 const dowSeg = (d: Date) => (d.getDay() + 6) % 7
+
+// ── Lista de espera ──
+const TIPOS_ESPERA = [
+  { value: 'consulta', label: 'Consulta' },
+  { value: 'retorno', label: 'Retorno' },
+  { value: 'exame', label: 'Exame' },
+] as const
+const PRIORIDADES = [
+  { value: '0', label: 'Normal' },
+  { value: '1', label: 'Alta' },
+  { value: '2', label: 'Urgente' },
+]
+// Seg → Dom (valores de Date.getDay)
+const DIAS_ESPERA = [1, 2, 3, 4, 5, 6, 0]
+const HORA_MS = 3600e3
+
+const FORM_ESPERA_VAZIO = {
+  modo: 'paciente' as 'paciente' | 'contato',
+  paciente_id: '', nome: '', telefone: '', medico_id: '',
+  tipo: 'consulta', preferencia_dias: [] as number[], preferencia_periodo: 'qualquer',
+  prioridade: '0', observacao: '',
+}
+
+/** Ordem da lista: prioridade (maior primeiro), depois quem entrou antes. */
+const ordenarEspera = (l: any[]) => [...l].sort((a, b) =>
+  (Number(b.prioridade) || 0) - (Number(a.prioridade) || 0) || String(a.criado_em || '').localeCompare(String(b.criado_em || '')))
+
+/** "Consulta · Seg, Qua · Tarde" */
+function resumoPreferencias(w: any) {
+  const tipo = TIPOS_ESPERA.find(t => t.value === w.tipo)?.label || 'Consulta'
+  const dias: number[] = Array.isArray(w.preferencia_dias) ? w.preferencia_dias : []
+  const diasTxt = dias.length === 0 || dias.length === 7 ? 'Qualquer dia'
+    : DIAS_ESPERA.filter(d => dias.includes(d)).map(d => DIAS_SEMANA_CURTOS[d]).join(', ')
+  const per = w.preferencia_periodo && w.preferencia_periodo !== 'qualquer'
+    ? ' · ' + (PERIODOS.find(p => p.value === w.preferencia_periodo)?.label || '') : ''
+  return `${tipo} · ${diasTxt}${per}`
+}
+
+// ── Modo demonstração (?demo=1) — nada é gravado ──
+function dadosDemo(medicoId: string) {
+  const em = (diasAdiante: number, h: number, m = 0) => {
+    const d = new Date(); d.setDate(d.getDate() + diasAdiante); d.setHours(h, m, 0, 0); return d
+  }
+  // Consulta "daqui a ~3h" para mostrar o aviso de não confirmação (cai para amanhã cedo fora do expediente)
+  const breve = new Date(Date.now() + 3 * HORA_MS); breve.setMinutes(breve.getMinutes() < 30 ? 0 : 30, 0, 0)
+  const brevePos = breve.getHours() >= 8 && breve.getHours() <= 19 ? breve : em(1, 8)
+  const pacientes = [
+    { id: 'dp1', nome: 'Marcos Vinícius Andrade', telefone: '(11) 98765-4321', medico_id: medicoId },
+    { id: 'dp2', nome: 'Juliana Ferreira Costa', telefone: '(11) 99812-3344', medico_id: medicoId },
+    { id: 'dp3', nome: 'Ana Beatriz Moura', telefone: '(11) 97654-1122', medico_id: medicoId },
+    { id: 'dp4', nome: 'Roberto Nogueira', telefone: '(11) 96543-7788', medico_id: medicoId },
+    { id: 'dp5', nome: 'Patrícia Lima Santos', telefone: '(11) 95432-6655', medico_id: medicoId },
+    { id: 'dp6', nome: 'Carla Mendes', telefone: '(11) 94321-9900', medico_id: medicoId },
+    { id: 'dp7', nome: 'Thiago Alves', telefone: '(11) 93210-5566', medico_id: medicoId },
+  ]
+  const pac = (id: string) => { const p = pacientes.find(x => x.id === id)!; return { nome: p.nome, telefone: p.telefone } }
+  const ag = (id: string, pid: string, d: Date, extra: any = {}) => ({
+    id, medico_id: medicoId, paciente_id: pid, pacientes: pac(pid), data_hora: d.toISOString(), duracao: '30',
+    tipo: 'consulta', status: 'agendado', motivo: '', ...extra,
+  })
+  const agendamentos = [
+    ag('da1', 'dp1', brevePos, { confirmacao_24h_enviada: true, confirmacao_24h_status: 'pendente', motivo: 'Dor no peito ao esforço' }),
+    ag('da2', 'dp2', em(1, 9), { confirmacao_24h_enviada: true, confirmacao_24h_status: 'pendente' }),
+    ag('da3', 'dp3', em(1, 10, 30), { status: 'confirmado', confirmacao_24h_enviada: true, confirmacao_24h_status: 'confirmado' }),
+    ag('da4', 'dp4', em(1, 14), { tipo: 'retorno', motivo: 'Retorno exames' }),
+    ag('da5', 'dp5', em(1, 15, 30), { tipo: 'exame', duracao: '45', motivo: 'Eletrocardiograma' }),
+    ag('da6', 'dp4', em(2, 11), { lembrete_48h_enviado: true }),
+  ]
+  const criado = (dias: number) => new Date(Date.now() - dias * 864e5).toISOString()
+  const amanha = em(1, 9).getDay()
+  const listaEspera = [
+    { id: 'dw1', medico_id: medicoId, paciente_id: 'dp6', nome: 'Carla Mendes', telefone: '(11) 94321-9900', tipo: 'consulta', preferencia_dias: [], preferencia_periodo: 'qualquer', prioridade: 2, status: 'aguardando', observacao: 'Dor lombar há 2 semanas', criado_em: criado(5) },
+    { id: 'dw2', medico_id: medicoId, paciente_id: null, nome: 'Luiza Barros', telefone: '(11) 92109-4433', tipo: 'consulta', preferencia_dias: [amanha], preferencia_periodo: 'qualquer', prioridade: 1, status: 'aguardando', observacao: 'Prefere primeiro horário', criado_em: criado(3) },
+    { id: 'dw3', medico_id: medicoId, paciente_id: 'dp7', nome: 'Thiago Alves', telefone: '(11) 93210-5566', tipo: 'retorno', preferencia_dias: [1, 3, 5], preferencia_periodo: 'tarde', prioridade: 0, status: 'aguardando', observacao: null, criado_em: criado(8) },
+    { id: 'dw4', medico_id: medicoId, paciente_id: null, nome: 'Eduardo Pires', telefone: '(11) 91098-2211', tipo: 'exame', preferencia_dias: [2, 4], preferencia_periodo: 'manha', prioridade: 0, status: 'oferecido', observacao: null, criado_em: criado(10) },
+  ]
+  return { pacientes, agendamentos, listaEspera }
+}
 
 function getWeekDays(date: Date) {
   const d = new Date(date)
@@ -206,8 +285,20 @@ function AgendaContent() {
   const [filtroPaciente, setFiltroPaciente] = useState<string>('')
   const [profsOff, setProfsOff] = useState<string[]>([])
 
+  const demo = searchParams?.get('demo') === '1'
   const [listaEsperaOpen, setListaEsperaOpen] = useState(false)
-  const [listaEspera] = useState<any[]>([])
+  const [listaEspera, setListaEspera] = useState<any[]>([])
+  const [avisoEspera, setAvisoEspera] = useState('')
+  const [modalEspera, setModalEspera] = useState(false)
+  const [formEspera, setFormEspera] = useState(FORM_ESPERA_VAZIO)
+  const [salvandoEspera, setSalvandoEspera] = useState(false)
+  // Config "oferecer vaga da lista" por médico (sem config = ligado)
+  const [ofertaPorMedico, setOfertaPorMedico] = useState<Record<string, boolean>>({})
+  // Horário liberado (cancelado/faltou) + sugestões da lista
+  const [vagaLiberada, setVagaLiberada] = useState<{ ag: any; sugestoes: any[] } | null>(null)
+  const [oferecendo, setOferecendo] = useState<string | null>(null)
+  // Item da lista sendo encaixado no novo agendamento
+  const [encaixeListaId, setEncaixeListaId] = useState<string | null>(null)
 
   const [modal, setModal] = useState<{ open: boolean; date?: Date; ag?: any }>({ open: false })
   const [submodalRealizado, setSubmodalRealizado] = useState(false)
@@ -224,12 +315,20 @@ function AgendaContent() {
   const [preConsultaEnviada, setPreConsultaEnviada] = useState(false)
 
   const [agora, setAgora] = useState<Date | null>(null)
+  // Query da primeira carga (a URL é limpa logo depois de abrir o "novo agendamento")
+  const buscaInicial = useRef<string | null>(null)
+  if (buscaInicial.current === null && typeof window !== 'undefined') buscaInicial.current = window.location.search
   useEffect(() => {
     const agora_ = new Date()
     setAgora(agora_)
-    setSemana(agora_)
-    setDiaSelecionado(agora_)
-    setMesVisualizado(agora_)
+    // ?data=AAAA-MM-DD (atalho vindo de Retornos) abre a agenda já na semana certa
+    const dataParam = new URLSearchParams(buscaInicial.current || '').get('data')
+    const m_ = dataParam && /^(\d{4})-(\d{2})-(\d{2})$/.exec(dataParam)
+    const foco = m_ ? new Date(Number(m_[1]), Number(m_[2]) - 1, Number(m_[3]), 9) : agora_
+    const inicio = foco < agora_ ? agora_ : foco
+    setSemana(inicio)
+    setDiaSelecionado(inicio)
+    setMesVisualizado(inicio)
     const t = setInterval(() => setAgora(new Date()), 60000)
     return () => clearInterval(t)
   }, [])
@@ -246,8 +345,21 @@ function AgendaContent() {
         setModal({ open: true })
         window.history.replaceState({}, '', '/agenda')
       } else if (params.get('novo') === '1') {
-        setModal({ open: true })
-        window.history.replaceState({}, '', '/agenda')
+        // Atalhos de outras telas (ex.: Retornos): ?novo=1&paciente_id=…&tipo=retorno&data=AAAA-MM-DD&motivo=…
+        const dataParam = params.get('data')
+        let quando: Date | undefined
+        if (dataParam && /^\d{4}-\d{2}-\d{2}$/.test(dataParam)) {
+          const [a_, m_, d_] = dataParam.split('-').map(Number)
+          quando = new Date(a_, m_ - 1, d_, 9, 0, 0, 0)
+          const agora_ = new Date()
+          if (quando < agora_) { quando = new Date(agora_); quando.setMinutes(0, 0, 0); quando.setHours(quando.getHours() + 1) }
+        }
+        abrirModal(quando)
+        const pid = params.get('paciente_id'), tipo = params.get('tipo'), motivo = params.get('motivo')
+        if (pid || tipo || motivo) {
+          setForm(f => ({ ...f, ...(pid ? { paciente_id: pid } : {}), ...(tipo ? { tipo } : {}), ...(motivo ? { motivo } : {}) }))
+        }
+        window.history.replaceState({}, '', demo ? '/agenda?demo=1' : '/agenda')
       }
     }
   }, [])
@@ -255,11 +367,33 @@ function AgendaContent() {
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
+    if (demo) {
+      const med = m ? JSON.parse(m) : { id: 'demo', nome: 'Helena Prado' }
+      setMedico(med)
+      const d = dadosDemo(med.id)
+      setPacientes(d.pacientes); setAgendamentos(d.agendamentos); setListaEspera(ordenarEspera(d.listaEspera))
+      setMedicosClinica([{ id: med.id, nome: med.nome || 'Helena Prado' }])
+      return
+    }
     if (!m) { router.push('/login'); return }
     const med = JSON.parse(m)
     setMedico(med)
     carregarDados(med.id)
-  }, [router])
+  }, [router, demo])
+
+  const carregarListaEspera = async (ids: string[]) => {
+    try {
+      const r = await fetch('/api/lista-espera?medico_ids=' + ids.join(','))
+      const d = await r.json()
+      setListaEspera(ordenarEspera(d.itens || []))
+      setAvisoEspera(d.aviso || '')
+    } catch { /* lista é complementar: não quebra a agenda */ }
+    // Config "oferecer vaga" de cada médico
+    const pares = await Promise.all(ids.map(id =>
+      fetch('/api/confirmacoes/config?so_config=1&medico_id=' + id).then(r => r.json())
+        .then(d => [id, d.config?.oferecer_vaga_lista !== false] as const).catch(() => [id, true] as const)))
+    setOfertaPorMedico(Object.fromEntries(pares))
+  }
 
   const carregarDados = async (medicoId: string) => {
     // Se for clinica admin, busca pacientes e agendamentos de TODOS os medicos da clinica
@@ -296,6 +430,7 @@ function AgendaContent() {
     setPacientes(pacsR.data || [])
     setAgendamentos(agsR.data || [])
     setMedicosClinica(medsR.data || [])
+    carregarListaEspera(medicoIds)
 
     // Carregar procedimentos da clínica (cobre admin + medico)
     const cidLoad = clinicaIdLocal || medico?.clinica_id
@@ -421,7 +556,7 @@ function AgendaContent() {
   // }
 
   const abrirModal = (date?: Date, ag?: any) => {
-    setPreConsultaEnviada(false); setComVideo(false); setSalaLink(''); setSalaId(''); setEditando(false)
+    setPreConsultaEnviada(false); setComVideo(false); setSalaLink(''); setSalaId(''); setEditando(false); setEncaixeListaId(null)
     if (ag) {
       const d = new Date(ag.data_hora)
       const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
@@ -525,7 +660,22 @@ function AgendaContent() {
   }
 
   const salvar = async (e: React.FormEvent) => {
-    e.preventDefault(); setSalvando(true)
+    e.preventDefault()
+    if (demo) {
+      const pac = pacientes.find((p: any) => p.id === form.paciente_id)
+      const dados = {
+        paciente_id: form.paciente_id || null, data_hora: new Date(form.data_hora).toISOString(), tipo: form.tipo,
+        motivo: form.motivo, observacoes: form.observacoes, duracao: form.duracao,
+        pacientes: pac ? { nome: pac.nome, telefone: pac.telefone } : null,
+      }
+      if (modal.ag) setAgendamentos(prev => prev.map(a => a.id === modal.ag.id ? { ...a, ...dados } : a))
+      else setAgendamentos(prev => [...prev, { id: 'demo-' + Date.now(), medico_id: form.medico_id || medico?.id, status: 'agendado', ...dados }])
+      if (!modal.ag && encaixeListaId) setListaEspera(l => l.filter(w => w.id !== encaixeListaId))
+      setModal({ open: false })
+      notificar('Modo demonstração: nada foi gravado', 'info')
+      return
+    }
+    setSalvando(true)
     try {
       if (modal.ag) {
         const { data } = await supabase.from('agendamentos').update({
@@ -578,6 +728,7 @@ function AgendaContent() {
           meet_code: meetCodeFinal || null,
         }).select(`*, pacientes(nome, data_nascimento, telefone)`).single()
         if (data) setAgendamentos(prev => [...prev, data])
+        if (data && encaixeListaId) marcarEsperaAgendada(encaixeListaId, data.id)
       }
       setModal({ open: false })
     } finally { setSalvando(false) }
@@ -585,13 +736,14 @@ function AgendaContent() {
 
   const deletar = async (id: string) => {
     if (!(await confirmar({ titulo: 'Excluir este agendamento?', mensagem: 'Se quiser manter o registro, use “Cancelar” em vez de excluir.', confirmar: 'Excluir', perigo: true }))) return
-    await supabase.from('agendamentos').delete().eq('id', id)
+    if (!demo) await supabase.from('agendamentos').delete().eq('id', id)
     setAgendamentos(prev => prev.filter(a => a.id !== id))
     setModal({ open: false })
   }
 
   const enviarPreConsulta = async (agendamentoId: string) => {
     if (!medico) return
+    if (demo) { setPreConsultaEnviada(true); notificar('Modo demonstração: nada foi enviado', 'info'); return }
     setEnviandoPreConsulta(true)
     try {
       const res = await fetch('/api/sofia/preatendimento', {
@@ -629,6 +781,7 @@ function AgendaContent() {
 
   const salvarBloqueio = async () => {
     if (!formBloqueio.medico_id) { toast('Escolha um medico', 'error'); return }
+    if (demo) { setModalBloqueio(false); notificar('Modo demonstração: nada foi gravado', 'info'); return }
 
     let data_inicio: string, data_fim: string
 
@@ -686,8 +839,137 @@ function AgendaContent() {
   }
 
   const atualizarStatus = async (id: string, status: string) => {
-    const { data } = await supabase.from('agendamentos').update({ status }).eq('id', id).select(`*, pacientes(nome, data_nascimento, telefone)`).single()
-    if (data) setAgendamentos(prev => prev.map(a => a.id === id ? data : a))
+    const anterior = agendamentos.find(a => a.id === id)
+    if (demo) {
+      setAgendamentos(prev => prev.map(a => a.id === id ? { ...a, status } : a))
+    } else {
+      // Confirmação manual registra quando/como (colunas da migration 0010; sem elas, só o status)
+      const extra = status === 'confirmado' ? { confirmado_em: new Date().toISOString(), confirmado_via: 'manual' } : {}
+      let { data, error } = await supabase.from('agendamentos').update({ status, ...extra }).eq('id', id).select(`*, pacientes(nome, data_nascimento, telefone)`).single()
+      if (error && status === 'confirmado') {
+        ({ data } = await supabase.from('agendamentos').update({ status }).eq('id', id).select(`*, pacientes(nome, data_nascimento, telefone)`).single())
+      }
+      if (data) setAgendamentos(prev => prev.map(a => a.id === id ? data : a))
+    }
+    if ((status === 'cancelado' || status === 'faltou') && anterior) sugerirVaga(anterior)
+  }
+
+  // ── Lista de espera ───────────────────────────────────────────────────────
+
+  /** Horário liberado → até 3 pacientes da lista compatíveis com o dia e o período. */
+  const sugerirVaga = (ag: any) => {
+    const d = new Date(ag.data_hora)
+    if (d.getTime() <= Date.now()) return // horário já passou: nada a oferecer
+    if (ag.medico_id && ofertaPorMedico[ag.medico_id] === false) return
+    const per = periodoDaHora(d.getHours())
+    const sugestoes = listaEspera.filter(w => {
+      if (w.status !== 'aguardando') return false
+      if (ag.medico_id && w.medico_id && w.medico_id !== ag.medico_id) return false
+      const dias: number[] = Array.isArray(w.preferencia_dias) ? w.preferencia_dias : []
+      if (dias.length && !dias.includes(d.getDay())) return false
+      return !w.preferencia_periodo || w.preferencia_periodo === 'qualquer' || w.preferencia_periodo === per
+    }).slice(0, 3)
+    if (sugestoes.length) setVagaLiberada({ ag, sugestoes })
+  }
+
+  const atualizarItemEspera = (id: string, campos: any) => {
+    setListaEspera(l => l.map(w => w.id === id ? { ...w, ...campos } : w))
+    setVagaLiberada(v => v ? { ...v, sugestoes: v.sugestoes.map(w => w.id === id ? { ...w, ...campos } : w) } : v)
+  }
+
+  const marcarEsperaAgendada = async (itemId: string, agendamentoId: string) => {
+    setListaEspera(l => l.filter(w => w.id !== itemId))
+    try {
+      await fetch('/api/lista-espera', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: itemId, status: 'agendado', agendamento_id: agendamentoId }),
+      })
+    } catch { /* o item some da lista local de qualquer forma */ }
+  }
+
+  const oferecerHorario = async (w: any, ag: any) => {
+    const nome = w.nome || w.pacientes?.nome || 'Paciente'
+    if (demo) {
+      atualizarItemEspera(w.id, { status: 'oferecido' })
+      notificar('Modo demonstração: a oferta não foi enviada', 'info')
+      return
+    }
+    setOferecendo(w.id)
+    try {
+      const r = await fetch('/api/lista-espera/oferecer', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_id: w.id, data_hora: ag.data_hora, duracao: Number(ag.duracao) || 30, medico_id: ag.medico_id }),
+      })
+      const d = await r.json()
+      if (!r.ok) { notificar(d.error || 'Não foi possível enviar a oferta', 'erro'); return }
+      atualizarItemEspera(w.id, { status: 'oferecido' })
+      notificar(`Horário oferecido a ${nome.split(' ')[0]} pelo WhatsApp`)
+    } catch { notificar('Erro de conexão', 'erro') }
+    finally { setOferecendo(null) }
+  }
+
+  /** Abre o novo agendamento já preenchido com o paciente da lista. */
+  const encaixarDaLista = (w: any, data?: Date, ag?: any) => {
+    setListaEsperaOpen(false); setVagaLiberada(null)
+    abrirModal(data)
+    setForm(f => ({
+      ...f,
+      paciente_id: w.paciente_id || '',
+      tipo: w.tipo || 'consulta',
+      medico_id: ag?.medico_id || w.medico_id || f.medico_id,
+      duracao: ag?.duracao ? String(ag.duracao) : f.duracao,
+      motivo: w.paciente_id ? (w.observacao || '') : `Encaixe — ${w.nome}${w.telefone ? ' · ' + w.telefone : ''}`,
+    }))
+    setEncaixeListaId(w.id)
+  }
+
+  const abrirModalEspera = () => {
+    setListaEsperaOpen(false)
+    setFormEspera({ ...FORM_ESPERA_VAZIO, medico_id: medicosClinica[0]?.id || '' })
+    setModalEspera(true)
+  }
+
+  const salvarEspera = async () => {
+    const f = formEspera
+    const pac = f.modo === 'paciente' ? pacientes.find((p: any) => p.id === f.paciente_id) : null
+    if (f.modo === 'paciente' && !pac) { notificar('Escolha o paciente', 'erro'); return }
+    if (f.modo === 'contato' && !f.nome.trim()) { notificar('Informe o nome', 'erro'); return }
+    if (f.modo === 'contato' && f.telefone.replace(/\D/g, '').length < 10) { notificar('Informe um telefone com DDD', 'erro'); return }
+    const item = {
+      medico_id: f.medico_id || pac?.medico_id || medicosClinica[0]?.id || medico?.id,
+      paciente_id: pac?.id || null,
+      nome: pac?.nome || f.nome.trim(),
+      telefone: pac?.telefone || f.telefone.trim() || null,
+      tipo: f.tipo, preferencia_dias: f.preferencia_dias, preferencia_periodo: f.preferencia_periodo,
+      prioridade: Number(f.prioridade) || 0, observacao: f.observacao.trim() || null,
+    }
+    if (demo) {
+      setListaEspera(l => ordenarEspera([...l, { ...item, id: 'demo-' + Date.now(), status: 'aguardando', criado_em: new Date().toISOString() }]))
+      setModalEspera(false)
+      notificar('Modo demonstração: nada foi gravado', 'info')
+      return
+    }
+    setSalvandoEspera(true)
+    try {
+      const r = await fetch('/api/lista-espera', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) })
+      const d = await r.json()
+      if (!r.ok) { notificar(d.error || 'Erro ao adicionar', 'erro'); return }
+      setListaEspera(l => ordenarEspera([...l, d.item]))
+      setModalEspera(false)
+      notificar(`${item.nome.split(' ')[0]} entrou na lista de espera`)
+    } catch { notificar('Erro de conexão', 'erro') }
+    finally { setSalvandoEspera(false) }
+  }
+
+  const removerEspera = async (w: any) => {
+    const nome = w.nome || 'Paciente'
+    if (!(await confirmar({ titulo: 'Remover da lista de espera?', mensagem: `${nome} deixa de receber ofertas de horário.`, confirmar: 'Remover', perigo: true }))) return
+    if (!demo) {
+      const r = await fetch('/api/lista-espera?id=' + w.id, { method: 'DELETE' }).catch(() => null)
+      if (!r?.ok) { notificar('Não foi possível remover', 'erro'); return }
+    }
+    setListaEspera(l => l.filter(x => x.id !== w.id))
+    notificar(demo ? 'Modo demonstração: nada foi gravado' : 'Removido da lista de espera', demo ? 'info' : 'ok')
   }
 
   // ── Apresentação ──────────────────────────────────────────────────────────
@@ -873,34 +1155,51 @@ function AgendaContent() {
           <>
             <div onClick={() => setListaEsperaOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 49 }} />
             <div style={{
-              position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 300, maxWidth: 'calc(100vw - 32px)',
+              position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 360, maxWidth: 'calc(100vw - 32px)',
               background: '#fff', border: `1px solid ${T.border.default}`, borderRadius: T.radius.xl,
               boxShadow: T.shadow.lg, padding: 8, zIndex: 50,
             }}>
-              <div style={{ fontSize: 13, fontWeight: 700, padding: '6px 8px 8px', color: T.text.primary }}>Lista de espera</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px 8px 8px' }}>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: T.text.primary }}>Lista de espera</span>
+                <Button variant="ghost" size="sm" icon={Plus} onClick={abrirModalEspera} disabled={!!avisoEspera}>Adicionar</Button>
+              </div>
+              {avisoEspera && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 4px 6px', padding: '8px 10px', borderRadius: 10, background: T.status.warningBg, color: T.status.warning, fontSize: 12, fontWeight: 600 }}>
+                  <Icon icon={TriangleAlert} size={14} />{avisoEspera}
+                </div>
+              )}
               {listaEspera.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '18px 12px 20px', textAlign: 'center' }}>
                   <IconTile icon={Hourglass} size={36} />
                   <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary, marginTop: 4 }}>Ninguém aguardando</span>
-                  <span style={{ fontSize: 12, color: T.text.quaternary, lineHeight: 1.45 }}>Pacientes aguardando encaixe aparecem aqui.</span>
+                  <span style={{ fontSize: 12, color: T.text.quaternary, lineHeight: 1.45 }}>Adicione pacientes que querem um horário antes. Quando alguém cancelar, a agenda sugere quem chamar.</span>
                 </div>
-              ) : listaEspera.map((w: any, i: number) => {
-                const nome = w.pacientes?.nome || w.paciente_nome || w.nome || 'Paciente'
-                return (
-                  <div key={w.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10 }} {...hoverLinha}>
-                    <Avatar nome={nome} size={30} />
-                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary }}>{nome}</span>
-                      {(w.observacao || w.observacoes) && <span style={{ fontSize: 11.5, color: T.text.quaternary }}>{w.observacao || w.observacoes}</span>}
-                    </span>
-                    <Button variant="ghost" size="sm" onClick={() => {
-                      setListaEsperaOpen(false)
-                      abrirModal()
-                      if (w.paciente_id) setForm(f => ({ ...f, paciente_id: w.paciente_id }))
-                    }}>Encaixar</Button>
-                  </div>
-                )
-              })}
+              ) : (
+                <div style={{ maxHeight: 380, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                  {listaEspera.map((w: any, i: number) => {
+                    const nome = w.pacientes?.nome || w.paciente_nome || w.nome || 'Paciente'
+                    const prio = Number(w.prioridade) || 0
+                    return (
+                      <div key={w.id || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10 }} {...hoverLinha}>
+                        <Avatar nome={nome} size={30} />
+                        <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, lineHeight: 1.3 }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nome}</span>
+                            {prio === 2 && <Badge tone="danger" style={{ padding: '1px 7px', fontSize: 10.5 }}>Urgente</Badge>}
+                            {prio === 1 && <Badge tone="warning" style={{ padding: '1px 7px', fontSize: 10.5 }}>Alta</Badge>}
+                            {w.status === 'oferecido' && <Badge tone="info" style={{ padding: '1px 7px', fontSize: 10.5 }}>Oferecido</Badge>}
+                          </span>
+                          <span style={{ fontSize: 11.5, color: T.text.quaternary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {resumoPreferencias(w)}{w.observacao ? ' · ' + w.observacao : ''}
+                          </span>
+                        </span>
+                        <Button variant="ghost" size="sm" onClick={() => encaixarDaLista(w)}>Encaixar</Button>
+                        <IconButton icon={Trash2} size={28} tone="danger" onClick={() => removerEspera(w)} aria-label={`Remover ${nome} da lista`} title="Remover da lista" />
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </>
         )}
@@ -931,7 +1230,18 @@ function AgendaContent() {
     const h = dur * PX_MIN
     const umaLinha = h < 34
     const sub = (ag.motivo || tipo.label) + (multiProf && ag.medico_id ? ' · ' + nomeMedico(ag.medico_id) : '')
-    const temIndicadores = !!(ag.meet_link || ag.pre_consulta_enviada || ag.confirmacao_24h_enviada || ag.confirmacao_24h_status === 'confirmado')
+    // Confirmação: confirmado (check verde) · pendente (pontinho âmbar) · não confirmou a < 6h (âmbar com halo) · avisou que não vai (vermelho)
+    const ativo = ag.status === 'agendado' || ag.status === 'confirmado'
+    const confirmou = ag.status === 'confirmado' || ag.confirmacao_24h_status === 'confirmado'
+    const recusou = ativo && ag.confirmacao_24h_status === 'nao_confirmado'
+    const faltaMs = agora ? d.getTime() - agora.getTime() : Infinity
+    const naoConfirmou = ativo && !confirmou && !recusou && faltaMs > 0 && faltaMs < 6 * HORA_MS
+    const pendente = ativo && !confirmou && !recusou && !naoConfirmou && ag.confirmacao_24h_enviada && ag.confirmacao_24h_status === 'pendente'
+    const ponto = recusou ? { cor: T.status.danger, halo: 'rgba(194,65,59,.22)', dica: 'Paciente avisou que não poderá ir' }
+      : naoConfirmou ? { cor: T.status.warningAmber, halo: 'rgba(245,158,11,.28)', dica: 'Não confirmou — consulta em menos de 6h' }
+      : pendente ? { cor: T.status.warningAmber, halo: '', dica: 'Confirmação pendente — lembrete de 24h enviado, sem resposta' }
+      : null
+    const temIndicadores = !!(ag.meet_link || ag.pre_consulta_enviada || (confirmou && !cancelado) || ponto)
     return (
       <div key={ag.id} style={{
         position: 'absolute', top: minToPx(d), height: h, left: `${(l / L) * 100}%`, width: `${100 / L}%`,
@@ -971,10 +1281,12 @@ function AgendaContent() {
             <span style={{ position: 'absolute', top: umaLinha ? 2 : 5, right: 5, display: 'flex', gap: 3 }}>
               {ag.meet_link && <span title="Teleconsulta" style={{ display: 'inline-grid' }}><Video size={12} strokeWidth={1.8} color={cor} /></span>}
               {ag.pre_consulta_enviada && <span title="Pré-consulta enviada no WhatsApp" style={{ display: 'inline-grid' }}><MessageCircle size={12} strokeWidth={1.8} color={T.whatsapp.green} /></span>}
-              {ag.confirmacao_24h_status === 'confirmado'
+              {confirmou && !cancelado
                 ? <span title="Paciente confirmou a consulta" style={{ display: 'inline-grid' }}><CheckCircle2 size={12} strokeWidth={1.8} color={T.status.success} /></span>
-                : ag.confirmacao_24h_enviada
-                  ? <span title="Aguardando confirmação do paciente" style={{ display: 'inline-grid' }}><Clock size={12} strokeWidth={1.8} color={T.status.warningAlt} /></span>
+                : ponto
+                  ? <span title={ponto.dica} aria-label={ponto.dica} style={{ display: 'inline-grid', placeItems: 'center', width: 12, height: 12 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: ponto.cor, boxShadow: ponto.halo ? `0 0 0 2.5px ${ponto.halo}` : 'none' }} />
+                    </span>
                   : null}
             </span>
           )}
@@ -1208,6 +1520,26 @@ function AgendaContent() {
               </div>
             )}
           </div>
+
+          {(() => {
+            if (ag.status !== 'agendado' && ag.status !== 'confirmado') return null
+            const cs = ag.confirmacao_24h_status
+            const conf = ag.status === 'confirmado' || cs === 'confirmado'
+              ? { cor: T.status.success, texto: 'Presença confirmada' + (ag.confirmado_via === 'whatsapp' ? ' pelo WhatsApp' : ag.confirmado_via === 'manual' ? ' manualmente' : '') }
+              : cs === 'nao_confirmado' ? { cor: T.status.danger, texto: 'Paciente avisou que não poderá ir' }
+              : cs === 'reagendou' ? { cor: T.status.info, texto: 'Paciente pediu para remarcar' }
+              : cs === 'erro_envio' ? { cor: T.status.danger, texto: 'Falha ao enviar a confirmação de 24h' }
+              : cs === 'pendente' ? { cor: T.status.warningAmber, texto: 'Confirmação de 24h enviada, aguardando resposta' }
+              : ag.lembrete_48h_enviado ? { cor: T.text.tertiary, texto: 'Lembrete de 48h enviado' }
+              : null
+            if (!conf) return null
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: T.text.secondary }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: conf.cor, flexShrink: 0 }} />
+                {conf.texto}
+              </div>
+            )
+          })()}
 
           {ag.meet_link && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: `1px solid ${T.border.default}` }}>
@@ -1533,6 +1865,127 @@ function AgendaContent() {
     </Modal>
   )
 
+  // ── Aviso: horário liberado → sugestões da lista de espera ──
+  const renderVagaLiberada = () => {
+    if (!vagaLiberada) return null
+    const { ag, sugestoes } = vagaLiberada
+    const d = new Date(ag.data_hora)
+    const prof = multiProf ? nomeMedico(ag.medico_id) : ''
+    return (
+      <div role="dialog" aria-label="Horário liberado" style={{
+        position: 'fixed', zIndex: 150, bottom: isMobile ? 12 : 24, right: isMobile ? 12 : 24, left: isMobile ? 12 : 'auto',
+        width: isMobile ? 'auto' : 400, background: '#fff', border: `1px solid ${T.border.default}`, borderRadius: T.radius.xl,
+        boxShadow: T.shadow.lg, padding: 14, display: 'flex', flexDirection: 'column', gap: 10,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <IconTile icon={Hourglass} size={34} radius={10} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text.primary }}>Horário liberado</div>
+            <div style={{ fontSize: 12.5, color: T.text.quaternary }}>
+              {cap(d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace('.', ''))} · <span className="mono" style={{ color: T.text.strong }}>{fmtHora(d)}</span>
+              {prof ? ' · ' + prof : ''} — quem da lista pode vir:
+            </div>
+          </div>
+          <IconButton icon={X} size={28} onClick={() => setVagaLiberada(null)} aria-label="Fechar" />
+        </div>
+        {sugestoes.map((w: any) => {
+          const nome = w.nome || 'Paciente'
+          const oferecido = w.status === 'oferecido'
+          return (
+            <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 12, border: `1px solid ${T.border.default}`, flexWrap: 'wrap' }}>
+              <Avatar nome={nome} size={30} />
+              <div style={{ flex: '1 1 140px', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nome}</span>
+                  {Number(w.prioridade) === 2 && <Badge tone="danger" style={{ padding: '1px 7px', fontSize: 10.5 }}>Urgente</Badge>}
+                  {Number(w.prioridade) === 1 && <Badge tone="warning" style={{ padding: '1px 7px', fontSize: 10.5 }}>Alta</Badge>}
+                </div>
+                <div style={{ fontSize: 11.5, color: T.text.quaternary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resumoPreferencias(w)}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {oferecido
+                  ? <Badge tone="info" icon={Send}>Oferecido</Badge>
+                  : <Button variant="secondary" size="sm" icon={Send} disabled={oferecendo === w.id || (!w.telefone && !w.paciente_id)}
+                      title={!w.telefone && !w.paciente_id ? 'Sem telefone' : undefined}
+                      onClick={() => oferecerHorario(w, ag)}>{oferecendo === w.id ? 'Enviando…' : 'Oferecer horário'}</Button>}
+                <Button variant="ghost" size="sm" onClick={() => encaixarDaLista(w, d, ag)}>Encaixar</Button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // ── Modal: adicionar à lista de espera ──
+  const renderModalEspera = () => {
+    const f = formEspera
+    const setF = (campos: Partial<typeof FORM_ESPERA_VAZIO>) => setFormEspera(p => ({ ...p, ...campos }))
+    return (
+      <Modal titulo="Adicionar à lista de espera" onClose={() => setModalEspera(false)} largura={500}
+        rodape={<>
+          <Button variant="secondary" onClick={() => setModalEspera(false)}>Cancelar</Button>
+          <Button icon={Plus} onClick={salvarEspera} disabled={salvandoEspera}>{salvandoEspera ? 'Salvando…' : 'Adicionar'}</Button>
+        </>}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <SegmentedControl stretch value={f.modo} onChange={v => setF({ modo: v })}
+            options={[{ value: 'paciente', label: 'Paciente cadastrado' }, { value: 'contato', label: 'Novo contato' }]} />
+          {f.modo === 'paciente' ? (
+            <Field label="Paciente">
+              <Select value={f.paciente_id} onChange={e => {
+                const p = pacientes.find((x: any) => x.id === e.target.value)
+                setF({ paciente_id: e.target.value, medico_id: multiProf && p?.medico_id ? p.medico_id : f.medico_id })
+              }}>
+                <option value="">Selecionar paciente</option>
+                {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+              </Select>
+            </Field>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+              <Field label="Nome"><Input value={f.nome} onChange={e => setF({ nome: e.target.value })} placeholder="Nome do paciente" /></Field>
+              <Field label="WhatsApp"><Input value={f.telefone} onChange={e => setF({ telefone: e.target.value })} placeholder="(11) 99999-9999" inputMode="tel" /></Field>
+            </div>
+          )}
+          {multiProf && (
+            <Field label="Profissional">
+              <Select value={f.medico_id} onChange={e => setF({ medico_id: e.target.value })}>
+                {profs.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+              </Select>
+            </Field>
+          )}
+          <Field label="Tipo">
+            <SegmentedControl stretch size="sm" value={f.tipo} onChange={v => setF({ tipo: v })} options={TIPOS_ESPERA.map(t => ({ value: t.value as string, label: t.label }))} />
+          </Field>
+          <Field label="Dias preferidos" hint="Nenhum marcado = qualquer dia">
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {DIAS_ESPERA.map(dia => {
+                const on = f.preferencia_dias.includes(dia)
+                return (
+                  <button key={dia} type="button" aria-pressed={on}
+                    onClick={() => setF({ preferencia_dias: on ? f.preferencia_dias.filter(x => x !== dia) : [...f.preferencia_dias, dia] })}
+                    style={{
+                      minWidth: 44, height: 34, padding: '0 8px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600,
+                      border: `1px solid ${on ? T.brand.primary : T.border.default}`,
+                      background: on ? T.brand.primary : '#fff', color: on ? '#fff' : T.text.secondary,
+                    }}>{DIAS_SEMANA_CURTOS[dia]}</button>
+                )
+              })}
+            </div>
+          </Field>
+          <Field label="Período">
+            <SegmentedControl stretch size="sm" value={f.preferencia_periodo} onChange={v => setF({ preferencia_periodo: v })} options={PERIODOS.map(p => ({ value: p.value as string, label: p.label }))} />
+          </Field>
+          <Field label="Prioridade">
+            <SegmentedControl stretch size="sm" value={f.prioridade} onChange={v => setF({ prioridade: v })} options={PRIORIDADES} />
+          </Field>
+          <Field label="Observação (opcional)">
+            <Input value={f.observacao} onChange={e => setF({ observacao: e.target.value })} placeholder="Ex.: prefere primeiro horário, dor há 2 semanas…" />
+          </Field>
+        </div>
+      </Modal>
+    )
+  }
+
   return (
     <div style={{
       height: '100%', boxSizing: 'border-box', padding: isMobile ? 12 : 20,
@@ -1571,12 +2024,14 @@ function AgendaContent() {
             <div style={{ padding: '0 16px' }}>
               {renderFiltros(true)}
             </div>
-            <style>{`@keyframes slideUpAgenda { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
+            <style dangerouslySetInnerHTML={{ __html: `@keyframes slideUpAgenda { from { transform: translateY(100%); } to { transform: translateY(0); } }` }} />
           </div>
         </>
       )}
 
       {modalBloqueio && renderModalBloqueio()}
+      {modalEspera && renderModalEspera()}
+      {!modal.open && renderVagaLiberada()}
 
       {modal.open && (modal.ag && !editando ? renderDetalhes() : renderFormulario())}
 

@@ -355,7 +355,7 @@ export default function Teleconsulta() {
         }}>{toast}</div>
       )}
 
-      <style>{`@media (max-width: 980px) { .tele-hero { grid-template-columns: minmax(0,1fr) !important; } } @media (max-width: 759px) { .tele-titulo { font-size: 22px !important; } }`}</style>
+      <style dangerouslySetInnerHTML={{ __html: `@media (max-width: 980px) { .tele-hero { grid-template-columns: minmax(0,1fr) !important; } } @media (max-width: 759px) { .tele-titulo { font-size: 22px !important; } }` }} />
     </div>
   )
 }

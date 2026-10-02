@@ -6,6 +6,7 @@ import type { Conversa, EtapaId, Mensagem, RespostaRapida } from './tipos'
 import { faltaMigration, nomeDe } from './tipos'
 import { confirmar } from '@/components/ui/dialogos'
 
+import { registrarAcesso } from '@/lib/auditoria'
 /**
  * Estado e ações do Chat omnicanal.
  * Identificação do usuário (mesma regra do antigo /whatsapp-app):
@@ -27,6 +28,7 @@ export function useChat() {
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<any>(null)
   const ativaRef = useRef<string | null>(null)
+  const conversasRef = useRef<Conversa[]>([])
   ativaRef.current = ativaId
   // Modo demonstração (/chat?demo=1): conversas de exemplo, nada é gravado no banco — para prints/apresentação
   const demo = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'
@@ -153,9 +155,16 @@ export function useChat() {
   const abrir = useCallback((id: string | null) => {
     setAtivaId(id)
     setMensagens([])
-    if (id) carregarMensagens(id)
-  }, [carregarMensagens])
+    if (id) {
+      carregarMensagens(id)
+      if (!demo) {
+        const c = conversasRef.current.find(x => x.id === id)
+        registrarAcesso({ acao: 'visualizou', recurso: 'conversa', recursoId: id, pacienteId: c?.paciente_id || null })
+      }
+    }
+  }, [carregarMensagens, demo])
 
+  conversasRef.current = conversas
   const ativa = conversas.find(c => c.id === ativaId) || null
   const nomeUsuario = usuario?.nome || medico?.nome || ''
 

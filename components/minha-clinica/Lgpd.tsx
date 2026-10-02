@@ -212,10 +212,10 @@ export function Lgpd() {
         </div>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .mc-lgpd-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
         @media (max-width: 900px) { .mc-lgpd-grid { grid-template-columns: minmax(0, 1fr); } }
-      `}</style>
+      ` }} />
     </div>
   )
 }

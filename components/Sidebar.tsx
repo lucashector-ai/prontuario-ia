@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, Sparkles, MessageCircle,
+  CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
@@ -57,6 +58,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
         { href: '/agenda', label: 'Agenda', icon: Calendar },
         { href: '/pacientes', label: 'Pacientes', icon: Users },
         ...(!isRecepcionista ? [{ href: '/historico', label: 'Histórico', icon: Clock }] : []),
+        { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
       ],
     },
     {
@@ -78,6 +80,9 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
           { href: '/minha-clinica', label: 'Minha clínica', icon: Hospital },
           { href: '/admin', label: 'Painel admin', icon: SlidersHorizontal },
         ] : []),
+        ...(!isRecepcionista ? [{ href: '/relatorios', label: 'Relatórios', icon: ChartColumnBig }] : []),
+        { href: '/faturamento', label: 'Faturamento TISS', icon: ReceiptText },
+        ...(!isRecepcionista ? [{ href: '/modelos-prontuario', label: 'Modelos de prontuário', icon: LayoutTemplate }] : []),
         { href: '/formularios', label: 'Formulários', icon: ClipboardList },
         { href: '/configuracoes/agenda-publica', label: 'Agenda pública', icon: CalendarCheck },
         { href: '/perfil', label: 'Perfil', icon: UserRound },

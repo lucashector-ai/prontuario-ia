@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/financeiro-diario",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/confirmacoes",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/retornos",
+      "schedule": "0 13 * * *"
     }
   ]
 }

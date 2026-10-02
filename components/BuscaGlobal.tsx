@@ -111,7 +111,7 @@ export function BuscaGlobal({ medicoId }: { medicoId: string }) {
             <p style={{ textAlign: 'center', color: tokens.border.strong, fontSize: 13, padding: 20 }}>Digite ao menos 2 caracteres para buscar</p>
           )}
         </div>
-        <style>{"@keyframes spin { to { transform: rotate(360deg) } }"}</style>
+        <style dangerouslySetInnerHTML={{ __html: "@keyframes spin { to { transform: rotate(360deg) } }" }} />
       </div>
     </>
   )

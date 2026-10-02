@@ -80,11 +80,11 @@ export default function Conteudo(props: any) {
 
   return (
     <div style={{ padding: 20 }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .c360-pub-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
         @media (max-width: 1100px) { .c360-pub-grid { grid-template-columns: minmax(0, 1fr); } }
         @keyframes spin { to { transform: rotate(360deg) } }
-      `}</style>
+      ` }} />
 
       {/* Abas + seletor de médico (admin com vários médicos) */}
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>

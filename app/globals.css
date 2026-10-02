@@ -245,3 +245,11 @@ input[style*="border:none"]:focus, textarea[style*="border:none"]:focus {
   background-size: 200px 100%;
   animation: c360-shimmer 1.2s ease-in-out infinite;
 }
+
+/* Linha de KPIs (KpiCard): 2 por linha no celular, mais compactos */
+@media (max-width: 759px) {
+  .c360-kpis > div { flex: 1 1 calc(50% - 6px) !important; padding: 14px !important; }
+  .c360-kpis > div > div:first-child > span:first-child { padding-top: 6px !important; font-size: 12.5px !important; white-space: normal !important; }
+  .c360-kpis > div > div:nth-child(2) { font-size: 24px !important; margin-top: 10px !important; }
+  .c360-kpis > div > div:nth-child(3) > span:last-child { display: none; }
+}

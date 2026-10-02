@@ -9,6 +9,9 @@ import {
   Avatar, Badge, Button, EmptyState, Icon, IconButton, PageHeader, SearchInput, SegmentedControl, Textarea,
 } from '@/components/ui'
 import { confirmar } from '@/components/ui/dialogos'
+import { registrarAcesso } from '@/lib/auditoria'
+import CardAgendarRetorno from '@/components/retornos/CardAgendarRetorno'
+import { BotaoGerarGuia } from '@/components/tiss/BotaoGerarGuia'
 
 const T = tokens
 
@@ -64,7 +67,7 @@ export default function Historico() {
 
     const { data } = await supabase
       .from('consultas')
-      .select('*, pacientes(id, nome)')
+      .select('*, pacientes(id, nome, convenio)')
       .in('medico_id', medicoIds)
       .order('criado_em', { ascending: false })
     setConsultas(data || [])
@@ -97,6 +100,7 @@ export default function Historico() {
 
   const selecionar = (c: any) => {
     setSelecionada(c)
+    registrarAcesso({ acao: 'visualizou', recurso: 'prontuario', recursoId: c.id, pacienteId: c.paciente_id || null })
     setEditando(false)
     setAba('pront')
     setEditForm({
@@ -123,6 +127,7 @@ export default function Historico() {
       setConsultas(prev => prev.map(c => c.id === data.id ? { ...c, ...data } : c))
       setEditando(false)
       showToast('ok', 'Alterações salvas')
+      registrarAcesso({ acao: 'editou', recurso: 'consulta', recursoId: data.id, pacienteId: data.paciente_id || null, detalhes: { campos: Object.keys(editForm) } })
     } else {
       showToast('erro', 'Erro ao salvar')
     }
@@ -171,6 +176,7 @@ export default function Historico() {
   const abrirPdf = (tipo: string) => {
     if (!selecionada || !medico) return
     const url = '/api/pdf-' + tipo + '?consulta_id=' + selecionada.id + '&medico_id=' + medico.id
+    registrarAcesso({ acao: 'exportou', recurso: 'prontuario', recursoId: selecionada.id, pacienteId: selecionada.paciente_id || null, detalhes: { formato: tipo } })
     window.open(url, '_blank')
   }
 
@@ -277,6 +283,7 @@ export default function Historico() {
                       <IconButton icon={Pencil} variant="outline" title="Editar" aria-label="Editar" onClick={() => { setAba('pront'); setEditando(true) }} />
                       <IconButton icon={Trash2} variant="outline" tone="danger" title="Deletar consulta" aria-label="Deletar consulta" onClick={() => deletar(selecionada.id)} />
                       <Button icon={Download} onClick={() => abrirPdf('prontuario')}>PDF</Button>
+                      <BotaoGerarGuia consultaId={selecionada.id} pacienteConvenio={selecionada.pacientes?.convenio} />
                     </>
                   )}
                 </div>
@@ -331,6 +338,18 @@ export default function Historico() {
                   )}
 
                   <ListaHipoteses hipoteses={selecionada.hipoteses} />
+
+                  {!editando && medico && selecionada.paciente_id && (
+                    <CardAgendarRetorno
+                      key={selecionada.id}
+                      pacienteId={selecionada.paciente_id}
+                      pacienteNome={selecionada.pacientes?.nome || null}
+                      medicoId={selecionada.medico_id || medico.id}
+                      consultaId={selecionada.id}
+                      plano={selecionada.plano}
+                      avaliacao={selecionada.avaliacao}
+                    />
+                  )}
                 </div>
               )}
 
@@ -382,10 +401,10 @@ export default function Historico() {
         </div>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .hist-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; align-items: start; }
         @media (max-width: 1000px) { .hist-grid { grid-template-columns: minmax(0, 1fr); } }
-      `}</style>
+      ` }} />
     </div>
   )
 }

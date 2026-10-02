@@ -588,10 +588,10 @@ function Admin() {
         </Modal>
       )}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .adm-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; align-items: start; }
         @media (max-width: 960px) { .adm-grid { grid-template-columns: minmax(0, 1fr); } }
-      `}</style>
+      ` }} />
     </main>
   )
 }

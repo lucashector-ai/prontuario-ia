@@ -175,7 +175,7 @@ export function WhatsAppConnect({ medicoId, onConnected }: Props) {
           Suas credenciais ficam armazenadas com segurança. Você pode desconectar a qualquer momento nas configurações.
         </p>
 
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
       </div>
     </div>
   )

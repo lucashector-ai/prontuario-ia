@@ -247,14 +247,14 @@ export default function AgendaPublica({ medicoSlug, clinicaSlug }: Props) {
 
   return (
     <CascaPublica clinica={clinica}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .ap-corpo { display: grid; grid-template-columns: 1fr; }
         .ap-col-horarios { border-top: 1px solid ${T.border.muted}; }
         @media (min-width: 768px) {
           .ap-corpo { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
           .ap-col-horarios { border-top: none; border-left: 1px solid ${T.border.muted}; }
         }
-      `}</style>
+      ` }} />
 
       <div style={{ ...cartao, maxWidth: 880, margin: '0 auto', overflow: 'hidden' }}>
         {/* Cabeçalho — profissional */}

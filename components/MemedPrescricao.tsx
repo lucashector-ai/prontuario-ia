@@ -205,7 +205,7 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
       }}>
         <div style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.2)', borderTopColor: 'white', animation: 'spin 0.8s linear infinite' }}/>
         <p style={{ color: 'white', fontSize: 14, fontWeight: 600, margin: 0 }}>Carregando Memed...</p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
       </div>
     )
   }

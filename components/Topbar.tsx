@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import {
-  Search, Sparkles, Bell, MessageCircle, ChevronDown, CornerDownLeft, UserRound, SlidersHorizontal, Hospital, LogOut,
+  Search, Sparkles, Bell, MessageCircle, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate, ChevronDown, CornerDownLeft, UserRound, SlidersHorizontal, Hospital, LogOut,
   LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, ClipboardList, CalendarCheck, CalendarClock,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -20,6 +20,10 @@ const PAGINAS: { label: string; href: string; icon: LucideIcon }[] = [
   { label: 'Agenda', href: '/agenda', icon: Calendar },
   { label: 'Pacientes', href: '/pacientes', icon: Users },
   { label: 'Histórico', href: '/historico', icon: Clock },
+  { label: 'Retornos e reativação', href: '/retornos', icon: CalendarHeart },
+  { label: 'Relatórios', href: '/relatorios', icon: ChartColumnBig },
+  { label: 'Faturamento de convênios (TISS)', href: '/faturamento', icon: ReceiptText },
+  { label: 'Modelos de prontuário', href: '/modelos-prontuario', icon: LayoutTemplate },
   { label: 'Nova consulta', href: '/nova-consulta', icon: CirclePlus },
   { label: 'Teleconsulta', href: '/teleconsulta', icon: Video },
   { label: 'Analisar exames', href: '/exames', icon: ScanSearch },

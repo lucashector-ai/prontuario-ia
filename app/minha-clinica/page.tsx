@@ -7,6 +7,7 @@ import { VisaoGeral } from '@/components/minha-clinica/VisaoGeral'
 import { Procedimentos } from '@/components/minha-clinica/Procedimentos'
 import { Lgpd } from '@/components/minha-clinica/Lgpd'
 import { Automacoes } from '@/components/minha-clinica/Automacoes'
+import PainelAuditoria from '@/components/auditoria/PainelAuditoria'
 import { Sofia } from '@/components/minha-clinica/Sofia'
 import { Icon, PageHeader, Tabs } from '@/components/ui'
 
@@ -51,7 +52,12 @@ export default function MinhaClinicaPage() {
       {tab === 'procedimentos' && <Procedimentos />}
       {tab === 'sofia' && <Sofia />}
       {tab === 'automacoes' && <Automacoes />}
-      {tab === 'lgpd' && <Lgpd />}
+      {tab === 'lgpd' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+          <Lgpd />
+          <PainelAuditoria />
+        </div>
+      )}
     </div>
   )
 }

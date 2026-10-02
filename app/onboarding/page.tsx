@@ -242,7 +242,7 @@ export default function OnboardingPage() {
 
   return (
     <div style={{ minHeight: '100dvh', background: T.bg.card, display: 'flex', overflow: 'hidden' }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .ob-left { display: flex; }
         .ob-right { flex: 1; }
         @media (max-width: 900px) {
@@ -254,7 +254,7 @@ export default function OnboardingPage() {
           from { opacity: 0; transform: translateY(6px); }
           to { opacity: 1; transform: translateY(0); }
         }
-      `}</style>
+      ` }} />
 
       <aside className="ob-left" style={{
         width: '42%',

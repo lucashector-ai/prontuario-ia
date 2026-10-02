@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { MODELOS } from '@/lib/ai/models'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,7 +59,7 @@ Responda APENAS com JSON no formato:
 {"score": 0-100, "nivel": "alto|medio|baixo", "pontos_positivos": ["..."], "pontos_atencao": ["..."], "recomendacao": "..."}`
 
     const res = await anthropic.messages.create({
-      model: 'claude-opus-4-5', max_tokens: 400,
+      model: MODELOS.apoio, max_tokens: 400,
       messages: [{ role: 'user', content: prompt }]
     })
 

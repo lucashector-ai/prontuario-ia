@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { notificar } from '@/components/ui/dialogos'
 
+import { registrarAcesso } from '@/lib/auditoria'
 const ICE = { iceServers: [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
@@ -687,6 +688,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       })
       const d = await r.json()
       if (d.id) {
+        registrarAcesso({ acao: 'editou', recurso: 'consulta', recursoId: d.id, pacienteId: sala?.paciente_id || null, detalhes: { origem: 'teleconsulta' } })
         setSalvado(true)
         setTimeout(() => { window.location.href = '/historico' }, 1500)
       }
@@ -884,7 +886,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center', justifyContent: 'center', background: N[900], color: '#fff' }}>
       <Spinner size={40} cor={T.brand.primaryAccent} trilho={branco(0.12)} />
       <span style={{ fontSize: 13, color: TXT_ESCURO.secundario }}>Preparando a sala…</span>
-      <style>{ESTILOS_BASE}</style>
+      <style dangerouslySetInnerHTML={{ __html: ESTILOS_BASE }} />
     </div>
   )
 
@@ -897,7 +899,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         <span style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Não foi possível entrar na sala</span>
         <span style={{ fontSize: 13.5, color: TXT_ESCURO.secundario, lineHeight: 1.5 }}>{erro}</span>
       </div>
-      <style>{ESTILOS_BASE}</style>
+      <style dangerouslySetInnerHTML={{ __html: ESTILOS_BASE }} />
     </div>
   )
 
@@ -915,7 +917,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         <Button size="lg" onClick={() => { try { window.close() } catch {} }} style={{ marginTop: 4 }}>Fechar janela</Button>
         <span style={{ fontSize: 12, color: TXT_ESCURO.terciario, marginTop: 8 }}>Se tiver dúvidas, entre em contato com a clínica.</span>
       </div>
-      <style>{ESTILOS_BASE}</style>
+      <style dangerouslySetInnerHTML={{ __html: ESTILOS_BASE }} />
     </div>
   )
 
@@ -1003,7 +1005,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
             {prontuarioData && <BotaoSalvar salvando={salvando} salvado={salvado} onClick={salvarProntuario} />}
           </div>
         </div>
-        <style>{ESTILOS_BASE + `@media (max-width: 520px) { .sala-resumo { grid-template-columns: 1fr !important; } }`}</style>
+        <style dangerouslySetInnerHTML={{ __html: ESTILOS_BASE + `@media (max-width: 520px) { .sala-resumo { grid-template-columns: 1fr !important; } }` }} />
       </div>
     )
   }
@@ -1080,7 +1082,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           </div>
         </div>
       </div>
-      <style>{ESTILOS_BASE}</style>
+      <style dangerouslySetInnerHTML={{ __html: ESTILOS_BASE }} />
     </div>
   )
 
@@ -1098,7 +1100,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ADE80' }} />Conectado
         </span>
       )}
-      <style>{ESTILOS_BASE}</style>
+      <style dangerouslySetInnerHTML={{ __html: ESTILOS_BASE }} />
     </div>
   )
 
@@ -1450,7 +1452,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
         </div>
       )}
 
-      <style>{ESTILOS_BASE + `
+      <style dangerouslySetInnerHTML={{ __html: ESTILOS_BASE + `
         @keyframes salaToast { from { opacity: 0; transform: translateX(24px) } to { opacity: 1; transform: none } }
         @keyframes salaPainel { from { opacity: 0; transform: translateX(16px) } to { opacity: 1; transform: none } }
         html, body { margin: 0; padding: 0; background: ${N[900]}; overflow: hidden; }
@@ -1459,7 +1461,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
           .sala-painel { position: absolute; top: 0; bottom: 0; left: 12px; right: 12px; width: auto !important; max-width: none !important; z-index: 30; box-shadow: ${T.shadow.modal}; }
           .sala-rodape-info { display: none; }
         }
-      `}</style>
+      ` }} />
 
       {memedAberto && medicoSala && pacienteSala && (
         <MemedPrescricao

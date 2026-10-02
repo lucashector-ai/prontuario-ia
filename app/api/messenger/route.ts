@@ -2,6 +2,7 @@ import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
+import { MODELOS } from '@/lib/ai/models'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
         }))
 
         const res = await anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514',
+          model: MODELOS.apoio,
           max_tokens: 1000,
           system: `Voce e Sofia, assistente virtual da clinica. Seja calorosa e objetiva. Responda em portugues.
           O paciente esta entrando em contato pelo Messenger.

@@ -13,6 +13,7 @@ import {
   Save, ScanSearch, Sparkles, Upload, Users, X,
 } from 'lucide-react'
 
+import { registrarAcesso } from '@/lib/auditoria'
 export default function Exames() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
@@ -79,7 +80,10 @@ export default function Exames() {
       if (contexto) form.append('contexto', contexto)
       const res = await fetch('/api/analisar-exame', { method: 'POST', body: form })
       const data = await res.json()
-      if (data.analise) setAnalise(data.analise)
+      if (data.analise) {
+        setAnalise(data.analise)
+        registrarAcesso({ acao: 'visualizou', recurso: 'exame', detalhes: { tipo: data.analise.tipo || data.analise.tipo_exame || null } })
+      }
       else setErro(data.error || 'Erro ao analisar')
     } catch (e: any) { setErro(e.message) }
     finally { setAnalisando(false) }
@@ -109,6 +113,7 @@ export default function Exames() {
 
   const exportarPDF = async () => {
     if (!analise) return
+    registrarAcesso({ acao: 'exportou', recurso: 'exame', detalhes: { tipo: analise.tipo || analise.tipo_exame || null } })
     const res = await fetch('/api/pdf-exame', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -447,12 +452,12 @@ export default function Exames() {
         </Modal>
       )}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .exames-grid { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 20px; align-items: start; }
         @media (max-width: 900px) { .exames-grid { grid-template-columns: minmax(0, 1fr); } }
         .exames-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; animation: exames-spin .8s linear infinite; display: inline-block; }
         @keyframes exames-spin { to { transform: rotate(360deg) } }
-      `}</style>
+      ` }} />
     </main>
   )
 }

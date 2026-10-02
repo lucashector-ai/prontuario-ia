@@ -563,7 +563,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
               <p style={{ fontSize: 12, color: tokens.text.tertiary, margin: 0 }}>
                 Não feche essa janela
               </p>
-              <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+              <style dangerouslySetInnerHTML={{ __html: '@keyframes spin{to{transform:rotate(360deg)}}' }} />
             </div>
           )}
 

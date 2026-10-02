@@ -255,11 +255,11 @@ export function VisaoGeral() {
         </div>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes spin { to { transform: rotate(360deg) } }
         .mc-visao-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
         @media (max-width: 900px) { .mc-visao-grid { grid-template-columns: minmax(0, 1fr); } }
-      `}</style>
+      ` }} />
     </div>
   )
 }

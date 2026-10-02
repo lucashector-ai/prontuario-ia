@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react"
 import { RefreshCw, CalendarCheck, Star, FileText, FileDown, Send, Lightbulb, Check, Sparkles, Clock, UserRoundCheck } from "lucide-react"
 import { tokens } from '@/lib/design-tokens'
 import { Badge, Button, Card, Icon, IconTile, SegmentedControl } from '@/components/ui'
+import { ConfiguracaoConfirmacoes } from '@/components/confirmacoes/ConfiguracaoConfirmacoes'
 
 const T = tokens
 
@@ -14,6 +15,10 @@ export function Automacoes() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
   const [aba, setAba] = useState<Tab>("followup")
+  // ?demo=1 abre direto em Confirmações (para demonstração)
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("demo") === "1") setAba("confirmacao")
+  }, [])
   const [carregando, setCarregando] = useState(false)
   const [resultado, setResultado] = useState<any>(null)
   const [msg, setMsg] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null)
@@ -51,7 +56,7 @@ export function Automacoes() {
 
   const ABAS: { id: Tab; label: string; icon: LucideIcon }[] = [
     { id: "followup", label: "Follow-up", icon: RefreshCw },
-    { id: "confirmacao", label: "Confirmação", icon: CalendarCheck },
+    { id: "confirmacao", label: "Confirmações", icon: CalendarCheck },
     { id: "nps", label: "Avaliação NPS", icon: Star },
     { id: "relatorio", label: "Relatório semanal", icon: FileText },
     { id: "pdf", label: "Relatório PDF", icon: FileDown },
@@ -153,16 +158,14 @@ export function Automacoes() {
 
         {/* CONFIRMAÇÃO */}
         {aba === "confirmacao" && (<>
+          <ConfiguracaoConfirmacoes />
           {card(
-            "Confirmar consultas das próximas 24h",
-            "Envia mensagem de confirmação para todos os pacientes com consulta agendada nas próximas 24 horas. O paciente pode confirmar, remarcar ou cancelar diretamente pelo WhatsApp.",
+            "Enviar confirmações agora",
+            "Dispara na hora a mensagem de confirmação para os pacientes com consulta nas próximas 24 horas, sem esperar o envio automático.",
             "/api/whatsapp-confirmacao",
             {},
             CalendarCheck, T.data.green,
           )}
-          {dica("Dica — configure um cron job", <>
-            Para enviar automaticamente todo dia às 18h, configure um cron job apontando para {codigo("POST /api/whatsapp-confirmacao")} com seu medico_id.
-          </>)}
         </>)}
 
         {/* NPS */}

@@ -1,6 +1,7 @@
 import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { MODELOS } from '@/lib/ai/models'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: MODELOS.apoio,
         max_tokens: 1000,
         system: promptSofia,
         messages: [...msgs, { role: 'user', content: texto }]

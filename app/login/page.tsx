@@ -81,12 +81,12 @@ function LoginForm() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100vw' }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 1024px) {
           .login-image-pane { display: none !important; }
           .login-form-pane { flex: 1 !important; }
         }
-      `}</style>
+      ` }} />
 
       {/* Painel esquerdo - SÓ imagem */}
       <div className="login-image-pane" style={{ flex: '0 0 25%', position: 'relative' as const, overflow: 'hidden', background: tokens.bg.page }}>

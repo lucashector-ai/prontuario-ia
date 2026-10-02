@@ -110,10 +110,10 @@ export default function LGPD() {
 
   return (
     <div style={{ padding: 20 }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .lgpd-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
         @media (min-width: 960px) { .lgpd-grid { grid-template-columns: 360px minmax(0, 1fr); } }
-      `}</style>
+      ` }} />
 
       <div className="lgpd-grid">
         {/* COLUNA ESQUERDA */}

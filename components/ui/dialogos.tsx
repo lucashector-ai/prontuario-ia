@@ -91,7 +91,7 @@ function Camada() {
           )
         })}
       </div>
-      <style>{`@keyframes c360-sobe { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }`}</style>
+      <style dangerouslySetInnerHTML={{ __html: `@keyframes c360-sobe { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }` }} />
     </>
   )
 }
@@ -141,7 +141,7 @@ function DialogoConfirmar({ pedido, onFim }: { pedido: Pedido; onFim: () => void
           }}>{pedido.confirmar || 'Confirmar'}</button>
         </div>
       </div>
-      <style>{`@keyframes c360-fade { from { opacity: 0 } to { opacity: 1 } }`}</style>
+      <style dangerouslySetInnerHTML={{ __html: `@keyframes c360-fade { from { opacity: 0 } to { opacity: 1 } }` }} />
     </div>
   )
 }

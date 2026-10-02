@@ -198,7 +198,7 @@ function Spinner() {
         width: 28, height: 28, border: '2.5px solid ' + T.brand.primaryLight, borderTopColor: T.brand.primary,
         borderRadius: '50%', animation: 'spin 0.8s linear infinite',
       }} />
-      <style>{'@keyframes spin { to { transform: rotate(360deg) } }'}</style>
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes spin { to { transform: rotate(360deg) } }' }} />
     </>
   )
 }

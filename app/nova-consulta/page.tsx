@@ -21,6 +21,12 @@ import { ModalSelecionarPaciente } from '@/components/ModalSelecionarPaciente'
 import { tokens } from '@/lib/design-tokens'
 import { Badge, Button, Card, Icon, IconButton, Input, Modal, Overline, ProgressBar, Textarea } from '@/components/ui'
 import { notificar } from '@/components/ui/dialogos'
+import { ResumoPreConsulta } from '@/components/ia/ResumoPreConsulta'
+import { SeletorModeloProntuario } from '@/components/ia/SeletorModeloProntuario'
+import { modeloParaRequisicao, type ModeloProntuario } from '@/lib/ai/modelos-prontuario'
+import CardAgendarRetorno from '@/components/retornos/CardAgendarRetorno'
+import { BotaoGerarGuia } from '@/components/tiss/BotaoGerarGuia'
+import { registrarAcesso } from '@/lib/auditoria'
 
 const T = tokens
 const ONDA = '#8B74E8' // roxo médio da onda de áudio (protótipo)
@@ -108,6 +114,8 @@ export default function Home() {
   const [erroMsg, setErroMsg] = useState('')
   const [consultaSalva, setConsultaSalva] = useState(false)
   const [consultaId, setConsultaId] = useState<string | null>(null)
+  // Modelo de prontuário escolhido (SOAP, Pediatria, Dermatologia…) — enviado à IA ao estruturar
+  const [modelo, setModelo] = useState<ModeloProntuario | null>(null)
   const [editado, setEditado] = useState(false)
   const [salvandoEdicao, setSalvandoEdicao] = useState(false)
   const [copiloto, setCopiloto] = useState<any>(null)
@@ -222,7 +230,7 @@ export default function Home() {
     try {
       const res = await fetch('/api/estruturar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcricao: texto }),
+        body: JSON.stringify({ transcricao: texto, ...(modelo ? { modelo: modeloParaRequisicao(modelo) } : {}) }),
       })
       const data = await res.json()
       if (data.prontuario) {
@@ -240,7 +248,10 @@ export default function Home() {
         body: JSON.stringify({ medico_id: medico.id, transcricao: textoTranscricao, paciente_id: pacienteSelecionado?.id || null, ...p }),
       })
       const d = await r.json().catch(() => null)
-      if (d?.id) setConsultaId(d.id)
+      if (d?.id) {
+        setConsultaId(d.id)
+        registrarAcesso({ acao: 'editou', recurso: 'consulta', recursoId: d.id, pacienteId: pacienteSelecionado?.id || null, detalhes: { criada: true } })
+      }
       setConsultaSalva(true)
       toast('Consulta salva com sucesso!')
     if (p.paciente_id) {
@@ -267,6 +278,11 @@ export default function Home() {
       .from('consultas')
       .update({ subjetivo: prontuario.subjetivo, objetivo: prontuario.objetivo, avaliacao: prontuario.avaliacao, plano: prontuario.plano })
       .eq('id', consultaId)
+    // Seções do modelo (coluna da migration 0014 — se não existir, ignora sem quebrar)
+    if (!error && Array.isArray(prontuario.secoes)) {
+      await supabase.from('consultas').update({ secoes: prontuario.secoes }).eq('id', consultaId)
+    }
+    if (!error) registrarAcesso({ acao: 'editou', recurso: 'consulta', recursoId: consultaId, pacienteId: pacienteSelecionado?.id || null })
     setSalvandoEdicao(false)
     if (error) { toast('Erro ao salvar alterações', 'error'); return }
     setEditado(false)
@@ -545,7 +561,7 @@ const handleCopiar = () => {
 
       {/* ── Idle ─────────────────────────────────────────────────────────── */}
       {estado === 'idle' && !prontuario && (
-        <div className={'nc-grid' + (temContexto ? '' : ' solo')}>
+        <div className={'nc-grid' + (temContexto || pacienteSelecionado?.id ? '' : ' solo')}>
           <div style={{ ...cardCentro, gap: 22 }}>
             <span style={{
               width: 76, height: 76, borderRadius: 24, background: T.brand.primarySubtle, color: T.brand.primary,
@@ -557,6 +573,12 @@ const handleCopiar = () => {
                 Fale normalmente com o paciente. A IA transcreve em tempo real e, ao final, gera o prontuário SOAP, sugere CIDs e hipóteses diagnósticas.
               </p>
             </div>
+            {medico && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: T.text.secondary }}>Modelo do prontuário</span>
+                <SeletorModeloProntuario especialidade={medico.especialidade} medicoId={medico.id} clinicaId={medico.clinica_id} value={modelo?.id} onChange={setModelo} />
+              </div>
+            )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
               <Button
                 size="lg"
@@ -571,7 +593,12 @@ const handleCopiar = () => {
               </Button>
             </div>
           </div>
-          {cardContexto && <div className="nc-lateral">{cardContexto}</div>}
+          {(cardContexto || (pacienteSelecionado?.id && medico)) && (
+            <div className="nc-lateral">
+              {pacienteSelecionado?.id && medico && <ResumoPreConsulta pacienteId={pacienteSelecionado.id} medicoId={medico.id} />}
+              {cardContexto}
+            </div>
+          )}
         </div>
       )}
 
@@ -687,6 +714,16 @@ const handleCopiar = () => {
               <IconButton icon={Download} variant="outline" title="Exportar PDF" aria-label="Exportar PDF" onClick={() => exportarProntuarioPdf(prontuario, { nome: medico?.nome, crm: medico?.crm })} />
             </div>
             <div style={{ padding: '0 20px 12px' }}>
+              {Array.isArray(prontuario.secoes) && prontuario.secoes.length > 0 && (
+                <SecoesModelo
+                  secoes={prontuario.secoes}
+                  nomeModelo={modelo?.nome}
+                  onEditar={(i, conteudo) => {
+                    setProntuario((p: any) => ({ ...p, secoes: p.secoes.map((x: any, j: number) => j === i ? { ...x, conteudo } : x) }))
+                    setEditado(true)
+                  }}
+                />
+              )}
               <ProntuarioCard
                 prontuario={prontuario}
                 nomeMedico={medico?.nome}
@@ -783,6 +820,18 @@ const handleCopiar = () => {
               )}
             </Card>
 
+            {/* Retorno do paciente (sugestão da IA a partir do plano) */}
+            {medico && (
+              <CardAgendarRetorno
+                pacienteId={pacienteSelecionado?.id || null}
+                pacienteNome={pacienteSelecionado?.nome || null}
+                medicoId={medico.id}
+                consultaId={consultaId || undefined}
+                plano={prontuario.plano}
+                avaliacao={prontuario.avaliacao}
+              />
+            )}
+
             {/* Salvar / nova */}
             <Card style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {!consultaSalva ? (
@@ -797,6 +846,13 @@ const handleCopiar = () => {
                 <span style={{ height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: T.status.success, background: T.status.successBg }}>
                   <Icon icon={CircleCheck} size={16} />Salvo no histórico
                 </span>
+              )}
+              {consultaSalva && consultaId && (
+                <BotaoGerarGuia
+                  consultaId={consultaId}
+                  size="md"
+                  pacienteConvenio={pacienteSelecionado?.convenio ?? pacientes.find((p: any) => p.id === pacienteSelecionado?.id)?.convenio}
+                />
               )}
               <Button variant="secondary" icon={Plus} onClick={handleNovo} style={{ height: 40, borderRadius: 12 }}>Nova consulta</Button>
             </Card>
@@ -856,13 +912,39 @@ const handleCopiar = () => {
         />
       )}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .nc-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; align-items: start; }
         .nc-grid.solo { grid-template-columns: minmax(0, 1fr); }
         .nc-lateral { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
         @media (max-width: 1100px) { .nc-grid { grid-template-columns: minmax(0, 1fr); } }
         @keyframes nc-onda { from { transform: scaleY(.25); } to { transform: scaleY(1); } }
-      `}</style>
+      ` }} />
+    </div>
+  )
+}
+
+/** Seções do modelo de prontuário escolhido (quando não é SOAP) — editáveis. */
+function SecoesModelo({ secoes, nomeModelo, onEditar }: {
+  secoes: { titulo: string; conteudo: string }[]
+  nomeModelo?: string
+  onEditar: (i: number, conteudo: string) => void
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 0 4px' }}>
+      <Overline>{nomeModelo ? `Modelo · ${nomeModelo}` : 'Seções do modelo'}</Overline>
+      {secoes.map((sec, i) => (
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: T.text.primary }}>{sec.titulo}</span>
+          <Textarea
+            value={sec.conteudo || ''}
+            onChange={e => onEditar(i, e.target.value)}
+            rows={Math.min(8, Math.max(2, Math.ceil((sec.conteudo || '').length / 90)))}
+            style={{ fontSize: 13.5, lineHeight: 1.55 }}
+          />
+        </div>
+      ))}
+      <div style={{ height: 1, background: T.border.muted, margin: '6px 0 2px' }} />
+      <Overline>Resumo SOAP (usado no histórico e nos relatórios)</Overline>
     </div>
   )
 }

@@ -90,10 +90,10 @@ export default function Dicionario() {
 
   return (
     <div style={{ padding: 20 }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .dic-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
         @media (min-width: 960px) { .dic-grid { grid-template-columns: 340px minmax(0, 1fr); } }
-      `}</style>
+      ` }} />
 
       <div className="dic-grid">
         {/* COLUNA ESQUERDA — adicionar + info */}

@@ -95,12 +95,12 @@ export default function Ditado() {
 
   return (
     <div style={{ padding: 20 }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .dit-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
         @media (min-width: 1024px) { .dit-grid.com-prontuario { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
         @keyframes dit-spin { to { transform: rotate(360deg) } }
         @keyframes dit-pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
-      `}</style>
+      ` }} />
 
       {/* Ações */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 10, flexWrap: 'wrap' }}>

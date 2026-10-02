@@ -2,6 +2,7 @@ import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
+import { MODELOS } from '@/lib/ai/models'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
         }))
 
         const aiRes = await anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514',
+          model: MODELOS.apoio,
           max_tokens: 300,
           system: 'Voce e Sofia, assistente da clinica. Responda em portugues. Seja breve. Sem botoes. Para transferir: [HUMANO]',
           messages: [...msgs, { role: 'user', content: texto }]

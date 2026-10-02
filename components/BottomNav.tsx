@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard, Calendar, CirclePlus, Users, Menu, Clock, Video, ScanSearch, Sparkles, MessageCircle,
-  Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, X,
+  Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, X, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon } from '@/components/ui'
@@ -49,6 +49,7 @@ export function BottomNav() {
   const resto: Item[] = atendente ? [] : [
     ...(!isRecepcionista ? [
       { href: '/historico', label: 'Histórico', icon: Clock },
+      { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
       { href: '/teleconsulta', label: 'Teleconsulta', icon: Video },
       { href: '/exames', label: 'Analisar exames', icon: ScanSearch },
       { href: '/assistente-ia', label: 'Assistente IA', icon: Sparkles },
@@ -58,7 +59,10 @@ export function BottomNav() {
       { href: '/minha-clinica', label: 'Minha clínica', icon: Hospital },
       { href: '/admin', label: 'Painel admin', icon: SlidersHorizontal },
     ] : []),
+    ...(!isRecepcionista ? [{ href: '/relatorios', label: 'Relatórios', icon: ChartColumnBig }] : []),
+    { href: '/faturamento', label: 'Faturamento', icon: ReceiptText },
     { href: '/formularios', label: 'Formulários', icon: ClipboardList },
+    ...(!isRecepcionista ? [{ href: '/modelos-prontuario', label: 'Modelos', icon: LayoutTemplate }] : []),
     { href: '/configuracoes/agenda-publica', label: 'Agenda pública', icon: CalendarCheck },
     { href: '/perfil', label: 'Perfil', icon: UserRound },
   ]
