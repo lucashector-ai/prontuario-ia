@@ -1,13 +1,13 @@
 'use client'
 import { log } from '@/lib/logger'
 
-import { useState, useCallback, useEffect, Suspense } from 'react'
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Mic, Zap, Pause, Play, Sparkles, AudioLines, CircleCheck, CircleDashed, LoaderCircle, CircleAlert,
   Copy, Download, Check, Plus, FlaskConical, FileBadge, Printer, MessageCircle, RefreshCw, TriangleAlert, Lightbulb, Target,
 } from 'lucide-react'
-import { useGravador } from '@/lib/useGravador'
+import { useTranscricao } from '@/lib/transcricao/useTranscricao'
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
 import { ProntuarioCard, exportarProntuarioPdf } from '@/components/ProntuarioCard'
@@ -46,24 +46,61 @@ function SearchParamsReader({ onParams }: { onParams: (pid: string | null, pnome
 
 const mmss = (s: number) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0')
 
-/** Onda de áudio decorativa (o gravador não expõe nível de áudio). */
-function OndaAudio({ ativa }: { ativa: boolean }) {
-  const barras = Array.from({ length: 84 }, (_, i) => {
-    const base = 0.35 + 0.65 * Math.abs(Math.sin(i * 1.7) * Math.cos(i / 5))
-    return { h: Math.round(6 + base * 22), d: ((i * 37) % 100) / 100, t: 0.7 + ((i * 53) % 60) / 100 }
-  })
+/** Onda de áudio com o volume real do microfone (histórico rolando da direita para a esquerda). */
+function OndaAudio({ ativa, nivel }: { ativa: boolean; nivel: number }) {
+  const N = 84
+  const hist = useRef<number[]>(Array(N).fill(0))
+  const [, tique] = useState(0)
+  useEffect(() => {
+    hist.current = [...hist.current.slice(1), ativa ? nivel : 0]
+    tique(x => x + 1)
+  }, [nivel, ativa])
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 2, height: 28, flex: 1, minWidth: 0, overflow: 'hidden' }}>
-      {barras.map((b, i) => (
+    <div aria-hidden style={{ display: 'flex', alignItems: 'center', gap: 2, height: 28, flex: 1, minWidth: 0, overflow: 'hidden' }}>
+      {hist.current.map((v, i) => (
         <span key={i} style={{
           width: 3, flexShrink: 0, borderRadius: 2,
-          height: ativa ? b.h : 3,
-          background: ativa ? (i > 72 ? T.brand.primaryAccent : ONDA) : T.border.strong,
-          transformOrigin: 'center',
-          animation: ativa ? `nc-onda ${b.t}s ease-in-out ${-b.d}s infinite alternate` : 'none',
-          transition: 'height .35s ease, background .2s',
+          height: ativa ? Math.max(3, Math.round(3 + v * 25)) : 3,
+          background: ativa ? (i > N - 12 ? T.brand.primaryAccent : ONDA) : T.border.strong,
+          transition: 'height .12s linear, background .2s',
         }} />
       ))}
+    </div>
+  )
+}
+
+/** Selo do estado da transcrição ao vivo. */
+function StatusConexao({ conexao, fase }: { conexao: string; fase: string }) {
+  if (fase === 'finalizando' || fase === 'revisando') return null
+  const mapa: Record<string, [string, string, string]> = {
+    conectando: ['Conectando…', T.text.tertiary, T.bg.page],
+    ao_vivo: ['Ao vivo', T.status.success, T.status.successBg],
+    reconectando: ['Reconectando…', T.status.warning, T.status.warningBg],
+    sem_ao_vivo: ['Gravando — o texto aparece ao encerrar', T.status.warning, T.status.warningBg],
+  }
+  const m = mapa[conexao]
+  if (!m) return null
+  return (
+    <span title="Transcrição ao vivo" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: m[1], background: m[2], padding: '4px 10px', borderRadius: 99, whiteSpace: 'nowrap' }}>
+      <span style={{ width: 6, height: 6, borderRadius: 99, background: m[1] }} />{m[0]}
+    </span>
+  )
+}
+
+/** Transcrição com "Falante N:" destacado em cada troca de falante. */
+function TextoTranscricao({ texto, parcial }: { texto: string; parcial?: string }) {
+  const linhas = texto ? texto.split('\n') : []
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {linhas.map((l, i) => {
+        const m = /^(Falante \d+):\s*(.*)$/.exec(l)
+        return (
+          <p key={i} style={{ fontSize: 14, color: T.text.primary, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
+            {m ? <><b style={{ fontWeight: 650, color: T.brand.primary }}>{m[1]}:</b> {m[2]}</> : l}
+          </p>
+        )
+      })}
+      {parcial ? <p style={{ fontSize: 14, color: T.text.tertiary, lineHeight: 1.7, margin: 0, fontStyle: 'italic' }}>{parcial}</p> : null}
     </div>
   )
 }
@@ -189,7 +226,7 @@ export default function Home() {
   }, [])
 
   const handleNovoTexto = useCallback((t: string) => setTranscricao(t), [])
-  const { gravando, transcrevendo, iniciarGravacao, pararGravacao, pausarGravacao, gravandoPausado, limpar, erro } = useGravador(handleNovoTexto)
+  const { gravando, transcrevendo, iniciarGravacao, pararGravacao, pausarGravacao, gravandoPausado, limpar, erro, fase, parcial, nivel, vozBaixa, conexao } = useTranscricao(handleNovoTexto, { medicoId: medico?.id })
 
   // Cronômetro da gravação (só visual)
   useEffect(() => {
@@ -213,14 +250,10 @@ export default function Home() {
   }
 
   const handleParar = async () => {
-    pararGravacao()
-    setTimeout(() => {
-      if (transcricao && transcricao.trim().length > 10) {
-        handleEstruturar()
-      } else {
-        setEstado('idle')
-      }
-    }, 500)
+    // Espera as últimas frases e a revisão do áudio inteiro antes de gerar o prontuário
+    const final = await pararGravacao()
+    if (final && final.trim().length > 10) handleEstruturar(final)
+    else setEstado('idle')
   }
 
   const handleEstruturar = async (textoParam?: string) => {
@@ -607,8 +640,8 @@ const handleCopiar = () => {
         <div className="nc-grid">
           <div style={{ ...cardBase, height: 'max(520px, calc(100vh - 300px))', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: `1px solid ${T.border.muted}` }}>
-              <OndaAudio ativa={gravando && !gravandoPausado} />
-              {transcrevendo && <span style={{ fontSize: 12, color: T.text.tertiary, whiteSpace: 'nowrap' }}>Transcrevendo…</span>}
+              <OndaAudio ativa={gravando && !gravandoPausado} nivel={nivel} />
+              <StatusConexao conexao={conexao} fase={fase} />
               <span style={{ fontSize: 12, fontWeight: 600, color: T.text.quaternary, background: T.bg.page, padding: '4px 10px', borderRadius: 99, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                 {palavras} palavras
               </span>
@@ -622,13 +655,22 @@ const handleCopiar = () => {
                   <Button variant="secondary" size="sm" onClick={() => { pararGravacao(); setEstado('idle') }}>Voltar</Button>
                 </div>
               )}
-              {transcricao ? (
-                <p style={{ fontSize: 14, color: T.text.primary, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{transcricao}</p>
-              ) : null}
-              {!gravandoPausado && !erro && (
+              {vozBaixa && !gravandoPausado && (
+                <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: T.status.warningBg, color: T.status.warning, fontSize: 13 }}>
+                  <Icon icon={TriangleAlert} size={16} />
+                  <span>O som está chegando bem baixo. Estamos amplificando, mas aproxime o microfone se puder.</span>
+                </div>
+              )}
+              {(transcricao || parcial) ? <TextoTranscricao texto={transcricao} parcial={gravandoPausado ? '' : parcial} /> : null}
+              {transcrevendo ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: T.text.secondary }}>
+                  <Icon icon={LoaderCircle} size={15} color={ONDA} style={{ animation: 'spin 1s linear infinite' }} />
+                  {fase === 'revisando' ? 'Revisando o áudio inteiro para máxima precisão…' : 'Finalizando as últimas frases…'}
+                </span>
+              ) : !gravandoPausado && !erro && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: T.text.tertiary }}>
                   <Icon icon={AudioLines} size={15} color={ONDA} />
-                  {transcricao ? 'Ouvindo…' : 'Aguardando fala do paciente…'}
+                  {transcricao || parcial ? 'Ouvindo…' : 'Aguardando a conversa começar…'}
                 </span>
               )}
             </div>
@@ -638,13 +680,15 @@ const handleCopiar = () => {
                 variant="secondary"
                 icon={gravandoPausado ? Play : Pause}
                 onClick={pausarGravacao}
+                disabled={transcrevendo}
                 style={{ height: 46, flex: '1 1 140px', borderRadius: 12, fontSize: 14 }}
               >
                 {gravandoPausado ? 'Retomar' : 'Pausar'}
               </Button>
-              <Button onClick={handleParar} style={{ height: 46, flex: '3 1 260px', borderRadius: 12, fontSize: 14 }}>
-                <span style={{ width: 11, height: 11, borderRadius: 3, background: '#fff' }} />
-                Encerrar e gerar prontuário
+              <Button onClick={handleParar} disabled={transcrevendo} style={{ height: 46, flex: '3 1 260px', borderRadius: 12, fontSize: 14 }}>
+                {transcrevendo
+                  ? <><Icon icon={LoaderCircle} size={16} style={{ animation: 'spin 1s linear infinite' }} />Finalizando transcrição…</>
+                  : <><span style={{ width: 11, height: 11, borderRadius: 3, background: '#fff' }} />Encerrar e gerar prontuário</>}
               </Button>
             </div>
           </div>

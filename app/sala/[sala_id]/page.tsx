@@ -2,6 +2,7 @@
 import { log } from '@/lib/logger'
 import React, { useEffect, useRef, useState } from 'react'
 import { supabase as sb } from '@/lib/supabase'
+import { useTranscricao } from '@/lib/transcricao/useTranscricao'
 import { MemedPrescricao } from '@/components/MemedPrescricao'
 import { BotaoMemed } from '@/components/BotaoMemed'
 import { tokens } from '@/lib/design-tokens'
@@ -53,8 +54,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [enviandoAnexo, setEnviandoAnexo] = useState(false)
   const anexoInputRef = useRef<HTMLInputElement>(null)
   // Fase 4: Transcrio
-  const [gravando, setGravando] = useState(false)
-  const [gravandoPausado, setGravandoPausado] = useState(false)
   const [transcricaoFinal, setTranscriçãoFinal] = useState('')
   const [prontuarioFinal, setProntuarioFinal] = useState<any>(null)
   const [configAberto, setConfigAberto] = useState(false)
@@ -63,6 +62,10 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([])
   const [videoInputs, setVideoInputs] = useState<MediaDeviceInfo[]>([])
   const [transcricao, setTranscrição] = useState('')
+  // Transcrição: voz do médico + voz do paciente (áudio da chamada) misturadas, ao vivo + revisão final
+  const motor = useTranscricao(t => setTranscrição(t), { obterStream: () => streamRef.current })
+  const gravando = motor.gravando
+  const gravandoPausado = motor.gravandoPausado
   const [processando, setProcessando] = useState(false)
   const [prontuarioModal, setProntuarioModal] = useState(false)
   const [prontuarioData, setProntuarioData] = useState<any>(null)
@@ -72,8 +75,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [carregandoSugestoes, setCarregandoSugestoes] = useState(false)
   const audioContextRef = useRef<AudioContext | null>(null)
   const mixDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null)
-  const dgSocketRef = useRef<WebSocket | null>(null)
-  const dgKeepAliveRef = useRef<any>(null)
   const chatIARef = useRef<HTMLDivElement>(null)
   const mensagensVistasRef = useRef<Set<string>>(new Set())
   const [historicoIAAberto, setHistoricoIAAberto] = useState(false)
@@ -81,8 +82,6 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const [salvando, setSalvando] = useState(false)
   const [salvado, setSalvado] = useState(false)
   const camposRef = useRef<Record<string, string>>({})
-  const recorderRef = useRef<MediaRecorder | null>(null)
-  const chunksRef = useRef<Blob[]>([])
 
   const localRef = useRef<HTMLVideoElement>(null)
   const remoteRef = useRef<HTMLVideoElement>(null)
@@ -231,6 +230,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     pc.ontrack = (e) => {
       if (remoteRef.current && e.streams[0]) {
         remoteRef.current.srcObject = e.streams[0]
+        // Paciente entrou com a gravação já rodando: mistura a voz dele também
+        if (motor.gravando) motor.adicionarFonte(e.streams[0])
         setRemoteConectado(true)
         setTela('chamada')
         setEntrando(false)
@@ -356,11 +357,8 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
   const encerrar = async () => {
     send('encerrar', {})
     await fetch(`/api/sala/${encodeURIComponent(String(sala_id))}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'encerrada', duracao_segundos: timer }) }).catch(() => {})
-    // Para gravacao
-    if (recorderRef.current && recorderRef.current.state !== 'inactive') {
-      recorderRef.current.stop()
-      setGravando(false)
-    }
+    // Para a gravação (o texto final, já revisado, vem na promessa)
+    const textoFinal = motor.gravando || motor.gravandoPausado ? motor.pararGravacao() : Promise.resolve(transcricao)
     encerrarLocal()
     if (papelRef.current === 'paciente') {
       setTimeout(() => { try { window.close() } catch {} }, 3000)
@@ -369,16 +367,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     // Medico: transcreve e gera prontuario
     if (papelRef.current === 'medico') {
       setProcessando(true)
-      await new Promise(res => setTimeout(res, 300))
-      // Prioriza transcrição que já veio do Modo Perfeita via WebSocket
-      let texto = transcricao?.trim() || ''
-      if (!texto || texto.length < 10) {
-        // Fallback: tenta transcrever chunks acumulados em batch
-        log.info('[encerrar] transcrição vazia, tentando batch...')
-        texto = await transcreverAudio()
-      } else {
-        log.info('[encerrar] reutilizando transcrição do Modo Perfeita:', texto.length, 'chars')
-      }
+      const texto = ((await textoFinal) || transcricao || '').trim()
       if (texto && texto.trim().length > 10) {
         await gerarProntuario(texto)
       } else {
@@ -485,157 +474,20 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
 
   const iniciarGravação = async () => {
     if (!streamRef.current) return
-    const audioStream = new MediaStream(streamRef.current.getAudioTracks())
-
-    // Mime pro MediaRecorder (alguns browsers não suportam 'audio/webm' puro)
-    const mimeCandidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus']
-    let chosenMime = ''
-    for (const m of mimeCandidates) {
-      if (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(m)) {
-        chosenMime = m; break
-      }
-    }
-    log.info('[ModoPerfeita] mimeType:', chosenMime || '(default)')
-
-    const recorder = chosenMime
-      ? new MediaRecorder(audioStream, { mimeType: chosenMime })
-      : new MediaRecorder(audioStream)
-    chunksRef.current = []
-    recorderRef.current = recorder
-
-    // ========== Tenta abrir WebSocket Deepgram pra transcrição ao vivo ==========
-    let wsReady = false
-    try {
-      const tokRes = await fetch('/api/deepgram-token', { method: 'POST' })
-      const tokData = await tokRes.json()
-      if (!tokData.access_token) throw new Error('sem token: ' + JSON.stringify(tokData).slice(0, 200))
-
-      // Parâmetros streaming — nova-2 tem streaming estável em pt-br; keyterms (nova-3)
-      // podem ser incompatíveis com streaming, então omitimos.
-      const wsUrl = 'wss://api.deepgram.com/v1/listen?model=nova-3&language=multi&smart_format=true&punctuate=true&interim_results=true&endpointing=500&utterance_end_ms=1500&vad_events=true'
-
-      const ws = new WebSocket(wsUrl, ['bearer', tokData.access_token])
-      dgSocketRef.current = ws
-
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('timeout conectando')), 5000)
-        ws.onopen = () => { clearTimeout(timeout); wsReady = true; resolve() }
-        ws.onerror = (err) => { clearTimeout(timeout); reject(err) }
-      })
-      log.info('[ModoPerfeita] WebSocket Deepgram conectado')
-
-      ws.onmessage = (msg) => {
-        try {
-          const data = JSON.parse(msg.data)
-          // Log TODAS as mensagens pra diagnóstico
-          if (data.type === 'Results') {
-            const alt = data.channel?.alternatives?.[0]
-            const texto = alt?.transcript?.trim()
-            log.info('[DG]', data.is_final ? 'FINAL' : 'interim', '|', texto || '(vazio)')
-            if (data.is_final && texto) {
-              setTranscrição(prev => (prev ? prev + ' ' : '') + texto)
-            }
-          } else {
-            log.info('[DG] msg tipo:', data.type, data)
-          }
-        } catch (err) {
-          log.warn('[DG] parse erro:', msg.data)
-        }
-      }
-
-      ws.onclose = (ev) => {
-        log.info('[ModoPerfeita] WebSocket fechado:', ev.code, ev.reason)
-        if (dgKeepAliveRef.current) { clearInterval(dgKeepAliveRef.current); dgKeepAliveRef.current = null }
-      }
-
-      // KeepAlive cada 8s — Deepgram dropa se passar 10s sem dados
-      dgKeepAliveRef.current = setInterval(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'KeepAlive' }))
-        }
-      }, 8000)
-
-    } catch (err: any) {
-      log.warn('[ModoPerfeita] WebSocket falhou, gravação ficará só pra transcrição final:', err?.message || err)
-      wsReady = false
-    }
-
-    // ========== MediaRecorder: envia chunks pro WS E acumula pro encerramento ==========
-    let chunkCount = 0
-    recorder.ondataavailable = (e) => {
-      if (e.data.size < 500) {
-        log.info('[DG] chunk vazio ignorado:', e.data.size)
-        return
-      }
-      chunkCount++
-      if (chunkCount <= 3 || chunkCount % 20 === 0) {
-        log.info('[DG] chunk #' + chunkCount, 'tamanho:', e.data.size, 'bytes')
-      }
-      chunksRef.current.push(e.data)
-      const ws = dgSocketRef.current
-      if (wsReady && ws && ws.readyState === WebSocket.OPEN) {
-        try { ws.send(e.data) } catch (err) { log.error('[DG] ws send error:', err) }
-      } else {
-        log.warn('[DG] WS nao aberto, chunk perdido. State:', ws?.readyState)
-      }
-    }
-
-    // Chunks de 250ms — streaming suave, Deepgram recomenda 100-500ms
-    recorder.start(250)
-    setGravando(true)
+    await motor.iniciarGravacao()
+    // Paciente já na chamada: inclui a voz dele
+    const remoto = remoteRef.current?.srcObject as MediaStream | null
+    if (remoto) motor.adicionarFonte(remoto)
   }
 
-  const pararGravação = () => {
-    // Envia CloseStream pro Deepgram pra ele finalizar a transcrição
-    const ws = dgSocketRef.current
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      try { ws.send(JSON.stringify({ type: 'CloseStream' })) } catch {}
-      try { ws.close() } catch {}
-    }
-    if (dgKeepAliveRef.current) {
-      clearInterval(dgKeepAliveRef.current)
-      dgKeepAliveRef.current = null
-    }
-    dgSocketRef.current = null
-
-    recorderRef.current?.stop()
-    setGravando(false)
-  }
+  const pararGravação = () => { motor.pararGravacao() }
 
   const toggleGravação = () => {
     if (gravando) pararGravação()
     else iniciarGravação()
   }
 
-  // Transcreve os chunks acumulados via Whisper
-  const pausarGravação = () => {
-    if (!recorderRef.current) return
-    if (recorderRef.current.state === 'recording') {
-      recorderRef.current.pause()
-      setGravandoPausado(true)
-    } else if (recorderRef.current.state === 'paused') {
-      recorderRef.current.resume()
-      setGravandoPausado(false)
-    }
-  }
-
-  const transcreverAudio = async (): Promise<string> => {
-    if (chunksRef.current.length === 0) return transcricao
-    const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
-    if (blob.size < 1000) return transcricao
-    const fd = new FormData()
-    fd.append('audio', new File([blob], 'consulta.webm', { type: 'audio/webm' }))
-    try {
-      const r = await fetch('/api/transcrever', { method: 'POST', body: fd })
-      const d = await r.json()
-      if (d.texto) {
-        const nova = transcricao ? transcricao + ' ' + d.texto : d.texto
-        setTranscrição(nova)
-        return nova
-      }
-    } catch {}
-    return transcricao
-  }
+  const pausarGravação = () => motor.pausarGravacao()
 
   // Gera pronturio a partir da transcrio via Claude
   const gerarProntuario = async (textoTranscrição: string) => {
