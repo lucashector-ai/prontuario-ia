@@ -136,8 +136,11 @@ export default function ConectarCanais() {
       const code: string | null = await new Promise(ok => {
         window.FB.login((r: any) => ok(r?.authResponse?.code || null), {
           config_id: estado.config_whatsapp, response_type: 'code', override_default_response_type: true,
+          // Formato do Cadastro incorporado v4 (igual ao código gerado pela Meta).
           // whatsapp_business_app_onboarding = coexistência: escaneia o QR no app WhatsApp Business do celular
-          extras: { setup: {}, featureType: modo === 'coexistencia' ? 'whatsapp_business_app_onboarding' : '', sessionInfoVersion: '3' },
+          extras: modo === 'coexistencia'
+            ? { version: 'v4', featureType: 'whatsapp_business_app_onboarding' }
+            : { version: 'v4' },
         })
       })
       // os dados do número às vezes chegam logo depois do login
