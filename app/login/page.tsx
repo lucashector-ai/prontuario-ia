@@ -72,7 +72,7 @@ function LoginForm() {
 
         if (data.precisa_trocar_senha) { router.push('/trocar-senha-obrigatoria'); return }
         if (!data.medico.onboarding_concluido) { router.push('/onboarding') }
-        else { router.push('/') }
+        else { router.push('/dashboard') }
         return
       }
 
