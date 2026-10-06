@@ -7,6 +7,7 @@ import {
   LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, Sparkles, MessageCircle,
   CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, PanelLeftClose, PanelLeftOpen,
+  ConciergeBell, DoorOpen,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, Avatar } from '@/components/ui'
@@ -64,6 +65,8 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
     {
       label: 'Atendimento',
       items: [
+        { href: '/recepcao', label: 'Recepção', icon: ConciergeBell },
+        ...(!isRecepcionista ? [{ href: '/consultorio', label: 'Consultório', icon: DoorOpen }] : []),
         ...(!isRecepcionista ? [
           { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
           { href: '/teleconsulta', label: 'Teleconsulta', icon: Video },

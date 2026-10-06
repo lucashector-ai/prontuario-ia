@@ -4,6 +4,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { iniciarPreAtendimento, registrarRespostaEAvancar, getPreConsultaAtiva, marcarPermissaoConcedida, marcarPermissaoNegada } from '@/lib/sofia/preatendimento'
 import { getSofiaConfig } from '@/lib/sofia/config'
 import { transcreverAudioWhatsApp } from '@/lib/sofia/transcribe'
+import { checkinPeloWhatsApp } from '@/lib/atendimento/servidor'
 import { dispararConfirmacoes24h, detectarRespostaConfirmacao24h, notificarMedico, marcarConfirmadoVia, tratarRespostaListaEspera } from '@/lib/sofia/confirmacao'
 import { createClient } from '@supabase/supabase-js'
 import { MODELOS } from '@/lib/ai/models'
@@ -744,6 +745,19 @@ export async function POST(req: NextRequest) {
         }
       }
       
+      // === CHECK-IN PELO WHATSAPP: "cheguei" → senha e posição na fila ===
+      try {
+        const respostaChegada = await checkinPeloWhatsApp({ medicoId: MEDICO_ID, pacienteId: conversa.paciente_id || null, texto })
+        if (respostaChegada) {
+          await supabase.from('whatsapp_mensagens').insert({ conversa_id: conversa.id, tipo: 'enviada', conteudo: respostaChegada, metadata: { ia: true, checkin_chegada: true } })
+          const credsChegada = await getWppCredentials(MEDICO_ID)
+          await enviarWpp(telefone, respostaChegada, credsChegada.token, credsChegada.phoneId)
+          continue
+        }
+      } catch (e) {
+        log.error('Check-in pelo WhatsApp erro:', e)
+      }
+
       // === LISTA DE ESPERA: resposta à oferta de horário ('Quero esse horário' | 'Não posso') ===
       try {
         if (await tratarRespostaListaEspera(telefone, MEDICO_ID, texto)) continue

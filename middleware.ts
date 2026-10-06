@@ -19,7 +19,7 @@ const API_PUBLICA_EXATA = new Set([
   '/api/canais/instagram/desautorizar', '/api/canais/instagram/exclusao',
   '/api/canais/instagram/callback',   // protegido pelo "state" assinado
 ])
-const API_PUBLICA_PREFIXO = ['/api/cron/', '/api/sala/']
+const API_PUBLICA_PREFIXO = ['/api/cron/', '/api/sala/', '/api/painel/']
 
 function apiPublica(pathname: string) {
   const p = pathname.replace(/\/+$/, '')
