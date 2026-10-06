@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, IconButton, Avatar } from '@/components/ui'
 import { useHeaderInfo, tituloDaRota } from '@/components/shell/header-context'
+import { ItemNotificacao, EsqueletoNotificacao } from '@/components/notificacoes/ItemNotificacao'
+import { listarNotificacoes, marcarNotificacao, marcarTodasLidas, destinoDaNotificacao, avisarMudanca, EVENTO_NOTIFICACOES, type Notificacao, type FiltroNotificacoes } from '@/lib/notificacoes'
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
 const T = tokens
@@ -47,6 +49,7 @@ const itemMenu: React.CSSProperties = {
   padding: '9px 10px', borderRadius: 9, fontSize: 13, color: T.text.strong, background: 'transparent',
   border: 'none', cursor: 'pointer', fontFamily: 'inherit',
 }
+const linkNotif: React.CSSProperties = { border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: T.brand.primary, fontFamily: 'inherit', padding: 0 }
 const hoverOn = (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = T.bg.hover }
 const hoverOff = (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = 'transparent' }
 
@@ -64,7 +67,11 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
   const [clinicaAdmin, setClinicaAdmin] = useState<any>(null)
   const [clinica, setClinica] = useState<any>(null)
   const [aberto, setAberto] = useState<null | 'menu' | 'notif' | 'busca'>(null)
-  const [notifs, setNotifs] = useState<any[]>([])
+  const [notifs, setNotifs] = useState<Notificacao[]>([])
+  const [naoLidas, setNaoLidas] = useState(0)
+  const [filtroNotif, setFiltroNotif] = useState<FiltroNotificacoes>('todas')
+  const [notifCarregando, setNotifCarregando] = useState(true)
+  const filtroRef = useRef<FiltroNotificacoes>('todas')
 
   const [busca, setBusca] = useState('')
   const [buscaFocus, setBuscaFocus] = useState(false)
@@ -121,65 +128,66 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
     }
   }, [])
 
-  const carregarNotificacoes = async (medicoId: string) => {
+  // Gera notificações novas a partir da agenda (idempotente) e recarrega o sino
+  const sincronizar = async (clinicaId: string | undefined, medicoId?: string) => {
+    if (!clinicaId) return
     try {
-      // Sincroniza notificacoes (gera novas baseadas na agenda do dia)
-      try {
-        const adm = localStorage.getItem('clinica_admin')
-        const med = localStorage.getItem('medico')
-        const dadosClinica = adm ? JSON.parse(adm) : (med ? JSON.parse(med) : null)
-        const clinicaId = dadosClinica?.clinica_id || dadosClinica?.id
-        if (clinicaId) {
-          await fetch('/api/notificacoes/sincronizar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ clinica_id: clinicaId, medico_id_logado: medicoId })
-          })
-        }
-      } catch {}
-      const r = await fetch(`/api/notificacoes-sofia?medico_id=${medicoId}&nao_lidas=true`)
-      const d = await r.json()
-      if (d.notificacoes) setNotifs(d.notificacoes.map(mapNotif))
+      await fetch('/api/notificacoes/sincronizar', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clinica_id: clinicaId, ...(medicoId ? { medico_id_logado: medicoId } : {}) }),
+      })
     } catch {}
+  }
+
+  const recarregarNotifs = async (filtro = filtroRef.current) => {
+    try {
+      const pg = await listarNotificacoes({ filtro, limite: 8 })
+      if (filtro !== filtroRef.current) return   // trocou de aba no meio
+      setNotifs(pg.itens); setNaoLidas(pg.naoLidas)
+    } catch {} finally { setNotifCarregando(false) }
+  }
+
+  const carregarNotificacoes = async (medicoId: string) => {
+    const med = localStorage.getItem('medico')
+    await sincronizar(med ? JSON.parse(med).clinica_id : undefined, medicoId)
+    await recarregarNotifs()
   }
 
   const carregarNotificacoesClinica = async (clinicaId: string) => {
-    try {
-      try {
-        await fetch('/api/notificacoes/sincronizar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clinica_id: clinicaId })
-        })
-      } catch {}
-      const r = await fetch(`/api/notificacoes-sofia?clinica_id=${clinicaId}&nao_lidas=true`)
-      const d = await r.json()
-      if (d.notificacoes) setNotifs(d.notificacoes.map(mapNotif))
-    } catch {}
+    await sincronizar(clinicaId)
+    await recarregarNotifs()
   }
 
-  const mapNotif = (n: any) => ({
-    id: n.id, titulo: n.titulo, descricao: n.descricao,
-    tempo: formatarTempo(n.criada_em), lida: n.lida,
-    agendamento_id: n.agendamento_id, paciente_id: n.paciente_id, tipo: n.tipo,
-  })
+  // A central (/notificacoes) avisa quando muda algo; o sino acompanha
+  useEffect(() => {
+    const f = () => { recarregarNotifs() }
+    window.addEventListener(EVENTO_NOTIFICACOES, f)
+    return () => window.removeEventListener(EVENTO_NOTIFICACOES, f)
+  }, [])
 
-  const formatarTempo = (iso: string) => {
-    const diff = (Date.now() - new Date(iso).getTime()) / 60000
-    if (diff < 1) return 'agora'
-    if (diff < 60) return `${Math.round(diff)} min atrás`
-    if (diff < 1440) return `${Math.round(diff / 60)}h atrás`
-    return `${Math.round(diff / 1440)}d atrás`
+  const trocarFiltroNotif = (f: FiltroNotificacoes) => {
+    filtroRef.current = f; setFiltroNotif(f); setNotifCarregando(true); recarregarNotifs(f)
   }
 
-  const marcarNotifLida = async (id: string) => {
-    try {
-      await fetch('/api/notificacoes-sofia', {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, lida: true }),
-      })
-      setNotifs(prev => prev.filter((n: any) => n.id !== id))
-    } catch {}
+  // Marcar como lida só tira o destaque — a notificação continua na lista
+  const alternarLida = async (n: Notificacao, lida = !n.lida) => {
+    setNotifs(prev => filtroRef.current === 'nao_lidas' && lida ? prev.filter(x => x.id !== n.id) : prev.map(x => x.id === n.id ? { ...x, lida } : x))
+    setNaoLidas(c => Math.max(0, c + (lida ? -1 : 1)))
+    await marcarNotificacao(n.id, lida)
+    avisarMudanca()
+  }
+
+  const abrirNotif = (n: Notificacao) => {
+    if (!n.lida) alternarLida(n, true)
+    setAberto(null)
+    router.push(destinoDaNotificacao(n))
+  }
+
+  const lerTodas = async () => {
+    setNotifs(prev => filtroRef.current === 'nao_lidas' ? [] : prev.map(x => ({ ...x, lida: true })))
+    setNaoLidas(0)
+    await marcarTodasLidas()
+    avisarMudanca()
   }
 
   // Fecha popovers com clique fora / Esc; ⌘K foca a busca
@@ -326,55 +334,40 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
           <IconButton
             icon={Bell} size={38} title="Notificações"
             active={aberto === 'notif'}
-            badge={notifs.length > 0 ? (notifs.length > 9 ? '9+' : notifs.length) : undefined}
-            onClick={() => setAberto(aberto === 'notif' ? null : 'notif')}
+            badge={naoLidas > 0 ? (naoLidas > 9 ? '9+' : naoLidas) : undefined}
+            onClick={() => { if (aberto !== 'notif') recarregarNotifs(); setAberto(aberto === 'notif' ? null : 'notif') }}
           />
           {aberto === 'notif' && (
-            <div style={{ ...popover, right: 0, width: 340, padding: 0, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px' }}>
-                <span style={{ fontSize: 14, fontWeight: 700 }}>Notificações</span>
-                {notifs.length > 0 && (
-                  <button
-                    onClick={async () => {
-                      await Promise.all(notifs.map((n: any) => fetch('/api/notificacoes-sofia', {
-                        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: n.id, lida: true }),
-                      })))
-                      setNotifs([])
-                    }}
-                    style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, color: T.brand.primary, fontFamily: 'inherit' }}
-                  >Marcar todas como lidas</button>
-                )}
+            <div style={{ ...popover, right: 0, width: 'min(380px, calc(100vw - 24px))', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 8px' }}>
+                <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-.01em' }}>Notificações</span>
+                <button onClick={() => ir('/notificacoes')} style={linkNotif}>Ver tudo</button>
               </div>
-              <div style={{ maxHeight: 380, overflowY: 'auto' }}>
-                {notifs.length === 0 ? (
-                  <div style={{ padding: '28px 16px', textAlign: 'center', fontSize: 13, color: T.text.quaternary, borderTop: `1px solid ${T.border.muted}` }}>Tudo em dia</div>
-                ) : notifs.map((n: any) => (
-                  <button
-                    key={n.id}
-                    onClick={() => {
-                      marcarNotifLida(n.id)
-                      if (n.agendamento_id) router.push('/agenda?ag=' + n.agendamento_id)
-                      else if (n.paciente_id) router.push('/pacientes/' + n.paciente_id)
-                      else router.push('/agenda')
-                      setAberto(null)
-                    }}
-                    style={{ ...itemMenu, borderRadius: 0, gap: 12, padding: '12px 16px', alignItems: 'flex-start', borderTop: `1px solid ${T.border.muted}`, background: n.lida ? '#fff' : T.brand.primarySoftBg }}
-                    onMouseEnter={hoverOn}
-                    onMouseLeave={e => e.currentTarget.style.background = n.lida ? '#fff' : T.brand.primarySoftBg}
-                  >
-                    <span style={{ width: 34, height: 34, borderRadius: 11, flexShrink: 0, display: 'grid', placeItems: 'center', background: T.brand.primaryLight, color: T.brand.primary }}>
-                      <Bell size={16} strokeWidth={1.6} />
-                    </span>
-                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: T.text.primary }}>{n.titulo}</span>
-                      {n.descricao && <span style={{ fontSize: 12, color: T.text.quaternary, lineHeight: 1.4 }}>{n.descricao}</span>}
-                      <span style={{ fontSize: 11.5, color: '#B4B2BF', marginTop: 2 }}>{n.tempo}</span>
-                    </span>
-                    {!n.lida && <span style={{ width: 8, height: 8, borderRadius: '50%', background: T.brand.primary, marginTop: 6, flexShrink: 0 }} />}
-                  </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 16px 8px' }}>
+                {(['todas', 'nao_lidas'] as const).map(f => (
+                  <button key={f} onClick={() => trocarFiltroNotif(f)} style={{
+                    height: 30, padding: '0 12px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                    fontSize: 13, fontWeight: 600, background: filtroNotif === f ? T.brand.primaryLight : 'transparent',
+                    color: filtroNotif === f ? T.brand.primary : T.text.secondary,
+                  }}>{f === 'todas' ? 'Tudo' : `Não lidas${naoLidas ? ` (${naoLidas > 99 ? '99+' : naoLidas})` : ''}`}</button>
+                ))}
+                <span style={{ flex: 1 }} />
+                {naoLidas > 0 && <button onClick={lerTodas} style={{ ...linkNotif, fontSize: 12.5 }}>Marcar todas como lidas</button>}
+              </div>
+              <div style={{ maxHeight: 420, overflowY: 'auto', padding: '0 6px 6px' }}>
+                {notifCarregando && notifs.length === 0 ? (
+                  <><EsqueletoNotificacao compacto /><EsqueletoNotificacao compacto /><EsqueletoNotificacao compacto /></>
+                ) : notifs.length === 0 ? (
+                  <div style={{ padding: '30px 16px', textAlign: 'center', fontSize: 13, color: T.text.quaternary }}>
+                    {filtroNotif === 'nao_lidas' ? 'Nenhuma notificação não lida' : 'Nenhuma notificação ainda'}
+                  </div>
+                ) : notifs.map(n => (
+                  <ItemNotificacao key={n.id} n={n} compacto onAbrir={abrirNotif} onAlternarLida={x => alternarLida(x)} />
                 ))}
               </div>
+              <button onClick={() => ir('/notificacoes')} style={{ ...linkNotif, borderTop: `1px solid ${T.border.muted}`, padding: '11px 16px', width: '100%', textAlign: 'center' }}>
+                Ver todas as notificações
+              </button>
             </div>
           )}
         </div>

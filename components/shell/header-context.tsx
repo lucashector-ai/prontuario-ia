@@ -52,6 +52,7 @@ const TITULOS_ROTA: Array<[string, HeaderInfo]> = [
   ['/configuracoes', { titulo: 'Configurações', descricao: 'Preferências da clínica' }],
   ['/perfil', { titulo: 'Perfil', descricao: 'Seus dados e preferências' }],
   ['/retornos', { titulo: 'Retornos e reativação', descricao: 'Retornos previstos e pacientes para trazer de volta' }],
+  ['/notificacoes', { titulo: 'Notificações', descricao: 'Tudo o que aconteceu na clínica, em um só lugar' }],
   ['/relatorios', { titulo: 'Relatórios', descricao: 'Produtividade, faltas e ocupação da agenda' }],
   ['/faturamento', { titulo: 'Faturamento de convênios', descricao: 'Guias TISS, lotes e recebimentos' }],
   ['/modelos-prontuario', { titulo: 'Modelos de prontuário', descricao: 'Estruturas por especialidade para a IA preencher' }],
