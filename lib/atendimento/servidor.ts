@@ -330,14 +330,16 @@ export async function dadosDoPainel(token: string) {
   if (!setor || !setor.ativo) return null
   const { de } = limitesDoDiaSP(hojeSP())
   const [{ data: chamadas }, { data: clinica }] = await Promise.all([
-    db.from('chamadas_painel').select('id, senha, nome_exibicao, local, criado_em')
-      .eq('setor_id', setor.id).gte('criado_em', de).order('criado_em', { ascending: false }).limit(8),
+    db.from('chamadas_painel').select('id, atendimento_id, senha, nome_exibicao, local, criado_em')
+      .eq('setor_id', setor.id).gte('criado_em', de).order('criado_em', { ascending: false }).limit(30),
     db.from('clinicas').select('nome, logo_url').eq('id', setor.clinica_id).maybeSingle(),
   ])
   return {
     setor: { nome: setor.nome, voz: setor.painel_voz, mensagem: setor.painel_mensagem },
     clinica: { nome: clinica?.nome || null, logo_url: clinica?.logo_url || null },
-    chamadas: chamadas || [],
+    // "Chamar de novo" gera chamada nova (a TV toca de novo), mas a lista mostra cada paciente uma vez
+    chamadas: (chamadas || []).filter((c: any, i, l) => !c.atendimento_id || l.findIndex((x: any) => x.atendimento_id === c.atendimento_id) === i)
+      .slice(0, 8).map(({ atendimento_id, ...c }: any) => c),
   }
 }
 
