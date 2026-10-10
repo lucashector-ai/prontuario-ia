@@ -197,6 +197,7 @@ export function Card({ style, onClick, padding = 18, radius, hover, titulo, acao
   const [h, setH] = useState(false)
   const clicavel = !!onClick || hover
   const on = clicavel && h
+  const semPadding = padding === 0 || padding === '0' || padding === '0px'
   return (
     <div
       {...props}
@@ -216,7 +217,11 @@ export function Card({ style, onClick, padding = 18, radius, hover, titulo, acao
       }}
     >
       {(titulo || acao) && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        // Card sem padding (tabelas/listas até a borda): o cabeçalho ganha o próprio respiro
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+          ...(semPadding ? { padding: '14px 16px', borderBottom: `1px solid ${T.border.muted}` } : { marginBottom: 12 }),
+        }}>
           <h3 style={{ margin: 0, flex: 1, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>{titulo}</h3>
           {acao}
         </div>
