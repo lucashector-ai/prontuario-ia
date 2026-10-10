@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, Sparkles, MessageCircle,
   CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, PanelLeftClose, PanelLeftOpen,
-  ConciergeBell, DoorOpen, HeartPulse, Gauge,
+  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, Avatar } from '@/components/ui'
@@ -17,6 +17,7 @@ import { useChatNaoLidas } from '@/components/shell/useChatNaoLidas'
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
 const T = tokens
+const linkMenu: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: '#9A98A5', whiteSpace: 'nowrap' }
 
 type Item = { href: string; label: string; icon: LucideIcon; emBreve?: boolean; novaAba?: boolean }
 
@@ -49,51 +50,64 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
   const temAcessoAdmin = isClinicaAdmin || isMedicoAdmin
 
   const atendente = ehAtendenteLocal
-  const grupos: { label: string; items: Item[] }[] = atendente ? [
-    { label: 'Atendimento', items: [{ href: '/chat', label: 'Chat', icon: MessageCircle }] },
+  const naoRecep = !isRecepcionista
+  // Seções na ordem do dia a dia da clínica. Cada perfil vê só o que pode usar.
+  const grupos: { id: string; label: string; items: Item[] }[] = atendente ? [
+    { id: 'atendimento', label: 'Atendimento', items: [{ href: '/chat', label: 'Chat', icon: MessageCircle }] },
   ] : [
-    {
-      label: 'Menu principal',
-      items: [
-        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/agenda', label: 'Agenda', icon: Calendar },
-        { href: '/pacientes', label: 'Pacientes', icon: Users },
-        ...(!isRecepcionista ? [{ href: '/historico', label: 'Histórico', icon: Clock }] : []),
-        { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
-      ],
-    },
-    {
-      label: 'Atendimento',
-      items: [
-        { href: '/recepcao', label: 'Recepção', icon: ConciergeBell },
-        { href: '/triagem', label: 'Triagem', icon: HeartPulse },
-        ...(!isRecepcionista ? [{ href: '/consultorio', label: 'Consultório', icon: DoorOpen }] : []),
-        ...(!isRecepcionista ? [
-          { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
-          { href: '/teleconsulta', label: 'Teleconsulta', icon: Video },
-          { href: '/exames', label: 'Analisar exames', icon: ScanSearch },
-          { href: '/assistente-ia', label: 'Assistente IA', icon: Sparkles },
-        ] : []),
-        { href: '/chat', label: 'Chat', icon: MessageCircle },
-      ],
-    },
-    {
-      label: 'Clínica',
-      items: [
-        ...(temAcessoAdmin ? [
-          { href: '/gestao', label: 'Gestão', icon: Gauge },
-          { href: '/minha-clinica', label: 'Minha clínica', icon: Hospital },
-          { href: '/admin', label: 'Painel admin', icon: SlidersHorizontal },
-        ] : []),
-        ...(!isRecepcionista ? [{ href: '/relatorios', label: 'Relatórios', icon: ChartColumnBig }] : []),
-        { href: '/faturamento', label: 'Faturamento TISS', icon: ReceiptText },
-        ...(!isRecepcionista ? [{ href: '/modelos-prontuario', label: 'Modelos de prontuário', icon: LayoutTemplate }] : []),
-        { href: '/formularios', label: 'Formulários', icon: ClipboardList },
-        { href: '/configuracoes/agenda-publica', label: 'Agenda pública', icon: CalendarCheck },
-        { href: '/perfil', label: 'Perfil', icon: UserRound },
-      ],
-    },
+    { id: 'inicio', label: 'Início', items: [
+      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/agenda', label: 'Agenda', icon: Calendar },
+    ] },
+    { id: 'atendimento', label: 'Atendimento', items: [
+      { href: '/recepcao', label: 'Recepção', icon: ConciergeBell },
+      { href: '/triagem', label: 'Triagem', icon: HeartPulse },
+      ...(naoRecep ? [{ href: '/consultorio', label: 'Consultório', icon: DoorOpen }] : []),
+      { href: '/chat', label: 'Chat', icon: MessageCircle },
+    ] },
+    { id: 'pacientes', label: 'Pacientes', items: [
+      { href: '/pacientes', label: 'Pacientes', icon: Users },
+      ...(naoRecep ? [{ href: '/historico', label: 'Histórico', icon: Clock }] : []),
+      { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
+      { href: '/formularios', label: 'Formulários', icon: ClipboardList },
+    ] },
+    { id: 'clinico', label: 'Consulta e IA', items: naoRecep ? [
+      { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
+      { href: '/teleconsulta', label: 'Teleconsulta', icon: Video },
+      { href: '/exames', label: 'Analisar exames', icon: ScanSearch },
+      { href: '/assistente-ia', label: 'Assistente IA', icon: Sparkles },
+      { href: '/modelos-prontuario', label: 'Modelos de prontuário', icon: LayoutTemplate },
+    ] : [] },
+    { id: 'gestao', label: 'Gestão', items: [
+      ...(temAcessoAdmin ? [{ href: '/gestao', label: 'Indicadores', icon: Gauge }] : []),
+      ...(naoRecep ? [{ href: '/relatorios', label: 'Relatórios', icon: ChartColumnBig }] : []),
+      { href: '/faturamento', label: 'Faturamento TISS', icon: ReceiptText },
+    ] },
+    { id: 'config', label: 'Configurações', items: [
+      ...(temAcessoAdmin ? [
+        { href: '/minha-clinica', label: 'Minha clínica', icon: Hospital },
+        { href: '/admin', label: 'Painel admin', icon: SlidersHorizontal },
+      ] : []),
+      { href: '/configuracoes/agenda-publica', label: 'Agenda pública', icon: CalendarCheck },
+      { href: '/perfil', label: 'Perfil', icon: UserRound },
+    ] },
   ]
+
+  // Preferências do menu (por computador/pessoa): seções recolhidas e itens escondidos
+  const [fechadas, setFechadas] = useState<string[]>([])
+  const [ocultos, setOcultos] = useState<string[]>([])
+  const [editando, setEditando] = useState(false)
+  useEffect(() => {
+    try {
+      setFechadas(JSON.parse(localStorage.getItem('c360-menu-fechadas') || '[]'))
+      setOcultos(JSON.parse(localStorage.getItem('c360-menu-ocultos') || '[]'))
+    } catch {}
+  }, [])
+  const salvar = (chave: string, v: string[]) => { try { localStorage.setItem(chave, JSON.stringify(v)) } catch {} }
+  const alternarSecao = (id: string) => setFechadas(l => { const n = l.includes(id) ? l.filter(x => x !== id) : [...l, id]; salvar('c360-menu-fechadas', n); return n })
+  const alternarItem = (href: string) => setOcultos(l => { const n = l.includes(href) ? l.filter(x => x !== href) : [...l, href]; salvar('c360-menu-ocultos', n); return n })
+  const restaurar = () => { setOcultos([]); setFechadas([]); salvar('c360-menu-ocultos', []); salvar('c360-menu-fechadas', []) }
+  const estaAtivo = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
   const usuario = clinicaAdmin || medico
   const sair = () => router.push(sairDaConta())
@@ -154,74 +168,118 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
         )}
       </div>
 
-      {/* Navegação */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' }}>
-        {grupos.map(g => g.items.length === 0 ? null : (
-          <div key={g.label} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {/* rótulo do grupo e divisória ocupam a mesma altura — troca por fade */}
-            <div style={{ position: 'relative', height: 18, flexShrink: 0 }}>
-              <div style={{ fontSize: 12, color: '#9A98A5', padding: '0 10px', ...fade(!rail) }}>{g.label}</div>
-              <div style={{ position: 'absolute', left: 10, width: 32, top: 9, height: 1, background: T.border.default, ...fade(rail) }} />
-            </div>
-            {g.items.map(item => {
-              const ativo = pathname === item.href || pathname.startsWith(item.href + '/')
-              const hv = !item.emBreve && hover === item.href
-              const realce = ativo || hv
-              const contador = item.href === '/chat' ? chatNaoLidas : 0
-              return (
+      {/* Navegação: seções recolhíveis; "Personalizar" esconde o que a pessoa não usa */}
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' }}>
+        {grupos.map(g => {
+          const visiveis = editando ? g.items : g.items.filter(it => !ocultos.includes(it.href) || estaAtivo(it.href))
+          if (!visiveis.length) return null
+          const temAtivo = g.items.some(it => estaAtivo(it.href))
+          const aberta = rail || editando || temAtivo || !fechadas.includes(g.id)
+          const novidade = g.items.some(it => it.href === '/chat' && chatNaoLidas > 0)
+          return (
+            <div key={g.id} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {/* título da seção (clique recolhe) e divisória no modo recolhido — troca por fade */}
+              <div style={{ position: 'relative', height: 24, flexShrink: 0 }}>
                 <button
-                  key={item.href}
-                  title={item.label}
-                  onMouseEnter={() => setHover(item.href)}
-                  onMouseLeave={() => setHover(null)}
-                  onClick={() => {
-                    if (item.emBreve) return
-                    if (item.novaAba) window.open(item.href, '_blank')
-                    else router.push(item.href)
-                  }}
+                  onClick={() => !temAtivo && alternarSecao(g.id)} tabIndex={rail ? -1 : 0}
+                  title={temAtivo ? undefined : aberta ? 'Recolher seção' : 'Mostrar seção'} aria-expanded={aberta}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 11, overflow: 'hidden', flexShrink: 0,
-                    padding: '0 10px 0 16px', height: 34, borderRadius: 9, fontSize: 13.5, fontFamily: 'inherit', textAlign: 'left',
-                    fontWeight: ativo ? 600 : 500,
-                    color: ativo || hv ? T.text.primary : '#5A5865',
-                    background: ativo ? '#fff' : hv ? '#ECECF0' : 'transparent',
-                    transition: 'background .15s, color .15s',
-                    border: `1px solid ${ativo ? T.border.default : 'transparent'}`,
-                    boxShadow: ativo ? T.shadow.sm : 'none',
-                    opacity: item.emBreve ? 0.5 : 1,
-                    cursor: item.emBreve ? 'not-allowed' : 'pointer',
+                    width: '100%', height: 24, display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 10px', border: 'none', borderRadius: 7,
+                    background: 'transparent', cursor: temAtivo ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 650,
+                    letterSpacing: '.04em', textTransform: 'uppercase', color: '#9A98A5', ...fade(!rail),
                   }}
+                  onMouseEnter={e => { if (!temAtivo) e.currentTarget.style.color = T.text.secondary }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#9A98A5' }}
                 >
-                  <span style={{
-                    position: 'relative', display: 'inline-grid', flexShrink: 0, color: realce ? T.brand.primary : 'inherit',
-                    transition: `transform .35s ${T.motion.spring}, color .25s`,
-                    transform: hv ? 'rotate(-8deg) scale(1.06)' : 'none',
-                  }}>
-                    <Icon icon={item.icon} size={18} active={realce} />
-                    {/* Recolhido: selo pequeno sobre o ícone */}
-                    {contador > 0 && (
-                      <span style={{
-                        position: 'absolute', top: -6, right: -8, minWidth: 15, height: 15, padding: '0 4px', boxSizing: 'border-box',
-                        borderRadius: 99, background: T.brand.primary, color: '#fff', fontSize: 9.5, fontWeight: 700, lineHeight: '15px',
-                        textAlign: 'center', border: `2px solid ${T.bg.page}`, opacity: rail ? 1 : 0, transition: 'opacity .2s',
-                      }}>{contador > 9 ? '9+' : contador}</span>
-                    )}
-                  </span>
-                  <span style={{ flex: 1, ...fade(!rail) }}>{item.label}</span>
-                  {contador > 0 && (
-                    <span title={`${contador} conversa${contador === 1 ? '' : 's'} com mensagens não lidas`} style={{
-                      minWidth: 20, height: 20, padding: '0 6px', boxSizing: 'border-box', borderRadius: 99, textAlign: 'center',
-                      background: T.brand.primary, color: '#fff', fontSize: 11, fontWeight: 700, lineHeight: '20px', ...fade(!rail),
-                    }}>{contador > 99 ? '99+' : contador}</span>
-                  )}
-                  {item.emBreve && (
-                    <span style={{ fontSize: 10, fontWeight: 600, color: '#8A6A1F', background: '#FBF3DF', padding: '2px 7px', borderRadius: 99, ...fade(!rail) }}>Em breve</span>
-                  )}
+                  <span style={{ flex: 1, textAlign: 'left' }}>{g.label}</span>
+                  {!aberta && novidade && <span style={{ width: 7, height: 7, borderRadius: '50%', background: T.brand.primary }} />}
+                  {!temAtivo && <ChevronDown size={13} style={{ transition: 'transform .2s', transform: aberta ? 'none' : 'rotate(-90deg)' }} />}
                 </button>
-              )
-            })}
-          </div>
-        ))}
+                <div style={{ position: 'absolute', left: 10, width: 32, top: 12, height: 1, background: T.border.default, ...fade(rail) }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateRows: aberta ? '1fr' : '0fr', transition: 'grid-template-rows .25s ease' }}>
+                <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {visiveis.map(item => {
+                    const ativo = estaAtivo(item.href)
+                    const oculto = ocultos.includes(item.href)
+                    const hv = !item.emBreve && hover === item.href
+                    const realce = ativo || hv
+                    const contador = item.href === '/chat' ? chatNaoLidas : 0
+                    return (
+                      <div key={item.href} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <button
+                          title={item.label}
+                          tabIndex={aberta ? 0 : -1}
+                          onMouseEnter={() => setHover(item.href)}
+                          onMouseLeave={() => setHover(null)}
+                          onClick={() => {
+                            if (editando) { alternarItem(item.href); return }
+                            if (item.emBreve) return
+                            if (item.novaAba) window.open(item.href, '_blank')
+                            else router.push(item.href)
+                          }}
+                          style={{
+                            flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 11, overflow: 'hidden', flexShrink: 0,
+                            padding: '0 10px 0 16px', height: 34, borderRadius: 9, fontSize: 13.5, fontFamily: 'inherit', textAlign: 'left',
+                            fontWeight: ativo ? 600 : 500,
+                            color: ativo || hv ? T.text.primary : '#5A5865',
+                            background: ativo && !editando ? '#fff' : hv ? '#ECECF0' : 'transparent',
+                            transition: 'background .15s, color .15s, opacity .15s',
+                            border: `1px solid ${ativo && !editando ? T.border.default : 'transparent'}`,
+                            boxShadow: ativo && !editando ? T.shadow.sm : 'none',
+                            opacity: item.emBreve || (editando && oculto) ? 0.45 : 1,
+                            cursor: item.emBreve ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          <span style={{
+                            position: 'relative', display: 'inline-grid', flexShrink: 0, color: realce ? T.brand.primary : 'inherit',
+                            transition: `transform .35s ${T.motion.spring}, color .25s`,
+                            transform: hv ? 'rotate(-8deg) scale(1.06)' : 'none',
+                          }}>
+                            <Icon icon={item.icon} size={18} active={realce} />
+                            {contador > 0 && (
+                              <span style={{
+                                position: 'absolute', top: -6, right: -8, minWidth: 15, height: 15, padding: '0 4px', boxSizing: 'border-box',
+                                borderRadius: 99, background: T.brand.primary, color: '#fff', fontSize: 9.5, fontWeight: 700, lineHeight: '15px',
+                                textAlign: 'center', border: `2px solid ${T.bg.page}`, opacity: rail ? 1 : 0, transition: 'opacity .2s',
+                              }}>{contador > 9 ? '9+' : contador}</span>
+                            )}
+                          </span>
+                          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', ...fade(!rail) }}>{item.label}</span>
+                          {editando && !rail && (oculto ? <EyeOff size={15} color={T.text.tertiary} /> : <Eye size={15} color={T.brand.primary} />)}
+                          {!editando && contador > 0 && (
+                            <span title={`${contador} conversa${contador === 1 ? '' : 's'} com mensagens não lidas`} style={{
+                              minWidth: 20, height: 20, padding: '0 6px', boxSizing: 'border-box', borderRadius: 99, textAlign: 'center',
+                              background: T.brand.primary, color: '#fff', fontSize: 11, fontWeight: 700, lineHeight: '20px', ...fade(!rail),
+                            }}>{contador > 99 ? '99+' : contador}</span>
+                          )}
+                          {item.emBreve && (
+                            <span style={{ fontSize: 10, fontWeight: 600, color: '#8A6A1F', background: '#FBF3DF', padding: '2px 7px', borderRadius: 99, ...fade(!rail) }}>Em breve</span>
+                          )}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+
+        {/* Personalizar o menu */}
+        <div style={{ padding: '4px 10px 2px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, ...fade(!rail) }}>
+          {editando ? (
+            <>
+              <button onClick={() => setEditando(false)} style={{ ...linkMenu, color: T.brand.primary, fontWeight: 700 }}>Pronto</button>
+              {(ocultos.length > 0 || fechadas.length > 0) && <button onClick={restaurar} style={linkMenu}>Restaurar padrão</button>}
+            </>
+          ) : (
+            <button onClick={() => setEditando(true)} style={linkMenu} title="Esconder do menu o que você não usa">
+              <Settings2 size={13} /> Personalizar menu{ocultos.length ? ` · ${ocultos.length} oculto${ocultos.length === 1 ? '' : 's'}` : ''}
+            </button>
+          )}
+        </div>
+        {editando && !rail && <div style={{ padding: '0 10px', fontSize: 11.5, color: T.text.tertiary, lineHeight: 1.4 }}>Toque num item para mostrar ou esconder. A página aberta sempre aparece.</div>}
       </nav>
 
       {/* Card de configuração: recolhe altura + fade (some no modo recolhido) */}
