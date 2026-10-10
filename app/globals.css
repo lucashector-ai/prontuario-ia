@@ -109,11 +109,17 @@ input:focus, textarea:focus, select:focus {
   outline: none !important;
   box-shadow: 0 0 0 4px rgba(91,63,208,0.1) !important;
 }
-/* Campo sem borda dentro de uma barra: o foco aparece na barra, não no campo */
-input[style*="border:none"]:focus, textarea[style*="border:none"]:focus {
-  box-shadow: none !important;
+/* Campo sem borda dentro de uma barra (buscas, composer): o foco aparece só na barra.
+   O React escreve "border: none" (com espaço) — os dois jeitos são cobertos — e a
+   classe .c360-campo-interno marca o campo de dentro explicitamente. */
+.c360-campo-interno, .c360-campo-interno:focus,
+input[style*="border:none"], input[style*="border: none"],
+textarea[style*="border:none"], textarea[style*="border: none"] {
+  border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+  outline: none !important; background: transparent !important;
 }
-*:has(> input[style*="border:none"]:focus) {
+*:has(> .c360-campo-interno:focus),
+*:has(> input[style*="border:none"]:focus), *:has(> input[style*="border: none"]:focus) {
   border-color: var(--border-focus) !important;
 }
 

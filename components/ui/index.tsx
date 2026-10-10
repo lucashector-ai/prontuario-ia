@@ -333,7 +333,9 @@ export function Field({ label, children, style, hint }: {
 }
 
 /** Busca = UMA barra com borda; o input interno não tem borda própria. */
-export function SearchInput({ value, onChange, placeholder = 'Buscar…', style, trailing, autoFocus }: {
+export function SearchInput({ value, onChange, placeholder = 'Buscar…', style, trailing, autoFocus, inputRef, onKeyDown }: {
+  inputRef?: React.Ref<HTMLInputElement>
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>
   value: string
   onChange: (v: string) => void
   placeholder?: string
@@ -351,12 +353,15 @@ export function SearchInput({ value, onChange, placeholder = 'Buscar…', style,
     }}>
       <Icon icon={Search} size={16} />
       <input
+        ref={inputRef}
+        onKeyDown={onKeyDown}
         value={value}
         autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setF(true)}
         onBlur={() => setF(false)}
         placeholder={placeholder}
+        className="c360-campo-interno"
         style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: 13.5, color: T.text.primary, padding: 0, minHeight: 0, boxShadow: 'none' }}
       />
       {trailing}

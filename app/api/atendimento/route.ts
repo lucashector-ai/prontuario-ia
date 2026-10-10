@@ -5,11 +5,16 @@
  *   POST { acao: 'checkin', agendamento_id | (paciente_id + medico_id), prioridade? }
  *   POST { acao: 'chamar', medico_id, consultorio_id, atendimento_id?, rechamar? }
  *   POST { acao: 'mudar', id, para: iniciar|finalizar|ausente|voltar_fila|cancelar|prioridade, prioridade?, retorno? }
+ *   POST { acao: 'novo_paciente', nome, telefone?, cpf?, data_nascimento?, convenio?, medico_id? }
+ *   POST { acao: 'atualizar_paciente', paciente_id, telefone?, cpf?, data_nascimento?, convenio?, nr_carteirinha? }
+ *   POST { acao: 'faltou', agendamento_id }
+ *   GET  ?ficha=<paciente_id>&agendamento_id=…  → ficha do paciente para o consultório
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { log } from '@/lib/logger'
 import {
-  ErroAtendimento, chamar, contextoAtendimento, faltaMigration, fazerCheckin, filaDoDia, mudarAtendimento,
+  ErroAtendimento, atualizarPaciente, chamar, contextoAtendimento, faltaMigration, fazerCheckin, fichaDoPaciente, filaDoDia,
+  marcarFalta, mudarAtendimento, novoPaciente,
   type AcaoAtendimento,
 } from '@/lib/atendimento/servidor'
 import { PRIORIDADES } from '@/lib/atendimento/comum'
@@ -30,6 +35,7 @@ export async function GET(req: NextRequest) {
   try {
     const ctx = await contextoAtendimento(req)
     const sp = req.nextUrl.searchParams
+    if (sp.get('ficha')) return NextResponse.json(await fichaDoPaciente(ctx, sp.get('ficha')!, sp.get('agendamento_id')))
     const dia = sp.get('dia')
     return NextResponse.json(await filaDoDia(ctx, {
       dia: dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) ? dia : undefined,
@@ -69,6 +75,24 @@ export async function POST(req: NextRequest) {
         retorno: dias > 0 && dias <= 730 ? { dias, motivo: b.retorno?.motivo || null } : null,
       })
       return NextResponse.json({ atendimento: at })
+    }
+
+    if (b.acao === 'novo_paciente') {
+      const r = await novoPaciente(ctx, { ...b, medicoId: b.medico_id || null })
+      return NextResponse.json({ paciente: r.paciente, ja_existia: r.jaExistia })
+    }
+
+    if (b.acao === 'atualizar_paciente') {
+      if (!b.paciente_id) throw new ErroAtendimento('paciente_id obrigatório')
+      const { acao, paciente_id, ...dados } = b
+      await atualizarPaciente(ctx, paciente_id, dados)
+      return NextResponse.json({ ok: true })
+    }
+
+    if (b.acao === 'faltou') {
+      if (!b.agendamento_id) throw new ErroAtendimento('agendamento_id obrigatório')
+      await marcarFalta(ctx, b.agendamento_id)
+      return NextResponse.json({ ok: true })
     }
 
     throw new ErroAtendimento('Ação desconhecida')

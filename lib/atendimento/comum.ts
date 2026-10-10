@@ -27,8 +27,16 @@ export type Atendimento = {
 /** Agendamento do dia que ainda não fez check-in (aparece na recepção como "esperado"). */
 export type Esperado = {
   id: string; data_hora: string; medico_id: string; tipo: string | null; motivo: string | null; status: string
-  paciente: { id: string; nome: string; telefone: string | null; data_nascimento: string | null } | null
+  paciente: { id: string; nome: string; telefone: string | null; data_nascimento: string | null; cpf?: string | null; convenio?: string | null } | null
   medico: { id: string; nome: string } | null
+}
+
+/** (11) 98765-4321 */
+export function formatarTelefone(t?: string | null) {
+  const d = String(t || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '')
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  return t || ''
 }
 
 export const PRIORIDADES: { valor: Prioridade; label: string; curto: string }[] = [

@@ -109,7 +109,7 @@ export async function filaDoDia(ctx: Contexto, p: { dia?: string; medicoId?: str
   const { de, ate } = limitesDoDiaSP(dia)
   const comCheckin = new Set((atendimentos || []).map((a: any) => a.agendamento_id).filter(Boolean))
   const { data: ags } = ids.length ? await db.from('agendamentos')
-    .select('id, data_hora, medico_id, tipo, motivo, status, paciente:pacientes(id, nome, telefone, data_nascimento), medico:medicos(id, nome)')
+    .select('id, data_hora, medico_id, tipo, motivo, status, paciente:pacientes(id, nome, telefone, data_nascimento, cpf, convenio), medico:medicos(id, nome)')
     .in('medico_id', ids).gte('data_hora', de).lte('data_hora', ate)
     .not('status', 'in', '(cancelado,faltou,realizado)').order('data_hora') : { data: [] as any[] }
 
@@ -387,4 +387,97 @@ export async function checkinPeloWhatsApp(p: { medicoId: string; pacienteId: str
     `Sua senha é *${at.senha}*. Aguarde em: ${setor}.`,
     pos > 0 ? `Você é o ${pos}º da fila. Avisamos aqui quando estiver chegando a sua vez.` : 'Avisamos aqui quando for a sua vez.',
   ].join('\n')
+}
+
+// ── Recepção: cadastro rápido, falta, ficha do paciente ─────────────────────
+
+const soDigitos = (s?: string | null) => String(s || '').replace(/\D/g, '')
+
+/** O paciente pertence a esta clínica (ou a um médico dela)? */
+async function pacienteDaClinica(ctx: Contexto, pacienteId: string) {
+  const { data: p } = await db.from('pacientes').select('*').eq('id', pacienteId).maybeSingle()
+  if (!p) throw new ErroAtendimento('Paciente não encontrado.', 404)
+  const ids = (await medicosDaClinica(ctx)).map((m: any) => m.id)
+  if (p.clinica_id !== ctx.clinica && !ids.includes(p.medico_id)) throw new ErroAtendimento('Paciente de outra clínica.', 403)
+  return p
+}
+
+/**
+ * Cadastro rápido na recepção (quem chega sem cadastro). Se já existe paciente da
+ * clínica com o mesmo CPF ou telefone, devolve esse — sem duplicar.
+ */
+export async function novoPaciente(ctx: Contexto, d: {
+  nome: string; telefone?: string | null; cpf?: string | null; data_nascimento?: string | null; convenio?: string | null; medicoId?: string | null
+}) {
+  const nome = String(d.nome || '').trim().replace(/\s+/g, ' ').slice(0, 160)
+  if (nome.split(' ').length < 2) throw new ErroAtendimento('Digite nome e sobrenome.')
+  const cpf = soDigitos(d.cpf)
+  if (cpf && cpf.length !== 11) throw new ErroAtendimento('CPF precisa ter 11 dígitos.')
+  const tel = soDigitos(d.telefone)
+  if (tel && (tel.length < 10 || tel.length > 13)) throw new ErroAtendimento('Telefone incompleto (com DDD).')
+  if (d.data_nascimento && !/^\d{4}-\d{2}-\d{2}$/.test(d.data_nascimento)) throw new ErroAtendimento('Data de nascimento inválida.')
+
+  const medicos = await medicosDaClinica(ctx)
+  const ids = medicos.map((m: any) => m.id)
+  const medicoId = d.medicoId && ids.includes(d.medicoId) ? d.medicoId : (ctx.medicoId && ids.includes(ctx.medicoId) ? ctx.medicoId : ids[0])
+  if (!medicoId) throw new ErroAtendimento('Cadastre um médico na clínica primeiro.')
+
+  // Já existe? (mesmo CPF ou mesmo telefone, na clínica)
+  if (cpf || tel) {
+    const filtros = [cpf && `cpf.eq.${cpf}`, cpf && `cpf.eq.${cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}`, tel && `telefone.ilike.%${tel.slice(-8)}%`].filter(Boolean).join(',')
+    const { data: iguais } = await db.from('pacientes').select('id, nome, telefone, cpf, data_nascimento, convenio, clinica_id, medico_id')
+      .or(filtros).in('medico_id', ids).limit(5)
+    const mesmo = (iguais || []).find((p: any) => (cpf && soDigitos(p.cpf) === cpf) || (tel && soDigitos(p.telefone).endsWith(tel.slice(-8)) && p.nome?.split(' ')[0]?.toLowerCase() === nome.split(' ')[0].toLowerCase()))
+    if (mesmo) return { paciente: mesmo, jaExistia: true }
+  }
+
+  const linha: Record<string, any> = {
+    nome, medico_id: medicoId, clinica_id: ctx.clinica === ctx.medicoId ? null : ctx.clinica,
+    telefone: tel || null, cpf: cpf || null, data_nascimento: d.data_nascimento || null,
+    convenio: d.convenio ? String(d.convenio).slice(0, 80) : null,
+  }
+  const { data, error } = await db.from('pacientes').insert(linha).select('id, nome, telefone, cpf, data_nascimento, convenio').single()
+  if (error) throw error
+  return { paciente: data, jaExistia: false }
+}
+
+/** Atualiza na chegada os dados que a recepção confere (telefone, convênio...). */
+export async function atualizarPaciente(ctx: Contexto, pacienteId: string, d: Record<string, any>) {
+  await pacienteDaClinica(ctx, pacienteId)
+  const c: Record<string, any> = {}
+  if (d.telefone !== undefined) { const t = soDigitos(d.telefone); if (t && (t.length < 10 || t.length > 13)) throw new ErroAtendimento('Telefone incompleto (com DDD).'); c.telefone = t || null }
+  if (d.cpf !== undefined) { const x = soDigitos(d.cpf); if (x && x.length !== 11) throw new ErroAtendimento('CPF precisa ter 11 dígitos.'); c.cpf = x || null }
+  if (d.data_nascimento !== undefined) c.data_nascimento = /^\d{4}-\d{2}-\d{2}$/.test(d.data_nascimento || '') ? d.data_nascimento : null
+  if (d.convenio !== undefined) c.convenio = d.convenio ? String(d.convenio).slice(0, 80) : null
+  if (d.nr_carteirinha !== undefined) c.nr_carteirinha = d.nr_carteirinha ? String(d.nr_carteirinha).slice(0, 40) : null
+  if (!Object.keys(c).length) return
+  const { error } = await db.from('pacientes').update(c).eq('id', pacienteId)
+  if (error) throw error
+}
+
+/** Paciente agendado não veio: marca falta no agendamento. */
+export async function marcarFalta(ctx: Contexto, agendamentoId: string) {
+  const ids = (await medicosDaClinica(ctx)).map((m: any) => m.id)
+  const { data, error } = await db.from('agendamentos').update({ status: 'faltou' })
+    .eq('id', agendamentoId).in('medico_id', ids).not('status', 'in', '(cancelado,realizado)').select('id').maybeSingle()
+  if (error) throw error
+  if (!data) throw new ErroAtendimento('Agendamento não encontrado ou já encerrado.', 404)
+}
+
+/** Ficha para o consultório: dados clínicos, últimas consultas e a pré-consulta do WhatsApp. */
+export async function fichaDoPaciente(ctx: Contexto, pacienteId: string, agendamentoId?: string | null) {
+  const p = await pacienteDaClinica(ctx, pacienteId)
+  const [{ data: consultas }, ag] = await Promise.all([
+    db.from('consultas').select('id, criado_em, data_hora, avaliacao, diagnostico_principal, plano, cids')
+      .eq('paciente_id', pacienteId).order('criado_em', { ascending: false }).limit(5),
+    agendamentoId ? db.from('agendamentos').select('motivo, tipo, pre_consulta_contexto').eq('id', agendamentoId).maybeSingle() : Promise.resolve({ data: null }),
+  ])
+  return {
+    paciente: {
+      id: p.id, nome: p.nome, telefone: p.telefone, data_nascimento: p.data_nascimento, sexo: p.sexo || p.genero || null,
+      convenio: p.convenio, alergias: p.alergias, comorbidades: p.comorbidades, medicamentos_uso: p.medicamentos_uso,
+    },
+    consultas: consultas || [],
+    agendamento: (ag as any)?.data || null,
+  }
 }

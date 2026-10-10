@@ -52,6 +52,61 @@ export async function mudar(id: string, para: AcaoMudar, extra: { prioridade?: P
   return post<{ atendimento: Atendimento }>('/api/atendimento', { acao: 'mudar', id, para, ...extra })
 }
 
+// ── Recepção: paciente novo, dados, falta, lista de espera ──────────────────
+
+export type PacienteResumo = { id: string; nome: string; telefone: string | null; cpf?: string | null; data_nascimento: string | null; convenio?: string | null }
+
+export async function novoPaciente(d: { nome: string; telefone?: string; cpf?: string; data_nascimento?: string; convenio?: string; medico_id?: string }) {
+  if (ehDemo()) {
+    const p = { id: 'demo-pac-n' + Date.now(), nome: d.nome, telefone: d.telefone || null, cpf: d.cpf || null, data_nascimento: d.data_nascimento || null, convenio: d.convenio || null }
+    PACIENTES_EXTRA.push(p as any)
+    return { paciente: p as PacienteResumo, ja_existia: false }
+  }
+  return post<{ paciente: PacienteResumo; ja_existia: boolean }>('/api/atendimento', { acao: 'novo_paciente', ...d })
+}
+
+export async function atualizarPaciente(pacienteId: string, d: Partial<Record<'telefone' | 'cpf' | 'data_nascimento' | 'convenio' | 'nr_carteirinha', string>>) {
+  if (ehDemo()) return { ok: true }
+  return post<{ ok: true }>('/api/atendimento', { acao: 'atualizar_paciente', paciente_id: pacienteId, ...d })
+}
+
+export async function marcarFalta(agendamentoId: string) {
+  if (ehDemo()) {
+    const e = demo.estado(); e.esperados = e.esperados.filter(x => x.id !== agendamentoId); demo.gravar(e); return { ok: true }
+  }
+  return post<{ ok: true }>('/api/atendimento', { acao: 'faltou', agendamento_id: agendamentoId })
+}
+
+export async function entrarListaEspera(d: { medico_id: string; paciente_id?: string; nome: string; telefone?: string | null; preferencia_periodo: string; observacao?: string }) {
+  if (ehDemo()) return { ok: true }
+  return post('/api/lista-espera', { ...d, tipo: 'consulta', preferencia_dias: [1, 2, 3, 4, 5], prioridade: 0 })
+}
+
+export type Ficha = {
+  paciente: { id: string; nome: string; telefone: string | null; data_nascimento: string | null; sexo: string | null; convenio: string | null; alergias: string | null; comorbidades: string | null; medicamentos_uso: string | null }
+  consultas: { id: string; criado_em: string; data_hora: string | null; avaliacao: string | null; diagnostico_principal: string | null; plano: string | null; cids: any }[]
+  agendamento: { motivo: string | null; tipo: string | null; pre_consulta_contexto: string | null } | null
+}
+
+export async function carregarFicha(pacienteId: string, agendamentoId?: string | null): Promise<Ficha> {
+  if (ehDemo()) {
+    await espera()
+    const e = demo.estado()
+    const p = [...e.esperados.map(x => x.paciente), ...PACIENTES_EXTRA].find(x => x?.id === pacienteId)
+    const dias = (n: number) => new Date(Date.now() - n * 864e5).toISOString()
+    return {
+      paciente: { id: pacienteId, nome: p?.nome || 'Paciente', telefone: null, data_nascimento: p?.data_nascimento || null, sexo: null, convenio: 'Unimed', alergias: 'Dipirona', comorbidades: 'Hipertensão arterial', medicamentos_uso: 'Losartana 50 mg 1x/dia' },
+      consultas: [
+        { id: 'd1', criado_em: dias(42), data_hora: null, avaliacao: 'Hipertensão arterial controlada. Solicitados exames de rotina.', diagnostico_principal: 'Hipertensão essencial', plano: 'Manter losartana. Retorno com exames.', cids: [{ codigo: 'I10', descricao: 'Hipertensão essencial' }] },
+        { id: 'd2', criado_em: dias(160), data_hora: null, avaliacao: 'Cefaleia tensional.', diagnostico_principal: 'Cefaleia tensional', plano: 'Analgesia e higiene do sono.', cids: [{ codigo: 'G44.2', descricao: 'Cefaleia tensional' }] },
+      ],
+      agendamento: { motivo: 'Retorno com exames', tipo: 'retorno', pre_consulta_contexto: 'Diz que a pressão tem ficado em 13x8. Dor de cabeça leve 2x na semana. Trouxe os exames de sangue.' },
+    }
+  }
+  const q = new URLSearchParams({ ficha: pacienteId, ...(agendamentoId ? { agendamento_id: agendamentoId } : {}) })
+  return api<Ficha>('/api/atendimento?' + q)
+}
+
 // ── Configuração ─────────────────────────────────────────────────────────────
 
 export async function carregarConfig(): Promise<Config> {
