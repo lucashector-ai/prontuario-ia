@@ -13,6 +13,7 @@ import { carregarPainel, type Chamada, type DadosPainel } from '@/lib/atendiment
 import { fraseChamada } from '@/lib/atendimento/comum'
 
 const INTERVALO_MS = 2500
+const VEZES_FALADA = 2
 const FUNDO = 'radial-gradient(1200px 700px at 15% 0%, #3B2A8C 0%, #221A55 45%, #150F36 100%)'
 
 export default function PainelPage({ params }: { params: { token: string } }) {
@@ -56,6 +57,7 @@ export default function PainelPage({ params }: { params: { token: string } }) {
     const fim = setTimeout(resolve, 9000)
     u.onend = () => { clearTimeout(fim); resolve() }
     u.onerror = () => { clearTimeout(fim); resolve() }
+    window.speechSynthesis.cancel()   // nada acumulado na fila de voz do navegador
     window.speechSynthesis.speak(u)
   }), [])
 
@@ -67,7 +69,8 @@ export default function PainelPage({ params }: { params: { token: string } }) {
       setDestaque(true)
       if (somRef.current) {
         await tocarAviso()
-        if (vozRef.current) { await falar(fraseChamada(c)); await new Promise(r => setTimeout(r, 400)); await falar(fraseChamada(c)) }
+        // Fala exatamente 2 vezes e para
+        if (vozRef.current) for (let i = 0; i < VEZES_FALADA; i++) { if (i) await new Promise(r => setTimeout(r, 700)); await falar(fraseChamada(c)) }
       } else {
         await new Promise(r => setTimeout(r, 4000))
       }
@@ -105,7 +108,8 @@ export default function PainelPage({ params }: { params: { token: string } }) {
         if (!primeiraCarga.current && d.chamadas.length && d.chamadas[0].id !== ultimaVista.current) {
           const ate = ultimaVista.current ? ids.indexOf(ultimaVista.current) : -1
           const novas = (ate === -1 ? d.chamadas.slice(0, 1) : d.chamadas.slice(0, ate)).reverse()
-          fila.current.push(...novas)
+          // Várias chamadas de uma vez (ex.: TV voltando da queda de internet): anuncia só a mais recente
+          fila.current = novas.slice(-1)
           anunciarFila()
         }
         ultimaVista.current = d.chamadas[0]?.id || ultimaVista.current
