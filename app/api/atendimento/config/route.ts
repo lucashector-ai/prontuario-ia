@@ -39,6 +39,7 @@ function campos(tipo: string, b: any) {
     if (typeof b.painel_voz === 'boolean') c.painel_voz = b.painel_voz
     if (typeof b.avisar_whatsapp === 'boolean') c.avisar_whatsapp = b.avisar_whatsapp
     if (typeof b.usa_triagem === 'boolean') c.usa_triagem = b.usa_triagem
+    if (typeof b.totem_ativo === 'boolean') c.totem_ativo = b.totem_ativo
     if (b.painel_mensagem !== undefined) c.painel_mensagem = String(b.painel_mensagem || '').slice(0, 200) || null
   }
   return c
@@ -89,6 +90,7 @@ export async function PATCH(req: NextRequest) {
     const b = await req.json().catch(() => ({}))
     const c = campos(b.tipo, b)
     if (b.tipo === 'setor' && b.novo_link) c.painel_token = crypto.randomUUID().replace(/-/g, '')
+    if (b.tipo === 'setor' && b.novo_link_totem) c.totem_token = crypto.randomUUID().replace(/-/g, '')
     if (b.tipo === 'consultorio' && b.setor_id) {
       const { data: setor } = await db.from('setores').select('id').eq('id', b.setor_id).eq('clinica_id', ctx.clinica).maybeSingle()
       if (!setor) throw new ErroAtendimento('Setor inválido.')

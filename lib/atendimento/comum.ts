@@ -10,7 +10,7 @@ export type ExibicaoPainel = 'senha' | 'senha_nome' | 'nome_completo'
 
 export type Setor = {
   id: string; nome: string; ordem: number; ativo: boolean
-  painel_token: string; painel_exibicao: ExibicaoPainel; painel_voz: boolean; painel_mensagem: string | null; avisar_whatsapp: boolean; usa_triagem?: boolean
+  painel_token: string; painel_exibicao: ExibicaoPainel; painel_voz: boolean; painel_mensagem: string | null; avisar_whatsapp: boolean; usa_triagem?: boolean; totem_ativo?: boolean; totem_token?: string | null
 }
 export type Consultorio = { id: string; setor_id: string; nome: string; ordem: number; ativo: boolean }
 
@@ -165,3 +165,24 @@ export function sugerirRisco(v: SinaisVitais): { risco: Risco; motivos: string[]
 /** IMC (peso em kg, altura em cm). */
 export const imc = (peso?: number | null, altura?: number | null) =>
   peso && altura ? Math.round((peso / Math.pow(altura / 100, 2)) * 10) / 10 : null
+
+/** CPF com dígitos verificadores válidos (evita tentativa aleatória no totem). */
+export function cpfValido(cpf: string) {
+  const d = String(cpf || '').replace(/\D/g, '')
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false
+  const dv = (n: number) => {
+    let s = 0
+    for (let i = 0; i < n; i++) s += Number(d[i]) * (n + 1 - i)
+    const r = (s * 10) % 11
+    return r === 10 ? 0 : r
+  }
+  return dv(9) === Number(d[9]) && dv(10) === Number(d[10])
+}
+
+/** Nome mínimo para telas públicas (totem): "Mariana C." */
+export function nomeMinimo(nome?: string | null) {
+  const p = String(nome || '').trim().split(/\s+/).filter(Boolean)
+  if (!p.length) return null
+  const ultimo = p.length > 1 ? p[p.length - 1] : ''
+  return ultimo ? `${p[0]} ${ultimo[0].toUpperCase()}.` : p[0]
+}

@@ -71,3 +71,14 @@ describe('triagem', () => {
     expect(imc(null, 180)).toBeNull()
   })
 })
+
+import { cpfValido } from '../atendimento/comum'
+describe('totem', () => {
+  it('valida CPF pelos dígitos verificadores', () => {
+    expect(cpfValido('123.456.789-09')).toBe(true)
+    expect(cpfValido('12345678909')).toBe(true)
+    expect(cpfValido('123.456.789-00')).toBe(false)
+    expect(cpfValido('111.111.111-11')).toBe(false)
+    expect(cpfValido('1234567890')).toBe(false)
+  })
+})

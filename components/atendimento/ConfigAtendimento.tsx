@@ -110,6 +110,7 @@ function CartaoSetor({ setor, consultorios, salvar, recarregar }: {
   useEffect(() => { setNome(setor.nome); setMensagem(setor.painel_mensagem || '') }, [setor])
 
   const link = typeof window !== 'undefined' ? `${window.location.origin}/painel/${setor.painel_token}${ehDemo() ? '?demo=1' : ''}` : ''
+  const linkTotem = typeof window !== 'undefined' && (setor.totem_token || ehDemo()) ? `${window.location.origin}/totem/${ehDemo() ? 'demo?demo=1' : setor.totem_token}` : ''
   const patch = (c: any, ok?: string) => salvar('PATCH', { tipo: 'setor', id: setor.id, ...c }, ok)
 
   const copiar = async () => { try { await navigator.clipboard.writeText(link); notificar('Link copiado — abra na TV') } catch { notificar('Não deu para copiar. Selecione o link e copie.', 'erro') } }
@@ -156,6 +157,22 @@ function CartaoSetor({ setor, consultorios, salvar, recarregar }: {
           <Switch checked={setor.painel_voz} onChange={v => patch({ painel_voz: v })} label="Chamar por voz" descricao="A TV fala a senha, o nome e o consultório." />
           <Switch checked={setor.avisar_whatsapp} onChange={v => patch({ avisar_whatsapp: v })} label="Avisar no WhatsApp" descricao="“Você é o próximo” e “É a sua vez” para o paciente." />
           <Switch checked={!!setor.usa_triagem} onChange={v => patch({ usa_triagem: v }, v ? 'Triagem ligada: o check-in agora vai para a triagem' : 'Triagem desligada')} label="Triagem antes do médico" descricao="Enfermagem registra sinais vitais e a cor de risco; a fila do médico ordena pela gravidade." />
+        </div>
+
+        <div style={{ padding: 12, borderRadius: 12, border: `1px solid ${T.border.default}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Switch checked={!!setor.totem_ativo} onChange={v => patch({ totem_ativo: v }, v ? 'Totem ligado — abra o link no tablet da entrada' : 'Totem desligado')}
+            label="Totem de autoatendimento" descricao="Tablet na entrada: o paciente confirma a chegada pelo CPF ou pega senha para o balcão." />
+          {setor.totem_ativo && linkTotem && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Input value={linkTotem} readOnly onFocus={e => e.currentTarget.select()} className="mono" style={{ flex: '1 1 300px', fontSize: 12.5 }} aria-label="Link do totem" />
+              <Button variant="secondary" icon={Copy} onClick={async () => { try { await navigator.clipboard.writeText(linkTotem); notificar('Link do totem copiado') } catch {} }}>Copiar</Button>
+              <Button variant="secondary" icon={ExternalLink} onClick={() => window.open(linkTotem, '_blank')}>Abrir</Button>
+              <IconButton icon={RefreshCw} size={36} variant="outline" title="Gerar link novo do totem" onClick={async () => {
+                if (await confirmar({ titulo: 'Gerar link novo do totem?', mensagem: 'O tablet com o link antigo para de funcionar.', confirmar: 'Gerar novo link' })) patch({ novo_link_totem: true }, 'Link novo do totem gerado')
+              }} />
+            </div>
+          )}
+          {setor.totem_ativo && <div style={{ fontSize: 12, color: T.text.tertiary }}>Dica: com impressora térmica, abra o link com <span className="mono">?imprimir=1</span> no Chrome em modo quiosque para imprimir a senha sozinho.</div>}
         </div>
 
         <Field label="Mensagem no rodapé da TV (opcional)">

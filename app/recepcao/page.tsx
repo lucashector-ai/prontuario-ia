@@ -10,14 +10,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowUpDown, CalendarPlus, Check, CheckCheck, Clock, DoorOpen, Hourglass, MessageCircle, MonitorPlay, Printer, RotateCcw, Settings2, Stethoscope, UserCheck, UserPlus, UserX, Users, XCircle,
+  ArrowUpDown, CalendarPlus, Check, CheckCheck, Clock, DoorOpen, Hourglass, Megaphone, MessageCircle, Ticket, MonitorPlay, Printer, RotateCcw, Settings2, Stethoscope, UserCheck, UserPlus, UserX, Users, XCircle,
 } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
 import { usePageHeader } from '@/components/shell/header-context'
 import { Badge, Button, Card, EmptyState, Field, IconButton, Input, KpiCard, Modal, ModalAcoes, SearchInput, SegmentedControl, Select } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { useFila } from '@/lib/atendimento/useFila'
-import { abrirFicha, atualizarPaciente, avisarFila, carregarConfig, checkin, ehDemo, marcarFalta, mudar, resolverSaida, whatsappRetorno, type Config, type Fila, type Saida } from '@/lib/atendimento/cliente'
+import { abrirFicha, atualizarPaciente, avisarFila, chamarBalcao, concluirBalcao, carregarConfig, checkin, ehDemo, marcarFalta, mudar, resolverSaida, whatsappRetorno, type Config, type Fila, type Saida, type SenhaBalcao } from '@/lib/atendimento/cliente'
 import { formatarTelefone, minutosDesde, ordenarFila, prioridadePelaIdade, type Atendimento, type Esperado, type Prioridade } from '@/lib/atendimento/comum'
 import { EscolhaPrioridade, ModalSenha, SeloPrioridade, SeloRisco, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade, imprimirSenha } from '@/components/atendimento/partes'
 import { NovoAtendimento } from '@/components/atendimento/NovoAtendimento'
@@ -139,6 +139,9 @@ export default function RecepcaoPage() {
 
       {/* Médicos agora */}
       {fila && fila.medicos.length > 0 && <MedicosAgora fila={fila} config={config} agora={agora} />}
+
+      {/* Senhas do balcão (totem / quem chegou sem horário) */}
+      {fila?.balcao && fila.balcao.length > 0 && <Balcao senhas={fila.balcao} agora={agora} onAtender={() => setNovo(true)} onMudou={() => { avisarFila(); recarregar() }} />}
 
       {/* Saindo do consultório: retorno e recados do médico para a recepção */}
       {fila?.saidas && fila.saidas.length > 0 && <SaindoDoConsultorio saidas={fila.saidas} onMudou={() => { avisarFila(); recarregar() }} />}
@@ -455,5 +458,58 @@ function NomePaciente({ id, nome }: { id?: string | null; nome?: string | null }
       border: 'none', background: 'none', padding: 0, cursor: 'pointer', font: 'inherit', color: 'inherit', textAlign: 'left',
       textDecoration: 'underline', textDecorationColor: T.border.strong, textUnderlineOffset: 3,
     }}>{nome || 'Paciente'}</button>
+  )
+}
+
+/** Senhas do balcão: quem pegou senha no totem sem horário (ou sem CPF). A recepção chama na TV e atende. */
+function Balcao({ senhas, agora, onAtender, onMudou }: { senhas: SenhaBalcao[]; agora: number; onAtender: () => void; onMudou: () => void }) {
+  const [guiche, setGuiche] = useState('Recepção')
+  const [chamando, setChamando] = useState(false)
+  useEffect(() => { try { setGuiche(localStorage.getItem('c360-guiche') || 'Recepção') } catch {} }, [])
+  const trocarGuiche = (v: string) => { setGuiche(v); try { localStorage.setItem('c360-guiche', v) } catch {} }
+  const aguardando = senhas.filter(s => s.status === 'aguardando')
+  const chamadas = senhas.filter(s => s.status === 'chamado')
+
+  const chamar = async (id?: string) => {
+    setChamando(true)
+    try {
+      const r = await chamarBalcao({ id, guiche: guiche.trim() || 'Recepção' })
+      if (r.fila_vazia || !r.senha) notificar('Nenhuma senha aguardando', 'info')
+      else notificar(`Chamando ${r.senha.senha} no painel`)
+      onMudou()
+    } catch (e: any) { notificar(e.message, 'erro') } finally { setChamando(false) }
+  }
+  const concluir = async (s: SenhaBalcao, status: 'atendido' | 'desistiu') => {
+    try { await concluirBalcao(s.id, status); onMudou() } catch (e: any) { notificar(e.message, 'erro') }
+  }
+
+  return (
+    <Card padding={0}>
+      <div style={cabecalho}>
+        <span style={{ ...tituloCard, display: 'inline-flex', alignItems: 'center', gap: 8 }}><Ticket size={17} color={T.brand.primary} /> Senhas no balcão · {aguardando.length}</span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Input value={guiche} onChange={e => trocarGuiche(e.target.value)} aria-label="Nome do guichê" title="Como a TV chama este balcão" style={{ width: 130, height: 32 }} />
+          <Button size="sm" icon={Megaphone} onClick={() => chamar()} disabled={chamando || !aguardando.length}>{aguardando.length ? `Chamar ${aguardando[0].senha}` : 'Sem senhas'}</Button>
+        </div>
+      </div>
+      {chamadas.map(s => (
+        <div key={s.id} style={{ ...linha, background: T.brand.primarySubtle }}>
+          <SenhaChip senha={s.senha} destaque />
+          <span style={{ flex: 1, fontSize: 13 }}>Chamada{s.guiche ? ` · ${s.guiche}` : ''} · {s.motivo === 'sem_cpf' ? 'não sabia o CPF' : 'sem horário'}</span>
+          <Button size="sm" icon={UserPlus} onClick={() => { concluir(s, 'atendido'); onAtender() }}>Atender</Button>
+          <IconButton icon={RotateCcw} size={30} title="Chamar de novo" onClick={() => chamar(s.id)} />
+          <IconButton icon={XCircle} size={30} tone="danger" title="Desistiu / não apareceu" onClick={() => concluir(s, 'desistiu')} />
+        </div>
+      ))}
+      {aguardando.map(s => (
+        <div key={s.id} style={linha}>
+          <SenhaChip senha={s.senha} />
+          <span style={{ flex: 1, fontSize: 13, color: T.text.secondary, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            há {esperaTexto(minutosDesde(s.criado_em, agora))} · {s.origem === 'totem' ? 'totem' : 'balcão'} <SeloPrioridade prioridade={s.prioridade} />
+          </span>
+          <Button size="sm" variant="secondary" onClick={() => chamar(s.id)} disabled={chamando}>Chamar</Button>
+        </div>
+      ))}
+    </Card>
   )
 }

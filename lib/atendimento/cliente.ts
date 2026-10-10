@@ -6,7 +6,7 @@
  * chamar no consultório de uma aba faz a TV de outra aba (/painel/demo?demo=1) falar.
  */
 import {
-  hojeSP, nomeNoPainel, ordenarFila, prefixoSenha, prioridadePelaIdade,
+  hojeSP, nomeMinimo, nomeNoPainel, ordenarFila, prefixoSenha, prioridadePelaIdade,
   type Atendimento, type Consultorio, type Esperado, type Prioridade, type Setor,
 } from './comum'
 
@@ -16,7 +16,8 @@ export type Saida = Atendimento & {
   saida_status?: 'pendente' | 'resolvida' | null; saida_obs?: string | null; saida_itens?: string[] | null; retorno_id?: string | null
   retorno?: { id: string; data_prevista: string; motivo: string | null; status: string; agendamento_id: string | null } | null
 }
-export type Fila = { dia: string; atendimentos: Atendimento[]; esperados: Esperado[]; medicos: { id: string; nome: string; consultorio_id: string | null }[]; saidas?: Saida[] }
+export type SenhaBalcao = { id: string; senha: string; prioridade: Prioridade; motivo: string | null; status: 'aguardando' | 'chamado'; criado_em: string; chamado_em: string | null; guiche: string | null; origem: string }
+export type Fila = { dia: string; atendimentos: Atendimento[]; esperados: Esperado[]; medicos: { id: string; nome: string; consultorio_id: string | null }[]; saidas?: Saida[]; balcao?: SenhaBalcao[] }
 
 /** Aviso que aparece no canto da tela (usado pelo modo demonstração; no real vem das notificações). */
 export const EVENTO_AVISO = 'c360:aviso'
@@ -132,6 +133,52 @@ export async function whatsappRetorno(id: string) {
   return post<{ ok: true }>('/api/atendimento', { acao: 'whatsapp_retorno', id })
 }
 
+// ── Balcão (senhas de quem chega sem horário) ───────────────────────────────
+
+export async function chamarBalcao(p: { id?: string; guiche?: string }) {
+  if (ehDemo()) return demo.chamarBalcao(p)
+  return post<{ senha: SenhaBalcao | null; fila_vazia: boolean }>('/api/atendimento', { acao: 'chamar_balcao', ...p })
+}
+export async function concluirBalcao(id: string, status: 'atendido' | 'desistiu') {
+  if (ehDemo()) { const e = demo.estado(); e.balcao = (e.balcao || []).filter(x => x.id !== id); demo.gravar(e); return { ok: true } }
+  return post<{ ok: true }>('/api/atendimento', { acao: 'concluir_balcao', id, status })
+}
+export async function senhaBalcao(prioridade: Prioridade) {
+  if (ehDemo()) return demo.senhaBalcao(prioridade)
+  return post<{ senha: string; na_frente: number }>('/api/atendimento', { acao: 'senha_balcao', prioridade })
+}
+
+// ── Totem (público, pelo link do totem) ──────────────────────────────────────
+
+export type AgendamentoTotem = { id: string; hora: string; medico: string | null; paciente: string | null; senha: string | null }
+const totemApi = <T,>(token: string, corpo?: any) => token === 'demo' || ehDemo()
+  ? null
+  : api<T>(`/api/totem/${encodeURIComponent(token)}`, corpo ? { method: 'POST', body: JSON.stringify(corpo) } : undefined)
+
+export async function totemDados(token: string) {
+  return (await totemApi<{ setor: string; clinica: string | null; logo_url: string | null }>(token)) || { setor: 'Recepção', clinica: 'Clínica Demonstração', logo_url: null }
+}
+export async function totemBuscar(token: string, cpf: string) {
+  const r = totemApi<{ agendamentos: AgendamentoTotem[] }>(token, { acao: 'buscar', cpf })
+  if (r) return r
+  await espera()
+  const e = demo.estado()
+  const comCheckin = new Map(e.atendimentos.filter(a => a.agendamento_id).map(a => [a.agendamento_id, a.senha]))
+  const ag = e.esperados[0]
+  return { agendamentos: ag ? [{ id: ag.id, hora: new Date(ag.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), medico: ag.medico?.nome || null, paciente: nomeMinimo(ag.paciente?.nome), senha: comCheckin.get(ag.id) || null }] : [] }
+}
+export async function totemCheckin(token: string, cpf: string, agendamentoId: string, prioridade: Prioridade | null) {
+  const r = totemApi<{ senha: string; ja_existia: boolean; medico: string | null; nome: string | null; prioridade: Prioridade }>(token, { acao: 'checkin', cpf, agendamento_id: agendamentoId, prioridade })
+  if (r) return r
+  const { atendimento: a, ja_existia } = await demo.checkin({ agendamento_id: agendamentoId, prioridade: prioridade || undefined })
+  return { senha: a.senha, ja_existia, medico: a.medico?.nome || null, nome: nomeMinimo(a.paciente?.nome), prioridade: a.prioridade }
+}
+export async function totemSenha(token: string, prioridade: Prioridade, motivo: string) {
+  const r = totemApi<{ senha: string; na_frente: number }>(token, { acao: 'senha', prioridade, motivo })
+  if (r) return r
+  return demo.senhaBalcao(prioridade)
+}
+
 // ── Triagem ──────────────────────────────────────────────────────────────────
 
 export type Triagem = {
@@ -229,7 +276,7 @@ export const avisarFila = () => { if (typeof window !== 'undefined') window.disp
 
 // ── Demonstração ─────────────────────────────────────────────────────────────
 
-type EstadoDemo = Fila & Config & { chamadas: (Chamada & { setor_id: string })[]; contador: Record<string, number>; saidas?: Saida[]; triagens?: Record<string, Triagem> }
+type EstadoDemo = Fila & Config & { chamadas: (Chamada & { setor_id: string })[]; contador: Record<string, number>; saidas?: Saida[]; triagens?: Record<string, Triagem>; balcao?: SenhaBalcao[] }
 const CHAVE = 'c360-demo-fila-v1'
 
 const demo = {
@@ -251,7 +298,7 @@ const demo = {
     const e = this.estado()
     const so = <T extends { medico_id: string }>(l: T[]) => (medicoId ? l.filter(x => x.medico_id === medicoId) : l)
     const comCheckin = new Set(e.atendimentos.map(a => a.agendamento_id))
-    return { dia: e.dia, medicos: e.medicos, atendimentos: so(e.atendimentos), esperados: so(e.esperados).filter(x => !comCheckin.has(x.id)), saidas: medicoId ? [] : (e.saidas || []) }
+    return { dia: e.dia, medicos: e.medicos, atendimentos: so(e.atendimentos), esperados: so(e.esperados).filter(x => !comCheckin.has(x.id)), saidas: medicoId ? [] : (e.saidas || []), balcao: medicoId ? [] : (e.balcao || []) }
   },
   async checkin(p: { agendamento_id?: string; paciente_id?: string; medico_id?: string; prioridade?: Prioridade }) {
     await espera()
@@ -318,6 +365,29 @@ const demo = {
     if (para === 'cancelar') at.status = 'cancelado'
     this.gravar(e)
     return { atendimento: at }
+  },
+  async senhaBalcao(prioridade: Prioridade) {
+    await espera()
+    const e = this.estado()
+    const pref = prioridade === 'normal' ? 'R' : 'RP'
+    e.contador[pref] = (e.contador[pref] || 0) + 1
+    const senha = pref + String(e.contador[pref]).padStart(3, '0')
+    const na_frente = (e.balcao || []).filter(x => x.status === 'aguardando').length
+    e.balcao = [...(e.balcao || []), { id: 'demo-bal-' + Date.now(), senha, prioridade, motivo: 'sem_horario', status: 'aguardando', criado_em: new Date().toISOString(), chamado_em: null, guiche: null, origem: 'totem' }]
+    this.gravar(e)
+    return { senha, na_frente }
+  },
+  async chamarBalcao(p: { id?: string; guiche?: string }) {
+    await espera()
+    const e = this.estado()
+    const lista = e.balcao || []
+    const s = p.id ? lista.find(x => x.id === p.id) : ordenarFila(lista.filter(x => x.status === 'aguardando').map(x => ({ ...x, horario_previsto: null, chegada_em: x.criado_em })))[0]
+    if (!s) return { senha: null, fila_vazia: true }
+    const alvo = lista.find(x => x.id === s.id)!
+    Object.assign(alvo, { status: 'chamado', chamado_em: new Date().toISOString(), guiche: p.guiche || 'Recepção' })
+    e.chamadas.unshift({ id: 'demo-ch-' + Date.now(), setor_id: e.setores[0].id, senha: alvo.senha, nome_exibicao: null, local: alvo.guiche || 'Recepção', criado_em: new Date().toISOString() })
+    this.gravar(e)
+    return { senha: alvo, fila_vazia: false }
   },
   async chamarTriagem(p: { consultorio_id: string | null; atendimento_id?: string; rechamar?: boolean }) {
     await espera()
@@ -389,7 +459,7 @@ export const pacientesDemo = () => PACIENTES_EXTRA
 function semente(): EstadoDemo {
   const dia = hojeSP()
   const hora = (h: number, m = 0) => new Date(`${dia}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00-03:00`).toISOString()
-  const setores: Setor[] = [{ id: 'demo-setor-1', nome: 'Ambulatório — 2º andar', ordem: 0, ativo: true, painel_token: 'demo', painel_exibicao: 'senha_nome', painel_voz: true, painel_mensagem: null, avisar_whatsapp: true }]
+  const setores: Setor[] = [{ id: 'demo-setor-1', nome: 'Ambulatório — 2º andar', ordem: 0, ativo: true, painel_token: 'demo', painel_exibicao: 'senha_nome', painel_voz: true, painel_mensagem: null, avisar_whatsapp: true, totem_ativo: true, totem_token: 'demo' }]
   const consultorios: Consultorio[] = [1, 2, 3].map(n => ({ id: 'demo-cons-' + n, setor_id: 'demo-setor-1', nome: 'Consultório ' + n, ordem: n, ativo: true }))
   const medicos = [
     { id: 'demo-medico', nome: 'Dra. Helena Duarte', consultorio_id: 'demo-cons-1' },

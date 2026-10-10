@@ -11,6 +11,7 @@
  *   POST { acao: 'resolver_saida' | 'whatsapp_retorno', id }   (saída do consultório)
  *   POST { acao: 'chamar_triagem', consultorio_id, atendimento_id?, rechamar? } · { acao: 'triagem', id, dados }
  *   GET  ?triagem=<atendimento_id>  → última triagem do atendimento
+ *   POST { acao: 'chamar_balcao', id?, guiche? } · { acao: 'concluir_balcao', id, status } · { acao: 'senha_balcao', prioridade }
  *   GET  ?ficha=<paciente_id>&agendamento_id=…  → ficha do paciente para o consultório
  *   GET  ?ficha360=<paciente_id>  → histórico completo (gaveta da ficha e exportação)
  */
@@ -22,6 +23,7 @@ import {
   type AcaoAtendimento,
 } from '@/lib/atendimento/servidor'
 import { PRIORIDADES } from '@/lib/atendimento/comum'
+import { balcaoDoDia, chamarBalcao, concluirBalcao, senhaBalcaoManual } from '@/lib/atendimento/totem'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,10 +45,11 @@ export async function GET(req: NextRequest) {
     if (sp.get('ficha360')) return NextResponse.json(await fichaCompleta(ctx, sp.get('ficha360')!))
     if (sp.get('triagem')) return NextResponse.json({ triagem: await triagemDoAtendimento(ctx, sp.get('triagem')!) })
     const dia = sp.get('dia')
-    return NextResponse.json(await filaDoDia(ctx, {
+    const fila = await filaDoDia(ctx, {
       dia: dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) ? dia : undefined,
       medicoId: sp.get('medico_id'),
-    }))
+    })
+    return NextResponse.json({ ...fila, balcao: sp.get('medico_id') ? [] : await balcaoDoDia(ctx) })
   } catch (e) { return erro(e) }
 }
 
@@ -105,6 +108,19 @@ export async function POST(req: NextRequest) {
       if (!b.id) throw new ErroAtendimento('id obrigatório')
       return NextResponse.json({ atendimento: await registrarTriagem(ctx, b.id, b.dados || {}) })
     }
+
+    if (b.acao === 'chamar_balcao') {
+      const senha = await chamarBalcao(ctx, { id: b.id || null, guiche: b.guiche || null })
+      return NextResponse.json({ senha, fila_vazia: !senha })
+    }
+
+    if (b.acao === 'concluir_balcao') {
+      if (!b.id || !['atendido', 'desistiu'].includes(b.status)) throw new ErroAtendimento('id e status obrigatórios')
+      await concluirBalcao(ctx, b.id, b.status)
+      return NextResponse.json({ ok: true })
+    }
+
+    if (b.acao === 'senha_balcao') return NextResponse.json(await senhaBalcaoManual(ctx, String(b.prioridade || 'normal')))
 
     if (b.acao === 'definir_consultorio') {
       if (!b.medico_id || !b.consultorio_id) throw new ErroAtendimento('medico_id e consultorio_id obrigatórios')
