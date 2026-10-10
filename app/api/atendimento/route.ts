@@ -8,13 +8,14 @@
  *   POST { acao: 'novo_paciente', nome, telefone?, cpf?, data_nascimento?, convenio?, medico_id? }
  *   POST { acao: 'atualizar_paciente', paciente_id, telefone?, cpf?, data_nascimento?, convenio?, nr_carteirinha? }
  *   POST { acao: 'faltou', agendamento_id }
+ *   POST { acao: 'resolver_saida' | 'whatsapp_retorno', id }   (saída do consultório)
  *   GET  ?ficha=<paciente_id>&agendamento_id=…  → ficha do paciente para o consultório
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { log } from '@/lib/logger'
 import {
   ErroAtendimento, atualizarPaciente, chamar, contextoAtendimento, faltaMigration, fazerCheckin, fichaDoPaciente, filaDoDia,
-  marcarFalta, mudarAtendimento, novoPaciente,
+  definirConsultorio, marcarFalta, mudarAtendimento, novoPaciente, resolverSaida, whatsappRetorno,
   type AcaoAtendimento,
 } from '@/lib/atendimento/servidor'
 import { PRIORIDADES } from '@/lib/atendimento/comum'
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest) {
       const at = await mudarAtendimento(ctx, b.id, b.para, {
         prioridade: ehPrioridade(b.prioridade) ? b.prioridade : undefined,
         retorno: dias > 0 && dias <= 730 ? { dias, motivo: b.retorno?.motivo || null } : null,
+        saida: b.saida ? { itens: Array.isArray(b.saida.itens) ? b.saida.itens.map(String) : [], obs: b.saida.obs ? String(b.saida.obs) : null } : null,
       })
       return NextResponse.json({ atendimento: at })
     }
@@ -86,6 +88,24 @@ export async function POST(req: NextRequest) {
       if (!b.paciente_id) throw new ErroAtendimento('paciente_id obrigatório')
       const { acao, paciente_id, ...dados } = b
       await atualizarPaciente(ctx, paciente_id, dados)
+      return NextResponse.json({ ok: true })
+    }
+
+    if (b.acao === 'definir_consultorio') {
+      if (!b.medico_id || !b.consultorio_id) throw new ErroAtendimento('medico_id e consultorio_id obrigatórios')
+      await definirConsultorio(ctx, b.medico_id, b.consultorio_id)
+      return NextResponse.json({ ok: true })
+    }
+
+    if (b.acao === 'resolver_saida') {
+      if (!b.id) throw new ErroAtendimento('id obrigatório')
+      await resolverSaida(ctx, b.id)
+      return NextResponse.json({ ok: true })
+    }
+
+    if (b.acao === 'whatsapp_retorno') {
+      if (!b.id) throw new ErroAtendimento('id obrigatório')
+      await whatsappRetorno(ctx, b.id)
       return NextResponse.json({ ok: true })
     }
 

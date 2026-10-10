@@ -12,7 +12,16 @@ import {
 
 export const ehDemo = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'
 
-export type Fila = { dia: string; atendimentos: Atendimento[]; esperados: Esperado[]; medicos: { id: string; nome: string; consultorio_id: string | null }[] }
+export type Saida = Atendimento & {
+  saida_status?: 'pendente' | 'resolvida' | null; saida_obs?: string | null; saida_itens?: string[] | null; retorno_id?: string | null
+  retorno?: { id: string; data_prevista: string; motivo: string | null; status: string; agendamento_id: string | null } | null
+}
+export type Fila = { dia: string; atendimentos: Atendimento[]; esperados: Esperado[]; medicos: { id: string; nome: string; consultorio_id: string | null }[]; saidas?: Saida[] }
+
+/** Aviso que aparece no canto da tela (usado pelo modo demonstração; no real vem das notificações). */
+export const EVENTO_AVISO = 'c360:aviso'
+export type AvisoTela = { id: string; tipo?: string | null; titulo: string; descricao?: string | null; link?: string | null }
+export const avisarNaTela = (a: AvisoTela) => { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(EVENTO_AVISO, { detail: a })) }
 export type Config = { setores: Setor[]; consultorios: Consultorio[] }
 export type Chamada = { id: string; senha: string; nome_exibicao: string | null; local: string; criado_em: string }
 export type DadosPainel = { setor: { nome: string; voz: boolean; mensagem: string | null }; clinica: { nome: string | null; logo_url: string | null }; chamadas: Chamada[] }
@@ -47,7 +56,8 @@ export async function chamar(p: { medico_id: string; consultorio_id: string | nu
   return post<{ atendimento: Atendimento | null; fila_vazia: boolean }>('/api/atendimento', { acao: 'chamar', ...p })
 }
 
-export async function mudar(id: string, para: AcaoMudar, extra: { prioridade?: Prioridade; retorno?: { dias: number; motivo?: string } | null } = {}) {
+export type ExtraMudar = { prioridade?: Prioridade; retorno?: { dias: number; motivo?: string } | null; saida?: { itens: string[]; obs?: string } | null }
+export async function mudar(id: string, para: AcaoMudar, extra: ExtraMudar = {}) {
   if (ehDemo()) return demo.mudar(id, para, extra)
   return post<{ atendimento: Atendimento }>('/api/atendimento', { acao: 'mudar', id, para, ...extra })
 }
@@ -107,6 +117,21 @@ export async function carregarFicha(pacienteId: string, agendamentoId?: string |
   return api<Ficha>('/api/atendimento?' + q)
 }
 
+export async function definirConsultorio(medicoId: string, consultorioId: string) {
+  if (ehDemo()) { const e = demo.estado(); const m = e.medicos.find(x => x.id === medicoId); if (m) m.consultorio_id = consultorioId; demo.gravar(e); return { ok: true } }
+  return post<{ ok: true }>('/api/atendimento', { acao: 'definir_consultorio', medico_id: medicoId, consultorio_id: consultorioId })
+}
+
+export async function resolverSaida(id: string) {
+  if (ehDemo()) { const e = demo.estado(); e.saidas = (e.saidas || []).filter(x => x.id !== id); demo.gravar(e); return { ok: true } }
+  return post<{ ok: true }>('/api/atendimento', { acao: 'resolver_saida', id })
+}
+
+export async function whatsappRetorno(id: string) {
+  if (ehDemo()) { await espera(); return { ok: true } }
+  return post<{ ok: true }>('/api/atendimento', { acao: 'whatsapp_retorno', id })
+}
+
 // ── Configuração ─────────────────────────────────────────────────────────────
 
 export async function carregarConfig(): Promise<Config> {
@@ -138,7 +163,7 @@ export const avisarFila = () => { if (typeof window !== 'undefined') window.disp
 
 // ── Demonstração ─────────────────────────────────────────────────────────────
 
-type EstadoDemo = Fila & Config & { chamadas: (Chamada & { setor_id: string })[]; contador: Record<string, number> }
+type EstadoDemo = Fila & Config & { chamadas: (Chamada & { setor_id: string })[]; contador: Record<string, number>; saidas?: Saida[] }
 const CHAVE = 'c360-demo-fila-v1'
 
 const demo = {
@@ -160,7 +185,7 @@ const demo = {
     const e = this.estado()
     const so = <T extends { medico_id: string }>(l: T[]) => (medicoId ? l.filter(x => x.medico_id === medicoId) : l)
     const comCheckin = new Set(e.atendimentos.map(a => a.agendamento_id))
-    return { dia: e.dia, medicos: e.medicos, atendimentos: so(e.atendimentos), esperados: so(e.esperados).filter(x => !comCheckin.has(x.id)) }
+    return { dia: e.dia, medicos: e.medicos, atendimentos: so(e.atendimentos), esperados: so(e.esperados).filter(x => !comCheckin.has(x.id)), saidas: medicoId ? [] : (e.saidas || []) }
   },
   async checkin(p: { agendamento_id?: string; paciente_id?: string; medico_id?: string; prioridade?: Prioridade }) {
     await espera()
@@ -202,7 +227,7 @@ const demo = {
     this.gravar(e)
     return { atendimento: at, fila_vazia: false }
   },
-  async mudar(id: string, para: AcaoMudar, extra: { prioridade?: Prioridade }) {
+  async mudar(id: string, para: AcaoMudar, extra: ExtraMudar) {
     await espera()
     const e = this.estado()
     const at = e.atendimentos.find(a => a.id === id)
@@ -210,7 +235,18 @@ const demo = {
     const agora = new Date().toISOString()
     if (para === 'prioridade' && extra.prioridade) at.prioridade = extra.prioridade
     if (para === 'iniciar') Object.assign(at, { status: 'em_atendimento', inicio_em: agora })
-    if (para === 'finalizar') Object.assign(at, { status: 'finalizado', fim_em: agora, inicio_em: at.inicio_em || agora })
+    if (para === 'finalizar') {
+      Object.assign(at, { status: 'finalizado', fim_em: agora, inicio_em: at.inicio_em || agora })
+      const itens = Array.from(new Set([...(extra.retorno?.dias ? ['retorno'] : []), ...(extra.saida?.itens || [])]))
+      if (itens.length || extra.saida?.obs) {
+        const d = new Date(); d.setDate(d.getDate() + (extra.retorno?.dias || 0))
+        const saida: Saida = { ...at, saida_status: 'pendente', saida_itens: itens, saida_obs: extra.saida?.obs || null,
+          retorno: extra.retorno?.dias ? { id: 'demo-ret-' + at.id, data_prevista: hojeSP(d), motivo: extra.retorno.motivo || null, status: 'pendente', agendamento_id: null } : null }
+        e.saidas = [saida, ...(e.saidas || [])]
+        avisarNaTela({ id: 'demo-aviso-' + at.id, tipo: 'saida_recepcao', titulo: `${at.paciente?.nome?.split(' ').slice(0, 2).join(' ')} saiu do consultório`,
+          descricao: `${at.medico?.nome}: ${itens.map(i => i === 'retorno' ? `Retorno em ${extra.retorno!.dias} dias` : ({ exames: 'Entregar pedido de exames', receita: 'Entregar receita', atestado: 'Entregar atestado', procedimento: 'Agendar procedimento', encaminhamento: 'Entregar encaminhamento' } as Record<string, string>)[i] || i).join(' · ')}${extra.saida?.obs ? ` · “${extra.saida.obs}”` : ''}`, link: '/recepcao?demo=1' })
+      }
+    }
     if (para === 'ausente') at.status = 'ausente'
     if (para === 'voltar_fila') at.status = 'aguardando'
     if (para === 'cancelar') at.status = 'cancelado'

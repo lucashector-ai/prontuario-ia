@@ -8,6 +8,7 @@ import { BottomNav } from './BottomNav'
 import { HeaderProvider } from './shell/header-context'
 import { AvisoConexao } from './shell/AvisoConexao'
 import { BatimentoAutomacoes } from './shell/BatimentoAutomacoes'
+import { AvisosAoVivo } from './shell/AvisosAoVivo'
 import { tokenSessao } from '@/lib/supabase'
 import { sairDaConta } from '@/lib/sessao'
 import { tokens } from '@/lib/design-tokens'
@@ -84,6 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Topbar compacto />
           <AvisoConexao />
           <BatimentoAutomacoes />
+          <AvisosAoVivo />
           <main className="appshell-main" style={painel}>{children}</main>
           <BottomNav />
         </div>
@@ -99,6 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Topbar />
           <AvisoConexao />
           <BatimentoAutomacoes />
+          <AvisosAoVivo />
           <main className="appshell-main" style={painel}>{children}</main>
         </div>
       </div>

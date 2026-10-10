@@ -14,11 +14,11 @@ import {
 } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
 import { usePageHeader } from '@/components/shell/header-context'
-import { Badge, Button, Card, Chip, EmptyState, Field, Input, Modal, ModalAcoes, Select } from '@/components/ui'
+import { Badge, Button, Card, Chip, EmptyState, Field, Input, Modal, ModalAcoes, Select, Switch, Textarea } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { useFila } from '@/lib/atendimento/useFila'
-import { avisarFila, carregarConfig, carregarFicha, chamar, ehDemo, mudar, type Config, type Ficha } from '@/lib/atendimento/cliente'
-import { formatarTelefone, minutosDesde, ordenarFila, type Atendimento } from '@/lib/atendimento/comum'
+import { avisarFila, carregarConfig, carregarFicha, chamar, definirConsultorio, ehDemo, mudar, type Config, type Ficha } from '@/lib/atendimento/cliente'
+import { formatarTelefone, hojeSP, minutosDesde, ordenarFila, type Atendimento } from '@/lib/atendimento/comum'
 import { SeloPrioridade, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade } from '@/components/atendimento/partes'
 import { GravadorConsulta } from '@/components/atendimento/GravadorConsulta'
 
@@ -35,6 +35,10 @@ export default function ConsultorioPage() {
   const [chamando, setChamando] = useState(false)
   const [finalizando, setFinalizando] = useState<Atendimento | null>(null)
   const [consultaSalva, setConsultaSalva] = useState(false)
+  // Chamada automática: ao finalizar, já chama o próximo. Desligada por padrão — o médico decide quando chamar.
+  const [autoChamar, setAutoChamar] = useState(false)
+  useEffect(() => { try { setAutoChamar(localStorage.getItem('c360-chamada-automatica') === '1') } catch {} }, [])
+  const trocarAuto = (v: boolean) => { setAutoChamar(v); try { localStorage.setItem('c360-chamada-automatica', v ? '1' : '0') } catch {} }
   const [agora, setAgora] = useState(() => Date.now())
   const demo = ehDemo()
 
@@ -58,17 +62,26 @@ export default function ConsultorioPage() {
 
   useEffect(() => { if (!medicoId && fila?.medicos.length) setMedicoId(fila.medicos[0].id) }, [fila, medicoId])
 
+  // Consultório do dia: escolhido ao entrar (vale para hoje, neste computador, para este médico)
+  const [escolhendoSala, setEscolhendoSala] = useState(false)
   useEffect(() => {
-    if (!config || consultorioId) return
-    let salvo = ''
-    try { salvo = localStorage.getItem('c360-consultorio-sala') || '' } catch {}
-    const padrao = fila?.medicos.find(m => m.id === medicoId)?.consultorio_id
-    const valido = (id?: string | null) => !!id && config.consultorios.some(c => c.id === id && c.ativo)
-    setConsultorioId(valido(salvo) ? salvo : valido(padrao) ? padrao! : config.consultorios.find(c => c.ativo)?.id || '')
-  }, [config, fila, medicoId, consultorioId])
+    if (!config || !medicoId) return
+    const ativos = config.consultorios.filter(c => c.ativo)
+    if (!ativos.length) return
+    let salvo: { dia?: string; id?: string } = {}
+    try { salvo = JSON.parse(localStorage.getItem('c360-sala-' + medicoId) || '{}') } catch {}
+    if (salvo.dia === hojeSP() && ativos.some(c => c.id === salvo.id)) setConsultorioId(salvo.id!)
+    else if (ativos.length === 1) escolherSala(ativos[0].id)
+    else { setConsultorioId(''); setEscolhendoSala(true) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config, medicoId])
 
   const escolherMedico = (id: string) => { setMedicoId(id); try { localStorage.setItem('c360-consultorio-medico', id) } catch {} }
-  const escolherSala = (id: string) => { setConsultorioId(id); try { localStorage.setItem('c360-consultorio-sala', id) } catch {} }
+  const escolherSala = (id: string) => {
+    setConsultorioId(id); setEscolhendoSala(false)
+    try { localStorage.setItem('c360-sala-' + medicoId, JSON.stringify({ dia: hojeSP(), id })) } catch {}
+    if (medicoId) definirConsultorio(medicoId, id).catch(() => {})
+  }
 
   const meus = useMemo(() => (fila?.atendimentos || []).filter(a => a.medico_id === medicoId), [fila, medicoId])
   const atual = useMemo(() => meus.filter(a => a.status === 'em_atendimento' || a.status === 'chamado')
@@ -122,12 +135,17 @@ export default function ConsultorioPage() {
           </Select>
         )}
         {config && config.consultorios.length > 0 && (
-          <Select value={consultorioId} onChange={e => escolherSala(e.target.value)} style={{ width: 'auto', minWidth: 170 }} aria-label="Consultório">
-            {config.consultorios.filter(c => c.ativo).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-          </Select>
+          <button onClick={() => setEscolhendoSala(true)} title="Trocar de consultório" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, padding: '0 12px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
+            border: `1px solid ${T.border.default}`, background: '#fff', fontSize: 13, fontWeight: 600, color: T.text.primary,
+          }}>
+            <DoorOpen size={16} color={T.brand.primary} /> {sala?.nome || 'Escolher consultório'}
+            <span style={{ color: T.brand.primary, fontWeight: 600, fontSize: 12.5 }}>Trocar</span>
+          </button>
         )}
         {setor && <Button variant="ghost" icon={MonitorPlay} onClick={() => window.open(`/painel/${setor.painel_token}${demo ? '?demo=1' : ''}`, '_blank')}>Painel da TV</Button>}
         <span style={{ flex: 1 }} />
+        <Switch checked={autoChamar} onChange={trocarAuto} label="Chamada automática" />
         <span style={{ fontSize: 13, color: T.text.secondary }}><b style={{ color: T.text.primary }}>{espera.length}</b> na espera · <b style={{ color: T.text.primary }}>{atendidos.length}</b> atendidos</span>
         <Button icon={Megaphone} onClick={() => chamarProximo()} disabled={!podeChamar} title={atual ? 'Finalize o paciente atual primeiro' : undefined}>
           {chamando ? 'Chamando…' : espera.length ? `Chamar próximo · ${espera[0].senha}` : 'Fila vazia'}
@@ -242,8 +260,13 @@ export default function ConsultorioPage() {
         </div>
       )}
 
+      {escolhendoSala && config && (
+        <ModalSala config={config} atual={consultorioId} outros={(fila?.medicos || []).filter(m => m.id !== medicoId)}
+          onEscolher={escolherSala} onClose={consultorioId ? () => setEscolhendoSala(false) : undefined} />
+      )}
+
       {finalizando && (
-        <ModalFinalizar at={finalizando} temProximo={espera.length > 0} onClose={() => setFinalizando(null)}
+        <ModalFinalizar at={finalizando} chamarDepois={autoChamar && espera.length > 0} onClose={() => setFinalizando(null)}
           onPronto={async (chamarSeguinte) => {
             try { sessionStorage.removeItem('c360-consulta-' + finalizando.id) } catch {}
             setFinalizando(null); setConsultaSalva(false); avisarFila(); await recarregar()
@@ -374,41 +397,101 @@ function FichaLateral({ ficha, pacienteId }: { ficha: Ficha | null; pacienteId: 
   )
 }
 
-function ModalFinalizar({ at, temProximo, onClose, onPronto }: { at: Atendimento; temProximo: boolean; onClose: () => void; onPronto: (chamarProximo: boolean) => void }) {
+const PARA_RECEPCAO: { v: string; label: string }[] = [
+  { v: 'exames', label: 'Pedido de exames' }, { v: 'receita', label: 'Receita' }, { v: 'atestado', label: 'Atestado/declaração' },
+  { v: 'procedimento', label: 'Agendar procedimento' }, { v: 'encaminhamento', label: 'Encaminhamento' },
+]
+
+function ModalFinalizar({ at, chamarDepois, onClose, onPronto }: { at: Atendimento; chamarDepois: boolean; onClose: () => void; onPronto: (chamarProximo: boolean) => void }) {
   const [dias, setDias] = useState<number | null>(null)
   const [outro, setOutro] = useState('')
   const [motivo, setMotivo] = useState('')
+  const [itens, setItens] = useState<string[]>([])
+  const [recado, setRecado] = useState('')
   const [salvando, setSalvando] = useState(false)
   const prazo = dias ?? (Number(outro) > 0 ? Number(outro) : null)
+  const vaiParaRecepcao = !!prazo || itens.length > 0 || !!recado.trim()
+  const alternar = (v: string) => setItens(l => l.includes(v) ? l.filter(x => x !== v) : [...l, v])
 
-  const finalizar = async (chamarSeguinte: boolean) => {
+  const finalizar = async () => {
     setSalvando(true)
     try {
-      await mudar(at.id, 'finalizar', { retorno: prazo ? { dias: prazo, motivo: motivo.trim() || undefined } : null })
-      notificar(prazo ? `Atendimento finalizado · retorno em ${prazo} dias na lista de Retornos` : 'Atendimento finalizado')
-      onPronto(chamarSeguinte)
+      await mudar(at.id, 'finalizar', {
+        retorno: prazo ? { dias: prazo, motivo: motivo.trim() || undefined } : null,
+        saida: itens.length || recado.trim() ? { itens, obs: recado.trim() || undefined } : null,
+      })
+      notificar(vaiParaRecepcao ? 'Atendimento finalizado · a recepção já foi avisada' : 'Atendimento finalizado')
+      onPronto(chamarDepois)
     } catch (e: any) { notificar(e.message, 'erro'); setSalvando(false) }
   }
 
   return (
-    <Modal titulo={`Finalizar · ${at.paciente?.nome?.split(' ')[0] || at.senha}`} onClose={onClose} largura={500}>
-      <Field label="Retorno" hint="Vai para a lista de Retornos; a clínica lembra o paciente de agendar.">
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <Chip ativo={dias === null && !outro} onClick={() => { setDias(null); setOutro('') }}>Sem retorno</Chip>
-          {PRAZOS_RETORNO.map(d => <Chip key={d} ativo={dias === d} onClick={() => { setDias(d); setOutro('') }} icon={CalendarPlus}>{d < 60 ? `${d} dias` : `${d / 30} meses`}</Chip>)}
-          <Input value={outro} onChange={e => { setOutro(e.target.value.replace(/\D/g, '').slice(0, 3)); setDias(null) }} placeholder="Outro (dias)" inputMode="numeric" style={{ width: 120, height: 32 }} />
-        </div>
-      </Field>
-      {prazo && (
-        <Field label="Motivo do retorno (opcional)" style={{ marginTop: 14 }}>
-          <Input value={motivo} onChange={e => setMotivo(e.target.value)} placeholder="Ex.: trazer exames de sangue" />
+    <Modal titulo={`Finalizar · ${at.paciente?.nome?.split(' ')[0] || at.senha}`} onClose={onClose} largura={540}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <Field label="Retorno" hint="A recepção recebe o aviso na hora e agenda com o paciente na saída.">
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <Chip ativo={dias === null && !outro} onClick={() => { setDias(null); setOutro('') }}>Sem retorno</Chip>
+            {PRAZOS_RETORNO.map(d => <Chip key={d} ativo={dias === d} onClick={() => { setDias(d); setOutro('') }} icon={CalendarPlus}>{d < 60 ? `${d} dias` : `${d / 30} meses`}</Chip>)}
+            <Input value={outro} onChange={e => { setOutro(e.target.value.replace(/\D/g, '').slice(0, 3)); setDias(null) }} placeholder="Outro (dias)" inputMode="numeric" style={{ width: 120, height: 32 }} />
+          </div>
         </Field>
-      )}
+        {prazo && (
+          <Field label="Motivo do retorno (opcional)">
+            <Input value={motivo} onChange={e => setMotivo(e.target.value)} placeholder="Ex.: trazer exames de sangue" />
+          </Field>
+        )}
+        <Field label="Para a recepção">
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {PARA_RECEPCAO.map(o => <Chip key={o.v} ativo={itens.includes(o.v)} onClick={() => alternar(o.v)}>{o.label}</Chip>)}
+          </div>
+        </Field>
+        <Field label="Recado para a recepção (opcional)">
+          <Textarea value={recado} onChange={e => setRecado(e.target.value)} rows={2} placeholder="Ex.: agendar fisioterapia 2x por semana; cobrar só a consulta" maxLength={500} />
+        </Field>
+        {vaiParaRecepcao && (
+          <div style={{ fontSize: 12.5, color: T.status.infoStrong, background: T.status.infoBg, padding: '8px 10px', borderRadius: 10 }}>
+            A recepção recebe um aviso agora e o paciente aparece em “Saindo do consultório”.
+          </div>
+        )}
+      </div>
       <ModalAcoes>
         <Button variant="secondary" onClick={onClose}>Voltar</Button>
-        <Button variant={temProximo ? 'secondary' : 'primary'} icon={CheckCircle2} onClick={() => finalizar(false)} disabled={salvando}>Finalizar</Button>
-        {temProximo && <Button icon={Megaphone} onClick={() => finalizar(true)} disabled={salvando}>Finalizar e chamar próximo</Button>}
+        <Button icon={chamarDepois ? Megaphone : CheckCircle2} onClick={finalizar} disabled={salvando}>{salvando ? 'Finalizando…' : chamarDepois ? 'Finalizar e chamar próximo' : 'Finalizar'}</Button>
       </ModalAcoes>
+    </Modal>
+  )
+}
+
+/** "Em qual consultório você está hoje?" — aparece ao entrar; mostra salas usadas por outros médicos. */
+function ModalSala({ config, atual, outros, onEscolher, onClose }: {
+  config: Config; atual: string; outros: { id: string; nome: string; consultorio_id: string | null }[]
+  onEscolher: (id: string) => void; onClose?: () => void
+}) {
+  const setores = config.setores.filter(s => config.consultorios.some(c => c.setor_id === s.id && c.ativo))
+  return (
+    <Modal titulo="Em qual consultório você está hoje?" onClose={onClose || (() => {})} largura={520}>
+      <div style={{ fontSize: 13, color: T.text.secondary, marginBottom: 14 }}>A TV chama os pacientes para esta sala e a recepção vê onde você está.</div>
+      {setores.map(s => (
+        <div key={s.id} style={{ marginBottom: 14 }}>
+          {setores.length > 1 && <div style={{ fontSize: 11.5, fontWeight: 700, color: T.text.tertiary, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{s.nome}</div>}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+            {config.consultorios.filter(c => c.setor_id === s.id && c.ativo).map(c => {
+              const ocupado = outros.find(m => m.consultorio_id === c.id)
+              const ativo = atual === c.id
+              return (
+                <button key={c.id} onClick={() => onEscolher(c.id)} style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, padding: '14px 14px', borderRadius: 14, cursor: 'pointer', textAlign: 'left',
+                  fontFamily: 'inherit', background: ativo ? T.brand.primarySubtle : '#fff', border: `1px solid ${ativo ? T.brand.primaryAccent : T.border.default}`,
+                }}>
+                  <DoorOpen size={20} color={ativo ? T.brand.primary : T.text.secondary} />
+                  <span style={{ fontSize: 14.5, fontWeight: 700, color: T.text.primary }}>{c.nome}</span>
+                  <span style={{ fontSize: 11.5, color: ocupado ? T.status.warning : T.status.success, fontWeight: 600 }}>{ocupado ? `Usado por ${ocupado.nome.split(' ').slice(0, 2).join(' ')}` : 'Livre'}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </Modal>
   )
 }

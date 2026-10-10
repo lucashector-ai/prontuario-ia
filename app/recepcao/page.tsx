@@ -10,14 +10,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowUpDown, CheckCheck, Clock, Hourglass, MonitorPlay, Printer, RotateCcw, Settings2, Stethoscope, UserCheck, UserPlus, UserX, Users, XCircle,
+  ArrowUpDown, CalendarPlus, Check, CheckCheck, Clock, DoorOpen, Hourglass, MessageCircle, MonitorPlay, Printer, RotateCcw, Settings2, Stethoscope, UserCheck, UserPlus, UserX, Users, XCircle,
 } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
 import { usePageHeader } from '@/components/shell/header-context'
 import { Badge, Button, Card, EmptyState, Field, IconButton, Input, KpiCard, Modal, ModalAcoes, SearchInput, SegmentedControl, Select } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { useFila } from '@/lib/atendimento/useFila'
-import { atualizarPaciente, avisarFila, carregarConfig, checkin, ehDemo, marcarFalta, mudar, type Config, type Fila } from '@/lib/atendimento/cliente'
+import { atualizarPaciente, avisarFila, carregarConfig, checkin, ehDemo, marcarFalta, mudar, resolverSaida, whatsappRetorno, type Config, type Fila, type Saida } from '@/lib/atendimento/cliente'
 import { formatarTelefone, minutosDesde, ordenarFila, prioridadePelaIdade, type Atendimento, type Esperado, type Prioridade } from '@/lib/atendimento/comum'
 import { EscolhaPrioridade, ModalSenha, SeloPrioridade, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade, imprimirSenha } from '@/components/atendimento/partes'
 import { NovoAtendimento } from '@/components/atendimento/NovoAtendimento'
@@ -138,6 +138,9 @@ export default function RecepcaoPage() {
 
       {/* Médicos agora */}
       {fila && fila.medicos.length > 0 && <MedicosAgora fila={fila} config={config} agora={agora} />}
+
+      {/* Saindo do consultório: retorno e recados do médico para a recepção */}
+      {fila?.saidas && fila.saidas.length > 0 && <SaindoDoConsultorio saidas={fila.saidas} onMudou={() => { avisarFila(); recarregar() }} />}
 
       <div className="c360-kpis" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <KpiCard label="A chegar" valor={fila?.esperados.length ?? '—'} icon={Clock} comparacao={`${atrasados.length} atrasados`} carregando={carregando && !fila} />
@@ -370,5 +373,73 @@ function ModalPrioridade({ at, onClose }: { at: Atendimento; onClose: () => void
         <Button onClick={salvar}>Salvar</Button>
       </ModalAcoes>
     </Modal>
+  )
+}
+
+const ROTULO_ITEM: Record<string, string> = {
+  retorno: 'Agendar retorno', exames: 'Entregar pedido de exames', receita: 'Entregar receita', atestado: 'Entregar atestado',
+  procedimento: 'Agendar procedimento', encaminhamento: 'Entregar encaminhamento',
+}
+
+/** Quem acabou de sair do consultório com algo para a recepção resolver (retorno, exames, recados). */
+function SaindoDoConsultorio({ saidas, onMudou }: { saidas: Saida[]; onMudou: () => void }) {
+  const router = useRouter()
+  const [destaque, setDestaque] = useState<string | null>(null)
+  const [enviando, setEnviando] = useState<string | null>(null)
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('saida')
+    if (!id) return
+    setDestaque(id)
+    setTimeout(() => document.getElementById('saida-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200)
+  }, [])
+
+  const agendar = (s: Saida) => {
+    const q = new URLSearchParams({ novo: '1', paciente_id: s.paciente_id || '', tipo: 'retorno', ...(s.retorno?.data_prevista ? { data: s.retorno.data_prevista } : {}),
+      motivo: s.retorno?.motivo ? `Retorno — ${s.retorno.motivo}` : 'Retorno', ...(ehDemo() ? { demo: '1' } : {}) })
+    router.push('/agenda?' + q)
+  }
+  const whatsapp = async (s: Saida) => {
+    setEnviando(s.id)
+    try { await whatsappRetorno(s.id); notificar('Mensagem enviada. A Sofia continua a conversa e oferece horários.') }
+    catch (e: any) { notificar(e.message, 'erro') } finally { setEnviando(null) }
+  }
+  const concluir = async (s: Saida) => {
+    try { await resolverSaida(s.id); notificar('Saída concluída'); onMudou() } catch (e: any) { notificar(e.message, 'erro') }
+  }
+
+  return (
+    <Card padding={0} style={{ border: `1px solid ${T.data.orange}`, overflow: 'hidden' }}>
+      <div style={{ ...cabecalho, background: 'color-mix(in srgb, ' + T.data.orange + ' 10%, #fff)' }}>
+        <span style={{ ...tituloCard, display: 'inline-flex', alignItems: 'center', gap: 8 }}><DoorOpen size={17} color={T.data.orange} /> Saindo do consultório · {saidas.length}</span>
+        <span style={{ fontSize: 12.5, color: T.text.secondary }}>O médico pediu — resolva com o paciente antes de ele ir embora</span>
+      </div>
+      {saidas.map((s, i) => {
+        const agendado = s.retorno?.status === 'agendado' || !!s.retorno?.agendamento_id
+        return (
+          <div key={s.id} id={'saida-' + s.id} style={{ ...linha, borderTop: i === 0 ? 'none' : linha.borderTop, alignItems: 'flex-start', flexWrap: 'wrap', background: destaque === s.id ? T.brand.primarySubtle : undefined }}>
+            <SenhaChip senha={s.senha} />
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 650 }}>{s.paciente?.nome || 'Paciente'} <span style={{ fontSize: 12, color: T.text.tertiary, fontWeight: 500 }}>· {s.medico?.nome} · saiu {horaCurta(s.fim_em)}</span></div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                {(s.saida_itens || []).map(it => (
+                  <Badge key={it} tone={it === 'retorno' && agendado ? 'success' : 'warning'} icon={it === 'retorno' && agendado ? Check : undefined}>
+                    {it === 'retorno' && s.retorno ? `${agendado ? 'Retorno agendado' : 'Retorno por volta de'} ${agendado ? '' : new Date(s.retorno.data_prevista + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`.trim() : (ROTULO_ITEM[it] || it)}
+                  </Badge>
+                ))}
+              </div>
+              {s.retorno?.motivo && <div style={{ fontSize: 12.5, color: T.text.secondary, marginTop: 6 }}>Motivo do retorno: {s.retorno.motivo}</div>}
+              {s.saida_obs && <div style={{ fontSize: 12.5, color: T.text.primary, marginTop: 6, padding: '6px 10px', borderRadius: 8, background: T.bg.page }}>“{s.saida_obs}”</div>}
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+              {(s.saida_itens || []).includes('retorno') && !agendado && <Button size="sm" icon={CalendarPlus} onClick={() => agendar(s)}>Agendar retorno</Button>}
+              {s.paciente?.telefone && (s.saida_itens || []).includes('retorno') && !agendado && (
+                <Button size="sm" variant="secondary" icon={MessageCircle} onClick={() => whatsapp(s)} disabled={enviando === s.id}>{enviando === s.id ? 'Enviando…' : 'Pelo WhatsApp'}</Button>
+              )}
+              <Button size="sm" variant={agendado ? 'primary' : 'secondary'} icon={Check} onClick={() => concluir(s)}>Concluído</Button>
+            </div>
+          </div>
+        )
+      })}
+    </Card>
   )
 }

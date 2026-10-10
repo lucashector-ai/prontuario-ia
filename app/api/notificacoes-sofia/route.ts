@@ -8,8 +8,8 @@
  *   PATCH { id, lida }            → marca uma como lida / não lida
  *   PATCH { todas: true }         → marca todas como lidas
  *
- * O escopo vem da sessão: admin da clínica vê as dos médicos da clínica; médico e
- * atendente veem as do próprio médico.
+ * O escopo vem da sessão (escopoDaSessao): admin e recepção veem as da clínica toda;
+ * médico vê as próprias.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServidor as supabase } from '@/lib/servidor'
@@ -18,20 +18,30 @@ import { sessaoDaRequisicao } from '@/lib/sessao-servidor'
 const LIMITE_PADRAO = 20
 const LIMITE_MAXIMO = 50
 
-async function medicosDaSessao(req: NextRequest): Promise<string[] | null> {
+/**
+ * De quem são os avisos que esta sessão vê:
+ *   admin da clínica e recepcionista → todos os médicos da clínica
+ *   médico → os próprios, menos os de "saída do consultório" (são para a recepção)
+ */
+async function escopoDaSessao(req: NextRequest): Promise<{ medicos: string[]; ocultar: string[] } | null> {
   const s = await sessaoDaRequisicao(req)
   if (!s) return null
-  if (s.tipo === 'clinica') {
-    if (!s.clinica_id) return []
+  const daClinica = async () => {
+    if (!s.clinica_id) return s.medico_id ? [s.medico_id] : []
     const { data } = await supabase.from('medicos').select('id').eq('clinica_id', s.clinica_id)
     return (data || []).map((m: any) => m.id)
   }
-  return s.medico_id ? [s.medico_id] : []
+  if (s.tipo === 'clinica') return { medicos: await daClinica(), ocultar: [] }
+  if (!s.medico_id) return { medicos: [], ocultar: [] }
+  const { data: eu } = await supabase.from('medicos').select('cargo').eq('id', s.medico_id).maybeSingle()
+  if (eu?.cargo === 'recepcionista' || eu?.cargo === 'admin') return { medicos: await daClinica(), ocultar: [] }
+  return { medicos: [s.medico_id], ocultar: ['saida_recepcao'] }
 }
 
 export async function GET(req: NextRequest) {
-  const medicos = await medicosDaSessao(req)
-  if (!medicos) return NextResponse.json({ error: 'sessão inválida' }, { status: 401 })
+  const escopo = await escopoDaSessao(req)
+  if (!escopo) return NextResponse.json({ error: 'sessão inválida' }, { status: 401 })
+  const { medicos, ocultar } = escopo
   if (!medicos.length) return NextResponse.json({ notificacoes: [], nao_lidas: 0, tem_mais: false })
 
   const { searchParams } = new URL(req.url)
@@ -47,11 +57,15 @@ export async function GET(req: NextRequest) {
     .limit(limite + 1)
   if (soNaoLidas) query = query.eq('lida', false)
   if (antes) query = query.lt('criada_em', antes)
+  if (ocultar.length) query = query.or(`tipo.is.null,tipo.not.in.(${ocultar.join(',')})`)
 
   const [{ data, error }, { count }] = await Promise.all([
     query,
-    supabase.from('notificacoes_medico').select('id', { count: 'exact', head: true })
-      .in('medico_id', medicos).eq('lida', false),
+    (() => {
+      let c = supabase.from('notificacoes_medico').select('id', { count: 'exact', head: true }).in('medico_id', medicos).eq('lida', false)
+      if (ocultar.length) c = c.or(`tipo.is.null,tipo.not.in.(${ocultar.join(',')})`)
+      return c
+    })(),
   ])
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -64,8 +78,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const medicos = await medicosDaSessao(req)
-  if (!medicos) return NextResponse.json({ error: 'sessão inválida' }, { status: 401 })
+  const escopo = await escopoDaSessao(req)
+  if (!escopo) return NextResponse.json({ error: 'sessão inválida' }, { status: 401 })
+  const { medicos } = escopo
   if (!medicos.length) return NextResponse.json({ ok: true })
 
   const { id, lida, todas } = await req.json().catch(() => ({}))

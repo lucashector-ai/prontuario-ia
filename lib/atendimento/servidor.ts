@@ -118,6 +118,7 @@ export async function filaDoDia(ctx: Contexto, p: { dia?: string; medicoId?: str
     atendimentos: (await comMedico((atendimentos || []) as any[])) as any as Atendimento[],
     esperados: (ags || []).filter((a: any) => !comCheckin.has(a.id)),
     medicos: medicos.map((m: any) => ({ id: m.id, nome: m.nome, consultorio_id: m.consultorio_id })),
+    saidas: p.medicoId ? [] : await saidasPendentes(ctx),
   }
 }
 
@@ -289,6 +290,7 @@ const TRANSICOES: Record<Exclude<AcaoAtendimento, 'prioridade'>, { de: string[];
 export async function mudarAtendimento(ctx: Contexto, id: string, acao: AcaoAtendimento, extra: {
   prioridade?: Prioridade
   retorno?: { dias: number; motivo?: string | null } | null
+  saida?: { itens: string[]; obs?: string | null } | null
 } = {}): Promise<Atendimento> {
   const atual = await carregarAtendimento(ctx, id)
   const agora = new Date().toISOString()
@@ -310,16 +312,103 @@ export async function mudarAtendimento(ctx: Contexto, id: string, acao: AcaoAten
 
   if (acao === 'finalizar') {
     if (atual.agendamento_id) await db.from('agendamentos').update({ status: 'realizado' }).eq('id', atual.agendamento_id)
+    let retorno: { id: string; data_prevista: string } | null = null
     if (extra.retorno?.dias && atual.paciente_id) {
       const d = new Date(); d.setDate(d.getDate() + Math.round(extra.retorno.dias))
-      const { error } = await db.from('retornos').insert({
+      const { data: r, error } = await db.from('retornos').insert({
         medico_id: atual.medico_id, paciente_id: atual.paciente_id, data_prevista: hojeSP(d),
         motivo: extra.retorno.motivo || null, origem: 'consulta', status: 'pendente',
-      })
+      }).select('id, data_prevista').single()
       if (error) log.warn('[atendimento] retorno', error.message)
+      else retorno = r
     }
+    await registrarSaida(ctx, atual, retorno, extra.saida || null)
   }
   return carregarAtendimento(ctx, id)
+}
+
+// ── Saída do consultório → recepção ─────────────────────────────────────────
+
+export const ITENS_SAIDA: Record<string, string> = {
+  retorno: 'Agendar retorno', exames: 'Entregar pedido de exames', receita: 'Entregar receita',
+  atestado: 'Entregar atestado/declaração', procedimento: 'Agendar procedimento', encaminhamento: 'Entregar encaminhamento',
+}
+const dataCurta = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+
+/**
+ * Médico finalizou com retorno e/ou recados: a saída fica pendente para a recepção
+ * e ela recebe o aviso (sino + canto da tela). Sem a migration 0019, só avisa.
+ */
+async function registrarSaida(ctx: Contexto, at: Atendimento, retorno: { id: string; data_prevista: string } | null, saida: { itens: string[]; obs?: string | null } | null) {
+  const itens = Array.from(new Set([...(retorno ? ['retorno'] : []), ...(saida?.itens || []).filter(i => i in ITENS_SAIDA)]))
+  const obs = saida?.obs?.trim().slice(0, 500) || null
+  if (!itens.length && !obs) return
+
+  const { error } = await db.from('atendimentos').update({
+    saida_status: 'pendente', saida_itens: itens, saida_obs: obs, retorno_id: retorno?.id || null,
+  }).eq('id', at.id)
+  if (error) log.warn('[atendimento] saída (rode a migration 0019)', error.message)
+
+  const nome = at.paciente?.nome?.split(' ').slice(0, 2).join(' ') || `Senha ${at.senha}`
+  const partes = itens.map(i => i === 'retorno' && retorno ? `Retorno por volta de ${dataCurta(retorno.data_prevista)}` : ITENS_SAIDA[i])
+  if (obs) partes.push(`“${obs}”`)
+  const { error: eN } = await db.from('notificacoes_medico').insert({
+    medico_id: at.medico_id, paciente_id: at.paciente_id, agendamento_id: at.agendamento_id, tipo: 'saida_recepcao',
+    titulo: `${nome} saiu do consultório`, descricao: `${at.medico?.nome || 'Médico'}: ${partes.join(' · ')}`,
+    link: `/recepcao?saida=${at.id}`, lida: false,
+  })
+  if (eN) log.warn('[atendimento] aviso de saída', eN.message)
+}
+
+/** Saídas pendentes (últimos 14 dias) com o retorno pedido, para a recepção resolver. */
+export async function saidasPendentes(ctx: Contexto) {
+  const desde = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10)
+  const { data, error } = await db.from('atendimentos').select(SELECT_ATENDIMENTO)
+    .eq('clinica_id', ctx.clinica).eq('saida_status', 'pendente').gte('dia', desde).order('fim_em', { ascending: false }).limit(50)
+  if (error) return []   // sem a migration 0019
+  const lista = await comMedico((data || []) as any[])
+  const ids = lista.map((a: any) => a.retorno_id).filter(Boolean)
+  const { data: rets } = ids.length ? await db.from('retornos').select('id, data_prevista, motivo, status, agendamento_id').in('id', ids) : { data: [] as any[] }
+  const porId = new Map((rets || []).map((r: any) => [r.id, r]))
+
+  // Retorno já marcado na agenda depois da saída? Liga ao agendamento (selo "Retorno agendado")
+  const abertos = lista.filter((a: any) => a.paciente_id && porId.get(a.retorno_id)?.status === 'pendente')
+  if (abertos.length) {
+    const { data: futuros } = await db.from('agendamentos').select('id, paciente_id, medico_id, data_hora, criado_em, status')
+      .in('paciente_id', abertos.map((a: any) => a.paciente_id)).gte('data_hora', new Date().toISOString()).not('status', 'in', '(cancelado,faltou)')
+    for (const a of abertos as any[]) {
+      const ag = (futuros || []).find((f: any) => f.paciente_id === a.paciente_id && f.medico_id === a.medico_id && (f.criado_em || '') >= (a.fim_em || ''))
+      if (!ag) continue
+      const r = porId.get(a.retorno_id)
+      await db.from('retornos').update({ status: 'agendado', agendamento_id: ag.id }).eq('id', r.id).eq('status', 'pendente')
+      porId.set(r.id, { ...r, status: 'agendado', agendamento_id: ag.id })
+    }
+  }
+  return lista.map((a: any) => ({ ...a, retorno: a.retorno_id ? porId.get(a.retorno_id) || null : null }))
+}
+
+export async function resolverSaida(ctx: Contexto, id: string) {
+  const { data, error } = await db.from('atendimentos').update({ saida_status: 'resolvida', saida_resolvida_em: new Date().toISOString(), saida_resolvida_por: ctx.usuario })
+    .eq('id', id).eq('clinica_id', ctx.clinica).select('id').maybeSingle()
+  if (error) throw error
+  if (!data) throw new ErroAtendimento('Saída não encontrada.', 404)
+  // O aviso dessa saída deixa de contar como não lido
+  await db.from('notificacoes_medico').update({ lida: true }).eq('tipo', 'saida_recepcao').eq('link', `/recepcao?saida=${id}`)
+}
+
+/** WhatsApp para o paciente: a clínica vai marcar o retorno (a Sofia continua a conversa). */
+export async function whatsappRetorno(ctx: Contexto, id: string) {
+  const at: any = await carregarAtendimento(ctx, id)
+  if (!at.paciente?.telefone) throw new ErroAtendimento('Paciente sem celular cadastrado.')
+  let quando = ''
+  if (at.retorno_id) {
+    const { data: r } = await db.from('retornos').select('data_prevista').eq('id', at.retorno_id).maybeSingle()
+    if (r?.data_prevista) quando = ` para por volta de ${dataCurta(r.data_prevista)}`
+  }
+  const nome = at.paciente.nome?.split(' ')[0] || ''
+  const texto = `Olá${nome ? `, ${nome}` : ''}! ${at.medico?.nome ? `${at.medico.nome} pediu` : 'O médico pediu'} seu retorno${quando}. Qual dia e período ficam melhores para você? Responda aqui que já vemos um horário. 🙂`
+  const r = await enviarWhatsApp({ medicoId: at.medico_id, telefone: at.paciente.telefone, texto, registrar: { nome: at.paciente.nome, pacienteId: at.paciente.id, metadata: { atendimento: at.id, tipo: 'retorno_saida' } } })
+  if (!r.ok) throw new ErroAtendimento(r.erro || 'Não foi possível enviar pelo WhatsApp.')
 }
 
 // ── Painel da TV (público, pelo link secreto) ────────────────────────────────
@@ -480,4 +569,13 @@ export async function fichaDoPaciente(ctx: Contexto, pacienteId: string, agendam
     consultas: consultas || [],
     agendamento: (ag as any)?.data || null,
   }
+}
+
+/** Médico escolheu em qual consultório está hoje (recepção e TV passam a usar esse). */
+export async function definirConsultorio(ctx: Contexto, medicoId: string, consultorioId: string) {
+  await garantirMedico(ctx, medicoId)
+  const { data } = await db.from('consultorios').select('id').eq('id', consultorioId).eq('clinica_id', ctx.clinica).eq('ativo', true).maybeSingle()
+  if (!data) throw new ErroAtendimento('Consultório não encontrado.', 404)
+  const { error } = await db.from('medicos').update({ consultorio_id: consultorioId }).eq('id', medicoId)
+  if (error) throw error
 }

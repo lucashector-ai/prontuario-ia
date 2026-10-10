@@ -8,7 +8,7 @@
  *   await marcarNotificacao(id, false)   // volta para não lida
  */
 import type { LucideIcon } from 'lucide-react'
-import { Bell, CalendarClock, CalendarCheck, CalendarX, ClipboardCheck, ListChecks, RefreshCw, Sun, Video } from 'lucide-react'
+import { Bell, DoorOpen, CalendarClock, CalendarCheck, CalendarX, ClipboardCheck, ListChecks, RefreshCw, Sun, Video } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
 
 export type Notificacao = {
@@ -40,6 +40,7 @@ export function estiloDaNotificacao(n: Pick<Notificacao, 'tipo' | 'titulo'>): { 
     case 'lista_espera_agendado': return { icon: ListChecks, cor: T.status.success }
     case 'formulario_preenchido': return { icon: ClipboardCheck, cor: T.status.success }
     case 'resumo_dia': return { icon: Sun, cor: T.data.orange }
+    case 'saida_recepcao': return { icon: DoorOpen, cor: T.data.orange }
     default: return { icon: Bell, cor: T.brand.primary }
   }
 }
