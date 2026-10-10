@@ -23,7 +23,7 @@ export function tokenSessao(): string | null {
  * - Servidor (rotas /api): service role. As rotas são protegidas pelo middleware.
  */
 export const supabase = typeof window === 'undefined'
-  ? createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY || anon, { auth: { persistSession: false, autoRefreshToken: false } })
+  ? createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY || anon, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: (u: any, i: any) => fetch(u, { ...i, cache: 'no-store' }) } })
   : createClient(url, anon, { accessToken: async () => tokenSessao() })
 
 /** Só para o Supabase Auth (OAuth/recuperação de senha) — não lê dados. */

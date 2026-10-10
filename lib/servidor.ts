@@ -5,10 +5,17 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
+/**
+ * fetch sem cache: o Next 14 guarda em cache as requisições GET de rotas que não leem
+ * cookies/headers (ex.: /api/painel) e passaria a devolver o banco "congelado".
+ */
+export const fetchSemCache: typeof fetch = (url, init) => fetch(url, { ...init, cache: 'no-store' })
+
 /** Cliente Supabase do servidor (service role quando disponível — ignora RLS). */
 export const supabaseServidor = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { global: { fetch: fetchSemCache } },
 )
 
 /**
