@@ -18,7 +18,7 @@ import { confirmar, notificar } from '@/components/ui/dialogos'
 import { CanalIcone } from '@/app/chat/pecas'
 
 type Canal = 'whatsapp' | 'instagram' | 'messenger'
-type Conectado = { id: string; canal: Canal; conta_id: string; nome: string | null; foto_url: string | null; status: string; erro: string | null; conectado_em: string | null; medico_id: string }
+type Conectado = { id: string; canal: Canal; conta_id: string; nome: string | null; foto_url: string | null; status: string; erro: string | null; conectado_em: string | null; medico_id: string; detalhe?: { modo?: string | null; legado?: boolean } }
 type Pagina = { id: string; nome: string; foto: string | null; instagram: { id: string; username: string; foto: string | null } | null }
 type Estado = {
   canais: Conectado[]; medicos: { id: string; nome: string }[]; configurado: boolean
@@ -29,7 +29,7 @@ const INFO: Record<Canal, { nome: string; cor: string; descricao: string; requis
   whatsapp: {
     nome: 'WhatsApp', cor: '#25D366',
     descricao: 'Receba e responda pacientes no Chat, com a Sofia, confirmações e lembretes automáticos.',
-    requisito: 'Já usa o WhatsApp Business no celular? Escaneie o QR code e continue usando o app normalmente.',
+    requisito: 'Já usa o WhatsApp Business no celular? Conecte o mesmo número: o app continua funcionando e as conversas aparecem aqui também.',
   },
   instagram: {
     nome: 'Instagram', cor: '#E1306C',
@@ -85,6 +85,7 @@ export default function ConectarCanais() {
   const [erroCarga, setErroCarga] = useState('')
   const [medicoId, setMedicoId] = useState('')
   const [ocupado, setOcupado] = useState<Canal | null>(null)
+  const [guiaWhatsApp, setGuiaWhatsApp] = useState(false)
   const [paginas, setPaginas] = useState<{ token: string; lista: Pagina[]; foco: Canal } | null>(null)
 
   const carregar = useCallback(async () => {
@@ -136,18 +137,20 @@ export default function ConectarCanais() {
       const code: string | null = await new Promise(ok => {
         window.FB.login((r: any) => ok(r?.authResponse?.code || null), {
           config_id: estado.config_whatsapp, response_type: 'code', override_default_response_type: true,
-          // Formato do Cadastro incorporado v4 (igual ao código gerado pela Meta).
-          // whatsapp_business_app_onboarding = coexistência: escaneia o QR no app WhatsApp Business do celular
+          // A versão (v4) vem da configuração criada no painel da Meta. featureType
+          // whatsapp_business_app_onboarding = coexistência: o número continua no app
+          // WhatsApp Business do celular (a Meta mostra o QR/código para confirmar no app).
           extras: modo === 'coexistencia'
-            ? { version: 'v4', featureType: 'whatsapp_business_app_onboarding' }
-            : { version: 'v4' },
+            ? { setup: {}, featureType: 'whatsapp_business_app_onboarding', sessionInfoVersion: '3' }
+            : { setup: {}, sessionInfoVersion: '3' },
         })
       })
       // os dados do número às vezes chegam logo depois do login
       for (let i = 0; i < 20 && code && !sessao && !cancelado; i++) await new Promise(r => setTimeout(r, 150))
       window.removeEventListener('message', ouvir)
       const s = sessao as { phone_number_id?: string; waba_id?: string } | null
-      if (!code || !s?.phone_number_id || !s?.waba_id) {
+      // Coexistência (FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING) traz só o waba_id; o servidor acha o número
+      if (!code || !s?.waba_id || (!s.phone_number_id && modo !== 'coexistencia')) {
         notificar(cancelado && cancelado !== 'cancelado' ? `A Meta interrompeu a conexão: ${cancelado}` : 'Conexão cancelada antes de terminar', cancelado ? 'erro' : 'info')
         return
       }
@@ -245,7 +248,7 @@ export default function ConectarCanais() {
           <div style={{ flex: '1 1 320px', minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 650, color: T.text.primary }}>Conecte seus canais em poucos minutos</div>
             <p style={{ margin: '4px 0 0', fontSize: 13, lineHeight: 1.6, color: T.text.secondary }}>
-              WhatsApp pelo QR code do celular, Instagram com a própria conta do Instagram e Messenger com o Facebook. As janelas são oficiais da Meta — a Clinical 360 nunca vê sua senha.
+              WhatsApp do celular (o app continua funcionando), Instagram com a própria conta do Instagram e Messenger com o Facebook. As janelas são oficiais da Meta — a Clinical 360 nunca vê sua senha.
             </p>
           </div>
           {estado.medicos.length > 1 && (
@@ -293,7 +296,10 @@ export default function ConectarCanais() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: T.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nome || c.conta_id}</div>
                         <div style={{ fontSize: 11.5, color: c.status === 'erro' ? T.status.danger : T.text.tertiary }}>
-                          {c.status === 'erro' ? 'Precisa reconectar' : (estado.medicos.length > 1 && nomeMedico(c.medico_id)) || (c.conectado_em ? `Desde ${new Date(c.conectado_em).toLocaleDateString('pt-BR')}` : 'Configurado manualmente')}
+                          {c.status === 'erro' ? 'Precisa reconectar' : [
+                            c.canal === 'whatsapp' && c.detalhe?.modo === 'coexistencia' ? 'No celular e no Clinical 360' : c.canal === 'whatsapp' && c.detalhe?.modo === 'cloud' ? 'Só no Clinical 360' : null,
+                            (estado.medicos.length > 1 && nomeMedico(c.medico_id)) || (c.conectado_em ? `desde ${new Date(c.conectado_em).toLocaleDateString('pt-BR')}` : 'configurado manualmente'),
+                          ].filter(Boolean).join(' · ')}
                         </div>
                       </div>
                       <Button size="sm" variant="ghost" icon={Unplug} onClick={() => desconectar(c)} aria-label={`Desconectar ${c.nome}`}>Desconectar</Button>
@@ -312,8 +318,8 @@ export default function ConectarCanais() {
                   </Button>
                 ) : canal === 'whatsapp' ? (
                   <>
-                    <Button variant={lista.length ? 'secondary' : 'primary'} icon={QrCode} disabled={indisponivel} onClick={() => conectarWhatsApp('coexistencia')} style={{ width: '100%' }}>
-                      {lista.length ? 'Conectar outro número (QR code)' : 'Conectar com QR code'}
+                    <Button variant={lista.length ? 'secondary' : 'primary'} icon={QrCode} disabled={indisponivel} onClick={() => setGuiaWhatsApp(true)} style={{ width: '100%' }}>
+                      {lista.length ? 'Conectar outro número do celular' : 'Conectar o WhatsApp do celular'}
                     </Button>
                     <button type="button" disabled={indisponivel} onClick={() => conectarWhatsApp('novo')} style={linkSecundario}>
                       Usar um número novo, que não está no celular
@@ -363,7 +369,50 @@ export default function ConectarCanais() {
           }}
         />
       )}
+
+      {guiaWhatsApp && (
+        <GuiaWhatsApp onFechar={() => setGuiaWhatsApp(false)} onContinuar={() => { setGuiaWhatsApp(false); conectarWhatsApp('coexistencia') }} />
+      )}
     </div>
+  )
+}
+
+/** Antes de abrir a janela da Meta: o que vai acontecer, em 4 passos (diminui desistência e erro). */
+function GuiaWhatsApp({ onFechar, onContinuar }: { onFechar: () => void; onContinuar: () => void }) {
+  const passos = [
+    { t: 'Atualize o WhatsApp Business no celular', d: 'Precisa da versão 2.24.17 ou mais nova (Play Store / App Store).' },
+    { t: 'Entre com o Facebook da clínica', d: 'Na janela da Meta, use a conta que administra o negócio.' },
+    { t: 'Escolha conectar o app WhatsApp Business', d: 'Informe o número que está no celular. A Meta mostra um código (ou QR).' },
+    { t: 'Confirme no celular', d: 'Abra a mensagem da Meta no WhatsApp Business, toque em “Conectar” e aceite compartilhar o histórico — assim as conversas dos últimos 6 meses aparecem no Chat.' },
+  ]
+  return (
+    <Modal titulo="Conectar o WhatsApp do celular" onClose={onFechar} largura={520} rodape={
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <Button variant="secondary" onClick={onFechar}>Agora não</Button>
+        <Button icon={QrCode} onClick={onContinuar}>Continuar na Meta</Button>
+      </div>
+    }>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <p style={{ margin: 0, fontSize: 13.5, color: T.text.secondary, lineHeight: 1.55 }}>
+          O número continua no celular: a equipe pode responder pelo app ou pelo Clinical 360, e tudo fica sincronizado.
+        </p>
+        <ol style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {passos.map((p, i) => (
+            <li key={i} style={{ display: 'flex', gap: 12 }}>
+              <span style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'grid', placeItems: 'center', background: T.brand.primarySubtle, color: T.brand.primary, fontSize: 13, fontWeight: 700 }}>{i + 1}</span>
+              <span>
+                <span style={{ display: 'block', fontSize: 13.5, fontWeight: 650, color: T.text.primary }}>{p.t}</span>
+                <span style={{ display: 'block', fontSize: 12.5, color: T.text.secondary, lineHeight: 1.5, marginTop: 2 }}>{p.d}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderRadius: 10, background: T.bg.page, fontSize: 12.5, color: T.text.secondary, lineHeight: 1.5 }}>
+          <Icon icon={Info} size={15} style={{ flexShrink: 0, marginTop: 2 }} />
+          <span>Se a janela só pedir um <b>número novo</b> (sem a opção de conectar o app), a Meta ainda não liberou essa opção para a sua conta. Feche e tente mais tarde, ou use um número novo só para o sistema.</span>
+        </div>
+      </div>
+    </Modal>
   )
 }
 

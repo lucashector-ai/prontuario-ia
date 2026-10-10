@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     conectados.push({ id: 'legado-' + w.phone_number_id, canal: 'whatsapp', conta_id: w.phone_number_id, nome: w.phone_number || 'Número configurado', foto_url: null, status: 'ativo', erro: null, conectado_em: null, medico_id: w.medico_id, detalhe: { legado: true } })
   }
   return NextResponse.json({
-    canais: conectados.map((c: any) => ({ ...c, detalhe: { waba_id: c.detalhe?.waba_id, page_id: c.detalhe?.page_id, username: c.detalhe?.username, legado: !!c.detalhe?.legado } })),
+    canais: conectados.map((c: any) => ({ ...c, detalhe: { waba_id: c.detalhe?.waba_id, page_id: c.detalhe?.page_id, username: c.detalhe?.username, legado: !!c.detalhe?.legado, modo: c.detalhe?.modo || null } })),
     medicos: e.medicos,
     configurado: metaConfigurada(),
     app_id: process.env.NEXT_PUBLIC_META_APP_ID || null,

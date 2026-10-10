@@ -5,6 +5,7 @@ import { iniciarPreAtendimento, registrarRespostaEAvancar, getPreConsultaAtiva, 
 import { getSofiaConfig } from '@/lib/sofia/config'
 import { transcreverAudioWhatsApp } from '@/lib/sofia/transcribe'
 import { checkinPeloWhatsApp } from '@/lib/atendimento/servidor'
+import { importarHistorico, sincronizarContatos } from '@/lib/whatsapp/coexistencia'
 import { dispararConfirmacoes24h, detectarRespostaConfirmacao24h, notificarMedico, marcarConfirmadoVia, tratarRespostaListaEspera } from '@/lib/sofia/confirmacao'
 import { createClient } from '@supabase/supabase-js'
 import { MODELOS } from '@/lib/ai/models'
@@ -502,6 +503,30 @@ export async function POST(req: NextRequest) {
 
     const mudanca = body.entry?.[0]?.changes?.[0]
     const value = mudanca?.value
+
+    // A clínica desconectou o Clinical 360 pelo app/Gerenciador do WhatsApp: marca o canal como desconectado
+    if (mudanca?.field === 'account_update' && ['PARTNER_REMOVED', 'ACCOUNT_OFFBOARDED'].includes(value?.event)) {
+      const waba = String(body.entry?.[0]?.id || value?.waba_info?.waba_id || '')
+      if (waba) {
+        await supabaseAdmin.from('canais_conectados').update({ status: 'desconectado', erro: 'Desconectado pela clínica no WhatsApp', atualizado_em: new Date().toISOString() })
+          .eq('canal', 'whatsapp').contains('detalhe', { waba_id: waba })
+        await supabaseAdmin.from('whatsapp_config').update({ ativo: false }).eq('waba_id', waba)
+        log.info('[whatsapp] conta desconectada pela clínica:', waba, value.event)
+      }
+      return NextResponse.json({ ok: true })
+    }
+
+    // Coexistência: histórico (180 dias) e contatos do app WhatsApp Business, logo após conectar
+    if (mudanca?.field === 'history' || mudanca?.field === 'smb_app_state_sync') {
+      const medicoSync = await getMedicoId(value?.metadata?.phone_number_id)
+      if (medicoSync) {
+        try {
+          const n = mudanca.field === 'history' ? await importarHistorico(medicoSync, value) : await sincronizarContatos(medicoSync, value)
+          log.info(`[coexistencia] ${mudanca.field}:`, n)
+        } catch (e: any) { log.error('[coexistencia]', mudanca.field, e?.message) }
+      }
+      return NextResponse.json({ ok: true })
+    }
 
     // Coexistência: mensagens que a clínica enviou pelo app WhatsApp Business do celular
     if (mudanca?.field === 'smb_message_echoes' && value?.message_echoes?.length) {

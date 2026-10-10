@@ -9,7 +9,8 @@ export const maxDuration = 60
 
 /**
  * Conclusão do "Cadastro incorporado" do WhatsApp (Embedded Signup).
- * O navegador manda o `code` do login da Meta + waba_id e phone_number_id escolhidos.
+ * O navegador manda o `code` do login da Meta + waba_id (e phone_number_id, quando a Meta
+ * informa — na coexistência ela manda só o waba_id; aí buscamos o número na WABA).
  *   1. troca o code por um token do negócio (não expira)
  *   2. inscreve o app na conta do WhatsApp (WABA) para receber mensagens
  *   3. registra o número na Cloud API
@@ -23,17 +24,27 @@ export async function POST(req: NextRequest) {
 
   const code = String(corpo.code || '')
   const wabaId = String(corpo.waba_id || '')
-  const phoneId = String(corpo.phone_number_id || '')
-  if (!code || !wabaId || !phoneId) return NextResponse.json({ error: 'Faltaram dados do cadastro. Tente conectar de novo.' }, { status: 400 })
+  let phoneId = String(corpo.phone_number_id || '')
+  if (!code || !wabaId) return NextResponse.json({ error: 'Faltaram dados do cadastro. Tente conectar de novo.' }, { status: 400 })
 
   try {
     const token = await trocarCodigo(code)
+
+    // Coexistência: a Meta não manda o número — pega o da WABA (o que está no app do celular)
+    if (!phoneId) {
+      const { data: numeros } = await graph<{ data: { id: string; is_on_biz_app?: boolean }[] }>(`${wabaId}/phone_numbers`, {
+        token, params: { fields: 'id,display_phone_number,is_on_biz_app,platform_type' },
+      })
+      phoneId = (numeros.find(n => n.is_on_biz_app) || numeros[0])?.id || ''
+      if (!phoneId) throw new Error('A conta do WhatsApp não tem número. Confira se terminou todas as etapas na janela da Meta.')
+    }
 
     await graph(`${wabaId}/subscribed_apps`, { token, metodo: 'POST' })
 
     // Coexistência (QR code): o número continua no app WhatsApp Business do celular —
     // não registra de novo; pede à Meta para sincronizar contatos e conversas recentes.
-    const coexistencia = corpo.modo === 'coexistencia'
+    const status = await graph<{ is_on_biz_app?: boolean; platform_type?: string }>(phoneId, { token, params: { fields: 'is_on_biz_app,platform_type' } }).catch(() => ({} as any))
+    const coexistencia = corpo.modo === 'coexistencia' || status.is_on_biz_app === true
     const pin = String(randomInt(100000, 999999))
     let avisoRegistro: string | null = null
     if (!coexistencia) {
