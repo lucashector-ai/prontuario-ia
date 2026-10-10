@@ -214,6 +214,15 @@ export default function PainelPage({ params }: { params: { token: string } }) {
         </section>
       </main>
 
+      {/* Recados (ex.: médico atrasado) */}
+      {!!dados?.avisos?.length && (
+        <div role="status" style={{ display: 'flex', alignItems: 'center', gap: '1.2vw', margin: '0 2.4vw 1.6vh', padding: '1.6vh 1.8vw', borderRadius: 18, background: '#FDE68A', color: '#422006', fontSize: '2.6vh', fontWeight: 700 }}>
+          <span style={{ fontSize: '3vh' }}>⏱</span>
+          <span style={{ flex: 1 }}>{dados.avisos[Math.floor(relogio.getTime() / 15000) % dados.avisos.length]}</span>
+          {dados.avisos.length > 1 && <span style={{ fontSize: '1.8vh', opacity: .7 }}>{dados.avisos.length} recados</span>}
+        </div>
+      )}
+
       {/* Rodapé */}
       <footer style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '1.6vh 2.4vw', background: 'rgba(0,0,0,.22)', fontSize: '2.2vh' }}>
         <span style={{ flex: 1, opacity: 0.85 }}>{dados?.setor.mensagem || 'Aguarde ser chamado. Pacientes prioritários são atendidos conforme a lei.'}</span>

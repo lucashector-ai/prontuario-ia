@@ -30,6 +30,7 @@ Rode **sempre em ordem numérica**, de `0000` até a última:
 | `0019_saida_recepcao.sql` | Saída do consultório → recepção (retorno e recados do médico) e avisos em tempo real. |
 | `0020_triagem.sql` | Triagem antes do médico: sinais vitais, classificação de risco por cores e fila do médico pela gravidade. |
 | `0021_totem.sql` | Totem de autoatendimento (link próprio por sala de espera) e senhas de balcão (R001) chamadas pela recepção. |
+| `0022_avisos_painel.sql` | Recados na TV da sala de espera (médico atrasado, avisos da recepção). |
 | `0016_seguranca_rls.sql` | **Segurança**: liga o RLS em todas as tabelas com acesso por clínica (exige `SUPABASE_JWT_SECRET` no app). |
 | `0015_automacoes_estado.sql` | Controle das automações a cada 15 min (evita disparo duplicado com várias abas abertas). |
 

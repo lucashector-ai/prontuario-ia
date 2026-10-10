@@ -13,7 +13,7 @@ import { supabase } from '@/lib/supabase'
 import { listarNotificacoes, marcarNotificacao, estiloDaNotificacao, avisarMudanca, EVENTO_NOTIFICACOES } from '@/lib/notificacoes'
 import { EVENTO_AVISO, type AvisoTela } from '@/lib/atendimento/cliente'
 
-const TIPOS_COM_AVISO = new Set(['saida_recepcao', 'triagem_urgente', 'formulario_preenchido', 'confirmacao_recusada', 'reagendamento_solicitado', 'lista_espera_agendado', 'consulta_iniciando'])
+const TIPOS_COM_AVISO = new Set(['saida_recepcao', 'triagem_urgente', 'atraso_medico', 'formulario_preenchido', 'confirmacao_recusada', 'reagendamento_solicitado', 'lista_espera_agendado', 'consulta_iniciando'])
 const FIXOS = new Set(['saida_recepcao', 'triagem_urgente'])
 const CHAVE_VISTOS = 'c360-avisos-vistos'
 

@@ -426,7 +426,9 @@ export async function dadosDoPainel(token: string) {
       .eq('setor_id', setor.id).gte('criado_em', de).order('criado_em', { ascending: false }).limit(30),
     db.from('clinicas').select('nome, logo_url').eq('id', setor.clinica_id).maybeSingle(),
   ])
+  const avisos = await avisosAtivos(setor.clinica_id, setor.id)
   return {
+    avisos: avisos.map(a => a.texto),
     setor: { nome: setor.nome, voz: setor.painel_voz, mensagem: setor.painel_mensagem },
     clinica: { nome: clinica?.nome || null, logo_url: clinica?.logo_url || null },
     // "Chamar de novo" gera chamada nova (a TV toca de novo), mas a lista mostra cada paciente uma vez
@@ -711,4 +713,85 @@ export async function triagemDoAtendimento(ctx: Contexto, atendimentoId: string)
   const { data, error } = await db.from('triagens').select('*').eq('atendimento_id', atendimentoId).eq('clinica_id', ctx.clinica)
     .order('criado_em', { ascending: false }).limit(1).maybeSingle()
   return error ? null : data
+}
+
+// ── Recados na TV e atraso do médico ─────────────────────────────────────────
+
+export type AvisoPainel = { id: string; tipo: string; texto: string; expira_em: string; medico_id: string | null; setor_id: string | null }
+
+/** Recados ativos da clínica (ou de uma sala). Sem a migration 0022, nenhum. */
+export async function avisosAtivos(clinica: string, setorId?: string | null): Promise<AvisoPainel[]> {
+  let q = db.from('avisos_painel').select('id, tipo, texto, expira_em, medico_id, setor_id').eq('clinica_id', clinica).gt('expira_em', new Date().toISOString())
+  if (setorId) q = q.or(`setor_id.is.null,setor_id.eq.${setorId}`)
+  const { data, error } = await q.order('criado_em', { ascending: false }).limit(10)
+  return error ? [] : ((data || []) as AvisoPainel[])
+}
+
+/** Recepção publica um recado na TV (ex.: "Sistema de cartão fora do ar — aceitamos Pix"). */
+export async function publicarRecado(ctx: Contexto, p: { texto: string; horas: number; setorId?: string | null }) {
+  const texto = String(p.texto || '').trim().slice(0, 160)
+  if (texto.length < 3) throw new ErroAtendimento('Escreva o recado.')
+  const horas = Math.min(12, Math.max(0.25, Number(p.horas) || 1))
+  const { error } = await db.from('avisos_painel').insert({
+    clinica_id: ctx.clinica, setor_id: p.setorId || null, tipo: 'recado', texto,
+    expira_em: new Date(Date.now() + horas * 3600e3).toISOString(), criado_por: ctx.usuario,
+  })
+  if (error) throw error
+}
+
+export async function retirarAviso(ctx: Contexto, id: string) {
+  const { error } = await db.from('avisos_painel').update({ expira_em: new Date().toISOString() }).eq('id', id).eq('clinica_id', ctx.clinica)
+  if (error) throw error
+}
+
+/**
+ * Médico avisa que está atrasado: recado na TV, aviso para a recepção e, se pedir,
+ * WhatsApp para quem ainda não chegou (com o novo horário provável e opção de remarcar).
+ */
+export async function avisarAtraso(ctx: Contexto, p: { medicoId: string; minutos: number; whatsapp: boolean }) {
+  const medico = await garantirMedico(ctx, p.medicoId)
+  const minutos = Math.min(240, Math.max(5, Math.round(Number(p.minutos) || 0)))
+  const agora = new Date()
+  // Um atraso por médico: o novo substitui o anterior
+  await db.from('avisos_painel').update({ expira_em: agora.toISOString() }).eq('clinica_id', ctx.clinica).eq('medico_id', medico.id).eq('tipo', 'atraso').gt('expira_em', agora.toISOString())
+  const { error } = await db.from('avisos_painel').insert({
+    clinica_id: ctx.clinica, medico_id: medico.id, tipo: 'atraso', criado_por: ctx.usuario,
+    texto: `${medico.nome} está com atraso de cerca de ${minutos} min. Agradecemos a compreensão.`,
+    expira_em: new Date(agora.getTime() + Math.max(60, minutos * 2) * 60e3).toISOString(),
+  })
+  if (error) throw error
+
+  await db.from('notificacoes_medico').insert({
+    medico_id: medico.id, tipo: 'atraso_medico', lida: false, link: '/recepcao',
+    titulo: `${medico.nome} vai atrasar ~${minutos} min`, descricao: 'O recado já está na TV da sala de espera. Avise quem perguntar e ofereça remarcar se preferirem.',
+  })
+
+  let enviados = 0
+  if (p.whatsapp) {
+    const { de, ate } = limitesDoDiaSP(hojeSP())
+    const { data: ags } = await db.from('agendamentos').select('id, data_hora, paciente:pacientes(id, nome, telefone)')
+      .eq('medico_id', medico.id).gte('data_hora', new Date(agora.getTime() - 30 * 60e3).toISOString()).lte('data_hora', ate)
+      .gte('data_hora', de).not('status', 'in', '(cancelado,faltou,realizado)')
+    const ids = (ags || []).map((a: any) => a.id)
+    const { data: chegaram } = ids.length ? await db.from('atendimentos').select('agendamento_id').in('agendamento_id', ids) : { data: [] as any[] }
+    const jaAqui = new Set((chegaram || []).map((c: any) => c.agendamento_id))
+    for (const a of (ags || []) as any[]) {
+      if (jaAqui.has(a.id) || !a.paciente?.telefone) continue
+      const previsto = new Date(new Date(a.data_hora).getTime() + minutos * 60e3).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
+      const hora = new Date(a.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
+      const r = await enviarWhatsApp({
+        medicoId: medico.id, telefone: a.paciente.telefone,
+        texto: `Olá, ${a.paciente.nome?.split(' ')[0] || ''}! ${medico.nome} está com atraso de cerca de ${minutos} min hoje. Sua consulta das ${hora} deve começar por volta das ${previsto}. Se preferir remarcar, é só responder aqui. Desculpe o transtorno.`,
+        registrar: { nome: a.paciente.nome, pacienteId: a.paciente.id, metadata: { tipo: 'atraso_medico', agendamento: a.id } },
+      })
+      if (r.ok) enviados++
+    }
+  }
+  return { minutos, enviados }
+}
+
+/** Médico encerrou o atraso (tira o recado da TV). */
+export async function encerrarAtraso(ctx: Contexto, medicoId: string) {
+  await garantirMedico(ctx, medicoId)
+  await db.from('avisos_painel').update({ expira_em: new Date().toISOString() }).eq('clinica_id', ctx.clinica).eq('medico_id', medicoId).eq('tipo', 'atraso').gt('expira_em', new Date().toISOString())
 }

@@ -35,7 +35,7 @@ async function escopoDaSessao(req: NextRequest): Promise<{ medicos: string[]; oc
   if (!s.medico_id) return { medicos: [], ocultar: [] }
   const { data: eu } = await supabase.from('medicos').select('cargo').eq('id', s.medico_id).maybeSingle()
   if (eu?.cargo === 'recepcionista' || eu?.cargo === 'admin') return { medicos: await daClinica(), ocultar: [] }
-  return { medicos: [s.medico_id], ocultar: ['saida_recepcao'] }
+  return { medicos: [s.medico_id], ocultar: ['saida_recepcao', 'atraso_medico'] }
 }
 
 export async function GET(req: NextRequest) {

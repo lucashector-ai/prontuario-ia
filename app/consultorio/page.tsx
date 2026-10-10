@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  AlertTriangle, BellRing, CalendarPlus, CheckCircle2, ClipboardList, DoorOpen, ExternalLink, History, Megaphone, MessageCircle,
+  AlarmClock, AlertTriangle, BellRing, CalendarPlus, CheckCircle2, ClipboardList, DoorOpen, ExternalLink, History, Megaphone, MessageCircle,
   MonitorPlay, Pill, Play, Settings2, Stethoscope, UserX, Users,
 } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
@@ -17,7 +17,7 @@ import { usePageHeader } from '@/components/shell/header-context'
 import { Badge, Button, Card, Chip, EmptyState, Field, Input, Modal, ModalAcoes, Select, Switch, Textarea } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { useFila } from '@/lib/atendimento/useFila'
-import { abrirFicha, avisarFila, carregarConfig, carregarFicha, carregarTriagem, chamar, definirConsultorio, ehDemo, mudar, type Config, type Ficha, type Triagem } from '@/lib/atendimento/cliente'
+import { abrirFicha, avisarAtraso, avisarFila, carregarConfig, encerrarAtraso, carregarFicha, carregarTriagem, chamar, definirConsultorio, ehDemo, mudar, type Config, type Ficha, type Triagem } from '@/lib/atendimento/cliente'
 import { RISCOS, formatarTelefone, hojeSP, imc, minutosDesde, ordenarFila, type Atendimento } from '@/lib/atendimento/comum'
 import { SeloPrioridade, SeloRisco, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade } from '@/components/atendimento/partes'
 import { GravadorConsulta } from '@/components/atendimento/GravadorConsulta'
@@ -64,6 +64,7 @@ export default function ConsultorioPage() {
 
   // Consultório do dia: escolhido ao entrar (vale para hoje, neste computador, para este médico)
   const [escolhendoSala, setEscolhendoSala] = useState(false)
+  const [atrasoAberto, setAtrasoAberto] = useState(false)
   useEffect(() => {
     if (!config || !medicoId) return
     const ativos = config.consultorios.filter(c => c.ativo)
@@ -146,7 +147,16 @@ export default function ConsultorioPage() {
         )}
         {setor && <Button variant="ghost" icon={MonitorPlay} onClick={() => window.open(`/painel/${setor.painel_token}${demo ? '?demo=1' : ''}`, '_blank')}>Painel da TV</Button>}
         <span style={{ flex: 1 }} />
-        <Switch checked={autoChamar} onChange={trocarAuto} label="Chamada automática" />
+        {(() => {
+          const atraso = fila?.avisos?.find(a => a.tipo === 'atraso' && a.medico_id === medicoId)
+          return atraso ? (
+            <Badge tone="warning" icon={AlarmClock}>
+              Atraso avisado · <button onClick={async () => { try { await encerrarAtraso(medicoId); avisarFila(); recarregar(); notificar('Recado de atraso retirado da TV') } catch (e: any) { notificar(e.message, 'erro') } }}
+                style={{ border: 'none', background: 'none', padding: 0, marginLeft: 4, cursor: 'pointer', color: 'inherit', fontWeight: 700, textDecoration: 'underline', fontFamily: 'inherit', fontSize: 'inherit' }}>encerrar</button>
+            </Badge>
+          ) : <Button variant="ghost" icon={AlarmClock} onClick={() => setAtrasoAberto(true)} disabled={!medicoId}>Estou atrasado</Button>
+        })()}
+                <Switch checked={autoChamar} onChange={trocarAuto} label="Chamada automática" />
         <span style={{ fontSize: 13, color: T.text.secondary }}><b style={{ color: T.text.primary }}>{espera.length}</b> na espera · <b style={{ color: T.text.primary }}>{atendidos.length}</b> atendidos</span>
         <Button icon={Megaphone} onClick={() => chamarProximo()} disabled={!podeChamar} title={atual ? 'Finalize o paciente atual primeiro' : undefined}>
           {chamando ? 'Chamando…' : espera.length ? `Chamar próximo · ${espera[0].senha}` : 'Fila vazia'}
@@ -261,6 +271,16 @@ export default function ConsultorioPage() {
         <div style={{ fontSize: 13, color: T.status.danger, display: 'flex', alignItems: 'center', gap: 10 }}>
           {erro.msg} <Button size="sm" variant="secondary" onClick={recarregar}>Tentar de novo</Button>
         </div>
+      )}
+
+      {atrasoAberto && (
+        <ModalAtraso naoChegaram={naoChegaram.length} onClose={() => setAtrasoAberto(false)} onAvisar={async (min, wpp) => {
+          try {
+            const r = await avisarAtraso(medicoId, min, wpp)
+            notificar(`Atraso de ~${r.minutos} min avisado na TV e à recepção${wpp ? ` · ${r.enviados} WhatsApp enviados` : ''}`)
+            setAtrasoAberto(false); avisarFila(); recarregar()
+          } catch (e: any) { notificar(e.message, 'erro') }
+        }} />
       )}
 
       {escolhendoSala && config && (
@@ -532,5 +552,30 @@ function CartaoTriagem({ t }: { t: Triagem }) {
         {t.observacoes && <div style={{ fontSize: 12.5, color: T.text.secondary }}>{t.observacoes}</div>}
       </div>
     </Card>
+  )
+}
+
+/** "Estou atrasado": recado na TV + aviso à recepção; WhatsApp para quem não chegou só se marcar. */
+function ModalAtraso({ naoChegaram, onClose, onAvisar }: { naoChegaram: number; onClose: () => void; onAvisar: (min: number, whatsapp: boolean) => Promise<void> }) {
+  const [min, setMin] = useState(30)
+  const [wpp, setWpp] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  return (
+    <Modal titulo="Avisar atraso" onClose={onClose} largura={460}>
+      <Field label="Quanto tempo, mais ou menos?">
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {[15, 30, 45, 60, 90].map(m => <Chip key={m} ativo={min === m} onClick={() => setMin(m)}>{m < 60 ? `${m} min` : `${m / 60 === 1 ? '1 h' : '1h30'}`}</Chip>)}
+        </div>
+      </Field>
+      <div style={{ fontSize: 13, color: T.text.secondary, margin: '14px 0', lineHeight: 1.5 }}>A TV da sala de espera mostra o recado e a recepção recebe o aviso na hora.</div>
+      <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 10, background: T.bg.page, cursor: 'pointer', fontSize: 13 }}>
+        <input type="checkbox" checked={wpp} onChange={e => setWpp(e.target.checked)} style={{ marginTop: 2, width: 16, height: 16 }} />
+        <span>Avisar pelo WhatsApp quem ainda não chegou ({naoChegaram})<span style={{ display: 'block', fontSize: 12, color: T.text.tertiary, marginTop: 2 }}>Com o novo horário provável e a opção de remarcar.</span></span>
+      </label>
+      <ModalAcoes>
+        <Button variant="secondary" onClick={onClose}>Voltar</Button>
+        <Button icon={AlarmClock} disabled={enviando} onClick={async () => { setEnviando(true); await onAvisar(min, wpp); setEnviando(false) }}>{enviando ? 'Avisando…' : 'Avisar'}</Button>
+      </ModalAcoes>
+    </Modal>
   )
 }

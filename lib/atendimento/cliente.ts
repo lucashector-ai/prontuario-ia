@@ -17,7 +17,8 @@ export type Saida = Atendimento & {
   retorno?: { id: string; data_prevista: string; motivo: string | null; status: string; agendamento_id: string | null } | null
 }
 export type SenhaBalcao = { id: string; senha: string; prioridade: Prioridade; motivo: string | null; status: 'aguardando' | 'chamado'; criado_em: string; chamado_em: string | null; guiche: string | null; origem: string }
-export type Fila = { dia: string; atendimentos: Atendimento[]; esperados: Esperado[]; medicos: { id: string; nome: string; consultorio_id: string | null }[]; saidas?: Saida[]; balcao?: SenhaBalcao[] }
+export type AvisoTV = { id: string; tipo: string; texto: string; expira_em: string; medico_id: string | null }
+export type Fila = { dia: string; atendimentos: Atendimento[]; esperados: Esperado[]; medicos: { id: string; nome: string; consultorio_id: string | null }[]; saidas?: Saida[]; balcao?: SenhaBalcao[]; avisos?: AvisoTV[] }
 
 /** Aviso que aparece no canto da tela (usado pelo modo demonstração; no real vem das notificações). */
 export const EVENTO_AVISO = 'c360:aviso'
@@ -25,7 +26,7 @@ export type AvisoTela = { id: string; tipo?: string | null; titulo: string; desc
 export const avisarNaTela = (a: AvisoTela) => { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(EVENTO_AVISO, { detail: a })) }
 export type Config = { setores: Setor[]; consultorios: Consultorio[] }
 export type Chamada = { id: string; senha: string; nome_exibicao: string | null; local: string; criado_em: string }
-export type DadosPainel = { setor: { nome: string; voz: boolean; mensagem: string | null }; clinica: { nome: string | null; logo_url: string | null }; chamadas: Chamada[] }
+export type DadosPainel = { avisos?: string[]; setor: { nome: string; voz: boolean; mensagem: string | null }; clinica: { nome: string | null; logo_url: string | null }; chamadas: Chamada[] }
 export type AcaoMudar = 'iniciar' | 'finalizar' | 'ausente' | 'voltar_fila' | 'cancelar' | 'prioridade'
 
 export class ErroApi extends Error {
@@ -131,6 +132,31 @@ export async function resolverSaida(id: string) {
 export async function whatsappRetorno(id: string) {
   if (ehDemo()) { await espera(); return { ok: true } }
   return post<{ ok: true }>('/api/atendimento', { acao: 'whatsapp_retorno', id })
+}
+
+// ── Recados na TV e atraso do médico ────────────────────────────────────────
+
+export async function avisarAtraso(medicoId: string, minutos: number, whatsapp: boolean) {
+  if (ehDemo()) {
+    const e = demo.estado(); const m = e.medicos.find(x => x.id === medicoId)
+    e.avisos = [...(e.avisos || []).filter(a => !(a.tipo === 'atraso' && a.medico_id === medicoId)), { id: 'demo-av-' + Date.now(), tipo: 'atraso', medico_id: medicoId, texto: `${m?.nome || 'O médico'} está com atraso de cerca de ${minutos} min. Agradecemos a compreensão.`, expira_em: new Date(Date.now() + Math.max(60, minutos * 2) * 60e3).toISOString() }]
+    demo.gravar(e)
+    avisarNaTela({ id: 'demo-atraso-' + Date.now(), tipo: 'atraso_medico', titulo: `${m?.nome} vai atrasar ~${minutos} min`, descricao: 'O recado já está na TV da sala de espera.', link: '/recepcao?demo=1' })
+    return { minutos, enviados: 0 }
+  }
+  return post<{ minutos: number; enviados: number }>('/api/atendimento', { acao: 'atraso', medico_id: medicoId, minutos, whatsapp })
+}
+export async function encerrarAtraso(medicoId: string) {
+  if (ehDemo()) { const e = demo.estado(); e.avisos = (e.avisos || []).filter(a => !(a.tipo === 'atraso' && a.medico_id === medicoId)); demo.gravar(e); return { ok: true } }
+  return post<{ ok: true }>('/api/atendimento', { acao: 'encerrar_atraso', medico_id: medicoId })
+}
+export async function publicarRecado(texto: string, horas: number) {
+  if (ehDemo()) { const e = demo.estado(); e.avisos = [...(e.avisos || []), { id: 'demo-av-' + Date.now(), tipo: 'recado', medico_id: null, texto, expira_em: new Date(Date.now() + horas * 3600e3).toISOString() }]; demo.gravar(e); return { ok: true } }
+  return post<{ ok: true }>('/api/atendimento', { acao: 'recado', texto, horas })
+}
+export async function retirarAviso(id: string) {
+  if (ehDemo()) { const e = demo.estado(); e.avisos = (e.avisos || []).filter(a => a.id !== id); demo.gravar(e); return { ok: true } }
+  return post<{ ok: true }>('/api/atendimento', { acao: 'retirar_aviso', id })
 }
 
 // ── Balcão (senhas de quem chega sem horário) ───────────────────────────────
@@ -321,7 +347,7 @@ export const avisarFila = () => { if (typeof window !== 'undefined') window.disp
 
 // ── Demonstração ─────────────────────────────────────────────────────────────
 
-type EstadoDemo = Fila & Config & { chamadas: (Chamada & { setor_id: string })[]; contador: Record<string, number>; saidas?: Saida[]; triagens?: Record<string, Triagem>; balcao?: SenhaBalcao[] }
+type EstadoDemo = Fila & Config & { chamadas: (Chamada & { setor_id: string })[]; contador: Record<string, number>; saidas?: Saida[]; triagens?: Record<string, Triagem>; balcao?: SenhaBalcao[]; avisos?: AvisoTV[] }
 const CHAVE = 'c360-demo-fila-v1'
 
 const demo = {
@@ -343,7 +369,7 @@ const demo = {
     const e = this.estado()
     const so = <T extends { medico_id: string }>(l: T[]) => (medicoId ? l.filter(x => x.medico_id === medicoId) : l)
     const comCheckin = new Set(e.atendimentos.map(a => a.agendamento_id))
-    return { dia: e.dia, medicos: e.medicos, atendimentos: so(e.atendimentos), esperados: so(e.esperados).filter(x => !comCheckin.has(x.id)), saidas: medicoId ? [] : (e.saidas || []), balcao: medicoId ? [] : (e.balcao || []) }
+    return { dia: e.dia, medicos: e.medicos, atendimentos: so(e.atendimentos), esperados: so(e.esperados).filter(x => !comCheckin.has(x.id)), saidas: medicoId ? [] : (e.saidas || []), balcao: medicoId ? [] : (e.balcao || []), avisos: (e.avisos || []).filter(a => a.expira_em > new Date().toISOString()) }
   },
   async checkin(p: { agendamento_id?: string; paciente_id?: string; medico_id?: string; prioridade?: Prioridade }) {
     await espera()
@@ -486,6 +512,7 @@ const demo = {
     const e = this.estado()
     const s = e.setores[0]
     return {
+      avisos: (e.avisos || []).filter(a => a.expira_em > new Date().toISOString()).map(a => a.texto),
       setor: { nome: s?.nome || 'Recepção', voz: s?.painel_voz ?? true, mensagem: s?.painel_mensagem || 'Aguarde ser chamado. Mantenha o celular por perto: avisamos pelo WhatsApp quando estiver chegando a sua vez.' },
       clinica: { nome: 'Clínica Demonstração', logo_url: null },
       chamadas: e.chamadas.filter(c => !s || c.setor_id === s.id).slice(0, 8),

@@ -11,6 +11,7 @@
  *   POST { acao: 'resolver_saida' | 'whatsapp_retorno', id }   (saída do consultório)
  *   POST { acao: 'chamar_triagem', consultorio_id, atendimento_id?, rechamar? } · { acao: 'triagem', id, dados }
  *   GET  ?triagem=<atendimento_id>  → última triagem do atendimento
+ *   POST { acao: 'atraso', medico_id, minutos, whatsapp? } · { acao: 'encerrar_atraso', medico_id } · { acao: 'recado', texto, horas } · { acao: 'retirar_aviso', id }
  *   POST { acao: 'chamar_balcao', id?, guiche? } · { acao: 'concluir_balcao', id, status } · { acao: 'senha_balcao', prioridade }
  *   GET  ?ficha=<paciente_id>&agendamento_id=…  → ficha do paciente para o consultório
  *   GET  ?ficha360=<paciente_id>  → histórico completo (gaveta da ficha e exportação)
@@ -19,7 +20,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { log } from '@/lib/logger'
 import {
   ErroAtendimento, atualizarPaciente, chamar, contextoAtendimento, faltaMigration, fazerCheckin, fichaDoPaciente, filaDoDia,
-  chamarTriagem, definirConsultorio, fichaCompleta, marcarFalta, registrarTriagem, triagemDoAtendimento, mudarAtendimento, novoPaciente, resolverSaida, whatsappRetorno,
+  avisarAtraso, avisosAtivos, chamarTriagem, definirConsultorio, encerrarAtraso, publicarRecado, retirarAviso, fichaCompleta, marcarFalta, registrarTriagem, triagemDoAtendimento, mudarAtendimento, novoPaciente, resolverSaida, whatsappRetorno,
   type AcaoAtendimento,
 } from '@/lib/atendimento/servidor'
 import { PRIORIDADES } from '@/lib/atendimento/comum'
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
       dia: dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) ? dia : undefined,
       medicoId: sp.get('medico_id'),
     })
-    return NextResponse.json({ ...fila, balcao: sp.get('medico_id') ? [] : await balcaoDoDia(ctx) })
+    return NextResponse.json({ ...fila, balcao: sp.get('medico_id') ? [] : await balcaoDoDia(ctx), avisos: await avisosAtivos(ctx.clinica) })
   } catch (e) { return erro(e) }
 }
 
@@ -108,6 +109,14 @@ export async function POST(req: NextRequest) {
       if (!b.id) throw new ErroAtendimento('id obrigatório')
       return NextResponse.json({ atendimento: await registrarTriagem(ctx, b.id, b.dados || {}) })
     }
+
+    if (b.acao === 'atraso') {
+      if (!b.medico_id) throw new ErroAtendimento('medico_id obrigatório')
+      return NextResponse.json(await avisarAtraso(ctx, { medicoId: b.medico_id, minutos: Number(b.minutos), whatsapp: !!b.whatsapp }))
+    }
+    if (b.acao === 'encerrar_atraso') { await encerrarAtraso(ctx, String(b.medico_id || '')); return NextResponse.json({ ok: true }) }
+    if (b.acao === 'recado') { await publicarRecado(ctx, { texto: b.texto, horas: b.horas, setorId: b.setor_id || null }); return NextResponse.json({ ok: true }) }
+    if (b.acao === 'retirar_aviso') { await retirarAviso(ctx, String(b.id || '')); return NextResponse.json({ ok: true }) }
 
     if (b.acao === 'chamar_balcao') {
       const senha = await chamarBalcao(ctx, { id: b.id || null, guiche: b.guiche || null })

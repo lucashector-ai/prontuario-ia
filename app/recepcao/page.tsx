@@ -10,14 +10,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowUpDown, CalendarPlus, Check, CheckCheck, Clock, DoorOpen, Hourglass, Megaphone, MessageCircle, Ticket, MonitorPlay, Printer, RotateCcw, Settings2, Stethoscope, UserCheck, UserPlus, UserX, Users, XCircle,
+  AlarmClock, ArrowUpDown, CalendarPlus, MonitorSpeaker, Check, CheckCheck, Clock, DoorOpen, Hourglass, Megaphone, MessageCircle, Ticket, MonitorPlay, Printer, RotateCcw, Settings2, Stethoscope, UserCheck, UserPlus, UserX, Users, XCircle,
 } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
 import { usePageHeader } from '@/components/shell/header-context'
 import { Badge, Button, Card, EmptyState, Field, IconButton, Input, KpiCard, Modal, ModalAcoes, SearchInput, SegmentedControl, Select } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { useFila } from '@/lib/atendimento/useFila'
-import { abrirFicha, atualizarPaciente, avisarFila, chamarBalcao, concluirBalcao, carregarConfig, checkin, ehDemo, marcarFalta, mudar, resolverSaida, whatsappRetorno, type Config, type Fila, type Saida, type SenhaBalcao } from '@/lib/atendimento/cliente'
+import { abrirFicha, atualizarPaciente, avisarFila, chamarBalcao, concluirBalcao, publicarRecado, retirarAviso, carregarConfig, checkin, ehDemo, marcarFalta, mudar, resolverSaida, whatsappRetorno, type Config, type Fila, type Saida, type SenhaBalcao } from '@/lib/atendimento/cliente'
 import { formatarTelefone, minutosDesde, ordenarFila, prioridadePelaIdade, type Atendimento, type Esperado, type Prioridade } from '@/lib/atendimento/comum'
 import { EscolhaPrioridade, ModalSenha, SeloPrioridade, SeloRisco, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade, imprimirSenha } from '@/components/atendimento/partes'
 import { NovoAtendimento } from '@/components/atendimento/NovoAtendimento'
@@ -38,6 +38,7 @@ export default function RecepcaoPage() {
   const [novo, setNovo] = useState(false)
   const [senhaGerada, setSenhaGerada] = useState<Atendimento | null>(null)
   const [mudarPrioridade, setMudarPrioridade] = useState<Atendimento | null>(null)
+  const [recado, setRecado] = useState(false)
   const [agora, setAgora] = useState(() => Date.now())
   const buscaRef = useRef<HTMLInputElement>(null)
 
@@ -125,6 +126,7 @@ export default function RecepcaoPage() {
           </Select>
         )}
         <span style={{ flex: 1 }} />
+        {painel && <Button variant="ghost" icon={MonitorSpeaker} onClick={() => setRecado(true)}>Recado na TV</Button>}
         {painel && <Button variant="secondary" icon={MonitorPlay} onClick={() => window.open(`/painel/${painel.painel_token}${demo ? '?demo=1' : ''}`, '_blank')}>Painel da TV</Button>}
         <Button icon={UserPlus} onClick={() => setNovo(true)} disabled={!fila}>Novo atendimento <kbd style={{ ...kbd, background: 'rgba(255,255,255,.18)', color: '#fff', borderColor: 'rgba(255,255,255,.25)' }}>N</kbd></Button>
       </div>
@@ -134,6 +136,19 @@ export default function RecepcaoPage() {
           <MonitorPlay size={18} />
           <span style={{ flex: 1 }}>Cadastre a sala de espera e os consultórios para usar o painel de chamada na TV.</span>
           <Button size="sm" variant="secondary" onClick={() => router.push('/minha-clinica?aba=atendimento')}>Configurar</Button>
+        </div>
+      )}
+
+      {/* Recados ativos na TV (atraso de médico, avisos da recepção) */}
+      {!!fila?.avisos?.length && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {fila.avisos.map(a => (
+            <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: '#FEF3C7', color: '#713F12', fontSize: 13 }}>
+              <AlarmClock size={16} />
+              <span style={{ flex: 1 }}><b>Na TV:</b> {a.texto} <span style={{ opacity: .7 }}>· até {horaCurta(a.expira_em)}</span></span>
+              <Button size="sm" variant="ghost" onClick={async () => { try { await retirarAviso(a.id); avisarFila(); recarregar() } catch (e: any) { notificar(e.message, 'erro') } }}>Retirar</Button>
+            </div>
+          ))}
         </div>
       )}
 
@@ -249,6 +264,7 @@ export default function RecepcaoPage() {
           onSenha={at => { setNovo(false); setBusca(''); setSenhaGerada(at); avisarFila() }} />
       )}
       {senhaGerada && <ModalSenha at={senhaGerada} setor={nomeSetor(senhaGerada.setor_id)} onClose={() => setSenhaGerada(null)} />}
+      {recado && <ModalRecado onClose={() => setRecado(false)} onPronto={() => { setRecado(false); avisarFila(); recarregar() }} />}
       {mudarPrioridade && <ModalPrioridade at={mudarPrioridade} onClose={() => setMudarPrioridade(null)} />}
     </div>
   )
@@ -511,5 +527,30 @@ function Balcao({ senhas, agora, onAtender, onMudou }: { senhas: SenhaBalcao[]; 
         </div>
       ))}
     </Card>
+  )
+}
+
+/** Recado na TV da sala de espera (some sozinho no prazo escolhido). */
+function ModalRecado({ onClose, onPronto }: { onClose: () => void; onPronto: () => void }) {
+  const [texto, setTexto] = useState('')
+  const [horas, setHoras] = useState(2)
+  const prontos = ['Sistema de cartão fora do ar — aceitamos Pix e dinheiro', 'Atendimento por ordem de chegada e prioridade, conforme a lei', 'Wi-Fi para pacientes: peça a senha na recepção']
+  const salvar = async () => {
+    try { await publicarRecado(texto.trim(), horas); notificar('Recado publicado na TV'); onPronto() } catch (e: any) { notificar(e.message, 'erro') }
+  }
+  return (
+    <Modal titulo="Recado na TV" onClose={onClose} largura={500}>
+      <Field label="Recado"><Input value={texto} onChange={e => setTexto(e.target.value)} maxLength={160} placeholder="Ex.: Dra. Camila atenderá a partir das 14h" autoFocus /></Field>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+        {prontos.map(p => <button key={p} onClick={() => setTexto(p)} style={{ border: `1px solid ${T.border.default}`, background: '#fff', borderRadius: 999, padding: '4px 10px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: T.text.secondary }}>{p}</button>)}
+      </div>
+      <Field label="Fica na TV por" style={{ marginTop: 14 }}>
+        <SegmentedControl value={String(horas)} onChange={v => setHoras(Number(v))} options={[{ value: '0.5', label: '30 min' }, { value: '1', label: '1 h' }, { value: '2', label: '2 h' }, { value: '4', label: '4 h' }, { value: '12', label: 'O dia todo' }]} />
+      </Field>
+      <ModalAcoes>
+        <Button variant="secondary" onClick={onClose}>Voltar</Button>
+        <Button icon={MonitorSpeaker} onClick={salvar} disabled={texto.trim().length < 3}>Publicar</Button>
+      </ModalAcoes>
+    </Modal>
   )
 }
