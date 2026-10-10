@@ -58,11 +58,21 @@ async function garantirMedico(ctx: Contexto, medicoId: string) {
 export async function carregarAtendimento(ctx: Contexto, id: string): Promise<Atendimento> {
   const { data } = await db.from('atendimentos').select(SELECT_ATENDIMENTO).eq('id', id).eq('clinica_id', ctx.clinica).maybeSingle()
   if (!data) throw new ErroAtendimento('Atendimento não encontrado.', 404)
-  return data as any
+  return (await comMedico([data as any]))[0] as any
 }
 
+// O nome do médico vem à parte (comMedico): atendimentos.medico_id não tem chave
+// estrangeira para medicos, então o PostgREST não consegue juntar as tabelas.
 export const SELECT_ATENDIMENTO =
-  '*, paciente:pacientes(id, nome, telefone, data_nascimento), medico:medicos(id, nome), consultorio:consultorios(id, nome)'
+  '*, paciente:pacientes(id, nome, telefone, data_nascimento), consultorio:consultorios(id, nome)'
+
+async function comMedico<T extends { medico_id: string }>(lista: T[]): Promise<(T & { medico: { id: string; nome: string } | null })[]> {
+  const ids = Array.from(new Set(lista.map(a => a.medico_id)))
+  if (!ids.length) return lista.map(a => ({ ...a, medico: null }))
+  const { data } = await db.from('medicos').select('id, nome').in('id', ids)
+  const porId = new Map((data || []).map((m: any) => [m.id, m]))
+  return lista.map(a => ({ ...a, medico: porId.get(a.medico_id) || null }))
+}
 
 // ── Configuração ─────────────────────────────────────────────────────────────
 
@@ -105,7 +115,7 @@ export async function filaDoDia(ctx: Contexto, p: { dia?: string; medicoId?: str
 
   return {
     dia,
-    atendimentos: (atendimentos || []) as any as Atendimento[],
+    atendimentos: (await comMedico((atendimentos || []) as any[])) as any as Atendimento[],
     esperados: (ags || []).filter((a: any) => !comCheckin.has(a.id)),
     medicos: medicos.map((m: any) => ({ id: m.id, nome: m.nome, consultorio_id: m.consultorio_id })),
   }
@@ -130,7 +140,7 @@ export async function fazerCheckin(ctx: Contexto, p: {
     // Check-in repetido devolve o mesmo atendimento (e a mesma senha)
     const { data: existente } = await db.from('atendimentos').select(SELECT_ATENDIMENTO)
       .eq('agendamento_id', p.agendamentoId).eq('clinica_id', ctx.clinica).maybeSingle()
-    if (existente) return { atendimento: existente as any, jaExistia: true }
+    if (existente) return { atendimento: await carregarAtendimento(ctx, (existente as any).id), jaExistia: true }
 
     const { data: ag } = await db.from('agendamentos').select('id, medico_id, paciente_id, data_hora, status').eq('id', p.agendamentoId).maybeSingle()
     if (!ag) throw new ErroAtendimento('Agendamento não encontrado.', 404)
@@ -149,7 +159,7 @@ export async function fazerCheckin(ctx: Contexto, p: {
     const { data: ativo } = await db.from('atendimentos').select(SELECT_ATENDIMENTO)
       .eq('clinica_id', ctx.clinica).eq('dia', dia).eq('paciente_id', pacienteId).eq('medico_id', medicoId)
       .in('status', ['aguardando', 'chamado', 'em_atendimento']).maybeSingle()
-    if (ativo) return { atendimento: ativo as any, jaExistia: true }
+    if (ativo) return { atendimento: await carregarAtendimento(ctx, (ativo as any).id), jaExistia: true }
   }
 
   const prioridade: Prioridade = p.prioridade || prioridadePelaIdade(pac.data_nascimento)
@@ -166,15 +176,15 @@ export async function fazerCheckin(ctx: Contexto, p: {
   if (error) {
     // Corrida: outro computador fez o check-in do mesmo agendamento no mesmo instante
     if (p.agendamentoId && /atendimentos_agendamento_uniq/.test(error.message)) {
-      const { data: outro } = await db.from('atendimentos').select(SELECT_ATENDIMENTO).eq('agendamento_id', p.agendamentoId).single()
-      return { atendimento: outro as any, jaExistia: true }
+      const { data: outro } = await db.from('atendimentos').select('id').eq('agendamento_id', p.agendamentoId).single()
+      return { atendimento: await carregarAtendimento(ctx, (outro as any).id), jaExistia: true }
     }
     throw error
   }
   if (p.agendamentoId) {
     await db.from('agendamentos').update({ status: 'confirmado' }).eq('id', p.agendamentoId).in('status', ['agendado', 'confirmacao_enviada'])
   }
-  return { atendimento: data as any, jaExistia: false }
+  return { atendimento: await carregarAtendimento(ctx, (data as any).id), jaExistia: false }
 }
 
 // ── Chamada ──────────────────────────────────────────────────────────────────
@@ -331,8 +341,12 @@ export async function dadosDoPainel(token: string) {
   }
 }
 
-export const faltaMigration = (e: any) => /atendimentos|setores|consultorios|chamadas_painel|c360_proxima_senha|c360_chamar_proximo|consultorio_id/.test(e?.message || '') &&
-  /does not exist|schema cache|Could not find/i.test(e?.message || '')
+/** Só "tabela/função não existe" conta como migration faltando (erro de junção ou de coluna aparece como erro normal). */
+export const faltaMigration = (e: any) => {
+  const m = String(e?.message || '')
+  return /(relation|table|function)[^]*(atendimentos|setores|consultorios|chamadas_painel|senhas_contador|c360_proxima_senha|c360_chamar_proximo)[^]*(does not exist|schema cache)/i.test(m)
+    || /Could not find the (table|function) [^]*(atendimentos|setores|consultorios|chamadas_painel|c360_)/i.test(m)
+}
 
 // ── Check-in pelo WhatsApp ("cheguei") ───────────────────────────────────────
 
