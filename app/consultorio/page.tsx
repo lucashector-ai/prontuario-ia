@@ -17,9 +17,9 @@ import { usePageHeader } from '@/components/shell/header-context'
 import { Badge, Button, Card, Chip, EmptyState, Field, Input, Modal, ModalAcoes, Select, Switch, Textarea } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { useFila } from '@/lib/atendimento/useFila'
-import { abrirFicha, avisarFila, carregarConfig, carregarFicha, chamar, definirConsultorio, ehDemo, mudar, type Config, type Ficha } from '@/lib/atendimento/cliente'
-import { formatarTelefone, hojeSP, minutosDesde, ordenarFila, type Atendimento } from '@/lib/atendimento/comum'
-import { SeloPrioridade, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade } from '@/components/atendimento/partes'
+import { abrirFicha, avisarFila, carregarConfig, carregarFicha, carregarTriagem, chamar, definirConsultorio, ehDemo, mudar, type Config, type Ficha, type Triagem } from '@/lib/atendimento/cliente'
+import { RISCOS, formatarTelefone, hojeSP, imc, minutosDesde, ordenarFila, type Atendimento } from '@/lib/atendimento/comum'
+import { SeloPrioridade, SeloRisco, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade } from '@/components/atendimento/partes'
 import { GravadorConsulta } from '@/components/atendimento/GravadorConsulta'
 
 const PRAZOS_RETORNO = [7, 15, 30, 60, 90, 180]
@@ -88,6 +88,7 @@ export default function ConsultorioPage() {
     .sort((a, b) => (b.chamado_em || '').localeCompare(a.chamado_em || ''))[0] || null, [meus])
   const espera = useMemo(() => ordenarFila(meus.filter(a => a.status === 'aguardando')), [meus])
   const ausentes = meus.filter(a => a.status === 'ausente')
+  const naTriagem = meus.filter(a => a.status === 'aguardando_triagem' || a.status === 'em_triagem').length
   const atendidos = meus.filter(a => a.status === 'finalizado').sort((a, b) => (b.fim_em || '').localeCompare(a.fim_em || ''))
   const naoChegaram = (fila?.esperados || []).filter(e => e.medico_id === medicoId)
   const sala = config?.consultorios.find(c => c.id === consultorioId)
@@ -166,7 +167,9 @@ export default function ConsultorioPage() {
         {/* Fila */}
         <div className="c360-consultorio-fila" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Card padding={0}>
-            <div style={cab}><Users size={15} /> Na espera · {espera.length}</div>
+            <div style={cab}><Users size={15} /> Na espera · {espera.length}
+              {naTriagem > 0 && <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 600, color: T.text.secondary }}>+{naTriagem} na triagem</span>}
+            </div>
             {carregando && !fila ? <div style={{ padding: 16 }}><span className="c360-skel" style={{ display: 'block', height: 14, borderRadius: 6 }} /></div>
               : espera.length === 0 ? <div style={vazio}>Ninguém na sala de espera.</div>
               : espera.map((a, i) => (
@@ -179,7 +182,7 @@ export default function ConsultorioPage() {
                     </div>
                     <div style={{ fontSize: 11.5, color: T.text.secondary, marginTop: 3, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                       {a.horario_previsto ? `agendado ${horaCurta(a.horario_previsto)}` : 'encaixe'} · espera {esperaTexto(minutosDesde(a.chegada_em, agora))}
-                      <SeloPrioridade prioridade={a.prioridade} />
+                      <SeloRisco risco={a.risco} /><SeloPrioridade prioridade={a.prioridade} />
                     </div>
                   </div>
                   <Button size="sm" variant="secondary" onClick={() => chamarProximo(a.id)} disabled={chamando || !!atual}>Chamar</Button>
@@ -286,10 +289,12 @@ function PacienteAtual({ at, medicoId, agora, chamando, onEntrou, onAusente, onR
   onEntrou: () => void; onAusente: () => void; onRechamar: () => void; onFinalizar: () => void; onProntuario: (salvo: boolean) => void
 }) {
   const [ficha, setFicha] = useState<Ficha | null>(null)
+  const [triagem, setTriagem] = useState<Triagem | null>(null)
   useEffect(() => {
     if (!at.paciente_id) return
     carregarFicha(at.paciente_id, at.agendamento_id).then(setFicha).catch(() => setFicha(null))
   }, [at.paciente_id, at.agendamento_id])
+  useEffect(() => { if (at.risco) carregarTriagem(at.id).then(setTriagem).catch(() => {}) }, [at.id, at.risco])
 
   const anos = idade(at.paciente?.data_nascimento)
   const emAtendimento = at.status === 'em_atendimento'
@@ -307,7 +312,7 @@ function PacienteAtual({ at, medicoId, agora, chamando, onEntrou, onAusente, onR
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <button onClick={() => abrirFicha(at.paciente_id)} title="Ver ficha e histórico" style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 19, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>{at.paciente?.nome || 'Paciente'}</button>
-              <SeloStatus status={at.status} /><SeloPrioridade prioridade={at.prioridade} />
+              <SeloStatus status={at.status} /><SeloRisco risco={at.risco} completo /><SeloPrioridade prioridade={at.prioridade} />
               {ficha?.paciente.alergias && <Badge tone="danger" icon={AlertTriangle}>Alergia: {ficha.paciente.alergias}</Badge>}
             </div>
             <div style={{ fontSize: 13, color: T.text.secondary, marginTop: 3 }}>
@@ -345,8 +350,11 @@ function PacienteAtual({ at, medicoId, agora, chamando, onEntrou, onAusente, onR
           )}
         </Card>
 
-        {/* Ficha */}
-        <FichaLateral ficha={ficha} pacienteId={at.paciente_id} />
+        {/* Triagem + ficha */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {triagem && <CartaoTriagem t={triagem} />}
+          <FichaLateral ficha={ficha} pacienteId={at.paciente_id} />
+        </div>
       </div>
     </>
   )
@@ -493,5 +501,36 @@ function ModalSala({ config, atual, outros, onEscolher, onClose }: {
         </div>
       ))}
     </Modal>
+  )
+}
+
+/** O que a enfermagem registrou na triagem, para o médico ver de relance. */
+function CartaoTriagem({ t }: { t: Triagem }) {
+  const r = RISCOS.find(x => x.valor === t.risco)
+  const itens: [string, string | null][] = [
+    ['PA', t.pa_sistolica ? `${t.pa_sistolica}x${t.pa_diastolica ?? '?'}` : null], ['FC', t.fc ? `${t.fc} bpm` : null], ['FR', t.fr ? `${t.fr} irpm` : null],
+    ['Temp', t.temperatura ? `${t.temperatura}°C` : null], ['SpO₂', t.spo2 ? `${t.spo2}%` : null], ['Glicemia', t.glicemia ? `${t.glicemia}` : null],
+    ['Dor', t.dor !== null && t.dor !== undefined ? `${t.dor}/10` : null], ['Peso', t.peso ? `${t.peso} kg` : null],
+    ['IMC', imc(t.peso, t.altura) ? String(imc(t.peso, t.altura)) : null],
+  ]
+  return (
+    <Card padding={0} style={{ overflow: 'hidden', border: r ? `1px solid ${r.cor}` : undefined }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: r ? `color-mix(in srgb, ${r.cor} 12%, #fff)` : undefined, fontSize: 13.5, fontWeight: 700 }}>
+        <span style={{ width: 10, height: 10, borderRadius: '50%', background: r?.cor }} /> Triagem · {r?.label}
+        <span style={{ marginLeft: 'auto', fontSize: 11.5, fontWeight: 500, color: T.text.secondary }}>{new Date(t.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+      </div>
+      <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {t.queixa && <div style={{ fontSize: 13, lineHeight: 1.45 }}><b>Queixa:</b> {t.queixa}</div>}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
+          {itens.filter(([, v]) => v).map(([k, v]) => (
+            <div key={k} style={{ padding: '6px 8px', borderRadius: 8, background: T.bg.page }}>
+              <div style={{ fontSize: 10.5, color: T.text.tertiary, fontWeight: 700 }}>{k}</div>
+              <div style={{ fontSize: 13, fontWeight: 650 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+        {t.observacoes && <div style={{ fontSize: 12.5, color: T.text.secondary }}>{t.observacoes}</div>}
+      </div>
+    </Card>
   )
 }

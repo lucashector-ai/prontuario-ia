@@ -38,6 +38,7 @@ function campos(tipo: string, b: any) {
     if (EXIBICOES.includes(b.painel_exibicao)) c.painel_exibicao = b.painel_exibicao
     if (typeof b.painel_voz === 'boolean') c.painel_voz = b.painel_voz
     if (typeof b.avisar_whatsapp === 'boolean') c.avisar_whatsapp = b.avisar_whatsapp
+    if (typeof b.usa_triagem === 'boolean') c.usa_triagem = b.usa_triagem
     if (b.painel_mensagem !== undefined) c.painel_mensagem = String(b.painel_mensagem || '').slice(0, 200) || null
   }
   return c

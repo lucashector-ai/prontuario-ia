@@ -132,6 +132,29 @@ export async function whatsappRetorno(id: string) {
   return post<{ ok: true }>('/api/atendimento', { acao: 'whatsapp_retorno', id })
 }
 
+// ── Triagem ──────────────────────────────────────────────────────────────────
+
+export type Triagem = {
+  id: string; criado_em: string; risco: string; queixa: string | null; observacoes: string | null
+  pa_sistolica: number | null; pa_diastolica: number | null; fc: number | null; fr: number | null; temperatura: number | null
+  spo2: number | null; glicemia: number | null; peso: number | null; altura: number | null; dor: number | null
+}
+
+export async function chamarTriagem(p: { consultorio_id: string | null; atendimento_id?: string; rechamar?: boolean }) {
+  if (ehDemo()) return demo.chamarTriagem(p)
+  return post<{ atendimento: Atendimento | null; fila_vazia: boolean }>('/api/atendimento', { acao: 'chamar_triagem', ...p })
+}
+
+export async function registrarTriagem(id: string, dados: Record<string, any>) {
+  if (ehDemo()) return demo.registrarTriagem(id, dados)
+  return post<{ atendimento: Atendimento }>('/api/atendimento', { acao: 'triagem', id, dados })
+}
+
+export async function carregarTriagem(atendimentoId: string): Promise<Triagem | null> {
+  if (ehDemo()) { const t = demo.estado().triagens?.[atendimentoId]; return t || null }
+  return (await api<{ triagem: Triagem | null }>('/api/atendimento?triagem=' + encodeURIComponent(atendimentoId))).triagem
+}
+
 // ── Ficha 360 (gaveta do paciente, abre de qualquer tela) ───────────────────
 
 export type Ficha360 = {
@@ -206,7 +229,7 @@ export const avisarFila = () => { if (typeof window !== 'undefined') window.disp
 
 // ── Demonstração ─────────────────────────────────────────────────────────────
 
-type EstadoDemo = Fila & Config & { chamadas: (Chamada & { setor_id: string })[]; contador: Record<string, number>; saidas?: Saida[] }
+type EstadoDemo = Fila & Config & { chamadas: (Chamada & { setor_id: string })[]; contador: Record<string, number>; saidas?: Saida[]; triagens?: Record<string, Triagem> }
 const CHAVE = 'c360-demo-fila-v1'
 
 const demo = {
@@ -245,7 +268,7 @@ const demo = {
     const at: Atendimento = {
       id: 'demo-at-' + Date.now(), clinica_id: 'demo', medico_id: medicoId, paciente_id: paciente?.id || null,
       agendamento_id: ag?.id || null, setor_id: e.setores[0].id, consultorio_id: med.consultorio_id, dia: e.dia,
-      senha: pref + String(e.contador[pref]).padStart(3, '0'), status: 'aguardando', prioridade,
+      senha: pref + String(e.contador[pref]).padStart(3, '0'), status: e.setores[0]?.usa_triagem ? 'aguardando_triagem' : 'aguardando', prioridade,
       origem: ag ? 'recepcao' : 'encaixe', horario_previsto: ag?.data_hora || null, chegada_em: new Date().toISOString(),
       chamado_em: null, chamadas: 0, inicio_em: null, fim_em: null, observacao: null,
       paciente, medico: { id: med.id, nome: med.nome }, consultorio: e.consultorios.find(c => c.id === med.consultorio_id) || null,
@@ -293,6 +316,30 @@ const demo = {
     if (para === 'ausente') at.status = 'ausente'
     if (para === 'voltar_fila') at.status = 'aguardando'
     if (para === 'cancelar') at.status = 'cancelado'
+    this.gravar(e)
+    return { atendimento: at }
+  },
+  async chamarTriagem(p: { consultorio_id: string | null; atendimento_id?: string; rechamar?: boolean }) {
+    await espera()
+    const e = this.estado()
+    const at = p.atendimento_id ? e.atendimentos.find(a => a.id === p.atendimento_id)
+      : ordenarFila(e.atendimentos.filter(a => a.status === 'aguardando_triagem'))[0]
+    if (!at) return { atendimento: null, fila_vazia: true }
+    Object.assign(at, { status: 'em_triagem', chamado_em: new Date().toISOString(), chamadas: at.chamadas + 1 })
+    const sala = e.consultorios.find(c => c.id === p.consultorio_id)
+    const setor = e.setores[0]
+    e.chamadas.unshift({ id: 'demo-ch-' + Date.now(), setor_id: setor.id, senha: at.senha, nome_exibicao: nomeNoPainel(at.paciente?.nome, setor.painel_exibicao), local: sala?.nome || 'Triagem', criado_em: new Date().toISOString() })
+    this.gravar(e)
+    return { atendimento: at, fila_vazia: false }
+  },
+  async registrarTriagem(id: string, dados: Record<string, any>) {
+    await espera()
+    const e = this.estado()
+    const at = e.atendimentos.find(a => a.id === id)
+    if (!at) throw new ErroApi('Atendimento não encontrado.')
+    Object.assign(at, { status: 'aguardando', risco: dados.risco })
+    e.triagens = { ...(e.triagens || {}), [id]: { id: 'demo-tri-' + id, criado_em: new Date().toISOString(), ...dados } as any }
+    if (dados.risco === 'vermelho' || dados.risco === 'laranja') avisarNaTela({ id: 'demo-tri-' + id, tipo: 'triagem_urgente', titulo: `${dados.risco === 'vermelho' ? 'EMERGÊNCIA' : 'Muito urgente'}: ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ')}`, descricao: `Triagem ${dados.risco}${dados.queixa ? ` · ${dados.queixa}` : ''}`, link: '/consultorio?demo=1' })
     this.gravar(e)
     return { atendimento: at }
   },

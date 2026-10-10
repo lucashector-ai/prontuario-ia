@@ -155,6 +155,7 @@ function CartaoSetor({ setor, consultorios, salvar, recarregar }: {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
           <Switch checked={setor.painel_voz} onChange={v => patch({ painel_voz: v })} label="Chamar por voz" descricao="A TV fala a senha, o nome e o consultório." />
           <Switch checked={setor.avisar_whatsapp} onChange={v => patch({ avisar_whatsapp: v })} label="Avisar no WhatsApp" descricao="“Você é o próximo” e “É a sua vez” para o paciente." />
+          <Switch checked={!!setor.usa_triagem} onChange={v => patch({ usa_triagem: v }, v ? 'Triagem ligada: o check-in agora vai para a triagem' : 'Triagem desligada')} label="Triagem antes do médico" descricao="Enfermagem registra sinais vitais e a cor de risco; a fila do médico ordena pela gravidade." />
         </div>
 
         <Field label="Mensagem no rodapé da TV (opcional)">

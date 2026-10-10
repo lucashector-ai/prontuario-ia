@@ -46,3 +46,28 @@ describe('fila de atendimento', () => {
     for (const t of ['quando eu chego?', 'cheguei a pensar em remarcar minha consulta de amanhã porque não vou conseguir ir', 'qual o endereço', 'não cheguei ainda']) expect(ehMensagemDeChegada(t), t).toBe(false)
   })
 })
+
+import { sugerirRisco, ordenarFila as ordenar2, imc } from '../atendimento/comum'
+describe('triagem', () => {
+  it('sugere a cor pelos sinais vitais (pior sinal manda)', () => {
+    expect(sugerirRisco({ pa_sistolica: 120, pa_diastolica: 80, fc: 78, spo2: 98, temperatura: 36.5 }).risco).toBe('verde')
+    expect(sugerirRisco({ temperatura: 38.9 }).risco).toBe('amarelo')
+    expect(sugerirRisco({ pa_sistolica: 185, pa_diastolica: 110 }).risco).toBe('laranja')
+    const r = sugerirRisco({ spo2: 86, temperatura: 38.9 })
+    expect(r.risco).toBe('vermelho')
+    expect(r.motivos).toEqual(['Saturação 86%', 'Febre 38.9°C'])
+    expect(sugerirRisco({ dor: 9 }).risco).toBe('laranja')
+    expect(sugerirRisco({}).risco).toBe('verde')
+  })
+
+  it('fila do médico: gravidade da triagem antes da prioridade da lei', () => {
+    const a = (id: string, prioridade: any, risco: any) => ({ id, prioridade, risco, horario_previsto: null, chegada_em: '2026-10-06T08:00:00Z' })
+    expect(ordenar2([a('80+', 'prioritario_80', 'verde'), a('lar', 'normal', 'laranja'), a('sem', 'normal', null), a('ver', 'normal', 'vermelho')]).map(x => x.id))
+      .toEqual(['ver', 'lar', '80+', 'sem'])
+  })
+
+  it('calcula o IMC', () => {
+    expect(imc(80, 180)).toBe(24.7)
+    expect(imc(null, 180)).toBeNull()
+  })
+})

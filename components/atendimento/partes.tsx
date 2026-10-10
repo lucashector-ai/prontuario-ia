@@ -6,10 +6,10 @@
 import { Accessibility, Droplet, Printer, Ticket } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
 import { Badge, Button, Modal, ModalAcoes, type BadgeTone } from '@/components/ui'
-import { PRIORIDADES, ROTULO_STATUS, type Atendimento, type Prioridade, type StatusAtendimento } from '@/lib/atendimento/comum'
+import { PRIORIDADES, RISCOS, ROTULO_STATUS, type Atendimento, type Prioridade, type StatusAtendimento } from '@/lib/atendimento/comum'
 
 const TOM_STATUS: Record<StatusAtendimento, BadgeTone> = {
-  aguardando: 'pending', chamado: 'accent', em_atendimento: 'info', finalizado: 'success', ausente: 'danger', cancelado: 'neutral',
+  aguardando_triagem: 'pending', em_triagem: 'info', aguardando: 'pending', chamado: 'accent', em_atendimento: 'info', finalizado: 'success', ausente: 'danger', cancelado: 'neutral',
 }
 
 export function SeloStatus({ status }: { status: StatusAtendimento }) {
@@ -119,6 +119,17 @@ export function SenhaChip({ senha, destaque }: { senha: string; destaque?: boole
       background: destaque ? T.brand.primary : T.brand.primarySubtle, color: destaque ? '#fff' : T.brand.primary, flexShrink: 0,
     }}>
       <Ticket size={13} strokeWidth={2} />{senha}
+    </span>
+  )
+}
+
+/** Cor da triagem (classificação de risco). */
+export function SeloRisco({ risco, completo }: { risco?: string | null; completo?: boolean }) {
+  const r = RISCOS.find(x => x.valor === risco)
+  if (!r) return null
+  return (
+    <span title={`${r.label} · ${r.prazo}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 999, fontSize: 11.5, fontWeight: 700, background: `color-mix(in srgb, ${r.cor} 14%, #fff)`, color: r.cor, flexShrink: 0 }}>
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: r.cor }} />{completo ? r.label : r.valor[0].toUpperCase() + r.valor.slice(1)}
     </span>
   )
 }

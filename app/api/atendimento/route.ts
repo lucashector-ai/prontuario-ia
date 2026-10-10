@@ -9,6 +9,8 @@
  *   POST { acao: 'atualizar_paciente', paciente_id, telefone?, cpf?, data_nascimento?, convenio?, nr_carteirinha? }
  *   POST { acao: 'faltou', agendamento_id }
  *   POST { acao: 'resolver_saida' | 'whatsapp_retorno', id }   (saída do consultório)
+ *   POST { acao: 'chamar_triagem', consultorio_id, atendimento_id?, rechamar? } · { acao: 'triagem', id, dados }
+ *   GET  ?triagem=<atendimento_id>  → última triagem do atendimento
  *   GET  ?ficha=<paciente_id>&agendamento_id=…  → ficha do paciente para o consultório
  *   GET  ?ficha360=<paciente_id>  → histórico completo (gaveta da ficha e exportação)
  */
@@ -16,7 +18,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { log } from '@/lib/logger'
 import {
   ErroAtendimento, atualizarPaciente, chamar, contextoAtendimento, faltaMigration, fazerCheckin, fichaDoPaciente, filaDoDia,
-  definirConsultorio, fichaCompleta, marcarFalta, mudarAtendimento, novoPaciente, resolverSaida, whatsappRetorno,
+  chamarTriagem, definirConsultorio, fichaCompleta, marcarFalta, registrarTriagem, triagemDoAtendimento, mudarAtendimento, novoPaciente, resolverSaida, whatsappRetorno,
   type AcaoAtendimento,
 } from '@/lib/atendimento/servidor'
 import { PRIORIDADES } from '@/lib/atendimento/comum'
@@ -39,6 +41,7 @@ export async function GET(req: NextRequest) {
     const sp = req.nextUrl.searchParams
     if (sp.get('ficha')) return NextResponse.json(await fichaDoPaciente(ctx, sp.get('ficha')!, sp.get('agendamento_id')))
     if (sp.get('ficha360')) return NextResponse.json(await fichaCompleta(ctx, sp.get('ficha360')!))
+    if (sp.get('triagem')) return NextResponse.json({ triagem: await triagemDoAtendimento(ctx, sp.get('triagem')!) })
     const dia = sp.get('dia')
     return NextResponse.json(await filaDoDia(ctx, {
       dia: dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) ? dia : undefined,
@@ -91,6 +94,16 @@ export async function POST(req: NextRequest) {
       const { acao, paciente_id, ...dados } = b
       await atualizarPaciente(ctx, paciente_id, dados)
       return NextResponse.json({ ok: true })
+    }
+
+    if (b.acao === 'chamar_triagem') {
+      const at = await chamarTriagem(ctx, { consultorioId: b.consultorio_id || null, atendimentoId: b.atendimento_id || null, rechamar: !!b.rechamar })
+      return NextResponse.json({ atendimento: at, fila_vazia: !at })
+    }
+
+    if (b.acao === 'triagem') {
+      if (!b.id) throw new ErroAtendimento('id obrigatório')
+      return NextResponse.json({ atendimento: await registrarTriagem(ctx, b.id, b.dados || {}) })
     }
 
     if (b.acao === 'definir_consultorio') {

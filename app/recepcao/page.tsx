@@ -19,7 +19,7 @@ import { confirmar, notificar } from '@/components/ui/dialogos'
 import { useFila } from '@/lib/atendimento/useFila'
 import { abrirFicha, atualizarPaciente, avisarFila, carregarConfig, checkin, ehDemo, marcarFalta, mudar, resolverSaida, whatsappRetorno, type Config, type Fila, type Saida } from '@/lib/atendimento/cliente'
 import { formatarTelefone, minutosDesde, ordenarFila, prioridadePelaIdade, type Atendimento, type Esperado, type Prioridade } from '@/lib/atendimento/comum'
-import { EscolhaPrioridade, ModalSenha, SeloPrioridade, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade, imprimirSenha } from '@/components/atendimento/partes'
+import { EscolhaPrioridade, ModalSenha, SeloPrioridade, SeloRisco, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade, imprimirSenha } from '@/components/atendimento/partes'
 import { NovoAtendimento } from '@/components/atendimento/NovoAtendimento'
 
 const semAcento = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -70,15 +70,16 @@ export default function RecepcaoPage() {
   const esperados = filtroAgenda === 'atrasados' ? atrasados : todosEsperados
 
   const naClinica = useMemo(() => {
-    const ativos = (fila?.atendimentos || []).filter(a => ['aguardando', 'chamado', 'em_atendimento', 'ausente'].includes(a.status)
+    const ativos = (fila?.atendimentos || []).filter(a => ['aguardando_triagem', 'em_triagem', 'aguardando', 'chamado', 'em_atendimento', 'ausente'].includes(a.status)
       && (!medicoFiltro || a.medico_id === medicoFiltro) && casa(a.paciente?.nome, a.senha, a.paciente?.telefone))
     return {
+      triagem: ordenarFila(ativos.filter(a => a.status === 'aguardando_triagem' || a.status === 'em_triagem')),
       agora: ativos.filter(a => a.status === 'chamado' || a.status === 'em_atendimento'),
       aguardando: ordenarFila(ativos.filter(a => a.status === 'aguardando')),
       ausentes: ativos.filter(a => a.status === 'ausente'),
     }
   }, [fila, medicoFiltro, busca])
-  const totalNaClinica = naClinica.agora.length + naClinica.aguardando.length + naClinica.ausentes.length
+  const totalNaClinica = naClinica.triagem.length + naClinica.agora.length + naClinica.aguardando.length + naClinica.ausentes.length
   const finalizados = (fila?.atendimentos || []).filter(a => a.status === 'finalizado' && (!medicoFiltro || a.medico_id === medicoFiltro))
 
   // Indicadores
@@ -200,7 +201,9 @@ export default function RecepcaoPage() {
             <>
               {naClinica.agora.length > 0 && <Secao titulo="Chamados e em atendimento" />}
               {naClinica.agora.map(a => <LinhaNaClinica key={a.id} a={a} agora={agora} />)}
-              {naClinica.aguardando.length > 0 && <Secao titulo="Aguardando" />}
+              {naClinica.triagem.length > 0 && <Secao titulo="Na triagem" />}
+              {naClinica.triagem.map(a => <LinhaNaClinica key={a.id} a={a} agora={agora} />)}
+              {naClinica.aguardando.length > 0 && <Secao titulo="Aguardando o médico" />}
               {naClinica.aguardando.map(a => (
                 <LinhaNaClinica key={a.id} a={a} agora={agora} posicao={naClinica.aguardando.filter(x => x.medico_id === a.medico_id).indexOf(a) + 1}>
                   <IconButton icon={Printer} size={30} title="Reimprimir senha" onClick={() => imprimirSenha(a, nomeSetor(a.setor_id))} />
@@ -263,7 +266,7 @@ function LinhaNaClinica({ a, agora, posicao, children }: { a: Atendimento; agora
       <SenhaChip senha={a.senha} destaque={a.status === 'chamado'} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 650, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-          <NomePaciente id={a.paciente_id} nome={a.paciente?.nome} /> <SeloPrioridade prioridade={a.prioridade} />
+          <NomePaciente id={a.paciente_id} nome={a.paciente?.nome} /> <SeloRisco risco={a.risco} /> <SeloPrioridade prioridade={a.prioridade} />
         </div>
         <div style={{ fontSize: 12.5, color: T.text.secondary, marginTop: 2 }}>
           {a.medico?.nome}
@@ -272,7 +275,7 @@ function LinhaNaClinica({ a, agora, posicao, children }: { a: Atendimento; agora
           {a.status === 'chamado' && a.chamadas > 1 && ` · chamado ${a.chamadas}x`}
         </div>
       </div>
-      {a.status !== 'aguardando' && <SeloStatus status={a.status} />}
+      {a.status !== 'aguardando' && a.status !== 'aguardando_triagem' && <SeloStatus status={a.status} />}
       {children && <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>{children}</div>}
     </div>
   )

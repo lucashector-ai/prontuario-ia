@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import {
   Search, Sparkles, Bell, MessageCircle, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate, ChevronDown, CornerDownLeft, UserRound, SlidersHorizontal, Hospital, LogOut,
-  LayoutDashboard, Calendar, Users, ConciergeBell, DoorOpen, Clock, CirclePlus, Video, ScanSearch, ClipboardList, CalendarCheck, CalendarClock,
+  LayoutDashboard, Calendar, Users, ConciergeBell, DoorOpen, HeartPulse, Clock, CirclePlus, Video, ScanSearch, ClipboardList, CalendarCheck, CalendarClock,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
@@ -29,6 +29,7 @@ const PAGINAS: { label: string; href: string; icon: LucideIcon }[] = [
   { label: 'Modelos de prontuário', href: '/modelos-prontuario', icon: LayoutTemplate },
   { label: 'Recepção (chegadas e senhas)', href: '/recepcao', icon: ConciergeBell },
   { label: 'Consultório (chamar próximo)', href: '/consultorio', icon: DoorOpen },
+  { label: 'Triagem (sinais vitais)', href: '/triagem', icon: HeartPulse },
   { label: 'Nova consulta', href: '/nova-consulta', icon: CirclePlus },
   { label: 'Teleconsulta', href: '/teleconsulta', icon: Video },
   { label: 'Analisar exames', href: '/exames', icon: ScanSearch },

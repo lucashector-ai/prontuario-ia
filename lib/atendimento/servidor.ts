@@ -167,10 +167,11 @@ export async function fazerCheckin(ctx: Contexto, p: {
   const { data: senha, error: eSenha } = await db.rpc('c360_proxima_senha', { p_clinica: ctx.clinica, p_dia: dia, p_prefixo: prefixoSenha(prioridade) })
   if (eSenha) throw eSenha
 
+  const setorId = await setorDoMedico(ctx, medico.consultorio_id)
   const linha = {
     clinica_id: ctx.clinica, medico_id: medicoId, paciente_id: pacienteId, agendamento_id: p.agendamentoId || null,
-    setor_id: await setorDoMedico(ctx, medico.consultorio_id), consultorio_id: medico.consultorio_id || null,
-    dia, senha, status: 'aguardando', prioridade, origem: p.origem || (p.agendamentoId ? 'recepcao' : 'encaixe'),
+    setor_id: setorId, consultorio_id: medico.consultorio_id || null,
+    dia, senha, status: (await usaTriagem(setorId)) ? 'aguardando_triagem' : 'aguardando', prioridade, origem: p.origem || (p.agendamentoId ? 'recepcao' : 'encaixe'),
     horario_previsto: horario, observacao: p.observacao || null, criado_por: ctx.usuario,
   }
   const { data, error } = await db.from('atendimentos').insert(linha).select(SELECT_ATENDIMENTO).single()
@@ -282,9 +283,9 @@ export type AcaoAtendimento = 'iniciar' | 'finalizar' | 'ausente' | 'voltar_fila
 const TRANSICOES: Record<Exclude<AcaoAtendimento, 'prioridade'>, { de: string[]; para: string }> = {
   iniciar: { de: ['chamado', 'aguardando'], para: 'em_atendimento' },
   finalizar: { de: ['em_atendimento', 'chamado'], para: 'finalizado' },
-  ausente: { de: ['chamado', 'aguardando'], para: 'ausente' },
-  voltar_fila: { de: ['chamado', 'ausente', 'cancelado'], para: 'aguardando' },
-  cancelar: { de: ['aguardando', 'chamado', 'ausente'], para: 'cancelado' },
+  ausente: { de: ['chamado', 'aguardando', 'em_triagem', 'aguardando_triagem'], para: 'ausente' },
+  voltar_fila: { de: ['chamado', 'ausente', 'cancelado', 'em_triagem'], para: 'aguardando' },
+  cancelar: { de: ['aguardando', 'chamado', 'ausente', 'aguardando_triagem', 'em_triagem'], para: 'cancelado' },
 }
 
 export async function mudarAtendimento(ctx: Contexto, id: string, acao: AcaoAtendimento, extra: {
@@ -304,6 +305,8 @@ export async function mudarAtendimento(ctx: Contexto, id: string, acao: AcaoAten
   const t = TRANSICOES[acao]
   if (!t) throw new ErroAtendimento('Ação inválida.')
   const campos: Record<string, any> = { status: t.para, atualizado_em: agora }
+  // Quem ainda não passou pela triagem volta para a fila da triagem (se a sala usa)
+  if (acao === 'voltar_fila' && !atual.risco && await usaTriagem(atual.setor_id)) campos.status = 'aguardando_triagem'
   if (acao === 'iniciar') campos.inicio_em = agora
   if (acao === 'finalizar') { campos.fim_em = agora; if (!atual.inicio_em) campos.inicio_em = atual.chamado_em || agora }
 
@@ -617,4 +620,95 @@ export async function fichaCompleta(ctx: Contexto, pacienteId: string) {
       proximo: ags.filter((a: any) => new Date(a.data_hora).getTime() >= agora && !['cancelado', 'faltou'].includes(a.status)).at(-1) || null,
     },
   }
+}
+
+// ── Triagem ──────────────────────────────────────────────────────────────────
+
+async function usaTriagem(setorId: string | null): Promise<boolean> {
+  if (!setorId) return false
+  const { data, error } = await db.from('setores').select('usa_triagem').eq('id', setorId).maybeSingle()
+  return !error && !!(data as any)?.usa_triagem
+}
+
+/**
+ * Enfermagem chama o próximo para a triagem (ou um paciente específico / de novo).
+ * Ordem: prioridade da lei e chegada. A troca de status é condicional — duas salas de
+ * triagem chamando juntas nunca pegam o mesmo paciente.
+ */
+export async function chamarTriagem(ctx: Contexto, p: { consultorioId: string | null; atendimentoId?: string | null; rechamar?: boolean }) {
+  let sala: { id: string; nome: string; setor_id: string } | null = null
+  if (p.consultorioId) {
+    const { data } = await db.from('consultorios').select('id, nome, setor_id').eq('id', p.consultorioId).eq('clinica_id', ctx.clinica).maybeSingle()
+    if (!data) throw new ErroAtendimento('Sala não encontrada.', 404)
+    sala = data
+  }
+  const agora = new Date().toISOString()
+  for (let tentativa = 0; tentativa < 5; tentativa++) {
+    let alvo: any
+    if (p.atendimentoId) {
+      alvo = await carregarAtendimento(ctx, p.atendimentoId)
+    } else {
+      const { data: fila } = await db.from('atendimentos').select('id, prioridade, horario_previsto, chegada_em, chamadas, status')
+        .eq('clinica_id', ctx.clinica).eq('dia', hojeSP()).eq('status', 'aguardando_triagem')
+      alvo = ordenarFila((fila || []) as any).find(() => true)
+      if (!alvo) return null
+    }
+    const permitidos = p.rechamar ? ['em_triagem', 'aguardando_triagem', 'ausente'] : ['aguardando_triagem', 'ausente']
+    const { data } = await db.from('atendimentos')
+      .update({ status: 'em_triagem', chamado_em: agora, chamadas: (alvo.chamadas || 0) + 1, atualizado_em: agora })
+      .eq('id', alvo.id).in('status', permitidos).select('id').maybeSingle()
+    if (data) {
+      const at = await carregarAtendimento(ctx, alvo.id)
+      await registrarChamada(ctx, at, sala)
+      return at
+    }
+    if (p.atendimentoId) throw new ErroAtendimento('Este paciente já foi chamado.', 409)
+    // outro computador pegou este paciente no mesmo instante: tenta o próximo
+  }
+  throw new ErroAtendimento('Fila muito disputada agora. Tente de novo.', 409)
+}
+
+const faixa = (v: any, min: number, max: number, nome: string) => {
+  if (v === null || v === undefined || v === '') return null
+  const n = Number(String(v).replace(',', '.'))
+  if (!Number.isFinite(n) || n < min || n > max) throw new ErroAtendimento(`${nome} fora do esperado (${min} a ${max}).`)
+  return n
+}
+
+/** Salva a triagem e manda o paciente para a fila do médico, já com a cor. */
+export async function registrarTriagem(ctx: Contexto, id: string, d: Record<string, any>) {
+  const at = await carregarAtendimento(ctx, id)
+  if (!['em_triagem', 'aguardando_triagem'].includes(at.status)) throw new ErroAtendimento('Este paciente não está na triagem.', 409)
+  const risco = String(d.risco || '')
+  if (!['vermelho', 'laranja', 'amarelo', 'verde', 'azul'].includes(risco)) throw new ErroAtendimento('Escolha a classificação de risco.')
+  const linha = {
+    clinica_id: ctx.clinica, atendimento_id: at.id, paciente_id: at.paciente_id, profissional_id: ctx.medicoId,
+    pa_sistolica: faixa(d.pa_sistolica, 40, 300, 'Pressão sistólica'), pa_diastolica: faixa(d.pa_diastolica, 20, 200, 'Pressão diastólica'),
+    fc: faixa(d.fc, 20, 250, 'Frequência cardíaca'), fr: faixa(d.fr, 4, 80, 'Frequência respiratória'),
+    temperatura: faixa(d.temperatura, 30, 45, 'Temperatura'), spo2: faixa(d.spo2, 40, 100, 'Saturação'),
+    glicemia: faixa(d.glicemia, 10, 1000, 'Glicemia'), peso: faixa(d.peso, 0.3, 400, 'Peso'), altura: faixa(d.altura, 20, 250, 'Altura'),
+    dor: faixa(d.dor, 0, 10, 'Dor'),
+    queixa: d.queixa ? String(d.queixa).slice(0, 1000) : null, observacoes: d.observacoes ? String(d.observacoes).slice(0, 1000) : null, risco,
+  }
+  const { error } = await db.from('triagens').insert(linha)
+  if (error) throw error
+  const { data } = await db.from('atendimentos').update({ status: 'aguardando', risco, atualizado_em: new Date().toISOString() })
+    .eq('id', at.id).in('status', ['em_triagem', 'aguardando_triagem']).select('id').maybeSingle()
+  if (!data) throw new ErroAtendimento('O atendimento mudou enquanto a triagem era salva. Atualize a tela.', 409)
+  // Emergência: avisa na hora (médico e recepção)
+  if (risco === 'vermelho' || risco === 'laranja') {
+    await db.from('notificacoes_medico').insert({
+      medico_id: at.medico_id, paciente_id: at.paciente_id, tipo: 'triagem_urgente', lida: false,
+      titulo: `${risco === 'vermelho' ? 'EMERGÊNCIA' : 'Muito urgente'}: ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ') || at.senha}`,
+      descricao: `Triagem ${risco}${linha.queixa ? ` · ${linha.queixa.slice(0, 120)}` : ''}`, link: '/consultorio',
+    })
+  }
+  return carregarAtendimento(ctx, at.id)
+}
+
+/** Última triagem de um atendimento (para o médico ver na ficha). */
+export async function triagemDoAtendimento(ctx: Contexto, atendimentoId: string) {
+  const { data, error } = await db.from('triagens').select('*').eq('atendimento_id', atendimentoId).eq('clinica_id', ctx.clinica)
+    .order('criado_em', { ascending: false }).limit(1).maybeSingle()
+  return error ? null : data
 }

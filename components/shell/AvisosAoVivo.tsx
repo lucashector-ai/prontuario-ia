@@ -13,8 +13,8 @@ import { supabase } from '@/lib/supabase'
 import { listarNotificacoes, marcarNotificacao, estiloDaNotificacao, avisarMudanca, EVENTO_NOTIFICACOES } from '@/lib/notificacoes'
 import { EVENTO_AVISO, type AvisoTela } from '@/lib/atendimento/cliente'
 
-const TIPOS_COM_AVISO = new Set(['saida_recepcao', 'formulario_preenchido', 'confirmacao_recusada', 'reagendamento_solicitado', 'lista_espera_agendado', 'consulta_iniciando'])
-const FIXOS = new Set(['saida_recepcao'])
+const TIPOS_COM_AVISO = new Set(['saida_recepcao', 'triagem_urgente', 'formulario_preenchido', 'confirmacao_recusada', 'reagendamento_solicitado', 'lista_espera_agendado', 'consulta_iniciando'])
+const FIXOS = new Set(['saida_recepcao', 'triagem_urgente'])
 const CHAVE_VISTOS = 'c360-avisos-vistos'
 
 export function AvisosAoVivo() {
@@ -93,7 +93,7 @@ export function AvisosAoVivo() {
               {a.descricao && <div style={{ fontSize: 12.5, color: T.text.secondary, marginTop: 2, lineHeight: 1.45 }}>{a.descricao}</div>}
               {a.link && (
                 <button onClick={() => abrir(a)} style={{ marginTop: 8, height: 30, padding: '0 12px', borderRadius: 9, border: 'none', cursor: 'pointer', background: T.brand.primary, color: '#fff', fontSize: 12.5, fontWeight: 650, fontFamily: 'inherit' }}>
-                  {a.tipo === 'saida_recepcao' ? 'Ver e agendar' : 'Abrir'}
+                  {a.tipo === 'saida_recepcao' ? 'Ver e agendar' : a.tipo === 'triagem_urgente' ? 'Ver no consultório' : 'Abrir'}
                 </button>
               )}
             </div>
