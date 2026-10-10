@@ -9,6 +9,7 @@ import { HeaderProvider } from './shell/header-context'
 import { AvisoConexao } from './shell/AvisoConexao'
 import { BatimentoAutomacoes } from './shell/BatimentoAutomacoes'
 import { AvisosAoVivo } from './shell/AvisosAoVivo'
+import { FichaRapidaGlobal } from './paciente/FichaRapida'
 import { tokenSessao } from '@/lib/supabase'
 import { sairDaConta } from '@/lib/sessao'
 import { tokens } from '@/lib/design-tokens'
@@ -86,6 +87,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <AvisoConexao />
           <BatimentoAutomacoes />
           <AvisosAoVivo />
+          <FichaRapidaGlobal />
           <main className="appshell-main" style={painel}>{children}</main>
           <BottomNav />
         </div>
@@ -102,6 +104,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <AvisoConexao />
           <BatimentoAutomacoes />
           <AvisosAoVivo />
+          <FichaRapidaGlobal />
           <main className="appshell-main" style={painel}>{children}</main>
         </div>
       </div>

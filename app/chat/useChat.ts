@@ -345,6 +345,18 @@ export function useChat() {
     setRespostas(p => p.filter(r => r.id !== id))
   }
 
+  // Atalho: /chat?paciente_id=… ou ?telefone=… abre direto a conversa (ex.: vindo da ficha do paciente)
+  const atalhoFeito = useRef(false)
+  useEffect(() => {
+    if (atalhoFeito.current || !conversas.length) return
+    const sp = new URLSearchParams(window.location.search)
+    const pid = sp.get('paciente_id'), tel = (sp.get('telefone') || '').replace(/\D/g, '')
+    if (!pid && !tel) { atalhoFeito.current = true; return }
+    const alvo = conversas.find(c => (pid && c.paciente_id === pid) || (tel.length >= 8 && c.telefone.replace(/\D/g, '').endsWith(tel.slice(-8))))
+    atalhoFeito.current = true
+    if (alvo) abrir(alvo.id)
+  }, [conversas, abrir])
+
   return {
     demo, medico, usuario, nomeUsuario, clinicaNome, config, atendentes, conversas, carregando,
     ativa, ativaId, abrir, mensagens, respostas, toast, avisar,

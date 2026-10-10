@@ -132,6 +132,49 @@ export async function whatsappRetorno(id: string) {
   return post<{ ok: true }>('/api/atendimento', { acao: 'whatsapp_retorno', id })
 }
 
+// ── Ficha 360 (gaveta do paciente, abre de qualquer tela) ───────────────────
+
+export type Ficha360 = {
+  paciente: Record<string, any> & { id: string; nome: string }
+  consultas: { id: string; criado_em: string; data_hora: string | null; medico: string | null; subjetivo: string | null; avaliacao: string | null; plano: string | null; diagnostico_principal: string | null; cids: any }[]
+  agendamentos: { id: string; data_hora: string; status: string; tipo: string | null; motivo: string | null; medico: string | null }[]
+  retornos: { id: string; data_prevista: string; status: string; motivo: string | null; medico: string | null; criado_em: string }[]
+  atendimentos: { id: string; dia: string; senha: string; status: string; chegada_em: string; chamado_em: string | null; inicio_em: string | null; fim_em: string | null; medico: string | null }[]
+  resumo: { consultas: number; faltas: number; comparecimento: number | null; ultima_consulta: string | null; proximo: { data_hora: string; medico: string | null; motivo: string | null } | null }
+}
+
+export const EVENTO_FICHA = 'c360:abrir-ficha'
+/** Abre a ficha do paciente por cima da tela atual. */
+export const abrirFicha = (pacienteId: string | null | undefined) => {
+  if (pacienteId && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(EVENTO_FICHA, { detail: pacienteId }))
+}
+
+export async function carregarFicha360(pacienteId: string): Promise<Ficha360> {
+  if (ehDemo()) {
+    await espera()
+    const e = demo.estado()
+    const p: any = [...e.esperados.map(x => x.paciente), ...PACIENTES_EXTRA].find(x => x?.id === pacienteId) || { id: pacienteId, nome: 'Paciente' }
+    const d = (n: number, h = 10) => { const x = new Date(Date.now() - n * 864e5); x.setHours(h, 0, 0, 0); return x.toISOString() }
+    return {
+      paciente: { ...p, cpf: '123.456.789-09', telefone: '(11) 98765-4321', email: 'paciente@email.com', convenio: 'Unimed', nr_carteirinha: '0012345678', alergias: 'Dipirona', comorbidades: 'Hipertensão arterial', medicamentos_uso: 'Losartana 50 mg 1x/dia', cidade: 'São Paulo' },
+      consultas: [
+        { id: 'c1', criado_em: d(42), data_hora: null, medico: 'Dra. Helena Duarte', subjetivo: null, avaliacao: 'Hipertensão controlada.', plano: 'Manter losartana. Retorno com exames.', diagnostico_principal: 'Hipertensão essencial', cids: [{ codigo: 'I10' }] },
+        { id: 'c2', criado_em: d(160), data_hora: null, medico: 'Dra. Helena Duarte', subjetivo: null, avaliacao: 'Cefaleia tensional.', plano: 'Analgesia e higiene do sono.', diagnostico_principal: 'Cefaleia tensional', cids: [{ codigo: 'G44.2' }] },
+      ],
+      agendamentos: [
+        { id: 'a0', data_hora: d(-12, 9), status: 'agendado', tipo: 'retorno', motivo: 'Retorno com exames', medico: 'Dra. Helena Duarte' },
+        { id: 'a1', data_hora: d(42), status: 'realizado', tipo: 'consulta', motivo: 'Rotina', medico: 'Dra. Helena Duarte' },
+        { id: 'a2', data_hora: d(95), status: 'faltou', tipo: 'retorno', motivo: 'Retorno', medico: 'Dra. Helena Duarte' },
+        { id: 'a3', data_hora: d(160), status: 'realizado', tipo: 'consulta', motivo: 'Dor de cabeça', medico: 'Dra. Helena Duarte' },
+      ],
+      retornos: [{ id: 'r1', data_prevista: d(-12).slice(0, 10), status: 'agendado', motivo: 'Trazer exames', medico: 'Dra. Helena Duarte', criado_em: d(42) }],
+      atendimentos: [{ id: 't1', dia: d(42).slice(0, 10), senha: 'A007', status: 'finalizado', chegada_em: d(42, 9), chamado_em: d(42, 10), inicio_em: d(42, 10), fim_em: d(42, 11), medico: 'Dra. Helena Duarte' }],
+      resumo: { consultas: 2, faltas: 1, comparecimento: 67, ultima_consulta: d(42), proximo: { data_hora: d(-12, 9), medico: 'Dra. Helena Duarte', motivo: 'Retorno com exames' } },
+    }
+  }
+  return api<Ficha360>('/api/atendimento?ficha360=' + encodeURIComponent(pacienteId))
+}
+
 // ── Configuração ─────────────────────────────────────────────────────────────
 
 export async function carregarConfig(): Promise<Config> {

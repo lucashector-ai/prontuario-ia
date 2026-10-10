@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import * as XLSX from 'xlsx'
+import { parsearCSV } from '@/lib/csv'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
 
@@ -33,6 +34,7 @@ type PreviewResult = {
 }
 
 type ResultadoImport = {
+  atualizados: number
   inseridos: number
   pulados: number
   invalidos: number
@@ -55,6 +57,8 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
   const [erro, setErro] = useState<string | null>(null)
   const [urlSheets, setUrlSheets] = useState('')
   const [nomeArquivo, setNomeArquivo] = useState('')
+  // Duplicados: completar os dados vazios de quem já existe (nunca apaga nada)
+  const [completarExistentes, setCompletarExistentes] = useState(true)
   const inputFileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -87,18 +91,6 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
   const fechar = () => {
     resetar()
     onFechar()
-  }
-
-  const parsearCSV = (texto: string): any[] => {
-    const linhas = texto.split(/\r?\n/).filter(l => l.trim())
-    if (linhas.length < 2) return []
-    const cabecalho = linhas[0].split(/[,;]/).map(c => c.trim().replace(/^["']|["']$/g, ''))
-    return linhas.slice(1).map(l => {
-      const valores = l.split(/[,;]/).map(v => v.trim().replace(/^["']|["']$/g, ''))
-      const obj: any = {}
-      cabecalho.forEach((col, i) => { obj[col] = valores[i] || '' })
-      return obj
-    })
   }
 
   const processarArquivo = async (file: File) => {
@@ -179,7 +171,11 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
   }
 
   const baixarModelo = () => {
-    const csv = 'nome,cpf,data_nascimento,telefone,sexo,email\nJoão Silva,123.456.789-00,1985-03-15,(11) 99999-9999,Masculino,joao@email.com\nMaria Santos,987.654.321-00,1990-07-22,(11) 88888-8888,Feminino,maria@email.com\n'
+    const csv = '\uFEFF' + [
+      'nome;cpf;data_nascimento;telefone;sexo;email;convenio;carteirinha;alergias;doencas;medicamentos;endereco;cidade',
+      'João Silva;123.456.789-09;15/03/1985;(11) 99999-9999;Masculino;joao@email.com;Unimed;0012345678;Dipirona;"Hipertensão, Diabetes tipo 2";Losartana 50 mg;Rua das Flores, 100;São Paulo',
+      'Maria Santos;987.654.321-00;22/07/1990;(11) 88888-8888;Feminino;maria@email.com;Particular;;;;;;Campinas',
+    ].join('\n') + '\n'
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -197,11 +193,12 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
       const res = await fetch('/api/pacientes/importar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ medico_id: medicoDestino || medicoId, clinica_id: clinicaId, linhas: linhasBrutas, modo: 'import' }),
+        body: JSON.stringify({ medico_id: medicoDestino || medicoId, clinica_id: clinicaId, linhas: linhasBrutas, modo: 'import', atualizar_existentes: completarExistentes }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erro ao importar')
       setResultado({
+        atualizados: data.atualizados || 0,
         inseridos: data.inseridos || 0,
         pulados: data.pulados || 0,
         invalidos: data.invalidos || 0,
@@ -518,6 +515,16 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                 )}
               </div>
 
+              {preview.duplicados > 0 && (
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderRadius: 10, background: tokens.bg.muted, fontSize: 13, color: tokens.text.primary, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={completarExistentes} onChange={e => setCompletarExistentes(e.target.checked)} style={{ marginTop: 2, width: 16, height: 16 }} />
+                  <span>
+                    <b>Completar os dados de quem já existe</b>
+                    <span style={{ display: 'block', fontSize: 12, color: tokens.text.secondary, marginTop: 2 }}>Para os {preview.duplicados} já cadastrados, preenche só o que estiver vazio (telefone, convênio, alergias…). Nada é apagado ou trocado.</span>
+                  </span>
+                </label>
+              )}
+
               {/* Ações */}
               <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between' }}>
                 <button
@@ -533,13 +540,13 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                 </button>
                 <button
                   onClick={confirmarImport}
-                  disabled={preview.validos === 0}
+                  disabled={preview.validos === 0 && !(completarExistentes && preview.duplicados > 0)}
                   style={{
                     padding: '10px 22px', borderRadius: 10,
-                    background: preview.validos === 0 ? tokens.text.tertiary : ACCENT,
+                    background: preview.validos === 0 && !(completarExistentes && preview.duplicados > 0) ? tokens.text.tertiary : ACCENT,
                     color: 'white', border: 'none',
                     fontSize: 13, fontWeight: 700,
-                    cursor: preview.validos === 0 ? 'not-allowed' : 'pointer',
+                    cursor: preview.validos === 0 && !(completarExistentes && preview.duplicados > 0) ? 'not-allowed' : 'pointer',
                   }}
                 >
                   Importar {preview.validos} paciente{preview.validos !== 1 ? 's' : ''}
@@ -592,6 +599,12 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
                   <p style={{ fontSize: 20, fontWeight: 700, color: tokens.status.successText, margin: '0 0 2px' }}>{resultado.inseridos}</p>
                   <p style={{ fontSize: 11, color: tokens.status.successText, margin: 0 }}>Importados</p>
                 </div>
+                {resultado.atualizados > 0 && (
+                  <div style={{ padding: '10px 16px', background: tokens.status.infoBg, borderRadius: 10, minWidth: 100 }}>
+                    <p style={{ fontSize: 20, fontWeight: 700, color: tokens.status.infoStrong, margin: '0 0 2px' }}>{resultado.atualizados}</p>
+                    <p style={{ fontSize: 11, color: tokens.status.infoStrong, margin: 0 }}>Completados</p>
+                  </div>
+                )}
                 {resultado.pulados > 0 && (
                   <div style={{ padding: '10px 16px', background: tokens.status.warningBgAlt, borderRadius: 10, minWidth: 100 }}>
                     <p style={{ fontSize: 20, fontWeight: 700, color: tokens.status.warningText, margin: '0 0 2px' }}>{resultado.pulados}</p>

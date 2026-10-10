@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, IconButton, Avatar } from '@/components/ui'
 import { useHeaderInfo, tituloDaRota } from '@/components/shell/header-context'
+import { abrirFicha } from '@/lib/atendimento/cliente'
 import { ItemNotificacao, EsqueletoNotificacao } from '@/components/notificacoes/ItemNotificacao'
 import { listarNotificacoes, marcarNotificacao, marcarTodasLidas, destinoDaNotificacao, avisarMudanca, EVENTO_NOTIFICACOES, type Notificacao, type FiltroNotificacoes } from '@/lib/notificacoes'
 
@@ -208,19 +209,23 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
 
   useEffect(() => { setAberto(null) }, [pathname])
 
-  // Busca de pacientes/agendamentos (só médico — usa medico_id)
+  // Busca de pacientes/agendamentos: médico vê os dele; clínica e recepção, os da clínica
+  // (o RLS do banco já limita à clínica da sessão)
   useEffect(() => {
-    if (modo !== 'medico' || !medico || busca.trim().length < 2) {
+    const daClinica = modo === 'clinica' || medico?.cargo === 'recepcionista' || medico?.cargo === 'admin'
+    if (!modo || busca.trim().length < 2 || (!daClinica && !medico)) {
       setResultados({ pacientes: [], agendamentos: [] })
       return
     }
     setBuscando(true)
     const timer = setTimeout(async () => {
       const termo = busca.trim()
-      const [{ data: pacs }, { data: ags }] = await Promise.all([
-        supabase.from('pacientes').select('id, nome, telefone').eq('medico_id', medico.id).ilike('nome', `%${termo}%`).limit(6),
-        supabase.from('agendamentos').select('id, data_hora, motivo, tipo, pacientes(nome)').eq('medico_id', medico.id).ilike('motivo', `%${termo}%`).order('data_hora', { ascending: false }).limit(4),
-      ])
+      const dig = termo.replace(/\D/g, '')
+      let qp = supabase.from('pacientes').select('id, nome, telefone').limit(6)
+      qp = dig.length >= 3 ? qp.or(`cpf.ilike.%${dig}%,telefone.ilike.%${dig}%`) : qp.ilike('nome', `%${termo}%`)
+      let qa = supabase.from('agendamentos').select('id, data_hora, motivo, tipo, pacientes(nome)').ilike('motivo', `%${termo}%`).order('data_hora', { ascending: false }).limit(4)
+      if (!daClinica) { qp = qp.eq('medico_id', medico.id); qa = qa.eq('medico_id', medico.id) }
+      const [{ data: pacs }, { data: ags }] = await Promise.all([qp, qa])
       setResultados({ pacientes: pacs || [], agendamentos: ags || [] })
       setBuscando(false)
     }, 250)
@@ -271,11 +276,11 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
             onKeyDown={e => {
               if (e.key === 'Enter') {
                 const p = resultados.pacientes[0]
-                if (p) ir(`/pacientes/${p.id}`)
+                if (p) { setBusca(''); setAberto(null); inputRef.current?.blur(); abrirFicha(p.id) }
                 else if (paginasFiltradas[0]) ir(paginasFiltradas[0].href)
               }
             }}
-            placeholder="Buscar paciente ou página"
+            placeholder="Buscar paciente, CPF, telefone ou página"
             style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', padding: 0, minHeight: 0, boxShadow: 'none', fontSize: 13.5, color: T.text.primary }}
           />
           <kbd style={{ fontSize: 11, border: `1px solid ${T.border.default}`, borderRadius: 7, padding: '3px 7px', background: T.bg.page, color: T.text.secondary }}>⌘K</kbd>
@@ -288,7 +293,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
               <>
                 <div style={{ fontSize: 11.5, color: '#9A98A5', padding: '8px 10px 4px' }}>Pacientes</div>
                 {resultados.pacientes.map((p: any) => (
-                  <button key={p.id} onMouseDown={e => e.preventDefault()} onClick={() => ir(`/pacientes/${p.id}`)} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+                  <button key={p.id} onMouseDown={e => e.preventDefault()} onClick={() => { setBusca(''); setAberto(null); inputRef.current?.blur(); abrirFicha(p.id) }} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
                     <Avatar nome={p.nome} size={28} />
                     <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontWeight: 600 }}>{p.nome}</span>

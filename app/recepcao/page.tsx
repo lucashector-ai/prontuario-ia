@@ -17,7 +17,7 @@ import { usePageHeader } from '@/components/shell/header-context'
 import { Badge, Button, Card, EmptyState, Field, IconButton, Input, KpiCard, Modal, ModalAcoes, SearchInput, SegmentedControl, Select } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { useFila } from '@/lib/atendimento/useFila'
-import { atualizarPaciente, avisarFila, carregarConfig, checkin, ehDemo, marcarFalta, mudar, resolverSaida, whatsappRetorno, type Config, type Fila, type Saida } from '@/lib/atendimento/cliente'
+import { abrirFicha, atualizarPaciente, avisarFila, carregarConfig, checkin, ehDemo, marcarFalta, mudar, resolverSaida, whatsappRetorno, type Config, type Fila, type Saida } from '@/lib/atendimento/cliente'
 import { formatarTelefone, minutosDesde, ordenarFila, prioridadePelaIdade, type Atendimento, type Esperado, type Prioridade } from '@/lib/atendimento/comum'
 import { EscolhaPrioridade, ModalSenha, SeloPrioridade, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade, imprimirSenha } from '@/components/atendimento/partes'
 import { NovoAtendimento } from '@/components/atendimento/NovoAtendimento'
@@ -175,7 +175,7 @@ export default function RecepcaoPage() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 650, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                    {e.paciente?.nome || 'Paciente'}
+                    <NomePaciente id={e.paciente?.id} nome={e.paciente?.nome} />
                     {anos !== null && <span style={{ fontSize: 12, color: T.text.tertiary, fontWeight: 500 }}>{anos} anos</span>}
                     <SeloPrioridade prioridade={prioridadePelaIdade(e.paciente?.data_nascimento)} />
                     {e.status === 'confirmado' && <Badge tone="success">Confirmou</Badge>}
@@ -263,7 +263,7 @@ function LinhaNaClinica({ a, agora, posicao, children }: { a: Atendimento; agora
       <SenhaChip senha={a.senha} destaque={a.status === 'chamado'} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 650, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-          {a.paciente?.nome || 'Paciente'} <SeloPrioridade prioridade={a.prioridade} />
+          <NomePaciente id={a.paciente_id} nome={a.paciente?.nome} /> <SeloPrioridade prioridade={a.prioridade} />
         </div>
         <div style={{ fontSize: 12.5, color: T.text.secondary, marginTop: 2 }}>
           {a.medico?.nome}
@@ -419,7 +419,7 @@ function SaindoDoConsultorio({ saidas, onMudou }: { saidas: Saida[]; onMudou: ()
           <div key={s.id} id={'saida-' + s.id} style={{ ...linha, borderTop: i === 0 ? 'none' : linha.borderTop, alignItems: 'flex-start', flexWrap: 'wrap', background: destaque === s.id ? T.brand.primarySubtle : undefined }}>
             <SenhaChip senha={s.senha} />
             <div style={{ flex: '1 1 260px', minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 650 }}>{s.paciente?.nome || 'Paciente'} <span style={{ fontSize: 12, color: T.text.tertiary, fontWeight: 500 }}>· {s.medico?.nome} · saiu {horaCurta(s.fim_em)}</span></div>
+              <div style={{ fontSize: 14, fontWeight: 650 }}><NomePaciente id={s.paciente_id} nome={s.paciente?.nome} /> <span style={{ fontSize: 12, color: T.text.tertiary, fontWeight: 500 }}>· {s.medico?.nome} · saiu {horaCurta(s.fim_em)}</span></div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
                 {(s.saida_itens || []).map(it => (
                   <Badge key={it} tone={it === 'retorno' && agendado ? 'success' : 'warning'} icon={it === 'retorno' && agendado ? Check : undefined}>
@@ -441,5 +441,16 @@ function SaindoDoConsultorio({ saidas, onMudou }: { saidas: Saida[]; onMudou: ()
         )
       })}
     </Card>
+  )
+}
+
+/** Nome clicável: abre a ficha do paciente por cima da tela. */
+function NomePaciente({ id, nome }: { id?: string | null; nome?: string | null }) {
+  if (!id) return <>{nome || 'Paciente'}</>
+  return (
+    <button onClick={() => abrirFicha(id)} title="Ver ficha e histórico" style={{
+      border: 'none', background: 'none', padding: 0, cursor: 'pointer', font: 'inherit', color: 'inherit', textAlign: 'left',
+      textDecoration: 'underline', textDecorationColor: T.border.strong, textUnderlineOffset: 3,
+    }}>{nome || 'Paciente'}</button>
   )
 }

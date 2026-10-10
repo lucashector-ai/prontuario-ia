@@ -223,26 +223,18 @@ export default function Pacientes() {
       return
     }
     registrarAcesso({ acao: 'exportou', recurso: 'paciente', detalhes: { quantidade: pacientes.length } })
-    // Helper pra escapar CSV
+    // Mesmas colunas do modelo de importação: exporta, edita no Excel e importa de volta
     const esc = (v: any) => {
       if (v === null || v === undefined) return ''
       const s = String(v)
-      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-        return '"' + s.replace(/"/g, '""') + '"'
-      }
-      return s
+      return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
     }
-    const cabecalho = ['nome', 'cpf', 'data_nascimento', 'telefone', 'sexo', 'email', 'convenio']
-    const linhas = pacientes.map(p => [
-      esc(p.nome),
-      esc(p.cpf),
-      esc(p.data_nascimento),
-      esc(p.telefone),
-      esc(p.sexo),
-      esc(p.email),
-      esc(p.convenio),
-    ].join(','))
-    const csv = cabecalho.join(',') + '\n' + linhas.join('\n')
+    const COLS: [string, string][] = [
+      ['nome', 'nome'], ['cpf', 'cpf'], ['data_nascimento', 'data_nascimento'], ['telefone', 'telefone'], ['sexo', 'sexo'], ['email', 'email'],
+      ['convenio', 'convenio'], ['carteirinha', 'nr_carteirinha'], ['alergias', 'alergias'], ['doencas', 'comorbidades'],
+      ['medicamentos', 'medicamentos_uso'], ['endereco', 'endereco'], ['cidade', 'cidade'],
+    ]
+    const csv = COLS.map(c => c[0]).join(';') + '\n' + pacientes.map(p => COLS.map(([, campo]) => esc((p as any)[campo])).join(';')).join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')

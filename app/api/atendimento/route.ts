@@ -10,12 +10,13 @@
  *   POST { acao: 'faltou', agendamento_id }
  *   POST { acao: 'resolver_saida' | 'whatsapp_retorno', id }   (saída do consultório)
  *   GET  ?ficha=<paciente_id>&agendamento_id=…  → ficha do paciente para o consultório
+ *   GET  ?ficha360=<paciente_id>  → histórico completo (gaveta da ficha e exportação)
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { log } from '@/lib/logger'
 import {
   ErroAtendimento, atualizarPaciente, chamar, contextoAtendimento, faltaMigration, fazerCheckin, fichaDoPaciente, filaDoDia,
-  definirConsultorio, marcarFalta, mudarAtendimento, novoPaciente, resolverSaida, whatsappRetorno,
+  definirConsultorio, fichaCompleta, marcarFalta, mudarAtendimento, novoPaciente, resolverSaida, whatsappRetorno,
   type AcaoAtendimento,
 } from '@/lib/atendimento/servidor'
 import { PRIORIDADES } from '@/lib/atendimento/comum'
@@ -37,6 +38,7 @@ export async function GET(req: NextRequest) {
     const ctx = await contextoAtendimento(req)
     const sp = req.nextUrl.searchParams
     if (sp.get('ficha')) return NextResponse.json(await fichaDoPaciente(ctx, sp.get('ficha')!, sp.get('agendamento_id')))
+    if (sp.get('ficha360')) return NextResponse.json(await fichaCompleta(ctx, sp.get('ficha360')!))
     const dia = sp.get('dia')
     return NextResponse.json(await filaDoDia(ctx, {
       dia: dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) ? dia : undefined,

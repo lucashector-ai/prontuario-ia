@@ -1,11 +1,7 @@
 import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { supabaseServidor as supabase } from '@/lib/servidor'
+import { sessaoDaRequisicao } from '@/lib/sessao-servidor'
 
 type LinhaBruta = Record<string, any>
 
@@ -16,6 +12,13 @@ interface PacienteNormalizado {
   telefone: string | null
   sexo: string | null
   email: string | null
+  convenio: string | null
+  nr_carteirinha: string | null
+  alergias: string | null
+  comorbidades: string | null
+  medicamentos_uso: string | null
+  endereco: string | null
+  cidade: string | null
 }
 
 interface LinhaProcessada {
@@ -55,6 +58,13 @@ const MAPA_COLUNAS: Record<string, string> = {
   email: 'email',
   emailcontato: 'email',
   mail: 'email',
+  convenio: 'convenio', plano: 'convenio', planodesaude: 'convenio', operadora: 'convenio',
+  carteirinha: 'nr_carteirinha', nrcarteirinha: 'nr_carteirinha', numerocarteirinha: 'nr_carteirinha', matricula: 'nr_carteirinha',
+  alergias: 'alergias', alergia: 'alergias',
+  comorbidades: 'comorbidades', doencas: 'comorbidades', doenca: 'comorbidades', condicoes: 'comorbidades', historicomedico: 'comorbidades', antecedentes: 'comorbidades',
+  medicamentos: 'medicamentos_uso', medicamentosemuso: 'medicamentos_uso', remedios: 'medicamentos_uso', medicacoes: 'medicamentos_uso', medicamentosuso: 'medicamentos_uso',
+  endereco: 'endereco', logradouro: 'endereco', rua: 'endereco',
+  cidade: 'cidade', municipio: 'cidade',
 }
 
 function mapearChave(key: string): string | null {
@@ -131,7 +141,15 @@ function normalizarLinha(raw: LinhaBruta): PacienteNormalizado {
     telefone: null,
     sexo: null,
     email: null,
+    convenio: null,
+    nr_carteirinha: null,
+    alergias: null,
+    comorbidades: null,
+    medicamentos_uso: null,
+    endereco: null,
+    cidade: null,
   }
+  const texto = (v: any, max: number) => limparTexto(v).slice(0, max) || null
 
   for (const [k, v] of Object.entries(raw)) {
     const chave = mapearChave(k)
@@ -142,6 +160,13 @@ function normalizarLinha(raw: LinhaBruta): PacienteNormalizado {
     if (chave === 'telefone') out.telefone = formatarTelefone(v)
     if (chave === 'sexo') out.sexo = normalizarSexo(v)
     if (chave === 'email') out.email = normalizarEmail(v)
+    if (chave === 'convenio') out.convenio = texto(v, 80)
+    if (chave === 'nr_carteirinha') out.nr_carteirinha = texto(v, 40)
+    if (chave === 'alergias') out.alergias = texto(v, 500)
+    if (chave === 'comorbidades') out.comorbidades = texto(v, 1000)
+    if (chave === 'medicamentos_uso') out.medicamentos_uso = texto(v, 1000)
+    if (chave === 'endereco') out.endereco = texto(v, 300)
+    if (chave === 'cidade') out.cidade = texto(v, 120)
   }
 
   return out
@@ -152,7 +177,14 @@ function normalizarLinha(raw: LinhaBruta): PacienteNormalizado {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { medico_id: medicoIdBody, clinica_id, linhas, modo } = body
+    const { medico_id: medicoIdBody, linhas, modo } = body
+    const atualizarExistentes = !!body.atualizar_existentes
+
+    // Quem importa só importa para a própria clínica (ou para si, se for autônomo)
+    const sessao = await sessaoDaRequisicao(req)
+    if (!sessao) return NextResponse.json({ error: 'Sessão expirada. Entre de novo.' }, { status: 401 })
+    const clinica_id = sessao.clinica_id
+    const doEscopo = (m: { id: string; clinica_id: string | null }) => (clinica_id ? m.clinica_id === clinica_id : m.id === sessao.medico_id)
 
     if (!Array.isArray(linhas)) {
       return NextResponse.json({ error: 'Dados insuficientes' }, { status: 400 })
@@ -165,12 +197,13 @@ export async function POST(req: NextRequest) {
       // Verifica se existe na tabela medicos
       const { data: medicoCheck } = await supabase
         .from('medicos').select('id, clinica_id').eq('id', medicoIdBody).maybeSingle()
-      if (medicoCheck) {
+      if (medicoCheck && doEscopo(medicoCheck)) {
         medico_id = medicoCheck.id
       }
     }
 
     // Se nao resolveu e veio clinica_id, busca primeiro medico
+    if (!medico_id && !clinica_id && sessao.medico_id) medico_id = sessao.medico_id
     if (!medico_id && clinica_id) {
       const { data: primeiroMedico } = await supabase
         .from('medicos')
@@ -202,10 +235,16 @@ export async function POST(req: NextRequest) {
       .toLowerCase().trim().replace(/\s+/g, ' ')
 
     // Busca existentes do médico (CPF, email, nome+data)
+    // Duplicados: em toda a clínica, não só no médico de destino
+    let idsClinica: string[] = [medico_id]
+    if (clinica_id) {
+      const { data: meds } = await supabase.from('medicos').select('id').eq('clinica_id', clinica_id)
+      idsClinica = (meds || []).map((m: any) => m.id)
+    }
     const { data: existentes } = await supabase
       .from('pacientes')
-      .select('cpf, email, nome, data_nascimento')
-      .eq('medico_id', medico_id)
+      .select('id, cpf, email, nome, data_nascimento, telefone, convenio, nr_carteirinha, alergias, comorbidades, medicamentos_uso, endereco, cidade, sexo')
+      .in('medico_id', idsClinica)
 
     const cpfsExistentes = new Set((existentes || []).map(p => p.cpf).filter(Boolean))
     const emailsExistentes = new Set((existentes || []).map(p => (p.email || '').toLowerCase()).filter(Boolean))
@@ -290,6 +329,14 @@ export async function POST(req: NextRequest) {
         telefone: r.dados.telefone,
         sexo: r.dados.sexo,
         email: r.dados.email,
+        convenio: r.dados.convenio,
+        nr_carteirinha: r.dados.nr_carteirinha,
+        alergias: r.dados.alergias,
+        comorbidades: r.dados.comorbidades,
+        medicamentos_uso: r.dados.medicamentos_uso,
+        endereco: r.dados.endereco,
+        cidade: r.dados.cidade,
+        clinica_id: clinica_id || null,
       }))
 
     let inseridos = 0
@@ -314,8 +361,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Completar quem já existe: só preenche o que está vazio (nunca apaga nem troca dado)
+    let atualizados = 0
+    if (atualizarExistentes) {
+      const CAMPOS = ['telefone', 'email', 'data_nascimento', 'sexo', 'convenio', 'nr_carteirinha', 'alergias', 'comorbidades', 'medicamentos_uso', 'endereco', 'cidade'] as const
+      for (const r of resultado.filter(x => x.status === 'duplicado')) {
+        const alvo = (existentes || []).find((p: any) =>
+          (r.dados.cpf && p.cpf === r.dados.cpf) ||
+          (r.dados.nome && r.dados.data_nascimento && normNome(p.nome) === normNome(r.dados.nome) && p.data_nascimento === r.dados.data_nascimento))
+        if (!alvo) continue
+        const novos: Record<string, any> = {}
+        for (const c of CAMPOS) if (!(alvo as any)[c] && (r.dados as any)[c]) novos[c] = (r.dados as any)[c]
+        if (!Object.keys(novos).length) continue
+        const { error } = await supabase.from('pacientes').update(novos).eq('id', (alvo as any).id)
+        if (!error) atualizados++
+      }
+    }
+
     return NextResponse.json({
       ok: true,
+      atualizados,
       inseridos,
       pulados: resultado.filter(r => r.status === 'duplicado').length,
       invalidos: resultado.filter(r => r.status === 'invalido').length,

@@ -579,3 +579,42 @@ export async function definirConsultorio(ctx: Contexto, medicoId: string, consul
   const { error } = await db.from('medicos').update({ consultorio_id: consultorioId }).eq('id', medicoId)
   if (error) throw error
 }
+
+// ── Ficha 360 do paciente (histórico completo, também usada para exportar) ────
+
+export async function fichaCompleta(ctx: Contexto, pacienteId: string) {
+  const p = await pacienteDaClinica(ctx, pacienteId)
+  const [consultas, agendamentos, retornos, atendimentos, medicos] = await Promise.all([
+    db.from('consultas').select('id, criado_em, data_hora, medico_id, subjetivo, avaliacao, plano, diagnostico_principal, cids')
+      .eq('paciente_id', pacienteId).order('criado_em', { ascending: false }).limit(100),
+    db.from('agendamentos').select('id, data_hora, status, tipo, motivo, medico_id, criado_em')
+      .eq('paciente_id', pacienteId).order('data_hora', { ascending: false }).limit(200),
+    db.from('retornos').select('id, data_prevista, status, motivo, medico_id, criado_em, agendamento_id')
+      .eq('paciente_id', pacienteId).order('data_prevista', { ascending: false }).limit(50),
+    db.from('atendimentos').select('id, dia, senha, status, prioridade, origem, chegada_em, chamado_em, inicio_em, fim_em, medico_id')
+      .eq('paciente_id', pacienteId).order('chegada_em', { ascending: false }).limit(100),
+    db.from('medicos').select('id, nome').in('id', (await medicosDaClinica(ctx)).map((m: any) => m.id)),
+  ])
+  const nomes = new Map((medicos.data || []).map((m: any) => [m.id, m.nome]))
+  const comNome = <T extends { medico_id: string | null }>(l: T[] | null) => (l || []).map(x => ({ ...x, medico: nomes.get(x.medico_id as string) || null }))
+
+  const ags = comNome(agendamentos.data as any[])
+  const agora = Date.now()
+  const passados = ags.filter((a: any) => new Date(a.data_hora).getTime() < agora && a.status !== 'cancelado')
+  const faltas = passados.filter((a: any) => a.status === 'faltou').length
+  const { senha_hash, ...paciente } = p as any
+  return {
+    paciente,
+    consultas: comNome(consultas.data as any[]),
+    agendamentos: ags,
+    retornos: comNome(retornos.data as any[]),
+    atendimentos: atendimentos.error ? [] : comNome(atendimentos.data as any[]),
+    resumo: {
+      consultas: (consultas.data || []).length,
+      faltas,
+      comparecimento: passados.length ? Math.round(((passados.length - faltas) / passados.length) * 100) : null,
+      ultima_consulta: consultas.data?.[0]?.data_hora || consultas.data?.[0]?.criado_em || null,
+      proximo: ags.filter((a: any) => new Date(a.data_hora).getTime() >= agora && !['cancelado', 'faltou'].includes(a.status)).at(-1) || null,
+    },
+  }
+}

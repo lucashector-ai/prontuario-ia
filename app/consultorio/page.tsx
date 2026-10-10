@@ -17,7 +17,7 @@ import { usePageHeader } from '@/components/shell/header-context'
 import { Badge, Button, Card, Chip, EmptyState, Field, Input, Modal, ModalAcoes, Select, Switch, Textarea } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { useFila } from '@/lib/atendimento/useFila'
-import { avisarFila, carregarConfig, carregarFicha, chamar, definirConsultorio, ehDemo, mudar, type Config, type Ficha } from '@/lib/atendimento/cliente'
+import { abrirFicha, avisarFila, carregarConfig, carregarFicha, chamar, definirConsultorio, ehDemo, mudar, type Config, type Ficha } from '@/lib/atendimento/cliente'
 import { formatarTelefone, hojeSP, minutosDesde, ordenarFila, type Atendimento } from '@/lib/atendimento/comum'
 import { SeloPrioridade, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade } from '@/components/atendimento/partes'
 import { GravadorConsulta } from '@/components/atendimento/GravadorConsulta'
@@ -306,7 +306,7 @@ function PacienteAtual({ at, medicoId, agora, chamando, onEntrou, onAusente, onR
           <span className="mono" style={{ fontSize: 30, fontWeight: 800, color: T.brand.primary, letterSpacing: '-.02em' }}>{at.senha}</span>
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-.01em' }}>{at.paciente?.nome || 'Paciente'}</span>
+              <button onClick={() => abrirFicha(at.paciente_id)} title="Ver ficha e histórico" style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 19, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>{at.paciente?.nome || 'Paciente'}</button>
               <SeloStatus status={at.status} /><SeloPrioridade prioridade={at.prioridade} />
               {ficha?.paciente.alergias && <Badge tone="danger" icon={AlertTriangle}>Alergia: {ficha.paciente.alergias}</Badge>}
             </div>
@@ -367,7 +367,7 @@ function FichaLateral({ ficha, pacienteId }: { ficha: Ficha | null; pacienteId: 
   ) : null
 
   return (
-    <Card titulo="Ficha" acao={<a href={`/pacientes/${pacienteId}`} target="_blank" rel="noreferrer" style={{ fontSize: 12.5, fontWeight: 600, color: T.brand.primary, textDecoration: 'none' }}>Prontuário completo</a>}>
+    <Card titulo="Ficha" acao={<button onClick={() => abrirFicha(pacienteId)} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontSize: 12.5, fontWeight: 600, color: T.brand.primary, fontFamily: 'inherit' }}>Histórico completo</button>}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {item(AlertTriangle, 'Alergias', p.alergias, true)}
         {item(ClipboardList, 'Doenças', p.comorbidades)}
