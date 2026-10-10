@@ -28,14 +28,16 @@ describe('fila de atendimento', () => {
   })
 
   it('nome no painel respeita a escolha da clínica (LGPD)', () => {
-    expect(nomeNoPainel('Maria Aparecida da Silva', 'senha_nome')).toBe('Maria S.')
+    expect(nomeNoPainel('Maria Aparecida da Silva', 'senha_nome')).toBe('Maria Aparecida')
+    expect(nomeNoPainel('Isabela Moura', 'senha_nome')).toBe('Isabela Moura')
+    expect(nomeNoPainel('Maria da Silva Santos', 'senha_nome')).toBe('Maria Silva')
     expect(nomeNoPainel('Maria Aparecida da Silva', 'senha')).toBeNull()
     expect(nomeNoPainel('Maria Aparecida da Silva', 'nome_completo')).toBe('Maria Aparecida da Silva')
     expect(nomeNoPainel('Cher', 'senha_nome')).toBe('Cher')
   })
 
   it('frase da TV sem zeros à esquerda', () => {
-    expect(fraseChamada({ senha: 'A007', nome_exibicao: 'Maria S.', local: 'Consultório 3' })).toBe('Senha A 7, Maria S. Consultório 3.')
+    expect(fraseChamada({ senha: 'A007', nome_exibicao: 'Maria Silva', local: 'Consultório 3' })).toBe('Senha A 7, Maria Silva. Consultório 3.')
     expect(fraseChamada({ senha: 'P012', nome_exibicao: null, local: 'Sala 2' })).toBe('Senha P 12. Sala 2.')
   })
 

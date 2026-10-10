@@ -3,7 +3,7 @@
  * Painel da TV da sala de espera. Abre pelo link secreto do setor (Minha clínica →
  * Atendimento) numa Smart TV, Chromecast ou mini PC — sem login.
  *
- * A cada chamada nova: destaque na tela, som de aviso e voz ("Senha A 23, Maria S.
+ * A cada chamada nova: destaque na tela, som de aviso e voz ("Senha A 23, Maria Silva.
  * Consultório 3"). Navegadores só tocam som depois de um toque na tela, por isso o
  * botão "Ativar som" na primeira vez.
  */

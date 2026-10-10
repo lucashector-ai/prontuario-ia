@@ -62,17 +62,18 @@ export function prioridadePelaIdade(nascimento?: string | null, hoje = new Date(
   return idade >= 80 ? 'prioritario_80' : idade >= 60 ? 'prioritario' : 'normal'
 }
 
-/** Nome para o painel da TV conforme a escolha da clínica (LGPD: o padrão é primeiro nome + inicial). */
+/** Nome para o painel da TV conforme a escolha da clínica. Padrão: primeiro e segundo nome ("Maria Aparecida"), sem "da/de/dos". */
+const PARTICULAS = new Set(['da', 'de', 'do', 'das', 'dos', 'e', 'di', 'du'])
 export function nomeNoPainel(nome: string | null | undefined, modo: ExibicaoPainel): string | null {
   if (modo === 'senha' || !nome) return null
   const partes = nome.trim().split(/\s+/)
   if (modo === 'nome_completo') return partes.join(' ')
-  const primeiro = partes[0]
-  const ultimo = partes.length > 1 ? partes[partes.length - 1] : ''
-  return ultimo ? `${primeiro} ${ultimo[0].toUpperCase()}.` : primeiro
+  const [primeiro, ...resto] = partes
+  const segundo = resto.find(p => !PARTICULAS.has(p.toLowerCase()))
+  return segundo ? `${primeiro} ${segundo}` : primeiro
 }
 
-/** Frase falada pela TV: "Senha A 23, Maria S. Consultório 3." (sem os zeros à esquerda). */
+/** Frase falada pela TV: "Senha A 23, Maria Silva. Consultório 3." (sem os zeros à esquerda). */
 export function fraseChamada(c: { senha: string; nome_exibicao: string | null; local: string }) {
   const letra = c.senha.replace(/\d+/g, '')
   const numero = Number(c.senha.replace(/\D+/g, ''))

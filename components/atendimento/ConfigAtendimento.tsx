@@ -14,7 +14,7 @@ import type { Consultorio, ExibicaoPainel, Setor } from '@/lib/atendimento/comum
 
 const EXIBICOES: { value: ExibicaoPainel; label: string }[] = [
   { value: 'senha', label: 'Só a senha' },
-  { value: 'senha_nome', label: 'Senha + nome curto' },
+  { value: 'senha_nome', label: 'Senha + nome e sobrenome' },
   { value: 'nome_completo', label: 'Nome completo' },
 ]
 
@@ -148,7 +148,7 @@ function CartaoSetor({ setor, consultorios, salvar, recarregar }: {
           </div>
         </Field>
 
-        <Field label="O que a TV mostra" hint="LGPD: o padrão é o nome curto (ex.: “Maria S.”). Nunca mostramos motivo ou especialidade.">
+        <Field label="O que a TV mostra" hint="Padrão: primeiro e segundo nome (ex.: “Maria Silva”). Nunca mostramos motivo ou especialidade (LGPD).">
           <SegmentedControl options={EXIBICOES} value={setor.painel_exibicao} onChange={v => patch({ painel_exibicao: v })} />
         </Field>
 
