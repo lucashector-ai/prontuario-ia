@@ -53,6 +53,7 @@ const TITULOS_ROTA: Array<[string, HeaderInfo]> = [
   ['/perfil', { titulo: 'Perfil', descricao: 'Seus dados e preferências' }],
   ['/retornos', { titulo: 'Retornos e reativação', descricao: 'Retornos previstos e pacientes para trazer de volta' }],
   ['/recepcao', { titulo: 'Recepção', descricao: 'Chegadas, senhas e fila de hoje' }],
+  ['/gestao', { titulo: 'Gestão do atendimento', descricao: 'Espera, faltas, picos e desempenho por médico' }],
   ['/triagem', { titulo: 'Triagem', descricao: 'Sinais vitais e classificação de risco antes do médico' }],
   ['/consultorio', { titulo: 'Consultório', descricao: 'Sua fila de hoje: chame o próximo e atenda' }],
   ['/notificacoes', { titulo: 'Notificações', descricao: 'Tudo o que aconteceu na clínica, em um só lugar' }],

@@ -179,6 +179,51 @@ export async function totemSenha(token: string, prioridade: Prioridade, motivo: 
   return demo.senhaBalcao(prioridade)
 }
 
+// ── Painel do gestor ─────────────────────────────────────────────────────────
+
+export type Indicadores = {
+  periodo: { de: string; ate: string }
+  resumo: {
+    chegadas: number; atendidos: number; esperaMedia: number | null; esperaMediana: number | null; consultaMedia: number | null
+    agendados: number; faltas: number; taxaFaltas: number | null; naoAtenderamChamada: number
+    retornosPedidos: number; retornosAgendados: number; saidasPendentes: number; balcaoSenhas: number; balcaoEspera: number | null
+  }
+  porHora: { hora: number; chegadas: number; esperaMedia: number | null }[]
+  porDiaSemana: { dia: number; chegadas: number }[]
+  porOrigem: Record<string, number>
+  porRisco: Record<string, number>
+  porPrioridade: Record<string, number>
+  porMedico: { id: string; nome: string; atendidos: number; espera: number | null; consulta: number | null; faltas: number; agendados: number; retornos: number }[]
+  pico: number | null
+}
+
+export async function carregarIndicadores(p: { de: string; ate: string; medico_id?: string }): Promise<Indicadores | null> {
+  if (ehDemo()) {
+    await espera()
+    const dias = Math.max(1, Math.round((new Date(p.ate).getTime() - new Date(p.de).getTime()) / 864e5) + 1)
+    const k = (n: number) => Math.round(n * dias)
+    const curva = [2, 6, 11, 13, 9, 4, 3, 7, 10, 8, 5, 3, 1, 0, 0, 0, 0]
+    const esperas = [8, 12, 22, 31, 24, 14, 11, 18, 26, 21, 13, 9, 6, null, null, null, null]
+    return {
+      periodo: { de: p.de, ate: p.ate },
+      resumo: { chegadas: k(82), atendidos: k(76), esperaMedia: 19, esperaMediana: 15, consultaMedia: 17, agendados: k(88), faltas: k(9), taxaFaltas: 10, naoAtenderamChamada: k(2), retornosPedidos: k(31), retornosAgendados: k(24), saidasPendentes: 3, balcaoSenhas: k(14), balcaoEspera: 6 },
+      porHora: curva.map((c, i) => ({ hora: i + 6, chegadas: k(c), esperaMedia: esperas[i] })),
+      porDiaSemana: [0, 1, 2, 3, 4, 5, 6].map(d => ({ dia: d, chegadas: d === 0 ? 0 : k([0, 18, 16, 14, 17, 12, 5][d]) })),
+      porOrigem: { recepcao: k(48), whatsapp: k(17), totem: k(11), encaixe: k(6) },
+      porRisco: { azul: k(20), verde: k(38), amarelo: k(14), laranja: k(4), vermelho: k(1) },
+      porPrioridade: { normal: k(61), prioritario: k(17), prioritario_80: k(3), doador: k(1) },
+      porMedico: [
+        { id: 'demo-medico', nome: 'Dra. Helena Duarte', atendidos: k(41), espera: 24, consulta: 19, faltas: k(5), agendados: k(47), retornos: k(18) },
+        { id: 'demo-medico-2', nome: 'Dr. Marcos Vieira', atendidos: k(35), espera: 13, consulta: 15, faltas: k(4), agendados: k(41), retornos: k(13) },
+      ],
+      pico: 9,
+    }
+  }
+  const q = new URLSearchParams({ de: p.de, ate: p.ate, ...(p.medico_id ? { medico_id: p.medico_id } : {}) })
+  const r = await api<Indicadores | { vazio: true }>('/api/atendimento/gestao?' + q)
+  return 'vazio' in r ? null : r
+}
+
 // ── Triagem ──────────────────────────────────────────────────────────────────
 
 export type Triagem = {

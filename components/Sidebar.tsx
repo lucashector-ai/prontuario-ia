@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, Sparkles, MessageCircle,
   CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, PanelLeftClose, PanelLeftOpen,
-  ConciergeBell, DoorOpen, HeartPulse,
+  ConciergeBell, DoorOpen, HeartPulse, Gauge,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, Avatar } from '@/components/ui'
@@ -81,6 +81,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
       label: 'Clínica',
       items: [
         ...(temAcessoAdmin ? [
+          { href: '/gestao', label: 'Gestão', icon: Gauge },
           { href: '/minha-clinica', label: 'Minha clínica', icon: Hospital },
           { href: '/admin', label: 'Painel admin', icon: SlidersHorizontal },
         ] : []),
