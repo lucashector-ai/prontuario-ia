@@ -97,6 +97,13 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
   const [fechadas, setFechadas] = useState<string[]>([])
   const [ocultos, setOcultos] = useState<string[]>([])
   const [editando, setEditando] = useState(false)
+  // O tour guiado abre a seção que está explicando, mesmo se a pessoa a deixou recolhida
+  const [secaoDoTour, setSecaoDoTour] = useState<string | null>(null)
+  useEffect(() => {
+    const on = (e: Event) => setSecaoDoTour((e as CustomEvent<string | null>).detail)
+    window.addEventListener('c360:tour-secao', on)
+    return () => window.removeEventListener('c360:tour-secao', on)
+  }, [])
   useEffect(() => {
     try {
       setFechadas(JSON.parse(localStorage.getItem('c360-menu-fechadas') || '[]'))
@@ -174,10 +181,10 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
           const visiveis = editando ? g.items : g.items.filter(it => !ocultos.includes(it.href) || estaAtivo(it.href))
           if (!visiveis.length) return null
           const temAtivo = g.items.some(it => estaAtivo(it.href))
-          const aberta = rail || editando || temAtivo || !fechadas.includes(g.id)
+          const aberta = rail || editando || temAtivo || secaoDoTour === g.id || !fechadas.includes(g.id)
           const novidade = g.items.some(it => it.href === '/chat' && chatNaoLidas > 0)
           return (
-            <div key={g.id} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div key={g.id} data-tour={`menu-${g.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {/* título da seção (clique recolhe) e divisória no modo recolhido — troca por fade */}
               <div style={{ position: 'relative', height: 24, flexShrink: 0 }}>
                 <button
@@ -267,7 +274,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
         })}
 
         {/* Personalizar o menu */}
-        <div style={{ padding: '4px 10px 2px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, ...fade(!rail) }}>
+        <div data-tour="personalizar" style={{ padding: '4px 10px 2px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, ...fade(!rail) }}>
           {editando ? (
             <>
               <button onClick={() => setEditando(false)} style={{ ...linkMenu, color: T.brand.primary, fontWeight: 700 }}>Pronto</button>
@@ -288,7 +295,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
           display: 'grid', gridTemplateRows: rail ? '0fr' : '1fr', marginTop: rail ? -18 : 0,
           transition: `grid-template-rows ${DUR} ${EASE}, margin-top ${DUR} ${EASE}`, flexShrink: 0,
         }}>
-          <div style={{ overflow: 'hidden', minWidth: 180, ...fade(!rail) }}>
+          <div data-tour="checklist" style={{ overflow: 'hidden', minWidth: 180, ...fade(!rail) }}>
             <SetupChecklist variante="sidebar" />
           </div>
         </div>

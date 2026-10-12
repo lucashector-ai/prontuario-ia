@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import {
-  Search, Sparkles, Bell, MessageCircle, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate, ChevronDown, CornerDownLeft, UserRound, SlidersHorizontal, Hospital, LogOut,
+  Search, Sparkles, Bell, MessageCircle, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate, ChevronDown, CornerDownLeft, UserRound, Compass, SlidersHorizontal, Hospital, LogOut,
   LayoutDashboard, Calendar, Users, ConciergeBell, DoorOpen, HeartPulse, Gauge, Clock, CirclePlus, Video, ScanSearch, ClipboardList, CalendarCheck, CalendarClock,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -13,6 +13,7 @@ import { Icon, IconButton, Avatar } from '@/components/ui'
 import { useHeaderInfo, tituloDaRota } from '@/components/shell/header-context'
 import { abrirFicha } from '@/lib/atendimento/cliente'
 import { ItemNotificacao, EsqueletoNotificacao } from '@/components/notificacoes/ItemNotificacao'
+import { iniciarTour } from '@/components/shell/TourGuiado'
 import { listarNotificacoes, marcarNotificacao, marcarTodasLidas, destinoDaNotificacao, avisarMudanca, EVENTO_NOTIFICACOES, type Notificacao, type FiltroNotificacoes } from '@/lib/notificacoes'
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
@@ -262,7 +263,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
       </div>
 
       {/* Busca ⌘K */}
-      <div style={{ flex: compacto ? '1 1 100%' : '0 1 320px', order: compacto ? 3 : 0, minWidth: 0, position: 'relative' }}>
+      <div data-tour="busca" style={{ flex: compacto ? '1 1 100%' : '0 1 320px', order: compacto ? 3 : 0, minWidth: 0, position: 'relative' }}>
         <label style={{
           display: 'flex', alignItems: 'center', gap: 10, height: 38, padding: '0 6px 0 14px', borderRadius: 12, background: '#fff',
           border: `1px solid ${buscaFocus ? T.brand.primaryAccent : T.border.default}`, boxShadow: buscaFocus ? T.shadow.focusRing : 'none',
@@ -340,12 +341,14 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
       {modo && (
         <div style={{ display: 'flex', flexShrink: 0, gap: 4, position: 'relative' }}>
           {!atendente && <IconButton icon={Sparkles} size={38} title="Assistente IA" onClick={() => router.push('/assistente-ia')} />}
+          <span data-tour="notificacoes" style={{ display: 'inline-flex', borderRadius: 12 }}>
           <IconButton
             icon={Bell} size={38} title="Notificações"
             active={aberto === 'notif'}
             badge={naoLidas > 0 ? (naoLidas > 9 ? '9+' : naoLidas) : undefined}
             onClick={() => { if (aberto !== 'notif') recarregarNotifs(); setAberto(aberto === 'notif' ? null : 'notif') }}
           />
+          </span>
           {aberto === 'notif' && (
             <div style={{ ...popover, right: 0, width: 'min(380px, calc(100vw - 24px))', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 8px' }}>
@@ -384,7 +387,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
 
       {/* Chip da clínica + menu do usuário */}
       {modo && (
-        <div style={{ position: 'relative', flexShrink: 0 }}>
+        <div data-tour="conta" style={{ position: 'relative', flexShrink: 0 }}>
           <button
             onClick={() => setAberto(aberto === 'menu' ? null : 'menu')}
             style={{
@@ -419,6 +422,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
                   <button onClick={() => ir('/minha-clinica')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Hospital size={16} strokeWidth={1.6} color={T.text.secondary} />Dados da clínica</button>
                 </>
               )}
+              <button onClick={() => { setAberto(null); iniciarTour() }} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Compass size={16} strokeWidth={1.6} color={T.text.secondary} />Tour guiado</button>
               <div style={{ height: 1, background: T.border.muted, margin: '6px 4px' }} />
               <button onClick={sair} style={{ ...itemMenu, color: T.status.danger }} onMouseEnter={e => e.currentTarget.style.background = T.status.dangerBg} onMouseLeave={hoverOff}><LogOut size={16} strokeWidth={1.6} />Sair</button>
             </div>

@@ -10,6 +10,7 @@ import { AvisoConexao } from './shell/AvisoConexao'
 import { BatimentoAutomacoes } from './shell/BatimentoAutomacoes'
 import { AvisosAoVivo } from './shell/AvisosAoVivo'
 import { FichaRapidaGlobal } from './paciente/FichaRapida'
+import { TourGuiado } from './shell/TourGuiado'
 import { tokenSessao } from '@/lib/supabase'
 import { sairDaConta } from '@/lib/sessao'
 import { tokens } from '@/lib/design-tokens'
@@ -88,6 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <BatimentoAutomacoes />
           <AvisosAoVivo />
           <FichaRapidaGlobal />
+          <TourGuiado />
           <main className="appshell-main" style={painel}>{children}</main>
           <BottomNav />
         </div>
@@ -105,6 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <BatimentoAutomacoes />
           <AvisosAoVivo />
           <FichaRapidaGlobal />
+          <TourGuiado />
           <main className="appshell-main" style={painel}>{children}</main>
         </div>
       </div>

@@ -90,7 +90,7 @@ export function BottomNav() {
 
   return (
     <>
-      <nav style={{
+      <nav data-tour="nav-celular" style={{
         position: 'fixed', left: 12, right: 12, bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))', zIndex: 30,
         display: 'flex', justifyContent: 'space-around', padding: 6, borderRadius: 18, background: '#fff',
         border: `1px solid ${T.border.default}`, boxShadow: '0 12px 32px -12px rgba(28,27,34,.25)',
