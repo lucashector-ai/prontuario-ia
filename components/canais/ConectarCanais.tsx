@@ -137,12 +137,13 @@ export default function ConectarCanais() {
       const code: string | null = await new Promise(ok => {
         window.FB.login((r: any) => ok(r?.authResponse?.code || null), {
           config_id: estado.config_whatsapp, response_type: 'code', override_default_response_type: true,
-          // A versão (v4) vem da configuração criada no painel da Meta. featureType
+          // A versão (v4) vem da configuração criada no painel da Meta — sessionInfoVersion era
+          // da v2/v3 (descontinuadas em 15/10/2026) e fazia a Meta ignorar o featureType.
           // whatsapp_business_app_onboarding = coexistência: o número continua no app
-          // WhatsApp Business do celular (a Meta mostra o QR/código para confirmar no app).
+          // WhatsApp Business do celular (a Meta mostra o código/QR para confirmar no app).
           extras: modo === 'coexistencia'
-            ? { setup: {}, featureType: 'whatsapp_business_app_onboarding', sessionInfoVersion: '3' }
-            : { setup: {}, sessionInfoVersion: '3' },
+            ? { setup: {}, featureType: 'whatsapp_business_app_onboarding' }
+            : { setup: {} },
         })
       })
       // os dados do número às vezes chegam logo depois do login
