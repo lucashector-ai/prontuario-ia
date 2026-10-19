@@ -58,7 +58,7 @@ function carregarSdkMeta(appId: string): Promise<void> {
   if (sdkCarregando) return sdkCarregando
   sdkCarregando = new Promise((ok, falha) => {
     window.fbAsyncInit = () => {
-      window.FB.init({ appId, autoLogAppEvents: true, xfbml: false, version: 'v23.0' })
+      window.FB.init({ appId, autoLogAppEvents: true, xfbml: false, version: 'v26.0' })
       ok()
     }
     const s = document.createElement('script')
