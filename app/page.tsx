@@ -115,11 +115,8 @@ function Landing({ router, logado, destinoLogado }: { router: any; logado: boole
   const h2: React.CSSProperties = { margin: 0, fontWeight: 500, fontSize: 48, lineHeight: 1.1, letterSpacing: '-0.05em', color: INK }
 
   return (
-    <div style={{ fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", background: '#fff', color: INK, overflowX: 'hidden', WebkitFontSmoothing: 'antialiased' }}>
-      {/* Fonte + animações + responsivo */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <div style={{ fontFamily: "var(--font-inter),Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", background: '#fff', color: INK, overflowX: 'hidden', WebkitFontSmoothing: 'antialiased' }}>
+      {/* Animações + responsivo (a fonte Inter vem do layout, servida pelo próprio site) */}
       <style dangerouslySetInnerHTML={{ __html: `
         html{scroll-behavior:smooth;}
         @keyframes c360pulse{0%,100%{opacity:1}50%{opacity:.25}}
