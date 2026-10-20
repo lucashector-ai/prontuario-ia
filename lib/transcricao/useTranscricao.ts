@@ -19,8 +19,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { log } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 import { PARAMS_DEEPGRAM, TERMOS_MEDICOS_BASE, paramsTermos, textoComFalantes } from '@/lib/transcricao/termos'
+import { lerAoVivo } from '@/lib/transcricao/aoVivo'
 
-export type Conexao = 'parado' | 'conectando' | 'ao_vivo' | 'reconectando' | 'sem_ao_vivo'
+export type Conexao = 'parado' | 'conectando' | 'ao_vivo' | 'reconectando' | 'sem_ao_vivo' | 'desligado'
 export type Fase = 'parado' | 'gravando' | 'finalizando' | 'revisando' | 'identificando'
 
 type Palavra = { word: string; punctuated_word?: string; speaker?: number }
@@ -50,6 +51,8 @@ export type OpcoesTranscricao = {
   obterStream?: () => MediaStream | null
   /** false = não pedir à IA para identificar médico/paciente no fim */
   identificarPapeis?: boolean
+  /** Texto ao vivo durante a gravação. Sem informar, usa a preferência do navegador (padrão: desligado). */
+  aoVivo?: boolean
 }
 
 export function useTranscricao(onTexto: (texto: string) => void, opcoes: OpcoesTranscricao = {}) {
@@ -234,12 +237,14 @@ export function useTranscricao(onTexto: (texto: string) => void, opcoes: OpcoesT
     inicioRef.current = Date.now()
     setPausado(false)
     setFase('gravando')
-    setConexao('conectando')
+    // Texto ao vivo só se pedido (custa mais); sem ele, grava e transcreve uma vez no fim
+    const aoVivo = opcoesRef.current.aoVivo ?? lerAoVivo()
+    setConexao(aoVivo ? 'conectando' : 'desligado')
 
     // Vocabulário (dicionário do médico + base) — não segura o início
     fetch('/api/transcrever/termos' + (opcoesRef.current.medicoId ? `?medico_id=${opcoesRef.current.medicoId}` : ''))
       .then(r => r.json()).then(j => { if (Array.isArray(j.termos)) termosRef.current = j.termos }).catch(() => {})
-      .finally(async () => { if (ativoRef.current && !(await conectar())) reconectar() })
+      .finally(async () => { if (aoVivo && ativoRef.current && !(await conectar())) reconectar() })
 
     keepAliveRef.current = setInterval(() => {
       const ws = wsRef.current

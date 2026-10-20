@@ -93,7 +93,7 @@ Formato: bullets curtos com "•" no início de cada linha. Sem cabeçalho, sem 
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: MODELOS.apoio,
+        model: MODELOS.rapido,
         max_tokens: 500,
         system: systemPrompt,
         messages: [

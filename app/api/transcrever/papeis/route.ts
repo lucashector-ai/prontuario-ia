@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const r = await anthropic.messages.create({
-      model: MODELOS.apoio,
+      model: MODELOS.rapido,
       max_tokens: Math.min(8000, 200 + frases.length * 6),
       messages: [{ role: 'user', content: prompt }],
     })

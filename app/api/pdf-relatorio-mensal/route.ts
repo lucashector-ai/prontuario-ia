@@ -67,7 +67,7 @@ Dados do mes de ${nomeMes}:
 Destaque pontos positivos, alertas e sugestoes para o proximo mes.`
 
     const res = await anthropic.messages.create({
-      model: MODELOS.apoio, max_tokens: 250,
+      model: MODELOS.rapido, max_tokens: 250,
       messages: [{ role: "user", content: prompt }]
     })
     const resumoIA = res.content[0].type === "text" ? res.content[0].text : ""

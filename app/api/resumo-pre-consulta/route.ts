@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
     let fonte: RespostaResumoPreConsulta['fonte'] = 'ia'
     try {
       const msg = await anthropic.messages.create({
-        model: MODELOS.apoio,
+        model: MODELOS.rapido,
         max_tokens: 900,
         messages: [{ role: 'user', content: prompt }],
       })

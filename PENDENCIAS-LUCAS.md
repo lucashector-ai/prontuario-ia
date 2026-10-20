@@ -22,6 +22,7 @@ _Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 ví
 - [x] Plano Grátis: 1 usuário, 10 consultas com IA por mês (feito).
 
 ## Vercel (Settings → Environment Variables)
+- [ ] `GROQ_API_KEY` (console.groq.com → API Keys): a transcrição final passa a usar o Whisper da Groq, bem mais barato. Sem a chave, o sistema usa a Deepgram como antes (funciona, só custa mais).
 - [ ] `EMAIL_PEDIDOS_PLANO`: email que recebe os pedidos de plano completo (sem ela, vai para contato@clinical360.app).
 - [ ] `RESEND_API_KEY` e `RESEND_FROM` (ex.: `Clinical 360 <nao-responda@seudominio.com.br>`, com o domínio verificado no Resend). Sem a chave o email não sai; o pedido fica guardado no banco mesmo assim.
 

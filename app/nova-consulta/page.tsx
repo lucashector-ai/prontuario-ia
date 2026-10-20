@@ -78,6 +78,7 @@ function StatusConexao({ conexao, fase }: { conexao: string; fase: string }) {
     ao_vivo: ['Ao vivo', T.status.success, T.status.successBg],
     reconectando: ['Reconectando…', T.status.warning, T.status.warningBg],
     sem_ao_vivo: ['Gravando — o texto aparece ao encerrar', T.status.warning, T.status.warningBg],
+    desligado: ['Gravando — o texto aparece ao encerrar', T.brand.primary, T.brand.primaryLight],
   }
   const m = mapa[conexao]
   if (!m) return null

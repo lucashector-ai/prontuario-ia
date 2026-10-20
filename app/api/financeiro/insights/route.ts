@@ -44,7 +44,7 @@ Projeção próximos 45 dias — entradas previstas: ${brl(m.projecao?.entradasP
 `.trim()
 
     const message = await anthropic.messages.create({
-      model: MODELOS.apoio,
+      model: MODELOS.rapido,
       max_tokens: 600,
       messages: [{
         role: 'user',

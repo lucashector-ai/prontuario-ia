@@ -14,6 +14,7 @@ import ConversaConsulta from '@/components/ia/ConversaConsulta'
 import { useTranscricao } from '@/lib/transcricao/useTranscricao'
 import { supabase } from '@/lib/supabase'
 import { ehDemo } from '@/lib/atendimento/cliente'
+import { ChaveAoVivo } from '@/components/atendimento/ChaveAoVivo'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
 type Prontuario = { subjetivo?: string; objetivo?: string; avaliacao?: string; plano?: string; cids?: { codigo: string; descricao: string }[]; [k: string]: any }
@@ -43,7 +44,7 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
   useEffect(() => { onProntuario?.(!!consultaId) }, [consultaId, onProntuario])
 
   const aoTexto = useCallback((t: string) => setTranscricao(t), [])
-  const { gravando, gravandoPausado, iniciarGravacao, pararGravacao, pausarGravacao, limpar, erro, fase, parcial, nivel, vozBaixa } =
+  const { gravando, gravandoPausado, iniciarGravacao, pararGravacao, pausarGravacao, limpar, erro, fase, parcial, nivel, vozBaixa, conexao } =
     useTranscricao(aoTexto, { medicoId })
 
   useEffect(() => {
@@ -127,7 +128,9 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
         {erro && <div style={{ fontSize: 12.5, color: T.status.danger }}>{erro}</div>}
         <div style={{ maxHeight: 340, overflowY: 'auto', padding: 12, borderRadius: 12, background: T.bg.page, border: `1px solid ${T.border.muted}` }}>
           {transcricao || parcial ? <ConversaConsulta texto={transcricao} parcial={parcial} compacto />
-            : <div style={{ fontSize: 13, color: T.text.tertiary }}>Pode começar a consulta normalmente. O texto aparece aqui enquanto vocês conversam.</div>}
+            : <div style={{ fontSize: 13, color: T.text.tertiary }}>{conexao === 'desligado'
+              ? 'Gravando. Pode conduzir a consulta normalmente: o texto e o prontuário aparecem quando você encerrar.'
+              : 'Pode começar a consulta normalmente. O texto aparece aqui enquanto vocês conversam.'}</div>}
         </div>
       </div>
     )
@@ -205,11 +208,12 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
             <Mic size={20} /> Iniciar gravação
           </button>
           <div style={{ fontSize: 12.5, color: T.text.secondary, maxWidth: 320, lineHeight: 1.45 }}>
-            A IA escuta a consulta, separa médico e {paciente.nome.split(' ')[0] || 'paciente'} e monta o prontuário no fim.
+            A IA ouve a consulta, separa médico e {paciente.nome.split(' ')[0] || 'paciente'} e monta o prontuário no fim.
             <button onClick={() => setDigitar(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', color: T.brand.primary, fontWeight: 600, cursor: 'pointer', padding: 0, marginLeft: 4, fontFamily: 'inherit', fontSize: 12.5 }}>
               <Type size={13} /> Prefiro digitar
             </button>
           </div>
+          <ChaveAoVivo />
         </div>
       )}
     </div>

@@ -59,7 +59,7 @@ Responda APENAS com JSON no formato:
 {"score": 0-100, "nivel": "alto|medio|baixo", "pontos_positivos": ["..."], "pontos_atencao": ["..."], "recomendacao": "..."}`
 
     const res = await anthropic.messages.create({
-      model: MODELOS.apoio, max_tokens: 400,
+      model: MODELOS.rapido, max_tokens: 400,
       messages: [{ role: 'user', content: prompt }]
     })
 

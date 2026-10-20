@@ -42,7 +42,7 @@ Retorne APENAS este JSON:
     }
 
     const message = await anthropic.messages.create({
-      model: MODELOS.apoio,
+      model: MODELOS.rapido,
       max_tokens: 600,
       messages: [{ role: "user", content: prompt }]
     })

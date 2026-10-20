@@ -16,6 +16,34 @@ export const maxDuration = 60
  */
 const BUCKET = 'transcricoes'
 
+/** Transcrição pelo Groq (Whisper large v3 turbo). Devolve null se não houver chave ou der erro. */
+async function transcreverGroq(url: string, termos: string[]): Promise<{ texto: string; duracao: number | null } | null> {
+  const chave = process.env.GROQ_API_KEY
+  if (!chave) return null
+  try {
+    const audio = await fetch(url)
+    if (!audio.ok) return null
+    const blob = await audio.blob()
+    if (blob.size > 24 * 1024 * 1024) return null   // acima do limite do Groq: usa o Deepgram
+    const form = new FormData()
+    form.append('file', blob, 'consulta.' + (blob.type.includes('mp4') ? 'm4a' : blob.type.includes('ogg') ? 'ogg' : 'webm'))
+    form.append('model', 'whisper-large-v3-turbo')
+    form.append('language', 'pt')
+    form.append('response_format', 'verbose_json')
+    form.append('temperature', '0')
+    // Vocabulário médico como contexto (o Whisper aceita um texto curto de "prompt")
+    form.append('prompt', 'Consulta médica em português. Termos: ' + termos.slice(0, 40).join(', ') + '.')
+    const r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${chave}` }, body: form })
+    if (!r.ok) { log.warn('[transcrever/final] groq', r.status, (await r.text()).slice(0, 200)); return null }
+    const j = await r.json()
+    const texto = String(j.text || '').trim()
+    return texto ? { texto, duracao: j.duration ?? null } : null
+  } catch (e: any) {
+    log.warn('[transcrever/final] groq falhou:', e?.message || e)
+    return null
+  }
+}
+
 async function garantirBucket() {
   const { data } = await db.storage.getBucket(BUCKET)
   if (!data) await db.storage.createBucket(BUCKET, { public: false, fileSizeLimit: '200MB' })
@@ -45,6 +73,15 @@ export async function POST(req: NextRequest) {
       if (errUrl || !assinado) throw new Error(errUrl?.message || 'Áudio não encontrado')
 
       const termos: string[] = Array.isArray(corpo.termos) ? corpo.termos.map(String) : TERMOS_MEDICOS_BASE
+
+      // 1º Groq Whisper (bem mais barato: ~US$ 0,04 por hora de áudio). Quem falou cada frase
+      // é identificado depois pela IA (/api/transcrever/papeis). Se falhar, cai no Deepgram.
+      const viaGroq = await transcreverGroq(assinado.signedUrl, termos)
+      if (viaGroq) {
+        db.storage.from(BUCKET).remove([caminho]).catch(() => {})
+        return NextResponse.json({ texto: viaGroq.texto, falantes: 0, duracao: viaGroq.duracao, confianca: null, motor: 'groq' })
+      }
+
       const r = await fetch(`https://api.deepgram.com/v1/listen?${PARAMS_DEEPGRAM}&utterances=true&${paramsTermos(termos)}`, {
         method: 'POST',
         headers: { Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`, 'Content-Type': 'application/json' },

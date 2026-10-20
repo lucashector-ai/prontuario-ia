@@ -50,7 +50,7 @@ Dados da semana:
 ${relatorio.alertas_pendentes.length > 0 ? '- Alertas: ' + relatorio.alertas_pendentes.map((a: any) => a.pacientes?.nome + ' (' + a.nivel + ')').join(', ') : ''}`
 
     const res = await anthropic.messages.create({
-      model: MODELOS.apoio, max_tokens: 300,
+      model: MODELOS.rapido, max_tokens: 300,
       messages: [{ role: 'user', content: prompt }]
     })
     relatorio.resumo_ia = res.content[0].type === 'text' ? res.content[0].text : ''
@@ -82,7 +82,7 @@ Mensagens recentes: ${mensagens?.filter((m: any) => m.tipo === 'recebida').slice
 Gere: 1) Resumo do estado atual 2) Sinais de alerta (se houver) 3) Recomendacao de acompanhamento. Maximo 150 palavras.`
 
   const res = await anthropic.messages.create({
-    model: MODELOS.apoio, max_tokens: 250,
+    model: MODELOS.rapido, max_tokens: 250,
     messages: [{ role: 'user', content: prompt }]
   })
 
