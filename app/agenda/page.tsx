@@ -291,6 +291,9 @@ function AgendaContent() {
   const [listaEsperaOpen, setListaEsperaOpen] = useState(false)
   const [listaEspera, setListaEspera] = useState<any[]>([])
   const [riscoOpen, setRiscoOpen] = useState(false)
+  const [pedidosOnline, setPedidosOnline] = useState<any[]>([])
+  const [pedidosOpen, setPedidosOpen] = useState(false)
+  const [respondendo, setRespondendo] = useState<string | null>(null)
   const [avisoEspera, setAvisoEspera] = useState('')
   const [modalEspera, setModalEspera] = useState(false)
   const [formEspera, setFormEspera] = useState(FORM_ESPERA_VAZIO)
@@ -437,6 +440,7 @@ function AgendaContent() {
     setAgendamentos(agsR.data || [])
     setMedicosClinica(medsR.data || [])
     carregarListaEspera(medicoIds)
+    fetch('/api/agenda-publica/pedidos').then(r => r.ok ? r.json() : { pedidos: [] }).then(j => setPedidosOnline(j.pedidos || [])).catch(() => {})
 
     // Carregar procedimentos da clínica (cobre admin + medico)
     const cidLoad = clinicaIdLocal || medico?.clinica_id
@@ -1156,6 +1160,54 @@ function AgendaContent() {
         <Button variant="secondary" icon={SlidersHorizontal} onClick={() => setFiltrosMobileOpen(true)}>
           Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
         </Button>
+      )}
+      {pedidosOnline.length > 0 && (
+        <div style={{ position: 'relative' }}>
+          <Button variant="primary" icon={CalendarClock} onClick={() => setPedidosOpen(o => !o)} title="Pedidos de horário feitos pela agenda online">
+            {isMobile ? '' : 'Pedidos online'}
+            <span style={{ minWidth: 18, height: 18, padding: '0 5px', boxSizing: 'border-box', borderRadius: 9, background: '#fff', color: T.brand.primary, fontSize: 11, fontWeight: 700, lineHeight: '18px', textAlign: 'center' }}>{pedidosOnline.length}</span>
+          </Button>
+          {pedidosOpen && (
+            <>
+              <div onClick={() => setPedidosOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 49 }} />
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 380, maxWidth: 'calc(100vw - 32px)', maxHeight: 460, overflowY: 'auto',
+                background: '#fff', border: `1px solid ${T.border.default}`, borderRadius: T.radius.xl, boxShadow: T.shadow.lg, padding: 8, zIndex: 50,
+              }}>
+                <div style={{ padding: '4px 8px 8px' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.text.primary }}>Pedidos da agenda online</div>
+                  <div style={{ fontSize: 12, color: T.text.quaternary }}>Confirme para entrar na agenda (o paciente é cadastrado ou ligado pelo telefone).</div>
+                </div>
+                {pedidosOnline.map(p => {
+                  const d = new Date(p.data_hora)
+                  const responder = async (acao: 'confirmar' | 'rejeitar') => {
+                    if (acao === 'rejeitar' && !(await confirmar({ titulo: 'Recusar este pedido?', mensagem: 'O horário volta a ficar livre. Se quiser, avise o paciente pelo Chat.', confirmar: 'Recusar', perigo: true }))) return
+                    setRespondendo(p.id)
+                    try {
+                      const r = await fetch('/api/agenda-publica/pedidos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: p.id, acao }) })
+                      const j = await r.json().catch(() => ({}))
+                      if (!r.ok) { notificar(j.error || 'Não foi possível responder o pedido.', 'erro'); return }
+                      setPedidosOnline(l => l.filter(x => x.id !== p.id))
+                      notificar(acao === 'confirmar' ? 'Consulta confirmada e adicionada à agenda' : 'Pedido recusado')
+                      if (acao === 'confirmar' && medico) carregarDados(medico.id)
+                    } finally { setRespondendo(null) }
+                  }
+                  return (
+                    <div key={p.id} style={{ padding: '10px 8px', borderTop: `1px solid ${T.border.muted}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.text.primary }}>{p.nome_paciente}{p.primeira_consulta ? <span style={{ fontSize: 11, fontWeight: 600, color: T.brand.primary, marginLeft: 6 }}>primeira consulta</span> : null}</div>
+                      <div style={{ fontSize: 12, color: T.text.secondary }}>{d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })} às {fmtHora(d)}{multiProf && p.medico?.nome ? ' · ' + p.medico.nome : ''}{p.telefone ? ' · ' + p.telefone : ''}</div>
+                      {p.motivo && <div style={{ fontSize: 12, color: T.text.quaternary }}>{p.motivo}</div>}
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <Button size="sm" icon={Check} disabled={respondendo === p.id} onClick={() => responder('confirmar')}>Confirmar</Button>
+                        <Button size="sm" variant="ghost" disabled={respondendo === p.id} onClick={() => responder('rejeitar')}>Recusar</Button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
       )}
       {confirmarPrimeiro.length > 0 && (
         <div style={{ position: 'relative' }}>

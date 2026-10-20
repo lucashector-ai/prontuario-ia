@@ -169,33 +169,17 @@ export default function AgendaPublicaPage() {
     }
   }
 
+  // Confirmar/rejeitar pelo servidor: liga (ou cadastra) o paciente pelo telefone e cria o agendamento
+  async function responderSolicitacao(s: SolicitacaoPendente, acao: 'confirmar' | 'rejeitar') {
+    const r = await fetch('/api/agenda-publica/pedidos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: s.id, acao }) })
+    const j = await r.json().catch(() => ({}))
+    if (!r.ok) throw new Error(j.error || 'Não foi possível responder o pedido.')
+  }
+
   async function confirmarSolicitacao(s: SolicitacaoPendente) {
     if (!medicoAtivo) return
     try {
-      const observacoes = 'Agendado via link público. Paciente: ' + s.nome_paciente + ' · ' + s.telefone + (s.email ? ' · ' + s.email : '')
-      
-      const { data: agendamento } = await supabase
-        .from('agendamentos')
-        .insert({
-          medico_id: medicoAtivo.id,
-          data_hora: s.data_hora,
-          tipo: 'consulta',
-          status: 'agendado',
-          motivo: s.motivo,
-          duracao: String(config.duracao_consulta_min),
-          observacoes,
-        })
-        .select()
-        .single()
-
-      await supabase
-        .from('agenda_publica_solicitacoes')
-        .update({ 
-          status: 'confirmado',
-          agendamento_id: agendamento?.id 
-        })
-        .eq('id', s.id)
-
+      await responderSolicitacao(s, 'confirmar')
       carregarSolicitacoes(medicoAtivo.id)
       setMensagem({ tipo: 'ok', texto: 'Consulta confirmada e adicionada à agenda.' })
     } catch (e: any) {
@@ -204,17 +188,13 @@ export default function AgendaPublicaPage() {
   }
 
   async function rejeitarSolicitacao(s: SolicitacaoPendente) {
-    if (!(await confirmar({ titulo: 'Rejeitar esta solicitação?', mensagem: 'O paciente será avisado de que o horário não foi confirmado.', confirmar: 'Rejeitar', perigo: true }))) return
+    if (!(await confirmar({ titulo: 'Recusar este pedido?', mensagem: 'O horário volta a ficar livre na agenda online. Se quiser, avise o paciente pelo Chat.', confirmar: 'Recusar', perigo: true }))) return
     try {
-      await supabase
-        .from('agenda_publica_solicitacoes')
-        .update({ status: 'rejeitado' })
-        .eq('id', s.id)
-      
+      await responderSolicitacao(s, 'rejeitar')
       if (medicoAtivo) carregarSolicitacoes(medicoAtivo.id)
-      setMensagem({ tipo: 'ok', texto: 'Solicitação rejeitada.' })
+      setMensagem({ tipo: 'ok', texto: 'Pedido recusado.' })
     } catch (e: any) {
-      setMensagem({ tipo: 'erro', texto: e.message || 'Erro ao rejeitar' })
+      setMensagem({ tipo: 'erro', texto: e.message || 'Erro ao recusar' })
     }
   }
 
