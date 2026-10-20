@@ -745,10 +745,11 @@ export async function retirarAviso(ctx: Contexto, id: string) {
 }
 
 /**
- * Médico avisa que está atrasado: recado na TV, aviso para a recepção e, se pedir,
- * WhatsApp para quem ainda não chegou (com o novo horário provável e opção de remarcar).
+ * Médico avisa que está atrasado: recado na TV (sem tempo nem horário) e aviso interno para a
+ * recepção (com os minutos, para ela orientar quem perguntar). Paciente NÃO recebe WhatsApp
+ * sobre atraso — decisão do dono do produto.
  */
-export async function avisarAtraso(ctx: Contexto, p: { medicoId: string; minutos: number; whatsapp: boolean }) {
+export async function avisarAtraso(ctx: Contexto, p: { medicoId: string; minutos: number }) {
   const medico = await garantirMedico(ctx, p.medicoId)
   const minutos = Math.min(240, Math.max(5, Math.round(Number(p.minutos) || 0)))
   const agora = new Date()
@@ -756,7 +757,7 @@ export async function avisarAtraso(ctx: Contexto, p: { medicoId: string; minutos
   await db.from('avisos_painel').update({ expira_em: agora.toISOString() }).eq('clinica_id', ctx.clinica).eq('medico_id', medico.id).eq('tipo', 'atraso').gt('expira_em', agora.toISOString())
   const { error } = await db.from('avisos_painel').insert({
     clinica_id: ctx.clinica, medico_id: medico.id, tipo: 'atraso', criado_por: ctx.usuario,
-    texto: `${medico.nome} está com atraso de cerca de ${minutos} min. Agradecemos a compreensão.`,
+    texto: `${medico.nome} está com um pequeno atraso. Agradecemos a compreensão.`,
     expira_em: new Date(agora.getTime() + Math.max(60, minutos * 2) * 60e3).toISOString(),
   })
   if (error) throw error
@@ -765,29 +766,7 @@ export async function avisarAtraso(ctx: Contexto, p: { medicoId: string; minutos
     medico_id: medico.id, tipo: 'atraso_medico', lida: false, link: '/recepcao',
     titulo: `${medico.nome} vai atrasar ~${minutos} min`, descricao: 'O recado já está na TV da sala de espera. Avise quem perguntar e ofereça remarcar se preferirem.',
   })
-
-  let enviados = 0
-  if (p.whatsapp) {
-    const { de, ate } = limitesDoDiaSP(hojeSP())
-    const { data: ags } = await db.from('agendamentos').select('id, data_hora, paciente:pacientes(id, nome, telefone)')
-      .eq('medico_id', medico.id).gte('data_hora', new Date(agora.getTime() - 30 * 60e3).toISOString()).lte('data_hora', ate)
-      .gte('data_hora', de).not('status', 'in', '(cancelado,faltou,realizado)')
-    const ids = (ags || []).map((a: any) => a.id)
-    const { data: chegaram } = ids.length ? await db.from('atendimentos').select('agendamento_id').in('agendamento_id', ids) : { data: [] as any[] }
-    const jaAqui = new Set((chegaram || []).map((c: any) => c.agendamento_id))
-    for (const a of (ags || []) as any[]) {
-      if (jaAqui.has(a.id) || !a.paciente?.telefone) continue
-      const previsto = new Date(new Date(a.data_hora).getTime() + minutos * 60e3).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
-      const hora = new Date(a.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
-      const r = await enviarWhatsApp({
-        medicoId: medico.id, telefone: a.paciente.telefone,
-        texto: `Olá, ${a.paciente.nome?.split(' ')[0] || ''}! ${medico.nome} está com atraso de cerca de ${minutos} min hoje. Sua consulta das ${hora} deve começar por volta das ${previsto}. Se preferir remarcar, é só responder aqui. Desculpe o transtorno.`,
-        registrar: { nome: a.paciente.nome, pacienteId: a.paciente.id, metadata: { tipo: 'atraso_medico', agendamento: a.id } },
-      })
-      if (r.ok) enviados++
-    }
-  }
-  return { minutos, enviados }
+  return { minutos }
 }
 
 /** Médico encerrou o atraso (tira o recado da TV). */

@@ -136,15 +136,15 @@ export async function whatsappRetorno(id: string) {
 
 // ── Recados na TV e atraso do médico ────────────────────────────────────────
 
-export async function avisarAtraso(medicoId: string, minutos: number, whatsapp: boolean) {
+export async function avisarAtraso(medicoId: string, minutos: number) {
   if (ehDemo()) {
     const e = demo.estado(); const m = e.medicos.find(x => x.id === medicoId)
-    e.avisos = [...(e.avisos || []).filter(a => !(a.tipo === 'atraso' && a.medico_id === medicoId)), { id: 'demo-av-' + Date.now(), tipo: 'atraso', medico_id: medicoId, texto: `${m?.nome || 'O médico'} está com atraso de cerca de ${minutos} min. Agradecemos a compreensão.`, expira_em: new Date(Date.now() + Math.max(60, minutos * 2) * 60e3).toISOString() }]
+    e.avisos = [...(e.avisos || []).filter(a => !(a.tipo === 'atraso' && a.medico_id === medicoId)), { id: 'demo-av-' + Date.now(), tipo: 'atraso', medico_id: medicoId, texto: `${m?.nome || 'O médico'} está com um pequeno atraso. Agradecemos a compreensão.`, expira_em: new Date(Date.now() + Math.max(60, minutos * 2) * 60e3).toISOString() }]
     demo.gravar(e)
     avisarNaTela({ id: 'demo-atraso-' + Date.now(), tipo: 'atraso_medico', titulo: `${m?.nome} vai atrasar ~${minutos} min`, descricao: 'O recado já está na TV da sala de espera.', link: '/recepcao?demo=1' })
-    return { minutos, enviados: 0 }
+    return { minutos }
   }
-  return post<{ minutos: number; enviados: number }>('/api/atendimento', { acao: 'atraso', medico_id: medicoId, minutos, whatsapp })
+  return post<{ minutos: number }>('/api/atendimento', { acao: 'atraso', medico_id: medicoId, minutos })
 }
 export async function encerrarAtraso(medicoId: string) {
   if (ehDemo()) { const e = demo.estado(); e.avisos = (e.avisos || []).filter(a => !(a.tipo === 'atraso' && a.medico_id === medicoId)); demo.gravar(e); return { ok: true } }

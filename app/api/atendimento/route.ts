@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
 
     if (b.acao === 'atraso') {
       if (!b.medico_id) throw new ErroAtendimento('medico_id obrigatório')
-      return NextResponse.json(await avisarAtraso(ctx, { medicoId: b.medico_id, minutos: Number(b.minutos), whatsapp: !!b.whatsapp }))
+      return NextResponse.json(await avisarAtraso(ctx, { medicoId: b.medico_id, minutos: Number(b.minutos) }))
     }
     if (b.acao === 'encerrar_atraso') { await encerrarAtraso(ctx, String(b.medico_id || '')); return NextResponse.json({ ok: true }) }
     if (b.acao === 'recado') { await publicarRecado(ctx, { texto: b.texto, horas: b.horas, setorId: b.setor_id || null }); return NextResponse.json({ ok: true }) }

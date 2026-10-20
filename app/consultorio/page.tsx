@@ -274,10 +274,10 @@ export default function ConsultorioPage() {
       )}
 
       {atrasoAberto && (
-        <ModalAtraso naoChegaram={naoChegaram.length} onClose={() => setAtrasoAberto(false)} onAvisar={async (min, wpp) => {
+        <ModalAtraso onClose={() => setAtrasoAberto(false)} onAvisar={async (min) => {
           try {
-            const r = await avisarAtraso(medicoId, min, wpp)
-            notificar(`Atraso de ~${r.minutos} min avisado na TV e à recepção${wpp ? ` · ${r.enviados} WhatsApp enviados` : ''}`)
+            await avisarAtraso(medicoId, min)
+            notificar('Atraso avisado na TV e à recepção')
             setAtrasoAberto(false); avisarFila(); recarregar()
           } catch (e: any) { notificar(e.message, 'erro') }
         }} />
@@ -555,10 +555,9 @@ function CartaoTriagem({ t }: { t: Triagem }) {
   )
 }
 
-/** "Estou atrasado": recado na TV + aviso à recepção; WhatsApp para quem não chegou só se marcar. */
-function ModalAtraso({ naoChegaram, onClose, onAvisar }: { naoChegaram: number; onClose: () => void; onAvisar: (min: number, whatsapp: boolean) => Promise<void> }) {
+/** "Estou atrasado": recado na TV (sem tempo) + aviso à recepção. Paciente não recebe WhatsApp de atraso. */
+function ModalAtraso({ onClose, onAvisar }: { onClose: () => void; onAvisar: (min: number) => Promise<void> }) {
   const [min, setMin] = useState(30)
-  const [wpp, setWpp] = useState(false)
   const [enviando, setEnviando] = useState(false)
   return (
     <Modal titulo="Avisar atraso" onClose={onClose} largura={460}>
@@ -567,14 +566,12 @@ function ModalAtraso({ naoChegaram, onClose, onAvisar }: { naoChegaram: number; 
           {[15, 30, 45, 60, 90].map(m => <Chip key={m} ativo={min === m} onClick={() => setMin(m)}>{m < 60 ? `${m} min` : `${m / 60 === 1 ? '1 h' : '1h30'}`}</Chip>)}
         </div>
       </Field>
-      <div style={{ fontSize: 13, color: T.text.secondary, margin: '14px 0', lineHeight: 1.5 }}>A TV da sala de espera mostra o recado e a recepção recebe o aviso na hora.</div>
-      <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 10, background: T.bg.page, cursor: 'pointer', fontSize: 13 }}>
-        <input type="checkbox" checked={wpp} onChange={e => setWpp(e.target.checked)} style={{ marginTop: 2, width: 16, height: 16 }} />
-        <span>Avisar pelo WhatsApp quem ainda não chegou ({naoChegaram})<span style={{ display: 'block', fontSize: 12, color: T.text.tertiary, marginTop: 2 }}>Com o novo horário provável e a opção de remarcar.</span></span>
-      </label>
+      <div style={{ fontSize: 13, color: T.text.secondary, margin: '14px 0', lineHeight: 1.5 }}>
+        A TV da sala de espera mostra um recado de atraso (sem tempo nem horário) e a recepção recebe o aviso com o tempo que você escolheu, para orientar quem perguntar.
+      </div>
       <ModalAcoes>
         <Button variant="secondary" onClick={onClose}>Voltar</Button>
-        <Button icon={AlarmClock} disabled={enviando} onClick={async () => { setEnviando(true); await onAvisar(min, wpp); setEnviando(false) }}>{enviando ? 'Avisando…' : 'Avisar'}</Button>
+        <Button icon={AlarmClock} disabled={enviando} onClick={async () => { setEnviando(true); await onAvisar(min); setEnviando(false) }}>{enviando ? 'Avisando…' : 'Avisar'}</Button>
       </ModalAcoes>
     </Modal>
   )
