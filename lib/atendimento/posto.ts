@@ -1,9 +1,12 @@
+import { ehDemo } from '@/lib/demo'
+
 /** "Meu posto" na Central de atendimento: onde cada pessoa trabalha e qual aba abre primeiro. */
 export type Posto = 'agora' | 'recepcao' | 'triagem' | 'consultorio' | 'saidas' | 'telas'
 export type Perfil = 'gestor' | 'recepcao' | 'enfermagem' | 'medico'
 export const CHAVE_POSTO = 'c360-meu-posto'
 
 export function perfilAtual(): Perfil {
+  if (ehDemo()) return 'gestor' // demonstração: vê todas as abas (Recepção, TV e totem…)
   try {
     if (localStorage.getItem('clinica_admin')) return 'gestor'
     const m = JSON.parse(localStorage.getItem('medico') || 'null')
@@ -21,6 +24,7 @@ export function postoPadrao(p: Perfil): Posto {
 
 /** Aba em que a Central abre para esta pessoa. */
 export function postoInicial(): Posto {
+  if (ehDemo()) return 'agora' // demonstração: começa pela visão geral
   try { const v = localStorage.getItem(CHAVE_POSTO) as Posto | null; if (v) return v } catch {}
   return postoPadrao(perfilAtual())
 }

@@ -15,6 +15,7 @@ import { Button, KpiCard, SegmentedControl, Icon, EmptyState } from '@/component
 
 import { corConvenio, normalizarConvenio } from '@/lib/convenios'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { ehDemo } from '@/lib/demo'
 const T = tokens
 type Periodo = 'hoje' | 'semana' | 'mes' | 'ano'
 type Comparacao = 'anterior' | 'ano_passado'
@@ -129,7 +130,7 @@ export default function Dashboard() {
     } else {
       const medicoData = JSON.parse(m!)
       // O Início da recepção é a própria Recepção (o Dashboard é dos números do médico)
-      if (ehApoio(medicoData.cargo)) { router.replace((medicoData.cargo === 'enfermagem' ? '/atendimento/triagem' : '/atendimento/recepcao') + (window.location.search.includes('demo=1') ? '?demo=1' : '')); return }
+      if (ehApoio(medicoData.cargo)) { router.replace((medicoData.cargo === 'enfermagem' ? '/atendimento/triagem' : '/atendimento/recepcao') + (ehDemo() ? '?demo=1' : '')); return }
       setMedico(medicoData)
       setMedicos([{ id: medicoData.id, nome: medicoData.nome }])
     }

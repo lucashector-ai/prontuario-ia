@@ -20,6 +20,7 @@ import { listarNotificacoes, marcarNotificacao, marcarTodasLidas, destinoDaNotif
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 import { SaldoCurto } from '@/components/planos/SaldoCreditos'
+import { ehDemo } from '@/lib/demo'
 const T = tokens
 
 // so: 'gestor' = dono/administrador · 'clinico' = quem atende (fora da recepção)
@@ -91,7 +92,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
   const [unidades, setUnidades] = useState<{ atual: string | null; unidades: UnidadeResumo[] }>({ atual: null, unidades: [] })
   useEffect(() => {
     try {
-      if (new URLSearchParams(window.location.search).get('demo') === '1') return
+      if (ehDemo()) return
       if (!localStorage.getItem('clinica_admin') && !localStorage.getItem('medico')) return
     } catch { return }
     listarUnidades().then(setUnidades).catch(() => {})

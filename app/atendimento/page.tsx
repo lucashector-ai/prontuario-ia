@@ -3,12 +3,13 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { postoInicial } from '@/lib/atendimento/posto'
+import { comDemo } from '@/lib/demo'
 
 export default function AtendimentoInicio() {
   const router = useRouter()
   useEffect(() => {
-    const demo = new URLSearchParams(window.location.search).get('demo') === '1' ? '?demo=1' : ''
-    router.replace(`/atendimento/${postoInicial()}${demo}`)
+    // Mantém os parâmetros (?demo=1, ?tour=1…) ao abrir o posto
+    router.replace(comDemo(`/atendimento/${postoInicial()}${window.location.search}`))
   }, [router])
   return null
 }

@@ -16,6 +16,7 @@ import { tokens as T, tint } from '@/lib/design-tokens'
 import { Badge, Button, Card, Checkbox, EmptyState, Icon, Modal, Select } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { CanalIcone } from '@/app/chat/pecas'
+import { ehDemo } from '@/lib/demo'
 
 type Canal = 'whatsapp' | 'instagram' | 'messenger'
 type Conectado = { id: string; canal: Canal; conta_id: string; nome: string | null; foto_url: string | null; status: string; erro: string | null; conectado_em: string | null; medico_id: string; detalhe?: { modo?: string | null; legado?: boolean } }
@@ -80,7 +81,7 @@ const DEMO: Estado = {
 }
 
 export default function ConectarCanais() {
-  const demo = useMemo(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1', [])
+  const demo = useMemo(() => ehDemo(), [])
   const [estado, setEstado] = useState<Estado | null>(null)
   const [erroCarga, setErroCarga] = useState('')
   const [medicoId, setMedicoId] = useState('')

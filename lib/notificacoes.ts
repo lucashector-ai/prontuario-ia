@@ -10,6 +10,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { AlarmClock, Bell, DoorOpen, Siren, CalendarClock, CalendarCheck, CalendarX, ClipboardCheck, ListChecks, RefreshCw, Sun, Video } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
+import { ehDemo } from '@/lib/demo'
 
 export type Notificacao = {
   id: string
@@ -26,7 +27,6 @@ export type Notificacao = {
 export type FiltroNotificacoes = 'todas' | 'nao_lidas'
 export type PaginaNotificacoes = { itens: Notificacao[]; naoLidas: number; temMais: boolean; cursor: string | null }
 
-const ehDemo = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'
 
 // ── Aparência e destino ──────────────────────────────────────────────────────
 

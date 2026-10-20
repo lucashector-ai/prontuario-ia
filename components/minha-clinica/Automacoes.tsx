@@ -6,6 +6,7 @@ import { RefreshCw, CalendarCheck, Star, FileText, FileDown, Send, Lightbulb, Ch
 import { tokens } from '@/lib/design-tokens'
 import { Badge, Button, Card, Icon, IconTile, SegmentedControl } from '@/components/ui'
 import { ConfiguracaoConfirmacoes } from '@/components/confirmacoes/ConfiguracaoConfirmacoes'
+import { ehDemo } from '@/lib/demo'
 
 const T = tokens
 
@@ -17,7 +18,7 @@ export function Automacoes() {
   const [aba, setAba] = useState<Tab>("followup")
   // ?demo=1 abre direto em Confirmações (para demonstração)
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("demo") === "1") setAba("confirmacao")
+    if (ehDemo()) setAba("confirmacao")
   }, [])
   const [carregando, setCarregando] = useState(false)
   const [resultado, setResultado] = useState<any>(null)

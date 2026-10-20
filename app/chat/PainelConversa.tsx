@@ -14,6 +14,7 @@ import { AvatarConversa, CanalIcone, EtapaBadge, ItemMenu, MenuConversa, Popover
 import { supabase } from '@/lib/supabase'
 
 import { ConvenioBadge } from '@/components/ConvenioBadge'
+import { ehDemo } from '@/lib/demo'
 const T = tokens
 const EMOJIS = ['😊', '🙂', '😉', '👍', '🙏', '👏', '❤️', '😅', '😂', '🤝', '✅', '📅', '⏰', '📍', '💊', '🩺', '📄', '📞', '🎉', '😔', '🤒', '💬', '👋', '⭐']
 
@@ -381,7 +382,7 @@ type StatusCanal = { canal: 'whatsapp' | 'instagram' | 'messenger'; contas: stri
 function useStatusCanais(): StatusCanal[] | null {
   const [st, setSt] = useState<StatusCanal[] | null>(null)
   useEffect(() => {
-    const demo = new URLSearchParams(window.location.search).get('demo') === '1'
+    const demo = ehDemo()
     const montar = (lista: { canal: string; nome: string | null; status: string }[]) =>
       (['whatsapp', 'instagram', 'messenger'] as const).map(canal => {
         const doCanal = lista.filter(c => c.canal === canal)

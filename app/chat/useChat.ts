@@ -8,6 +8,7 @@ import { confirmar } from '@/components/ui/dialogos'
 
 import { registrarAcesso } from '@/lib/auditoria'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { ehDemo } from '@/lib/demo'
 /**
  * Estado e ações do Chat omnicanal.
  * Identificação do usuário (mesma regra do antigo /whatsapp-app):
@@ -32,7 +33,7 @@ export function useChat() {
   const conversasRef = useRef<Conversa[]>([])
   ativaRef.current = ativaId
   // Modo demonstração (/chat?demo=1): conversas de exemplo, nada é gravado no banco — para prints/apresentação
-  const demo = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'
+  const demo = ehDemo()
 
   const avisar = useCallback((t: string) => {
     clearTimeout(toastTimer.current)

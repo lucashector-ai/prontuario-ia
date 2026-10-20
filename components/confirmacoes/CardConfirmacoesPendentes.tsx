@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase'
 import { Avatar, Badge, Button, Card, EmptyState } from '@/components/ui'
 import type { BadgeTone } from '@/components/ui'
 import { notificar } from '@/components/ui/dialogos'
+import { ehDemo } from '@/lib/demo'
 
 const T = tokens
 const HORA = 3600e3
@@ -76,14 +77,14 @@ export function CardConfirmacoesPendentes({ medicoIds, demo: demoProp, limite = 
 }) {
   const router = useRouter()
   // Lido já na criação do estado: evita uma carga real "atrasada" sobrescrever os dados de exemplo
-  const [demoUrl, setDemoUrl] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1')
+  const [demoUrl, setDemoUrl] = useState(() => ehDemo())
   const demo = !!demoProp || demoUrl
   const [itens, setItens] = useState<Item[]>([])
   const [carregando, setCarregando] = useState(true)
   const [confirmando, setConfirmando] = useState<string | null>(null)
   const chave = useMemo(() => medicoIds.join(','), [medicoIds])
 
-  useEffect(() => { setDemoUrl(new URLSearchParams(window.location.search).get('demo') === '1') }, [])
+  useEffect(() => { setDemoUrl(ehDemo()) }, [])
 
   const versao = useRef(0)
   const carregar = useCallback(async () => {

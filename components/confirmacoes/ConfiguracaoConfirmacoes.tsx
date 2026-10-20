@@ -14,6 +14,7 @@ import { ehApoio } from '@/lib/cargos'
 import {
   BOTOES_CONFIRMACAO_24H, CONFIG_PADRAO, MODELOS_PADRAO, dataHoraSP, preencher, type ConfirmacaoConfig,
 } from './modelos'
+import { ehDemo } from '@/lib/demo'
 
 const T = tokens
 
@@ -23,7 +24,6 @@ type TipoModelo = '48h' | '24h' | '2h'
 const ESTAT_DEMO: Estatisticas = { enviados: 184, confirmados: 121, sem_resposta: 9, faltas: 6, taxa_comparecimento: 94 }
 const PLACEHOLDERS = ['{nome}', '{data}', '{hora}', '{medico}', '{clinica}']
 
-const ehDemo = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'
 
 export function ConfiguracaoConfirmacoes() {
   const demo = useMemo(ehDemo, [])

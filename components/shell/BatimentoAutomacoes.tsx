@@ -1,5 +1,6 @@
 'use client'
 import { useEffect } from 'react'
+import { ehDemo } from '@/lib/demo'
 
 const INTERVALO = 15 * 60_000
 
@@ -11,7 +12,7 @@ const INTERVALO = 15 * 60_000
  */
 export function BatimentoAutomacoes() {
   useEffect(() => {
-    const demo = new URLSearchParams(window.location.search).get('demo') === '1'
+    const demo = ehDemo()
     const logado = !!(localStorage.getItem('clinica_admin') || localStorage.getItem('medico'))
     if (demo || !logado) return
 

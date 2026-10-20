@@ -9,6 +9,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { tokens as T } from '@/lib/design-tokens'
 import { ehApoio } from '@/lib/cargos'
+import { ehDemo } from '@/lib/demo'
 
 export type Aba = { href: string; label: string; so?: 'gestor' | 'clinico' }
 
@@ -21,7 +22,7 @@ export function AbasSecao({ abas }: { abas: Aba[] }) {
       const ca = localStorage.getItem('clinica_admin')
       const m = JSON.parse(localStorage.getItem('medico') || 'null')
       setPerfil({ gestor: !!ca || m?.cargo === 'admin', apoio: ehApoio(m?.cargo) })
-      setDemo(new URLSearchParams(window.location.search).get('demo') === '1' ? '?demo=1' : '')
+      setDemo(ehDemo() ? '?demo=1' : '')
     } catch { setPerfil({ gestor: false, apoio: false }) }
   }, [])
   if (!perfil || !abas.some(a => a.href === pathname)) return null

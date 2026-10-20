@@ -18,6 +18,7 @@ import { useChatNaoLidas } from '@/components/shell/useChatNaoLidas'
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { comDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
 const T = tokens
 const linkMenu: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: '#9A98A5', whiteSpace: 'nowrap' }
 
@@ -40,6 +41,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
   const bloqueado = (href: string) => { const r = recursoDaRota(href); return !!r && plano !== undefined && !recursoLiberado(plano, r) }
 
   useEffect(() => {
+    if (ehDemo()) { setMedico(MEDICO_DEMO); return } // demonstração: médica com acesso de gestora
     const ca = localStorage.getItem('clinica_admin')
     if (ca) { setClinicaAdmin(JSON.parse(ca)); return }
     const m = localStorage.getItem('medico')
@@ -237,8 +239,8 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
                           onClick={() => {
                             if (editando) { alternarItem(item.href); return }
                             if (item.emBreve) return
-                            if (item.novaAba) window.open(item.href, '_blank')
-                            else router.push(item.href)
+                            if (item.novaAba) window.open(comDemo(item.href), '_blank')
+                            else router.push(comDemo(item.href))
                           }}
                           style={{
                             flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 11, overflow: 'hidden', flexShrink: 0,

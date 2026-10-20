@@ -19,6 +19,7 @@ import {
 import {
   buscarAuditoria, dadosDemoAuditoria, fmtDataHora, gerarCSV, baixarArquivo, resumoUA, TOM_ACAO, type FiltrosAuditoria,
 } from './util'
+import { ehDemo } from '@/lib/demo'
 
 const T = tokens
 const POR_PAGINA = 50
@@ -60,7 +61,7 @@ export default function PainelAuditoria({ clinicaId, medicoId, pacienteId, demo 
   // Escopo: props explícitas ou usuário logado
   useEffect(() => {
     let d = !!demo
-    try { if (new URLSearchParams(window.location.search).get('demo') === '1') d = true } catch {}
+    try { if (ehDemo()) d = true } catch {}
     setModoDemo(d)
     if (clinicaId || medicoId || pacienteId) { setEscopo({ clinicaId, medicoId, pacienteId }); return }
     const u = usuarioAtualAuditoria()
