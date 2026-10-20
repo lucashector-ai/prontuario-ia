@@ -27,7 +27,7 @@ const PRAZOS_RETORNO = [7, 15, 30, 60, 90, 180]
 
 export default function ConsultorioPage() {
   const router = useRouter()
-  usePageHeader('Consultório', 'Chame, atenda e registre — tudo nesta tela')
+  usePageHeader('Consultório', 'Sua fila de hoje: chame, atenda e registre')
 
   const [medicoLogado, setMedicoLogado] = useState<string | null>(null)
   const [medicoId, setMedicoId] = useState<string>('')

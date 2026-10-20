@@ -29,7 +29,7 @@ const min = (v: number | null) => (v === null ? '—' : esperaTexto(v))
 
 export default function GestaoPage() {
   const router = useRouter()
-  usePageHeader('Gestão do atendimento', 'Espera, faltas, picos e desempenho por médico')
+  usePageHeader('Indicadores do atendimento', 'Espera, faltas, picos e desempenho por médico')
   const [periodo, setPeriodo] = useState<Periodo>('7')
   const [medicoId, setMedicoId] = useState('')
   const [dados, setDados] = useState<Indicadores | null>(null)

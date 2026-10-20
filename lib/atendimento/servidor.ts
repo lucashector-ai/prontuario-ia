@@ -257,7 +257,7 @@ async function avisarPorWhatsApp(ctx: Contexto, at: Atendimento, local: string) 
   if (at.paciente?.telefone && at.chamadas === 1) {
     await enviarWhatsApp({
       medicoId: at.medico_id, telefone: at.paciente.telefone,
-      texto: `${nome ? nome + ', é' : 'É'} a sua vez! Senha ${at.senha} — dirija-se ao ${local}.`,
+      texto: `${nome ? nome + ', é' : 'É'} a sua vez! Senha ${at.senha}. Local: ${local}.`,
       registrar: { nome: at.paciente.nome, pacienteId: at.paciente.id, metadata: { atendimento: at.id, tipo: 'chamada' } },
     })
   }
@@ -732,7 +732,9 @@ export async function registrarTriagem(ctx: Contexto, id: string, d: Record<stri
   if (risco === 'vermelho' || risco === 'laranja') {
     await db.from('notificacoes_medico').insert({
       medico_id: at.medico_id, paciente_id: at.paciente_id, tipo: 'triagem_urgente', lida: false,
-      titulo: `${risco === 'vermelho' ? 'EMERGÊNCIA' : 'Muito urgente'}: ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ') || at.senha}`,
+      titulo: risco === 'vermelho'
+        ? `Emergência — ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ') || at.senha}. Atender agora.`
+        : `Muito urgente — ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ') || at.senha}`,
       descricao: `Triagem ${risco}${linha.queixa ? ` · ${linha.queixa.slice(0, 120)}` : ''}`, link: '/consultorio',
     })
   }
@@ -795,7 +797,7 @@ export async function avisarAtraso(ctx: Contexto, p: { medicoId: string; minutos
 
   await db.from('notificacoes_medico').insert({
     medico_id: medico.id, tipo: 'atraso_medico', lida: false, link: '/recepcao',
-    titulo: `${medico.nome} vai atrasar ~${minutos} min`, descricao: 'O recado já está na TV da sala de espera. Avise quem perguntar e ofereça remarcar se preferirem.',
+    titulo: `${medico.nome} vai atrasar cerca de ${minutos} min`, descricao: 'O recado já está na TV da sala de espera. Avise quem perguntar e ofereça remarcar se preferirem.',
   })
   return { minutos }
 }

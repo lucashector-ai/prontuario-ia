@@ -480,7 +480,7 @@ const demo = {
     if (!at) throw new ErroApi('Atendimento não encontrado.')
     Object.assign(at, { status: 'aguardando', risco: dados.risco })
     e.triagens = { ...(e.triagens || {}), [id]: { id: 'demo-tri-' + id, criado_em: new Date().toISOString(), ...dados } as any }
-    if (dados.risco === 'vermelho' || dados.risco === 'laranja') avisarNaTela({ id: 'demo-tri-' + id, tipo: 'triagem_urgente', titulo: `${dados.risco === 'vermelho' ? 'EMERGÊNCIA' : 'Muito urgente'}: ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ')}`, descricao: `Triagem ${dados.risco}${dados.queixa ? ` · ${dados.queixa}` : ''}`, link: '/consultorio?demo=1' })
+    if (dados.risco === 'vermelho' || dados.risco === 'laranja') avisarNaTela({ id: 'demo-tri-' + id, tipo: 'triagem_urgente', titulo: dados.risco === 'vermelho' ? `Emergência — ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ')}. Atender agora.` : `Muito urgente — ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ')}`, descricao: `Triagem ${dados.risco}${dados.queixa ? ` · ${dados.queixa}` : ''}`, link: '/consultorio?demo=1' })
     this.gravar(e)
     return { atendimento: at }
   },

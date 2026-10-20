@@ -57,7 +57,7 @@ export function BottomNav() {
       { href: '/atendimento/consultorio', label: 'Consultório', icon: DoorOpen },
       { href: '/agenda', label: 'Agenda', icon: Calendar },
       { href: '/pacientes', label: 'Pacientes', icon: Users },
-      { href: '/nova-consulta', label: 'Consulta', icon: CirclePlus },
+      { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
     ]
 
   const todos: Item[] = atendente ? [] : [
@@ -80,7 +80,7 @@ export function BottomNav() {
     ] : []),
     ...(!isRecepcionista ? [{ href: '/relatorios', label: 'Relatórios', icon: ChartColumnBig }] : []),
     { href: '/faturamento', label: 'Faturamento', icon: ReceiptText },
-    ...(!isRecepcionista ? [{ href: '/modelos-prontuario', label: 'Modelos', icon: LayoutTemplate }] : []),
+    ...(!isRecepcionista ? [{ href: '/modelos-prontuario', label: 'Modelos de prontuário', icon: LayoutTemplate }] : []),
     { href: '/configuracoes/agenda-publica', label: 'Agenda online', icon: CalendarCheck },
     { href: '/perfil', label: 'Meu perfil', icon: UserRound },
   ]
@@ -125,7 +125,7 @@ export function BottomNav() {
             background: '#fff', borderRadius: 20, boxShadow: T.shadow.modal, padding: 8, maxHeight: '75vh', overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', padding: '8px 10px 6px' }}>
-              <span style={{ flex: 1, fontSize: 15, fontWeight: 700 }}>Menu</span>
+              <span style={{ flex: 1, fontSize: 15, fontWeight: 700 }}>Mais</span>
               <button onClick={() => setMaisAberto(false)} aria-label="Fechar" style={{ width: 32, height: 32, borderRadius: 9, border: 'none', background: 'transparent', display: 'grid', placeItems: 'center', color: T.text.secondary }}>
                 <X size={16} />
               </button>

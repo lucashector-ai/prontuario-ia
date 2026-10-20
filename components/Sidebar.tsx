@@ -84,7 +84,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
     { id: 'gestao', label: 'Gestão', items: [
       ...(temAcessoAdmin ? [{ href: '/gestao', label: 'Indicadores', icon: Gauge }] : []),
       ...(naoRecep ? [{ href: '/relatorios', label: 'Relatórios', icon: ChartColumnBig }] : []),
-      { href: '/faturamento', label: 'Faturamento TISS', icon: ReceiptText },
+      { href: '/faturamento', label: 'Faturamento', icon: ReceiptText },
     ] },
     { id: 'config', label: 'Configurações', items: [
       ...(temAcessoAdmin ? [
