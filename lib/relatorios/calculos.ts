@@ -270,6 +270,8 @@ export interface LinhaMedico {
   novos: number
   tele: number
   retornos: number
+  /** Soma do valor dos procedimentos realizados (estimativa pela tabela da clínica). */
+  receita: number
 }
 
 export function porMedico(
@@ -290,11 +292,12 @@ export function porMedico(
       ocupacao: taxa(ocup, disp),
       novos: filtrarPeriodo(pacientes, i, p => p.criado_em).filter(p => p.medico_id === m.id).length,
       tele: r.teleconsultas, retornos: ret.previstos,
+      receita: meus.filter(a => a.status === 'realizado').reduce((s, a) => s + (Number(a.valor) || 0), 0),
     }
   })
 }
 
-export type ColunaMedico = 'nome' | 'realizados' | 'faltas' | 'taxaFalta' | 'cancelados' | 'ocupacao' | 'novos' | 'tele' | 'retornos'
+export type ColunaMedico = 'nome' | 'realizados' | 'faltas' | 'taxaFalta' | 'cancelados' | 'ocupacao' | 'novos' | 'tele' | 'retornos' | 'receita'
 
 export function ordenarLinhas(linhas: LinhaMedico[], col: ColunaMedico, dir: 'asc' | 'desc'): LinhaMedico[] {
   const f = dir === 'asc' ? 1 : -1

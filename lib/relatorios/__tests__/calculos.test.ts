@@ -160,7 +160,7 @@ describe('convênios, retornos, ordenação e CSV', () => {
       .toEqual({ previstos: 2, concluidos: 1, fonte: 'agenda' })
   })
   it('ordena linhas por coluna', () => {
-    const base = { total: 0, realizadosAntes: 0, faltas: 0, cancelados: 0, novos: 0, tele: 0, retornos: 0, taxaFalta: null }
+    const base = { total: 0, realizadosAntes: 0, faltas: 0, cancelados: 0, novos: 0, tele: 0, retornos: 0, receita: 0, taxaFalta: null }
     const linhas = [
       { ...base, id: 'a', nome: 'Bruno', realizados: 5, ocupacao: 0.5 },
       { ...base, id: 'b', nome: 'Ana', realizados: 9, ocupacao: null },

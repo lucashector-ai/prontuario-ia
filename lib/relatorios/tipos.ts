@@ -15,6 +15,7 @@ export interface AgRel {
   meet_link?: string | null
   confirmacao_24h_status?: string | null
   convenio?: string | null // do paciente, já normalizado no carregamento
+  valor?: number | null // valor do procedimento agendado (tabela da clínica), quando houver
 }
 
 export interface PacRel {

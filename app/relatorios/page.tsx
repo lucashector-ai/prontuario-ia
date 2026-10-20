@@ -112,8 +112,8 @@ export default function RelatoriosPage() {
       ])
     },
     medicos: () => r && baixarCsv(`relatorio-por-medico_${sufixo}`,
-      ['Médico', 'Especialidade', 'Realizados', 'Realizados (período anterior)', 'Faltas', 'Taxa de falta (%)', 'Cancelamentos', 'Ocupação estimada (%)', 'Pacientes novos', 'Teleconsultas', 'Retornos'],
-      r.linhas.map(l => [l.nome, l.especialidade, l.realizados, l.realizadosAntes, l.faltas, pctCsv(l.taxaFalta), l.cancelados, pctCsv(l.ocupacao), l.novos, l.tele, l.retornos])),
+      ['Médico', 'Especialidade', 'Realizados', 'Realizados (período anterior)', 'Faltas', 'Taxa de falta (%)', 'Cancelamentos', 'Ocupação estimada (%)', 'Pacientes novos', 'Teleconsultas', 'Retornos', 'Receita estimada (R$)'],
+      r.linhas.map(l => [l.nome, l.especialidade, l.realizados, l.realizadosAntes, l.faltas, pctCsv(l.taxaFalta), l.cancelados, pctCsv(l.ocupacao), l.novos, l.tele, l.retornos, l.receita.toFixed(2)])),
     faltas: () => r && baixarCsv(`relatorio-faltas_${sufixo}`, ['Dia da semana', 'Hora', 'Faltas', 'Realizados + faltas', 'Taxa de falta (%)'],
       r.mapa.flatMap((linha, d) => linha.map((c, h) => ({ c, d, h }))).filter(x => x.c.base > 0)
         .map(({ c, d, h }) => [DIAS_PLURAL[d], `${h}h`, c.faltas, c.base, pctCsv(c.taxa)])),

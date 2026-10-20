@@ -17,7 +17,10 @@ const COLUNAS: { id: ColunaMedico; label: string; dica?: string }[] = [
   { id: 'novos', label: 'Novos' },
   { id: 'tele', label: 'Tele' },
   { id: 'retornos', label: 'Retornos' },
+  { id: 'receita', label: 'Receita', dica: 'Estimativa: soma do valor dos procedimentos realizados, pela tabela de procedimentos da clínica. Consultas sem procedimento não entram.' },
 ]
+
+const brl = (v: number) => v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }) : '—'
 
 const COR_FALTA = 'oklch(0.66 0.17 20)'
 const COR_CANCEL = 'oklch(0.82 0.02 285)'
@@ -108,6 +111,7 @@ export function PorMedico({ linhas, carregando, selecionado, onSelecionar, onCsv
                       <td style={td()}>{nf(l.novos)}</td>
                       <td style={td()}>{nf(l.tele)}</td>
                       <td style={td()}>{nf(l.retornos)}</td>
+                      <td style={td()}>{brl(l.receita)}</td>
                       <td style={td('left')}><BarraDesempenho l={l} max={maxTotal} /></td>
                     </tr>
                   )
@@ -150,6 +154,7 @@ export function PorMedico({ linhas, carregando, selecionado, onSelecionar, onCsv
                     <Mini label="Novos" valor={nf(l.novos)} />
                     <Mini label="Tele" valor={nf(l.tele)} />
                     <Mini label="Retornos" valor={nf(l.retornos)} />
+                    <Mini label="Receita" valor={brl(l.receita)} />
                   </div>
                 </button>
               )

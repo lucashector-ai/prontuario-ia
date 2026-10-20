@@ -117,7 +117,7 @@ export function useRelatorios(carga: Intervalo) {
       const camposBase = 'id, medico_id, paciente_id, data_hora, duracao, tipo, status, meet_link, pacientes:paciente_id(convenio)'
 
       const [agsR0, pacR, retR, espR] = await Promise.all([
-        consultaAgs(camposBase + ', confirmacao_24h_status'),
+        consultaAgs(camposBase + ', confirmacao_24h_status, procedimentos:procedimento_id(valor)'),
         paginar<any>((de, ate) => supabase.from('pacientes').select('id, medico_id, criado_em, convenio')
           .in('medico_id', ids).gte('criado_em', ini.toISOString()).lt('criado_em', fim.toISOString()).range(de, ate)),
         paginar<any>((de, ate) => supabase.from('retornos').select('id, medico_id, status, data_prevista')
@@ -125,7 +125,8 @@ export function useRelatorios(carga: Intervalo) {
         paginar<any>((de, ate) => supabase.from('lista_espera').select('id, medico_id, status').in('medico_id', ids).range(de, ate)),
       ])
       let agsR = agsR0
-      if (agsR.error && faltaTabela(agsR.error)) agsR = await consultaAgs(camposBase)
+      // Sem a coluna de confirmação ou a ligação com procedimentos: carrega o básico
+      if (agsR.error) agsR = await consultaAgs(camposBase)
       if (cancelado) return
       if (agsR.error) { setErro('Não foi possível carregar os agendamentos.'); setCarregando(false); return }
 
@@ -138,6 +139,7 @@ export function useRelatorios(carga: Intervalo) {
         id: a.id, medico_id: a.medico_id, paciente_id: a.paciente_id, data_hora: a.data_hora, duracao: a.duracao,
         tipo: a.tipo, status: a.status, meet_link: a.meet_link, confirmacao_24h_status: a.confirmacao_24h_status ?? null,
         convenio: normalizarConvenio(a.pacientes?.convenio),
+        valor: a.procedimentos?.valor != null ? Number(a.procedimentos.valor) : null,
       }))
       const pacientes: PacRel[] = (pacR.data || []).map((p: any) => ({ id: p.id, medico_id: p.medico_id, criado_em: p.criado_em, convenio: p.convenio }))
       setDados({ medicos, agendamentos, pacientes, retornos, listaEspera: espera })
