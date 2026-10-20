@@ -558,12 +558,44 @@ export async function marcarFalta(ctx: Contexto, agendamentoId: string) {
   if (!data) throw new ErroAtendimento('Agendamento não encontrado ou já encerrado.', 404)
 }
 
+/**
+ * Prontuário é de quem atendeu (migration 0023). Outro médico só vê o conteúdo se a clínica
+ * compartilha prontuários ou se a consulta foi compartilhada; recepção vê só data e médico.
+ * O administrador da clínica continua vendo tudo (indicadores dependem disso).
+ * Consultas sem acesso voltam com o conteúdo vazio e `restrita: true`.
+ */
+/** Consulta de consultas que funciona antes e depois da migration 0023 (coluna compartilhada). */
+async function lerConsultas(campos: string, pacienteId: string, limite: number): Promise<{ data: any[] | null; error: any }> {
+  const q = (c: string): PromiseLike<{ data: any[] | null; error: any }> => db.from('consultas').select(c).eq('paciente_id', pacienteId).order('criado_em', { ascending: false }).limit(limite)
+  const r = await q(campos)
+  if (r.error && /compartilhada/.test(r.error.message)) return q(campos.replace(', compartilhada', ''))
+  return r
+}
+const CAMPOS_CLINICOS = ['subjetivo', 'objetivo', 'avaliacao', 'plano', 'diagnostico_principal', 'cids', 'transcricao', 'receita'] as const
+async function filtrarProntuario<T extends { medico_id?: string | null; compartilhada?: boolean | null }>(ctx: Contexto, lista: T[]): Promise<(T & { restrita?: boolean })[]> {
+  if (ctx.tipo === 'clinica' || !lista.length) return lista
+  const [{ data: eu }, { data: clinica }] = await Promise.all([
+    ctx.medicoId ? db.from('medicos').select('cargo').eq('id', ctx.medicoId).maybeSingle() : Promise.resolve({ data: null }),
+    db.from('clinicas').select('prontuario_compartilhado').eq('id', ctx.clinica).maybeSingle(),
+  ])
+  // Sem a migration 0023 a clínica segue compartilhando (comportamento antigo)
+  const semMigration = (clinica as any) == null
+  const recepcao = (eu as any)?.cargo === 'recepcionista'
+  const clinicaCompartilha = semMigration || !!(clinica as any)?.prontuario_compartilhado
+  return lista.map(c => {
+    const pode = !recepcao && (c.medico_id === ctx.medicoId || c.compartilhada || clinicaCompartilha)
+    if (pode) return c
+    const vazia: any = { ...c, restrita: true }
+    for (const k of CAMPOS_CLINICOS) if (k in vazia) vazia[k] = null
+    return vazia
+  })
+}
+
 /** Ficha para o consultório: dados clínicos, últimas consultas e a pré-consulta do WhatsApp. */
 export async function fichaDoPaciente(ctx: Contexto, pacienteId: string, agendamentoId?: string | null) {
   const p = await pacienteDaClinica(ctx, pacienteId)
   const [{ data: consultas }, ag] = await Promise.all([
-    db.from('consultas').select('id, criado_em, data_hora, avaliacao, diagnostico_principal, plano, cids')
-      .eq('paciente_id', pacienteId).order('criado_em', { ascending: false }).limit(5),
+    lerConsultas('id, criado_em, data_hora, medico_id, compartilhada, avaliacao, diagnostico_principal, plano, cids', pacienteId, 5),
     agendamentoId ? db.from('agendamentos').select('motivo, tipo, pre_consulta_contexto').eq('id', agendamentoId).maybeSingle() : Promise.resolve({ data: null }),
   ])
   return {
@@ -571,7 +603,7 @@ export async function fichaDoPaciente(ctx: Contexto, pacienteId: string, agendam
       id: p.id, nome: p.nome, telefone: p.telefone, data_nascimento: p.data_nascimento, sexo: p.sexo || p.genero || null,
       convenio: p.convenio, alergias: p.alergias, comorbidades: p.comorbidades, medicamentos_uso: p.medicamentos_uso,
     },
-    consultas: consultas || [],
+    consultas: await filtrarProntuario(ctx, consultas || []),
     agendamento: (ag as any)?.data || null,
   }
 }
@@ -590,8 +622,7 @@ export async function definirConsultorio(ctx: Contexto, medicoId: string, consul
 export async function fichaCompleta(ctx: Contexto, pacienteId: string) {
   const p = await pacienteDaClinica(ctx, pacienteId)
   const [consultas, agendamentos, retornos, atendimentos, medicos] = await Promise.all([
-    db.from('consultas').select('id, criado_em, data_hora, medico_id, subjetivo, avaliacao, plano, diagnostico_principal, cids')
-      .eq('paciente_id', pacienteId).order('criado_em', { ascending: false }).limit(100),
+    lerConsultas('id, criado_em, data_hora, medico_id, compartilhada, subjetivo, avaliacao, plano, diagnostico_principal, cids', pacienteId, 100),
     db.from('agendamentos').select('id, data_hora, status, tipo, motivo, medico_id, criado_em')
       .eq('paciente_id', pacienteId).order('data_hora', { ascending: false }).limit(200),
     db.from('retornos').select('id, data_prevista, status, motivo, medico_id, criado_em, agendamento_id')
@@ -610,7 +641,7 @@ export async function fichaCompleta(ctx: Contexto, pacienteId: string) {
   const { senha_hash, ...paciente } = p as any
   return {
     paciente,
-    consultas: comNome(consultas.data as any[]),
+    consultas: await filtrarProntuario(ctx, comNome(consultas.data as any[])),
     agendamentos: ags,
     retornos: comNome(retornos.data as any[]),
     atendimentos: atendimentos.error ? [] : comNome(atendimentos.data as any[]),

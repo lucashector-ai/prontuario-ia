@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FileText, Pencil, Trash2, Plus, Download, Sparkles, SearchX, ScrollText, Pill } from 'lucide-react'
+import { FileText, Pencil, Trash2, Plus, Download, Sparkles, SearchX, ScrollText, Pill, Users, LockKeyhole } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
 import {
   Avatar, Badge, Button, EmptyState, Icon, IconButton, PageHeader, SearchInput, SegmentedControl, Textarea,
 } from '@/components/ui'
-import { confirmar } from '@/components/ui/dialogos'
+import { confirmar, notificar } from '@/components/ui/dialogos'
 import { registrarAcesso } from '@/lib/auditoria'
 import CardAgendarRetorno from '@/components/retornos/CardAgendarRetorno'
 import { BotaoGerarGuia } from '@/components/tiss/BotaoGerarGuia'
@@ -182,6 +182,17 @@ export default function Historico() {
   }
 
   // Abas: só as que têm dado real na consulta
+  // Prontuário é de quem atendeu; o médico pode liberar uma consulta para os colegas (migration 0023)
+  const alternarCompartilhada = async () => {
+    if (!selecionada) return
+    const v = !selecionada.compartilhada
+    const { error } = await supabase.from('consultas').update({ compartilhada: v }).eq('id', selecionada.id)
+    if (error) { notificar('Não foi possível mudar o compartilhamento agora.', 'erro'); return }
+    setSelecionada({ ...selecionada, compartilhada: v })
+    setConsultas((l: any[]) => l.map(c => c.id === selecionada.id ? { ...c, compartilhada: v } : c))
+    notificar(v ? 'Consulta compartilhada com os médicos da clínica' : 'Consulta voltou a ser só sua')
+  }
+
   const temReceita = !!(selecionada && typeof selecionada.receita === 'string' && selecionada.receita.trim())
   const temTranscricao = !!(selecionada && typeof selecionada.transcricao === 'string' && selecionada.transcricao.trim())
   const abas: { value: AbaDetalhe; label: string }[] = [
@@ -283,6 +294,12 @@ export default function Historico() {
                     <>
                       <IconButton icon={Pencil} variant="outline" title="Editar" aria-label="Editar" onClick={() => { setAba('pront'); setEditando(true) }} />
                       <IconButton icon={Trash2} variant="outline" tone="danger" title="Deletar consulta" aria-label="Deletar consulta" onClick={() => deletar(selecionada.id)} />
+                      {selecionada.medico_id === medico?.id && (
+                        <Button variant="secondary" icon={selecionada.compartilhada ? Users : LockKeyhole} onClick={alternarCompartilhada}
+                          title={selecionada.compartilhada ? 'Os médicos da clínica podem ler esta consulta. Clique para voltar a ser só sua.' : 'Só você lê esta consulta. Clique para os médicos da clínica também lerem.'}>
+                          {selecionada.compartilhada ? 'Compartilhada' : 'Só minha'}
+                        </Button>
+                      )}
                       <Button icon={Download} onClick={() => abrirPdf('prontuario')}>PDF</Button>
                       <BotaoGerarGuia consultaId={selecionada.id} pacienteConvenio={selecionada.pacientes?.convenio} />
                     </>

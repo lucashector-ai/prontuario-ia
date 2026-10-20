@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react'
 import { Eye, Upload, Pencil, Trash2, ShieldCheck, Lock, Download, Check, TriangleAlert } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Badge, Button, Card, Field, Icon, IconTile, Input } from '@/components/ui'
+import { PrivacidadeProntuario } from './PrivacidadeProntuario'
 
 const T = tokens
 
@@ -131,6 +132,8 @@ export function Lgpd() {
           {msg.texto}
         </div>
       )}
+
+      <PrivacidadeProntuario />
 
       <div className="mc-lgpd-grid">
         {/* Coluna esquerda */}

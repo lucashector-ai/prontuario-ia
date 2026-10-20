@@ -82,6 +82,8 @@ declare
   -- Catálogos com itens do sistema (clinica_id e medico_id vazios) visíveis a todos os logados
   catalogos text[] := array['modelos_prontuario', 'financeiro_categorias', 'formularios_templates', 'procedimentos'];
   sem_regra text[] := '{}';
+  -- Tabelas com regra própria em migrations posteriores (0023: prontuário privado) — não mexer
+  regra_propria text[] := array['consultas', 'prescricoes'];
 begin
   for t in
     select c.relname as nome
@@ -89,6 +91,7 @@ begin
     where n.nspname = 'public' and c.relkind in ('r', 'p')
   loop
     execute format('alter table public.%I enable row level security', t.nome);
+    if t.nome = any(regra_propria) and exists (select 1 from pg_policies where schemaname = 'public' and tablename = t.nome and policyname = 'c360_leitura') then continue; end if;
 
     for pol in select policyname from pg_policies where schemaname = 'public' and tablename = t.nome and policyname like 'c360_%' loop
       execute format('drop policy %I on public.%I', pol.policyname, t.nome);
