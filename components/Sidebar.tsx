@@ -192,7 +192,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
                   title={temAtivo ? undefined : aberta ? 'Recolher seção' : 'Mostrar seção'} aria-expanded={aberta}
                   style={{
                     width: '100%', height: 24, display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 10px', border: 'none', borderRadius: 7,
-                    background: 'transparent', cursor: temAtivo ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 650,
+                    background: 'transparent', cursor: temAtivo ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700,
                     letterSpacing: '.04em', textTransform: 'uppercase', color: '#9A98A5', ...fade(!rail),
                   }}
                   onMouseEnter={e => { if (!temAtivo) e.currentTarget.style.color = T.text.secondary }}
@@ -228,8 +228,8 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
                           style={{
                             flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 11, overflow: 'hidden', flexShrink: 0,
                             padding: '0 10px 0 16px', height: 34, borderRadius: 9, fontSize: 13.5, fontFamily: 'inherit', textAlign: 'left',
-                            fontWeight: ativo ? 600 : 500,
-                            color: ativo || hv ? T.text.primary : '#5A5865',
+                            fontWeight: ativo ? 700 : 600,
+                            color: ativo || hv ? T.text.primary : '#4A4855',
                             background: ativo && !editando ? '#fff' : hv ? '#ECECF0' : 'transparent',
                             transition: 'background .15s, color .15s, opacity .15s',
                             border: `1px solid ${ativo && !editando ? T.border.default : 'transparent'}`,
