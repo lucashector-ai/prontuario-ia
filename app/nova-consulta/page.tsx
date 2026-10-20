@@ -5,6 +5,7 @@ import { useState, useCallback, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FILTRO_APOIO } from '@/lib/cargos'
 import { lerAoVivo } from '@/lib/transcricao/aoVivo'
+import { ConsentimentoGravacao, camposConsentimento } from '@/components/atendimento/ConsentimentoGravacao'
 import {
   Mic, Zap, Pause, Play, Sparkles, AudioLines, CircleCheck, CircleDashed, LoaderCircle, CircleAlert,
   Copy, Download, Check, Plus, FlaskConical, FileBadge, Printer, MessageCircle, RefreshCw, TriangleAlert, Lightbulb, Target,
@@ -238,6 +239,7 @@ export default function Home() {
     return () => clearInterval(t)
   }, [estado])
 
+  const [autorizou, setAutorizou] = useState(false)  // consentimento para gravar (LGPD)
   const handleIniciar = async () => {
     limpar(); setProntuario(null)
     setConsultaSalva(false); setConsultaId(null); setEditado(false); setSegundos(0); setEstado('gravando')
@@ -273,7 +275,7 @@ export default function Home() {
     try {
       const r = await fetch('/api/consultas', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ medico_id: medico.id, transcricao: textoTranscricao, paciente_id: pacienteSelecionado?.id || null, ...p }),
+        body: JSON.stringify({ medico_id: medico.id, transcricao: textoTranscricao, paciente_id: pacienteSelecionado?.id || null, ...p, ...camposConsentimento(segundos > 0 && autorizou) }),
       })
       const d = await r.json().catch(() => null)
       if (d?.id) {
@@ -605,10 +607,13 @@ const handleCopiar = () => {
               </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+              <ConsentimentoGravacao marcado={autorizou} onChange={setAutorizou} nome={pacienteSelecionado?.nome?.split(' ')[0]} />
               <Button
                 size="lg"
                 icon={Mic}
                 onClick={handleIniciar}
+                disabled={!autorizou}
+                title={autorizou ? undefined : 'Marque que o paciente autorizou a gravação'}
                 style={{ height: 50, padding: '0 28px', borderRadius: 14, fontSize: 15, boxShadow: T.shadow.accent }}
               >
                 Iniciar gravação

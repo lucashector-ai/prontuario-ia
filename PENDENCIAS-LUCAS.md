@@ -7,7 +7,7 @@
 Lista viva: o Claude vai acrescentando à medida que o trabalho avança. Risque o que já fez.
 
 ## Banco de dados (Supabase → SQL Editor, rodar na ordem)
-_Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 vínculos). 0025 (recurso de glosa), 0026 (portal do paciente) e 0027 (créditos) aplicadas pelo Claude em 20/10._
+_Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 vínculos). 0025 (recurso de glosa), 0026 (portal do paciente), 0027 (créditos) e 0028 (consentimento de gravação) aplicadas pelo Claude em 20/10._
 - [x] `supabase/migrations/0021_totem.sql`: conferido em 20/10, ainda não rodou (totem e senhas de balcão)
 - [x] `supabase/migrations/0022_avisos_painel.sql`: conferido em 20/10, ainda não rodou (recados e atraso na TV)
 - [x] `supabase/migrations/0023_prontuario_privado.sql`: prontuário só de quem atendeu. Até rodar, tudo funciona como antes.
@@ -15,7 +15,7 @@ _Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 ví
 
 ## Decisões
 - [x] Planos com créditos de IA (feito em 20/10): Solo R$297 (250), Clínica R$597 (400), Pro R$999 (1.000), Grátis 10. Pacotes 100/R$89 e 300/R$249, profissional extra R$97 (+100). Anual 10% menos.
-- [ ] Consentimento para gravar a consulta (LGPD): mostrar ao médico um aviso "o paciente autorizou a gravação?" antes de gravar, e guardar esse registro? Recomendo que sim.
+- [x] Consentimento para gravar a consulta (LGPD): feito em 20/10. O médico marca "o paciente autorizou" antes de gravar e a consulta guarda o registro. Se quiser outro texto (ex.: termo assinado), me diga.
 - [ ] Assinatura digital dos documentos (ICP-Brasil, CFM 1.821/2007): hoje atestado, pedido de exames e prontuário saem para assinar à mão. A receita já é assinada pela Memed.
 - [ ] Apagar contas de teste: o sistema não me deixa apagar dados de produção. Apague pelo Supabase (Table Editor) ou libere a permissão para eu escrever o script. Antes, confirme as clínicas "Enfermeiros Care" (itsmarisantos2000@gmail.com) e "Clínica ZenCardio" (juniorrosalvo2015@gmail.com), que parecem clientes reais, e a "Clínica Demonstração" (revisao.meta@clinical360.app), usada na revisão da Meta.
 - [ ] Pacote de créditos comprado: hoje chega um email de pedido; libere em /superadmin → "+ créditos" na clínica.

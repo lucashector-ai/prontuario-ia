@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase'
 import { ehDemo } from '@/lib/atendimento/cliente'
 import { ChaveAoVivo } from '@/components/atendimento/ChaveAoVivo'
 import { lerAoVivo } from '@/lib/transcricao/aoVivo'
+import { ConsentimentoGravacao, camposConsentimento } from '@/components/atendimento/ConsentimentoGravacao'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
 type Prontuario = { subjetivo?: string; objetivo?: string; avaliacao?: string; plano?: string; cids?: { codigo: string; descricao: string }[]; [k: string]: any }
@@ -39,6 +40,8 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
   const [segundos, setSegundos] = useState(0)
   const [erroMsg, setErroMsg] = useState('')
   const [digitar, setDigitar] = useState(false)
+  const [autorizou, setAutorizou] = useState(false)  // consentimento para gravar (LGPD)
+  const [gravou, setGravou] = useState(false)
   const [textoDigitado, setTextoDigitado] = useState('')
 
   useEffect(() => { gravarSalvo(chave, { transcricao, prontuario, consultaId }) }, [chave, transcricao, prontuario, consultaId])
@@ -84,7 +87,7 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
   const salvarNovo = async (p: Prontuario, texto: string) => {
     const r = await fetch('/api/consultas', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ medico_id: medicoId, transcricao: texto, paciente_id: paciente.id, ...p }),
+      body: JSON.stringify({ medico_id: medicoId, transcricao: texto, paciente_id: paciente.id, ...p, ...camposConsentimento(gravou && autorizou) }),
     })
     const d = await r.json().catch(() => null)
     if (d?.id) { setConsultaId(d.id); notificar('Prontuário salvo no histórico do paciente') }
@@ -202,8 +205,9 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
         </>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', padding: '6px 0' }}>
-          <button onClick={iniciar} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 10, height: 52, padding: '0 22px', borderRadius: 16, border: 'none', cursor: 'pointer',
+          <div style={{ flexBasis: '100%' }}><ConsentimentoGravacao marcado={autorizou} onChange={setAutorizou} nome={paciente.nome.split(' ')[0]} /></div>
+          <button onClick={() => { setGravou(true); iniciar() }} disabled={!autorizou} title={autorizou ? undefined : 'Marque que o paciente autorizou a gravação'} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10, height: 52, padding: '0 22px', borderRadius: 16, border: 'none', cursor: autorizou ? 'pointer' : 'not-allowed', opacity: autorizou ? 1 : 0.45,
             background: T.status.danger, color: '#fff', fontSize: 15, fontWeight: 700, fontFamily: 'inherit', boxShadow: '0 8px 20px -10px rgba(194,65,59,.6)',
           }}>
             <Mic size={20} /> Iniciar gravação
