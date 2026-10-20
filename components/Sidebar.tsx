@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, Sparkles, MessageCircle,
   CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, PanelLeftClose, PanelLeftOpen,
-  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2, Lock, Mic, BookA, Coins, Receipt,
+  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2, Lock, Mic, BookA, Coins, Receipt, Building,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, Avatar } from '@/components/ui'
@@ -73,6 +73,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
       ...(enfermagem ? [{ href: '/atendimento/triagem', label: 'Triagem', icon: HeartPulse }]
         : naoRecep && !isClinicaAdmin && !gratis ? [{ href: '/atendimento/consultorio', label: 'Meu consultório', icon: DoorOpen }] : []),
       { href: '/atendimento', label: 'Central de atendimento', icon: ConciergeBell },
+      ...(isRecepcionista || temAcessoAdmin ? [{ href: '/salas', label: 'Salas do dia', icon: Building }] : []),
       ...(enfermagem ? [] : [{ href: '/chat', label: 'Chat', icon: MessageCircle }]),
     ] },
     { id: 'pacientes', label: 'Pacientes', items: [

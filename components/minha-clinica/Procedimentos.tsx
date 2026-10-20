@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Stethoscope, Pencil, Power, RotateCcw, Check, Clock } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Badge, Button, Card, EmptyState, Field, Icon, IconButton, IconTile, Input, Modal, ModalAcoes, Overline, Select } from '@/components/ui'
+import { TIPOS_SALA } from '@/components/minha-clinica/SalasEquipamentos'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { avisoDemo, ehDemo } from '@/lib/demo'
 import { PROCEDIMENTOS_DEMO } from './demo'
@@ -18,7 +19,7 @@ export function Procedimentos() {
   const [carregando, setCarregando] = useState(true)
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState<any>(null)
-  const [form, setForm] = useState({ nome: '', duracao: '30', valor: '', custo_insumos: '', custo_operacional: '' })
+  const [form, setForm] = useState({ nome: '', duracao: '30', valor: '', custo_insumos: '', custo_operacional: '', tipo_sala: '', equipamentos_tipos: '' })
   const [salvando, setSalvando] = useState(false)
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
 
@@ -55,7 +56,7 @@ export function Procedimentos() {
 
   const abrirNovo = () => {
     setEditando(null)
-    setForm({ nome: '', duracao: '30', valor: '', custo_insumos: '', custo_operacional: '' })
+    setForm({ nome: '', duracao: '30', valor: '', custo_insumos: '', custo_operacional: '', tipo_sala: '', equipamentos_tipos: '' })
     setModalAberto(true)
   }
 
@@ -67,6 +68,8 @@ export function Procedimentos() {
       valor: p.valor != null ? String(p.valor) : '',
       custo_insumos: p.custo_insumos != null ? String(p.custo_insumos) : '',
       custo_operacional: p.custo_operacional != null ? String(p.custo_operacional) : '',
+      tipo_sala: p.tipo_sala || '',
+      equipamentos_tipos: (p.equipamentos_tipos || []).join(', '),
     })
     setModalAberto(true)
   }
@@ -237,6 +240,18 @@ export function Procedimentos() {
                 <Input type="number" step="0.01" value={form.custo_operacional}
                   onChange={e => setForm(f => ({ ...f, custo_operacional: e.target.value }))}
                   placeholder="0,00" />
+              </Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <Field label="Precisa de sala" hint="A agenda reserva uma sala livre desse tipo">
+                <Select value={form.tipo_sala} onChange={e => setForm(f => ({ ...f, tipo_sala: e.target.value }))}>
+                  <option value="">Qualquer sala</option>
+                  {TIPOS_SALA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </Select>
+              </Field>
+              <Field label="Precisa de equipamentos" hint="Tipos separados por vírgula (ex.: laser)">
+                <Input value={form.equipamentos_tipos} onChange={e => setForm(f => ({ ...f, equipamentos_tipos: e.target.value }))} placeholder="Nenhum" />
               </Field>
             </div>
 

@@ -6,7 +6,7 @@ import { Suspense, useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Ban, Calendar, CalendarClock, Check, CheckCircle2, ChevronLeft, ChevronRight, Copy,
-  Eye, EyeOff, Gift, Hourglass, MessageCircle, Mic, Plus, Send, SlidersHorizontal, Trash2, TriangleAlert, Video, X,
+  DoorOpen, Eye, EyeOff, Gift, Hourglass, MessageCircle, Mic, Plus, Send, SlidersHorizontal, Trash2, TriangleAlert, Video, X,
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
@@ -313,6 +313,8 @@ function AgendaContent() {
   // Agendamento existente abre em "Detalhes"; "Editar/Remarcar" troca para o formulário
   const [editando, setEditando] = useState(false)
   const [form, setForm] = useState({ paciente_id: '', medico_id: '', procedimento_id: '', data_hora: '', tipo: 'consulta', motivo: '', observacoes: '', duracao: '30' })
+  // Sala e equipamentos escolhidos para o horário do formulário (ou o conflito com horários livres)
+  const [planoSala, setPlanoSala] = useState<{ sem_salas?: boolean; sala: { id: string; nome: string } | null; equipamentos: { id: string; nome: string }[]; conflito?: string; livres?: string[] } | null>(null)
   const [salvando, setSalvando] = useState(false)
 
   const [comVideo, setComVideo] = useState(false)
@@ -681,8 +683,30 @@ function AgendaContent() {
     }
   }
 
+  useEffect(() => {
+    setPlanoSala(null)
+    if (!modal.open || demo || !form.data_hora || !medico) return
+    const t = setTimeout(() => {
+      fetch('/api/salas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        acao: 'planejar', medico_id: form.medico_id || modal.ag?.medico_id || medico.id, procedimento_id: form.procedimento_id || null,
+        inicio: new Date(form.data_hora).toISOString(), duracao: Number(form.duracao) || 30, agendamento_id: modal.ag?.id || null,
+      }) }).then(r => r.ok ? r.json() : null).then(p => setPlanoSala(p && !p.sem_salas ? p : null)).catch(() => {})
+    }, 400)
+    return () => clearTimeout(t)
+  }, [modal.open, modal.ag?.id, form.data_hora, form.duracao, form.procedimento_id, form.medico_id, demo, medico?.id])
+
+  /** Reserva sala/equipamentos do agendamento salvo; avisa se não deu. */
+  const reservarSala = async (agendamentoId: string) => {
+    try {
+      const r = await fetch('/api/salas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'reservar', agendamento_id: agendamentoId }) })
+      const p = await r.json().catch(() => null)
+      if (p?.conflito) notificar('Agendado, mas sem sala ou equipamento: ' + p.conflito, 'erro')
+    } catch {}
+  }
+
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!demo && planoSala?.conflito && !(await confirmar({ titulo: 'Sala ou equipamento ocupado', mensagem: planoSala.conflito + ' Salvar mesmo assim, sem reservar?', confirmar: 'Salvar sem reservar' }))) return
     if (demo) {
       const pac = pacientes.find((p: any) => p.id === form.paciente_id)
       const dados = {
@@ -709,7 +733,7 @@ function AgendaContent() {
           observacoes: form.observacoes,
           duracao: form.duracao,
         }).eq('id', modal.ag.id).select(`*, pacientes(nome, data_nascimento, telefone)`).single()
-        if (data) setAgendamentos(prev => prev.map(a => a.id === data.id ? data : a))
+        if (data) { setAgendamentos(prev => prev.map(a => a.id === data.id ? data : a)); reservarSala(data.id) }
       } else {
         let meetLinkFinal = ''
         let meetCodeFinal = ''
@@ -749,7 +773,7 @@ function AgendaContent() {
           meet_link: meetLinkFinal || null,
           meet_code: meetCodeFinal || null,
         }).select(`*, pacientes(nome, data_nascimento, telefone)`).single()
-        if (data) setAgendamentos(prev => [...prev, data])
+        if (data) { setAgendamentos(prev => [...prev, data]); reservarSala(data.id) }
         if (data && encaixeListaId) marcarEsperaAgendada(encaixeListaId, data.id)
       }
       setModal({ open: false })
@@ -1254,6 +1278,7 @@ function AgendaContent() {
           )}
         </div>
       )}
+      {!isMobile && <Button variant="ghost" icon={DoorOpen} onClick={() => router.push(comDemo('/salas'))} title="Quem está em cada sala e equipamento">Salas</Button>}
       <div style={{ position: 'relative' }}>
         <Button variant="secondary" icon={Hourglass} onClick={() => setListaEsperaOpen(o => !o)}>
           Lista de espera
@@ -1828,6 +1853,30 @@ function AgendaContent() {
                 ))}
               </Select>
             </Field>
+          )}
+
+          {planoSala && (planoSala.conflito || planoSala.sala || planoSala.equipamentos.length > 0) && (
+            planoSala.conflito ? (
+              <div style={{ padding: '10px 12px', borderRadius: 12, background: T.status.warningBg, fontSize: 12.5, color: T.status.warning, lineHeight: 1.45 }}>
+                <b>Sala ou equipamento ocupado.</b> {planoSala.conflito.split(' Horários livres:')[0]}
+                {!!planoSala.livres?.length && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                    {planoSala.livres.map(l => {
+                      const d = new Date(l)
+                      const p2 = (n: number) => String(n).padStart(2, '0')
+                      const local = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}T${p2(d.getHours())}:${p2(d.getMinutes())}`
+                      return <Chip key={l} onClick={() => setForm(f => ({ ...f, data_hora: local }))}>{fmtHora(d)}</Chip>
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: T.text.secondary }}>
+                <DoorOpen size={14} color={T.brand.primary} />
+                {[planoSala.sala?.nome, ...planoSala.equipamentos.map(e => e.nome)].filter(Boolean).join(' · ')}
+                <span style={{ color: T.text.quaternary }}>· reservado ao salvar</span>
+              </div>
+            )
           )}
 
           <Field label="Motivo">

@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Stethoscope, Bot, Zap, ShieldCheck, Plug, MonitorPlay, Network } from 'lucide-react'
+import { Building2, Stethoscope, Bot, Zap, ShieldCheck, Plug, MonitorPlay, Network, DoorOpen } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { VisaoGeral } from '@/components/minha-clinica/VisaoGeral'
 import { Procedimentos } from '@/components/minha-clinica/Procedimentos'
@@ -13,14 +13,16 @@ import { Sofia } from '@/components/minha-clinica/Sofia'
 import ConfigAtendimento from '@/components/atendimento/ConfigAtendimento'
 import { Icon, PageHeader, Tabs } from '@/components/ui'
 import { Unidades } from '@/components/minha-clinica/Unidades'
+import { SalasEquipamentos } from '@/components/minha-clinica/SalasEquipamentos'
 import { ehDemo } from '@/lib/demo'
 
-type TabKey = 'visao' | 'unidades' | 'atendimento' | 'canais' | 'procedimentos' | 'sofia' | 'automacoes' | 'lgpd'
+type TabKey = 'visao' | 'unidades' | 'atendimento' | 'salas' | 'canais' | 'procedimentos' | 'sofia' | 'automacoes' | 'lgpd'
 
 const TABS: Array<{ key: TabKey; label: string; icon: LucideIcon }> = [
   { key: 'visao', label: 'Visão geral', icon: Building2 },
   { key: 'unidades', label: 'Unidades', icon: Network },
   { key: 'atendimento', label: 'Recepção e painel', icon: MonitorPlay },
+  { key: 'salas', label: 'Salas e equipamentos', icon: DoorOpen },
   { key: 'canais', label: 'Canais', icon: Plug },
   { key: 'procedimentos', label: 'Procedimentos', icon: Stethoscope },
   { key: 'sofia', label: 'Sofia', icon: Bot },
@@ -35,7 +37,7 @@ export default function MinhaClinicaPage() {
   // Abre direto numa aba: /minha-clinica?aba=atendimento|canais|procedimentos|sofia|automacoes|lgpd
   useEffect(() => {
     const aba = new URLSearchParams(window.location.search).get('aba') as TabKey | null
-    if (aba && ['visao', 'unidades', 'atendimento', 'canais', 'procedimentos', 'sofia', 'automacoes', 'lgpd'].includes(aba)) setTab(aba)
+    if (aba && ['visao', 'unidades', 'atendimento', 'salas', 'canais', 'procedimentos', 'sofia', 'automacoes', 'lgpd'].includes(aba)) setTab(aba)
   }, [])
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export default function MinhaClinicaPage() {
       {tab === 'visao' && <VisaoGeral />}
       {tab === 'unidades' && <Unidades />}
       {tab === 'atendimento' && <ConfigAtendimento />}
+      {tab === 'salas' && <SalasEquipamentos />}
       {tab === 'canais' && <ConectarCanais />}
       {tab === 'procedimentos' && <Procedimentos />}
       {tab === 'sofia' && <Sofia />}
