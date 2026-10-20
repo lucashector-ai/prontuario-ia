@@ -297,8 +297,8 @@ export default function ConectarCanais() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: T.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nome || c.conta_id}</div>
                         <div style={{ fontSize: 11.5, color: c.status === 'erro' ? T.status.danger : T.text.tertiary }}>
-                          {c.status === 'erro' ? 'Precisa reconectar' : [
-                            c.canal === 'whatsapp' && c.detalhe?.modo === 'coexistencia' ? 'No celular e no Clinical 360' : c.canal === 'whatsapp' && c.detalhe?.modo === 'cloud' ? 'Só no Clinical 360' : null,
+                          {c.status === 'erro' ? (c.erro || 'Precisa reconectar') : [
+                            c.canal === 'whatsapp' && c.detalhe?.modo === 'coexistencia_pendente' ? 'Aguardando a Meta confirmar o app do celular' : c.canal === 'whatsapp' && c.detalhe?.modo === 'coexistencia' ? 'No celular e no Clinical 360' : c.canal === 'whatsapp' && c.detalhe?.modo === 'cloud' ? 'Só no Clinical 360' : null,
                             (estado.medicos.length > 1 && nomeMedico(c.medico_id)) || (c.conectado_em ? `desde ${new Date(c.conectado_em).toLocaleDateString('pt-BR')}` : 'configurado manualmente'),
                           ].filter(Boolean).join(' · ')}
                         </div>

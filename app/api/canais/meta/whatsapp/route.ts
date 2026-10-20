@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
     // não registra de novo; pede à Meta para sincronizar contatos e conversas recentes.
     const status = await graph<{ is_on_biz_app?: boolean; platform_type?: string }>(phoneId, { token, params: { fields: 'is_on_biz_app,platform_type' } }).catch(() => ({} as any))
     const coexistencia = corpo.modo === 'coexistencia' || status.is_on_biz_app === true
+    // Pediu o app do celular, mas a Meta não confirmou o número no WhatsApp Business: não registra
+    // (registrar tiraria o número do celular) e avisa — mensagens só chegam depois que a Meta resolver.
+    const coexistenciaPendente = corpo.modo === 'coexistencia' && status.is_on_biz_app !== true
     const pin = String(randomInt(100000, 999999))
     let avisoRegistro: string | null = null
     if (!coexistencia) {
@@ -71,8 +74,10 @@ export async function POST(req: NextRequest) {
     const { error } = await db.from('canais_conectados').upsert({
       clinica_id: e.clinicaId, medico_id: e.medicoId, canal: 'whatsapp', conta_id: phoneId,
       nome: info.display_phone_number || phoneId,
-      detalhe: { waba_id: wabaId, verified_name: info.verified_name, quality: info.quality_rating, modo: coexistencia ? 'coexistencia' : 'cloud', ...(coexistencia ? {} : { pin }), aviso_registro: avisoRegistro },
-      access_token: token, status: 'ativo', erro: null, atualizado_em: agora,
+      detalhe: { waba_id: wabaId, verified_name: info.verified_name, quality: info.quality_rating, modo: coexistenciaPendente ? 'coexistencia_pendente' : coexistencia ? 'coexistencia' : 'cloud', ...(coexistencia ? {} : { pin }), aviso_registro: avisoRegistro },
+      access_token: token, status: coexistenciaPendente ? 'erro' : 'ativo',
+      erro: coexistenciaPendente ? 'A Meta ainda não confirmou este número no app WhatsApp Business do celular. As mensagens começam a chegar quando ela resolver.' : null,
+      atualizado_em: agora,
     }, { onConflict: 'canal,conta_id' })
     if (error) throw new Error(error.message)
 
