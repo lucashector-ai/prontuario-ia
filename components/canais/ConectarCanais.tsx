@@ -116,7 +116,7 @@ export default function ConectarCanais() {
 
   // ── WhatsApp: cadastro incorporado ──────────────────────────────────────
   async function conectarWhatsApp(modo: 'coexistencia' | 'novo') {
-    if (demo) { notificar(modo === 'coexistencia' ? 'Modo demonstração: abriria a janela da Meta com o QR code do WhatsApp Business' : 'Modo demonstração: abriria a janela oficial da Meta para escolher o número', 'info'); return }
+    if (demo) { notificar(modo === 'coexistencia' ? 'Modo demonstração: abriria a janela da Meta para conectar o WhatsApp Business do celular' : 'Modo demonstração: abriria a janela oficial da Meta para escolher o número', 'info'); return }
     if (!estado?.app_id || !estado.config_whatsapp) { notificar('Conexão do WhatsApp ainda não liberada para esta conta', 'erro'); return }
     setOcupado('whatsapp')
     try {
@@ -140,7 +140,7 @@ export default function ConectarCanais() {
           // A versão (v4) vem da configuração criada no painel da Meta — sessionInfoVersion era
           // da v2/v3 (descontinuadas em 15/10/2026) e fazia a Meta ignorar o featureType.
           // whatsapp_business_app_onboarding = coexistência: o número continua no app
-          // WhatsApp Business do celular (a Meta mostra o código/QR para confirmar no app).
+          // WhatsApp Business do celular (a Meta manda uma mensagem no app para confirmar).
           extras: modo === 'coexistencia'
             ? { setup: {}, featureType: 'whatsapp_business_app_onboarding' }
             : { setup: {} },
@@ -383,7 +383,7 @@ function GuiaWhatsApp({ onFechar, onContinuar }: { onFechar: () => void; onConti
   const passos = [
     { t: 'Atualize o WhatsApp Business no celular', d: 'Precisa da versão 2.24.17 ou mais nova (Play Store / App Store).' },
     { t: 'Entre com o Facebook da clínica', d: 'Na janela da Meta, use a conta que administra o negócio.' },
-    { t: 'Escolha conectar o app WhatsApp Business', d: 'Informe o número que está no celular. A Meta mostra um código (ou QR).' },
+    { t: 'Escolha conectar o app WhatsApp Business', d: 'Informe o número que está no celular. A Meta manda uma mensagem no app WhatsApp Business.' },
     { t: 'Confirme no celular', d: 'Abra a mensagem da Meta no WhatsApp Business, toque em “Conectar” e aceite compartilhar o histórico — assim as conversas dos últimos 6 meses aparecem no Chat.' },
   ]
   return (

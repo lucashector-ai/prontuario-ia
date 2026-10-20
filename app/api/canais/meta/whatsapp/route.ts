@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     await graph(`${wabaId}/subscribed_apps`, { token, metodo: 'POST' })
 
-    // Coexistência (QR code): o número continua no app WhatsApp Business do celular —
+    // Coexistência (número do app confirmado no celular): o número continua no app WhatsApp Business do celular —
     // não registra de novo; pede à Meta para sincronizar contatos e conversas recentes.
     const status = await graph<{ is_on_biz_app?: boolean; platform_type?: string }>(phoneId, { token, params: { fields: 'is_on_biz_app,platform_type' } }).catch(() => ({} as any))
     const coexistencia = corpo.modo === 'coexistencia' || status.is_on_biz_app === true
