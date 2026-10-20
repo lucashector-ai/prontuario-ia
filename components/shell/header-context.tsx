@@ -36,7 +36,7 @@ export function usePageHeader(titulo: string, descricao?: string) {
 
 // Títulos padrão por rota (prefixo mais longo vence)
 const TITULOS_ROTA: Array<[string, HeaderInfo]> = [
-  ['/dashboard', { titulo: 'Dashboard', descricao: 'Visão geral dos atendimentos da sua clínica' }],
+  ['/dashboard', { titulo: 'Início', descricao: 'Visão geral dos atendimentos da sua clínica' }],
   ['/agenda', { titulo: 'Agenda', descricao: 'Consultas e horários da equipe' }],
   ['/pacientes', { titulo: 'Pacientes', descricao: 'Cadastro e acompanhamento dos seus pacientes' }],
   ['/historico', { titulo: 'Histórico de consultas', descricao: 'Prontuários gerados e registros anteriores' }],
@@ -46,9 +46,9 @@ const TITULOS_ROTA: Array<[string, HeaderInfo]> = [
   ['/assistente-ia', { titulo: 'Assistente IA', descricao: 'Pergunte sobre condutas, doses e diagnósticos' }],
   ['/chat', { titulo: 'Chat', descricao: 'WhatsApp, Instagram e Messenger' }],
   ['/minha-clinica', { titulo: 'Minha clínica', descricao: 'Dados, procedimentos, automações e privacidade' }],
-  ['/admin', { titulo: 'Painel admin', descricao: 'Equipe, permissões e uso da plataforma' }],
+  ['/admin', { titulo: 'Equipe', descricao: 'Quem trabalha na clínica, acessos e desempenho' }],
   ['/formularios', { titulo: 'Formulários', descricao: 'Anamnese, consentimentos e pré-consulta' }],
-  ['/configuracoes/agenda-publica', { titulo: 'Agenda pública', descricao: 'Página de agendamento online para pacientes' }],
+  ['/configuracoes/agenda-publica', { titulo: 'Agenda online', descricao: 'Página para o paciente marcar consulta sozinho' }],
   ['/configuracoes', { titulo: 'Configurações', descricao: 'Preferências da clínica' }],
   ['/perfil', { titulo: 'Perfil', descricao: 'Seus dados e preferências' }],
   ['/retornos', { titulo: 'Retornos e reativação', descricao: 'Retornos previstos e pacientes para trazer de volta' }],

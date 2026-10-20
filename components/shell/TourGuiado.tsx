@@ -37,7 +37,7 @@ const PASSOS: Passo[] = [
   { alvo: 'menu-atendimento', lado: 'direita', icon: ConciergeBell, titulo: 'Atendimento: o caminho do paciente', texto: 'Recepção faz o check-in e a senha → Triagem mede sinais e classifica o risco → Consultório chama na TV e atende. O Chat junta WhatsApp, Instagram e Messenger.' },
   { alvo: 'menu-pacientes', lado: 'direita', icon: Users, titulo: 'Pacientes', texto: 'Cadastro, histórico completo, retornos pendentes e formulários. Importe sua base por planilha em Pacientes → Importar.' },
   { alvo: 'menu-clinico', lado: 'direita', icon: Stethoscope, titulo: 'Consulta e IA', papeis: ['clinica', 'medico'], texto: 'Grave a consulta e a IA escreve o prontuário. Teleconsulta, análise de exames, assistente e seus modelos de prontuário ficam aqui.' },
-  { alvo: 'menu-gestao', lado: 'direita', icon: ChartColumnBig, titulo: 'Gestão', texto: 'Indicadores do dia em tempo real, relatórios e faturamento TISS dos convênios.' },
+  { alvo: 'menu-gestao', lado: 'direita', icon: ChartColumnBig, titulo: 'Gestão', texto: 'Indicadores do dia em tempo real, relatórios e faturamento de convênios (TISS).' },
   { alvo: 'menu-config', lado: 'direita', icon: Settings2, titulo: 'Configurações', texto: 'Dados da clínica, equipe, salas, painel da TV, totem e a sua agenda pública para o paciente marcar sozinho.' },
   { alvo: 'personalizar', opcional: true, lado: 'direita', icon: Settings2, titulo: 'Deixe o menu do seu jeito', texto: 'Clique no nome de uma seção para recolher. Em "Personalizar menu" você esconde o que não usa.' },
   { alvo: 'busca', lado: 'baixo', icon: Search, titulo: 'Busca rápida (⌘K)', texto: 'Ache qualquer paciente por nome, CPF ou telefone — abre a ficha na hora, em qualquer tela. Também leva a qualquer página.' },
@@ -55,7 +55,7 @@ const ACOES: Record<Papel, Acao[]> = {
     { label: 'Abrir a agenda', desc: 'Horários, encaixes e confirmações', href: '/agenda', icon: CalendarPlus, objetivo: 'agenda' },
     { label: 'Montar a recepção', desc: 'Salas, painel da TV e totem', href: '/minha-clinica?aba=atendimento', icon: ConciergeBell, objetivo: 'recepcao', soEquipe: true },
     { label: 'Conectar o WhatsApp', desc: 'Atenda e confirme consultas pelo Chat', href: '/minha-clinica?aba=canais', icon: MessageCircle, objetivo: 'whatsapp' },
-    { label: 'Ver o financeiro', desc: 'Recebimentos, comandas e TISS', href: '/financeiro', icon: ChartColumnBig, objetivo: 'financeiro' },
+    { label: 'Faturar convênios', desc: 'Guias TISS dos atendimentos', href: '/faturamento', icon: ChartColumnBig, objetivo: 'tiss' },
     { label: 'Importar pacientes', desc: 'Traga sua base por planilha', href: '/pacientes', icon: Upload },
   ],
   medico: [

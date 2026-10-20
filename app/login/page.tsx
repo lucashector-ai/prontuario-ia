@@ -37,11 +37,11 @@ function LoginForm() {
         options: { redirectTo: `${window.location.origin}/auth/callback` }
       })
       if (error) {
-        setErro('Login com Google ainda não está configurado. Use seu e-mail e senha.')
+        setErro('Entrar com Google ainda não está disponível. Use seu email e senha.')
         setCarregandoGoogle(false)
       }
     } catch {
-      setErro('Login com Google ainda não está configurado.')
+      setErro('Entrar com Google ainda não está disponível. Use seu email e senha.')
       setCarregandoGoogle(false)
     }
   }
@@ -224,7 +224,13 @@ function LoginForm() {
           <p style={{ textAlign: 'center' as const, fontSize: 13, color: tokens.text.quaternary, margin: '0 0 20px' }}>
             Não tem conta?{' '}
             <Link href="/cadastro" style={{ color: tokens.brand.primary, textDecoration: 'none', fontWeight: 600 }}>
-              Cadastre sua clínica
+              Criar conta
+            </Link>
+          </p>
+          <p style={{ textAlign: 'center' as const, fontSize: 12.5, color: tokens.text.quaternary, margin: '-8px 0 20px' }}>
+            Atende só o chat da clínica?{' '}
+            <Link href="/login-atendente" style={{ color: tokens.brand.primary, textDecoration: 'none', fontWeight: 600 }}>
+              Entrar como atendente
             </Link>
           </p>
 

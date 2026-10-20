@@ -107,7 +107,7 @@ export default function Dashboard() {
   const [cids, setCids] = useState<{ codigo: string; descricao: string; n: number; antes: number }[]>([])
   const [convenios, setConvenios] = useState<{ label: string; n: number }[]>([])
 
-  usePageHeader('Dashboard', ehAdmin
+  usePageHeader('Início', ehAdmin
     ? `Visão geral dos atendimentos da sua clínica · ${medicos.length} médico${medicos.length === 1 ? '' : 's'}`
     : 'Visão geral dos seus atendimentos')
 

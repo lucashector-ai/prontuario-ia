@@ -224,7 +224,7 @@ export default function CadastroPage() {
                   })}
                 </div>
                 <p style={{ fontSize: 12.5, color: T.text.tertiary, margin: '22px 0 0', lineHeight: 1.5 }}>
-                  Faz parte de uma clínica que já usa o Clinical 360? Peça ao administrador para te cadastrar — você recebe o acesso por email.
+                  Faz parte de uma clínica que já usa o Clinical 360? Peça ao administrador para cadastrar você. Ele recebe uma senha provisória para te passar, e no primeiro acesso você cria a sua.
                 </p>
               </div>
             )}

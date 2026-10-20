@@ -57,7 +57,7 @@ const OBJETIVOS: { id: string; icon: LucideIcon; titulo: string; sub: string; so
   { id: 'agenda', icon: CalendarCheck, titulo: 'Agenda e confirmações', sub: 'Menos faltas' },
   { id: 'whatsapp', icon: MessageCircle, titulo: 'WhatsApp com a Sofia', sub: 'Atender 24 horas' },
   { id: 'recepcao', icon: ConciergeBell, titulo: 'Recepção, fila e TV', sub: 'Organizar a espera', soEquipe: true },
-  { id: 'financeiro', icon: Wallet, titulo: 'Financeiro e TISS', sub: 'Receber e faturar' },
+  { id: 'tiss', icon: Wallet, titulo: 'Faturamento de convênios', sub: 'Guias TISS sem retrabalho' },
   { id: 'teleconsulta', icon: Video, titulo: 'Teleconsulta', sub: 'Atender a distância' },
 ]
 

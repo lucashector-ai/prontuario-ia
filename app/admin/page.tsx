@@ -273,7 +273,7 @@ function Admin() {
   return (
     <main style={{ height: '100%', overflow: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <PageHeader
-        titulo="Painel admin"
+        titulo="Equipe"
         descricao={`${listaMedicos.length} médico${listaMedicos.length !== 1 ? 's' : ''} · ${listaRecepcionistas.length} recepcionista${listaRecepcionistas.length !== 1 ? 's' : ''}`}
       />
 

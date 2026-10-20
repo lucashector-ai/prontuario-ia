@@ -19,29 +19,30 @@ import { listarNotificacoes, marcarNotificacao, marcarTodasLidas, destinoDaNotif
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
 const T = tokens
 
-const PAGINAS: { label: string; href: string; icon: LucideIcon }[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+// so: 'gestor' = dono/administrador · 'clinico' = quem atende (fora da recepção)
+const PAGINAS: { label: string; href: string; icon: LucideIcon; so?: 'gestor' | 'clinico' }[] = [
+  { label: 'Início', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Agenda', href: '/agenda', icon: Calendar },
   { label: 'Pacientes', href: '/pacientes', icon: Users },
-  { label: 'Histórico', href: '/historico', icon: Clock },
+  { label: 'Histórico', href: '/historico', icon: Clock, so: 'clinico' },
   { label: 'Retornos e reativação', href: '/retornos', icon: CalendarHeart },
-  { label: 'Relatórios', href: '/relatorios', icon: ChartColumnBig },
+  { label: 'Relatórios', href: '/relatorios', icon: ChartColumnBig, so: 'clinico' },
   { label: 'Faturamento de convênios (TISS)', href: '/faturamento', icon: ReceiptText },
-  { label: 'Modelos de prontuário', href: '/modelos-prontuario', icon: LayoutTemplate },
+  { label: 'Modelos de prontuário', href: '/modelos-prontuario', icon: LayoutTemplate, so: 'clinico' },
   { label: 'Recepção (chegadas e senhas)', href: '/recepcao', icon: ConciergeBell },
-  { label: 'Consultório (chamar próximo)', href: '/consultorio', icon: DoorOpen },
+  { label: 'Consultório (chamar próximo)', href: '/consultorio', icon: DoorOpen, so: 'clinico' },
   { label: 'Triagem (sinais vitais)', href: '/triagem', icon: HeartPulse },
-  { label: 'Gestão do atendimento (indicadores)', href: '/gestao', icon: Gauge },
-  { label: 'Nova consulta', href: '/nova-consulta', icon: CirclePlus },
-  { label: 'Teleconsulta', href: '/teleconsulta', icon: Video },
-  { label: 'Analisar exames', href: '/exames', icon: ScanSearch },
-  { label: 'Assistente IA', href: '/assistente-ia', icon: Sparkles },
+  { label: 'Indicadores do atendimento', href: '/gestao', icon: Gauge, so: 'gestor' },
+  { label: 'Nova consulta', href: '/nova-consulta', icon: CirclePlus, so: 'clinico' },
+  { label: 'Teleconsulta', href: '/teleconsulta', icon: Video, so: 'clinico' },
+  { label: 'Analisar exames', href: '/exames', icon: ScanSearch, so: 'clinico' },
+  { label: 'Assistente IA', href: '/assistente-ia', icon: Sparkles, so: 'clinico' },
   { label: 'Chat (WhatsApp, Instagram, Messenger)', href: '/chat', icon: MessageCircle },
-  { label: 'Minha clínica', href: '/minha-clinica', icon: Hospital },
-  { label: 'Painel admin', href: '/admin', icon: SlidersHorizontal },
+  { label: 'Minha clínica', href: '/minha-clinica', icon: Hospital, so: 'gestor' },
+  { label: 'Equipe', href: '/admin', icon: SlidersHorizontal, so: 'gestor' },
   { label: 'Formulários', href: '/formularios', icon: ClipboardList },
-  { label: 'Agenda pública', href: '/configuracoes/agenda-publica', icon: CalendarCheck },
-  { label: 'Perfil', href: '/perfil', icon: UserRound },
+  { label: 'Agenda online', href: '/configuracoes/agenda-publica', icon: CalendarCheck },
+  { label: 'Meu perfil', href: '/perfil', icon: UserRound },
 ]
 
 const semAcento = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -237,9 +238,13 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
 
   const paginasFiltradas = useMemo(() => {
     const q = semAcento(busca.trim())
-    const base = atendente ? PAGINAS.filter(p => p.href === '/chat') : PAGINAS
+    // Só páginas que o perfil pode abrir (mesma regra do menu)
+    const recepcao = medico?.cargo === 'recepcionista'
+    const gestor = !!clinicaAdmin || medico?.cargo === 'admin'
+    const base = atendente ? PAGINAS.filter(p => p.href === '/chat')
+      : PAGINAS.filter(p => !(p.so === 'gestor' && !gestor) && !(p.so === 'clinico' && recepcao))
     return (q ? base.filter(p => semAcento(p.label).includes(q)) : base.slice(0, 6))
-  }, [busca, atendente])
+  }, [busca, atendente, medico, clinicaAdmin])
 
   const sair = () => router.push(sairDaConta())
 
@@ -399,7 +404,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
             {!compacto && (
               <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.2, textAlign: 'left' }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: T.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nomeClinica}</span>
-                <span style={{ fontSize: 11, color: T.text.quaternary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nomeUsuario && nomeUsuario !== nomeClinica ? nomeUsuario : (modo === 'clinica' ? 'Administrador' : 'Médico')}</span>
+                <span style={{ fontSize: 11, color: T.text.quaternary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nomeUsuario && nomeUsuario !== nomeClinica ? nomeUsuario : (modo === 'clinica' ? 'Administrador' : medico?.cargo === 'recepcionista' ? 'Recepção' : 'Médico')}</span>
               </span>
             )}
             <ChevronDown size={14} color={T.text.tertiary} />
@@ -418,7 +423,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
               {!atendente && <button onClick={() => ir('/perfil')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><UserRound size={16} strokeWidth={1.6} color={T.text.secondary} />Meu perfil</button>}
               {modo === 'clinica' && (
                 <>
-                  <button onClick={() => ir('/admin')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><SlidersHorizontal size={16} strokeWidth={1.6} color={T.text.secondary} />Painel admin</button>
+                  <button onClick={() => ir('/admin')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><SlidersHorizontal size={16} strokeWidth={1.6} color={T.text.secondary} />Equipe</button>
                   <button onClick={() => ir('/minha-clinica')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Hospital size={16} strokeWidth={1.6} color={T.text.secondary} />Dados da clínica</button>
                 </>
               )}

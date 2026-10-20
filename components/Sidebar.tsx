@@ -56,7 +56,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
     { id: 'atendimento', label: 'Atendimento', items: [{ href: '/chat', label: 'Chat', icon: MessageCircle }] },
   ] : [
     { id: 'inicio', label: 'Início', items: [
-      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
       { href: '/agenda', label: 'Agenda', icon: Calendar },
     ] },
     { id: 'atendimento', label: 'Atendimento', items: [
@@ -86,10 +86,10 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
     { id: 'config', label: 'Configurações', items: [
       ...(temAcessoAdmin ? [
         { href: '/minha-clinica', label: 'Minha clínica', icon: Hospital },
-        { href: '/admin', label: 'Painel admin', icon: SlidersHorizontal },
+        { href: '/admin', label: 'Equipe', icon: SlidersHorizontal },
       ] : []),
-      { href: '/configuracoes/agenda-publica', label: 'Agenda pública', icon: CalendarCheck },
-      { href: '/perfil', label: 'Perfil', icon: UserRound },
+      { href: '/configuracoes/agenda-publica', label: 'Agenda online', icon: CalendarCheck },
+      { href: '/perfil', label: 'Meu perfil', icon: UserRound },
     ] },
   ]
 

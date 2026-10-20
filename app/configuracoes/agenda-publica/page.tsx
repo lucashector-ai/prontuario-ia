@@ -253,7 +253,7 @@ export default function AgendaPublicaPage() {
         <EmptyState
           icon={Stethoscope}
           titulo="Nenhum médico cadastrado"
-          descricao="Cadastre médicos no Painel admin antes de configurar a agenda pública."
+          descricao="Cadastre os médicos em Equipe antes de configurar a agenda online."
         />
       </div>
     )
