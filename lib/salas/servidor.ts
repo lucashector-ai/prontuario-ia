@@ -101,7 +101,7 @@ export async function planejar(chave: string, p: { medicoId?: string | null; pro
   const salaPadrao: string | null = (padrao as any)?.data?.consultorio_id || null
   if (!tipoSala && !tiposEquip.length && !salaPadrao) return { sala: null, equipamentos: [] }
 
-  const tentar = async (inicio: Date): Promise<Plano & { motivoConflito?: { recurso: string; ag?: string | null; fim?: string } }> => {
+  const tentar = async (inicio: Date): Promise<Plano & { motivoConflito?: { recurso: string; ag?: string | null; fim?: string; plural?: boolean; semRecurso?: boolean } }> => {
     const fim = new Date(inicio.getTime() + dur * MIN)
     const ocup = await ocupados(chave, inicio, fim, p.ignorarAgendamento)
     const salaOcupada = new Set(ocup.filter(o => o.consultorio_id).map(o => o.consultorio_id))
@@ -111,7 +111,8 @@ export async function planejar(chave: string, p: { medicoId?: string | null; pro
     const sala = candidatas.find(s => !salaOcupada.has(s.id)) || null
     if ((tipoSala || salaPadrao) && !sala) {
       const o = ocup.find(x => candidatas.some(s => s.id === x.consultorio_id))
-      return { sala: null, equipamentos: [], motivoConflito: { recurso: tipoSala ? `Nenhuma sala do tipo "${tipoSala}"` : (candidatas[0]?.nome || 'A sala'), ag: o?.agendamento_id, fim: String(o?.periodo || '').split(',')[1] } }
+      if (!candidatas.length) return { sala: null, equipamentos: [], motivoConflito: { recurso: `Não há sala do tipo "${tipoSala}" cadastrada`, semRecurso: true } }
+      return { sala: null, equipamentos: [], motivoConflito: { recurso: candidatas.length === 1 ? `A sala ${candidatas[0].nome}` : `Todas as salas do tipo "${tipoSala}"`, plural: candidatas.length > 1, ag: o?.agendamento_id, fim: String(o?.periodo || '').split(',')[1] } }
     }
     const escolhidos: Recurso[] = []
     for (const t of tiposEquip) {
@@ -122,7 +123,8 @@ export async function planejar(chave: string, p: { medicoId?: string | null; pro
       const livre = opcoes.find(e => !equipOcupado.has(e.id))
       if (!livre) {
         const o = ocup.find(x => opcoes.some(e => e.id === x.equipamento_id))
-        return { sala: null, equipamentos: [], motivoConflito: { recurso: opcoes.length ? `O ${opcoes[0].nome}` : `Nenhum equipamento do tipo "${t}" disponível`, ag: o?.agendamento_id, fim: String(o?.periodo || '').split(',')[1] } }
+        if (!opcoes.length) return { sala: null, equipamentos: [], motivoConflito: { recurso: `Não há equipamento do tipo "${t}" cadastrado${sala ? ' para esta sala' : ''}`, semRecurso: true } }
+        return { sala: null, equipamentos: [], motivoConflito: { recurso: opcoes.length === 1 ? `O equipamento ${opcoes[0].nome}` : `Todos os equipamentos do tipo "${t}"`, plural: opcoes.length > 1, ag: o?.agendamento_id, fim: String(o?.periodo || '').split(',')[1] } }
       }
       escolhidos.push({ id: livre.id, nome: livre.nome })
     }
@@ -131,6 +133,7 @@ export async function planejar(chave: string, p: { medicoId?: string | null; pro
 
   const r = await tentar(ini)
   if (!r.motivoConflito) return { sala: r.sala, equipamentos: r.equipamentos }
+  if (r.motivoConflito.semRecurso) return { sala: null, equipamentos: [], conflito: `${r.motivoConflito.recurso}. Cadastre em Minha clínica → Salas e equipamentos.`, livres: [] }
 
   // Conflito: quem está usando e os próximos 3 horários livres no mesmo dia (de 15 em 15 min, até 8h à frente)
   let quem = ''
@@ -148,7 +151,7 @@ export async function planejar(chave: string, p: { medicoId?: string | null; pro
   }
   return {
     sala: null, equipamentos: [], livres,
-    conflito: `${r.motivoConflito.recurso} está em uso nesse horário${ate}${quem}.${livres.length ? ' Horários livres: ' + livres.map(hora).join(' · ') : ' Não há horário livre mais tarde neste dia.'}`,
+    conflito: `${r.motivoConflito.recurso} ${r.motivoConflito.plural ? 'estão ocupados' : 'está em uso'} nesse horário${ate}${quem}.${livres.length ? ' Horários livres: ' + livres.map(hora).join(' · ') : ' Não há horário livre mais tarde neste dia.'}`,
   }
 }
 
