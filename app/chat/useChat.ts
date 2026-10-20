@@ -42,7 +42,7 @@ export function useChat() {
   const tratarErro = useCallback((erro: any, acao: string) => {
     if (!erro) return false
     avisar(faltaMigration(erro)
-      ? `${acao} · rode a migration 0009_chat_omnicanal no Supabase`
+      ? `${acao} · este recurso ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.`
       : `${acao} · ${erro.message || 'erro'}`)
     return true
   }, [avisar])

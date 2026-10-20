@@ -22,14 +22,14 @@ export default function ResetPasswordPage() {
     const { error } = await supabaseAuth.auth.updateUser({ password: senha })
     setLoading(false)
     if (error) setErro(error.message)
-    else { setOk(true); setTimeout(() => router.push('/dashboard'), 2000) }
+    else { setOk(true); setTimeout(() => router.push('/login'), 2000) }
   }
 
   if (ok) {
     return (
       <TelaAcesso
         titulo="Senha alterada"
-        descricao="Redirecionando…"
+        descricao="Pronto! Agora entre com a nova senha."
         icone={<CircleCheck size={22} strokeWidth={1.6} />}
         tomIcone="success"
       />

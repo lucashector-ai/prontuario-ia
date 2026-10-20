@@ -129,9 +129,9 @@ export function useRelatorios(carga: Intervalo) {
       if (agsR.error) { setErro('Não foi possível carregar os agendamentos.'); setCarregando(false); return }
 
       let retornos: RetornoRel[] | null = retR.data as RetornoRel[]
-      if (retR.error) { retornos = null; if (faltaTabela(retR.error)) avs.push('Retornos calculados pela agenda — rode a migration 0011 para usar a lista de retornos.') }
+      if (retR.error) { retornos = null; if (faltaTabela(retR.error)) avs.push('Retornos calculados pela agenda.') }
       let espera: EsperaRel[] | null = espR.data as EsperaRel[]
-      if (espR.error) { espera = null; if (faltaTabela(espR.error)) avs.push('Lista de espera indisponível — rode a migration 0010.') }
+      if (espR.error) { espera = null; if (faltaTabela(espR.error)) avs.push('Lista de espera ainda não está ativa na sua conta.') }
 
       const agendamentos: AgRel[] = agsR.data.map((a: any) => ({
         id: a.id, medico_id: a.medico_id, paciente_id: a.paciente_id, data_hora: a.data_hora, duracao: a.duracao,

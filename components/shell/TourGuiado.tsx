@@ -32,7 +32,7 @@ type Passo = { alvo?: string; lado?: Lado; icon: LucideIcon; titulo: string; tex
 
 const PASSOS: Passo[] = [
   { icon: Sparkles, titulo: 'Bem-vindo ao Clinical 360', texto: 'Em um minuto você vê onde fica cada coisa. Use as setas do teclado ou os botões — dá para sair quando quiser.' },
-  { alvo: 'nav-celular', lado: 'cima', icon: LayoutDashboard, titulo: 'O menu fica aqui embaixo', celular: true, texto: 'Início, Agenda, Consulta e Pacientes à mão. Em "Mais" está o resto: recepção, triagem, chat, gestão e configurações.' },
+  { alvo: 'nav-celular', lado: 'cima', icon: LayoutDashboard, titulo: 'O menu fica aqui embaixo', celular: true, texto: 'Os quatro lugares do seu dia a dia ficam aqui. Em "Mais" está todo o resto do sistema.' },
   { alvo: 'menu-inicio', lado: 'direita', icon: LayoutDashboard, titulo: 'Início: o seu dia', texto: 'Dashboard com o resumo do dia e a Agenda, onde você marca, confirma, remarca e encaixa consultas.' },
   { alvo: 'menu-atendimento', lado: 'direita', icon: ConciergeBell, titulo: 'Atendimento: o caminho do paciente', texto: 'Recepção faz o check-in e a senha → Triagem mede sinais e classifica o risco → Consultório chama na TV e atende. O Chat junta WhatsApp, Instagram e Messenger.' },
   { alvo: 'menu-pacientes', lado: 'direita', icon: Users, titulo: 'Pacientes', texto: 'Cadastro, histórico completo, retornos pendentes e formulários. Importe sua base por planilha em Pacientes → Importar.' },

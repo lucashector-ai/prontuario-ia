@@ -8,6 +8,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+// Mesma mensagem para email inexistente e senha errada (não revela quem tem conta)
+const ERRO_CREDENCIAIS = 'Email ou senha incorretos'
+
 export async function POST(req: NextRequest) {
   try {
     const { email, senha } = await req.json()
@@ -21,7 +24,7 @@ export async function POST(req: NextRequest) {
     // 1. Tenta encontrar em clinica_admins
     const adminRes = await supabase
       .from('clinica_admins')
-      .select('id, email, senha_hash, nome, role, clinica_id, ativo')
+      .select('id, email, senha_hash, nome, role, clinica_id, ativo, onboarding_concluido')
       .ilike('email', emailNorm)
       .maybeSingle()
 
@@ -32,7 +35,7 @@ export async function POST(req: NextRequest) {
       }
       const ok = await bcrypt.compare(senha, admin.senha_hash)
       if (!ok) {
-        return NextResponse.json({ error: 'Senha incorreta' }, { status: 401 })
+        return NextResponse.json({ error: ERRO_CREDENCIAIS }, { status: 401 })
       }
 
       // Busca dados da clínica
@@ -54,6 +57,7 @@ export async function POST(req: NextRequest) {
           nome: admin.nome,
           role: admin.role,
           clinica_id: admin.clinica_id,
+          onboarding_concluido: admin.onboarding_concluido === true,
         },
       }), token)
     }
@@ -78,7 +82,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (!senhaOk) {
-        return NextResponse.json({ error: 'Senha incorreta' }, { status: 401 })
+        return NextResponse.json({ error: ERRO_CREDENCIAIS }, { status: 401 })
       }
 
       // Busca clínica pra saber o tipo
@@ -93,13 +97,13 @@ export async function POST(req: NextRequest) {
         ok: true,
         tipo: 'medico',
         token,
-        medico: { ...medico, senha: undefined, senha_hash: undefined },
+        medico: { ...medico, senha: undefined, senha_hash: undefined, token_verificacao: undefined, token_expira_em: undefined },
         clinica,
         precisa_trocar_senha: medico.senha_provisoria === true,
       }), token)
     }
 
-    return NextResponse.json({ error: 'Email não encontrado' }, { status: 404 })
+    return NextResponse.json({ error: ERRO_CREDENCIAIS }, { status: 401 })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }

@@ -9,7 +9,7 @@ const ORIGENS = ['manual', 'ia', 'consulta']
 const ehData = (s: any) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)
 
 const erro = (e: any, status = 500) => NextResponse.json(
-  { error: faltaMigration(e) ? 'Rode a migration 0011_retornos no Supabase' : (e?.message || String(e)), falta_migration: faltaMigration(e) },
+  { error: faltaMigration(e) ? 'Este recurso ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.' : (e?.message || String(e)), falta_migration: faltaMigration(e) },
   { status },
 )
 

@@ -56,7 +56,7 @@ export default function FaturamentoPage() {
           {fat.demo && <Badge tone="accent" dot>Modo demonstração · nada é gravado</Badge>}
           {fat.semMigration && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: T.status.warning }}>
-              <Icon icon={Info} size={14} /> Rode a migration 0012_faturamento_tiss no Supabase para usar o faturamento.
+              <Icon icon={Info} size={14} /> O faturamento de convênios ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.
             </span>
           )}
         </div>

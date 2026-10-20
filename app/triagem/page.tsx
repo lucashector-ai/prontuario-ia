@@ -65,7 +65,7 @@ export default function TriagemPage() {
     } catch (e: any) { notificar(e.message, 'erro') } finally { setChamando(false) }
   }
 
-  if (erro?.faltaMigration) return <div className="c360-pagina"><Card><EmptyState icon={Settings2} titulo="Falta ativar o módulo de atendimento" descricao="Rode as migrations 0018 e 0020 no Supabase." /></Card></div>
+  if (erro?.faltaMigration) return <div className="c360-pagina"><Card><EmptyState icon={Settings2} titulo="A triagem ainda não está ativa" descricao="A triagem ainda não está ativa na sua conta. Fale com o suporte do Clinical 360 para liberar." /></Card></div>
 
   return (
     <div className="c360-pagina" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

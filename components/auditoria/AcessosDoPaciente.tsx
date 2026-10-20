@@ -61,7 +61,7 @@ export default function AcessosDoPaciente({ pacienteId, limite = 5, demo, onVerT
           <ShieldCheck size={16} strokeWidth={1.6} color={T.text.tertiary} />
           <span style={{ fontSize: 12.5, color: T.text.quaternary, lineHeight: 1.45 }}>
             {ausente
-              ? 'Registro de acessos desativado — rode a migration 0013 para ativar.'
+              ? 'O registro de acessos ainda não está ativo na sua conta.'
               : 'Nenhum acesso registrado ainda.'}
           </span>
         </div>

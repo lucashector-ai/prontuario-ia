@@ -205,7 +205,7 @@ export default function CardAgendarRetorno({ pacienteId, pacienteNome, medicoId,
       <Input value={motivo} onChange={e => setMotivo(e.target.value)} placeholder="Motivo (ex.: reavaliar pressão)" maxLength={200} aria-label="Motivo do retorno" />
     </div>
 
-    {erroMigration && <div style={{ fontSize: 12, color: T.status.warning }}>Retornos ainda não ativados: rode a migration 0011_retornos.</div>}
+    {erroMigration && <div style={{ fontSize: 12, color: T.status.warning }}>Os retornos ainda não estão ativos na sua conta. Fale com o suporte do Clinical 360 para liberar.</div>}
 
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
       <span style={{ flex: '1 1 180px', fontSize: 12.5, color: T.text.quaternary }}>

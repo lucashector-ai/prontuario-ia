@@ -32,7 +32,7 @@ export default function ConfigAtendimento() {
     catch (e: any) { notificar(e.message, 'erro') }
   }
 
-  if (erro?.migration) return <Card><EmptyState icon={MonitorPlay} titulo="Falta ativar o módulo de atendimento" descricao="Rode a migration 0018_atendimento_fila no Supabase (SQL Editor) e volte aqui." /></Card>
+  if (erro?.migration) return <Card><EmptyState icon={MonitorPlay} titulo="O módulo de atendimento ainda não está ativo" descricao="Recepção, fila e painel da TV precisam ser liberados na sua conta. Fale com o suporte do Clinical 360 para liberar." /></Card>
   if (erro) return <Card><EmptyState icon={MonitorPlay} titulo="Não foi possível carregar" descricao={erro.msg} acao={<Button variant="secondary" onClick={recarregar}>Tentar de novo</Button>} /></Card>
   if (!config) return <Card><span className="c360-skel" style={{ display: 'block', height: 120, borderRadius: 12 }} /></Card>
 

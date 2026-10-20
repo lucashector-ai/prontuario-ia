@@ -127,6 +127,8 @@ export default function Dashboard() {
       })()
     } else {
       const medicoData = JSON.parse(m!)
+      // O Início da recepção é a própria Recepção (o Dashboard é dos números do médico)
+      if (medicoData.cargo === 'recepcionista') { router.replace('/recepcao' + (window.location.search.includes('demo=1') ? '?demo=1' : '')); return }
       setMedico(medicoData)
       setMedicos([{ id: medicoData.id, nome: medicoData.nome }])
     }

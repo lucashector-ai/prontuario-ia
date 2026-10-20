@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   if (quando.getTime() < Date.now()) return NextResponse.json({ error: 'Esse horário já passou' }, { status: 400 })
 
   const { data: item, error } = await db.from('lista_espera').select('*').eq('id', b.item_id).maybeSingle()
-  if (error) return NextResponse.json({ error: ehErroDeSchema(error) ? 'Rode a migration 0010.' : error.message }, { status: ehErroDeSchema(error) ? 409 : 500 })
+  if (error) return NextResponse.json({ error: ehErroDeSchema(error) ? 'Este recurso ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.' : error.message }, { status: ehErroDeSchema(error) ? 409 : 500 })
   if (!item) return NextResponse.json({ error: 'Item não encontrado' }, { status: 404 })
 
   let telefone: string | null = item.telefone

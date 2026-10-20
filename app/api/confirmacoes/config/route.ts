@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
   let aviso: string | undefined
   const { data: linha, error } = await db.from('confirmacao_config').select('*').eq('medico_id', medicoId).maybeSingle()
-  if (error && ehErroDeSchema(error)) aviso = 'Rode a migration 0010 para salvar as configurações.'
+  if (error && ehErroDeSchema(error)) aviso = 'Este recurso ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.'
   const config = mesclarConfig(error ? null : linha)
   if (req.nextUrl.searchParams.get('so_config') === '1') return NextResponse.json({ config, aviso })
 
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
       .select('status, data_hora, confirmacao_24h_enviada, confirmacao_24h_status')
       .eq('medico_id', medicoId).gte('data_hora', de).lte('data_hora', ate)
     ags = r2.data || []
-    if (!aviso && ehErroDeSchema(r1.error)) aviso = 'Rode a migration 0010 para ver os lembretes de 48h e 2h.'
+    if (!aviso && ehErroDeSchema(r1.error)) aviso = 'Este recurso ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.'
   } else ags = r1.data || []
 
   const passados = ags.filter(a => new Date(a.data_hora).getTime() <= agora)
@@ -77,7 +77,7 @@ export async function PUT(req: NextRequest) {
   const { data, error } = await db.from('confirmacao_config').upsert(linha, { onConflict: 'medico_id' }).select('*').single()
   if (error) {
     const status = ehErroDeSchema(error) ? 409 : 500
-    return NextResponse.json({ error: ehErroDeSchema(error) ? 'Rode a migration 0010 para salvar as configurações.' : error.message }, { status })
+    return NextResponse.json({ error: ehErroDeSchema(error) ? 'Este recurso ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.' : error.message }, { status })
   }
   return NextResponse.json({ config: mesclarConfig(data) })
 }

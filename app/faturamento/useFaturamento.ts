@@ -22,7 +22,7 @@ import { DEMO_OPERADORAS, DEMO_PRECOS, demoGuias, demoLotes, demoPendentes } fro
 export type Pendente = { consulta_id: string; paciente: string; convenio: string; data: string; carteira?: string | null }
 export type Resultado = { ok: boolean; erros?: Problema[]; guia?: Guia; mensagem?: string }
 
-const faltaMig = (msg: string) => /migration 0012|does not exist|relation|schema cache/i.test(msg)
+const faltaMig = (msg: string) => /ainda não está ativo|migration 0012|does not exist|relation|schema cache/i.test(msg)
 const agoraIso = () => new Date().toISOString()
 
 export function useFaturamento() {

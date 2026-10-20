@@ -7,6 +7,7 @@ import { tokens } from '@/lib/design-tokens'
 import { TelaAcesso } from '@/components/TelaAcesso'
 import { Button } from '@/components/ui'
 import { guardarToken } from '@/lib/sessao'
+import { destinoInicial } from '@/lib/destino'
 
 function VerificarContent() {
   const router = useRouter()
@@ -20,7 +21,7 @@ function VerificarContent() {
 
     if (!token) {
       setStatus('erro')
-      setMensagem('Link inválido — token ausente')
+      setMensagem('Link incompleto. Abra de novo o link do email.')
       return
     }
 
@@ -52,14 +53,7 @@ function VerificarContent() {
         setStatus('ok')
         setMensagem('Email confirmado! Redirecionando...')
 
-        // Clínica admin vai pro painel, médico vai pro onboarding
-        setTimeout(() => {
-          if (data.tipo_conta === 'clinica') {
-            router.push('/admin')
-          } else {
-            router.push('/onboarding')
-          }
-        }, 1200)
+        setTimeout(() => router.push(destinoInicial(data.tipo_conta === 'clinica' ? 'clinica' : 'medico', data.tipo_conta === 'clinica' ? data.admin : data.medico)), 1200)
       })
       .catch(() => {
         setStatus('erro')

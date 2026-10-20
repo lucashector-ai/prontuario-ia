@@ -76,7 +76,7 @@ async function processarJanela(j: Janela): Promise<Contagem> {
     .in('status', ['agendado', 'confirmado'])
     .or(`${j.flag}.is.null,${j.flag}.eq.false`)
   if (error) {
-    if (ehErroDeSchema(error)) return { ...res, erro: 'rode a migration 0010' }
+    if (ehErroDeSchema(error)) return { ...res, erro: 'recurso ainda não ativo nesta conta' }
     log.error('confirmacoes: busca', j.flag, error.message)
     return { ...res, erro: error.message }
   }

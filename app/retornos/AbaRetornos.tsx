@@ -48,7 +48,7 @@ export default function AbaRetornos({ medico, demo }: { medico: MedicoCtx; demo:
     try {
       const r = await fetch(`/api/retornos?medico_id=${medico.id}`)
       const j = await r.json()
-      if (!r.ok) { setAviso(j.falta_migration ? 'Retornos ainda não ativados — rode a migration 0011_retornos no Supabase.' : (j.error || 'Erro ao carregar')); setRetornos([]) }
+      if (!r.ok) { setAviso(j.falta_migration ? 'Os retornos ainda não estão ativos na sua conta. Fale com o suporte do Clinical 360 para liberar.' : (j.error || 'Erro ao carregar')); setRetornos([]) }
       else { setAviso(null); setRetornos(j.retornos || []) }
     } catch { setAviso('Sem conexão. Tente novamente.') }
     setCarregando(false)

@@ -15,7 +15,7 @@ export const faltaMigration = (erro: any) =>
 /** Resposta de erro padronizada; tabela inexistente → 503 com aviso da migration. */
 export function erro(e: any, status = 500) {
   if (faltaMigration(e)) {
-    return NextResponse.json({ error: 'Rode a migration 0012_faturamento_tiss no Supabase.', migration: '0012' }, { status: 503 })
+    return NextResponse.json({ error: 'O faturamento de convênios ainda não está ativo nesta conta. Fale com o suporte do Clinical 360 para liberar.', migration: '0012' }, { status: 503 })
   }
   return NextResponse.json({ error: e?.message || String(e) }, { status })
 }

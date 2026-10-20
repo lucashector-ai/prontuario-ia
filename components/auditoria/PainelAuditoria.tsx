@@ -159,7 +159,7 @@ export default function PainelAuditoria({ clinicaId, medicoId, pacienteId, demo 
       {tabelaAusente && (
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 12, background: T.status.warningBg, color: T.status.warningText, fontSize: 12.5, lineHeight: 1.45 }}>
           <Icon icon={TriangleAlert} size={15} />
-          <span>A tabela de auditoria ainda não existe no banco. Rode a migration <b className="mono">0013_auditoria_acessos.sql</b> para começar a registrar os acessos.</span>
+          <span>O registro de acessos ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.</span>
         </div>
       )}
 

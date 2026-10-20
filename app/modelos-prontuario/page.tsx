@@ -133,7 +133,7 @@ function Conteudo({ demo }: { demo: boolean }) {
       notificar('Modelo salvo (demonstração — nada foi gravado)', 'info')
       return
     }
-    if (!podeGravar) { notificar('Não foi possível salvar: rode a migration 0014', 'erro'); return }
+    if (!podeGravar) { notificar('Não foi possível salvar: os modelos personalizados ainda não estão ativos na sua conta', 'erro'); return }
 
     setSalvando(true)
     const linha = {
@@ -212,7 +212,7 @@ function Conteudo({ demo }: { demo: boolean }) {
       {semTabela && !demo && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 12, background: T.status.warningBg, color: T.status.warning, fontSize: 12.5 }}>
           <Icon icon={Info} size={14} />
-          Modelos personalizados indisponíveis: rode a migration 0014 no Supabase. Os modelos do sistema funcionam normalmente.
+          Os modelos personalizados ainda não estão ativos na sua conta. Os modelos prontos do sistema funcionam normalmente.
         </div>
       )}
 

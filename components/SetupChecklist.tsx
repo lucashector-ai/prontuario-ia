@@ -98,7 +98,7 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
           label: 'Conecte o WhatsApp',
           desc: whatsappConectado ? 'Integração ativa' : 'Configure o WhatsApp Business pra atender pelo chat',
           completo: whatsappConectado,
-          href: '/chat',
+          href: whatsappConectado ? '/chat' : '/minha-clinica?aba=canais',
           ctaLabel: whatsappConectado ? 'Ver conversas' : 'Conectar',
         },
         {
@@ -114,7 +114,7 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
           label: 'Configure a Sofia (IA)',
           desc: sofiaConfigurada ? 'Assistente pronta' : 'Ensine a Sofia a atender como sua clínica',
           completo: sofiaConfigurada,
-          href: '/configuracoes/sofia',
+          href: '/minha-clinica?aba=sofia',
           ctaLabel: sofiaConfigurada ? 'Ajustar' : 'Configurar',
         },
       ]

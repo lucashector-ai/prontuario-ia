@@ -8,6 +8,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase, supabaseAuth } from '@/lib/supabase'
 import { guardarToken } from '@/lib/sessao'
+import { destinoInicial } from '@/lib/destino'
 
 function LoginForm() {
   const router = useRouter()
@@ -61,7 +62,7 @@ function LoginForm() {
         localStorage.setItem('clinica_admin', JSON.stringify(data.admin))
         localStorage.setItem('clinica', JSON.stringify(data.clinica))
         localStorage.removeItem('medico')
-        router.push('/dashboard')
+        router.push(destinoInicial('clinica', data.admin))
         return
       }
 
@@ -71,8 +72,7 @@ function LoginForm() {
         localStorage.removeItem('clinica_admin')
 
         if (data.precisa_trocar_senha) { router.push('/trocar-senha-obrigatoria'); return }
-        if (!data.medico.onboarding_concluido) { router.push('/onboarding') }
-        else { router.push(data.medico.cargo === 'recepcionista' ? '/recepcao' : '/dashboard') }
+        router.push(destinoInicial('medico', data.medico))
         return
       }
 

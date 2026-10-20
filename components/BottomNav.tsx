@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard, Calendar, CirclePlus, Users, Menu, Clock, Video, ScanSearch, Sparkles, MessageCircle,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, X, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
+  ConciergeBell, DoorOpen, HeartPulse, Gauge,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon } from '@/components/ui'
@@ -15,7 +16,7 @@ const T = tokens
 type Item = { href: string; label: string; icon: LucideIcon }
 
 /**
- * Barra inferior flutuante (< 760px): Início, Agenda, Consulta, Pacientes + "Mais"
+ * Barra inferior flutuante (< 760px): 4 atalhos por perfil + "Mais"
  * (folha com o resto do menu). Segue o design v2 — pílula branca com borda e sombra.
  */
 export function BottomNav() {
@@ -39,33 +40,52 @@ export function BottomNav() {
   useEffect(() => { setAtendente(ehAtendente()) }, [])
   const temAcessoAdmin = !!clinicaAdmin || medico?.cargo === 'admin'
 
-  const principais: Item[] = atendente ? [{ href: '/chat', label: 'Chat', icon: MessageCircle }] : [
-    { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
-    { href: '/agenda', label: 'Agenda', icon: Calendar },
-    ...(!isRecepcionista ? [{ href: '/nova-consulta', label: 'Consulta', icon: CirclePlus }] : []),
-    { href: '/pacientes', label: 'Pacientes', icon: Users },
-  ]
+  // Barra por perfil: os 4 lugares do dia a dia de cada um; o resto fica em "Mais"
+  const principais: Item[] = atendente ? [{ href: '/chat', label: 'Chat', icon: MessageCircle }]
+    : isRecepcionista ? [
+      { href: '/recepcao', label: 'Recepção', icon: ConciergeBell },
+      { href: '/agenda', label: 'Agenda', icon: Calendar },
+      { href: '/chat', label: 'Chat', icon: MessageCircle },
+      { href: '/pacientes', label: 'Pacientes', icon: Users },
+    ] : temAcessoAdmin && !!clinicaAdmin ? [
+      { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
+      { href: '/recepcao', label: 'Recepção', icon: ConciergeBell },
+      { href: '/agenda', label: 'Agenda', icon: Calendar },
+      { href: '/pacientes', label: 'Pacientes', icon: Users },
+    ] : [
+      { href: '/consultorio', label: 'Consultório', icon: DoorOpen },
+      { href: '/agenda', label: 'Agenda', icon: Calendar },
+      { href: '/pacientes', label: 'Pacientes', icon: Users },
+      { href: '/nova-consulta', label: 'Consulta', icon: CirclePlus },
+    ]
 
-  const resto: Item[] = atendente ? [] : [
+  const todos: Item[] = atendente ? [] : [
+    { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
+    { href: '/recepcao', label: 'Recepção', icon: ConciergeBell },
+    { href: '/triagem', label: 'Triagem', icon: HeartPulse },
     ...(!isRecepcionista ? [
+      { href: '/consultorio', label: 'Consultório', icon: DoorOpen },
+      { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
       { href: '/historico', label: 'Histórico', icon: Clock },
-      { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
       { href: '/teleconsulta', label: 'Teleconsulta', icon: Video },
       { href: '/exames', label: 'Analisar exames', icon: ScanSearch },
       { href: '/assistente-ia', label: 'Assistente IA', icon: Sparkles },
     ] : []),
     { href: '/chat', label: 'Chat', icon: MessageCircle },
+    { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
+    { href: '/formularios', label: 'Formulários', icon: ClipboardList },
     ...(temAcessoAdmin ? [
+      { href: '/gestao', label: 'Indicadores', icon: Gauge },
       { href: '/minha-clinica', label: 'Minha clínica', icon: Hospital },
-      { href: '/admin', label: 'Painel admin', icon: SlidersHorizontal },
+      { href: '/admin', label: 'Equipe', icon: SlidersHorizontal },
     ] : []),
     ...(!isRecepcionista ? [{ href: '/relatorios', label: 'Relatórios', icon: ChartColumnBig }] : []),
     { href: '/faturamento', label: 'Faturamento', icon: ReceiptText },
-    { href: '/formularios', label: 'Formulários', icon: ClipboardList },
     ...(!isRecepcionista ? [{ href: '/modelos-prontuario', label: 'Modelos', icon: LayoutTemplate }] : []),
-    { href: '/configuracoes/agenda-publica', label: 'Agenda pública', icon: CalendarCheck },
-    { href: '/perfil', label: 'Perfil', icon: UserRound },
+    { href: '/configuracoes/agenda-publica', label: 'Agenda online', icon: CalendarCheck },
+    { href: '/perfil', label: 'Meu perfil', icon: UserRound },
   ]
+  const resto = todos.filter(i => !principais.some(p => p.href === i.href))
 
   const ativo = (href: string) => pathname === href || pathname.startsWith(href + '/')
   const maisAtivo = resto.some(i => ativo(i.href))

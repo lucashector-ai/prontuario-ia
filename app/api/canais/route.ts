@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     config_whatsapp: process.env.NEXT_PUBLIC_META_CONFIG_WHATSAPP || null,
     config_paginas: process.env.NEXT_PUBLIC_META_CONFIG_PAGINAS || null,
     instagram_login: instagramConfigurado(),
-    ...(tabelaAusente ? { aviso: 'Rode a migration 0017_canais_conectados.sql' } : {}),
+    ...(tabelaAusente ? { aviso: 'Este recurso ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.' } : {}),
   })
 }
 

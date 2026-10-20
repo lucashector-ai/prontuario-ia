@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
  *   PATCH  { id, ...campos }
  *   DELETE ?id=…  (remoção lógica: status = 'removido')
  */
-const AVISO_MIGRATION = 'Lista de espera indisponível: rode a migration 0010.'
+const AVISO_MIGRATION = 'Este recurso ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.'
 const TIPOS = ['consulta', 'retorno', 'exame']
 const PERIODOS = ['manha', 'tarde', 'noite', 'qualquer']
 const STATUS = ['aguardando', 'oferecido', 'agendado', 'removido']

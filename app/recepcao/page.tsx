@@ -109,7 +109,7 @@ export default function RecepcaoPage() {
   const semSetores = config && config.setores.length === 0
 
   if (erro?.faltaMigration) {
-    return <div className="c360-pagina"><Card><EmptyState icon={Settings2} titulo="Falta ativar o módulo de atendimento" descricao="Rode a migration 0018_atendimento_fila no Supabase (SQL Editor) e recarregue a página." /></Card></div>
+    return <div className="c360-pagina"><Card><EmptyState icon={Settings2} titulo="O módulo de atendimento ainda não está ativo" descricao="Recepção, fila e painel da TV precisam ser liberados na sua conta. Fale com o suporte do Clinical 360 para liberar." /></Card></div>
   }
 
   return (

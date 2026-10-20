@@ -10,7 +10,7 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   try {
     const { token, tipo } = await req.json()
-    if (!token) return NextResponse.json({ error: 'Token ausente' }, { status: 400 })
+    if (!token) return NextResponse.json({ error: 'Link incompleto. Abra de novo o link do email.' }, { status: 400 })
 
     const tabela = tipo === 'admin' ? 'clinica_admins' : 'medicos'
 
@@ -21,11 +21,11 @@ export async function POST(req: NextRequest) {
       .maybeSingle()
 
     if (error || !data) {
-      return NextResponse.json({ error: 'Token inválido ou já usado' }, { status: 404 })
+      return NextResponse.json({ error: 'Este link já foi usado ou não é válido. Se você já confirmou, é só entrar.' }, { status: 404 })
     }
 
     if (data.token_expira_em && new Date(data.token_expira_em).getTime() < Date.now()) {
-      return NextResponse.json({ error: 'Token expirado. Solicite um novo link.' }, { status: 410 })
+      return NextResponse.json({ error: 'Este link venceu. Entre com seu email e senha para receber outro.' }, { status: 410 })
     }
 
     // Marca como verificado + limpa token (só se ainda não estava)
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
           nome: data.nome,
           role: data.role,
           clinica_id: data.clinica_id,
+          onboarding_concluido: data.onboarding_concluido === true,
         },
         clinica,
         mensagem: 'Email confirmado! Redirecionando...',

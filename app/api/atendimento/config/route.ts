@@ -19,7 +19,7 @@ const EXIBICOES = ['senha', 'senha_nome', 'nome_completo']
 
 function erro(e: any) {
   if (e instanceof ErroAtendimento) return NextResponse.json({ error: e.message }, { status: e.status })
-  if (faltaMigration(e)) return NextResponse.json({ error: 'Rode a migration 0018_atendimento_fila no Supabase', falta_migration: true }, { status: 503 })
+  if (faltaMigration(e)) return NextResponse.json({ error: 'Este recurso ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.', falta_migration: true }, { status: 503 })
   log.error('[atendimento/config]', e?.message || e)
   return NextResponse.json({ error: e?.message || 'Erro inesperado' }, { status: 500 })
 }
