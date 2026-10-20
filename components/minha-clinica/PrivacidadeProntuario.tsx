@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { tokens as T } from '@/lib/design-tokens'
 import { Card, IconTile, Switch } from '@/components/ui'
 import { notificar } from '@/components/ui/dialogos'
+import { avisoDemo, ehDemo } from '@/lib/demo'
 
 export function PrivacidadeProntuario() {
   const [clinicaId, setClinicaId] = useState<string | null>(null)
@@ -18,6 +19,7 @@ export function PrivacidadeProntuario() {
   const [indisponivel, setIndisponivel] = useState(false)
 
   useEffect(() => {
+    if (ehDemo()) { setGestor(true); setValor(false); return } // demonstração: só na tela
     try {
       const ca = JSON.parse(localStorage.getItem('clinica_admin') || 'null')
       const m = JSON.parse(localStorage.getItem('medico') || 'null')
@@ -36,6 +38,7 @@ export function PrivacidadeProntuario() {
   }, [clinicaId])
 
   async function mudar(v: boolean) {
+    if (ehDemo()) { setValor(v); avisoDemo(); return }
     if (!clinicaId) return
     setValor(v)
     const { error } = await supabase.from('clinicas').update({ prontuario_compartilhado: v }).eq('id', clinicaId)

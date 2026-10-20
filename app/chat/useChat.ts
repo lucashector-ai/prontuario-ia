@@ -8,7 +8,7 @@ import { confirmar } from '@/components/ui/dialogos'
 
 import { registrarAcesso } from '@/lib/auditoria'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
-import { ehDemo } from '@/lib/demo'
+import { CLINICA_DEMO, ehDemo, MEDICO_DEMO } from '@/lib/demo'
 /**
  * Estado e ações do Chat omnicanal.
  * Identificação do usuário (mesma regra do antigo /whatsapp-app):
@@ -56,6 +56,20 @@ export function useChat() {
         .from('medicos').select('*').eq('clinica_id', clinicaId).eq('cargo', 'medico').eq('ativo', true)
         .order('criado_em', { ascending: true }).limit(1).maybeSingle()).data
 
+      // Demonstração: médica fictícia e conversas de exemplo, sem sessão e sem banco
+      if (demo) {
+        setClinicaNome(CLINICA_DEMO.nome)
+        setUsuario(MEDICO_DEMO)
+        setMedico(MEDICO_DEMO)
+        setConfig({ medico_id: MEDICO_DEMO.id, ativo: true, demo: true })
+        setAtendentes([{ nome: 'Recepção Ana', ativo: true }, { nome: 'Carla (atendimento)', ativo: true }])
+        setRespostas([
+          { id: 'r1', atalho: 'horarios', texto: 'Atendemos de segunda a sexta, das 8h às 18h, e aos sábados das 8h às 12h.' },
+          { id: 'r2', atalho: 'endereco', texto: 'Estamos na Av. Paulista, 1000 — conj. 52. Há estacionamento conveniado no prédio.' },
+          { id: 'r3', atalho: 'valor', texto: 'A consulta particular custa R$ 350. Aceitamos Pix, cartão e os principais convênios.' },
+        ])
+        return
+      }
       const ca = localStorage.getItem('clinica_admin')
       const c = localStorage.getItem('clinica')
       if (c) try { setClinicaNome(JSON.parse(c).nome || '') } catch {}
@@ -81,15 +95,6 @@ export function useChat() {
       if (!med) { setCarregando(false); return }
       setMedico(med)
       supabase.from('whatsapp_config').select('*').eq('medico_id', med.id).maybeSingle().then(({ data }) => setConfig(data))
-      if (demo) {
-        setAtendentes([{ nome: 'Recepção Ana', ativo: true }, { nome: 'Carla (atendimento)', ativo: true }])
-        setRespostas([
-          { id: 'r1', atalho: 'horarios', texto: 'Atendemos de segunda a sexta, das 8h às 18h, e aos sábados das 8h às 12h.' },
-          { id: 'r2', atalho: 'endereco', texto: 'Estamos na Av. Paulista, 1000 — conj. 52. Há estacionamento conveniado no prédio.' },
-          { id: 'r3', atalho: 'valor', texto: 'A consulta particular custa R$ 350. Aceitamos Pix, cartão e os principais convênios.' },
-        ])
-        return
-      }
       fetch('/api/atendentes?medico_id=' + med.id).then(r => r.json()).then(d => setAtendentes(d.atendentes || [])).catch(() => {})
       supabase.from('chat_respostas_rapidas').select('id, atalho, texto').eq('medico_id', med.id).order('atalho')
         .then(({ data }) => setRespostas(data || []))
@@ -404,7 +409,7 @@ function mensagensDemo(id: string, medicoNome?: string): Mensagem[] {
   ]
   return [
     m(1, 'recebida', 'Oi, boa tarde! Tenho consulta marcada amanhã.', 1500),
-    m(2, 'enviada', 'Olá, Mariana! Sou a *Sofia*, assistente da clínica. Encontrei sua consulta de amanhã às 10h com a Dra. Ana. Posso ajudar em algo?', 1499, { ia: true }),
+    m(2, 'enviada', 'Olá, Mariana! Sou a *Sofia*, assistente da clínica. Encontrei sua consulta de amanhã às 10h com a Dra. Helena Duarte. Posso ajudar em algo?', 1499, { ia: true }),
     m(3, 'recebida', 'Preciso falar com alguém da recepção', 30),
     m(4, 'enviada', 'Conversa transferida para atendimento humano', 29, { sistema: true }),
     m(5, 'enviada', 'Paciente pediu remarcação — verificar agenda de quinta à tarde.', 20, { nota: true, remetente: 'Recepção Ana' }),

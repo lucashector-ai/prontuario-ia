@@ -10,6 +10,19 @@ import {
 import { useToast } from '@/components/Toast'
 import { tokens } from '@/lib/design-tokens'
 import { Badge, Button, Card, Chip, Field, Icon, IconButton, Input, Switch, Textarea } from '@/components/ui'
+import { avisoDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+
+// Demonstração: configuração de exemplo da Sofia (nada é gravado)
+const CONFIG_DEMO = {
+  ativa: true, autonomia: 'supervisionado', duracao_consulta_padrao: 30, lembrete_teleconsulta_min: 10,
+  horario_funcionamento: { seg: '07:00-19:00', ter: '07:00-19:00', qua: '07:00-19:00', qui: '07:00-19:00', sex: '07:00-19:00', sab: '08:00-12:00', dom: null },
+  pre_atendimento_ativo: true, pre_atendimento_automatico: false, pre_atendimento_prompt_extra: 'Pergunte se o paciente trouxe exames recentes.',
+  preco_consulta: 280, precos_tipos: { 'Consulta cardiológica': 380, 'Eletrocardiograma': 120 },
+  relatorio_diario_ativo: true, relatorio_diario_canais: ['whatsapp'], relatorio_diario_horario: '19:00',
+  relatorio_email: 'helena.duarte@exemplo.com.br', relatorio_whatsapp: '(11) 90000-0000',
+  saudacao: 'Olá! Sou a Sofia, assistente da Clínica Bem Viver. Como posso ajudar?',
+  tipos_consulta_aceitos: ['presencial', 'online'],
+}
 
 const T = tokens
 
@@ -48,6 +61,7 @@ export function Sofia() {
   const horariosAnteriores = useRef<Record<string, string>>({})
 
   useEffect(() => {
+    if (ehDemo()) { setMedico(MEDICO_DEMO); setConfig(CONFIG_DEMO); return }
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
@@ -60,6 +74,7 @@ export function Sofia() {
 
   const salvar = async () => {
     if (!medico || !config) return
+    if (ehDemo()) { avisoDemo(); return }
     setSalvando(true)
     const res = await fetch('/api/sofia/config', {
       method: 'PUT',

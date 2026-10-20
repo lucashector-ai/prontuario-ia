@@ -13,7 +13,8 @@ import { notificar } from '@/components/ui/dialogos'
 import ConversaConsulta from '@/components/ia/ConversaConsulta'
 import { useTranscricao } from '@/lib/transcricao/useTranscricao'
 import { supabase } from '@/lib/supabase'
-import { ehDemo } from '@/lib/atendimento/cliente'
+import { ehDemo } from '@/lib/demo'
+import { FALAS_DEMO, prontuarioDemo, simularTranscricaoDemo } from '@/components/atendimento/prontuarioDemo'
 import { ChaveAoVivo } from '@/components/atendimento/ChaveAoVivo'
 import { lerAoVivo } from '@/lib/transcricao/aoVivo'
 import { ConsentimentoGravacao, camposConsentimento } from '@/components/atendimento/ConsentimentoGravacao'
@@ -51,18 +52,28 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
   const { gravando, gravandoPausado, iniciarGravacao, pararGravacao, pausarGravacao, limpar, erro, fase, parcial, nivel, vozBaixa, conexao } =
     useTranscricao(aoTexto, { medicoId })
 
+  // Demonstração: não usa o microfone — uma conversa de exemplo "aparece" aos poucos
+  const pararSimulacao = useRef<(() => void) | null>(null)
+  useEffect(() => () => pararSimulacao.current?.(), [])
+
   useEffect(() => {
-    if (estado !== 'gravando' || !gravando || gravandoPausado) return
+    if (estado !== 'gravando' || (!gravando && !ehDemo()) || gravandoPausado) return
     const t = setInterval(() => setSegundos(s => s + 1), 1000)
     return () => clearInterval(t)
   }, [estado, gravando, gravandoPausado])
 
   const iniciar = async () => {
     limpar(); setTranscricao(''); setProntuario(null); setConsultaId(null); setSegundos(0); setErroMsg(''); setEstado('gravando')
+    if (ehDemo()) { pararSimulacao.current?.(); pararSimulacao.current = simularTranscricaoDemo(setTranscricao); return }
     await iniciarGravacao()
   }
 
   const parar = async () => {
+    if (ehDemo()) {
+      pararSimulacao.current?.(); pararSimulacao.current = null
+      const texto = transcricao.trim().length > 10 ? transcricao : FALAS_DEMO.join('\n')
+      setTranscricao(texto); gerar(texto); return
+    }
     const final = await pararGravacao()
     if (final && final.trim().length > 10) gerar(final)
     else { setEstado('idle'); notificar('Não deu para ouvir a consulta. Tente de novo mais perto do microfone.', 'erro') }
@@ -73,8 +84,9 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
     try {
       if (ehDemo()) {
         await new Promise(r => setTimeout(r, 1200))
-        const p = { subjetivo: 'Paciente relata ' + texto.slice(0, 160), objetivo: 'PA 130x85 mmHg. Bom estado geral.', avaliacao: 'Quadro estável.', plano: 'Manter conduta. Retorno em 30 dias.', cids: [{ codigo: 'I10', descricao: 'Hipertensão essencial' }] }
-        setProntuario(p); setConsultaId('demo-consulta'); setEstado('pronto'); return
+        // Prontuário fictício que segue o assunto da conversa (nada vai para a IA nem para o banco)
+        setProntuario(prontuarioDemo(texto)); setConsultaId('demo-consulta'); setEstado('pronto'); setEditado(false)
+        notificar('Prontuário de exemplo gerado · demonstração, nada foi gravado', 'info'); return
       }
       const r = await fetch('/api/estruturar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ transcricao: texto, origem: digitado ? 'digitado' : 'gravado', ao_vivo: !digitado && lerAoVivo() }) })
       const d = await r.json()
@@ -85,6 +97,7 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
   }
 
   const salvarNovo = async (p: Prontuario, texto: string) => {
+    if (ehDemo()) { setConsultaId('demo-consulta'); notificar('Demonstração: nada foi gravado.', 'info'); return }
     const r = await fetch('/api/consultas', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ medico_id: medicoId, transcricao: texto, paciente_id: paciente.id, ...p, ...camposConsentimento(gravou && autorizou) }),
@@ -100,14 +113,14 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
     if (t.length < 5) return
     const p: Prontuario = { subjetivo: t, objetivo: '', avaliacao: '', plano: '', cids: [] } as any
     setTranscricao(t); setProntuario(p); setEstado('pronto'); setEditado(false); setErroMsg('')
-    if (ehDemo()) { setConsultaId('demo-consulta'); notificar('Prontuário salvo (demonstração)'); return }
+    if (ehDemo()) { setConsultaId('demo-consulta'); notificar('Demonstração: nada foi gravado.', 'info'); return }
     await salvarNovo(p, t)
   }
 
   const salvarEdicao = async () => {
     if (!prontuario) return
     if (!consultaId) { await salvarNovo(prontuario, transcricao); setEditado(false); return }
-    if (ehDemo()) { setEditado(false); notificar('Alterações salvas'); return }
+    if (ehDemo()) { setEditado(false); notificar('Demonstração: nada foi gravado.', 'info'); return }
     const { error } = await supabase.from('consultas')
       .update({ subjetivo: prontuario.subjetivo, objetivo: prontuario.objetivo, avaliacao: prontuario.avaliacao, plano: prontuario.plano }).eq('id', consultaId)
     if (error) { notificar('Não foi possível salvar as alterações. Confira a conexão e tente de novo.', 'erro'); return }

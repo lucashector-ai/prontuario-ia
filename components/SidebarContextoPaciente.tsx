@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase'
 import { Pill, TriangleAlert, FileText } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, Modal, Overline } from '@/components/ui'
+import { ehDemo } from '@/lib/demo'
+import { consultasDemo, pacienteDemo } from '@/lib/demo-dados'
 
 const T = tokens
 
@@ -24,6 +26,12 @@ export function SidebarContextoPaciente({ pacienteId, medicoId }: Props) {
     let cancelado = false
     ;(async () => {
       setLoading(true)
+      if (ehDemo()) {
+        // Demonstração: paciente fictício, sem banco
+        const pd = pacienteDemo(pacienteId)
+        setPaciente(pd); setConsultas(pd ? consultasDemo(pd) : []); setLoading(false)
+        return
+      }
       const [{ data: p }, { data: cs }] = await Promise.all([
         supabase.from('pacientes').select('*').eq('id', pacienteId).single(),
         supabase.from('consultas').select('id, criado_em, hipoteses, cids, avaliacao, plano, receita').eq('paciente_id', pacienteId).order('criado_em', { ascending: false }).limit(5),

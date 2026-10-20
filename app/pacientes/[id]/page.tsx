@@ -26,7 +26,10 @@ import { confirmar, notificar } from '@/components/ui/dialogos'
 import { normalizarConvenio } from '@/lib/convenios'
 import { registrarAcesso } from '@/lib/auditoria'
 import AcessosDoPaciente from '@/components/auditoria/AcessosDoPaciente'
+import { avisoDemo, comDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { fichaDemo } from '../demo'
 const T = tokens
+const AVISO_PDF_DEMO = 'Demonstração: o PDF sai das consultas reais.'
 
 type Aba = 'overview' | 'consultas' | 'agendamentos' | 'prontuario' | 'timeline' | 'financeiro'
 
@@ -61,9 +64,12 @@ export default function PacienteDetalhe() {
   const [carregandoPresc, setCarregandoPresc] = useState(false)
   const [memedAberto, setMemedAberto] = useState(false)
   const [medicoLogado, setMedicoLogado] = useState<any>(null)
+  // Modo demonstração: ficha fictícia, nada é lido nem gravado no banco
+  const [demo, setDemo] = useState(false)
 
   useEffect(() => {
     (async () => {
+      if (ehDemo()) { setMedicoLogado(MEDICO_DEMO); return }
       const ca = localStorage.getItem('clinica_admin')
       if (ca) {
         // Logado como admin: pega primeiro médico ativo da clínica pra Memed
@@ -93,6 +99,7 @@ export default function PacienteDetalhe() {
 
   const carregarPrescricoes = async () => {
     if (!paciente?.id) return
+    if (ehDemo()) { setPrescricoes([]); return }
     setCarregandoPresc(true)
     try {
       const r = await fetch('/api/prescricoes?paciente_id=' + paciente.id)
@@ -104,6 +111,7 @@ export default function PacienteDetalhe() {
 
   const carregarComandas = async () => {
     if (!paciente?.id) return
+    if (ehDemo()) { setComandasPaciente([]); return }
     setCarregandoComandas(true)
     try {
       const r = await fetch('/api/comandas?paciente_id=' + paciente.id)
@@ -115,6 +123,7 @@ export default function PacienteDetalhe() {
 
   async function criarNovaComanda() {
     if (!paciente?.id) return
+    if (demo) { avisoDemo(); return }
     try {
       const r = await fetch('/api/comandas', {
         method: 'POST',
@@ -154,6 +163,16 @@ export default function PacienteDetalhe() {
   const [uploadandoFoto, setUploadandoFoto] = useState(false)
 
   useEffect(() => {
+    if (ehDemo()) {
+      setDemo(true)
+      setMedico(MEDICO_DEMO)
+      const f = fichaDemo(id) || fichaDemo('demo-pac-1')!
+      setPaciente(f.paciente); setEditForm(f.paciente)
+      setConsultas(f.consultas); setAgendamentos(f.agendamentos)
+      setMapaMedicos({ [MEDICO_DEMO.id]: { nome: MEDICO_DEMO.nome.replace(/^Dra?\.\s*/, ''), cor: tokens.brand.primary } })
+      setCarregando(false)
+      return
+    }
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
@@ -190,6 +209,7 @@ export default function PacienteDetalhe() {
   }
 
   const salvarPaciente = async () => {
+    if (demo) { setEditForm(paciente); setEditando(false); avisoDemo(); return }
     setSalvando(true)
     const r = await fetch('/api/pacientes/' + id, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(editForm)})
     const d = await r.json()
@@ -213,7 +233,9 @@ export default function PacienteDetalhe() {
     registrarAcesso({ acao: 'exportou', recurso: 'prontuario', recursoId: consultaId, pacienteId: id, detalhes: { formato: 'PDF' } })
 
   const salvarAg = async (e: React.FormEvent) => {
-    e.preventDefault(); setSalvandoAg(true)
+    e.preventDefault()
+    if (demo) { setModalAg(false); avisoDemo('Demonstração: o agendamento não foi criado.'); return }
+    setSalvandoAg(true)
     const r = await fetch('/api/agendamentos', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...agForm,paciente_id:id,medico_id:medico.id,status:'agendado'})})
     const d = await r.json()
     if (d.agendamento) {
@@ -224,12 +246,14 @@ export default function PacienteDetalhe() {
   }
 
   const atualizarAg = async (agId: string, status: string) => {
+    if (demo) { avisoDemo(); return }
     const r = await fetch('/api/agendamentos', {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:agId,status})})
     const d = await r.json()
     if (d.agendamento) setAgendamentos(prev => prev.map(a => a.id===agId ? d.agendamento : a))
   }
 
   const deletarAg = async (agId: string) => {
+    if (demo) { avisoDemo(); return }
     if (!(await confirmar({ titulo: 'Excluir este agendamento?', confirmar: 'Excluir', perigo: true }))) return
     await fetch('/api/agendamentos?id='+agId, {method:'DELETE'})
     setAgendamentos(prev => prev.filter(a => a.id!==agId))
@@ -246,6 +270,7 @@ export default function PacienteDetalhe() {
   const fmtH = (s: string) => new Date(s).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
   const uploadFoto = async (file: File) => {
     if (!file || !paciente) return
+    if (demo) { avisoDemo('Demonstração: a foto não foi enviada.'); return }
     setUploadandoFoto(true)
     const reader = new FileReader()
     reader.onload = async (e) => {
@@ -282,7 +307,7 @@ export default function PacienteDetalhe() {
     p.set('paciente_id', id)
     if (paciente?.nome) p.set('paciente_nome', paciente.nome)
     if (paciente?.telefone) p.set('paciente_tel', paciente.telefone)
-    router.push('/nova-consulta?' + p.toString())
+    router.push(comDemo('/nova-consulta?' + p.toString()))
   }
 
   const agendamentosAtivos = agendamentos.filter(a => a.status !== 'cancelado').length
@@ -309,7 +334,7 @@ export default function PacienteDetalhe() {
         {/* Cabeçalho da ficha */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <Button variant="ghost" size="sm" icon={ArrowLeft} onClick={() => router.push('/pacientes')} style={{ color: T.text.secondary, marginLeft: -8 }}>
+            <Button variant="ghost" size="sm" icon={ArrowLeft} onClick={() => router.push(comDemo('/pacientes'))} style={{ color: T.text.secondary, marginLeft: -8 }}>
               Pacientes
             </Button>
           </div>
@@ -346,10 +371,10 @@ export default function PacienteDetalhe() {
             </div>
 
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              <BotaoMemed onClick={() => setMemedAberto(true)} variant="primary" />
+              <BotaoMemed onClick={() => demo ? avisoDemo('Demonstração: a prescrição Memed abre só na conta real.') : setMemedAberto(true)} variant="primary" />
               <Button variant="secondary" icon={CalendarPlus} onClick={() => setModalAg(true)}>Agendar</Button>
-              <Button variant="secondary" icon={Send} onClick={() => setModalForm(true)}>Enviar formulário</Button>
-              {paciente && <BotaoPortalPaciente paciente={paciente} />}
+              <Button variant="secondary" icon={Send} onClick={() => demo ? avisoDemo('Demonstração: nenhum formulário foi enviado.') : setModalForm(true)}>Enviar formulário</Button>
+              {paciente && <BotaoPortalPaciente paciente={paciente} demo={demo} />}
               <Button variant="primary" icon={Mic} onClick={irNovaConsulta}>Nova consulta</Button>
             </div>
           </div>
@@ -567,7 +592,7 @@ export default function PacienteDetalhe() {
                       variant="primary"
                       icon={Download}
                       title="Baixar PDF"
-                      onClick={() => { auditarPdf(consultaAberta.id); window.open('/api/pdf-prontuario?consulta_id=' + consultaAberta.id + '&medico_id=' + (consultaAberta.medico_id || ''), '_blank') }}
+                      onClick={() => { if (demo) { avisoDemo(AVISO_PDF_DEMO); return } auditarPdf(consultaAberta.id); window.open('/api/pdf-prontuario?consulta_id=' + consultaAberta.id + '&medico_id=' + (consultaAberta.medico_id || ''), '_blank') }}
                     >
                       PDF
                     </Button>
@@ -728,7 +753,7 @@ export default function PacienteDetalhe() {
                 <div style={{ padding: '10px 18px 14px', borderTop: `1px solid ${T.border.muted}`, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <a
                     href={'/api/pdf-prontuario?consulta_id=' + c.id + '&medico_id=' + (c.medico_id || medico?.id)}
-                    onClick={() => auditarPdf(c.id)}
+                    onClick={e => { if (demo) { e.preventDefault(); avisoDemo(AVISO_PDF_DEMO); return } auditarPdf(c.id) }}
                     target="_blank" rel="noreferrer"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 11px', borderRadius: 9, border: `1px solid ${T.border.default}`, background: T.bg.card, color: T.text.strong, fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}
                   >
@@ -781,7 +806,7 @@ export default function PacienteDetalhe() {
                           </div>
                           <a
                             href={'/api/pdf-prontuario?consulta_id=' + c.id + '&medico_id=' + (c.medico_id || medico?.id)}
-                            onClick={() => auditarPdf(c.id)}
+                            onClick={e => { if (demo) { e.preventDefault(); avisoDemo(AVISO_PDF_DEMO); return } auditarPdf(c.id) }}
                             target="_blank" rel="noreferrer"
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: T.brand.primary, fontWeight: 600, textDecoration: 'none' }}
                           >
@@ -879,7 +904,7 @@ export default function PacienteDetalhe() {
                     const cancelada = c.status === 'cancelada'
                     const cor = fechada ? T.status.success : cancelada ? T.status.danger : T.status.warning
                     return (
-                      <LinhaClicavel key={c.id} onClick={() => router.push('/comandas/' + c.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 12, border: `1px solid ${T.border.muted}` }}>
+                      <LinhaClicavel key={c.id} onClick={() => router.push(comDemo('/comandas/' + c.id))} style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 12, border: `1px solid ${T.border.muted}` }}>
                         <IconTile icon={Receipt} color={cor} size={36} radius={10} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 13, fontWeight: 600, color: T.text.primary, margin: '0 0 2px' }}>Comanda <span className="mono" style={{ fontSize: 12 }}>#{c.id.substring(0, 8)}</span></p>

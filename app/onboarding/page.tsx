@@ -16,6 +16,7 @@ import { Button, Field, Input, IconTile, ProgressBar } from '@/components/ui'
 import { primeiroNome } from '@/lib/nome'
 import { CHAVE_PERFIL_CADASTRO, CHAVE_OBJETIVOS, CHAVE_TOUR_PENDENTE } from '@/lib/onboarding'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { avisoDemo, CLINICA_DEMO, comDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
 
 const T = tokens
 type TipoConta = 'clinica' | 'medico'
@@ -89,6 +90,7 @@ export default function OnboardingPage() {
   useEffect(() => { try { setRede(localStorage.getItem('c360-tipo-conta') === 'rede') } catch {} }, [])
   const [pedidoPlano, setPedidoPlano] = useState(false)
   async function pedirPlanoCompleto() {
+    if (ehDemo()) { avisoDemo(); setPedidoPlano(true); return }
     try {
       const t = tokenSessao()
       await fetch('/api/planos/interesse', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) }, body: JSON.stringify({ recurso: 'Equipe com mais pessoas' }) })
@@ -101,6 +103,14 @@ export default function OnboardingPage() {
   const [formClinica, setFormClinica] = useState({ nome: '', telefone: '', endereco: '' })
 
   useEffect(() => {
+    // Demonstração: mostra o primeiro acesso de uma clínica fictícia (nada é gravado)
+    if (ehDemo()) {
+      setUsuario({ ...MEDICO_DEMO, onboarding_concluido: false })
+      setTipo('clinica')
+      setFormMedico({ nome: MEDICO_DEMO.nome, crm: MEDICO_DEMO.crm, especialidade: MEDICO_DEMO.especialidade })
+      setFormClinica({ nome: CLINICA_DEMO.nome, telefone: '(11) 3000-0000', endereco: 'Av. Exemplo, 1000 — São Paulo, SP' })
+      return
+    }
     const ca = localStorage.getItem('clinica_admin')
     const m = localStorage.getItem('medico')
     const dados = ca ? JSON.parse(ca) : (m ? JSON.parse(m) : null)
@@ -148,6 +158,7 @@ export default function OnboardingPage() {
     if (!usuario || tipo !== 'medico') return false
     if (!formMedico.nome.trim()) { setErro('Preencha seu nome para continuar.'); return false }
     if (!recepcao && !formMedico.crm.trim()) { setErro('Preencha o CRM — ele sai nos prontuários e receitas.'); return false }
+    if (ehDemo()) return true // demonstração: segue sem gravar
     setSalvando(true); setErro('')
     try {
       const updates = recepcao
@@ -170,6 +181,7 @@ export default function OnboardingPage() {
   async function salvarClinica(): Promise<boolean> {
     if (!usuario || tipo !== 'clinica') return false
     if (!formClinica.nome.trim()) { setErro(perfil === 'autonomo' ? 'Dê um nome ao consultório.' : 'O nome da clínica é obrigatório.'); return false }
+    if (ehDemo()) return true // demonstração: segue sem gravar
     if (!usuario.clinica_id) { setErro('Conta sem clínica vinculada. Fale com o suporte.'); return false }
     setSalvando(true); setErro('')
     try {
@@ -191,6 +203,13 @@ export default function OnboardingPage() {
 
   async function concluir({ tour, destino }: { tour: boolean; destino?: string }) {
     if (!usuario || !tipo) return
+    if (ehDemo()) {
+      // Nada é gravado (nem no navegador): volta ao Início do demo, com o tour se pedido
+      avisoDemo()
+      const alvo = destino ?? '/dashboard'
+      router.replace(comDemo(tour ? alvo + (alvo.includes('?') ? '&' : '?') + 'tour=1' : alvo))
+      return
+    }
     setSalvando(true)
     try {
       const tabela = tipo === 'medico' ? 'medicos' : 'clinica_admins'

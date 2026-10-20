@@ -73,10 +73,10 @@ function carregarSdkMeta(appId: string): Promise<void> {
 
 const DEMO: Estado = {
   configurado: true, app_id: 'demo', config_whatsapp: 'demo', config_paginas: null, instagram_login: true,
-  medicos: [{ id: 'm1', nome: 'Dra. Helena Prado' }, { id: 'm2', nome: 'Dr. Rafael Montenegro' }],
+  medicos: [{ id: 'demo-medico', nome: 'Dra. Helena Duarte' }, { id: 'demo-medico-2', nome: 'Dr. Marcos Vieira' }],
   canais: [
-    { id: 'c1', canal: 'whatsapp', conta_id: '1', nome: '+55 11 98765-4321', foto_url: null, status: 'ativo', erro: null, conectado_em: new Date(Date.now() - 12 * 864e5).toISOString(), medico_id: 'm1' },
-    { id: 'c2', canal: 'instagram', conta_id: '2', nome: '@clinicabemviver', foto_url: null, status: 'ativo', erro: null, conectado_em: new Date(Date.now() - 3 * 864e5).toISOString(), medico_id: 'm1' },
+    { id: 'c1', canal: 'whatsapp', conta_id: '1', nome: '+55 11 98765-4321', foto_url: null, status: 'ativo', erro: null, conectado_em: new Date(Date.now() - 12 * 864e5).toISOString(), medico_id: 'demo-medico' },
+    { id: 'c2', canal: 'instagram', conta_id: '2', nome: '@clinicabemviver', foto_url: null, status: 'ativo', erro: null, conectado_em: new Date(Date.now() - 3 * 864e5).toISOString(), medico_id: 'demo-medico' },
   ],
 }
 
@@ -90,7 +90,7 @@ export default function ConectarCanais() {
   const [paginas, setPaginas] = useState<{ token: string; lista: Pagina[]; foco: Canal } | null>(null)
 
   const carregar = useCallback(async () => {
-    if (demo) { setEstado(DEMO); setMedicoId('m1'); return }
+    if (demo) { setEstado(DEMO); setMedicoId('demo-medico'); return }
     try {
       const r = await fetch('/api/canais')
       const j = await r.json()
@@ -181,7 +181,7 @@ export default function ConectarCanais() {
     if (demo) {
       setPaginas({ token: 'demo', foco, lista: [
         { id: 'p1', nome: 'Clínica Bem Viver', foto: null, instagram: { id: 'i1', username: 'clinicabemviver', foto: null } },
-        { id: 'p2', nome: 'Dra. Helena Prado — Cardiologia', foto: null, instagram: null },
+        { id: 'p2', nome: 'Dra. Helena Duarte — Clínica médica', foto: null, instagram: null },
       ] })
       return
     }

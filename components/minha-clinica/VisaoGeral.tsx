@@ -5,6 +5,8 @@ import { Check, ImageIcon, Users, UserRound, CalendarDays, Loader2 } from 'lucid
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
 import { Avatar, Button, Card, Field, Icon, IconTile, Input, Textarea, Badge } from '@/components/ui'
+import { avisoDemo, comDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { CLINICA_DEMO_COMPLETA, EQUIPE_DEMO, PACIENTES_TOTAL_DEMO } from './demo'
 
 const T = tokens
 
@@ -36,6 +38,16 @@ export function VisaoGeral() {
   const logoRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    if (ehDemo()) {
+      // Demonstração: clínica e equipe fictícias
+      const c = CLINICA_DEMO_COMPLETA
+      setMedico(MEDICO_DEMO); setEhAdmin(true); setClinica(c)
+      setForm({ nome: c.nome, endereco: c.endereco, telefone: c.telefone, site: c.site, horarios: c.horarios, descricao: c.descricao })
+      const pros = EQUIPE_DEMO.filter(p => p.cargo === 'medico' || p.cargo === 'admin')
+      setStats({ medicos: pros.length, pacientes: PACIENTES_TOTAL_DEMO })
+      setProfissionais(pros)
+      return
+    }
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
@@ -71,9 +83,10 @@ export function VisaoGeral() {
 
   const salvarTudo = async () => {
     if (!clinica || alterados.length === 0) return
-    setSalvando(true); setMsg(null)
     const update: any = {}
     alterados.forEach(k => { update[k] = form[k] })
+    if (ehDemo()) { setClinica({ ...clinica, ...update }); avisoDemo(); return }
+    setSalvando(true); setMsg(null)
     const { error } = await supabase.from('clinicas').update(update).eq('id', clinica.id)
     if (error) {
       setMsg({ tipo: 'erro', texto: error.message })
@@ -94,6 +107,7 @@ export function VisaoGeral() {
   }
 
   const uploadLogo = async (file: File) => {
+    if (ehDemo()) { avisoDemo(); return }
     setUploadandoLogo(true)
     const reader = new FileReader()
     reader.onload = async (e) => {
@@ -227,7 +241,7 @@ export function VisaoGeral() {
           <Card
             titulo="Profissionais"
             acao={ehAdmin ? (
-              <button onClick={() => router.push('/admin')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, color: T.brand.primary }}>
+              <button onClick={() => router.push(comDemo('/admin'))} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, color: T.brand.primary }}>
                 Gerenciar equipe
               </button>
             ) : undefined}

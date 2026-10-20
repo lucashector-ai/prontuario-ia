@@ -7,6 +7,8 @@ import { tokens } from '@/lib/design-tokens'
 import { Avatar, Icon } from '@/components/ui'
 
 import { normalizarConvenio } from '@/lib/convenios'
+import { ehDemo } from '@/lib/demo'
+import { consultasDemo, pacienteDemo } from '@/lib/demo-dados'
 const T = tokens
 
 type Props = {
@@ -37,6 +39,12 @@ export function PacienteBanner({ pacienteId, medicoId, onTrocar, acoes }: Props)
     let cancelado = false
     ;(async () => {
       setLoading(true)
+      if (ehDemo()) {
+        // Demonstração: paciente fictício, sem banco
+        const pd = pacienteDemo(pacienteId)
+        setPaciente(pd); setUltimaConsulta(pd ? consultasDemo(pd)[0] || null : null); setLoading(false)
+        return
+      }
       const [{ data: p }, { data: ultConsultas }] = await Promise.all([
         supabase.from('pacientes').select('*').eq('id', pacienteId).single(),
         supabase.from('consultas').select('criado_em, cids').eq('paciente_id', pacienteId).eq('medico_id', medicoId).order('criado_em', { ascending: false }).limit(1),

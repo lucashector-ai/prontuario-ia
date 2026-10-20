@@ -15,7 +15,8 @@ import { Button, KpiCard, SegmentedControl, Icon, EmptyState } from '@/component
 
 import { corConvenio, normalizarConvenio } from '@/lib/convenios'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
-import { ehDemo } from '@/lib/demo'
+import { avisoDemo, comDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { dadosDashboardDemo, MEDICOS_DEMO } from './demo'
 const T = tokens
 type Periodo = 'hoje' | 'semana' | 'mes' | 'ano'
 type Comparacao = 'anterior' | 'ano_passado'
@@ -114,6 +115,8 @@ export default function Dashboard() {
     : 'Visão geral dos seus atendimentos')
 
   useEffect(() => {
+    // Demonstração: médica com acesso de gestora, dois médicos fictícios, nada do banco
+    if (ehDemo()) { setEhAdmin(true); setMedico(MEDICO_DEMO); setMedicos(MEDICOS_DEMO); return }
     const ca = localStorage.getItem('clinica_admin')
     const m = localStorage.getItem('medico')
     if (!ca && !m) { router.push('/login'); return }
@@ -130,7 +133,7 @@ export default function Dashboard() {
     } else {
       const medicoData = JSON.parse(m!)
       // O Início da recepção é a própria Recepção (o Dashboard é dos números do médico)
-      if (ehApoio(medicoData.cargo)) { router.replace((medicoData.cargo === 'enfermagem' ? '/atendimento/triagem' : '/atendimento/recepcao') + (ehDemo() ? '?demo=1' : '')); return }
+      if (ehApoio(medicoData.cargo)) { router.replace(comDemo(medicoData.cargo === 'enfermagem' ? '/atendimento/triagem' : '/atendimento/recepcao')); return }
       setMedico(medicoData)
       setMedicos([{ id: medicoData.id, nome: medicoData.nome }])
     }
@@ -145,6 +148,12 @@ export default function Dashboard() {
     setCarregando(true)
     const r = intervaloDe(periodo, ref)
     const p = intervaloComparacao(periodo, ref, comparacao)
+    if (ehDemo()) {
+      const d = dadosDashboardDemo(r, p, ref.getFullYear())
+      setKpis(d.kpis); setPorMes(d.porMes); setProximos(d.proximos); setCids(d.cids); setConvenios(d.convenios)
+      setCarregando(false)
+      return
+    }
     const agora = new Date()
     const ano = { ini: new Date(ref.getFullYear(), 0, 1), fim: new Date(ref.getFullYear() + 1, 0, 1) }
 
@@ -222,12 +231,14 @@ export default function Dashboard() {
   }
 
   const confirmar = async (id: string) => {
+    if (ehDemo()) { avisoDemo('Demonstração: presença confirmada só nesta tela, nada foi gravado.'); setProximos(prev => prev.map(a => a.id === id ? { ...a, status: 'confirmado' } : a)); return }
     await supabase.from('agendamentos').update({ status: 'confirmado' }).eq('id', id)
     setProximos(prev => prev.map(a => a.id === id ? { ...a, status: 'confirmado' } : a))
   }
 
   const gerarRelatorio = async () => {
     if (!medico) return
+    if (ehDemo()) { avisoDemo('Demonstração: o relatório mensal em PDF é gerado com os dados reais da clínica.'); return }
     setGerandoRelatorio(true)
     try {
       const res = await fetch('/api/relatorio-mensal?medico_id=' + (medicoIds[0] || medico.id))
@@ -327,16 +338,16 @@ export default function Dashboard() {
       <CardConfirmacoesPendentes medicoIds={medicoIds} />
 
       {/* Atendimentos por mês */}
-      <GraficoMeses dados={porMes} ano={ref.getFullYear()} carregando={carregando} vazio={semDados} onAgendar={() => router.push('/agenda?novo=1')} />
+      <GraficoMeses dados={porMes} ano={ref.getFullYear()} carregando={carregando} vazio={semDados} onAgendar={() => router.push(comDemo('/agenda?novo=1'))} />
 
       {/* Linha inferior */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 14 }}>
         <ProximosAgendamentos
           itens={proximos} carregando={carregando} nomeMedico={ehAdmin ? nomeMedico : undefined}
-          onVerTodos={() => router.push('/agenda')}
-          onAbrir={id => router.push('/agenda?ag=' + id)}
+          onVerTodos={() => router.push(comDemo('/agenda'))}
+          onAbrir={id => router.push(comDemo('/agenda?ag=' + id))}
           onConfirmar={confirmar}
-          onAgendar={() => router.push('/agenda?novo=1')}
+          onAgendar={() => router.push(comDemo('/agenda?novo=1'))}
         />
         <CidsFrequentes itens={cids} carregando={carregando} />
         <Convenios itens={convenios} carregando={carregando} />

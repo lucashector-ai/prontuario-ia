@@ -44,7 +44,7 @@ export function ConfiguracaoConfirmacoes() {
   useEffect(() => {
     (async () => {
       if (demo) {
-        setMedicos([{ id: 'demo', nome: 'Dra. Helena Prado' }]); setMedicoId('demo'); setClinicaNome('Clínica Bem Viver')
+        setMedicos([{ id: 'demo-medico', nome: 'Dra. Helena Duarte' }, { id: 'demo-medico-2', nome: 'Dr. Marcos Vieira' }]); setMedicoId('demo-medico'); setClinicaNome('Clínica Bem Viver')
         return
       }
       const ca = localStorage.getItem('clinica_admin')
@@ -94,7 +94,7 @@ export function ConfiguracaoConfirmacoes() {
 
   const alterado = JSON.stringify(config) !== JSON.stringify(salvo)
   const chaveModelo = `modelo_${tipo}` as const
-  const medicoNome = medicos.find(m => m.id === medicoId)?.nome || 'Dra. Helena Prado'
+  const medicoNome = medicos.find(m => m.id === medicoId)?.nome || 'Dra. Helena Duarte'
 
   const salvar = async () => {
     if (demo) { setSalvo(config); notificar('Modo demonstração: nada foi gravado', 'info'); return }
