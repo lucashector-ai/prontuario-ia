@@ -20,6 +20,7 @@ import {
   Field, Input, Select, Textarea, type BadgeTone,
 } from '@/components/ui'
 import { usePageHeader } from '@/components/shell/header-context'
+import { BotaoPortalPaciente } from '@/components/BotaoPortalPaciente'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 
 import { normalizarConvenio } from '@/lib/convenios'
@@ -348,6 +349,7 @@ export default function PacienteDetalhe() {
               <BotaoMemed onClick={() => setMemedAberto(true)} variant="primary" />
               <Button variant="secondary" icon={CalendarPlus} onClick={() => setModalAg(true)}>Agendar</Button>
               <Button variant="secondary" icon={Send} onClick={() => setModalForm(true)}>Enviar formulário</Button>
+              {paciente && <BotaoPortalPaciente paciente={paciente} />}
               <Button variant="primary" icon={Mic} onClick={irNovaConsulta}>Nova consulta</Button>
             </div>
           </div>

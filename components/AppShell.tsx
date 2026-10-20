@@ -19,7 +19,7 @@ import { sairDaConta } from '@/lib/sessao'
 import { tokens } from '@/lib/design-tokens'
 
 const ROTAS_PUBLICAS = ['/login', '/login-atendente', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/privacidade', '/termos', '/sobre', '/contato', '/dev-login']
-const PREFIXOS_PUBLICOS = ['/convite/', '/sala/', '/painel/', '/totem/', '/pre-consulta/', '/paciente-publico/', '/agenda/', '/formulario/']
+const PREFIXOS_PUBLICOS = ['/p/', '/convite/', '/sala/', '/painel/', '/totem/', '/pre-consulta/', '/paciente-publico/', '/agenda/', '/formulario/']
 
 type Layout = 'desktop' | 'rail' | 'mobile'
 

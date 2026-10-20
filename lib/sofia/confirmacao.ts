@@ -159,7 +159,7 @@ export async function dispararLembretes2h(medicoId: string, cfg?: ConfirmacaoCon
 }
 
 /** Preenche confirmado_em / confirmado_via (melhor esforço — não quebra sem a migration 0010). */
-export async function marcarConfirmadoVia(agendamentoId: string, via: 'whatsapp' | 'manual' = 'whatsapp') {
+export async function marcarConfirmadoVia(agendamentoId: string, via: 'whatsapp' | 'manual' | 'portal' = 'whatsapp') {
   try {
     await supabase.from('agendamentos')
       .update({ confirmado_em: new Date().toISOString(), confirmado_via: via, status: 'confirmado' })

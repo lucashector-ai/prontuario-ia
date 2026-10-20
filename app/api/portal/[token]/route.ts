@@ -1,0 +1,41 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { log } from '@/lib/logger'
+import { ErroAtendimento } from '@/lib/atendimento/servidor'
+import { checkinPeloPortal, confirmarPeloPortal, dadosDoPortal, remarcarPeloPortal, validarToken } from '@/lib/portal/servidor'
+
+/**
+ * Portal do paciente (público, protegido pelo token do link).
+ *   GET                                         → clínica, próxima consulta, formulários e retorno
+ *   POST { acao: 'confirmar', agendamento_id }
+ *   POST { acao: 'remarcar', agendamento_id, preferencia? }
+ *   POST { acao: 'checkin', agendamento_id }    → { senha, na_frente }
+ */
+export const dynamic = 'force-dynamic'
+
+const invalido = () => NextResponse.json({ erro: 'Este link não vale mais.', invalido: true }, { status: 404 })
+const falha = (e: any) => {
+  if (e instanceof ErroAtendimento) return NextResponse.json({ erro: e.message }, { status: e.status || 400 })
+  log.error('[portal]', e)
+  return NextResponse.json({ erro: 'Não conseguimos concluir agora. Tente de novo.' }, { status: 500 })
+}
+
+export async function GET(_req: NextRequest, { params }: { params: { token: string } }) {
+  try {
+    const t = await validarToken(params.token)
+    if (!t) return invalido()
+    return NextResponse.json(await dadosDoPortal(t), { headers: { 'Cache-Control': 'no-store' } })
+  } catch (e) { return falha(e) }
+}
+
+export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
+  try {
+    const t = await validarToken(params.token)
+    if (!t) return invalido()
+    const b = await req.json().catch(() => ({}))
+    const ag = String(b.agendamento_id || '')
+    if (b.acao === 'confirmar') return NextResponse.json(await confirmarPeloPortal(t, ag))
+    if (b.acao === 'remarcar') return NextResponse.json(await remarcarPeloPortal(t, ag, String(b.preferencia || '')))
+    if (b.acao === 'checkin') return NextResponse.json(await checkinPeloPortal(t, ag))
+    return NextResponse.json({ erro: 'Ação inválida.' }, { status: 400 })
+  } catch (e) { return falha(e) }
+}

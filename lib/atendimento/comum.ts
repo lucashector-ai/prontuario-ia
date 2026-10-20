@@ -17,7 +17,7 @@ export type Consultorio = { id: string; setor_id: string; nome: string; ordem: n
 export type Atendimento = {
   id: string; clinica_id: string; medico_id: string; paciente_id: string | null; agendamento_id: string | null
   setor_id: string | null; consultorio_id: string | null; dia: string; senha: string
-  status: StatusAtendimento; prioridade: Prioridade; origem: 'recepcao' | 'whatsapp' | 'totem' | 'encaixe'
+  status: StatusAtendimento; prioridade: Prioridade; origem: 'recepcao' | 'whatsapp' | 'totem' | 'encaixe' | 'portal'
   horario_previsto: string | null; chegada_em: string; chamado_em: string | null; chamadas: number
   inicio_em: string | null; fim_em: string | null; observacao: string | null; risco?: Risco | null
   paciente?: { id: string; nome: string; telefone: string | null; data_nascimento: string | null } | null
