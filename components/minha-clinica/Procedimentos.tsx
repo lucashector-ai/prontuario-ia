@@ -6,6 +6,7 @@ import { Plus, Stethoscope, Pencil, Power, RotateCcw, Check, Clock } from 'lucid
 import { tokens } from '@/lib/design-tokens'
 import { Badge, Button, Card, EmptyState, Field, Icon, IconButton, IconTile, Input, Modal, ModalAcoes, Overline, Select } from '@/components/ui'
 import { TIPOS_SALA } from '@/components/minha-clinica/SalasEquipamentos'
+import { InsumosDoProcedimento } from '@/components/minha-clinica/InsumosDoProcedimento'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { avisoDemo, ehDemo } from '@/lib/demo'
 import { PROCEDIMENTOS_DEMO } from './demo'
@@ -254,6 +255,8 @@ export function Procedimentos() {
                 <Input value={form.equipamentos_tipos} onChange={e => setForm(f => ({ ...f, equipamentos_tipos: e.target.value }))} placeholder="Nenhum" />
               </Field>
             </div>
+
+            {editando?.id && !ehDemo() && <InsumosDoProcedimento procedimentoId={editando.id} />}
 
             {(() => {
               const v = parseFloat(form.valor) || 0

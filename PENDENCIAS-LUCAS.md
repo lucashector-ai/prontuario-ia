@@ -7,7 +7,7 @@
 Lista viva: o Claude vai acrescentando à medida que o trabalho avança. Risque o que já fez.
 
 ## Banco de dados (Supabase → SQL Editor, rodar na ordem)
-_Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 vínculos). 0025 (recurso de glosa), 0026 (portal do paciente), 0027 (créditos), 0028 (consentimento de gravação) , 0029 (arquivos do portal) , 0030 (orçamentos) e 0031 (salas e equipamentos) aplicadas pelo Claude em 20/10._
+_Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 vínculos). 0025 (recurso de glosa), 0026 (portal do paciente), 0027 (créditos), 0028 (consentimento de gravação) , 0029 (arquivos do portal) , 0030 (orçamentos) , 0031 (salas e equipamentos) e 0032 (estoque) aplicadas pelo Claude em 20/10._
 - [x] `supabase/migrations/0021_totem.sql`: conferido em 20/10, ainda não rodou (totem e senhas de balcão)
 - [x] `supabase/migrations/0022_avisos_painel.sql`: conferido em 20/10, ainda não rodou (recados e atraso na TV)
 - [x] `supabase/migrations/0023_prontuario_privado.sql`: prontuário só de quem atendeu. Até rodar, tudo funciona como antes.

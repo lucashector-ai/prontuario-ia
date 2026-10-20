@@ -178,5 +178,33 @@ export async function POST(req: NextRequest) {
     }
   } catch { /* sem a migration 0025: sem aviso */ }
 
+  // ===== TRIGGER 5: Estoque abaixo do mínimo ou lote vencendo em 7 dias (um aviso por item por dia) =====
+  try {
+    const { data: itens } = await supabase.from('estoque_itens').select('id, nome, unidade, estoque_minimo').eq('clinica_chave', clinica_id).eq('ativo', true)
+    if (itens?.length) {
+      const { data: lotes } = await supabase.from('estoque_lotes').select('item_id, saldo, validade').eq('clinica_chave', clinica_id).gt('saldo', 0)
+      const hoje = agora.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+      const em7 = new Date(agora.getTime() + 7 * 864e5).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+      for (const it of itens as any[]) {
+        const ls = (lotes || []).filter((l: any) => l.item_id === it.id)
+        const saldo = ls.reduce((s: number, l: any) => s + Number(l.saldo), 0)
+        const vencendo = ls.filter((l: any) => l.validade && l.validade <= em7)
+        const problemas = [
+          ...(saldo < Number(it.estoque_minimo) ? [saldo <= 0 ? 'em falta' : `abaixo do mínimo (${saldo} ${it.unidade})`] : []),
+          ...(vencendo.length ? [`lote vence até ${em7.split('-').reverse().join('/')}`] : []),
+        ]
+        if (!problemas.length) continue
+        const link = `/estoque?item=${it.id}&dia=${hoje}`
+        const { data: ja } = await supabase.from('notificacoes_medico').select('id').eq('tipo', 'estoque_alerta').eq('link', link).limit(1).maybeSingle()
+        if (ja) continue
+        await supabase.from('notificacoes_medico').insert({
+          medico_id: medicoIds[0], tipo: 'estoque_alerta', link, lida: false,
+          titulo: `Estoque: ${it.nome}`, descricao: problemas.join(' · '),
+        })
+        criadas++
+      }
+    }
+  } catch { /* sem a migration 0032: sem aviso */ }
+
   return NextResponse.json({ criadas })
 }

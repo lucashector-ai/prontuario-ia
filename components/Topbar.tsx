@@ -32,6 +32,7 @@ const PAGINAS: { label: string; href: string; icon: LucideIcon; so?: 'gestor' | 
   { label: 'Histórico', href: '/historico', icon: Clock, so: 'clinico' },
   { label: 'Retornos e reativação', href: '/retornos', icon: CalendarHeart },
   { label: 'Orçamentos', href: '/orcamentos', icon: Receipt },
+  { label: 'Estoque (insumos, validade, reposição)', href: '/estoque', icon: ClipboardList, so: 'gestor' },
   { label: 'Salas do dia (salas e equipamentos)', href: '/salas', icon: DoorOpen },
   { label: 'Relatórios', href: '/relatorios', icon: ChartColumnBig, so: 'clinico' },
   { label: 'Convênios (faturamento TISS)', href: '/faturamento', icon: ReceiptText },

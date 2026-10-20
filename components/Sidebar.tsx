@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, Sparkles, MessageCircle,
   CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, PanelLeftClose, PanelLeftOpen,
-  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2, Lock, Mic, BookA, Coins, Receipt, Building,
+  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2, Lock, Mic, BookA, Coins, Receipt, Building, Package,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, Avatar } from '@/components/ui'
@@ -94,6 +94,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
       // Indicadores = atendimento do dia (gestor) + relatórios, em abas na mesma tela
       ...(temAcessoAdmin && !gratis ? [{ href: '/gestao', label: 'Indicadores', icon: Gauge }] : naoRecep ? [{ href: '/relatorios', label: 'Meus números', icon: ChartColumnBig }] : []),
       ...(enfermagem ? [] : [{ href: '/faturamento', label: 'Convênios (TISS)', icon: ReceiptText }]),
+      ...(temAcessoAdmin || enfermagem ? [{ href: '/estoque', label: 'Estoque', icon: Package }] : []),
     ] },
     { id: 'config', label: 'Configurações', items: [
       ...(temAcessoAdmin ? [
