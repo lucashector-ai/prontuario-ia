@@ -164,7 +164,7 @@ function gerarSugestoes(d: Indicadores) {
   }
   if ((r.taxaFaltas || 0) >= 10) l.push({ texto: `${r.taxaFaltas}% dos agendados faltaram. A confirmação automática pelo WhatsApp 24h antes costuma reduzir bastante as faltas.`, acao: { label: 'Ver automações', url: '/minha-clinica?aba=automacoes' } })
   if (r.retornosPedidos && r.retornosAgendados / r.retornosPedidos < 0.8) l.push({ texto: `${r.retornosPedidos - r.retornosAgendados} retornos pedidos pelos médicos ainda não foram agendados.`, acao: { label: 'Ver retornos', url: '/retornos' } })
-  if (r.saidasPendentes > 0) l.push({ texto: r.saidasPendentes === 1 ? '1 paciente saiu do consultório com algo para a recepção resolver.' : `${r.saidasPendentes} pacientes saíram do consultório com algo para a recepção resolver.`, acao: { label: 'Abrir recepção', url: '/recepcao' } })
+  if (r.saidasPendentes > 0) l.push({ texto: r.saidasPendentes === 1 ? '1 paciente saiu do consultório com algo para a recepção resolver.' : `${r.saidasPendentes} pacientes saíram do consultório com algo para a recepção resolver.`, acao: { label: 'Abrir recepção', url: '/atendimento/saidas' } })
   return l
 }
 

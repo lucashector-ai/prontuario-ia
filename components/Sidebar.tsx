@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, Sparkles, MessageCircle,
   CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, PanelLeftClose, PanelLeftOpen,
-  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2, Lock,
+  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2, Lock, Mic, BookA,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, Avatar } from '@/components/ui'
@@ -54,6 +54,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
   const temAcessoAdmin = isClinicaAdmin || isMedicoAdmin
 
   const atendente = ehAtendenteLocal
+  const enfermagem = medico?.cargo === 'enfermagem'
   const naoRecep = !isRecepcionista
   // Seções na ordem do dia a dia da clínica. Cada perfil vê só o que pode usar.
   const grupos: { id: string; label: string; items: Item[] }[] = atendente ? [
@@ -64,32 +65,40 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
       { href: '/agenda', label: 'Agenda', icon: Calendar },
     ] },
     { id: 'atendimento', label: 'Atendimento', items: [
-      { href: '/atendimento', label: 'Central', icon: ConciergeBell },
-      { href: '/chat', label: 'Chat', icon: MessageCircle },
+      // Atalho para o posto de cada um; a Central completa fica logo abaixo
+      ...(enfermagem ? [{ href: '/atendimento/triagem', label: 'Triagem', icon: HeartPulse }]
+        : naoRecep && !isClinicaAdmin ? [{ href: '/atendimento/consultorio', label: 'Meu consultório', icon: DoorOpen }] : []),
+      { href: '/atendimento', label: 'Central de atendimento', icon: ConciergeBell },
+      ...(enfermagem ? [] : [{ href: '/chat', label: 'Chat', icon: MessageCircle }]),
     ] },
     { id: 'pacientes', label: 'Pacientes', items: [
       { href: '/pacientes', label: 'Pacientes', icon: Users },
-      { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
-      { href: '/formularios', label: 'Formulários', icon: ClipboardList },
+      ...(enfermagem ? [] : [
+        { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
+        { href: '/formularios', label: 'Formulários', icon: ClipboardList },
+      ]),
     ] },
     { id: 'clinico', label: 'Consulta e IA', items: naoRecep ? [
       { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
       { href: '/teleconsulta', label: 'Teleconsulta', icon: Video },
       { href: '/exames', label: 'Analisar exames', icon: ScanSearch },
-      { href: '/assistente-ia', label: 'Assistente IA', icon: Sparkles },
-      { href: '/modelos-prontuario', label: 'Modelos de prontuário', icon: LayoutTemplate },
+      { href: '/ditado', label: 'Ditado livre', icon: Mic },
     ] : [] },
     { id: 'gestao', label: 'Gestão', items: [
       // Indicadores = atendimento do dia (gestor) + relatórios, em abas na mesma tela
       ...(temAcessoAdmin ? [{ href: '/gestao', label: 'Indicadores', icon: Gauge }] : naoRecep ? [{ href: '/relatorios', label: 'Meus números', icon: ChartColumnBig }] : []),
-      { href: '/faturamento', label: 'Faturamento', icon: ReceiptText },
+      ...(enfermagem ? [] : [{ href: '/faturamento', label: 'Convênios (TISS)', icon: ReceiptText }]),
     ] },
     { id: 'config', label: 'Configurações', items: [
       ...(temAcessoAdmin ? [
         { href: '/minha-clinica', label: 'Minha clínica', icon: Hospital },
         { href: '/admin', label: 'Equipe', icon: SlidersHorizontal },
       ] : []),
-      { href: '/configuracoes/agenda-publica', label: 'Agenda online', icon: CalendarCheck },
+      ...(naoRecep ? [
+        { href: '/modelos-prontuario', label: 'Modelos de prontuário', icon: LayoutTemplate },
+        { href: '/dicionario', label: 'Dicionário da IA', icon: BookA },
+        { href: '/configuracoes/agenda-publica', label: 'Agenda online', icon: CalendarCheck },
+      ] : []),
       { href: '/perfil', label: 'Meu perfil', icon: UserRound },
     ] },
   ]

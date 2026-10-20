@@ -796,7 +796,7 @@ export async function avisarAtraso(ctx: Contexto, p: { medicoId: string; minutos
   if (error) throw error
 
   await db.from('notificacoes_medico').insert({
-    medico_id: medico.id, tipo: 'atraso_medico', lida: false, link: '/recepcao',
+    medico_id: medico.id, tipo: 'atraso_medico', lida: false, link: '/atendimento/recepcao',
     titulo: `${medico.nome} vai atrasar cerca de ${minutos} min`, descricao: 'O recado já está na TV da sala de espera. Avise quem perguntar e ofereça remarcar se preferirem.',
   })
   return { minutos }

@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import {
   Search, Sparkles, Bell, MessageCircle, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate, ChevronDown, CornerDownLeft, UserRound, Compass, Building2, Check, SlidersHorizontal, Hospital, LogOut,
-  LayoutDashboard, Calendar, Users, ConciergeBell, DoorOpen, HeartPulse, Gauge, Clock, CirclePlus, Video, ScanSearch, ClipboardList, CalendarCheck, CalendarClock,
+  LayoutDashboard, Calendar, Users, ConciergeBell, DoorOpen, HeartPulse, Gauge, Clock, CirclePlus, Video, ScanSearch, ClipboardList, CalendarCheck, CalendarClock, Mic, BookA,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
@@ -29,7 +29,7 @@ const PAGINAS: { label: string; href: string; icon: LucideIcon; so?: 'gestor' | 
   { label: 'Histórico', href: '/historico', icon: Clock, so: 'clinico' },
   { label: 'Retornos e reativação', href: '/retornos', icon: CalendarHeart },
   { label: 'Relatórios', href: '/relatorios', icon: ChartColumnBig, so: 'clinico' },
-  { label: 'Faturamento de convênios', href: '/faturamento', icon: ReceiptText },
+  { label: 'Convênios (faturamento TISS)', href: '/faturamento', icon: ReceiptText },
   { label: 'Modelos de prontuário', href: '/modelos-prontuario', icon: LayoutTemplate, so: 'clinico' },
   { label: 'Central de atendimento', href: '/atendimento', icon: ConciergeBell },
   { label: 'Recepção (chegadas e senhas)', href: '/atendimento/recepcao', icon: ConciergeBell },
@@ -40,6 +40,8 @@ const PAGINAS: { label: string; href: string; icon: LucideIcon; so?: 'gestor' | 
   { label: 'Teleconsulta', href: '/teleconsulta', icon: Video, so: 'clinico' },
   { label: 'Analisar exames', href: '/exames', icon: ScanSearch, so: 'clinico' },
   { label: 'Assistente IA', href: '/assistente-ia', icon: Sparkles, so: 'clinico' },
+  { label: 'Ditado livre', href: '/ditado', icon: Mic, so: 'clinico' },
+  { label: 'Dicionário da IA', href: '/dicionario', icon: BookA, so: 'clinico' },
   { label: 'Chat (WhatsApp, Instagram, Messenger)', href: '/chat', icon: MessageCircle },
   { label: 'Minha clínica', href: '/minha-clinica', icon: Hospital, so: 'gestor' },
   { label: 'Equipe', href: '/admin', icon: SlidersHorizontal, so: 'gestor' },

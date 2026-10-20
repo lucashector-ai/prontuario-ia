@@ -23,7 +23,6 @@ const ABAS: { id: Posto | 'mensagens'; label: string; icon: LucideIcon; href: st
   { id: 'recepcao', label: 'Recepção', icon: ConciergeBell, href: '/atendimento/recepcao', perfis: ['gestor', 'recepcao'] },
   { id: 'triagem', label: 'Triagem', icon: HeartPulse, href: '/atendimento/triagem', perfis: ['gestor', 'recepcao', 'enfermagem', 'medico'] },
   { id: 'consultorio', label: 'Consultório', icon: DoorOpen, href: '/atendimento/consultorio', perfis: ['gestor', 'medico'] },
-  { id: 'mensagens', label: 'Mensagens', icon: MessageCircle, href: '/chat', perfis: ['gestor', 'recepcao', 'medico'] },
   { id: 'saidas', label: 'Saídas e retornos', icon: CalendarHeart, href: '/atendimento/saidas', perfis: ['gestor', 'recepcao', 'medico'] },
   { id: 'telas', label: 'TV e totem', icon: MonitorPlay, href: '/atendimento/telas', perfis: ['gestor', 'recepcao'] },
 ]
