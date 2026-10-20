@@ -456,6 +456,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
                 </>
               )}
               <button onClick={() => { setAberto(null); iniciarTour() }} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Compass size={16} strokeWidth={1.6} color={T.text.secondary} />Tour guiado</button>
+              <button onClick={() => ir('/planos')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Sparkles size={16} strokeWidth={1.6} color={T.text.secondary} />Planos</button>
               <div style={{ height: 1, background: T.border.muted, margin: '6px 4px' }} />
               <button onClick={sair} style={{ ...itemMenu, color: T.status.danger }} onMouseEnter={e => e.currentTarget.style.background = T.status.dangerBg} onMouseLeave={hoverOff}><LogOut size={16} strokeWidth={1.6} />Sair</button>
             </div>

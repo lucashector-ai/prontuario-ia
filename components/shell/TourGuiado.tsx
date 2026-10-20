@@ -43,7 +43,6 @@ const PASSOS: Passo[] = [
   { alvo: 'personalizar', opcional: true, lado: 'direita', icon: Settings2, titulo: 'Deixe o menu do seu jeito', texto: 'Toque no nome de uma seção para recolher. Em "Personalizar menu" você esconde o que não usa.' },
   { alvo: 'busca', lado: 'baixo', icon: Search, titulo: 'Busca rápida (⌘K)', texto: 'Ache qualquer paciente por nome, CPF ou telefone — abre a ficha na hora, em qualquer tela. Também leva a qualquer página.' },
   { alvo: 'notificacoes', lado: 'baixo', icon: Bell, titulo: 'Tudo avisa você', texto: 'Chegadas, saídas do consultório, retornos, confirmações e mensagens aparecem aqui e num aviso no canto da tela.' },
-  { alvo: 'checklist', opcional: true, lado: 'direita', icon: ListChecks, titulo: 'Primeiros passos', papeis: ['clinica'], texto: 'Esta lista mostra o que falta configurar. Siga de cima para baixo e a clínica fica pronta para atender.' },
   { alvo: 'conta', lado: 'baixo', icon: UserRound, titulo: 'Sua conta', texto: 'Meu perfil, Minha clínica e sair. Este tour fica aqui também, em "Tour guiado".' },
   { icon: Compass, titulo: 'Por onde começar', texto: 'Sugestões para o primeiro dia:', acoes: true },
 ]

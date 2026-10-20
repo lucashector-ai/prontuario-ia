@@ -63,3 +63,14 @@ export function inicioDoMesSP(agora = new Date()) {
   const [a, m] = agora.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }).split('-')
   return new Date(`${a}-${m}-01T00:00:00-03:00`).toISOString()
 }
+
+/** Planos pagos (mesmos valores da página inicial). A compra hoje vira um pedido para a equipe liberar. */
+export type PlanoPago = { id: 'solo' | 'clinica' | 'pro'; nome: string; para: string; mensal: string; anualMes: string; destaque?: boolean; itens: string[] }
+export const PLANOS_PAGOS: PlanoPago[] = [
+  { id: 'solo', nome: 'Solo', para: 'Para quem atende sozinho', mensal: '297', anualMes: '237',
+    itens: ['Consultas com IA ilimitadas', 'Receitas Memed', 'Agenda e teleconsulta', '200 mensagens de WhatsApp por mês', 'Suporte por email'] },
+  { id: 'clinica', nome: 'Clínica', para: 'De 2 a 10 médicos', mensal: '597', anualMes: '477', destaque: true,
+    itens: ['Até 10 usuários', '1.000 consultas com IA por mês', 'Recepção, fila, triagem e TV', 'Sofia no WhatsApp', 'Faturamento de convênios', 'Suporte pelo WhatsApp'] },
+  { id: 'pro', nome: 'Pro', para: 'Clínicas grandes e redes', mensal: '1.197', anualMes: '957',
+    itens: ['Usuários ilimitados', 'Consultas com IA ilimitadas', 'Análise de exames com IA', 'Várias unidades', '5.000 mensagens de WhatsApp por mês', 'Suporte prioritário'] },
+]

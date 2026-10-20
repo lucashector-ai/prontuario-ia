@@ -11,7 +11,6 @@ import {
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, Avatar } from '@/components/ui'
-import { SetupChecklist } from '@/components/SetupChecklist'
 import { Marca } from '@/components/Marca'
 import { usePlano } from '@/lib/usePlano'
 import { recursoDaRota, recursoLiberado } from '@/lib/planos'
@@ -293,18 +292,6 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
         </div>
         {editando && !rail && <div style={{ padding: '0 10px', fontSize: 11.5, color: T.text.tertiary, lineHeight: 1.4 }}>Toque num item para mostrar ou esconder. A página aberta sempre aparece.</div>}
       </nav>
-
-      {/* Card de configuração: recolhe altura + fade (some no modo recolhido) */}
-      {temAcessoAdmin && (
-        <div style={{
-          display: 'grid', gridTemplateRows: rail ? '0fr' : '1fr', marginTop: rail ? -18 : 0,
-          transition: `grid-template-rows ${DUR} ${EASE}, margin-top ${DUR} ${EASE}`, flexShrink: 0,
-        }}>
-          <div data-tour="checklist" style={{ overflow: 'hidden', minWidth: 180, ...fade(!rail) }}>
-            <SetupChecklist variante="sidebar" />
-          </div>
-        </div>
-      )}
 
       {/* Usuário — avatar fixo; borda/fundo e textos com fade */}
       {usuario && (
