@@ -3,6 +3,7 @@ import { log } from '@/lib/logger'
 
 import { useState, useCallback, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { FILTRO_APOIO } from '@/lib/cargos'
 import {
   Mic, Zap, Pause, Play, Sparkles, AudioLines, CircleCheck, CircleDashed, LoaderCircle, CircleAlert,
   Copy, Download, Check, Plus, FlaskConical, FileBadge, Printer, MessageCircle, RefreshCw, TriangleAlert, Lightbulb, Target,
@@ -170,10 +171,14 @@ export default function Home() {
       if (!m) { router.push('/login'); return }
       const med = JSON.parse(m)
       if (ca_ && med.clinica_id) {
-        const { data: medicos } = await supabase
-          .from('medicos').select('*')
-          .eq('clinica_id', med.clinica_id)
-          .order('criado_em', { ascending: true }).limit(1)
+        // Dono da clínica: a consulta fica no nome do médico indicado no link (agenda/consultório)
+        // ou do primeiro profissional que atende — nunca de recepção/enfermagem
+        const pedido = new URLSearchParams(window.location.search).get('medico_id')
+        let q = supabase.from('medicos').select('*').eq('clinica_id', med.clinica_id).eq('ativo', true).not('cargo', 'in', FILTRO_APOIO)
+        if (pedido) q = q.eq('id', pedido)
+        let { data: medicos } = await q.order('criado_em', { ascending: true }).limit(1)
+        if (pedido && !medicos?.length) ({ data: medicos } = await supabase.from('medicos').select('*').eq('clinica_id', med.clinica_id).eq('ativo', true)
+          .not('cargo', 'in', FILTRO_APOIO).order('criado_em', { ascending: true }).limit(1))
         if (medicos && medicos.length > 0) {
           setMedico(medicos[0])
         } else {

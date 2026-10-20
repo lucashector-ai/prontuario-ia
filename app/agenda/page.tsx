@@ -402,12 +402,15 @@ function AgendaContent() {
     // Se for clinica admin, busca pacientes e agendamentos de TODOS os medicos da clinica
     const ca = localStorage.getItem('clinica_admin')
     let medicoIds: string[] = [medicoId]
+    // Dono e equipe de apoio (recepção/enfermagem) veem a agenda de todos os profissionais da clínica
+    const eu = JSON.parse(ca || localStorage.getItem('medico') || 'null')
+    const clinicaGeral = ca || ehApoio(eu?.cargo) ? eu?.clinica_id : null
 
-    if (ca) {
-      const admin = JSON.parse(ca)
+    if (clinicaGeral) {
+      const admin = { clinica_id: clinicaGeral }
       if (admin.clinica_id) {
         const { data: meds } = await supabase
-          .from('medicos').select('id, cor').eq('clinica_id', admin.clinica_id).eq('cargo', 'medico').eq('ativo', true)
+          .from('medicos').select('id, cor').eq('clinica_id', admin.clinica_id).not('cargo', 'in', FILTRO_APOIO).eq('ativo', true)
         medicoIds = (meds || []).map((m: any) => m.id)
         const mapa: Record<string, string> = {}
         ;(meds || []).forEach((m: any) => { mapa[m.id] = m.cor || tokens.brand.primary })
@@ -712,7 +715,7 @@ function AgendaContent() {
         // Resolução do médico responsável pelo agendamento
         let medicoIdFinal = medico.id
         const ca = localStorage.getItem('clinica_admin')
-        if (ca) {
+        if (ca || ehApoio(medico.cargo)) {
           // Admin da clínica: prioriza médico escolhido no form, senão pega do paciente, senão primeiro ativo
           if (form.medico_id) {
             medicoIdFinal = form.medico_id
@@ -721,7 +724,7 @@ function AgendaContent() {
             if (pac && pac.medico_id) medicoIdFinal = pac.medico_id
           } else {
             const { data: primMed } = await supabase
-              .from('medicos').select('id').eq('clinica_id', medico.clinica_id).eq('cargo', 'medico').eq('ativo', true).order('criado_em').limit(1).maybeSingle()
+              .from('medicos').select('id').eq('clinica_id', medico.clinica_id).not('cargo', 'in', FILTRO_APOIO).eq('ativo', true).order('criado_em').limit(1).maybeSingle()
             if (primMed) medicoIdFinal = primMed.id
           }
         }
@@ -1681,7 +1684,7 @@ function AgendaContent() {
 
   // ── Modal: novo agendamento / editar ──
   const renderFormulario = () => {
-    const ehAdminClinica = typeof window !== 'undefined' && !!localStorage.getItem('clinica_admin')
+    const ehAdminClinica = typeof window !== 'undefined' && (!!localStorage.getItem('clinica_admin') || ehApoio(medico?.cargo))
     const duracoes = [
       { value: '15', label: '15 min' }, { value: '30', label: '30 min' }, { value: '45', label: '45 min' },
       { value: '60', label: '1 hora' }, { value: '90', label: '1h30' },

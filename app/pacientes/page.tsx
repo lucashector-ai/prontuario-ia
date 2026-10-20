@@ -113,7 +113,8 @@ export default function Pacientes() {
     carregarPacientes(med.id)
 
     // Se for clinica admin, carrega lista de medicos da clinica
-    const clinicaIdAdmin = ca_ ? med.clinica_id : null
+    // Dono e equipe de apoio (recepção/enfermagem) trabalham com os pacientes de toda a clínica
+    const clinicaIdAdmin = ca_ || ehApoio(med.cargo) ? med.clinica_id : null
     if (clinicaIdAdmin) {
       setEhClinicaAdmin(true)
       import('@/lib/supabase').then(({ supabase }) => {
@@ -135,15 +136,10 @@ export default function Pacientes() {
     }
   }, [router])
 
-  const carregarPacientes = async (id: string) => {
+  const carregarPacientes = async (_id: string) => {
     setCarregando(true)
-    // Se for clinica admin, busca pacientes de todos medicos da clinica
-    const ca = localStorage.getItem('clinica_admin')
-    let url = '/api/pacientes?medico_id=' + id
-    if (ca) {
-      const admin = JSON.parse(ca)
-      if (admin.clinica_id) url = '/api/pacientes?clinica_id=' + admin.clinica_id
-    }
+    // O servidor decide o escopo pela sessão (clínica inteira ou só o autônomo)
+    const url = '/api/pacientes'
     const res = await fetch(url)
     const data = await res.json()
     setPacientes(data.pacientes || [])
