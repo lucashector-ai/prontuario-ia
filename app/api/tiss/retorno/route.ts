@@ -9,7 +9,9 @@ import { arred2 } from '@/lib/tiss/tipos'
  *     → paga | paga_parcial | glosada (glosado = total − pago)
  *  { guia_id, acao: 'reapresentar' }
  *     → cria NOVA guia (rascunho) com o valor glosado para entrar em outro lote;
- *       a original fica como glosada no histórico. (Recurso de glosa formal TISS não incluso.)
+ *       a original fica como glosada no histórico.
+ *  { guia_id, acao: 'recurso', prazo, justificativa, protocolo? }  → abre/edita o recurso de glosa
+ *  { guia_id, acao: 'recurso_resultado', resultado: aceito|parcial|negado, valor_recuperado? }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +19,35 @@ export async function POST(req: NextRequest) {
     const r = await guiaNoEscopo(b.guia_id || '', escopoDe(b))
     if (r.erro) return erro(r.erro, r.status)
     const g = r.guia
+
+    if (b.acao === 'recurso' || b.acao === 'recurso_resultado') {
+      if (!['glosada', 'paga_parcial'].includes(g.status)) return ruim('Só guias com glosa podem ter recurso.', 409)
+      const atual = g.recurso || null
+      let recurso: any
+      let ev: string
+      if (b.acao === 'recurso') {
+        const prazo = String(b.prazo || '').slice(0, 10)
+        const justificativa = String(b.justificativa || '').trim()
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(prazo)) return ruim('Informe o prazo do recurso.', 422)
+        if (justificativa.length < 10) return ruim('Escreva a justificativa do recurso.', 422)
+        recurso = { ...(atual || {}), status: 'em_recurso', prazo, justificativa: justificativa.slice(0, 2000), protocolo: String(b.protocolo || '').trim().slice(0, 60) || null, aberto_em: atual?.aberto_em || new Date().toISOString(), resolvido_em: null, valor_recuperado: null }
+        ev = atual ? 'Recurso atualizado' : `Recurso aberto (prazo ${prazo.split('-').reverse().join('/')})`
+      } else {
+        if (!atual) return ruim('Abra o recurso antes de registrar o resultado.', 409)
+        const res = b.resultado
+        if (!['aceito', 'parcial', 'negado'].includes(res)) return ruim('Resultado inválido.', 422)
+        const glosado = Number(g.valor_glosado) || 0
+        const rec = res === 'aceito' ? glosado : res === 'negado' ? 0 : numero(b.valor_recuperado)
+        if (rec === null || rec < 0 || rec > glosado + 0.001) return ruim('Informe quanto foi recuperado (até o valor glosado).', 422)
+        recurso = { ...atual, status: res, resolvido_em: new Date().toISOString(), valor_recuperado: arred2(rec) }
+        ev = res === 'negado' ? 'Recurso negado' : `Recurso ${res === 'aceito' ? 'aceito' : 'aceito em parte'}: recuperado ${rec.toFixed(2)}`
+      }
+      const { data, error } = await db.from('guias_tiss').update({
+        recurso, atualizado_em: new Date().toISOString(), historico: [...(g.historico || []), evento('recurso', ev)],
+      }).eq('id', g.id).select().single()
+      if (error) return erro(error)
+      return NextResponse.json({ guia: data })
+    }
 
     if (b.acao === 'reapresentar') {
       if (!['glosada', 'paga_parcial'].includes(g.status)) return ruim('Só guias glosadas podem ser reapresentadas.', 409)

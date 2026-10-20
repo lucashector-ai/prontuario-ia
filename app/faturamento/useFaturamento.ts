@@ -481,11 +481,32 @@ export function useFaturamento() {
     } catch (e: any) { return { ok: false, mensagem: e.message } }
   }, [api, demo, guias])
 
+  /** Abre/edita o recurso de glosa ou registra o resultado. */
+  const salvarRecurso = useCallback(async (g: Guia, corpo: { acao: 'recurso'; prazo: string; justificativa: string; protocolo?: string } | { acao: 'recurso_resultado'; resultado: 'aceito' | 'parcial' | 'negado'; valor_recuperado?: number }): Promise<Resultado> => {
+    if (demo) {
+      const agora = agoraIso()
+      const glosado = Number(g.valor_glosado) || 0
+      const recurso: any = corpo.acao === 'recurso'
+        ? { ...(g.recurso || {}), status: 'em_recurso', prazo: corpo.prazo, justificativa: corpo.justificativa, protocolo: corpo.protocolo || null, aberto_em: g.recurso?.aberto_em || agora, resolvido_em: null, valor_recuperado: null }
+        : { ...g.recurso, status: corpo.resultado, resolvido_em: agora, valor_recuperado: corpo.resultado === 'aceito' ? glosado : corpo.resultado === 'negado' ? 0 : arred2(corpo.valor_recuperado || 0) }
+      const nova: Guia = { ...g, recurso }
+      setGuias(l => l.map(x => x.id === g.id ? nova : x))
+      notificar(corpo.acao === 'recurso' ? 'Recurso salvo (demonstração)' : 'Resultado registrado (demonstração)')
+      return { ok: true, guia: nova }
+    }
+    try {
+      const j = await api('retorno', 'POST', { guia_id: g.id, ...corpo })
+      setGuias(l => l.map(x => x.id === g.id ? j.guia : x))
+      notificar(corpo.acao === 'recurso' ? 'Recurso salvo' : 'Resultado do recurso registrado')
+      return { ok: true, guia: j.guia }
+    } catch (e: any) { return { ok: false, mensagem: e.message } }
+  }, [api, demo])
+
   return {
     demo, escopo, medicos, operadoras, opMap, guias, lotes, precos, pendentes, carregando, semMigration, guiaInicial,
     recarregar: carregar, carregarPrecos, salvarPreco, excluirPreco, importarCsv, salvarOperadora, excluirOperadora,
     novaGuia, salvarGuia, excluirGuia, marcarProntas, gerarDaConsulta, montarLote, exportarXml, marcarEnviado, salvarProtocolo,
-    desfazerLote, registrarRetorno, reapresentar,
+    desfazerLote, registrarRetorno, reapresentar, salvarRecurso,
   }
 }
 

@@ -48,6 +48,17 @@ export type ItemPreco = {
 
 export type HistoricoGuia = { em: string; evento: string; detalhe?: string }
 
+/** Recurso de glosa (coluna guias_tiss.recurso). */
+export type RecursoGlosa = {
+  status: 'em_recurso' | 'aceito' | 'parcial' | 'negado'
+  prazo: string // yyyy-mm-dd
+  justificativa: string
+  protocolo?: string | null
+  aberto_em: string
+  resolvido_em?: string | null
+  valor_recuperado?: number | null
+}
+
 export type Guia = {
   id: string
   operadora_id: string
@@ -75,6 +86,7 @@ export type Guia = {
   valor_glosado?: number | null
   motivo_glosa?: string | null
   retorno_em?: string | null
+  recurso?: RecursoGlosa | null
   historico?: HistoricoGuia[] | null
   lote_id?: string | null
   criado_em?: string
