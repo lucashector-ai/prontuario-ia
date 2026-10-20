@@ -11,7 +11,7 @@
  * ?demo=1 mostra canais de exemplo e não grava nada.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, CircleAlert, LoaderCircle, Plug, ShieldCheck, Unplug, Clock, Info, QrCode } from 'lucide-react'
+import { CheckCircle2, CircleAlert, LoaderCircle, Plug, ShieldCheck, Unplug, Clock, Info, Smartphone } from 'lucide-react'
 import { tokens as T, tint } from '@/lib/design-tokens'
 import { Badge, Button, Card, Checkbox, EmptyState, Icon, Modal, Select } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
@@ -319,7 +319,7 @@ export default function ConectarCanais() {
                   </Button>
                 ) : canal === 'whatsapp' ? (
                   <>
-                    <Button variant={lista.length ? 'secondary' : 'primary'} icon={QrCode} disabled={indisponivel} onClick={() => setGuiaWhatsApp(true)} style={{ width: '100%' }}>
+                    <Button variant={lista.length ? 'secondary' : 'primary'} icon={Smartphone} disabled={indisponivel} onClick={() => setGuiaWhatsApp(true)} style={{ width: '100%' }}>
                       {lista.length ? 'Conectar outro número do celular' : 'Conectar o WhatsApp do celular'}
                     </Button>
                     <button type="button" disabled={indisponivel} onClick={() => conectarWhatsApp('novo')} style={linkSecundario}>
@@ -390,7 +390,7 @@ function GuiaWhatsApp({ onFechar, onContinuar }: { onFechar: () => void; onConti
     <Modal titulo="Conectar o WhatsApp do celular" onClose={onFechar} largura={520} rodape={
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
         <Button variant="secondary" onClick={onFechar}>Agora não</Button>
-        <Button icon={QrCode} onClick={onContinuar}>Continuar na Meta</Button>
+        <Button icon={Smartphone} onClick={onContinuar}>Continuar na Meta</Button>
       </div>
     }>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
