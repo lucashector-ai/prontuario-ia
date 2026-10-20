@@ -18,6 +18,7 @@
 - Agenda online para o paciente marcar sozinho
 - Confirmação automática pelo WhatsApp (48h, 24h e 2h antes)
 - Risco de falta por paciente, com o motivo escrito, e a lista "Confirmar primeiro"
+- Pedidos da agenda online confirmados na própria agenda
 - Procedimentos com duração e valor
 
 ## Central de atendimento
@@ -32,6 +33,7 @@
 
 ## Consulta e prontuário
 - Gravação da consulta com transcrição e prontuário escrito pela IA (SOAP, CID, alertas)
+- Consentimento do paciente registrado antes de gravar (LGPD)
 - Texto ao vivo durante a gravação (opcional)
 - Salvar o prontuário sem a IA
 - Digitar em vez de gravar
@@ -91,10 +93,25 @@
 - Margem por procedimento, DRE e saúde financeira
 - Assistente financeiro com IA
 
+## Portal do paciente (link, sem instalar nada)
+- Próxima consulta: confirmar presença, pedir para remarcar, "Cheguei na clínica" e entrar na teleconsulta
+- Formulários da pré-consulta e envio de exames e documentos (foto ou PDF)
+- Atestados e pedidos de exames liberados pelo médico
+- Orçamentos: ver, escolher a forma de pagamento e aprovar com aceite registrado
+- Link enviado junto com o lembrete da consulta
+
+## Orçamentos
+- Montar com os procedimentos da clínica, desconto, validade e formas de pagamento
+- Enviar pelo WhatsApp com o link do portal
+- Acompanhar: para enviar, aguardando, aprovado para agendar; aviso no sino quando o paciente responde
+
+## Planos e créditos de IA
+- Grátis, Solo, Clínica e Pro com créditos de IA por mês
+- Saldo e uso do mês, pacotes extras e profissional adicional
+
+## Modo demonstração
+- Toda a plataforma com dados de exemplo (?demo=1), sem gravar nada
+
 ## Em preparação
-- Portal do paciente por link (confirmar, check-in, formulários, documentos, retornos)
-- Pré-consulta com envio de arquivos
-- Orçamentos digitais com aceite
 - Salas e equipamentos sem conflito na agenda
 - Estoque com lotes, validade e reposição
-- Créditos de IA por plano
