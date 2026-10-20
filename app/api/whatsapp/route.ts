@@ -8,7 +8,7 @@ import { checkinPeloWhatsApp } from '@/lib/atendimento/servidor'
 import { importarHistorico, sincronizarContatos } from '@/lib/whatsapp/coexistencia'
 import { dispararConfirmacoes24h, detectarRespostaConfirmacao24h, notificarMedico, marcarConfirmadoVia, tratarRespostaListaEspera } from '@/lib/sofia/confirmacao'
 import { createClient } from '@supabase/supabase-js'
-import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, semRaciocinio } from '@/lib/ai/models'
 import { cobrarConversaSofia } from '@/lib/creditos-servidor'
 
 const supabase = createClient(
@@ -390,7 +390,7 @@ async function processarIA(mensagem: string, historico: any[]) {
   }))
   msgs.push({ role: 'user', content: mensagem })
 
-  const res = await anthropic.messages.create({ ...SEM_RACIOCINIO,
+  const res = await anthropic.messages.create({ ...semRaciocinio(MODELOS.apoio),
     model: MODELOS.apoio, max_tokens: 400,
     system: PROMPT_SOFIA, messages: msgs
   })

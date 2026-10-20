@@ -1,7 +1,7 @@
 import { log } from '@/lib/logger'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
-import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, semRaciocinio } from '@/lib/ai/models'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const supabase = createClient(
@@ -71,7 +71,7 @@ A chave deve ser curta e descritiva (ex: "queixa", "tempo", "medicacao", "alergi
 NUNCA inclua comentários, markdown, ou texto fora do JSON.`
 
   try {
-    const res = await anthropic.messages.create({ ...SEM_RACIOCINIO,
+    const res = await anthropic.messages.create({ ...semRaciocinio(MODELOS.apoio),
       model: MODELOS.apoio,
       max_tokens: 800,
       system: systemPrompt,
@@ -116,7 +116,7 @@ export async function avaliarRespostaERedigirFollowup(
     // Resposta claramente insuficiente — pede complemento natural
     const systemPrompt = `Você é uma assistente de clínica conversando no WhatsApp. A pessoa respondeu de forma muito curta ou evasiva a uma pergunta. Reformule a pergunta de forma mais acolhedora, sem parecer insistente. Seja jovem, descontraída, curta e natural. Máximo 1 frase, sem parecer formulário.`
     try {
-      const res = await anthropic.messages.create({ ...SEM_RACIOCINIO,
+      const res = await anthropic.messages.create({ ...semRaciocinio(MODELOS.apoio),
         model: MODELOS.apoio,
         max_tokens: 200,
         system: systemPrompt,

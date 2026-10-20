@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
-import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, semRaciocinio } from '@/lib/ai/models'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,7 +49,7 @@ Dados da semana:
 - Próximos agendamentos: ${relatorio.proximos_agendamentos.length}
 ${relatorio.alertas_pendentes.length > 0 ? '- Alertas: ' + relatorio.alertas_pendentes.map((a: any) => a.pacientes?.nome + ' (' + a.nivel + ')').join(', ') : ''}`
 
-    const res = await anthropic.messages.create({ ...SEM_RACIOCINIO,
+    const res = await anthropic.messages.create({ ...semRaciocinio(MODELOS.rapido),
       model: MODELOS.rapido, max_tokens: 300,
       messages: [{ role: 'user', content: prompt }]
     })
@@ -81,7 +81,7 @@ Mensagens recentes: ${mensagens?.filter((m: any) => m.tipo === 'recebida').slice
 
 Gere: 1) Resumo do estado atual 2) Sinais de alerta (se houver) 3) Recomendacao de acompanhamento. Maximo 150 palavras.`
 
-  const res = await anthropic.messages.create({ ...SEM_RACIOCINIO,
+  const res = await anthropic.messages.create({ ...semRaciocinio(MODELOS.rapido),
     model: MODELOS.rapido, max_tokens: 250,
     messages: [{ role: 'user', content: prompt }]
   })

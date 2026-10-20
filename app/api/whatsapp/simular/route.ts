@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: MODELOS.apoio,
-        thinking: { type: 'disabled' },
+        thinking: { type: 'between_tools' },
         max_tokens: 1000,
         system: promptSofia,
         messages: [...msgs, { role: 'user', content: texto }]

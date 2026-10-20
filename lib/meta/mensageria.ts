@@ -6,7 +6,7 @@
  * por variável de ambiente continuam funcionando (modo legado), sem misturar clínicas.
  */
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, semRaciocinio } from '@/lib/ai/models'
 import { log } from '@/lib/logger'
 import { supabaseServidor as db } from '@/lib/servidor'
 import { GRAPH_IG, canalPorConta, graph, marcarErroCanal } from '@/lib/meta/graph'
@@ -129,7 +129,7 @@ export async function receberMensagemSocial(p: { canal: CanalSocial; contaId: st
   }, [])
   if (!alternadas.length) return
 
-  const ia = await anthropic.messages.create({ ...SEM_RACIOCINIO, model: MODELOS.apoio, max_tokens: 600, system: SISTEMA[p.canal], messages: alternadas })
+  const ia = await anthropic.messages.create({ ...semRaciocinio(MODELOS.apoio), model: MODELOS.apoio, max_tokens: 600, system: SISTEMA[p.canal], messages: alternadas })
   let resposta = textoDaResposta(ia)
   cobrarConversaSofia(conv.medico_id, conv.id)
   const humano = resposta.includes('[HUMANO]')

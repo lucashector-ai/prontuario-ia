@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 import { contextoDaRequisicao } from "@/lib/acesso"
 import Anthropic from "@anthropic-ai/sdk"
-import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, semRaciocinio } from '@/lib/ai/models'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       return `Consulta ${i + 1} (${data}): Subjetivo: ${c.subjetivo || ""} | Avaliação: ${c.avaliacao || ""} | CIDs: ${(c.cids || []).map((x: any) => x.codigo).join(", ")}`
     }).join("\n")
 
-    const message = await anthropic.messages.create({ ...SEM_RACIOCINIO,
+    const message = await anthropic.messages.create({ ...semRaciocinio(MODELOS.rapido),
       model: MODELOS.rapido,
       max_tokens: 800,
       messages: [{

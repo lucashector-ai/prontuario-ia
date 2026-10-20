@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
-import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, semRaciocinio } from '@/lib/ai/models'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,7 +58,7 @@ Mensagens recentes (30 dias): ${mensagensRecentes.slice(0, 10).join(' | ') || 'n
 Responda APENAS com JSON no formato:
 {"score": 0-100, "nivel": "alto|medio|baixo", "pontos_positivos": ["..."], "pontos_atencao": ["..."], "recomendacao": "..."}`
 
-    const res = await anthropic.messages.create({ ...SEM_RACIOCINIO,
+    const res = await anthropic.messages.create({ ...semRaciocinio(MODELOS.rapido),
       model: MODELOS.rapido, max_tokens: 400,
       messages: [{ role: 'user', content: prompt }]
     })

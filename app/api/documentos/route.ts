@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
-import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, semRaciocinio } from '@/lib/ai/models'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -41,7 +41,7 @@ Retorne APENAS este JSON:
 }`
     }
 
-    const message = await anthropic.messages.create({ ...SEM_RACIOCINIO,
+    const message = await anthropic.messages.create({ ...semRaciocinio(MODELOS.rapido),
       model: MODELOS.rapido,
       max_tokens: 600,
       messages: [{ role: "user", content: prompt }]

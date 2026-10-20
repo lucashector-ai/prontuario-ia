@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: MODELOS.raciocinioClinico,
-        thinking: { type: 'disabled' },
+        thinking: { type: 'between_tools' },
         max_tokens: 2000,
         system: SYSTEM_PROMPT_MEDICO,
         messages,

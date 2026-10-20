@@ -1,7 +1,7 @@
 import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, semRaciocinio } from '@/lib/ai/models'
 import { resolverModelo, ehModeloSoap, type ModeloProntuario, type CampoSoap } from '@/lib/ai/modelos-prontuario'
 import { assinatura, conferirCreditos, debitarCreditos, jaCobrado } from '@/lib/creditos-servidor'
 import { contarPalavras, custoConsulta } from '@/lib/creditos'
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
 
     const prompt = partes.filter(Boolean).join('\n')
 
-    const message = await anthropic.messages.create({ ...SEM_RACIOCINIO,
+    const message = await anthropic.messages.create({ ...semRaciocinio(MODELOS.apoio),
       model: MODELOS.apoio,
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     log.error('Erro Claude:', error)
     const m = mensagemErroIA(error)
-    return NextResponse.json({ error: m.mensagem, codigo: m.codigo, diag: String(error?.message || error).slice(0, 300) }, { status: m.status })
+    return NextResponse.json({ error: m.mensagem, codigo: m.codigo }, { status: m.status })
   }
 }
 
@@ -157,7 +157,7 @@ async function estruturarComModelo(modelo: ModeloProntuario, transcricao: string
     partes.push(preConsulta)
   }
 
-  const message = await anthropic.messages.create({ ...SEM_RACIOCINIO,
+  const message = await anthropic.messages.create({ ...semRaciocinio(MODELOS.apoio),
     model: MODELOS.apoio,
     max_tokens: 3000,
     messages: [{ role: 'user', content: partes.filter(Boolean).join('\n') }],
