@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import {
   AlarmClock, AlertTriangle, BellRing, CalendarPlus, CheckCircle2, ClipboardList, DoorOpen, ExternalLink, History, Megaphone, MessageCircle,
   MonitorPlay, Pill, Play, Settings2, Stethoscope, UserX, Users,
+  CirclePlus,
 } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
 import { usePageHeader } from '@/components/shell/header-context'
@@ -147,6 +148,7 @@ export default function ConsultorioPage() {
           </button>
         )}
         {setor && <Button variant="ghost" icon={MonitorPlay} onClick={() => window.open(`/painel/${setor.painel_token}${demo ? '?demo=1' : ''}`, '_blank')}>Painel da TV</Button>}
+        <Button variant="ghost" icon={CirclePlus} onClick={() => router.push('/nova-consulta' + (demo ? '?demo=1' : ''))} title="Para quem não passou pela recepção (encaixe, retorno rápido, telefone)">Consulta sem senha</Button>
         <span style={{ flex: 1 }} />
         {(() => {
           const atraso = fila?.avisos?.find(a => a.tipo === 'atraso' && a.medico_id === medicoId)

@@ -70,7 +70,6 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
     ] },
     { id: 'pacientes', label: 'Pacientes', items: [
       { href: '/pacientes', label: 'Pacientes', icon: Users },
-      ...(naoRecep ? [{ href: '/historico', label: 'Histórico', icon: Clock }] : []),
       { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
       { href: '/formularios', label: 'Formulários', icon: ClipboardList },
     ] },
@@ -82,9 +81,9 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
       { href: '/modelos-prontuario', label: 'Modelos de prontuário', icon: LayoutTemplate },
     ] : [] },
     { id: 'gestao', label: 'Gestão', items: [
-      ...(temAcessoAdmin ? [{ href: '/gestao', label: 'Indicadores', icon: Gauge }] : []),
-      ...(naoRecep ? [{ href: '/relatorios', label: 'Relatórios', icon: ChartColumnBig }] : []),
-      { href: '/faturamento', label: 'Faturamento TISS', icon: ReceiptText },
+      // Indicadores = atendimento do dia (gestor) + relatórios, em abas na mesma tela
+      ...(temAcessoAdmin ? [{ href: '/gestao', label: 'Indicadores', icon: Gauge }] : naoRecep ? [{ href: '/relatorios', label: 'Meus números', icon: ChartColumnBig }] : []),
+      { href: '/faturamento', label: 'Faturamento', icon: ReceiptText },
     ] },
     { id: 'config', label: 'Configurações', items: [
       ...(temAcessoAdmin ? [
@@ -117,7 +116,9 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
   const alternarSecao = (id: string) => setFechadas(l => { const n = l.includes(id) ? l.filter(x => x !== id) : [...l, id]; salvar('c360-menu-fechadas', n); return n })
   const alternarItem = (href: string) => setOcultos(l => { const n = l.includes(href) ? l.filter(x => x !== href) : [...l, href]; salvar('c360-menu-ocultos', n); return n })
   const restaurar = () => { setOcultos([]); setFechadas([]); salvar('c360-menu-ocultos', []); salvar('c360-menu-fechadas', []) }
-  const estaAtivo = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  // Telas que são abas de outra contam como ativas no item do menu (Histórico → Pacientes; Relatórios → Indicadores)
+  const ALIAS: Record<string, string[]> = { '/pacientes': ['/historico'], '/gestao': ['/relatorios'] }
+  const estaAtivo = (href: string) => [href, ...(ALIAS[href] || [])].some(h => pathname === h || pathname.startsWith(h + '/'))
 
   const usuario = clinicaAdmin || medico
   const sair = () => router.push(sairDaConta())
