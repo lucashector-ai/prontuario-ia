@@ -112,6 +112,16 @@
 ## Modo demonstração
 - Toda a plataforma com dados de exemplo (?demo=1), sem gravar nada
 
-## Em preparação
-- Salas e equipamentos sem conflito na agenda
-- Estoque com lotes, validade e reposição
+## Salas e equipamentos
+- Tipo e local de cada sala, equipamentos fixos ou móveis e sala padrão de cada profissional
+- A agenda escolhe sala e equipamento livres e não deixa dois agendamentos no mesmo recurso
+- Em caso de conflito, mostra quem está usando e os próximos horários livres
+- Manutenção de equipamento com aviso para os agendamentos afetados
+- Salas do dia: linha do tempo por sala e equipamento
+
+## Estoque
+- Insumos com lote, validade e estoque mínimo
+- Entrada como uma nota, saída avulsa, perda e vencido
+- Baixa automática dos insumos quando o procedimento é realizado (lote que vence antes primeiro)
+- Reposição sugerida com o porquê e lista para o fornecedor
+- Inventário que gera os ajustes e aviso no sino de falta e vencimento
