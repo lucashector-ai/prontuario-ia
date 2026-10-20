@@ -55,6 +55,7 @@ export async function dadosDoDocumento(ctx: Contexto, p: { medicoId?: string | n
   }
 }
 
+const telFmt = (t: string | null) => { const d = String(t || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, ''); return d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : (t || '') }
 const cpfFmt = (c: string | null) => { const d = String(c || '').replace(/\D/g, ''); return d.length === 11 ? `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}` : (c || '') }
 const nascFmt = (n: string | null) => n ? new Date(n + 'T12:00:00').toLocaleDateString('pt-BR') : ''
 
@@ -78,7 +79,7 @@ h1{font-size:17px;letter-spacing:.12em;text-transform:uppercase;text-align:cente
 <button class="btn no-print" onclick="window.print()">Imprimir / Salvar PDF</button>
 <div class="cab">
   <div class="clin">${esc(d.clinica.nome || d.medico.nome)}</div>
-  <div class="info">${[d.clinica.endereco, d.clinica.telefone ? 'Tel. ' + d.clinica.telefone : ''].filter(Boolean).map(esc).join(' · ')}</div>
+  <div class="info">${[d.clinica.endereco, d.clinica.telefone ? 'Tel. ' + telFmt(d.clinica.telefone) : ''].filter(Boolean).map(esc).join(' · ')}</div>
 </div>
 <h1>${esc(titulo)}</h1>
 <div class="pac"><b>Paciente:</b> ${esc(d.paciente.nome || '—')}${idPaciente ? ' · ' + idPaciente : ''}</div>
