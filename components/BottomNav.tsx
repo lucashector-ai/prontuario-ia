@@ -6,13 +6,14 @@ import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard, Calendar, CirclePlus, Users, Menu, Clock, Video, ScanSearch, Sparkles, MessageCircle,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, X, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
-  ConciergeBell, DoorOpen, HeartPulse, Gauge,
+  ConciergeBell, DoorOpen, HeartPulse, Gauge, Mic, BookA, Coins,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon } from '@/components/ui'
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { usePlano } from '@/lib/usePlano'
 const T = tokens
 type Item = { href: string; label: string; icon: LucideIcon }
 
@@ -41,9 +42,21 @@ export function BottomNav() {
   useEffect(() => { setAtendente(ehAtendente()) }, [])
   const temAcessoAdmin = !!clinicaAdmin || medico?.cargo === 'admin'
 
-  // Barra por perfil: os 4 lugares do dia a dia de cada um; o resto fica em "Mais"
+  const enfermagem = medico?.cargo === 'enfermagem'
+  const gratis = usePlano() === 'gratis'
+  // Barra por perfil: os 4 lugares do dia a dia de cada um; o resto fica em "Mais" (mesmo menu da lateral)
   const principais: Item[] = atendente ? [{ href: '/chat', label: 'Chat', icon: MessageCircle }]
-    : isRecepcionista ? [
+    : gratis ? [
+      { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
+      { href: '/agenda', label: 'Agenda', icon: Calendar },
+      { href: '/pacientes', label: 'Pacientes', icon: Users },
+      { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
+    ] : enfermagem ? [
+      { href: '/atendimento/triagem', label: 'Triagem', icon: HeartPulse },
+      { href: '/atendimento', label: 'Atendimento', icon: ConciergeBell },
+      { href: '/agenda', label: 'Agenda', icon: Calendar },
+      { href: '/pacientes', label: 'Pacientes', icon: Users },
+    ] : isRecepcionista ? [
       { href: '/atendimento', label: 'Atendimento', icon: ConciergeBell },
       { href: '/agenda', label: 'Agenda', icon: Calendar },
       { href: '/chat', label: 'Chat', icon: MessageCircle },
@@ -60,28 +73,38 @@ export function BottomNav() {
       { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
     ]
 
+  const naoRecep = !isRecepcionista
   const todos: Item[] = atendente ? [] : [
     { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
-    { href: '/atendimento', label: 'Atendimento', icon: ConciergeBell },
-    ...(!isRecepcionista ? [
+    { href: '/agenda', label: 'Agenda', icon: Calendar },
+    ...(enfermagem ? [{ href: '/atendimento/triagem', label: 'Triagem', icon: HeartPulse }]
+      : naoRecep && !clinicaAdmin && !gratis ? [{ href: '/atendimento/consultorio', label: 'Meu consultório', icon: DoorOpen }] : []),
+    { href: '/atendimento', label: 'Central de atendimento', icon: ConciergeBell },
+    ...(enfermagem ? [] : [{ href: '/chat', label: 'Chat', icon: MessageCircle }]),
+    { href: '/pacientes', label: 'Pacientes', icon: Users },
+    ...(enfermagem ? [] : [
+      { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
+      { href: '/formularios', label: 'Formulários', icon: ClipboardList },
+    ]),
+    ...(naoRecep ? [
       { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
-      { href: '/historico', label: 'Histórico', icon: Clock },
       { href: '/teleconsulta', label: 'Teleconsulta', icon: Video },
       { href: '/exames', label: 'Analisar exames', icon: ScanSearch },
+      { href: '/ditado', label: 'Ditado livre', icon: Mic },
       { href: '/assistente-ia', label: 'Assistente IA', icon: Sparkles },
     ] : []),
-    { href: '/chat', label: 'Chat', icon: MessageCircle },
-    { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
-    { href: '/formularios', label: 'Formulários', icon: ClipboardList },
+    ...(temAcessoAdmin && !gratis ? [{ href: '/gestao', label: 'Indicadores', icon: Gauge }] : naoRecep ? [{ href: '/relatorios', label: 'Meus números', icon: ChartColumnBig }] : []),
+    ...(enfermagem ? [] : [{ href: '/faturamento', label: 'Convênios (TISS)', icon: ReceiptText }]),
     ...(temAcessoAdmin ? [
-      { href: '/gestao', label: 'Indicadores', icon: Gauge },
       { href: '/minha-clinica', label: 'Minha clínica', icon: Hospital },
-      { href: '/admin', label: 'Equipe', icon: SlidersHorizontal },
+      ...(gratis ? [] : [{ href: '/admin', label: 'Equipe', icon: SlidersHorizontal }]),
     ] : []),
-    ...(!isRecepcionista ? [{ href: '/relatorios', label: 'Relatórios', icon: ChartColumnBig }] : []),
-    { href: '/faturamento', label: 'Faturamento', icon: ReceiptText },
-    ...(!isRecepcionista ? [{ href: '/modelos-prontuario', label: 'Modelos de prontuário', icon: LayoutTemplate }] : []),
-    { href: '/configuracoes/agenda-publica', label: 'Agenda online', icon: CalendarCheck },
+    ...(naoRecep ? [
+      { href: '/modelos-prontuario', label: 'Modelos de prontuário', icon: LayoutTemplate },
+      { href: '/dicionario', label: 'Dicionário da IA', icon: BookA },
+      { href: '/configuracoes/agenda-publica', label: 'Agenda online', icon: CalendarCheck },
+    ] : []),
+    { href: '/planos', label: 'Planos e créditos', icon: Coins },
     { href: '/perfil', label: 'Meu perfil', icon: UserRound },
   ]
   const resto = todos.filter(i => !principais.some(p => p.href === i.href))

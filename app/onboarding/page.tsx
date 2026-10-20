@@ -55,6 +55,12 @@ const JORNADA_RECEPCAO: Etapa[] = [
   { icon: CalendarHeart, titulo: 'Saída e retorno', quem: 'Médico → Você', texto: 'Quando o médico encerra, você recebe um aviso com o retorno pedido para agendar.' },
 ]
 
+const JORNADA_ENFERMAGEM: Etapa[] = [
+  { icon: ConciergeBell, titulo: 'Chegada', quem: 'Recepção', texto: 'O paciente faz o check-in, ganha senha e entra na fila da triagem.' },
+  { icon: HeartPulse, titulo: 'Triagem', quem: 'Você', texto: 'Chame pela TV, registre os sinais vitais e o risco por cores. Os urgentes passam na frente.' },
+  { icon: Stethoscope, titulo: 'Consultório', quem: 'Médico', texto: 'O médico vê a sua triagem antes de chamar o paciente.' },
+]
+
 const OBJETIVOS: { id: string; icon: LucideIcon; titulo: string; sub: string; soEquipe?: boolean }[] = [
   { id: 'ia', icon: Mic, titulo: 'Prontuário com IA', sub: 'Gravar e escrever menos' },
   { id: 'agenda', icon: CalendarCheck, titulo: 'Agenda e confirmações', sub: 'Menos faltas' },
@@ -68,6 +74,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const [tipo, setTipo] = useState<TipoConta | null>(null)
   const [recepcao, setRecepcao] = useState(false)
+  const [enfermagem, setEnfermagem] = useState(false)
   // Perfil escolhido no cadastro/onboarding — só decide o fluxo e as sugestões (não é a identidade da conta)
   const [perfil, setPerfil] = useState<Perfil | null>(null)
   const [perfilDoCadastro, setPerfilDoCadastro] = useState(false)
@@ -109,6 +116,7 @@ export default function OnboardingPage() {
     setUsuario(dados)
     setTipo(tp)
     setRecepcao(tp === 'medico' && ehApoio(dados.cargo))
+    setEnfermagem(tp === 'medico' && dados.cargo === 'enfermagem')
     setFormMedico({ nome: dados.nome || '', crm: dados.crm || '', especialidade: dados.especialidade || '' })
     try {
       const p = localStorage.getItem(CHAVE_PERFIL_CADASTRO) as Perfil | null
@@ -134,7 +142,7 @@ export default function OnboardingPage() {
   const total = kinds.length
   const progresso = total > 0 ? ((passoIdx + 1) / total) * 100 : 0
   // Autônomo entra como médico-administrador (tipo 'medico'), mas a jornada é a de quem atende sozinho
-  const jornada = perfil === 'autonomo' ? JORNADA_AUTONOMO : tipo === 'medico' ? (recepcao ? JORNADA_RECEPCAO : JORNADA_MEDICO) : JORNADA_CLINICA
+  const jornada = perfil === 'autonomo' ? JORNADA_AUTONOMO : tipo === 'medico' ? (enfermagem ? JORNADA_ENFERMAGEM : recepcao ? JORNADA_RECEPCAO : JORNADA_MEDICO) : JORNADA_CLINICA
 
   async function salvarMedico(): Promise<boolean> {
     if (!usuario || tipo !== 'medico') return false
@@ -194,7 +202,7 @@ export default function OnboardingPage() {
         localStorage.setItem(CHAVE_OBJETIVOS, JSON.stringify(objetivos))
         if (tour) localStorage.setItem(CHAVE_TOUR_PENDENTE, '1')
       } catch {}
-      router.replace(destino ?? (recepcao ? '/atendimento/recepcao' : '/dashboard'))
+      router.replace(destino ?? (enfermagem ? '/atendimento/triagem' : recepcao ? '/atendimento/recepcao' : '/dashboard'))
     } finally {
       setSalvando(false)
     }
@@ -293,7 +301,7 @@ export default function OnboardingPage() {
                 <p style={{ ...descricao, fontSize: 16 }}>
                   {tipo === 'clinica'
                     ? 'Antes de entrar, vamos fazer três coisas rápidas:'
-                    : recepcao ? 'Você vai cuidar da agenda, das chegadas e dos retornos. Antes de entrar:' : 'Antes de abrir seu consultório, três coisas rápidas:'}
+                    : enfermagem ? 'Você vai cuidar da triagem dos pacientes. Antes de entrar:' : recepcao ? 'Você vai cuidar da agenda, das chegadas e dos retornos. Antes de entrar:' : 'Antes de abrir seu consultório, três coisas rápidas:'}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {(tipo === 'clinica' ? [
@@ -302,7 +310,7 @@ export default function OnboardingPage() {
                     { icon: ListChecks, t: 'Escolher por onde começar', s: 'E um tour em balões mostrando cada parte da tela' },
                   ] : [
                     { icon: Stethoscope, t: 'Confirmar seus dados', s: recepcao ? 'Seu nome aparece para a equipe' : 'Nome e CRM saem nos prontuários e receitas' },
-                    { icon: Compass, t: 'Ver como funciona', s: recepcao ? 'Da agenda ao retorno' : 'Do chamado na TV ao prontuário pronto' },
+                    { icon: Compass, t: 'Ver como funciona', s: enfermagem ? 'Da chegada ao consultório' : recepcao ? 'Da agenda ao retorno' : 'Do chamado na TV ao prontuário pronto' },
                     { icon: ListChecks, t: 'Tour guiado', s: 'Balões mostrando cada parte da tela' },
                   ]).map((it, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 14, border: `1px solid ${T.border.default}`, background: '#fff' }}>
@@ -356,7 +364,7 @@ export default function OnboardingPage() {
                 <p style={descricao}>{recepcao ? 'Seu nome aparece nos registros de check-in e agendamento.' : 'Esses dados saem no rodapé de prontuários, receitas Memed e PDFs.'}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <Field label="Nome completo">
-                    <Input style={campo} value={formMedico.nome} onChange={e => setFormMedico({ ...formMedico, nome: e.target.value })} placeholder={recepcao ? 'Ex.: Carla Mendes' : 'Ex.: Dr. João Silva'} />
+                    <Input style={campo} value={formMedico.nome} onChange={e => setFormMedico({ ...formMedico, nome: e.target.value })} placeholder={enfermagem ? 'Ex.: Bruno Lima' : recepcao ? 'Ex.: Carla Mendes' : 'Ex.: Dr. João Silva'} />
                   </Field>
                   {!recepcao && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -394,7 +402,7 @@ export default function OnboardingPage() {
             {kind === 'jornada' && (
               <div>
                 <p style={overline}>Como funciona</p>
-                <h1 style={titulo}>{perfil === 'autonomo' ? 'O caminho do paciente' : tipo === 'medico' ? (recepcao ? 'Seu dia na recepção' : 'Seu dia no consultório') : 'O caminho do paciente'}</h1>
+                <h1 style={titulo}>{perfil === 'autonomo' ? 'O caminho do paciente' : tipo === 'medico' ? (enfermagem ? 'Seu dia na triagem' : recepcao ? 'Seu dia na recepção' : 'Seu dia no consultório') : 'O caminho do paciente'}</h1>
                 <p style={descricao}>Cada etapa avisa a próxima sozinha — ninguém precisa sair da tela para chamar o outro. Toque numa etapa para ver.</p>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {jornada.map((e, i) => {

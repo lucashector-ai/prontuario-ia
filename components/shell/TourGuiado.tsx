@@ -26,7 +26,7 @@ const LARGURA = 340
 
 export function iniciarTour() { window.dispatchEvent(new Event(EVENTO)) }
 
-type Papel = 'clinica' | 'medico' | 'recepcao'
+type Papel = 'clinica' | 'medico' | 'recepcao' | 'enfermagem'
 type Lado = 'direita' | 'baixo' | 'cima'
 type Acao = { label: string; desc: string; href: string; icon: LucideIcon; objetivo?: string; soEquipe?: boolean }
 type Passo = { alvo?: string; lado?: Lado; icon: LucideIcon; titulo: string; texto: string; papeis?: Papel[]; acoes?: boolean; opcional?: boolean; celular?: boolean }
@@ -63,6 +63,11 @@ const ACOES: Record<Papel, Acao[]> = {
     { label: 'Abrir o consultório', desc: 'Veja quem está esperando e chame', href: '/atendimento/consultorio', icon: DoorOpen },
     { label: 'Ver a agenda', desc: 'Seus horários de hoje e da semana', href: '/agenda', icon: CalendarPlus },
   ],
+  enfermagem: [
+    { label: 'Abrir a triagem', desc: 'Quem chegou e espera a triagem', href: '/atendimento/triagem', icon: HeartPulse },
+    { label: 'Ver a Central de atendimento', desc: 'A clínica neste momento', href: '/atendimento/agora', icon: ConciergeBell },
+    { label: 'Ver a agenda', desc: 'Quem vem hoje', href: '/agenda', icon: CalendarPlus },
+  ],
   recepcao: [
     { label: 'Abrir a Central de atendimento', desc: 'Check-in, senhas e fila do dia', href: '/atendimento/recepcao', icon: ConciergeBell },
     { label: 'Agendar uma consulta', desc: 'Encaixe e confirmações', href: '/agenda', icon: CalendarPlus },
@@ -89,7 +94,7 @@ function usuarioAtual(): { id: string; papel: Papel } | null {
     const ca = localStorage.getItem('clinica_admin')
     if (ca) return { id: JSON.parse(ca).id || 'admin', papel: 'clinica' }
     const m = localStorage.getItem('medico')
-    if (m) { const d = JSON.parse(m); return { id: d.id || 'medico', papel: ehApoio(d.cargo) ? 'recepcao' : d.cargo === 'admin' ? 'clinica' : 'medico' } }
+    if (m) { const d = JSON.parse(m); return { id: d.id || 'medico', papel: d.cargo === 'enfermagem' ? 'enfermagem' : ehApoio(d.cargo) ? 'recepcao' : d.cargo === 'admin' ? 'clinica' : 'medico' } }
   } catch {}
   return null
 }
