@@ -77,8 +77,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: MODELOS.raciocinioClinico,
-        thinking: { type: 'between_tools' },
-        max_tokens: 2000,
+        max_tokens: 8000, // o Opus 5.5 raciocina antes (não dá para desligar); a resposta vem depois
         system: SYSTEM_PROMPT_MEDICO,
         messages,
         stream: true,
@@ -88,7 +87,7 @@ export async function POST(req: NextRequest) {
     if (!anthropicRes.ok || !anthropicRes.body) {
       const errText = await anthropicRes.text().catch(() => '')
       log.error('Erro Anthropic API:', anthropicRes.status, errText)
-      return new Response(JSON.stringify({ erro: 'Erro ao processar a resposta', diag: `${anthropicRes.status} ${errText.slice(0, 300)}` }), { status: 502 })
+      return new Response(JSON.stringify({ erro: 'Erro ao processar a resposta' }), { status: 502 })
     }
 
     await debitarCreditos(cred.cobranca, 'assistente')
