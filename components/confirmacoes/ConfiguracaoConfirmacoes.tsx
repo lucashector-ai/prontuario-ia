@@ -10,6 +10,7 @@ import { tokens } from '@/lib/design-tokens'
 import { supabase } from '@/lib/supabase'
 import { Badge, Button, Card, Field, Icon, IconTile, ProgressBar, SegmentedControl, Select, Switch, Textarea } from '@/components/ui'
 import { notificar } from '@/components/ui/dialogos'
+import { ehApoio } from '@/lib/cargos'
 import {
   BOTOES_CONFIRMACAO_24H, CONFIG_PADRAO, MODELOS_PADRAO, dataHoraSP, preencher, type ConfirmacaoConfig,
 } from './modelos'
@@ -54,7 +55,7 @@ export function ConfiguracaoConfirmacoes() {
         clinicaId = JSON.parse(ca).clinica_id
       } else if (m) {
         const p = JSON.parse(m)
-        if (p.cargo === 'recepcionista') clinicaId = p.clinica_id
+        if (ehApoio(p.cargo)) clinicaId = p.clinica_id
         else { lista = [{ id: p.id, nome: p.nome, clinica_id: p.clinica_id }]; clinicaId = p.clinica_id }
       }
       if (!lista.length && clinicaId) {

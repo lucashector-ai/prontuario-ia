@@ -47,77 +47,43 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
         return
       }
 
-      const { count: numMedicos } = await supabase
-        .from('medicos')
-        .select('*', { count: 'exact', head: true })
-        .eq('clinica_id', clinicaId)
-        .eq('cargo', 'medico')
-        .eq('ativo', true)
+      // Perfil da conta: autônomo/Grátis (uso individual) ou clínica com equipe
+      const perfil = (() => { try { return localStorage.getItem('c360-perfil-cadastro') } catch { return null } })()
+      const conta = await supabase.from('clinicas').select('nome, telefone, logo_url, email, plano, tipo').eq('id', clinicaId).single()
+      const clinica: any = conta.data
+      const individual = perfil === 'autonomo' || clinica?.tipo === 'autonomo' || clinica?.plano === 'gratis'
 
-      const { data: primeiroMedico } = await supabase
-        .from('medicos')
-        .select('id')
-        .eq('clinica_id', clinicaId)
-        .eq('ativo', true)
-        .order('criado_em', { ascending: true })
-        .limit(1)
-        .maybeSingle()
+      const { data: meds } = await supabase.from('medicos').select('id, cargo').eq('clinica_id', clinicaId).eq('ativo', true)
+      const idsMedicos = (meds || []).filter((x: any) => !['recepcionista', 'enfermagem'].includes(x.cargo)).map((x: any) => x.id)
+      const equipe = (meds || []).length
+      const nada = ['00000000-0000-0000-0000-000000000000']
+      const conta0 = (r: { count: number | null; error: any }) => (r.error ? 0 : r.count || 0)
 
-      let whatsappConectado = false
-      let sofiaConfigurada = false
-
-      if (primeiroMedico) {
-        const { data: config } = await supabase
-          .from('whatsapp_config')
-          .select('access_token, sofia_instrucoes')
-          .eq('medico_id', primeiroMedico.id)
-          .maybeSingle()
-        whatsappConectado = !!(config && config.access_token)
-        sofiaConfigurada = !!(config && config.sofia_instrucoes && config.sofia_instrucoes.length > 10)
-      }
-
-      const { data: clinica } = await supabase
-        .from('clinicas')
-        .select('nome, telefone, logo_url, email')
-        .eq('id', clinicaId)
-        .single()
-
+      const [wppNovo, wppAntigo, pacientes, setores, consultas] = await Promise.all([
+        supabase.from('canais_conectados').select('id', { count: 'exact', head: true }).eq('canal', 'whatsapp').eq('status', 'ativo').in('medico_id', idsMedicos.length ? idsMedicos : nada),
+        supabase.from('whatsapp_config').select('access_token, sofia_instrucoes').in('medico_id', idsMedicos.length ? idsMedicos : nada).limit(1).maybeSingle(),
+        supabase.from('pacientes').select('id', { count: 'exact', head: true }).eq('clinica_id', clinicaId),
+        supabase.from('setores').select('id', { count: 'exact', head: true }).eq('clinica_id', clinicaId),
+        supabase.from('consultas').select('id', { count: 'exact', head: true }).in('medico_id', idsMedicos.length ? idsMedicos : nada),
+      ])
+      const cfg: any = wppAntigo.data
+      const whatsappConectado = conta0(wppNovo as any) > 0 || !!cfg?.access_token
+      const sofiaConfigurada = !!(cfg?.sofia_instrucoes && cfg.sofia_instrucoes.length > 10)
       const clinicaConfigurada = !!(clinica && clinica.telefone && (clinica.logo_url || clinica.email))
+      const temPacientes = conta0(pacientes as any) > 0
 
-      const lista: Passo[] = [
-        {
-          key: 'medicos',
-          label: 'Cadastre seus médicos',
-          desc: numMedicos ? (numMedicos + ' médico' + (numMedicos !== 1 ? 's' : '') + ' cadastrado' + (numMedicos !== 1 ? 's' : '')) : 'Adicione os médicos que atendem na sua clínica',
-          completo: (numMedicos || 0) > 0,
-          href: '/admin',
-          ctaLabel: (numMedicos || 0) > 0 ? 'Gerenciar' : 'Cadastrar',
-        },
-        {
-          key: 'whatsapp',
-          label: 'Conecte o WhatsApp',
-          desc: whatsappConectado ? 'Integração ativa' : 'Configure o WhatsApp Business pra atender pelo chat',
-          completo: whatsappConectado,
-          href: whatsappConectado ? '/chat' : '/minha-clinica?aba=canais',
-          ctaLabel: whatsappConectado ? 'Ver conversas' : 'Conectar',
-        },
-        {
-          key: 'clinica',
-          label: 'Dados da clínica',
-          desc: clinicaConfigurada ? 'Informações completas' : 'Preencha telefone, logo e outros dados',
-          completo: clinicaConfigurada,
-          href: '/minha-clinica',
-          ctaLabel: clinicaConfigurada ? 'Editar' : 'Configurar',
-        },
-        {
-          key: 'sofia',
-          label: 'Configure a Sofia (IA)',
-          desc: sofiaConfigurada ? 'Assistente pronta' : 'Ensine a Sofia a atender como sua clínica',
-          completo: sofiaConfigurada,
-          href: '/minha-clinica?aba=sofia',
-          ctaLabel: sofiaConfigurada ? 'Ajustar' : 'Configurar',
-        },
-      ]
+      const P = {
+        clinica: { key: 'clinica', label: individual ? 'Dados do consultório' : 'Dados da clínica', desc: clinicaConfigurada ? 'Informações completas' : 'Telefone, logo e endereço aparecem para o paciente', completo: clinicaConfigurada, href: '/minha-clinica', ctaLabel: clinicaConfigurada ? 'Editar' : 'Completar' },
+        equipe: { key: 'equipe', label: 'Convide a equipe', desc: equipe > 1 ? `${equipe} pessoas com acesso` : 'Médicos, recepção e enfermagem, cada um com seu acesso', completo: equipe > 1, href: '/admin?add=medico', ctaLabel: equipe > 1 ? 'Gerenciar' : 'Convidar' },
+        salas: { key: 'salas', label: 'Salas de espera e TV', desc: conta0(setores as any) > 0 ? 'Recepção e painel prontos' : 'Cadastre a sala, os consultórios e abra o painel na TV', completo: conta0(setores as any) > 0, href: '/minha-clinica?aba=atendimento', ctaLabel: conta0(setores as any) > 0 ? 'Ver' : 'Configurar' },
+        whatsapp: { key: 'whatsapp', label: 'Conecte o WhatsApp', desc: whatsappConectado ? 'Conversas chegando no Chat' : 'Atenda e confirme consultas pelo Chat', completo: whatsappConectado, href: whatsappConectado ? '/chat' : '/minha-clinica?aba=canais', ctaLabel: whatsappConectado ? 'Ver conversas' : 'Conectar' },
+        sofia: { key: 'sofia', label: 'Ensine a Sofia', desc: sofiaConfigurada ? 'Sofia pronta para atender' : 'Horários, valores e o jeito de falar da clínica', completo: sofiaConfigurada, href: '/minha-clinica?aba=sofia', ctaLabel: sofiaConfigurada ? 'Ajustar' : 'Configurar' },
+        importar: { key: 'importar', label: 'Traga seus pacientes', desc: temPacientes ? 'Pacientes cadastrados' : 'Importe a planilha do sistema antigo', completo: temPacientes, href: '/pacientes', ctaLabel: temPacientes ? 'Ver' : 'Importar' },
+        consulta: { key: 'consulta', label: 'Faça a 1ª consulta com IA', desc: conta0(consultas as any) > 0 ? 'Prontuário pela IA funcionando' : 'Grave e receba o prontuário pronto', completo: conta0(consultas as any) > 0, href: '/nova-consulta', ctaLabel: 'Começar' },
+      }
+      const lista: Passo[] = individual
+        ? [P.clinica, P.importar, P.consulta, P.whatsapp]
+        : [P.clinica, P.equipe, P.salas, P.whatsapp, P.sofia, P.importar]
 
       setPassos(lista)
     } catch (e) {
@@ -142,7 +108,7 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
     return (
       <div style={{ padding: 14, borderRadius: 14, background: '#fff', border: `1px solid ${tokens.border.default}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary }}>Configurar clínica</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary }}>Primeiros passos</span>
           <span style={{ fontSize: 12, fontWeight: 600, color: ACCENT }}>{completos} de {total}</span>
         </div>
         <div style={{ height: 6, borderRadius: 99, background: tokens.brand.primaryLight, overflow: 'hidden' }}>
@@ -209,7 +175,7 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
             }}>
               {pendentes}
             </span>
-            Configurar plataforma
+            Primeiros passos
           </>
         )}
       </button>
@@ -245,7 +211,7 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
             }}>
               <div>
                 <h2 style={{ fontSize: 17, fontWeight: 700, color: tokens.text.primary, margin: '0 0 4px' }}>
-                  {tudoPronto ? 'Configuração completa' : 'Comece por aqui'}
+                  {tudoPronto ? 'Tudo pronto' : 'Primeiros passos'}
                 </h2>
                 <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>
                   {tudoPronto

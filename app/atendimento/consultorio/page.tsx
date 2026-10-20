@@ -21,6 +21,7 @@ import { abrirFicha, avisarAtraso, avisarFila, carregarConfig, encerrarAtraso, c
 import { RISCOS, formatarTelefone, hojeSP, imc, minutosDesde, ordenarFila, type Atendimento } from '@/lib/atendimento/comum'
 import { SeloPrioridade, SeloRisco, SeloStatus, SenhaChip, esperaTexto, horaCurta, idade } from '@/components/atendimento/partes'
 import { GravadorConsulta } from '@/components/atendimento/GravadorConsulta'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 
 const PRAZOS_RETORNO = [7, 15, 30, 60, 90, 180]
 
@@ -47,7 +48,7 @@ export default function ConsultorioPage() {
       const m = localStorage.getItem('medico')
       if (m && !localStorage.getItem('clinica_admin')) {
         const med = JSON.parse(m)
-        if (med.cargo !== 'recepcionista') { setMedicoLogado(med.id); setMedicoId(demo ? 'demo-medico' : med.id) }
+        if (!ehApoio(med.cargo)) { setMedicoLogado(med.id); setMedicoId(demo ? 'demo-medico' : med.id) }
       } else {
         const salvo = localStorage.getItem('c360-consultorio-medico')
         if (salvo) setMedicoId(salvo)

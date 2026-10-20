@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         allowedFields[f] = v
       }
     }
-    if (allowedFields.cargo !== undefined && !['medico', 'admin', 'recepcionista'].includes(allowedFields.cargo)) {
+    if (allowedFields.cargo !== undefined && !['medico', 'admin', 'recepcionista', 'enfermagem'].includes(allowedFields.cargo)) {
       return NextResponse.json({ error: 'Cargo inválido' }, { status: 400 })
     }
 

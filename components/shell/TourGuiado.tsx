@@ -19,6 +19,7 @@ import {
 import { tokens as T } from '@/lib/design-tokens'
 import { ehAtendente } from '@/lib/sessao'
 import { CHAVE_TOUR_PENDENTE as PENDENTE, CHAVE_OBJETIVOS, CHAVE_PERFIL_CADASTRO } from '@/lib/onboarding'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 
 const EVENTO = 'c360:tour'
 const LARGURA = 340
@@ -42,7 +43,7 @@ const PASSOS: Passo[] = [
   { alvo: 'personalizar', opcional: true, lado: 'direita', icon: Settings2, titulo: 'Deixe o menu do seu jeito', texto: 'Clique no nome de uma seção para recolher. Em "Personalizar menu" você esconde o que não usa.' },
   { alvo: 'busca', lado: 'baixo', icon: Search, titulo: 'Busca rápida (⌘K)', texto: 'Ache qualquer paciente por nome, CPF ou telefone — abre a ficha na hora, em qualquer tela. Também leva a qualquer página.' },
   { alvo: 'notificacoes', lado: 'baixo', icon: Bell, titulo: 'Tudo avisa você', texto: 'Chegadas, saídas do consultório, retornos, confirmações e mensagens aparecem aqui e num aviso no canto da tela.' },
-  { alvo: 'checklist', opcional: true, lado: 'direita', icon: ListChecks, titulo: 'Seu passo a passo', papeis: ['clinica'], texto: 'Esta lista mostra o que falta configurar. Siga de cima para baixo e a clínica fica pronta.' },
+  { alvo: 'checklist', opcional: true, lado: 'direita', icon: ListChecks, titulo: 'Primeiros passos', papeis: ['clinica'], texto: 'Esta lista mostra o que falta configurar. Siga de cima para baixo e a clínica fica pronta para atender.' },
   { alvo: 'conta', lado: 'baixo', icon: UserRound, titulo: 'Sua conta', texto: 'Perfil, dados da clínica e sair. Este tour fica aqui também, em "Tour guiado".' },
   { icon: Compass, titulo: 'Por onde começar', texto: 'Sugestões para o primeiro dia:', acoes: true },
 ]
@@ -89,7 +90,7 @@ function usuarioAtual(): { id: string; papel: Papel } | null {
     const ca = localStorage.getItem('clinica_admin')
     if (ca) return { id: JSON.parse(ca).id || 'admin', papel: 'clinica' }
     const m = localStorage.getItem('medico')
-    if (m) { const d = JSON.parse(m); return { id: d.id || 'medico', papel: d.cargo === 'recepcionista' ? 'recepcao' : d.cargo === 'admin' ? 'clinica' : 'medico' } }
+    if (m) { const d = JSON.parse(m); return { id: d.id || 'medico', papel: ehApoio(d.cargo) ? 'recepcao' : d.cargo === 'admin' ? 'clinica' : 'medico' } }
   } catch {}
   return null
 }

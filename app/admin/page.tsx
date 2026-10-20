@@ -13,6 +13,8 @@ import {
   Check, Copy, Info, TriangleAlert,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { ehApoio, NOME_CARGO } from '@/lib/cargos'
+import { AtendentesChat } from '@/components/equipe/AtendentesChat'
 import {
   KpiCard, Tabs, EmptyState, Button, Card, Avatar, Badge, Field, Input, Select, Modal, ModalAcoes,
   SegmentedControl, IconButton, Icon, Overline, PageHeader,
@@ -44,11 +46,12 @@ function Admin() {
   const [kpis, setKpis] = useState({ totalPacientes: 0, consultasMes: 0, consultasTotal: 0 })
   const [carregando, setCarregando] = useState(true)
 
-  const [aba, setAba] = useState<'medicos' | 'recepcionistas'>('medicos')
-  const [modalNovoTipo, setModalNovoTipo] = useState<'medico' | 'recepcionista' | null>(null)
+  const [aba, setAba] = useState<'medicos' | 'recepcionistas' | 'atendentes'>('medicos')
+  const [modalNovoTipo, setModalNovoTipo] = useState<'medico' | 'recepcionista' | 'enfermagem' | null>(null)
   const [modalEditar, setModalEditar] = useState<any>(null)
   const [modalExcluir, setModalExcluir] = useState<any>(null)
-  const [senhaGerada, setSenhaGerada] = useState<{ pessoa: any; senha: string; tipo: 'medico' | 'recepcionista' } | null>(null)
+  const [senhaGerada, setSenhaGerada] = useState<{ pessoa: any; senha: string; tipo: 'medico' | 'recepcionista' | 'enfermagem'; convite?: string } | null>(null)
+  const [linkCopiado, setLinkCopiado] = useState(false)
   const [senhaCopiada, setSenhaCopiada] = useState(false)
 
   const [form, setForm] = useState({ nome: '', email: '', crm: '', especialidade: '', cpf: '', data_nascimento: '', cor: tokens.brand.primary as string, comissao_tipo: 'sem' as 'sem' | 'percentual' | 'fixo_consulta' | 'fixo_mensal', comissao_valor: '', comissao_base: 'receita' as 'receita' | 'lucro' })
@@ -81,6 +84,7 @@ function Admin() {
     else if (add === 'recepcionista') { setAba('recepcionistas'); setModalNovoTipo('recepcionista') }
     else if (tab === 'recepcionistas') setAba('recepcionistas')
     else if (tab === 'medicos') setAba('medicos')
+    else if (tab === 'atendentes') setAba('atendentes')
   }, [searchParams])
 
   const carregarDados = async (clinicaId: string) => {
@@ -103,7 +107,7 @@ function Admin() {
       inicioMes.setDate(1)
       inicioMes.setHours(0, 0, 0, 0)
 
-      await Promise.all(lista.filter(m => m.cargo !== 'recepcionista').map(async (m: any) => {
+      await Promise.all(lista.filter(m => !ehApoio(m.cargo)).map(async (m: any) => {
         try {
           const [{ count: consultas }, { count: consultasMes }, { count: pacientes }] = await Promise.all([
             supabase.from('consultas').select('*', { count: 'exact', head: true }).eq('medico_id', m.id),
@@ -136,8 +140,7 @@ function Admin() {
     if (!form.nome || !form.email) { toast('Preencha nome e email', 'error'); return }
     if (modalNovoTipo === 'medico') {
       const cpfDigits = form.cpf.replace(/\D/g, '')
-      if (cpfDigits.length !== 11) { toast('CPF é obrigatório (11 dígitos)', 'error'); return }
-      if (!form.data_nascimento) { toast('Data de nascimento é obrigatória', 'error'); return }
+      if (cpfDigits && cpfDigits.length !== 11) { toast('CPF incompleto: são 11 dígitos (ou deixe em branco)', 'error'); return }
     }
     setSalvando(true)
     try {
@@ -167,7 +170,7 @@ function Admin() {
         const tipoSalvo = modalNovoTipo!
         setModalNovoTipo(null)
         setForm({ ...FORM_VAZIO })
-        setSenhaGerada({ pessoa: data.medico, senha: data.senha_provisoria_gerada, tipo: tipoSalvo })
+        setSenhaGerada({ pessoa: data.medico, senha: data.senha_provisoria_gerada, tipo: tipoSalvo, convite: data.convite_token ? `${window.location.origin}/convite/${data.convite_token}` : undefined })
         await carregarDados(medico.clinica_id)
       } else throw new Error(data.error || 'Erro ao criar')
     } catch (e: any) { toast(e.message, 'error') }
@@ -241,7 +244,7 @@ function Admin() {
 
   const copiarCredenciais = () => {
     if (!senhaGerada) return
-    const label = senhaGerada.tipo === 'recepcionista' ? 'Recepcionista' : 'Médico'
+    const label = NOME_CARGO[senhaGerada.tipo] || 'Médico'
     const texto = `Acesso Clinical 360 — ${label} ${senhaGerada.pessoa.nome}\nEmail: ${senhaGerada.pessoa.email}\nSenha provisória: ${senhaGerada.senha}\n\nNo primeiro login você vai precisar trocar a senha.`
     navigator.clipboard.writeText(texto)
     setSenhaCopiada(true)
@@ -252,14 +255,14 @@ function Admin() {
 
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
 
-  const listaMedicos = medicos.filter(m => m.cargo !== 'recepcionista')
-  const listaRecepcionistas = medicos.filter(m => m.cargo === 'recepcionista')
+  const listaMedicos = medicos.filter(m => !ehApoio(m.cargo))
+  const listaRecepcionistas = medicos.filter(m => ehApoio(m.cargo))
 
   const listaAtual = aba === 'medicos' ? listaMedicos : listaRecepcionistas
-  const labelAba = aba === 'medicos' ? 'médico' : 'recepcionista'
-  const labelPlural = aba === 'medicos' ? 'médicos' : 'recepcionistas'
+  const labelAba = aba === 'medicos' ? 'médico' : 'pessoa da recepção ou enfermagem'
+  const labelPlural = aba === 'medicos' ? 'médicos' : 'pessoas'
 
-  const abrirNovo = (tipo: 'medico' | 'recepcionista') => {
+  const abrirNovo = (tipo: 'medico' | 'recepcionista' | 'enfermagem') => {
     setModalNovoTipo(tipo)
     setForm({ ...FORM_VAZIO })
   }
@@ -268,19 +271,20 @@ function Admin() {
     admin: { label: 'Admin', tone: 'accent' },
     medico: { label: 'Médico', tone: 'info' },
     recepcionista: { label: 'Recepção', tone: 'warning' },
+    enfermagem: { label: 'Enfermagem', tone: 'info' },
   }
 
   return (
     <main style={{ height: '100%', overflow: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <PageHeader
         titulo="Equipe"
-        descricao={`${listaMedicos.length} médico${listaMedicos.length !== 1 ? 's' : ''} · ${listaRecepcionistas.length} recepcionista${listaRecepcionistas.length !== 1 ? 's' : ''}`}
+        descricao={`${listaMedicos.length} médico${listaMedicos.length !== 1 ? 's' : ''} · ${listaRecepcionistas.length} na recepção e enfermagem`}
       />
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
         <KpiCard label="Médicos ativos" valor={listaMedicos.filter(m => m.ativo).length} icon={UserRound} cor={T.data.purple} carregando={carregando} />
-        <KpiCard label="Recepcionistas" valor={listaRecepcionistas.filter(m => m.ativo).length} icon={Headset} cor={T.data.blue} carregando={carregando} />
+        <KpiCard label="Recepção e enfermagem" valor={listaRecepcionistas.filter(m => m.ativo).length} icon={Headset} cor={T.data.blue} carregando={carregando} />
         <KpiCard label="Pacientes cadastrados" valor={kpis.totalPacientes} icon={Users} cor={T.data.green} carregando={carregando} />
         <KpiCard label="Consultas este mês" valor={kpis.consultasMes} icon={CalendarCheck} cor={T.data.orange} carregando={carregando} />
       </div>
@@ -290,19 +294,20 @@ function Admin() {
         <Card padding={0} style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 18px 4px', flexWrap: 'wrap' }}>
             <h3 style={{ margin: 0, flex: 1, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary }}>Equipe</h3>
-            <Button icon={UserPlus} onClick={() => abrirNovo(aba === 'medicos' ? 'medico' : 'recepcionista')}>Adicionar membro</Button>
+            {aba !== 'atendentes' && <Button icon={UserPlus} onClick={() => abrirNovo(aba === 'medicos' ? 'medico' : 'recepcionista')}>Adicionar membro</Button>}
           </div>
           <Tabs
             style={{ padding: '0 10px', marginBottom: 0, borderBottom: 'none' }}
             ativa={aba}
-            onChange={(id) => setAba(id as 'medicos' | 'recepcionistas')}
+            onChange={(id) => setAba(id as 'medicos' | 'recepcionistas' | 'atendentes')}
             tabs={[
               { id: 'medicos', label: `Médicos (${listaMedicos.length})` },
-              { id: 'recepcionistas', label: `Recepcionistas (${listaRecepcionistas.length})` },
+              { id: 'recepcionistas', label: `Recepção e enfermagem (${listaRecepcionistas.length})` },
+              { id: 'atendentes', label: 'Atendentes do chat' },
             ]}
           />
 
-          {carregando ? (
+          {aba === 'atendentes' ? <AtendentesChat medicos={listaMedicos} /> : carregando ? (
             <div style={{ padding: '8px 18px 18px', display: 'flex', flexDirection: 'column', gap: 10, borderTop: `1px solid ${T.border.muted}` }}>
               {[0, 1, 2].map(i => <div key={i} className="c360-skel" style={{ height: 44, borderRadius: 10 }} />)}
             </div>
@@ -313,7 +318,7 @@ function Admin() {
                 titulo={`Nenhum ${labelAba} cadastrado ainda`}
                 descricao={aba === 'medicos'
                   ? 'Adicione os médicos da clínica — cada um recebe um acesso próprio com agenda e prontuários.'
-                  : 'Adicione recepcionistas para cuidar da agenda e do atendimento no WhatsApp.'}
+                  : 'Recepção cuida da agenda, das chegadas e dos retornos; enfermagem faz a triagem. Nenhuma das duas lê o prontuário.'}
                 acao={
                   <Button variant="secondary" icon={UserPlus} onClick={() => abrirNovo(aba === 'medicos' ? 'medico' : 'recepcionista')}>
                     Adicionar {labelAba}
@@ -324,7 +329,7 @@ function Admin() {
           ) : (
             <div>
               {listaAtual.map((m, i) => {
-                const isRecep = m.cargo === 'recepcionista'
+                const isRecep = ehApoio(m.cargo)
                 const role = ROLE[m.cargo] || ROLE.medico
                 const proprio = m.id === medico.id
                 const meta = isRecep ? m.email : [m.especialidade || 'Sem especialidade', m.crm ? 'CRM ' + m.crm : '', m.email].filter(Boolean).join(' · ')
@@ -417,12 +422,13 @@ function Admin() {
               <SegmentedControl
                 value={modalNovoTipo}
                 onChange={(v) => setModalNovoTipo(v)}
-                options={[{ value: 'medico', label: 'Médico' }, { value: 'recepcionista', label: 'Recepção' }]}
+                options={[{ value: 'medico', label: 'Médico' }, { value: 'recepcionista', label: 'Recepção' }, { value: 'enfermagem', label: 'Enfermagem' }]}
               />
               <span style={{ fontSize: 12.5, color: T.text.quaternary, lineHeight: 1.45 }}>
                 {modalNovoTipo === 'medico'
                   ? 'Agenda própria, prontuários, prescrições e exames.'
-                  : 'Agenda, cadastro de pacientes e WhatsApp.'}
+                  : modalNovoTipo === 'enfermagem' ? 'Triagem, sinais vitais e classificação de risco. Não lê o prontuário.'
+                  : 'Agenda, chegadas, senhas, retornos e WhatsApp. Não lê o prontuário.'}
               </span>
             </Field>
             <Field label="Nome completo *">
@@ -500,7 +506,7 @@ function Admin() {
             <Field label="E-mail">
               <Input value={formEditar.email} onChange={e => setFormEditar(p => ({ ...p, email: e.target.value }))} />
             </Field>
-            {modalEditar.cargo !== 'recepcionista' && (
+            {!ehApoio(modalEditar.cargo) && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                 <Field label="CRM">
                   <Input value={formEditar.crm} onChange={e => setFormEditar(p => ({ ...p, crm: e.target.value }))} />
@@ -513,8 +519,9 @@ function Admin() {
             <Field label="Cargo">
               <Select value={formEditar.cargo} onChange={e => setFormEditar(p => ({ ...p, cargo: e.target.value }))}>
                 <option value="medico">Médico</option>
-                <option value="recepcionista">Recepcionista</option>
-                <option value="admin">Admin</option>
+                <option value="recepcionista">Recepção</option>
+                <option value="enfermagem">Enfermagem</option>
+                <option value="admin">Administrador</option>
               </Select>
             </Field>
             {modalEditar?.cargo === 'medico' && (
@@ -555,11 +562,22 @@ function Admin() {
             <Icon icon={Check} size={22} />
           </span>
           <h2 style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-.01em', color: T.text.primary, margin: '0 0 6px' }}>
-            {senhaGerada.tipo === 'medico' ? 'Médico' : 'Recepcionista'} cadastrado
+            {NOME_CARGO[senhaGerada.tipo] || 'Pessoa'} cadastrado
           </h2>
           <p style={{ fontSize: 13, color: T.text.secondary, margin: '0 0 18px', lineHeight: 1.55 }}>
-            Envie essas credenciais para <strong style={{ color: T.text.primary }}>{senhaGerada.pessoa.nome}</strong>. No primeiro login, {senhaGerada.tipo === 'medico' ? 'ele' : 'ela'} vai precisar criar uma senha própria.
+            Mande o convite para <strong style={{ color: T.text.primary }}>{senhaGerada.pessoa.nome}</strong>: pelo link a pessoa cria a própria senha e já entra. O link vale 7 dias.
           </p>
+          {senhaGerada.convite && (
+            <div style={{ border: `1px solid ${T.brand.primaryAccent}`, background: T.brand.primarySoftBg, borderRadius: 14, padding: 14, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Overline>Link de convite</Overline>
+              <code className="mono" style={{ fontSize: 12, color: T.text.secondary, wordBreak: 'break-all' }}>{senhaGerada.convite}</code>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Button size="sm" icon={linkCopiado ? Check : Copy} onClick={() => { navigator.clipboard.writeText(senhaGerada.convite!).catch(() => {}); setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2000) }}>{linkCopiado ? 'Copiado' : 'Copiar link'}</Button>
+                <Button size="sm" variant="secondary" onClick={() => window.open('https://wa.me/?text=' + encodeURIComponent(`Olá, ${senhaGerada.pessoa.nome?.split(' ')[0] || ''}! Você foi convidado(a) para o Clinical 360. Crie sua senha por aqui: ${senhaGerada.convite}`), '_blank')}>Enviar pelo WhatsApp</Button>
+              </div>
+            </div>
+          )}
+          <p style={{ fontSize: 12.5, color: T.text.tertiary, margin: '0 0 10px' }}>Se preferir, passe o email e a senha provisória abaixo: no primeiro acesso a pessoa troca a senha.</p>
 
           <div style={{ border: `1px solid ${T.border.default}`, borderRadius: 14, padding: 14, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>

@@ -5,6 +5,7 @@
  */
 export function destinoInicial(tipo: 'clinica' | 'medico', dados: { onboarding_concluido?: boolean | null; cargo?: string | null } | null | undefined) {
   if (!dados?.onboarding_concluido) return '/onboarding'
+  if (tipo === 'medico' && dados.cargo === 'enfermagem') return '/atendimento/triagem'
   if (tipo === 'medico' && dados.cargo === 'recepcionista') return '/atendimento/recepcao'
   return '/dashboard'
 }

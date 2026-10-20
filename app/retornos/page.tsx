@@ -15,6 +15,7 @@ import { ehDemo } from '@/components/retornos/datas'
 import AbaRetornos from './AbaRetornos'
 import AbaReativacao from './AbaReativacao'
 import AbaCampanhas from './AbaCampanhas'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 
 const T = tokens
 type Aba = 'retornos' | 'reativacao' | 'campanhas'
@@ -50,7 +51,7 @@ export default function RetornosPage() {
       const daClinica = async (clinicaId: string) => (await supabase.from('medicos').select('id, nome, clinica_id')
         .eq('clinica_id', clinicaId).eq('cargo', 'medico').eq('ativo', true).order('criado_em', { ascending: true })).data || []
       let lista: any[] = []
-      if (ca || usuario.cargo === 'recepcionista') lista = usuario.clinica_id ? await daClinica(usuario.clinica_id) : []
+      if (ca || ehApoio(usuario.cargo)) lista = usuario.clinica_id ? await daClinica(usuario.clinica_id) : []
       else lista = [usuario]
       if (demo && !lista.length) lista = [{ id: 'demo-medico', nome: usuario.nome || 'Dra. Helena Duarte' }]
       setMedicos(lista)

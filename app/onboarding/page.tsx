@@ -15,6 +15,7 @@ import { Marca } from '@/components/Marca'
 import { Button, Field, Input, IconTile, ProgressBar } from '@/components/ui'
 import { primeiroNome } from '@/lib/nome'
 import { CHAVE_PERFIL_CADASTRO, CHAVE_OBJETIVOS, CHAVE_TOUR_PENDENTE } from '@/lib/onboarding'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 
 const T = tokens
 type TipoConta = 'clinica' | 'medico'
@@ -99,13 +100,13 @@ export default function OnboardingPage() {
 
     // Já concluiu: vai direto
     if (dados.onboarding_concluido) {
-      router.replace(tp === 'clinica' ? '/dashboard' : dados.cargo === 'recepcionista' ? '/atendimento/recepcao' : '/dashboard')
+      router.replace(tp === 'clinica' ? '/dashboard' : dados.cargo === 'enfermagem' ? '/atendimento/triagem' : dados.cargo === 'recepcionista' ? '/atendimento/recepcao' : '/dashboard')
       return
     }
 
     setUsuario(dados)
     setTipo(tp)
-    setRecepcao(tp === 'medico' && dados.cargo === 'recepcionista')
+    setRecepcao(tp === 'medico' && ehApoio(dados.cargo))
     setFormMedico({ nome: dados.nome || '', crm: dados.crm || '', especialidade: dados.especialidade || '' })
     try {
       const p = localStorage.getItem(CHAVE_PERFIL_CADASTRO) as Perfil | null

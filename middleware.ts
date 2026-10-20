@@ -11,7 +11,7 @@ const ATENDENTE_ROUTES = ['/chat', '/login-atendente', '/api/']
  */
 const API_PUBLICA_EXATA = new Set([
   '/api/login', '/api/logout', '/api/atendentes/login', '/api/cadastro-clinica', '/api/cadastro-autonomo',
-  '/api/verificar-email', '/api/forgot-password',
+  '/api/verificar-email', '/api/forgot-password', '/api/convite',
   '/api/whatsapp', '/api/instagram', '/api/messenger',
   '/api/superadmin', '/api/public',
   '/api/agenda-publica/slots', '/api/agenda-publica/solicitar', '/api/agenda-publica/perfil',

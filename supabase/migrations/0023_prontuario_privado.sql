@@ -5,7 +5,7 @@
 --   • vê as próprias consultas e prescrições;
 --   • vê as de colegas só se a clínica ligar "prontuário compartilhado" (clinicas.prontuario_compartilhado)
 --     ou se o médico que atendeu compartilhar aquela consulta (consultas.compartilhada);
---   • recepção (cargo recepcionista) não lê prontuário.
+--   • recepção e enfermagem (cargos recepcionista e enfermagem) não leem prontuário.
 -- A conta de administrador da clínica (tipo 'clinica') continua vendo, por enquanto, porque
 -- indicadores e relatórios dependem disso — será restrita na reorganização dos tipos de conta.
 --
@@ -24,8 +24,8 @@ language sql stable security definer set search_path = public as $$
     -- administrador da clínica (sem perfil de médico): mantém o acesso de antes
     when coalesce(auth.jwt() ->> 'tipo', '') = 'clinica' then
       p_medico in (select c360_medicos()) or p_paciente in (select c360_pacientes())
-    -- recepção não lê prontuário
-    when exists (select 1 from medicos m where m.id = c360_medico() and m.cargo = 'recepcionista') then false
+    -- recepção e enfermagem não leem prontuário
+    when exists (select 1 from medicos m where m.id = c360_medico() and m.cargo in ('recepcionista', 'enfermagem')) then false
     -- outro médico da clínica: só se compartilhado (na consulta ou na clínica toda)
     when (p_medico in (select c360_medicos()) or p_paciente in (select c360_pacientes())) then
       coalesce(p_compartilhada, false)

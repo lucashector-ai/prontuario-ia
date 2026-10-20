@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx'
 import { parsearCSV } from '@/lib/csv'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 
 const ACCENT = tokens.brand.primary
 const ACCENT_LIGHT = tokens.brand.primaryLighter
@@ -68,7 +69,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
       .select('id, nome, cargo, ativo')
       .eq('clinica_id', clinicaId)
       .eq('ativo', true)
-      .neq('cargo', 'recepcionista')
+      .not('cargo', 'in', FILTRO_APOIO)
       .order('nome')
       .then(({ data }) => {
         const lista = data || []

@@ -18,6 +18,7 @@ import {
 import type { BadgeTone } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { DIAS_SEMANA_CURTOS, PERIODOS, periodoDaHora } from '@/components/confirmacoes/modelos'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 
 const T = tokens
 
@@ -423,7 +424,7 @@ function AgendaContent() {
     const [pacsR, agsR, medsR, blqsResp] = await Promise.all([
       supabase.from('pacientes').select('id, nome, data_nascimento, telefone, medico_id').in('medico_id', medicoIds).order('nome'),
       supabase.from('agendamentos').select(`*, pacientes(nome, data_nascimento, telefone)`).in('medico_id', medicoIds).order('data_hora'),
-      supabase.from('medicos').select('id, nome, cor').in('id', medicoIds).eq('ativo', true).neq('cargo', 'recepcionista').order('nome'),
+      supabase.from('medicos').select('id, nome, cor').in('id', medicoIds).eq('ativo', true).not('cargo', 'in', FILTRO_APOIO).order('nome'),
       // Bloqueios via API (service_role, sem RLS)
       fetch('/api/bloqueios?' + (clinicaIdLocal ? 'clinica_id=' + clinicaIdLocal : 'medico_id=' + medicoId)).then(r => r.json()),
     ])

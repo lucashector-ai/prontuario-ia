@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 
 /**
  * Quantas conversas do Chat têm mensagem recebida não lida (para o selo no menu).
@@ -22,7 +23,7 @@ export function useChatNaoLidas() {
         const m = localStorage.getItem('medico')
         const pessoa = ca ? JSON.parse(ca) : m ? JSON.parse(m) : null
         if (!pessoa) return null
-        if (!ca && pessoa.cargo !== 'recepcionista') return pessoa.id as string
+        if (!ca && !ehApoio(pessoa.cargo)) return pessoa.id as string
         if (!pessoa.clinica_id) return null
         const { data } = await supabase.from('medicos').select('id').eq('clinica_id', pessoa.clinica_id)
           .eq('cargo', 'medico').eq('ativo', true).order('criado_em', { ascending: true }).limit(1).maybeSingle()

@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const { nome, crm, especialidade, email, cargo: cargoBody, cor, comissao_tipo, comissao_valor, comissao_base, cpf, data_nascimento } = body
-    const cargoFinal = cargoBody === 'recepcionista' ? 'recepcionista' : 'medico'
+    const cargoFinal = cargoBody === 'recepcionista' || cargoBody === 'enfermagem' ? cargoBody : 'medico'
 
     if (!nome || !email) {
       return NextResponse.json({ error: "Nome e email são obrigatórios" }, { status: 400 })
@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
     // Adição de médico/recepção pela clínica → gera senha provisória
     {
       const senhaProvisoria = gerarSenhaProvisoria()
+      const tokenConvite = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('')
       const hash = await bcrypt.hash(senhaProvisoria, 10)
 
       const { data: medico, error } = await supabase
@@ -68,6 +69,9 @@ export async function POST(req: NextRequest) {
           email: emailNorm,
           senha_hash: hash,
           senha_provisoria: true,
+          // Convite por link (/convite/<token>), vale 7 dias — a senha provisória continua como alternativa
+          token_verificacao: tokenConvite,
+          token_expira_em: new Date(Date.now() + 7 * 24 * 3600e3).toISOString(),
           ativo: true,
           clinica_id,
           cargo: cargoFinal,
@@ -90,6 +94,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         medico: medicoSemSenha,
         senha_provisoria_gerada: senhaProvisoria, // frontend mostra pra clínica copiar
+        convite_token: tokenConvite,
       })
     }
 

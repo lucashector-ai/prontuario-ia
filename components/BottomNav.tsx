@@ -12,6 +12,7 @@ import { tokens } from '@/lib/design-tokens'
 import { Icon } from '@/components/ui'
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 const T = tokens
 type Item = { href: string; label: string; icon: LucideIcon }
 
@@ -35,7 +36,7 @@ export function BottomNav() {
 
   useEffect(() => { setMaisAberto(false) }, [pathname])
 
-  const isRecepcionista = medico?.cargo === 'recepcionista'
+  const isRecepcionista = ehApoio(medico?.cargo)
   const [atendente, setAtendente] = useState(false)
   useEffect(() => { setAtendente(ehAtendente()) }, [])
   const temAcessoAdmin = !!clinicaAdmin || medico?.cargo === 'admin'

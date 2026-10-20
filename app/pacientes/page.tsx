@@ -22,6 +22,7 @@ import { CONVENIOS, normalizarConvenio } from '@/lib/convenios'
 import { ConvenioBadge } from '@/components/ConvenioBadge'
 import { primeiroNome } from '@/lib/nome'
 import { registrarAcesso } from '@/lib/auditoria'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 const T = tokens
 
 const CONVENIOS_LISTA = CONVENIOS
@@ -121,7 +122,7 @@ export default function Pacientes() {
           .select('id, nome')
           .eq('clinica_id', clinicaIdAdmin)
           .eq('ativo', true)
-          .neq('cargo', 'recepcionista')
+          .not('cargo', 'in', FILTRO_APOIO)
           .order('nome')
           .then(({ data, error }) => {
             if (error) log.error('Erro carregando medicos:', error)

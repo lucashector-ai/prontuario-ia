@@ -7,6 +7,7 @@ import { faltaMigration, nomeDe } from './tipos'
 import { confirmar } from '@/components/ui/dialogos'
 
 import { registrarAcesso } from '@/lib/auditoria'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 /**
  * Estado e ações do Chat omnicanal.
  * Identificação do usuário (mesma regra do antigo /whatsapp-app):
@@ -67,7 +68,7 @@ export function useChat() {
         const m = localStorage.getItem('medico')
         if (!m) { router.push('/login'); return }
         const parsed = JSON.parse(m)
-        if (parsed.cargo === 'recepcionista') {
+        if (ehApoio(parsed.cargo)) {
           setUsuario(parsed)
           med = parsed.clinica_id ? await primeiroMedicoDa(parsed.clinica_id) : null
         } else {

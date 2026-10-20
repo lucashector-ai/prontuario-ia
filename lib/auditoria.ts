@@ -71,7 +71,7 @@ export function usuarioAtualAuditoria(): UsuarioAuditoria | null {
   }
   if (!medico) return null
   const tipo: TipoUsuarioAuditoria = medico.is_atendente ? 'atendente'
-    : medico.cargo === 'recepcionista' ? 'recepcionista' : 'medico'
+    : medico.cargo === 'recepcionista' || medico.cargo === 'enfermagem' ? 'recepcionista' : 'medico'
   return {
     usuario_id: medico.id || null, usuario_nome: medico.nome || null, usuario_tipo: tipo,
     clinica_id: medico.clinica_id || null, medico_id: tipo === 'medico' ? medico.id || null : null,

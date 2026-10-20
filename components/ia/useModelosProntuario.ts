@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { MODELOS_SISTEMA, normalizarModelo, type ModeloProntuario } from '@/lib/ai/modelos-prontuario'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 
 export type DonoModelos = { medicoId: string | null; clinicaId: string | null; especialidade: string | null; ehAdmin: boolean }
 
@@ -24,7 +25,7 @@ export function lerDonoLocal(): DonoModelos {
     const m = localStorage.getItem('medico')
     if (m) {
       const p = JSON.parse(m)
-      const recep = p.cargo === 'recepcionista'
+      const recep = ehApoio(p.cargo)
       return { medicoId: recep ? null : p.id || null, clinicaId: p.clinica_id || null, especialidade: recep ? null : p.especialidade || null, ehAdmin: false }
     }
   } catch {}

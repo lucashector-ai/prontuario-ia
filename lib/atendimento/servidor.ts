@@ -45,7 +45,7 @@ export async function medicosDaClinica(ctx: Contexto) {
   }
   const { data } = await db.from('medicos').select('id, nome, cargo, consultorio_id')
     .eq('clinica_id', ctx.clinica).eq('ativo', true).order('nome')
-  return (data || []).filter((m: any) => (m.cargo || 'medico') !== 'recepcionista')
+  return (data || []).filter((m: any) => !['recepcionista', 'enfermagem'].includes(m.cargo || 'medico'))
 }
 
 async function garantirMedico(ctx: Contexto, medicoId: string) {
@@ -580,7 +580,7 @@ async function filtrarProntuario<T extends { medico_id?: string | null; comparti
   ])
   // Sem a migration 0023 a clínica segue compartilhando (comportamento antigo)
   const semMigration = (clinica as any) == null
-  const recepcao = (eu as any)?.cargo === 'recepcionista'
+  const recepcao = ['recepcionista', 'enfermagem'].includes((eu as any)?.cargo)
   const clinicaCompartilha = semMigration || !!(clinica as any)?.prontuario_compartilhado
   return lista.map(c => {
     const pode = !recepcao && (c.medico_id === ctx.medicoId || c.compartilhada || clinicaCompartilha)

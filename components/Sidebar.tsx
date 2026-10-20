@@ -18,6 +18,7 @@ import { recursoDaRota, recursoLiberado } from '@/lib/planos'
 import { useChatNaoLidas } from '@/components/shell/useChatNaoLidas'
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 const T = tokens
 const linkMenu: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: '#9A98A5', whiteSpace: 'nowrap' }
 
@@ -47,7 +48,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
   }, [])
 
   const isClinicaAdmin = !!clinicaAdmin
-  const isRecepcionista = medico?.cargo === 'recepcionista'
+  const isRecepcionista = ehApoio(medico?.cargo)
   const [ehAtendenteLocal, setEhAtendenteLocal] = useState(false)
   useEffect(() => { setEhAtendenteLocal(ehAtendente()) }, [])
   const isMedicoAdmin = medico?.cargo === 'admin'

@@ -17,6 +17,7 @@ import { iniciarTour } from '@/components/shell/TourGuiado'
 import { listarNotificacoes, marcarNotificacao, marcarTodasLidas, destinoDaNotificacao, avisarMudanca, EVENTO_NOTIFICACOES, type Notificacao, type FiltroNotificacoes } from '@/lib/notificacoes'
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 const T = tokens
 
 // so: 'gestor' = dono/administrador · 'clinico' = quem atende (fora da recepção)
@@ -217,7 +218,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
   // Busca de pacientes/agendamentos: médico vê os dele; clínica e recepção, os da clínica
   // (o RLS do banco já limita à clínica da sessão)
   useEffect(() => {
-    const daClinica = modo === 'clinica' || medico?.cargo === 'recepcionista' || medico?.cargo === 'admin'
+    const daClinica = modo === 'clinica' || ehApoio(medico?.cargo) || medico?.cargo === 'admin'
     if (!modo || busca.trim().length < 2 || (!daClinica && !medico)) {
       setResultados({ pacientes: [], agendamentos: [] })
       return
@@ -240,7 +241,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
   const paginasFiltradas = useMemo(() => {
     const q = semAcento(busca.trim())
     // Só páginas que o perfil pode abrir (mesma regra do menu)
-    const recepcao = medico?.cargo === 'recepcionista'
+    const recepcao = ehApoio(medico?.cargo)
     const gestor = !!clinicaAdmin || medico?.cargo === 'admin'
     const base = atendente ? PAGINAS.filter(p => p.href === '/chat')
       : PAGINAS.filter(p => !(p.so === 'gestor' && !gestor) && !(p.so === 'clinico' && recepcao))
@@ -405,7 +406,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
             {!compacto && (
               <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.2, textAlign: 'left' }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: T.text.primary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nomeClinica}</span>
-                <span style={{ fontSize: 11, color: T.text.quaternary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nomeUsuario && nomeUsuario !== nomeClinica ? nomeUsuario : (modo === 'clinica' ? 'Administrador' : medico?.cargo === 'recepcionista' ? 'Recepção' : 'Médico')}</span>
+                <span style={{ fontSize: 11, color: T.text.quaternary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nomeUsuario && nomeUsuario !== nomeClinica ? nomeUsuario : (modo === 'clinica' ? 'Administrador' : medico?.cargo === 'enfermagem' ? 'Enfermagem' : medico?.cargo === 'recepcionista' ? 'Recepção' : 'Médico')}</span>
               </span>
             )}
             <ChevronDown size={14} color={T.text.tertiary} />

@@ -13,6 +13,7 @@ import { normalizarConvenio } from '@/lib/convenios'
 import { gerarDemo } from '@/lib/relatorios/demo'
 import { paraInputData } from '@/lib/relatorios/periodo'
 import type { AgRel, DadosRelatorio, EsperaRel, Intervalo, MedRel, PacRel, RetornoRel } from '@/lib/relatorios/tipos'
+import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 
 const faltaTabela = (e: any) => !!e && /column|relation|does not exist|schema cache|42P01|42703/i.test(String(e.message || e.code || e))
 
@@ -78,7 +79,7 @@ export function useRelatorios(carga: Intervalo) {
           lista = await buscarMedicos(q => q.eq('clinica_id', admin.clinica_id || admin.id).eq('cargo', 'medico').eq('ativo', true).order('nome'))
         } else {
           const med = JSON.parse(m!)
-          if (med.cargo === 'recepcionista' && med.clinica_id) {
+          if (ehApoio(med.cargo) && med.clinica_id) {
             setEhClinica(true)
             lista = await buscarMedicos(q => q.eq('clinica_id', med.clinica_id).eq('cargo', 'medico').eq('ativo', true).order('nome'))
           } else {
