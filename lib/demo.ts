@@ -7,11 +7,8 @@
  *
  *   if (ehDemo()) { setDados(DADOS_FICTICIOS); return }
  *   router.push(comDemo('/pacientes'))
- *   const demo = useDemo()            // em componentes (evita diferença servidor × navegador)
  *   avisoDemo()                       // "Demonstração: nada foi gravado"
  */
-import { useEffect, useState } from 'react'
-
 export const CHAVE_DEMO = 'c360-demo'
 export const AVISO_DEMO = 'Demonstração: nada foi gravado.'
 
@@ -40,13 +37,6 @@ export function comDemo(href: string, demo: boolean = ehDemo()): string {
   if (/[?&]demo=1(&|#|$)/.test(href)) return href
   const [semHash, hash] = href.split('#')
   return semHash + (semHash.includes('?') ? '&' : '?') + 'demo=1' + (hash !== undefined ? '#' + hash : '')
-}
-
-/** Hook: true em demonstração (false no servidor e no primeiro render, para não dar diferença de hidratação). */
-export function useDemo(): boolean {
-  const [demo, setDemo] = useState(false)
-  useEffect(() => { setDemo(ehDemo()) }, [])
-  return demo
 }
 
 /** Aviso padrão para ações que gravariam algo. Devolve true (para `if (avisoDemo()) return`). */
