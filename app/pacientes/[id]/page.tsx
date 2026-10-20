@@ -21,6 +21,7 @@ import {
 } from '@/components/ui'
 import { usePageHeader } from '@/components/shell/header-context'
 import { BotaoPortalPaciente } from '@/components/BotaoPortalPaciente'
+import { ArquivosDoPaciente } from '@/components/pacientes/ArquivosDoPaciente'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 
 import { normalizarConvenio } from '@/lib/convenios'
@@ -434,6 +435,8 @@ export default function PacienteDetalhe() {
                 <StatCard icon={CalendarDays} cor={T.data.purple} label="Agendamentos" valor={String(agendamentosAtivos)} />
                 <StatCard icon={Clock} cor={T.data.green} label="Próximo" valor={prox ? fmt(prox.data_hora) : 'Não agendado'} pequeno />
               </div>
+
+              {paciente?.id && <ArquivosDoPaciente pacienteId={paciente.id} />}
 
               <Card padding={0}>
                 <div style={{ display: 'flex', alignItems: 'center', padding: '16px 18px 10px' }}>

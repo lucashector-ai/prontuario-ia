@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { contextoDaRequisicao, naoAutenticado } from '@/lib/acesso'
+import { guardarDocumento } from '@/lib/portal/arquivos'
 import { dadosDoDocumento, paginaDocumento, esc } from '@/lib/documentos-html'
 
 /**
@@ -23,7 +24,9 @@ export async function POST(req: NextRequest) {
       <ol>${lista.map(e => `<li><b>${esc(e.nome)}</b>${e.indicacao ? `<br/><span style="font-size:12px;color:#444">${esc(e.indicacao)}</span>` : ''}</li>`).join('')}</ol>
       ${b.indicacao_clinica ? `<p><b>Indicação clínica:</b> ${esc(b.indicacao_clinica)}</p>` : ''}
       ${b.observacoes ? `<p><b>Orientações:</b> ${esc(b.observacoes)}</p>` : ''}`
-    return new NextResponse(paginaDocumento('Pedido de exames', d, corpo), { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+    const html = paginaDocumento('Pedido de exames', d, corpo)
+    if (b.liberar_portal) await guardarDocumento(ctx, { pacienteId: b.paciente_id, medicoId: b.medico_id, tipo: 'pedido_exames', titulo: `Pedido de exames (${lista.length})`, html }).catch(() => {})
+    return new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   } catch {
     return NextResponse.json({ error: 'Não foi possível gerar o pedido de exames. Tente de novo.' }, { status: 500 })
   }

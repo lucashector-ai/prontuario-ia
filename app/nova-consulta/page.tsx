@@ -364,6 +364,7 @@ const handleCopiar = () => {
 
   // Atestado não depende de IA: dias, CID (só com autorização do paciente) e impressão
   const [cidNoAtestado, setCidNoAtestado] = useState(false)
+  const [liberarPortal, setLiberarPortal] = useState(true)  // documentos aparecem no portal do paciente
   const [examesDigitados, setExamesDigitados] = useState('')
   const pacienteDoc = () => ({ paciente_id: pacienteSelecionado?.id || null, paciente_avulso: pacienteSelecionado ? null : pacienteAvulso, medico_id: medico?.id })
   const abrirDocumento = async (rota: string, corpo: any) => {
@@ -377,11 +378,11 @@ const handleCopiar = () => {
   const imprimirAtestado = () => {
     if (!medico) return
     const cid = (prontuario?.cids || [])[0]?.codigo || ''
-    return abrirDocumento('/api/pdf-atestado', { ...pacienteDoc(), dias: diasAtestado, cid, incluir_cid: cidNoAtestado && !!cid })
+    return abrirDocumento('/api/pdf-atestado', { ...pacienteDoc(), dias: diasAtestado, cid, incluir_cid: cidNoAtestado && !!cid, liberar_portal: liberarPortal && !!pacienteSelecionado?.id })
   }
   const imprimirPedidoExames = () => {
     const lista = exames?.exames?.length ? exames.exames : examesDigitados
-    return abrirDocumento('/api/pdf-pedido-exames', { ...pacienteDoc(), exames: lista, indicacao_clinica: prontuario?.avaliacao || '', observacoes: exames?.observacoes || '' })
+    return abrirDocumento('/api/pdf-pedido-exames', { ...pacienteDoc(), exames: lista, indicacao_clinica: prontuario?.avaliacao || '', observacoes: exames?.observacoes || '', liberar_portal: liberarPortal && !!pacienteSelecionado?.id })
   }
 
   const buscarSugestoes = async (texto: string) => {
@@ -840,6 +841,12 @@ const handleCopiar = () => {
                   </label>
                 )}
               </LinhaDocumento>
+              {pacienteSelecionado?.id && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: T.text.secondary, marginTop: 10, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={liberarPortal} onChange={e => setLiberarPortal(e.target.checked)} />
+                  Deixar o atestado e o pedido de exames no portal do paciente
+                </label>
+              )}
             </Card>
 
             {/* Resumo / orientações ao paciente */}

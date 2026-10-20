@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { contextoDaRequisicao, naoAutenticado } from '@/lib/acesso'
+import { guardarDocumento } from '@/lib/portal/arquivos'
 import { dadosDoDocumento, paginaDocumento, porExtenso, esc, dataLonga } from '@/lib/documentos-html'
 
 /**
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
       + (a.observacoes ? `<p>${esc(a.observacoes)}</p>` : '')
 
     const html = paginaDocumento(comparecimento ? 'Declaração de comparecimento' : 'Atestado médico', d, corpo)
+    if (b.liberar_portal) await guardarDocumento(ctx, { pacienteId: b.paciente_id, medicoId: b.medico_id, tipo: comparecimento ? 'comparecimento' : 'atestado', titulo: comparecimento ? 'Declaração de comparecimento' : `Atestado de ${dias} dia${dias > 1 ? 's' : ''}`, html }).catch(() => {})
     return new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   } catch (e: any) {
     return NextResponse.json({ error: 'Não foi possível gerar o atestado. Tente de novo.' }, { status: 500 })

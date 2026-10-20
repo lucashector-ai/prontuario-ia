@@ -8,10 +8,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import {
   CalendarCheck, CalendarClock, CheckCircle2, ClipboardList, MapPin, MessageCircle, Phone, Stethoscope, Video, Hand, CircleAlert, LinkIcon,
+  FileText, Upload, Camera, Paperclip,
 } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
 import { Button, Chip, Textarea, Icon } from '@/components/ui'
 import { CascaPublica, cartaoPublico, Spinner } from '@/components/publico/CascaPublica'
+import { supabase } from '@/lib/supabase'
 
 type Portal = {
   clinica: { nome: string; logo_url: string | null; telefone: string | null; endereco: string | null }
@@ -22,6 +24,8 @@ type Portal = {
   }
   formularios: { nome: string; url: string }[]
   retorno: { data_prevista: string; motivo: string | null } | null
+  documentos: { id: string; tipo: string; titulo: string; criado_em: string }[]
+  anexos: { id: string; nome_arquivo: string; criado_em: string }[]
 }
 
 const TZ = 'America/Sao_Paulo'
@@ -50,6 +54,41 @@ export default function PortalPaciente() {
   const [quando, setQuando] = useState<string | null>(null)
   const [obs, setObs] = useState('')
   const [checkin, setCheckin] = useState<{ senha: string; na_frente?: number } | null>(null)
+  const [enviandoArq, setEnviandoArq] = useState<string | null>(null)
+  const [avisoArq, setAvisoArq] = useState<string | null>(null)
+
+  async function post(corpo: any) {
+    const r = await fetch(`/api/portal/${token}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) })
+    const j = r.headers.get('content-type')?.includes('json') ? await r.json().catch(() => ({})) : null
+    if (!r.ok) throw new Error(j?.erro || 'Não deu certo agora. Tente de novo.')
+    return { r, j }
+  }
+
+  /** Envia direto do celular para o armazenamento da clínica (URL assinada), um arquivo por vez. */
+  async function enviarArquivos(lista: FileList | null) {
+    if (!lista?.length) return
+    setAvisoArq(null)
+    for (const f of Array.from(lista)) {
+      setEnviandoArq(f.name)
+      try {
+        const { j } = await post({ acao: 'upload', nome: f.name, tipo: f.type || 'application/octet-stream', tamanho: f.size })
+        const { error } = await supabase.storage.from('paciente-anexos').uploadToSignedUrl(j.caminho, j.token, f, { contentType: f.type })
+        if (error) throw new Error('O envio falhou. Confira sua internet e tente de novo.')
+        await post({ acao: 'upload_ok', anexo_id: j.id })
+      } catch (e: any) { setAvisoArq(`${f.name}: ${e.message}`); break }
+    }
+    setEnviandoArq(null)
+    carregar()
+  }
+
+  async function abrirDocumento(id: string) {
+    const janela = window.open('', '_blank')
+    try {
+      const { r } = await post({ acao: 'documento', documento_id: id })
+      const html = await r.text()
+      if (janela) { janela.document.write(html); janela.document.close() }
+    } catch (e: any) { janela?.close(); setAvisoArq(e.message) }
+  }
 
   const carregar = useCallback(async () => {
     try {
@@ -209,6 +248,53 @@ export default function PortalPaciente() {
             ))}
           </section>
         )}
+
+        {/* Documentos liberados pelo médico */}
+        {dados.documentos?.length > 0 && (
+          <section style={cartao}>
+            <span style={tituloCartao}><Icon icon={FileText} size={15} /> Seus documentos</span>
+            {dados.documentos.map(d => (
+              <button key={d.id} onClick={() => abrirDocumento(d.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 14, border: `1px solid ${T.border.default}`, background: '#fff', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                <Icon icon={FileText} size={18} color={T.brand.primary} />
+                <span style={{ flex: 1 }}>
+                  <span style={{ display: 'block', fontSize: 15.5, fontWeight: 600, color: T.text.primary }}>{d.titulo}</span>
+                  <span style={{ display: 'block', fontSize: 13, color: T.text.tertiary }}>{new Date(d.criado_em).toLocaleDateString('pt-BR', { timeZone: TZ })}</span>
+                </span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: T.brand.primary }}>Abrir →</span>
+              </button>
+            ))}
+          </section>
+        )}
+
+        {/* Enviar exames e documentos */}
+        <section style={cartao}>
+          <span style={tituloCartao}><Icon icon={Paperclip} size={15} /> Enviar exames e documentos</span>
+          <div style={{ fontSize: 15, color: T.text.secondary, lineHeight: 1.5 }}>Mande fotos ou PDFs de exames anteriores, pedidos e receitas. O médico vê antes da consulta.</div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <label style={{ ...botaoGrande, flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px solid ${T.border.default}`, background: '#fff', fontWeight: 600, color: T.text.primary, cursor: 'pointer' }}>
+              <Icon icon={Camera} size={18} /> Tirar foto
+              <input type="file" accept="image/*" capture="environment" hidden disabled={!!enviandoArq} onChange={e => { enviarArquivos(e.target.files); e.target.value = '' }} />
+            </label>
+            <label style={{ ...botaoGrande, flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px solid ${T.border.default}`, background: '#fff', fontWeight: 600, color: T.text.primary, cursor: 'pointer' }}>
+              <Icon icon={Upload} size={18} /> Escolher arquivo
+              <input type="file" accept="image/*,application/pdf" multiple hidden disabled={!!enviandoArq} onChange={e => { enviarArquivos(e.target.files); e.target.value = '' }} />
+            </label>
+          </div>
+          <div style={{ fontSize: 13, color: T.text.tertiary }}>JPG, PNG ou PDF, até 15 MB cada.</div>
+          {enviandoArq && <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: T.text.secondary }}><Spinner tamanho={16} /> Enviando {enviandoArq}…</div>}
+          {avisoArq && <div style={{ padding: '10px 12px', borderRadius: 12, background: T.status.warningBg, color: T.status.warning, fontSize: 14, fontWeight: 600 }}>{avisoArq}</div>}
+          {dados.anexos?.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {dados.anexos.map(a => (
+                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: T.text.secondary }}>
+                  <Icon icon={CheckCircle2} size={15} color={T.status.success} />
+                  <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.nome_arquivo}</span>
+                  <span style={{ fontSize: 12.5, color: T.text.tertiary }}>enviado</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* Retorno */}
         {retorno && (
