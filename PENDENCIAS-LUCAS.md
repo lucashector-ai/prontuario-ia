@@ -1,5 +1,8 @@
 # O que depende do Lucas
 
+## 🔴 URGENTE
+- [ ] **Recarregar os créditos da Anthropic** (console.anthropic.com → Plans & Billing). Desde 20/10 a IA do prontuário responde "credit balance is too low": nenhum médico consegue gerar prontuário com IA. Enquanto isso, o sistema já oferece "Salvar o texto sem a IA".
+
 Lista viva: o Claude vai acrescentando à medida que o trabalho avança. Risque o que já fez.
 
 ## Banco de dados (Supabase → SQL Editor, rodar na ordem)
@@ -10,6 +13,9 @@ _Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 ví
 - [x] `supabase/migrations/0024_contas_unidades.sql`: contas com várias unidades (organização, pessoas e vínculos). Até rodar, a aba Unidades avisa que não está ativa e o resto segue igual.
 
 ## Decisões
+- [ ] Planos se contradizem: o Solo tem "consultas com IA ilimitadas" e o Clínica (mais caro) tem "1.000 consultas com IA por mês". Qual é o certo? (`lib/planos.ts` e página inicial)
+- [ ] Consentimento para gravar a consulta (LGPD): mostrar ao médico um aviso "o paciente autorizou a gravação?" antes de gravar, e guardar esse registro? Recomendo que sim.
+- [ ] Assinatura digital dos documentos (ICP-Brasil, CFM 1.821/2007): hoje atestado, pedido de exames e prontuário saem para assinar à mão. A receita já é assinada pela Memed.
 - [ ] Apagar contas de teste: o sistema não me deixa apagar dados de produção. Apague pelo Supabase (Table Editor) ou libere a permissão para eu escrever o script. Antes, confirme as clínicas "Enfermeiros Care" (itsmarisantos2000@gmail.com) e "Clínica ZenCardio" (juniorrosalvo2015@gmail.com), que parecem clientes reais, e a "Clínica Demonstração" (revisao.meta@clinical360.app), usada na revisão da Meta.
 - [ ] Cobrança automática dos planos: hoje "Quero o plano" manda um pedido por email e o plano é trocado no /superadmin. Para pagar e liberar sozinho, escolher o meio de pagamento (Asaas, Mercado Pago ou Stripe).
 - [x] Pedido de "plano completo": por email (feito).
