@@ -1,40 +1,49 @@
-
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseServidor as supabase } from "@/lib/servidor"
+import { contextoDaRequisicao, medicoDaClinica, naoAutenticado, proibido } from "@/lib/acesso"
 import bcrypt from "bcryptjs"
+
+const senhaEhForte = (s: string) => s.length >= 8 && /[A-Z]/.test(s) && /[a-z]/.test(s) && /[0-9]/.test(s)
+
+// Equipe da clínica — sempre a clínica da SESSÃO (o clinica_id da URL/corpo é ignorado)
+async function gestor(req: NextRequest) {
+  const ctx = await contextoDaRequisicao(req)
+  if (!ctx) return { erro: naoAutenticado() }
+  if (!ctx.gestor || !ctx.clinica_id) return { erro: proibido('Só o administrador da clínica gerencia a equipe') }
+  return { clinicaId: ctx.clinica_id }
+}
 
 // GET - busca médicos da clínica
 export async function GET(req: NextRequest) {
-  const clinicaId = req.nextUrl.searchParams.get("clinica_id")
-  if (!clinicaId) return NextResponse.json({ error: "clinica_id obrigatório" }, { status: 400 })
-
+  const g = await gestor(req); if (g.erro) return g.erro
   const [{ data: medicos }, { data: clinica }] = await Promise.all([
-    supabase.from("medicos").select("id, nome, email, especialidade, crm, cargo, ativo, criado_em").eq("clinica_id", clinicaId).order("criado_em"),
-    supabase.from("clinicas").select("*, planos(*)").eq("id", clinicaId).single(),
+    supabase.from("medicos").select("id, nome, email, especialidade, crm, cargo, ativo, criado_em").eq("clinica_id", g.clinicaId).order("criado_em"),
+    supabase.from("clinicas").select("*, planos(*)").eq("id", g.clinicaId).single(),
   ])
-
   return NextResponse.json({ medicos: medicos || [], clinica })
 }
 
-// POST - adiciona médico à clínica
+// POST - adiciona médico à clínica (senha obrigatória e forte — não existe mais senha padrão)
 export async function POST(req: NextRequest) {
   try {
-    const { clinica_id, nome, email, especialidade, crm, senha, cargo } = await req.json()
-    
-    // Verifica limite do plano
-    const { data: clinica } = await supabase.from("clinicas").select("*, planos(max_medicos)").eq("id", clinica_id).single()
-    const { count: totalMedicos } = await supabase.from("medicos").select("*", { count: "exact", head: true }).eq("clinica_id", clinica_id).eq("ativo", true)
-    
+    const g = await gestor(req); if (g.erro) return g.erro
+    const { nome, email, especialidade, crm, senha, cargo } = await req.json()
+    if (!nome || !email) return NextResponse.json({ error: "Nome e email são obrigatórios" }, { status: 400 })
+    if (!senhaEhForte(senha || '')) return NextResponse.json({ error: "Senha fraca: use 8+ caracteres com maiúscula, minúscula e número" }, { status: 400 })
+
+    const { data: clinica } = await supabase.from("clinicas").select("*, planos(max_medicos)").eq("id", g.clinicaId).single()
+    const { count: totalMedicos } = await supabase.from("medicos").select("*", { count: "exact", head: true }).eq("clinica_id", g.clinicaId).eq("ativo", true)
     const maxMedicos = (clinica as any)?.planos?.max_medicos || 3
     if ((totalMedicos || 0) >= maxMedicos) return NextResponse.json({ error: `Limite de ${maxMedicos} médicos atingido para o plano atual` }, { status: 403 })
 
-    const { data: existe } = await supabase.from("medicos").select("id").eq("email", email).single()
+    const emailNorm = String(email).trim().toLowerCase()
+    const { data: existe } = await supabase.from("medicos").select("id").eq("email", emailNorm).maybeSingle()
     if (existe) return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 400 })
 
-    const hash = await bcrypt.hash(senha || "medIA@2026", 10)
+    const hash = await bcrypt.hash(senha, 10)
     const { data: medico, error } = await supabase
       .from("medicos")
-      .insert({ nome, email, especialidade, crm, senha_hash: hash, ativo: true, clinica_id, cargo: cargo || "medico" })
+      .insert({ nome, email: emailNorm, especialidade, crm, senha_hash: hash, ativo: true, clinica_id: g.clinicaId, cargo: cargo === 'recepcionista' ? 'recepcionista' : 'medico' })
       .select().single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -47,15 +56,19 @@ export async function POST(req: NextRequest) {
 
 // PATCH - ativa/desativa médico
 export async function PATCH(req: NextRequest) {
+  const g = await gestor(req); if (g.erro) return g.erro
   const { medico_id, ativo } = await req.json()
-  await supabase.from("medicos").update({ ativo }).eq("id", medico_id)
+  if (!(await medicoDaClinica(medico_id, g.clinicaId!))) return proibido('Pessoa não encontrada nesta clínica')
+  await supabase.from("medicos").update({ ativo: !!ativo }).eq("id", medico_id).eq("clinica_id", g.clinicaId)
   return NextResponse.json({ ok: true })
 }
 
 // DELETE - remove médico da clínica
 export async function DELETE(req: NextRequest) {
+  const g = await gestor(req); if (g.erro) return g.erro
   const medicoId = req.nextUrl.searchParams.get("medico_id")
   if (!medicoId) return NextResponse.json({ error: "medico_id obrigatório" }, { status: 400 })
-  await supabase.from("medicos").delete().eq("id", medicoId)
+  if (!(await medicoDaClinica(medicoId, g.clinicaId!))) return proibido('Pessoa não encontrada nesta clínica')
+  await supabase.from("medicos").delete().eq("id", medicoId).eq("clinica_id", g.clinicaId)
   return NextResponse.json({ ok: true })
 }

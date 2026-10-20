@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseServidor as supabase } from "@/lib/servidor"
+import { contextoDaRequisicao, naoAutenticado, proibido } from "@/lib/acesso"
 import bcrypt from "bcryptjs"
 
 // Gera senha aleatória com maiúscula, minúscula, número e símbolo
@@ -10,7 +11,8 @@ function gerarSenhaProvisoria(): string {
   const simbolos = '!@#$%&*'
   const all = maiusculas + minusculas + numeros + simbolos
 
-  const pick = (set: string) => set[Math.floor(Math.random() * set.length)]
+  // Sorteio criptográfico (Math.random é previsível)
+  const pick = (set: string) => set[crypto.getRandomValues(new Uint32Array(1))[0] % set.length]
 
   // Garante pelo menos 1 de cada
   let s = [
@@ -27,8 +29,14 @@ function gerarSenhaProvisoria(): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // Só o gestor cadastra gente, e sempre na clínica da própria sessão (nunca a do corpo)
+    const ctx = await contextoDaRequisicao(req)
+    if (!ctx) return naoAutenticado()
+    if (!ctx.gestor || !ctx.clinica_id) return proibido('Só o administrador da clínica cadastra a equipe')
+    const clinica_id = ctx.clinica_id
+
     const body = await req.json()
-    const { nome, crm, especialidade, email, senha, nome_clinica, clinica_id, cargo: cargoBody, cor, comissao_tipo, comissao_valor, comissao_base, cpf, data_nascimento } = body
+    const { nome, crm, especialidade, email, cargo: cargoBody, cor, comissao_tipo, comissao_valor, comissao_base, cpf, data_nascimento } = body
     const cargoFinal = cargoBody === 'recepcionista' ? 'recepcionista' : 'medico'
 
     if (!nome || !email) {
@@ -43,8 +51,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 400 })
     }
 
-    // CASO 1: clinica já existe, adição de médico pela clínica → gera senha provisória
-    if (clinica_id) {
+    // Adição de médico/recepção pela clínica → gera senha provisória
+    {
       const senhaProvisoria = gerarSenhaProvisoria()
       const hash = await bcrypt.hash(senhaProvisoria, 10)
 
@@ -82,43 +90,6 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // CASO 2: cadastro inicial da clínica (fluxo antigo mantido)
-    if (!senha) {
-      return NextResponse.json({ error: "Senha é obrigatória no cadastro inicial" }, { status: 400 })
-    }
-
-    const hash = await bcrypt.hash(senha, 10)
-
-    const { data: clinica, error: errClinica } = await supabase
-      .from("clinicas")
-      .insert({ nome: nome_clinica || `Clínica ${nome}` })
-      .select().single()
-
-    if (errClinica || !clinica) {
-      return NextResponse.json({ error: "Erro ao criar clínica" }, { status: 500 })
-    }
-
-    const { data: medico, error } = await supabase
-      .from("medicos")
-      .insert({
-        nome,
-        crm: crm || null,
-        especialidade: especialidade || null,
-        email: emailNorm,
-        senha_hash: hash,
-        ativo: true,
-        clinica_id: clinica.id,
-        cargo: "admin",
-        verificado: true,
-      })
-      .select().single()
-
-    if (error || !medico) {
-      return NextResponse.json({ error: error?.message || "Erro ao criar médico" }, { status: 500 })
-    }
-
-    const { senha_hash, ...medicoSemSenha } = medico as any
-    return NextResponse.json({ medico: medicoSemSenha })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
