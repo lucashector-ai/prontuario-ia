@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, DoorOpen, Cpu, Wrench, Settings2 } from 'lucide-react'
-import { tokens as T, tint } from '@/lib/design-tokens'
+import { tokens as T } from '@/lib/design-tokens'
 import { usePageHeader } from '@/components/shell/header-context'
 import { Button, Card, EmptyState } from '@/components/ui'
 import { ehDemo, comDemo } from '@/lib/demo'
@@ -107,7 +107,7 @@ export default function SalasDoDia() {
                       <div key={r.id} title={manut ? `Manutenção ${hhmm(r.inicio)}–${hhmm(r.fim)}${r.observacao ? ' · ' + r.observacao : ''}` : `${hhmm(r.inicio)}–${hhmm(r.fim)} · ${r.agendamento?.paciente?.nome || 'Paciente'} · ${r.agendamento?.medico?.nome || ''}`}
                         onClick={() => r.agendamento?.id && r.agendamento.id !== 'x' && router.push(comDemo('/agenda?ag=' + r.agendamento.id))}
                         style={{ position: 'absolute', top: 6, bottom: 6, left: pos(ini), width: `calc(${pos(fim)} - ${pos(ini)} - 2px)`, borderRadius: 8, padding: '3px 6px', overflow: 'hidden',
-                          background: tint(cor, 0.14), borderLeft: `3px solid ${cor}`, cursor: r.agendamento ? 'pointer' : 'default', fontSize: 11, lineHeight: 1.25, color: T.text.primary }}>
+                          background: manut ? T.status.warningBg : T.brand.primaryLight, borderLeft: `3px solid ${cor}`, cursor: r.agendamento ? 'pointer' : 'default', fontSize: 11, lineHeight: 1.25, color: T.text.primary }}>
                         {manut ? <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, color: T.status.warning }}><Wrench size={11} /> Manutenção</span>
                           : <><b style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.agendamento?.paciente?.nome || 'Paciente'}</b>
                             <span style={{ color: T.text.secondary, whiteSpace: 'nowrap' }}>{hhmm(r.inicio)} · {r.agendamento?.medico?.nome || ''}</span></>}
