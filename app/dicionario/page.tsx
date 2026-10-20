@@ -59,7 +59,7 @@ export default function Dicionario() {
       setNovoTermo(''); setNovaDescricao('')
       toast('Termo adicionado!')
     } else {
-      toast(error?.message || 'Erro ao salvar', 'error')
+      toast('Não foi possível salvar. Confira a conexão e tente de novo.', 'error')
     }
     setSalvando(false)
   }

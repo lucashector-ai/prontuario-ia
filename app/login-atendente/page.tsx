@@ -40,7 +40,7 @@ export default function LoginAtendente() {
       } else {
         setErro(data.error || 'Email ou senha incorretos')
       }
-    } catch { setErro('Erro de conexão') }
+    } catch { setErro('Sem conexão com a internet. Confira e tente de novo.') }
     finally { setLoading(false) }
   }
 

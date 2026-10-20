@@ -50,7 +50,7 @@ export default function AbaRetornos({ medico, demo }: { medico: MedicoCtx; demo:
       const j = await r.json()
       if (!r.ok) { setAviso(j.falta_migration ? 'Os retornos ainda não estão ativos na sua conta. Fale com o suporte do Clinical 360 para liberar.' : (j.error || 'Não foi possível carregar a lista. Tente de novo.')); setRetornos([]) }
       else { setAviso(null); setRetornos(j.retornos || []) }
-    } catch { setAviso('Sem conexão. Tente novamente.') }
+    } catch { setAviso('Sem conexão com a internet. Confira e tente de novo.') }
     setCarregando(false)
   }, [demo, medico.id])
   useEffect(() => { carregar() }, [carregar])

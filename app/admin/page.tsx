@@ -194,7 +194,7 @@ function Admin() {
       if (data.medico) {
         setMedicos(prev => prev.map(m => m.id === modalEditar.id ? { ...m, ...formEditar } : m))
         setModalEditar(null)
-        toast('Atualizado!')
+        toast(`Dados de ${formEditar.nome || modalEditar.nome || 'membro'} atualizados`)
       } else throw new Error(data.error)
     } catch (e: any) { toast(e.message, 'error') }
     finally { setSalvando(false) }
@@ -209,7 +209,7 @@ function Admin() {
       if (data.ok) {
         setMedicos(prev => prev.filter(m => m.id !== modalExcluir.id))
         setModalExcluir(null)
-        toast('Removido')
+        toast(`${modalExcluir.nome || 'Membro'} removido da equipe`)
       } else throw new Error(data.error)
     } catch (e: any) { toast(e.message, 'error') }
     finally { setSalvando(false) }
@@ -218,7 +218,8 @@ function Admin() {
   const toggleAtivo = async (id: string, ativo: boolean) => {
     await supabase.from('medicos').update({ ativo: !ativo }).eq('id', id)
     setMedicos(prev => prev.map(m => m.id === id ? { ...m, ativo: !ativo } : m))
-    toast(ativo ? 'Desativado' : 'Reativado', ativo ? 'error' : 'success')
+    const nomeMembro = medicos.find(m => m.id === id)?.nome || 'membro'
+    toast(ativo ? `Acesso de ${nomeMembro} desativado` : `Acesso de ${nomeMembro} reativado`, ativo ? 'error' : 'success')
   }
 
   const abrirEditar = (m: any) => {
@@ -268,7 +269,7 @@ function Admin() {
   }
 
   const ROLE: Record<string, { label: string; tone: 'accent' | 'info' | 'warning' }> = {
-    admin: { label: 'Admin', tone: 'accent' },
+    admin: { label: 'Administrador', tone: 'accent' },
     medico: { label: 'Médico', tone: 'info' },
     recepcionista: { label: 'Recepção', tone: 'warning' },
     enfermagem: { label: 'Enfermagem', tone: 'info' },
@@ -435,7 +436,7 @@ function Admin() {
               <Input value={form.nome} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))}
                 placeholder={modalNovoTipo === 'medico' ? 'Dr. João Silva' : 'Maria Santos'} />
             </Field>
-            <Field label="E-mail *">
+            <Field label="Email *">
               <Input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
                 placeholder="nome@clinica.com" />
             </Field>
@@ -503,7 +504,7 @@ function Admin() {
             <Field label="Nome completo">
               <Input value={formEditar.nome} onChange={e => setFormEditar(p => ({ ...p, nome: e.target.value }))} />
             </Field>
-            <Field label="E-mail">
+            <Field label="Email">
               <Input value={formEditar.email} onChange={e => setFormEditar(p => ({ ...p, email: e.target.value }))} />
             </Field>
             {!ehApoio(modalEditar.cargo) && (
@@ -516,7 +517,7 @@ function Admin() {
                 </Field>
               </div>
             )}
-            <Field label="Cargo">
+            <Field label="Função">
               <Select value={formEditar.cargo} onChange={e => setFormEditar(p => ({ ...p, cargo: e.target.value }))}>
                 <option value="medico">Médico</option>
                 <option value="recepcionista">Recepção</option>
@@ -581,7 +582,7 @@ function Admin() {
 
           <div style={{ border: `1px solid ${T.border.default}`, borderRadius: 14, padding: 14, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
-              <Overline>E-mail</Overline>
+              <Overline>Email</Overline>
               <p style={{ fontSize: 13.5, fontWeight: 600, color: T.text.primary, margin: '4px 0 0', wordBreak: 'break-all' }}>{senhaGerada.pessoa.email}</p>
             </div>
             <div>

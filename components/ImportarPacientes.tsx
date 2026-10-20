@@ -121,7 +121,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
       setLinhasBrutas(linhas)
       await fazerPreview(linhas)
     } catch (e: any) {
-      setErro(e.message || 'Erro ao processar arquivo')
+      setErro(e.message || 'Não foi possível ler a planilha. Confira o arquivo e tente de novo.')
     } finally {
       setCarregando(false)
     }
@@ -153,7 +153,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
       setLinhasBrutas(linhas)
       await fazerPreview(linhas)
     } catch (e: any) {
-      setErro(e.message || 'Erro ao buscar Google Sheets')
+      setErro(e.message || 'Não foi possível abrir a planilha. Confira se o link está público.')
     } finally {
       setCarregando(false)
     }
@@ -166,7 +166,7 @@ export function ImportarPacientes({ aberto, onFechar, onImportado, medicoId, cli
       body: JSON.stringify({ medico_id: medicoDestino || medicoId, clinica_id: clinicaId, linhas, modo: 'preview' }),
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Erro ao processar preview')
+    if (!res.ok) throw new Error(data.error || 'Não foi possível ler a planilha. Confira o arquivo e tente de novo.')
     setPreview(data)
     setEtapa('preview')
   }

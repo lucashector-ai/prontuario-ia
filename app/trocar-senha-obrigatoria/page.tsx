@@ -51,7 +51,7 @@ export default function TrocarSenhaObrigatoria() {
       localStorage.setItem('medico', JSON.stringify(novoMedico))
       router.push('/onboarding')
     } catch (e: any) {
-      setErro(e.message || 'Erro ao salvar')
+      setErro(e.message || 'Não foi possível salvar a senha. Tente de novo.')
     } finally {
       setSalvando(false)
     }

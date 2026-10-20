@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { log } from '@/lib/logger'
 import { validarFormatoSlug, checarDisponibilidadeSlug, sugerirAlternativaSlug } from '@/lib/agenda-publica/slug'
 
 export async function POST(req: NextRequest) {
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
       sugestao
     })
   } catch (e: any) {
-    return NextResponse.json({ disponivel: false, erro: e.message || 'Erro ao validar' }, { status: 500 })
+    log.error('[check-slug]', e?.message)
+    return NextResponse.json({ disponivel: false, erro: 'Não foi possível conferir este endereço agora. Tente de novo.' }, { status: 500 })
   }
 }

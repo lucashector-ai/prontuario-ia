@@ -122,7 +122,7 @@ export default function AgendaPublicaPage() {
         }
       } catch (e: any) {
         setStatusSlug('erro')
-        setErroSlug('Erro ao validar')
+        setErroSlug('Não foi possível conferir este endereço agora. Tente de novo.')
       } finally {
         setValidandoSlug(false)
       }
@@ -163,7 +163,7 @@ export default function AgendaPublicaPage() {
       atualizarMedicoAtivo(updates)
       setMensagem({ tipo: 'ok', texto: 'Configurações salvas com sucesso.' })
     } catch (e: any) {
-      setMensagem({ tipo: 'erro', texto: e.message || 'Erro ao salvar' })
+      setMensagem({ tipo: 'erro', texto: e.message || 'Não foi possível salvar. Confira a conexão e tente de novo.' })
     } finally {
       setSalvando(false)
     }

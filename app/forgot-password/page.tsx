@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
       const data = await res.json()
       if (data.ok) setEnviado(true)
       else setErro(data.error || 'Email nao encontrado')
-    } catch { setErro('Erro de conexao') }
+    } catch { setErro('Sem conexão com a internet. Confira e tente de novo.') }
     finally { setLoading(false) }
   }
 

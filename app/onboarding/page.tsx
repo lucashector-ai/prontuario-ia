@@ -150,7 +150,7 @@ export default function OnboardingPage() {
       localStorage.setItem('medico', JSON.stringify(novo))
       return true
     } catch (e: any) {
-      setErro(e.message || 'Erro ao salvar')
+      setErro(e.message || 'Não foi possível salvar seus dados. Tente de novo.')
       return false
     } finally {
       setSalvando(false)
@@ -172,7 +172,7 @@ export default function OnboardingPage() {
       } catch {}
       return true
     } catch (e: any) {
-      setErro(e.message || 'Erro ao salvar')
+      setErro(e.message || 'Não foi possível salvar seus dados. Tente de novo.')
       return false
     } finally {
       setSalvando(false)

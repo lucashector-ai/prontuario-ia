@@ -195,7 +195,7 @@ export default function ChatAssistente({
       })
 
       if (!res.ok || !res.body) {
-        let msgErro = 'Erro ao processar. Tente novamente.'
+        let msgErro = 'Não consegui responder agora. Tente de novo em instantes.'
         try {
           const j = await res.json()
           if (j.erro) msgErro = j.erro
@@ -221,7 +221,7 @@ export default function ChatAssistente({
       await salvarMensagem({ conversaId: convId, papel: 'assistant', conteudo: acumulado })
       if (conversaNova) onTituloAtualizado()
     } catch (e: any) {
-      setErro('Erro de conexão. Verifique sua internet e tente novamente.')
+      setErro('Sem conexão com a internet. Confira e tente de novo.')
     } finally {
       setStreaming(false)
     }

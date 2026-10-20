@@ -60,7 +60,7 @@ export function AvisoConexao() {
         display: 'flex', alignItems: 'center', gap: 6, height: 30, padding: '0 10px', borderRadius: 8, border: '1px solid #EBC98E',
         background: '#fff', color: '#7A4A00', fontSize: 12.5, fontWeight: 600, cursor: checando ? 'wait' : 'pointer', fontFamily: 'inherit', flexShrink: 0,
       }}>
-        <RotateCw size={13} style={{ animation: checando ? 'spin .8s linear infinite' : 'none' }} />Tentar novamente
+        <RotateCw size={13} style={{ animation: checando ? 'spin .8s linear infinite' : 'none' }} />Tentar de novo
       </button>
     </div>
   )

@@ -78,7 +78,7 @@ function LoginForm() {
 
       setErro('Resposta inesperada do servidor')
     } catch {
-      setErro('Erro de conexão')
+      setErro('Sem conexão com a internet. Confira e tente de novo.')
     } finally {
       setCarregando(false)
     }

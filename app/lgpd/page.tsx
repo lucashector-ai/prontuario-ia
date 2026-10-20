@@ -94,7 +94,7 @@ export default function LGPD() {
 
   const direitos: { titulo: string; desc: string; icon: LucideIcon }[] = [
     { titulo: 'Acesso', desc: 'Veja todos os dados armazenados sobre você', icon: Eye },
-    { titulo: 'Portabilidade', desc: 'Exporte em formato legível (JSON)', icon: Upload },
+    { titulo: 'Portabilidade', desc: 'Leve seus dados para outro sistema', icon: Upload },
     { titulo: 'Correção', desc: 'Ajuste dados incorretos no seu perfil', icon: PenLine },
     { titulo: 'Eliminação', desc: 'Delete sua conta permanentemente', icon: Trash2 },
   ]
@@ -102,7 +102,7 @@ export default function LGPD() {
   const consentimentos = [
     { label: 'Armazenamento de prontuários médicos', desc: 'Essencial para o funcionamento da plataforma', obrig: true },
     { label: 'Transcrição de consultas com IA', desc: 'Áudios processados pela Deepgram e Anthropic', obrig: true },
-    { label: 'Envio de mensagens pelo WhatsApp', desc: 'Integração com Meta WhatsApp Business API', obrig: false },
+    { label: 'Envio de mensagens pelo WhatsApp', desc: 'Envio pelo WhatsApp oficial (Meta)', obrig: false },
     { label: 'Análise de métricas e relatórios', desc: 'Dados agregados para o dashboard', obrig: false },
   ]
 
@@ -162,12 +162,12 @@ export default function LGPD() {
 
           {/* Exportar */}
           <Card padding={20}>
-            <CabecalhoCard icon={Upload} titulo="Exportar meus dados" sub="Baixe tudo em formato JSON" />
+            <CabecalhoCard icon={Upload} titulo="Exportar meus dados" sub="Baixe um arquivo com tudo (formato JSON)" />
             <p style={{ fontSize: 13, color: T.text.secondary, margin: '0 0 16px', lineHeight: 1.6 }}>
               O arquivo inclui todos os seus pacientes, consultas e agendamentos. Ideal pra migrar de plataforma ou fazer backup pessoal.
             </p>
             <Button icon={Download} onClick={exportarDados} disabled={exportando}>
-              {exportando ? 'Exportando…' : 'Exportar tudo em JSON'}
+              {exportando ? 'Exportando…' : 'Exportar meus dados'}
             </Button>
           </Card>
 

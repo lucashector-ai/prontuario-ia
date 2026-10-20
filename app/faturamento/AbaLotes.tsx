@@ -29,7 +29,7 @@ export function AbaLotes({ fat, abrirGuia, irPara }: { fat: Faturamento; abrirGu
     if (!envio) return
     if (envio.modo === 'protocolo') { await fat.salvarProtocolo(envio.lote, protocolo.trim()); setEnvio(null); return }
     const r = await fat.marcarEnviado(envio.lote, protocolo.trim())
-    if (!r.ok) { notificar(r.mensagem || 'Erro', 'erro'); return }
+    if (!r.ok) { notificar(r.mensagem || 'Não foi possível concluir. Confira os dados e tente de novo.', 'erro'); return }
     setEnvio(null)
   }
 

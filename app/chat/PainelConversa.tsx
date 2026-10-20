@@ -304,7 +304,7 @@ function PainelContato({ c, api, onFechar, onAbrirPaciente }: { c: Conversa; api
             <CanalIcone canal={canal} size={14} />{CANAIS.find(x => x.id === canal)!.label}
           </div>
         </div>
-        <InfoLinha icon={canal === 'whatsapp' ? Phone : UserRound} label={canal === 'whatsapp' ? 'Telefone' : 'ID do contato'} valor={canal === 'whatsapp' ? '+' + c.telefone : c.telefone} mono />
+        <InfoLinha icon={canal === 'whatsapp' ? Phone : UserRound} label={canal === 'whatsapp' ? 'Telefone' : 'Contato'} valor={canal === 'whatsapp' ? '+' + c.telefone : c.telefone} mono />
         <InfoLinha icon={UserRoundCog} label="Atendimento" valor={c.modo === 'humano' ? (c.atendente_nome || 'Sem atendente') : 'Sofia IA'} />
         <div>
           <div style={rotulo}>Etapa</div>
@@ -458,7 +458,7 @@ export function ChatVazio({ nome }: { nome: string }) {
         </div>
         <div style={{ fontSize: 13.5, color: T.text.quaternary, lineHeight: 1.6 }}>
           WhatsApp, Instagram Direct e Messenger chegam aqui. A Sofia IA responde sozinha; quando precisar, assuma a conversa,
-          transfira para alguém da equipe e acompanhe tudo no Kanban.
+          transfira para alguém da equipe e acompanhe tudo no Quadro.
         </div>
         <a href="/minha-clinica?aba=canais" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#fff', textDecoration: 'none', padding: '9px 16px', borderRadius: 10, background: T.brand.primary }}>
           Conectar canais

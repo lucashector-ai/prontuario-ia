@@ -77,7 +77,7 @@ export default function PerfilPage() {
       setMedico(novoMedico)
       mostrarMsg('ok', 'Perfil atualizado')
     } catch (e: any) {
-      mostrarMsg('erro', e.message || 'Erro ao salvar')
+      mostrarMsg('erro', e.message || 'Não foi possível salvar. Confira a conexão e tente de novo.')
     }
     setSalvando(false)
   }
@@ -244,7 +244,7 @@ export default function PerfilPage() {
                 <span style={{ fontSize: 13.5, fontWeight: 600, color: T.text.primary }}>Privacidade e dados (LGPD)</span>
                 <span style={{ fontSize: 12.5, color: T.text.quaternary }}>Exporte seus dados ou solicite a exclusão da conta.</span>
               </div>
-              <Button variant="secondary" onClick={() => router.push('/lgpd')}>Abrir</Button>
+              <Button variant="secondary" onClick={() => router.push('/lgpd')}>Abrir privacidade</Button>
             </div>
           </Card>
         </div>

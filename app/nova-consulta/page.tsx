@@ -301,7 +301,7 @@ export default function Home() {
     }
     if (!error) registrarAcesso({ acao: 'editou', recurso: 'consulta', recursoId: consultaId, pacienteId: pacienteSelecionado?.id || null })
     setSalvandoEdicao(false)
-    if (error) { toast('Erro ao salvar alterações', 'error'); return }
+    if (error) { toast('Não foi possível salvar as alterações. Confira a conexão e tente de novo.', 'error'); return }
     setEditado(false)
     toast('Alterações salvas no histórico')
   }
@@ -721,8 +721,8 @@ const handleCopiar = () => {
             <Icon icon={CircleAlert} size={22} />
           </span>
           <div>
-            <p style={{ fontSize: 14.5, fontWeight: 700, color: T.text.primary, margin: '0 0 4px' }}>Erro ao processar</p>
-            <p style={{ fontSize: 12.5, color: T.text.quaternary, margin: 0 }}>{erroMsg || 'Tente novamente.'}</p>
+            <p style={{ fontSize: 14.5, fontWeight: 700, color: T.text.primary, margin: '0 0 4px' }}>Não foi possível gerar o prontuário</p>
+            <p style={{ fontSize: 12.5, color: T.text.quaternary, margin: 0 }}>{erroMsg || 'Tente de novo.'}</p>
           </div>
           <Button variant="secondary" onClick={handleNovo}>Recomeçar</Button>
         </div>

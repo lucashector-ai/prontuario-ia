@@ -35,7 +35,7 @@ export default function AbaCampanhas({ medico, demo, irParaReativacao }: { medic
       const r = await fetch(`/api/reativacao?medico_id=${medico.id}&campanhas=1`)
       const j = await r.json()
       if (!r.ok) { setAviso(j.error || 'Não foi possível carregar a lista. Tente de novo.'); setLista([]) } else { setAviso(null); setLista(j.campanhas || []) }
-    } catch { setAviso('Sem conexão. Tente novamente.') }
+    } catch { setAviso('Sem conexão com a internet. Confira e tente de novo.') }
     setCarregando(false)
   }, [demo, medico.id])
   useEffect(() => { carregar() }, [carregar])
