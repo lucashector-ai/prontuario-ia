@@ -1,6 +1,7 @@
 # O que depende do Lucas
 
 ## 🔴 URGENTE
+- [ ] **Pagar a fatura da Vercel** (vercel.com → Settings → Billing → Pay Invoices). Em 20/10 o painel avisa "Payment failed, pay any open invoices before your account is shut down". Se desligarem a conta, o clinical360.vercel.app sai do ar.
 - [ ] **Recarregar os créditos da Anthropic** (console.anthropic.com → Plans & Billing). Desde 20/10 a IA do prontuário responde "credit balance is too low": nenhum médico consegue gerar prontuário com IA. Enquanto isso, o sistema já oferece "Salvar o texto sem a IA".
 
 Lista viva: o Claude vai acrescentando à medida que o trabalho avança. Risque o que já fez.
