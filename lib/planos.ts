@@ -16,14 +16,14 @@ export type Recurso =
 export const PLANO_GRATIS = {
   nome: 'Grátis',
   /** Consultas com prontuário pela IA por mês (somando a clínica). */
-  consultasIaMes: 20,
+  consultasIaMes: 10,
   /** Pessoas com acesso (o próprio dono incluído). */
   usuarios: 1,
   /** O que fica fora do grátis. */
   bloqueados: ['equipe', 'atendimento', 'sofia', 'tiss', 'exames'] as Recurso[],
   incluso: [
     'Agenda e cadastro de pacientes',
-    '20 consultas por mês com prontuário escrito pela IA',
+    '10 consultas por mês com prontuário escrito pela IA',
     'Receitas Memed e documentos',
     'Teleconsulta',
     'Chat do WhatsApp (sem a Sofia)',

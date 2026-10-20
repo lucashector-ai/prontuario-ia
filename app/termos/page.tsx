@@ -108,7 +108,7 @@ export default function TermosPage() {
 
           <h3>4.2. Plano Grátis</h3>
           <p>
-            Toda conta nova começa no plano Grátis, sem cobrança, sem prazo e sem necessidade de cadastrar meio de pagamento. O plano Grátis é de uso individual (um usuário) e inclui agenda, cadastro de pacientes, até 20 (vinte) consultas por mês com prontuário estruturado por inteligência artificial, prescrição digital e teleconsulta. Recursos como equipe com mais usuários, recepção com fila e painel, assistente Sofia no WhatsApp, faturamento de convênios e análise de exames por IA estão disponíveis apenas nos planos pagos. Os limites do plano Grátis podem ser revistos, com aviso prévio ao Usuário.
+            Toda conta nova começa no plano Grátis, sem cobrança, sem prazo e sem necessidade de cadastrar meio de pagamento. O plano Grátis é de uso individual (um usuário) e inclui agenda, cadastro de pacientes, até 10 (dez) consultas por mês com prontuário estruturado por inteligência artificial, prescrição digital e teleconsulta. Recursos como equipe com mais usuários, recepção com fila e painel, assistente Sofia no WhatsApp, faturamento de convênios e análise de exames por IA estão disponíveis apenas nos planos pagos. Os limites do plano Grátis podem ser revistos, com aviso prévio ao Usuário.
           </p>
 
           <h3>4.3. Renovação automática</h3>

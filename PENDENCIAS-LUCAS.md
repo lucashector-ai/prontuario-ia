@@ -3,14 +3,19 @@
 Lista viva: o Claude vai acrescentando à medida que o trabalho avança. Risque o que já fez.
 
 ## Banco de dados (Supabase → SQL Editor, rodar na ordem)
-- [ ] `supabase/migrations/0021_totem.sql`: conferido em 20/10, ainda não rodou (totem e senhas de balcão)
-- [ ] `supabase/migrations/0022_avisos_painel.sql`: conferido em 20/10, ainda não rodou (recados e atraso na TV)
-- [ ] `supabase/migrations/0023_prontuario_privado.sql`: prontuário só de quem atendeu. Até rodar, tudo funciona como antes.
-- [ ] `supabase/migrations/0024_contas_unidades.sql`: contas com várias unidades (organização, pessoas e vínculos). Até rodar, a aba Unidades avisa que não está ativa e o resto segue igual.
+_Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 vínculos)._
+- [x] `supabase/migrations/0021_totem.sql`: conferido em 20/10, ainda não rodou (totem e senhas de balcão)
+- [x] `supabase/migrations/0022_avisos_painel.sql`: conferido em 20/10, ainda não rodou (recados e atraso na TV)
+- [x] `supabase/migrations/0023_prontuario_privado.sql`: prontuário só de quem atendeu. Até rodar, tudo funciona como antes.
+- [x] `supabase/migrations/0024_contas_unidades.sql`: contas com várias unidades (organização, pessoas e vínculos). Até rodar, a aba Unidades avisa que não está ativa e o resto segue igual.
 
 ## Decisões
-- [ ] Pedido de "plano completo": como quer receber? (WhatsApp, qual número / email / lista no superadmin). Hoje fica gravado em `notificacoes_admin`.
-- [ ] Limites do plano Grátis estão bons? (1 usuário, 20 consultas com IA por mês) — `lib/planos.ts`
+- [x] Pedido de "plano completo": por email (feito).
+- [x] Plano Grátis: 1 usuário, 10 consultas com IA por mês (feito).
+
+## Vercel (Settings → Environment Variables)
+- [ ] `EMAIL_PEDIDOS_PLANO`: email que recebe os pedidos de plano completo (sem ela, vai para contato@clinical360.app).
+- [ ] `RESEND_API_KEY` e `RESEND_FROM` (ex.: `Clinical 360 <nao-responda@seudominio.com.br>`, com o domínio verificado no Resend). Sem a chave o email não sai; o pedido fica guardado no banco mesmo assim.
 
 ## Testar com login real
 - [ ] Criar uma conta "Atendo sozinho(a)" em produção e fazer uma consulta (o cadastro de autônomo mudou).
