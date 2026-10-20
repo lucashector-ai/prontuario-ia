@@ -7,11 +7,13 @@ import { Button, Card, SegmentedControl } from '@/components/ui'
 import { PLANOS_PAGOS } from '@/lib/planos'
 import { CUSTO, PACOTES, PROFISSIONAL_EXTRA, fmtCreditos } from '@/lib/creditos'
 import { tokenSessao } from '@/lib/supabase'
+import { usePlano } from '@/lib/usePlano'
 
 export function TabelaPlanos({ recurso }: { recurso?: string }) {
   const [ciclo, setCiclo] = useState<'mensal' | 'anual'>('mensal')
   const [pedido, setPedido] = useState<string | null>(null)
   const [enviando, setEnviando] = useState<string | null>(null)
+  const planoAtual = usePlano()
 
   async function pedir(id: string, nome: string) {
     setEnviando(id)
@@ -54,7 +56,9 @@ export function TabelaPlanos({ recurso }: { recurso?: string }) {
                 </li>
               ))}
             </ul>
-            {pedido === p.id ? (
+            {planoAtual === p.id ? (
+              <div style={{ padding: '10px 12px', borderRadius: 12, border: `1px solid ${T.border.default}`, color: T.text.secondary, fontSize: 13, fontWeight: 600, textAlign: 'center' }}>Seu plano atual</div>
+            ) : pedido === p.id ? (
               <div style={{ padding: '10px 12px', borderRadius: 12, background: T.status.successBg, color: T.status.success, fontSize: 13, fontWeight: 600 }}>Pedido recebido. A equipe do Clinical 360 fala com você para ativar.</div>
             ) : (
               <Button variant={p.destaque ? 'primary' : 'secondary'} icon={Sparkles} onClick={() => pedir(p.id, p.nome)} disabled={!!enviando}>{enviando === p.id ? 'Enviando…' : `Quero o ${p.nome}`}</Button>
