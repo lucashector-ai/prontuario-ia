@@ -23,7 +23,11 @@ type Aba = 'guias' | 'lotes' | 'recebimentos' | 'operadoras'
 export default function FaturamentoPage() {
   usePageHeader('Faturamento de convênios', 'Guias TISS, lotes, recebimentos e glosas')
   const fat = useFaturamento()
-  const [aba, setAba] = useState<Aba>('guias')
+  // ?aba=recebimentos (avisos do sino levam direto à aba certa)
+  const [aba, setAba] = useState<Aba>(() => {
+    const a = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('aba') : null
+    return (['guias', 'lotes', 'recebimentos', 'operadoras'].includes(a || '') ? a : 'guias') as Aba
+  })
   const [editando, setEditando] = useState<Guia | null>(null)
 
   // ?guia=<id> → abre o editor quando os dados chegarem

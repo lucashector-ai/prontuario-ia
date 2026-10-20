@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { contextoDaRequisicao, naoAutenticado } from '@/lib/acesso'
+import { FILTRO_APOIO } from '@/lib/cargos'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,12 +14,16 @@ const supabase = createClient(
 //   2. Confirmacoes pendentes (proximas 24h, status agendado)
 //   3. Resumo do dia (1x por dia, primeira vez que abre)
 export async function POST(req: NextRequest) {
-  const { clinica_id, medico_id_logado } = await req.json()
-  if (!clinica_id) return NextResponse.json({ error: 'clinica_id obrigatorio' }, { status: 400 })
+  // A clínica vem da SESSÃO (o corpo só servia de dica e permitia gerar avisos em outra clínica)
+  const ctx = await contextoDaRequisicao(req)
+  if (!ctx) return naoAutenticado()
+  const clinica_id = ctx.clinica_id
+  if (!clinica_id) return NextResponse.json({ criadas: 0 })
+  const medico_id_logado = ctx.tipo === 'medico' ? ctx.medico_id : null
 
   // Busca medicos ativos da clinica
   const { data: medicos } = await supabase
-    .from('medicos').select('id, nome').eq('clinica_id', clinica_id).eq('cargo', 'medico').eq('ativo', true)
+    .from('medicos').select('id, nome').eq('clinica_id', clinica_id).not('cargo', 'in', FILTRO_APOIO).eq('ativo', true)
   const medicoIds = (medicos || []).map((m: any) => m.id)
   if (medicoIds.length === 0) return NextResponse.json({ criadas: 0 })
 
@@ -147,6 +153,30 @@ export async function POST(req: NextRequest) {
       }
     }
   }
+
+  // ===== TRIGGER 4: Recurso de glosa com prazo em até 5 dias (um aviso por guia) =====
+  try {
+    const { data: ops } = await supabase.from('operadoras').select('id, nome').eq('clinica_id', clinica_id)
+    const opIds = (ops || []).map((o: any) => o.id)
+    if (opIds.length) {
+      const limite = new Date(agora.getTime() + 5 * 864e5).toISOString().slice(0, 10)
+      const { data: guias } = await supabase.from('guias_tiss').select('id, medico_id, operadora_id, numero_guia_prestador, nome_beneficiario, recurso')
+        .in('operadora_id', opIds).eq('recurso->>status', 'em_recurso').lte('recurso->>prazo', limite)
+      for (const g of (guias || []) as any[]) {
+        const link = `/faturamento?aba=recebimentos&guia=${g.id}`
+        const { data: ja } = await supabase.from('notificacoes_medico').select('id').eq('tipo', 'recurso_glosa_prazo').eq('link', link).limit(1).maybeSingle()
+        if (ja) continue
+        const prazo = String(g.recurso?.prazo || '')
+        const vencido = prazo < agora.toISOString().slice(0, 10)
+        await supabase.from('notificacoes_medico').insert({
+          medico_id: g.medico_id || medicoIds[0], paciente_id: null, agendamento_id: null, tipo: 'recurso_glosa_prazo', link, lida: false,
+          titulo: vencido ? 'Prazo de recurso de glosa vencido' : 'Prazo de recurso de glosa chegando',
+          descricao: `Guia ${g.numero_guia_prestador} · ${g.nome_beneficiario || 'paciente'} · ${(ops || []).find((o: any) => o.id === g.operadora_id)?.nome || 'operadora'} · prazo ${prazo.split('-').reverse().join('/')}`,
+        })
+        criadas++
+      }
+    }
+  } catch { /* sem a migration 0025: sem aviso */ }
 
   return NextResponse.json({ criadas })
 }
