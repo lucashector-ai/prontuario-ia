@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     log.error('Erro Claude:', error)
     const m = mensagemErroIA(error)
-    return NextResponse.json({ error: m.mensagem, codigo: m.codigo }, { status: m.status })
+    return NextResponse.json({ error: m.mensagem, codigo: m.codigo, diag: String(error?.message || error).slice(0, 300) }, { status: m.status })
   }
 }
 
