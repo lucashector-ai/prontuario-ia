@@ -11,6 +11,7 @@
  * condicional (flag = false → true) ANTES do envio, então nunca sai duas vezes.
  */
 import { log } from '@/lib/logger'
+import { linkDoPortalDoPaciente } from '@/lib/portal/link'
 import { supabaseServidor as supabase, agoraSP } from '@/lib/servidor'
 import { enviarWhatsApp, normalizarTelefone } from '@/lib/whatsapp/enviar'
 import {
@@ -59,6 +60,8 @@ type Janela = {
   botoes?: string[]
   marcaMetadata: string
   extraAoReservar?: Record<string, any>
+  /** Inclui o link do portal do paciente: sempre, ou só se o lembrete de 48h não saiu. */
+  portal?: 'sempre' | 'se_sem_48h'
   aoFalhar?: Record<string, any>
   nomes: { medico: string; clinica: string }
 }
@@ -69,7 +72,7 @@ async function processarJanela(j: Janela): Promise<Contagem> {
   const agora = Date.now()
   const { data: ags, error } = await supabase
     .from('agendamentos')
-    .select('id, data_hora, status, meet_link, paciente_id, pacientes(nome, telefone)')
+    .select('id, data_hora, status, meet_link, paciente_id, lembrete_48h_enviado, pacientes(nome, telefone)')
     .eq('medico_id', j.medicoId)
     .gte('data_hora', new Date(agora + j.deHoras * HORA).toISOString())
     .lte('data_hora', new Date(agora + j.ateHoras * HORA).toISOString())
@@ -99,8 +102,11 @@ async function processarJanela(j: Janela): Promise<Contagem> {
       nome: primeiroNomeDe(pac.nome), data, hora, medico: j.nomes.medico, clinica: j.nomes.clinica,
       online: ag.meet_link ? ' (online)' : '',
     })
+    const comPortal = j.portal === 'sempre' || (j.portal === 'se_sem_48h' && !(ag as any).lembrete_48h_enviado)
+    const portal = comPortal ? await linkDoPortalDoPaciente(ag.paciente_id) : null
+    const textoFinal = portal ? `${texto}\n\nConfirme, peça para remarcar e prepare sua consulta por aqui: ${portal}` : texto
     const r = await enviarWhatsApp({
-      medicoId: j.medicoId, telefone: pac.telefone, texto, botoes: j.botoes,
+      medicoId: j.medicoId, telefone: pac.telefone, texto: textoFinal, botoes: j.botoes,
       registrar: { nome: pac.nome, pacienteId: ag.paciente_id, metadata: { [j.marcaMetadata]: true, agendamento_id: ag.id } },
     })
     if (r.ok) {
@@ -120,7 +126,7 @@ export async function dispararLembretes48h(medicoId: string, cfg?: ConfirmacaoCo
   const c = cfg || await carregarConfigConfirmacao(medicoId)
   if (!c.lembrete_48h) return { enviados: 0, falhas: 0 }
   return processarJanela({
-    medicoId, flag: 'lembrete_48h_enviado', deHoras: 44, ateHoras: 52, modelo: c.modelo_48h,
+    medicoId, flag: 'lembrete_48h_enviado', deHoras: 44, ateHoras: 52, modelo: c.modelo_48h, portal: 'sempre',
     marcaMetadata: 'lembrete_48h', nomes: nomes || await nomesMedicoClinica(medicoId),
   })
 }
@@ -136,7 +142,7 @@ export async function dispararConfirmacoes24h(medico_id: string, cfg?: Confirmac
     const c = cfg || await carregarConfigConfirmacao(medico_id)
     if (!c.confirmacao_24h) return { enviados: 0, falhas: 0 }
     return await processarJanela({
-      medicoId: medico_id, flag: 'confirmacao_24h_enviada', deHoras: 20, ateHoras: 28, modelo: c.modelo_24h,
+      medicoId: medico_id, flag: 'confirmacao_24h_enviada', deHoras: 20, ateHoras: 28, modelo: c.modelo_24h, portal: 'se_sem_48h',
       botoes: BOTOES_CONFIRMACAO_24H, marcaMetadata: 'confirmacao_24h',
       extraAoReservar: { confirmacao_24h_status: 'pendente' },
       aoFalhar: { confirmacao_24h_status: 'erro_envio' },
