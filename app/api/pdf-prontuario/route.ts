@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { contextoDaRequisicao, regraDoProntuario } from '@/lib/acesso'
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,6 +13,9 @@ export async function GET(req: NextRequest) {
       supabase.from('medicos').select('nome, crm, especialidade, telefone, clinica_id').eq('id', medicoId).single(),
     ])
     if (!consulta) return NextResponse.json({ error: 'Consulta nao encontrada' }, { status: 404 })
+    // Prontuário de quem atendeu: confere se esta sessão pode ler a consulta
+    const ctx = await contextoDaRequisicao(req)
+    if (!ctx || !(await regraDoProntuario(ctx))(consulta as any)) return NextResponse.json({ error: 'Você não tem acesso a este prontuário' }, { status: 403 })
     if (!medico) return NextResponse.json({ error: 'Medico nao encontrado' }, { status: 404 })
 
     // Busca dados da clinica separadamente

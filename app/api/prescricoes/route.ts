@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { contextoDaRequisicao, regraDoProntuario } from '@/lib/acesso'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,7 +63,10 @@ export async function GET(req: NextRequest) {
       .limit(100)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ prescricoes: data || [] })
+    // Prontuário de quem atendeu: só as prescrições que esta sessão pode ler
+    const ctx = await contextoDaRequisicao(req)
+    const pode = ctx ? await regraDoProntuario(ctx) : () => false
+    return NextResponse.json({ prescricoes: (data || []).filter((p: any) => pode({ medico_id: p.medico_id })) })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }

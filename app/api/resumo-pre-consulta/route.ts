@@ -13,6 +13,7 @@ import { supabaseServidor as supabase } from '@/lib/servidor'
 import { MODELOS } from '@/lib/ai/models'
 import { log } from '@/lib/logger'
 import type { ResumoPreConsulta, RespostaResumoPreConsulta } from './tipos'
+import { contextoDaRequisicao, regraDoProntuario } from '@/lib/acesso'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
     // ── Coleta ──────────────────────────────────────────────────────────────
     const [paciente, consultas, preConsultas, formularios, retornos, conversas] = await Promise.all([
       seguro<any>(supabase.from('pacientes').select('*').eq('id', paciente_id).maybeSingle()),
-      seguro<any[]>(supabase.from('consultas').select('criado_em, subjetivo, avaliacao, plano, cids').eq('paciente_id', paciente_id).order('criado_em', { ascending: false }).limit(5)),
+      seguro<any[]>(supabase.from('consultas').select('criado_em, subjetivo, avaliacao, plano, cids, medico_id').eq('paciente_id', paciente_id).order('criado_em', { ascending: false }).limit(5)),
       seguro<any[]>(supabase.from('pre_consultas').select('*').eq('paciente_id', paciente_id).order('criado_em', { ascending: false }).limit(1)),
       seguro<any[]>(supabase.from('formularios_respostas').select('respostas, resumo_ia, preenchido_em').eq('paciente_id', paciente_id).order('preenchido_em', { ascending: false }).limit(1)),
       seguro<any[]>(supabase.from('retornos').select('*').eq('paciente_id', paciente_id).limit(10)),
@@ -82,7 +83,10 @@ export async function POST(req: NextRequest) {
     const comorbidades = lista(p.comorbidades)
     const medicacoes = lista(p.medicamentos_uso)
     const id = idade(p.data_nascimento)
-    const cs = consultas || []
+    // Prontuário de quem atendeu: o resumo só usa as consultas que esta sessão pode ler
+    const ctx = await contextoDaRequisicao(req)
+    const pode = ctx ? await regraDoProntuario(ctx) : () => false
+    const cs = (consultas || []).filter(c => pode(c))
     const pre = preConsultas?.[0] || null
     const form = formularios?.[0] || null
     const FECHADOS = /realiz|conclu|cancel|feito|agendad/i

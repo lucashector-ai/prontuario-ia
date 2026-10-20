@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
+import { contextoDaRequisicao } from "@/lib/acesso"
 import Anthropic from "@anthropic-ai/sdk"
 import { MODELOS } from '@/lib/ai/models'
 
@@ -8,8 +9,12 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
-    const { paciente_id, medico_id, prontuario_atual } = await req.json()
+    const { paciente_id, medico_id: medicoPedido, prontuario_atual } = await req.json()
     if (!paciente_id || !prontuario_atual) return NextResponse.json({ insights: [] })
+    // O histórico usado é sempre o do médico logado (prontuário é de quem atendeu)
+    const ctx = await contextoDaRequisicao(req)
+    const medico_id = ctx?.tipo === 'medico' ? ctx.medico_id : medicoPedido
+    if (!medico_id) return NextResponse.json({ insights: [] })
 
     const { data: consultas } = await supabase
       .from("consultas")
