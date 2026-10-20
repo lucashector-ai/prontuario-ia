@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { esc } from '@/lib/documentos-html'
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,15 +11,15 @@ export async function POST(req: NextRequest) {
       const bgStatus = v.status === "critico" ? "#fef2f2" : v.status === "alterado" ? "#fffbeb" : "#ecfdf5"
       return `<tr>
         <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb">
-          <div style="font-weight:600;color:#111;font-size:13px">${v.nome}</div>
-          <div style="font-size:11px;color:#666;margin-top:2px">${v.interpretacao || ""}</div>
+          <div style="font-weight:600;color:#111;font-size:13px">${esc(v.nome)}</div>
+          <div style="font-size:11px;color:#666;margin-top:2px">${esc(v.interpretacao)}</div>
         </td>
         <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap">
-          <div style="font-weight:700;color:${corStatus};font-size:14px">${v.valor}</div>
-          <div style="font-size:10px;color:#9ca3af">Ref: ${v.referencia}</div>
+          <div style="font-weight:700;color:${corStatus};font-size:14px">${esc(v.valor)}</div>
+          <div style="font-size:10px;color:#9ca3af">Ref: ${esc(v.referencia)}</div>
         </td>
         <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:center">
-          <span style="display:inline-block;padding:3px 10px;border-radius:10px;background:${bgStatus};color:${corStatus};font-size:10px;font-weight:700;text-transform:uppercase">${v.status}</span>
+          <span style="display:inline-block;padding:3px 10px;border-radius:10px;background:${bgStatus};color:${corStatus};font-size:10px;font-weight:700;text-transform:uppercase">${esc(v.status)}</span>
         </td>
       </tr>`
     }).join("")
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
       ? `<div class="bloco alerta">
           <div class="label" style="color:#dc2626">⚠️ Achados importantes</div>
           <ul style="margin:0;padding-left:20px;color:#991b1b">
-            ${(analise.alertas || []).map((a: string) => `<li style="margin:6px 0;font-size:13px;line-height:1.5">${a}</li>`).join("")}
+            ${(analise.alertas || []).map((a: string) => `<li style="margin:6px 0;font-size:13px;line-height:1.5">${esc(a)}</li>`).join("")}
           </ul>
         </div>`
       : ""
@@ -36,12 +37,12 @@ export async function POST(req: NextRequest) {
       ? `<div class="bloco recomendacoes">
           <div class="label">Recomendações</div>
           <ul style="margin:0;padding-left:20px">
-            ${(analise.recomendacoes || []).map((r: string) => `<li style="margin:6px 0;font-size:13px;line-height:1.6;color:#4c2f9f">${r}</li>`).join("")}
+            ${(analise.recomendacoes || []).map((r: string) => `<li style="margin:6px 0;font-size:13px;line-height:1.6;color:#4c2f9f">${esc(r)}</li>`).join("")}
           </ul>
         </div>`
       : ""
 
-    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>Análise de Exame — ${analise.tipo || "Exame médico"}</title>
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>Análise de Exame — ${esc(analise.tipo || "Exame médico")}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;color:#111;padding:50px;max-width:780px;margin:0 auto;background:#fff}
@@ -64,20 +65,20 @@ body{font-family:Arial,sans-serif;color:#111;padding:50px;max-width:780px;margin
 <button class="btn no-print" onclick="window.print()">Imprimir / Salvar PDF</button>
 
 <div class="header">
-  <div class="clinica">${medico?.clinica || "Clínica Clinical 360"}</div>
+  <div class="clinica">${esc(medico?.clinica || "Clínica Clinical 360")}</div>
   <div class="title">Análise de Exame</div>
-  <div class="subtitle">Gerado em ${hoje} ${medico?.nome ? "• Dr(a). " + medico.nome : ""} ${medico?.crm ? "• CRM " + medico.crm : ""}</div>
+  <div class="subtitle">Gerado em ${hoje} ${esc(medico?.nome ? "• Dr(a). " + medico.nome : "")} ${esc(medico?.crm ? "• CRM " + medico.crm : "")}</div>
 </div>
 
 <div class="bloco">
   <div class="label">Tipo de exame</div>
-  <div style="font-size:18px;font-weight:700;color:#111">${analise.tipo || "Exame"}</div>
-  ${analise.resumo ? `<div style="font-size:13px;color:#666;margin-top:6px;line-height:1.5">${analise.resumo}</div>` : ""}
+  <div style="font-size:18px;font-weight:700;color:#111">${esc(analise.tipo || "Exame")}</div>
+  ${analise.resumo ? `<div style="font-size:13px;color:#666;margin-top:6px;line-height:1.5">${esc(analise.resumo)}</div>` : ""}
 </div>
 
 ${contexto ? `<div class="bloco">
   <div class="label">Contexto clínico</div>
-  <div class="contexto">${contexto}</div>
+  <div class="contexto">${esc(contexto)}</div>
 </div>` : ""}
 
 ${renderAlertas}
@@ -89,7 +90,7 @@ ${(analise.valores || []).length > 0 ? `<div class="bloco">
 
 ${analise.conclusao ? `<div class="bloco">
   <div class="label">Conclusão clínica</div>
-  <div class="conclusao">${analise.conclusao}</div>
+  <div class="conclusao">${esc(analise.conclusao)}</div>
 </div>` : ""}
 
 ${renderRecomendacoes}

@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { contextoDaRequisicao, regraDoProntuario } from '@/lib/acesso'
+import { esc } from '@/lib/documentos-html'
 
 export async function GET(req: NextRequest) {
   try {
     const consultaId = req.nextUrl.searchParams.get('consulta_id')
-    const medicoId = req.nextUrl.searchParams.get('medico_id')
-    if (!consultaId || !medicoId) return NextResponse.json({ error: 'Parametros faltando' }, { status: 400 })
+    if (!consultaId) return NextResponse.json({ error: 'Parametros faltando' }, { status: 400 })
 
-    const [{ data: consulta }, { data: medico }] = await Promise.all([
-      supabase.from('consultas').select('*, pacientes(nome, data_nascimento, telefone, email, cpf)').eq('id', consultaId).single(),
-      supabase.from('medicos').select('nome, crm, especialidade, telefone, clinica_id').eq('id', medicoId).single(),
-    ])
+    const { data: consulta } = await supabase.from('consultas').select('*, pacientes(nome, data_nascimento, telefone, email, cpf, convenio, nr_carteirinha)').eq('id', consultaId).single()
     if (!consulta) return NextResponse.json({ error: 'Consulta nao encontrada' }, { status: 404 })
+    // Assina quem atendeu (não o médico que a tela manda)
+    const medicoId = (consulta as any).medico_id || req.nextUrl.searchParams.get('medico_id')
+    const { data: medico } = await supabase.from('medicos').select('nome, crm, especialidade, telefone, clinica_id').eq('id', medicoId || '').maybeSingle()
     // Prontuário de quem atendeu: confere se esta sessão pode ler a consulta
     const ctx = await contextoDaRequisicao(req)
     if (!ctx || !(await regraDoProntuario(ctx))(consulta as any)) return NextResponse.json({ error: 'Você não tem acesso a este prontuário' }, { status: 403 })
@@ -61,10 +61,10 @@ export async function GET(req: NextRequest) {
             <div class="hipotese-item">
               <div class="hipotese-header">
                 <span class="hipotese-num">${i + 1}</span>
-                <span class="hipotese-nome">${h.nome || ''}</span>
-                ${h.probabilidade ? `<span class="hipotese-prob" style="background:${cor.bg};color:${cor.text}">${(h.probabilidade || '').toUpperCase()}</span>` : ''}
+                <span class="hipotese-nome">${esc(h.nome)}</span>
+                ${h.probabilidade ? `<span class="hipotese-prob" style="background:${cor.bg};color:${cor.text}">${esc((h.probabilidade || '').toUpperCase())}</span>` : ''}
               </div>
-              ${h.justificativa ? `<p class="hipotese-just">${h.justificativa}</p>` : ''}
+              ${h.justificativa ? `<p class="hipotese-just">${esc(h.justificativa)}</p>` : ''}
             </div>
           `}).join('')}
         </div>
@@ -76,8 +76,8 @@ export async function GET(req: NextRequest) {
         <div class="cids-list">
           ${c.cids.map((x: any) => `
             <div class="cid-item">
-              <span class="cid-code">${x.codigo}</span>
-              <span class="cid-desc">${x.descricao || ''}</span>
+              <span class="cid-code">${esc(x.codigo)}</span>
+              <span class="cid-desc">${esc(x.descricao)}</span>
             </div>
           `).join('')}
         </div>
@@ -85,18 +85,18 @@ export async function GET(req: NextRequest) {
 
     const secao = (label: string, content: string) => content && content.trim() ? `
       <div class="section">
-        <div class="section-label">${label}</div>
-        <div class="section-content">${content.replace(/\n/g, '<br>')}</div>
+        <div class="section-label">${esc(label)}</div>
+        <div class="section-content">${esc(content).replace(/\n/g, '<br>')}</div>
       </div>` : ''
 
     const alertasHtml = (c.alertas || []).length > 0 ? `
       <div class="alertas">
         <div class="alertas-label">⚠ Alertas clínicos</div>
-        ${c.alertas.map((a: string) => `<div class="alerta-item">${a}</div>`).join('')}
+        ${c.alertas.map((a: string) => `<div class="alerta-item">${esc(a)}</div>`).join('')}
       </div>` : ''
 
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
-<title>Prontuário - ${p.nome || 'Paciente'}</title>
+<title>Prontuário - ${esc(p.nome || 'Paciente')}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#111827;background:#F5F5F5;padding:40px 20px}
@@ -150,8 +150,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <div class="page">
   <div class="header">
     <div class="clinic-block">
-      <div class="clinic-name">${nomeClinica}</div>
-      ${infoClinica ? `<div class="clinic-info">${infoClinica}</div>` : ''}
+      <div class="clinic-name">${esc(nomeClinica)}</div>
+      ${infoClinica ? `<div class="clinic-info">${esc(infoClinica)}</div>` : ''}
     </div>
     <div class="doc-type">
       <div class="doc-type-label">Documento</div>
@@ -163,22 +163,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
   <div class="info-grid">
     <div class="info-card">
       <div class="info-label">Paciente</div>
-      <div class="info-value">${p.nome || 'Não informado'}${idade}</div>
-      <div class="info-sub">${[p.cpf ? 'CPF ' + p.cpf : '', p.telefone].filter(Boolean).join(' · ')}</div>
+      <div class="info-value">${esc(p.nome || 'Não informado')}${idade}</div>
+      <div class="info-sub">${esc([p.cpf ? 'CPF ' + p.cpf : '', p.data_nascimento ? 'Nasc. ' + new Date(p.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR') : '', p.telefone, p.convenio ? 'Convênio ' + p.convenio + (p.nr_carteirinha ? ' nº ' + p.nr_carteirinha : '') : ''].filter(Boolean).join(' · '))}</div>
     </div>
     <div class="info-card">
       <div class="info-label">Profissional</div>
-      <div class="info-value">${m.nome || ''}</div>
-      <div class="info-sub">${[m.especialidade, m.crm ? 'CRM ' + m.crm : ''].filter(Boolean).join(' · ')}</div>
+      <div class="info-value">${esc(m.nome)}</div>
+      <div class="info-sub">${esc([m.especialidade, m.crm ? 'CRM ' + m.crm : ''].filter(Boolean).join(' · '))}</div>
     </div>
   </div>
 
   ${alertasHtml}
 
-  ${secao('Subjetivo (queixa e história)', c.subjetivo || '')}
+  ${c.motivo_consulta ? secao('Motivo da consulta', c.motivo_consulta) : ''}
+  ${Array.isArray(c.secoes) && c.secoes.length
+    ? c.secoes.map((x: any) => secao(String(x.titulo || ''), String(x.conteudo || ''))).join('')
+    : `${secao('Subjetivo (queixa e história)', c.subjetivo || '')}
   ${secao('Objetivo (exame físico)', c.objetivo || '')}
   ${secao('Avaliação (hipóteses diagnósticas)', c.avaliacao || '')}
-  ${secao('Plano (conduta)', c.plano || '')}
+  ${secao('Plano (conduta)', c.plano || '')}`}
 
   ${hipotesesHtml}
   ${cidsHtml}
@@ -190,8 +193,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
     </div>
     <div class="assinatura">
       <div class="assinatura-linha"></div>
-      <div class="assinatura-nome">${m.nome || ''}</div>
-      <div class="assinatura-crm">${[m.especialidade, m.crm ? 'CRM ' + m.crm : ''].filter(Boolean).join(' · ')}</div>
+      <div class="assinatura-nome">${esc(m.nome)}</div>
+      <div class="assinatura-crm">${esc([m.especialidade, m.crm ? 'CRM ' + m.crm : ''].filter(Boolean).join(' · '))}</div>
     </div>
   </div>
 </div>

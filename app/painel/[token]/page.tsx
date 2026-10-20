@@ -146,8 +146,11 @@ export default function PainelPage({ params }: { params: { token: string } }) {
     )
   }
 
-  const atual = dados?.chamadas[0]
-  const anteriores = dados?.chamadas.slice(1, 6) || []
+  // A última chamada fica em destaque por até 15 min; depois vai para a lista e a tela volta a "aguarde"
+  const ultima = dados?.chamadas[0]
+  const recente = !!ultima && (!(ultima as any).criado_em || relogio.getTime() - new Date((ultima as any).criado_em).getTime() < 15 * 60000)
+  const atual = recente ? ultima : undefined
+  const anteriores = dados?.chamadas.slice(recente ? 1 : 0, recente ? 6 : 5) || []
 
   return (
     <Tela semCursor={som}>
@@ -168,10 +171,19 @@ export default function PainelPage({ params }: { params: { token: string } }) {
           <div style={{ fontSize: '2vh', opacity: 0.7 }}>{dados?.setor.nome || ' '}</div>
         </div>
         <span style={{ flex: 1 }} />
+        {/* Ativar som (o navegador exige um toque): no cabeçalho, sem cobrir a chamada nem o rodapé */}
+        {!som && (
+          <button onClick={ativarSom} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', flexShrink: 0,
+            borderRadius: 999, border: 'none', background: '#fff', color: '#2A1E6E', fontSize: 'clamp(13px, 1.7vh, 18px)', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+          }}>
+            <Volume2 size={18} /> Ativar som e tela cheia
+          </button>
+        )}
         {offline && <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.8vh', color: '#FCA5A5' }}><WifiOff size={20} /> Reconectando…</span>}
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '4.2vh', fontWeight: 800, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{relogio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
-          <div style={{ fontSize: '1.8vh', opacity: 0.7, textTransform: 'capitalize' }}>{relogio.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          <div style={{ fontSize: '1.8vh', opacity: 0.7 }}>{(d => d.charAt(0).toUpperCase() + d.slice(1))(relogio.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }))}</div>
         </div>
       </header>
 
@@ -229,16 +241,6 @@ export default function PainelPage({ params }: { params: { token: string } }) {
         <span style={{ opacity: 0.45, fontSize: '1.6vh' }}>Clinical 360</span>
       </footer>
 
-      {/* Ativar som (navegador exige um toque) */}
-      {!som && (
-        <button onClick={ativarSom} style={{
-          position: 'fixed', right: 24, bottom: 'calc(6vh + 24px)', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px',
-          borderRadius: 999, border: 'none', background: '#fff', color: '#2A1E6E', fontSize: 16, fontWeight: 700, cursor: 'pointer',
-          boxShadow: '0 12px 30px rgba(0,0,0,.35)', fontFamily: 'inherit',
-        }}>
-          <Volume2 size={20} /> Ativar som e tela cheia
-        </button>
-      )}
       {som && (
         <button onClick={telaCheia} title="Tela cheia" aria-label="Tela cheia" style={{ position: 'fixed', right: 16, bottom: 'calc(6vh + 16px)', width: 40, height: 40, borderRadius: 12, border: 'none', background: 'rgba(255,255,255,.1)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer', opacity: 0.5 }}>
           {dados?.setor.voz === false ? <VolumeX size={18} /> : <Maximize size={18} />}
