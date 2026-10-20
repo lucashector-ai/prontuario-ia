@@ -28,4 +28,4 @@ _Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 ví
 
 ## Meta / WhatsApp
 - [ ] Coexistência (QR / app do celular): a Meta ainda não libera para o app 959392466549100. Abrir chamado no suporte de desenvolvedores da Meta, ou testar pelo app Nexxus.
-- [ ] Chamado na Meta nº 28707411205581053 (atendente Arvin). Diagnóstico: a checagem interna diz que +55 11 92748-8081 "não existe no WhatsApp" e por isso a opção de coexistência some. Aguardando correção. Antes: Chamado aberto no Suporte direto da Meta (Gerenciador de Negócios → Suporte direto → tópico "WhatsApp Tech Provider: Onboarding"). Quando responderem, mostrar a resposta ao Claude.
+- [ ] Chamado na Meta nº 28707411205581053 (atendente Arvin; caso para anexos 29082093431426410). Diagnóstico: a checagem interna diz que +55 11 92748-8081 "não existe no WhatsApp" e por isso a opção de coexistência some. Aguardando correção. Antes: Chamado aberto no Suporte direto da Meta (Gerenciador de Negócios → Suporte direto → tópico "WhatsApp Tech Provider: Onboarding"). Quando responderem, mostrar a resposta ao Claude.
