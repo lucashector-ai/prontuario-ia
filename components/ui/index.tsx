@@ -656,10 +656,10 @@ export function KpiCard({ label, valor, delta, tendencia = 'up', comparacao = 'v
           <div style={{ marginTop: 14, fontSize: 28, fontWeight: 700, letterSpacing: '-.03em', lineHeight: 1, color: T.text.primary, fontVariantNumeric: 'tabular-nums' }}>{valor}</div>
           {delta !== undefined && (
             <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{
+              {delta !== '' && <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 3, height: 24, padding: '0 8px 0 6px', borderRadius: 8,
                 background: TR[1], color: TR[0], fontSize: 12.5, fontWeight: 600,
-              }}><Icon icon={TR[2]} size={13} />{delta}</span>
+              }}><Icon icon={TR[2]} size={13} />{delta}</span>}
               <span style={{ fontSize: 12.5, color: T.text.tertiary }}>{comparacao}</span>
             </div>
           )}
