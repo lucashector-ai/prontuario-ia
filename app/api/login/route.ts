@@ -63,26 +63,27 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Tenta encontrar em medicos
-    const medRes = await supabase
+    // A mesma pessoa pode ter um login em cada unidade da organização (mesmo email):
+    // entra na primeira ativa cuja senha confere; as outras aparecem no seletor de unidade do topo.
+    const { data: candidatos } = await supabase
       .from('medicos')
       .select('*')
       .ilike('email', emailNorm)
-      .maybeSingle()
+      .order('criado_em', { ascending: true })
 
-    const medico = medRes.data
-    if (medico) {
+    if (candidatos && candidatos.length) {
+      let medico: any = null
+      for (const m of candidatos as any[]) {
+        if (m.senha_hash && m.senha_hash.startsWith('$2') && await bcrypt.compare(senha, m.senha_hash)) {
+          if (m.ativo) { medico = m; break }
+          medico = medico || m
+        }
+      }
+      if (!medico) {
+        return NextResponse.json({ error: ERRO_CREDENCIAIS }, { status: 401 })
+      }
       if (!medico.ativo) {
         return NextResponse.json({ error: 'Conta desativada. Procure o administrador.' }, { status: 403 })
-      }
-
-      // Senha armazenada em senha_hash (bcrypt)
-      let senhaOk = false
-      if (medico.senha_hash && medico.senha_hash.startsWith('$2')) {
-        senhaOk = await bcrypt.compare(senha, medico.senha_hash)
-      }
-
-      if (!senhaOk) {
-        return NextResponse.json({ error: ERRO_CREDENCIAIS }, { status: 401 })
       }
 
       // Busca clínica pra saber o tipo

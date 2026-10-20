@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     if ((totalMedicos || 0) >= maxMedicos) return NextResponse.json({ error: `Limite de ${maxMedicos} médicos atingido para o plano atual` }, { status: 403 })
 
     const emailNorm = String(email).trim().toLowerCase()
-    const { data: existe } = await supabase.from("medicos").select("id").eq("email", emailNorm).maybeSingle()
+    const { data: existe } = await supabase.from("medicos").select("id").eq("email", emailNorm).limit(1).maybeSingle()
     if (existe) return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 400 })
 
     const hash = await bcrypt.hash(senha, 10)

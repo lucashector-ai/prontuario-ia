@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
-import { Eye, EyeOff, ArrowLeft, ArrowRight, Check, Stethoscope, Building2, Mic, ConciergeBell, MessageCircle, CalendarCheck, ShieldCheck, CircleAlert } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, ArrowRight, Check, Stethoscope, Building2, Network, Mic, ConciergeBell, MessageCircle, CalendarCheck, ShieldCheck, CircleAlert } from 'lucide-react'
 import { SenhaStrength, senhaEhForte } from '@/components/SenhaStrength'
 import { tokens } from '@/lib/design-tokens'
 import { Marca } from '@/components/Marca'
@@ -12,7 +12,7 @@ import { guardarToken } from '@/lib/sessao'
 import { CHAVE_PERFIL_CADASTRO } from '@/lib/onboarding'
 
 const T = tokens
-type Perfil = 'autonomo' | 'clinica'
+type Perfil = 'autonomo' | 'clinica' | 'rede'
 
 
 const INCLUSO: { icon: LucideIcon; titulo: string; texto: string }[] = [
@@ -73,6 +73,7 @@ export default function CadastroPage() {
         body: JSON.stringify(autonomo ? {
           nome: form.nome.trim(), email: form.email, senha: form.senha, telefone: form.telefone, empresa_nome: form.nome_clinica.trim(),
         } : {
+          tipo_conta: perfil === 'rede' ? 'rede' : 'clinica',
           clinica: { nome: form.nome_clinica.trim(), email: form.email, telefone: form.telefone },
           admin: { nome: form.nome.trim(), email: form.email, senha: form.senha },
           medicos: [],
@@ -97,7 +98,7 @@ export default function CadastroPage() {
         localStorage.setItem('clinica_admin', JSON.stringify(verifyData.admin))
         localStorage.setItem('clinica', JSON.stringify(verifyData.clinica))
         localStorage.removeItem('medico')
-        try { if (perfil) localStorage.setItem(CHAVE_PERFIL_CADASTRO, perfil) } catch {}
+        try { if (perfil) localStorage.setItem(CHAVE_PERFIL_CADASTRO, perfil === 'rede' ? 'clinica' : perfil); localStorage.setItem('c360-tipo-conta', perfil === 'rede' ? 'rede' : '') } catch {}
         router.push('/onboarding')
       } else if (verifyData.ok && verifyData.tipo_conta === 'medico') {
         localStorage.setItem('medico', JSON.stringify(verifyData.medico))
@@ -203,6 +204,7 @@ export default function CadastroPage() {
                   {([
                     { key: 'autonomo', titulo: 'Atendo sozinho(a)', sub: 'Médico ou profissional autônomo, com ou sem secretária', icone: Stethoscope },
                     { key: 'clinica', titulo: 'Tenho uma clínica com equipe', sub: 'Vários médicos, recepção, triagem e gestão', icone: Building2 },
+                    { key: 'rede', titulo: 'Tenho várias unidades', sub: 'Grupo ou rede: cada unidade com equipe e agenda, e uma visão de todas', icone: Network },
                   ] as const).map(op => {
                     const sel = perfil === op.key
                     return (
@@ -243,7 +245,7 @@ export default function CadastroPage() {
                   <Field label="WhatsApp ou telefone" hint="Opcional — usado só para suporte e avisos da conta.">
                     <Input inputMode="tel" value={form.telefone} onChange={e => set('telefone', mascararTelefone(e.target.value))} placeholder="(11) 99999-9999" style={campo} autoComplete="tel" />
                   </Field>
-                  <Field label={perfil === 'autonomo' ? 'Nome do consultório' : 'Nome da clínica'} hint="Aparece para o paciente: WhatsApp, TV da recepção e documentos.">
+                  <Field label={perfil === 'autonomo' ? 'Nome do consultório' : perfil === 'rede' ? 'Nome da primeira unidade' : 'Nome da clínica'} hint="Aparece para o paciente: WhatsApp, TV da recepção e documentos.">
                     <Input value={form.nome_clinica} onChange={e => set('nome_clinica', e.target.value)} placeholder={perfil === 'autonomo' ? 'Ex.: Consultório Dra. Ana Souza' : 'Ex.: Clínica São Lucas'} style={campo} onKeyDown={e => { if (e.key === 'Enter') avancarDados() }} />
                   </Field>
                 </div>

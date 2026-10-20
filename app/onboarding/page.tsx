@@ -78,6 +78,8 @@ export default function OnboardingPage() {
   const [etapaAberta, setEtapaAberta] = useState(0)
   const [objetivos, setObjetivos] = useState<string[]>([])
   const plano = usePlano()
+  const [rede, setRede] = useState(false)
+  useEffect(() => { try { setRede(localStorage.getItem('c360-tipo-conta') === 'rede') } catch {} }, [])
   const [pedidoPlano, setPedidoPlano] = useState(false)
   async function pedirPlanoCompleto() {
     try {
@@ -518,6 +520,7 @@ export default function OnboardingPage() {
                   <Button size="lg" block variant="secondary" onClick={() => concluir({ tour: false })} disabled={salvando}>Entrar sem tour</Button>
                 </div>
                 <p style={{ fontSize: 12.5, color: T.text.tertiary, margin: '14px 0 0' }}>Dá para rever quando quiser no menu da sua conta → Tour guiado.</p>
+                {rede && <p style={{ fontSize: 13, color: T.text.secondary, margin: '10px 0 0' }}>Depois, cadastre as outras unidades em <b>Minha clínica → Unidades</b>.</p>}
               </div>
             )}
 

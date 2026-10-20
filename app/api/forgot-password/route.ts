@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json()
     const { data: medico } = await supabase
-      .from('medicos').select('id, nome, email').eq('email', email).single()
+      .from('medicos').select('id, nome, email').eq('email', email).limit(1).maybeSingle()
     
     if (!medico) return NextResponse.json({ error: 'Email nao encontrado' }, { status: 404 })
 

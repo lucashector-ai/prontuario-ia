@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
+import { registrarVinculo } from '@/lib/contas'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -99,6 +100,8 @@ export async function POST(req: NextRequest) {
         if (!errM && novoMedico) medicosCriados.push(novoMedico)
       }
     }
+
+    await registrarVinculo({ email: novoAdmin.email, nome: novoAdmin.nome, clinicaId: novaClinica.id, papel: 'dono', clinicaAdminId: novoAdmin.id, tipoConta: body.tipo_conta === 'rede' ? 'rede' : 'clinica', todasUnidades: true })
 
     return NextResponse.json({
       ok: true,

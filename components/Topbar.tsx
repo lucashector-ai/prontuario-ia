@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import {
-  Search, Sparkles, Bell, MessageCircle, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate, ChevronDown, CornerDownLeft, UserRound, Compass, SlidersHorizontal, Hospital, LogOut,
+  Search, Sparkles, Bell, MessageCircle, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate, ChevronDown, CornerDownLeft, UserRound, Compass, Building2, Check, SlidersHorizontal, Hospital, LogOut,
   LayoutDashboard, Calendar, Users, ConciergeBell, DoorOpen, HeartPulse, Gauge, Clock, CirclePlus, Video, ScanSearch, ClipboardList, CalendarCheck, CalendarClock,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -14,6 +14,7 @@ import { useHeaderInfo, tituloDaRota } from '@/components/shell/header-context'
 import { abrirFicha } from '@/lib/atendimento/cliente'
 import { ItemNotificacao, EsqueletoNotificacao } from '@/components/notificacoes/ItemNotificacao'
 import { iniciarTour } from '@/components/shell/TourGuiado'
+import { listarUnidades, trocarDeUnidade, type UnidadeResumo } from '@/lib/unidades-cliente'
 import { listarNotificacoes, marcarNotificacao, marcarTodasLidas, destinoDaNotificacao, avisarMudanca, EVENTO_NOTIFICACOES, type Notificacao, type FiltroNotificacoes } from '@/lib/notificacoes'
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
@@ -83,6 +84,15 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
   const filtroRef = useRef<FiltroNotificacoes>('todas')
 
   const [busca, setBusca] = useState('')
+  // Unidades da pessoa (contas com várias unidades): o seletor só aparece se houver mais de uma
+  const [unidades, setUnidades] = useState<{ atual: string | null; unidades: UnidadeResumo[] }>({ atual: null, unidades: [] })
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get('demo') === '1') return
+      if (!localStorage.getItem('clinica_admin') && !localStorage.getItem('medico')) return
+    } catch { return }
+    listarUnidades().then(setUnidades).catch(() => {})
+  }, [])
   const [buscaFocus, setBuscaFocus] = useState(false)
   const [resultados, setResultados] = useState<{ pacientes: any[]; agendamentos: any[] }>({ pacientes: [], agendamentos: [] })
   const [buscando, setBuscando] = useState(false)
@@ -422,6 +432,22 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
                 </div>
               </div>
               <div style={{ height: 1, background: T.border.muted, margin: '0 4px 6px' }} />
+              {unidades.unidades.length > 1 && (
+                <>
+                  <div style={{ fontSize: 11.5, color: '#9A98A5', padding: '4px 10px' }}>Unidades</div>
+                  {unidades.unidades.map(u => {
+                    const atual = u.clinica_id === unidades.atual
+                    return (
+                      <button key={u.clinica_id + u.papel} disabled={atual} onClick={() => { setAberto(null); trocarDeUnidade(u.clinica_id, u.papel).catch(() => {}) }} style={{ ...itemMenu, cursor: atual ? 'default' : 'pointer', fontWeight: atual ? 700 : 500 }} onMouseEnter={atual ? undefined : hoverOn} onMouseLeave={hoverOff}>
+                        <Building2 size={16} strokeWidth={1.6} color={atual ? T.brand.primary : T.text.secondary} />
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.apelido || u.nome}</span>
+                        {atual && <Check size={14} color={T.brand.primary} />}
+                      </button>
+                    )
+                  })}
+                  <div style={{ height: 1, background: T.border.muted, margin: '6px 4px' }} />
+                </>
+              )}
               {!atendente && <button onClick={() => ir('/perfil')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><UserRound size={16} strokeWidth={1.6} color={T.text.secondary} />Meu perfil</button>}
               {modo === 'clinica' && (
                 <>

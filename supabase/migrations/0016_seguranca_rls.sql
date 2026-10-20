@@ -78,7 +78,8 @@ declare
   leitura_extra text;
   -- Só o servidor acessa (senhas, tokens, auditoria, controle interno)
   so_servidor text[] := array['clinica_admins', 'password_resets', 'memed_tokens', 'atendentes',
-                              'automacoes_estado', 'auditoria_acessos', 'sofia_relatorios_log'];
+                              'automacoes_estado', 'auditoria_acessos', 'sofia_relatorios_log',
+                              'organizacoes', 'usuarios', 'vinculos'];
   -- Catálogos com itens do sistema (clinica_id e medico_id vazios) visíveis a todos os logados
   catalogos text[] := array['modelos_prontuario', 'financeiro_categorias', 'formularios_templates', 'procedimentos'];
   sem_regra text[] := '{}';

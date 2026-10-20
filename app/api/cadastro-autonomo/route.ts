@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
+import { registrarVinculo } from '@/lib/contas'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     const emailNorm = String(email).trim().toLowerCase()
     const [{ data: medicoExistente }, { data: adminExistente }] = await Promise.all([
-      supabase.from('medicos').select('id').ilike('email', emailNorm).maybeSingle(),
+      supabase.from('medicos').select('id').ilike('email', emailNorm).limit(1).maybeSingle(),
       supabase.from('clinica_admins').select('id').ilike('email', emailNorm).maybeSingle(),
     ])
     if (medicoExistente || adminExistente) {
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
       .select()
       .single()
     if (errM) return NextResponse.json({ error: errM.message }, { status: 500 })
+    await registrarVinculo({ email: emailNorm, nome, clinicaId: novaClinica.id, papel: 'dono', medicoId: novoMedico.id, tipoConta: 'individual' })
 
     return NextResponse.json({
       ok: true,

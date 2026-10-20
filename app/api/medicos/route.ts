@@ -3,6 +3,7 @@ import { supabaseServidor as supabase } from "@/lib/servidor"
 import { contextoDaRequisicao, naoAutenticado, proibido } from "@/lib/acesso"
 import { ehGratis } from "@/lib/planos"
 import { planoDaClinica } from "@/lib/planos-servidor"
+import { registrarVinculo, papelDoCargo } from "@/lib/contas"
 import bcrypt from "bcryptjs"
 
 // Gera senha aleatória com maiúscula, minúscula, número e símbolo
@@ -48,10 +49,23 @@ export async function POST(req: NextRequest) {
 
     const emailNorm = email.trim().toLowerCase()
 
-    const { data: existe } = await supabase
-      .from("medicos").select("id").eq("email", emailNorm).maybeSingle()
-    if (existe) {
-      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 400 })
+    // Mesmo email já cadastrado: se for de outra unidade da MESMA organização, a pessoa passa a
+    // trabalhar também aqui (mesma senha; troca de unidade no topo). Fora disso, recusa.
+    const { data: existentes } = await supabase.from("medicos").select("id, clinica_id, senha_hash, nome").eq("email", emailNorm)
+    if (existentes?.length) {
+      if (existentes.some((m: any) => m.clinica_id === clinica_id)) return NextResponse.json({ error: "Esta pessoa já faz parte desta unidade" }, { status: 400 })
+      const { data: unidades } = await supabase.from("clinicas").select("id, organizacao_id").in("id", [clinica_id, ...existentes.map((m: any) => m.clinica_id)])
+      const minhaOrg = (unidades || []).find((c: any) => c.id === clinica_id)?.organizacao_id
+      const outra = existentes.find((m: any) => minhaOrg && (unidades || []).find((c: any) => c.id === m.clinica_id)?.organizacao_id === minhaOrg)
+      if (!outra) return NextResponse.json({ error: "E-mail já cadastrado em outra clínica" }, { status: 400 })
+      const { data: novo, error: e2 } = await supabase.from("medicos").insert({
+        nome: nome || (outra as any).nome, email: emailNorm, crm: crm || null, especialidade: especialidade || null, senha_hash: (outra as any).senha_hash,
+        senha_provisoria: false, ativo: true, clinica_id, cargo: cargoFinal, verificado: true, cor: cor || '#6043C1',
+      }).select().single()
+      if (e2 || !novo) return NextResponse.json({ error: e2?.message || "Não foi possível adicionar" }, { status: 500 })
+      await registrarVinculo({ email: emailNorm, nome: (novo as any).nome, clinicaId: clinica_id, papel: papelDoCargo(cargoFinal), medicoId: (novo as any).id })
+      const { senha_hash: _h, ...sem } = novo as any
+      return NextResponse.json({ medico: sem, mesma_pessoa: true })
     }
 
     // Adição de médico/recepção pela clínica → gera senha provisória
@@ -89,6 +103,7 @@ export async function POST(req: NextRequest) {
       if (error || !medico) {
         return NextResponse.json({ error: error?.message || "Erro ao criar médico" }, { status: 500 })
       }
+      await registrarVinculo({ email: emailNorm, nome, clinicaId: clinica_id, papel: papelDoCargo(cargoFinal), medicoId: (medico as any).id })
 
       const { senha_hash, ...medicoSemSenha } = medico as any
       return NextResponse.json({
