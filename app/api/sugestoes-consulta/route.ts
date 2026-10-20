@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       sugestoes: Array.isArray(json.sugestoes) ? json.sugestoes : [],
       alertas: Array.isArray(json.alertas) ? json.alertas : [],
-      foco: typeof json.foco === "string" ? json.foco : ""
+      foco: typeof json.foco === "string" ? json.foco : "",
+      diag: { parar: message.stop_reason, blocos: message.content.map(b => b.type), modelo: message.model, inicio: txt.slice(0, 80) },
     })
   } catch (e: any) {
     return NextResponse.json({ sugestoes: [], alertas: [], error: e.message })
