@@ -43,17 +43,17 @@ export function BottomNav() {
   // Barra por perfil: os 4 lugares do dia a dia de cada um; o resto fica em "Mais"
   const principais: Item[] = atendente ? [{ href: '/chat', label: 'Chat', icon: MessageCircle }]
     : isRecepcionista ? [
-      { href: '/recepcao', label: 'Recepção', icon: ConciergeBell },
+      { href: '/atendimento', label: 'Atendimento', icon: ConciergeBell },
       { href: '/agenda', label: 'Agenda', icon: Calendar },
       { href: '/chat', label: 'Chat', icon: MessageCircle },
       { href: '/pacientes', label: 'Pacientes', icon: Users },
     ] : temAcessoAdmin && !!clinicaAdmin ? [
       { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
-      { href: '/recepcao', label: 'Recepção', icon: ConciergeBell },
+      { href: '/atendimento', label: 'Atendimento', icon: ConciergeBell },
       { href: '/agenda', label: 'Agenda', icon: Calendar },
       { href: '/pacientes', label: 'Pacientes', icon: Users },
     ] : [
-      { href: '/consultorio', label: 'Consultório', icon: DoorOpen },
+      { href: '/atendimento/consultorio', label: 'Consultório', icon: DoorOpen },
       { href: '/agenda', label: 'Agenda', icon: Calendar },
       { href: '/pacientes', label: 'Pacientes', icon: Users },
       { href: '/nova-consulta', label: 'Consulta', icon: CirclePlus },
@@ -61,10 +61,8 @@ export function BottomNav() {
 
   const todos: Item[] = atendente ? [] : [
     { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
-    { href: '/recepcao', label: 'Recepção', icon: ConciergeBell },
-    { href: '/triagem', label: 'Triagem', icon: HeartPulse },
+    { href: '/atendimento', label: 'Atendimento', icon: ConciergeBell },
     ...(!isRecepcionista ? [
-      { href: '/consultorio', label: 'Consultório', icon: DoorOpen },
       { href: '/nova-consulta', label: 'Nova consulta', icon: CirclePlus },
       { href: '/historico', label: 'Histórico', icon: Clock },
       { href: '/teleconsulta', label: 'Teleconsulta', icon: Video },

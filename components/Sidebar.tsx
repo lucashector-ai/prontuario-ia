@@ -64,9 +64,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
       { href: '/agenda', label: 'Agenda', icon: Calendar },
     ] },
     { id: 'atendimento', label: 'Atendimento', items: [
-      { href: '/recepcao', label: 'Recepção', icon: ConciergeBell },
-      { href: '/triagem', label: 'Triagem', icon: HeartPulse },
-      ...(naoRecep ? [{ href: '/consultorio', label: 'Consultório', icon: DoorOpen }] : []),
+      { href: '/atendimento', label: 'Central', icon: ConciergeBell },
       { href: '/chat', label: 'Chat', icon: MessageCircle },
     ] },
     { id: 'pacientes', label: 'Pacientes', items: [

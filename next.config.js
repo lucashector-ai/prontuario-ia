@@ -41,6 +41,10 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@react-pdf/renderer'],
   },
+  // Recepção, Triagem e Consultório viraram abas da Central de atendimento (links antigos continuam valendo)
+  async redirects() {
+    return ['recepcao', 'triagem', 'consultorio'].map(t => ({ source: `/${t}`, destination: `/atendimento/${t}`, permanent: false }))
+  },
   async headers() {
     return [
       { source: '/:path*', headers: SEGURANCA },

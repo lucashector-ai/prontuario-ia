@@ -99,7 +99,7 @@ export default function OnboardingPage() {
 
     // Já concluiu: vai direto
     if (dados.onboarding_concluido) {
-      router.replace(tp === 'clinica' ? '/dashboard' : dados.cargo === 'recepcionista' ? '/recepcao' : '/dashboard')
+      router.replace(tp === 'clinica' ? '/dashboard' : dados.cargo === 'recepcionista' ? '/atendimento/recepcao' : '/dashboard')
       return
     }
 
@@ -191,7 +191,7 @@ export default function OnboardingPage() {
         localStorage.setItem(CHAVE_OBJETIVOS, JSON.stringify(objetivos))
         if (tour) localStorage.setItem(CHAVE_TOUR_PENDENTE, '1')
       } catch {}
-      router.replace(destino ?? (recepcao ? '/recepcao' : '/dashboard'))
+      router.replace(destino ?? (recepcao ? '/atendimento/recepcao' : '/dashboard'))
     } finally {
       setSalvando(false)
     }

@@ -34,7 +34,7 @@ const PASSOS: Passo[] = [
   { icon: Sparkles, titulo: 'Bem-vindo ao Clinical 360', texto: 'Em um minuto você vê onde fica cada coisa. Use as setas do teclado ou os botões — dá para sair quando quiser.' },
   { alvo: 'nav-celular', lado: 'cima', icon: LayoutDashboard, titulo: 'O menu fica aqui embaixo', celular: true, texto: 'Os quatro lugares do seu dia a dia ficam aqui. Em "Mais" está todo o resto do sistema.' },
   { alvo: 'menu-inicio', lado: 'direita', icon: LayoutDashboard, titulo: 'Início: o seu dia', texto: 'Dashboard com o resumo do dia e a Agenda, onde você marca, confirma, remarca e encaixa consultas.' },
-  { alvo: 'menu-atendimento', lado: 'direita', icon: ConciergeBell, titulo: 'Atendimento: o caminho do paciente', texto: 'Recepção faz o check-in e a senha → Triagem mede sinais e classifica o risco → Consultório chama na TV e atende. O Chat junta WhatsApp, Instagram e Messenger.' },
+  { alvo: 'menu-atendimento', lado: 'direita', icon: ConciergeBell, titulo: 'Atendimento: o caminho do paciente', texto: 'A Central de atendimento junta tudo do dia: Agora (a clínica neste momento), Recepção, Triagem, Consultório, Saídas e retornos e as telas da TV. Fixe o seu posto e use tela cheia (tecla F). O Chat junta WhatsApp, Instagram e Messenger.' },
   { alvo: 'menu-pacientes', lado: 'direita', icon: Users, titulo: 'Pacientes', texto: 'Cadastro, histórico completo, retornos pendentes e formulários. Importe sua base por planilha em Pacientes → Importar.' },
   { alvo: 'menu-clinico', lado: 'direita', icon: Stethoscope, titulo: 'Consulta e IA', papeis: ['clinica', 'medico'], texto: 'Grave a consulta e a IA escreve o prontuário. Teleconsulta, análise de exames, assistente e seus modelos de prontuário ficam aqui.' },
   { alvo: 'menu-gestao', lado: 'direita', icon: ChartColumnBig, titulo: 'Gestão', texto: 'Indicadores do dia em tempo real, relatórios e faturamento de convênios (TISS).' },
@@ -60,13 +60,13 @@ const ACOES: Record<Papel, Acao[]> = {
   ],
   medico: [
     { label: 'Fazer uma consulta com IA', desc: 'Grave e receba o prontuário pronto', href: '/nova-consulta', icon: Mic },
-    { label: 'Abrir o consultório', desc: 'Veja quem está esperando e chame', href: '/consultorio', icon: DoorOpen },
+    { label: 'Abrir o consultório', desc: 'Veja quem está esperando e chame', href: '/atendimento/consultorio', icon: DoorOpen },
     { label: 'Ver a agenda', desc: 'Seus horários de hoje e da semana', href: '/agenda', icon: CalendarPlus },
   ],
   recepcao: [
-    { label: 'Abrir a recepção', desc: 'Check-in, senhas e fila do dia', href: '/recepcao', icon: ConciergeBell },
+    { label: 'Abrir a Central de atendimento', desc: 'Check-in, senhas e fila do dia', href: '/atendimento/recepcao', icon: ConciergeBell },
     { label: 'Agendar uma consulta', desc: 'Encaixe e confirmações', href: '/agenda', icon: CalendarPlus },
-    { label: 'Triagem', desc: 'Sinais vitais e classificação de risco', href: '/triagem', icon: HeartPulse },
+    { label: 'Triagem', desc: 'Sinais vitais e classificação de risco', href: '/atendimento/triagem', icon: HeartPulse },
   ],
 }
 

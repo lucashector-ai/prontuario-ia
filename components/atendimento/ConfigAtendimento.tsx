@@ -41,9 +41,9 @@ export default function ConfigAtendimento() {
       <Card>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
           {[
-            { icon: UserCheck, t: '1. Recepção', d: 'Confirma a chegada e gera a senha (com prioridade da lei).', href: '/recepcao' },
+            { icon: UserCheck, t: '1. Recepção', d: 'Confirma a chegada e gera a senha (com prioridade da lei).', href: '/atendimento/recepcao' },
             { icon: Megaphone, t: '2. Painel na TV', d: 'Mostra e fala quem foi chamado e para qual consultório.', href: null },
-            { icon: Stethoscope, t: '3. Consultório', d: 'O médico chama o próximo e finaliza com o retorno.', href: '/consultorio' },
+            { icon: Stethoscope, t: '3. Consultório', d: 'O médico chama o próximo e finaliza com o retorno.', href: '/atendimento/consultorio' },
           ].map(p => (
             <div key={p.t} style={{ display: 'flex', gap: 12 }}>
               <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: 'grid', placeItems: 'center', background: T.brand.primarySubtle, color: T.brand.primary }}><p.icon size={18} /></span>

@@ -47,7 +47,7 @@ export function recursoLiberado(plano: string | null | undefined, r: Recurso) {
 
 /** Rotas do app que cada recurso cobre (para o menu e o aviso de "plano completo"). */
 export const ROTAS_RECURSO: Record<string, Recurso> = {
-  '/recepcao': 'atendimento', '/triagem': 'atendimento', '/consultorio': 'atendimento', '/gestao': 'atendimento',
+  '/atendimento': 'atendimento', '/gestao': 'atendimento',
   '/faturamento': 'tiss',
   '/exames': 'exames',
   '/admin': 'equipe',
