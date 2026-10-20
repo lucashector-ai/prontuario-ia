@@ -89,6 +89,16 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
     else notificar('Prontuário gerado, mas não foi salvo. Toque em Salvar alterações.', 'erro')
   }
 
+  /** Sem IA (falhou ou o médico preferiu): o próprio relato vira o prontuário. */
+  const salvarSemIA = async (texto: string) => {
+    const t = texto.trim()
+    if (t.length < 5) return
+    const p: Prontuario = { subjetivo: t, objetivo: '', avaliacao: '', plano: '', cids: [] } as any
+    setTranscricao(t); setProntuario(p); setEstado('pronto'); setEditado(false); setErroMsg('')
+    if (ehDemo()) { setConsultaId('demo-consulta'); notificar('Prontuário salvo (demonstração)'); return }
+    await salvarNovo(p, t)
+  }
+
   const salvarEdicao = async () => {
     if (!prontuario) return
     if (!consultaId) { await salvarNovo(prontuario, transcricao); setEditado(false); return }
@@ -166,12 +176,23 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
   // idle / erro
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {estado === 'erro' && <div style={{ fontSize: 13, color: T.status.danger }}>{erroMsg || 'Não foi possível gerar o prontuário. Tente gravar de novo ou digite o relato.'} {transcricao && <button onClick={() => gerar(transcricao)} style={{ border: 'none', background: 'none', color: T.brand.primary, fontWeight: 600, cursor: 'pointer', padding: 0 }}>Tentar gerar de novo</button>}</div>}
+      {estado === 'erro' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 12px', borderRadius: 12, background: T.status.dangerBg }}>
+          <div style={{ fontSize: 13, color: T.status.danger }}>{erroMsg || 'Não foi possível gerar o prontuário. Tente gravar de novo ou digite o relato.'}</div>
+          {(transcricao || textoDigitado).trim() && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Button size="sm" icon={FileText} onClick={() => salvarSemIA(transcricao || textoDigitado)}>Salvar o texto sem a IA</Button>
+              <Button size="sm" variant="secondary" onClick={() => gerar(transcricao || textoDigitado)}>Tentar a IA de novo</Button>
+            </div>
+          )}
+        </div>
+      )}
       {digitar ? (
         <>
           <Textarea value={textoDigitado} onChange={e => setTextoDigitado(e.target.value)} rows={6} placeholder="Escreva ou cole o relato da consulta: queixa, exame, conduta…" autoFocus />
           <div style={{ display: 'flex', gap: 8 }}>
             <Button icon={FileText} onClick={() => { setTranscricao(textoDigitado); gerar(textoDigitado) }} disabled={textoDigitado.trim().length < 20}>Gerar prontuário</Button>
+            <Button variant="secondary" onClick={() => salvarSemIA(textoDigitado)} disabled={textoDigitado.trim().length < 5}>Salvar sem a IA</Button>
             <Button variant="ghost" onClick={() => setDigitar(false)}>Voltar a gravar</Button>
           </div>
         </>

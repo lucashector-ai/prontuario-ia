@@ -3,6 +3,7 @@ import { createElement } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { renderToBuffer } from '@react-pdf/renderer'
 import ReciboPDF, { type ReciboData } from '@/components/financeiro/ReciboPDF'
+import { contextoDaRequisicao } from '@/lib/acesso'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -12,21 +13,22 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 )
 
-const fmtData = (d: string | null) => {
-  if (!d) return new Date().toLocaleDateString('pt-BR')
-  return new Date(d).toLocaleDateString('pt-BR')
-}
+const fmtData = (d: string | null) => (d ? new Date(d) : new Date()).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 
 // GET /api/financeiro/recibo/[id] — gera o recibo em PDF de um recebimento pago
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Só quem é da clínica do recebimento baixa o recibo (tem nome e CPF do paciente)
+    const ctx = await contextoDaRequisicao(req)
+    if (!ctx?.clinica_id) return NextResponse.json({ error: 'Sessão expirada. Entre novamente.' }, { status: 401 })
+
     const { data: receb, error } = await supabase
       .from('recebimentos')
       .select('*, pacientes:paciente_id(nome, cpf), formas_pagamento:forma_pagamento_id(nome)')
       .eq('id', params.id)
       .single()
 
-    if (error || !receb) {
+    if (error || !receb || receb.clinica_id !== ctx.clinica_id) {
       return NextResponse.json({ error: 'recebimento não encontrado' }, { status: 404 })
     }
     if (receb.status !== 'pago') {

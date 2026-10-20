@@ -109,9 +109,12 @@ export default function ConsultorioPage() {
     finally { setChamando(false) }
   }
 
+  // Resposta imediata na tela; a fila confirma em seguida (antes levava ~8s sem sinal nenhum)
+  const [mudando, setMudando] = useState<'iniciar' | 'ausente' | null>(null)
   const mudarAtual = async (para: 'iniciar' | 'ausente') => {
-    if (!atual) return
-    try { await mudar(atual.id, para); avisarFila(); recarregar() } catch (e: any) { notificar(e.message, 'erro') }
+    if (!atual || mudando) return
+    setMudando(para)
+    try { await mudar(atual.id, para); avisarFila(); await recarregar() } catch (e: any) { notificar(e.message, 'erro') } finally { setMudando(null) }
   }
 
   const pedirFinalizar = async () => {
@@ -247,7 +250,7 @@ export default function ConsultorioPage() {
             <Card><span className="c360-skel" style={{ display: 'block', height: 22, width: '50%', borderRadius: 8 }} /><span className="c360-skel" style={{ display: 'block', height: 14, width: '30%', borderRadius: 6, marginTop: 12 }} /></Card>
           ) : atual ? (
             <PacienteAtual key={atual.id} at={atual} medicoId={medicoId} agora={agora} chamando={chamando}
-              onEntrou={() => mudarAtual('iniciar')} onAusente={() => mudarAtual('ausente')} onRechamar={() => chamarProximo(atual.id, true)}
+              mudando={mudando} onEntrou={() => mudarAtual('iniciar')} onAusente={() => mudarAtual('ausente')} onRechamar={() => chamarProximo(atual.id, true)}
               onFinalizar={pedirFinalizar} onProntuario={aoProntuario} />
           ) : (
             <Card>
@@ -307,9 +310,9 @@ const cab: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8
 const linha: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderTop: `1px solid ${T.border.muted}` }
 const vazio: React.CSSProperties = { padding: '14px', fontSize: 13, color: T.text.tertiary }
 
-function PacienteAtual({ at, medicoId, agora, chamando, onEntrou, onAusente, onRechamar, onFinalizar, onProntuario }: {
+function PacienteAtual({ at, medicoId, agora, chamando, mudando, onEntrou, onAusente, onRechamar, onFinalizar, onProntuario }: {
   at: Atendimento; medicoId: string; agora: number; chamando: boolean
-  onEntrou: () => void; onAusente: () => void; onRechamar: () => void; onFinalizar: () => void; onProntuario: (salvo: boolean) => void
+  mudando?: 'iniciar' | 'ausente' | null; onEntrou: () => void; onAusente: () => void; onRechamar: () => void; onFinalizar: () => void; onProntuario: (salvo: boolean) => void
 }) {
   const [ficha, setFicha] = useState<Ficha | null>(null)
   const [triagem, setTriagem] = useState<Triagem | null>(null)
@@ -322,7 +325,8 @@ function PacienteAtual({ at, medicoId, agora, chamando, onEntrou, onAusente, onR
   const anos = idade(at.paciente?.data_nascimento)
   const emAtendimento = at.status === 'em_atendimento'
   const abrirFerramentas = () => {
-    const q = new URLSearchParams({ paciente_id: at.paciente_id || '', paciente_nome: at.paciente?.nome || '', paciente_tel: at.paciente?.telefone || '' })
+    // Só o id vai na URL (nome e telefone não ficam no histórico do navegador); a tela busca o resto
+    const q = new URLSearchParams({ paciente_id: at.paciente_id || '' })
     window.open(`/nova-consulta?${q}`, '_blank')
   }
 
@@ -351,7 +355,7 @@ function PacienteAtual({ at, medicoId, agora, chamando, onEntrou, onAusente, onR
               <>
                 <Button variant="ghost" icon={UserX} onClick={onAusente} style={{ color: T.status.danger }}>Não apareceu</Button>
                 <Button variant="secondary" icon={BellRing} onClick={onRechamar} disabled={chamando}>Chamar de novo</Button>
-                <Button icon={Play} onClick={onEntrou}>Iniciar consulta</Button>
+                <Button icon={Play} onClick={onEntrou} disabled={!!mudando}>{mudando === 'iniciar' ? 'Iniciando…' : 'Iniciar consulta'}</Button>
               </>
             )}
           </div>

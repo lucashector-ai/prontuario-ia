@@ -491,7 +491,7 @@ function Admin() {
           <ModalAcoes>
             <Button variant="secondary" onClick={() => setModalNovoTipo(null)}>Cancelar</Button>
             <Button onClick={handleCriar} disabled={salvando}>
-              {salvando ? 'Criando…' : 'Criar ' + (modalNovoTipo === 'medico' ? 'médico' : 'recepcionista')}
+              {salvando ? 'Criando…' : modalNovoTipo === 'medico' ? 'Criar médico' : modalNovoTipo === 'enfermagem' ? 'Criar enfermagem' : 'Criar recepção'}
             </Button>
           </ModalAcoes>
         </Modal>

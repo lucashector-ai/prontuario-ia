@@ -356,9 +356,9 @@ function AgendaContent() {
           if (quando < agora_) { quando = new Date(agora_); quando.setMinutes(0, 0, 0); quando.setHours(quando.getHours() + 1) }
         }
         abrirModal(quando)
-        const pid = params.get('paciente_id'), tipo = params.get('tipo'), motivo = params.get('motivo')
-        if (pid || tipo || motivo) {
-          setForm(f => ({ ...f, ...(pid ? { paciente_id: pid } : {}), ...(tipo ? { tipo } : {}), ...(motivo ? { motivo } : {}) }))
+        const pid = params.get('paciente_id'), tipo = params.get('tipo'), motivo = params.get('motivo'), med = params.get('medico_id')
+        if (pid || tipo || motivo || med) {
+          setForm(f => ({ ...f, ...(pid ? { paciente_id: pid } : {}), ...(tipo ? { tipo } : {}), ...(motivo ? { motivo } : {}), ...(med ? { medico_id: med } : {}) }))
         }
         window.history.replaceState({}, '', demo ? '/agenda?demo=1' : '/agenda')
       }

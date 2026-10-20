@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 export async function POST(req: NextRequest) {
   try {
     const { medico, analise, contexto } = await req.json()
-    const hoje = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
+    const hoje = new Date().toLocaleDateString("pt-BR", { timeZone: 'America/Sao_Paulo', day: "2-digit", month: "long", year: "numeric" })
 
     const renderValores = (analise.valores || []).map((v: any) => {
       const corStatus = v.status === "critico" ? "#dc2626" : v.status === "alterado" ? "#d97706" : "#059669"

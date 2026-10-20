@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const mesAnteriorInicio = new Date(agora.getFullYear(), agora.getMonth() - 1, 1)
     const mesAnteriorFim = new Date(agora.getFullYear(), agora.getMonth(), 0)
 
-    const nomeMes = agora.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
+    const nomeMes = agora.toLocaleDateString("pt-BR", { timeZone: 'America/Sao_Paulo', month: "long", year: "numeric" })
 
     const [
       { data: medico },
@@ -72,7 +72,7 @@ Destaque pontos positivos, alertas e sugestoes para o proximo mes.`
     })
     const resumoIA = res.content[0].type === "text" ? res.content[0].text : ""
 
-    const hoje = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
+    const hoje = new Date().toLocaleDateString("pt-BR", { timeZone: 'America/Sao_Paulo', day: "2-digit", month: "long", year: "numeric" })
 
     const linhasCID = topCids.map(c => `
       <tr>
@@ -84,7 +84,7 @@ Destaque pontos positivos, alertas e sugestoes para o proximo mes.`
       </tr>`).join("")
 
     const linhasAgenda = proxAgendamentos.map((a: any) => {
-      const data = new Date(a.data_hora).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+      const data = new Date(a.data_hora).toLocaleDateString("pt-BR", { timeZone: 'America/Sao_Paulo', day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
       return `<tr>
         <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151">${data}</td>
         <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#111827">${(a.pacientes as any)?.nome || "—"}</td>

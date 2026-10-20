@@ -4,6 +4,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { MODELOS } from '@/lib/ai/models'
 import { resolverModelo, ehModeloSoap, type ModeloProntuario, type CampoSoap } from '@/lib/ai/modelos-prontuario'
 import { cotaIaEsgotada } from '@/lib/planos-servidor'
+import { mensagemErroIA } from '@/lib/ai/erro-ia'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -98,7 +99,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ prontuario })
   } catch (error: any) {
     log.error('Erro Claude:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const m = mensagemErroIA(error)
+    return NextResponse.json({ error: m.mensagem, codigo: m.codigo }, { status: m.status })
   }
 }
 

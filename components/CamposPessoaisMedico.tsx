@@ -36,7 +36,7 @@ export function CamposPessoaisMedico({ cpf, data_nascimento, onChange }: Props) 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
       <div>
-        <label style={labelStyle}>CPF *</label>
+        <label style={labelStyle}>CPF <span style={{ fontWeight: 400, opacity: .7 }}>· opcional</span></label>
         <input
           type="text"
           value={cpf}
@@ -47,7 +47,7 @@ export function CamposPessoaisMedico({ cpf, data_nascimento, onChange }: Props) 
         />
       </div>
       <div>
-        <label style={labelStyle}>Data de nascimento *</label>
+        <label style={labelStyle}>Data de nascimento <span style={{ fontWeight: 400, opacity: .7 }}>· opcional</span></label>
         <input
           type="date"
           value={data_nascimento}

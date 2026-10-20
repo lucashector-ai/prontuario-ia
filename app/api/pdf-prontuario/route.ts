@@ -28,8 +28,8 @@ export async function GET(req: NextRequest) {
     const c = consulta as any
     const m = medico as any
     const p = c.pacientes || {}
-    const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
-    const dataConsulta = c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : hoje
+    const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: 'long', year: 'numeric' })
+    const dataConsulta = c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : hoje
 
     // Idade
     let idade = ''

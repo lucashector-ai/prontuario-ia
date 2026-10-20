@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { CalendarPlus, Check, DoorOpen, MessageCircle, Stethoscope } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
 import { Badge, Button, Card } from '@/components/ui'
-import { notificar } from '@/components/ui/dialogos'
+import { confirmar, notificar } from '@/components/ui/dialogos'
 import { abrirFicha, ehDemo, resolverSaida, whatsappRetorno, type Config, type Fila, type Saida } from '@/lib/atendimento/cliente'
 import { minutosDesde } from '@/lib/atendimento/comum'
 import { SenhaChip, esperaTexto, horaCurta } from '@/components/atendimento/partes'
@@ -68,7 +68,7 @@ export function SaindoDoConsultorio({ saidas, onMudou }: { saidas: Saida[]; onMu
   }, [])
 
   const agendar = (s: Saida) => {
-    const q = new URLSearchParams({ novo: '1', paciente_id: s.paciente_id || '', tipo: 'retorno', ...(s.retorno?.data_prevista ? { data: s.retorno.data_prevista } : {}),
+    const q = new URLSearchParams({ novo: '1', paciente_id: s.paciente_id || '', medico_id: s.medico_id || '', tipo: 'retorno', ...(s.retorno?.data_prevista ? { data: s.retorno.data_prevista } : {}),
       motivo: s.retorno?.motivo ? `Retorno — ${s.retorno.motivo}` : 'Retorno', ...(ehDemo() ? { demo: '1' } : {}) })
     router.push('/agenda?' + q)
   }
@@ -78,6 +78,8 @@ export function SaindoDoConsultorio({ saidas, onMudou }: { saidas: Saida[]; onMu
     catch (e: any) { notificar(e.message, 'erro') } finally { setEnviando(null) }
   }
   const concluir = async (s: Saida) => {
+    const retornoPendente = (s.saida_itens || []).includes('retorno') && !(s.retorno?.status === 'agendado' || s.retorno?.agendamento_id)
+    if (retornoPendente && !(await confirmar({ titulo: 'Concluir sem agendar o retorno?', mensagem: `O médico pediu retorno para ${s.paciente?.nome?.split(' ')[0] || 'o paciente'}. Ele continua na lista de Retornos para você agendar depois.`, confirmar: 'Concluir mesmo assim' }))) return
     try { await resolverSaida(s.id); notificar('Saída concluída'); onMudou() } catch (e: any) { notificar(e.message, 'erro') }
   }
 

@@ -206,6 +206,10 @@ export default function Home() {
     if (pid && pnome) {
       setPacienteSelecionado({ id: pid, nome: pnome, telefone: ptel || '' })
       setModalPaciente(false)
+    } else if (pid) {
+      // Vindo do consultório: busca o paciente pelo id (o banco só devolve se for da clínica)
+      supabase.from('pacientes').select('id, nome, telefone, cpf, data_nascimento, convenio').eq('id', pid).maybeSingle()
+        .then(({ data }) => { if (data) { setPacienteSelecionado(data); setModalPaciente(false) } })
     }
   }, [])
 
@@ -349,29 +353,26 @@ const handleCopiar = () => {
     finally { setGerandoDoc(false) }
   }
 
-  const handleGerarAtestado = async () => {
-    if (!prontuario) return
-    setGerandoDoc(true)
-    try {
-      const res = await fetch('/api/documentos', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo: 'atestado', prontuario, medico, paciente: null })
-      })
-      const data = await res.json()
-      if (data.dias !== undefined) { setAtestado({ ...data, dias: diasAtestado }) }
-    } catch (e) { log.error(e) }
-    finally { setGerandoDoc(false) }
-  }
-
-  const imprimirAtestado = async () => {
-    if (!atestado || !medico) return
-    const res = await fetch('/api/pdf-atestado', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ medico, paciente: null, atestado })
-    })
+  // Atestado não depende de IA: dias, CID (só com autorização do paciente) e impressão
+  const [cidNoAtestado, setCidNoAtestado] = useState(false)
+  const [examesDigitados, setExamesDigitados] = useState('')
+  const pacienteDoc = () => ({ paciente_id: pacienteSelecionado?.id || null, paciente_avulso: pacienteSelecionado ? null : pacienteAvulso, medico_id: medico?.id })
+  const abrirDocumento = async (rota: string, corpo: any) => {
+    const res = await fetch(rota, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) })
+    if (!res.ok) { const j = await res.json().catch(() => ({})); notificar(j.error || 'Não foi possível gerar o documento. Tente de novo.', 'erro'); return }
     const html = await res.text()
     const win = window.open('', '_blank')
     if (win) { win.document.write(html); win.document.close(); setTimeout(() => win.print(), 500) }
+    else notificar('O navegador bloqueou a nova janela. Libere pop-ups para este site.', 'erro')
+  }
+  const imprimirAtestado = () => {
+    if (!medico) return
+    const cid = (prontuario?.cids || [])[0]?.codigo || ''
+    return abrirDocumento('/api/pdf-atestado', { ...pacienteDoc(), dias: diasAtestado, cid, incluir_cid: cidNoAtestado && !!cid })
+  }
+  const imprimirPedidoExames = () => {
+    const lista = exames?.exames?.length ? exames.exames : examesDigitados
+    return abrirDocumento('/api/pdf-pedido-exames', { ...pacienteDoc(), exames: lista, indicacao_clinica: prontuario?.avaliacao || '', observacoes: exames?.observacoes || '' })
   }
 
   const buscarSugestoes = async (texto: string) => {
@@ -786,6 +787,15 @@ const handleCopiar = () => {
                 onClick={!exames ? handleGerarExames : undefined}
                 disabled={gerandoDoc}
               >
+                {!exames?.exames?.length && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+                    <Textarea value={examesDigitados} onChange={e => setExamesDigitados(e.target.value)} placeholder="Ou digite os exames, um por linha (ex.: Hemograma completo)" rows={3} style={{ fontSize: 12.5 }} />
+                    {examesDigitados.trim() && <Button size="sm" icon={Printer} onClick={imprimirPedidoExames} style={{ alignSelf: 'flex-start' }}>Imprimir pedido</Button>}
+                  </div>
+                )}
+                {exames?.exames?.length > 0 && (
+                  <Button size="sm" icon={Printer} onClick={imprimirPedidoExames} style={{ alignSelf: 'flex-start', marginTop: 6 }}>Imprimir pedido</Button>
+                )}
                 {exames?.exames?.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {exames.exames.map((e: any, i: number) => (
@@ -800,7 +810,7 @@ const handleCopiar = () => {
                   </div>
                 )}
               </LinhaDocumento>
-              <LinhaDocumento icon={FileBadge} label="Atestado" estado={atestado ? 'pronto' : 'novo'}>
+              <LinhaDocumento icon={FileBadge} label="Atestado" estado="novo">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <Input
                     type="number" min={1} max={30} value={diasAtestado}
@@ -809,12 +819,14 @@ const handleCopiar = () => {
                     style={{ width: 64, minHeight: 32, height: 32, padding: '4px 8px', textAlign: 'center', fontSize: 13, borderRadius: 9 }}
                   />
                   <span style={{ fontSize: 12.5, color: T.text.secondary, flex: 1 }}>dia{diasAtestado !== 1 ? 's' : ''}</span>
-                  {!atestado ? (
-                    <Button variant="secondary" size="sm" onClick={handleGerarAtestado} disabled={gerandoDoc}>{gerandoDoc ? 'Gerando…' : 'Gerar'}</Button>
-                  ) : (
-                    <Button size="sm" icon={Printer} onClick={imprimirAtestado}>Imprimir</Button>
-                  )}
+                  <Button size="sm" icon={Printer} onClick={imprimirAtestado} disabled={!pacienteSelecionado && !pacienteAvulso?.nome} title={!pacienteSelecionado && !pacienteAvulso?.nome ? 'Escolha o paciente primeiro' : undefined}>Imprimir</Button>
                 </div>
+                {(prontuario?.cids || [])[0]?.codigo && (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: T.text.secondary, marginTop: 6, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={cidNoAtestado} onChange={e => setCidNoAtestado(e.target.checked)} />
+                    Incluir CID {(prontuario.cids || [])[0].codigo} (o paciente autorizou)
+                  </label>
+                )}
               </LinhaDocumento>
             </Card>
 
