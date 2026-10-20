@@ -14,9 +14,29 @@ import {
 } from 'lucide-react'
 
 import { registrarAcesso } from '@/lib/auditoria'
+import { avisoDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { PACIENTES_DEMO } from '@/lib/demo-dados'
+
+// Modo demonstração: análise fictícia, neutra e plausível (nada vai para a IA)
+const ANALISE_DEMO = {
+  tipo: 'Hemograma completo',
+  data_exame: null as string | null,
+  resumo: 'Hemograma dentro dos valores de referência, sem alterações relevantes.',
+  valores: [
+    { nome: 'Hemoglobina', valor: '13,8 g/dL', referencia: '12,0 – 16,0 g/dL', status: 'normal', interpretacao: 'Dentro da referência.' },
+    { nome: 'Hematócrito', valor: '41%', referencia: '36 – 46%', status: 'normal', interpretacao: 'Dentro da referência.' },
+    { nome: 'VCM', valor: '88 fL', referencia: '80 – 100 fL', status: 'normal', interpretacao: 'Hemácias de tamanho normal.' },
+    { nome: 'Leucócitos', valor: '6.800 /mm³', referencia: '4.000 – 11.000 /mm³', status: 'normal', interpretacao: 'Sem sinais de infecção.' },
+    { nome: 'Plaquetas', valor: '245.000 /mm³', referencia: '150.000 – 450.000 /mm³', status: 'normal', interpretacao: 'Dentro da referência.' },
+  ],
+  alertas: [] as string[],
+  conclusao: 'Exame sem alterações. Correlacionar com a avaliação clínica.',
+  recomendacoes: ['Sem conduta adicional pelo exame.', 'Repetir conforme rotina de acompanhamento.'],
+}
 export default function Exames() {
   const router = useRouter()
   const [medico, setMedico] = useState<any>(null)
+  const [demo, setDemo] = useState(false)
   const [imagem, setImagem] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [contexto, setContexto] = useState('')
@@ -51,6 +71,7 @@ export default function Exames() {
 
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
+    if (ehDemo()) { setMedico(MEDICO_DEMO); setDemo(true); return }
     const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
     setMedico(JSON.parse(m))
@@ -74,6 +95,11 @@ export default function Exames() {
   const handleAnalisar = async () => {
     if (!imagem) return
     setAnalisando(true); setErro('')
+    if (demo) {
+      await new Promise(r => setTimeout(r, 2500))
+      setAnalise(ANALISE_DEMO); setAnalisando(false)
+      return
+    }
     try {
       const form = new FormData()
       form.append('file', imagem)
@@ -97,6 +123,7 @@ export default function Exames() {
 
   const carregarPacientes = async () => {
     if (!medico) return
+    if (demo) { setPacientesList(PACIENTES_DEMO.map(p => ({ id: p.id, nome: p.nome }))); return }
     const ca = localStorage.getItem('clinica_admin')
     let medicoIdParaBusca = medico.id
     if (ca) {
@@ -113,6 +140,7 @@ export default function Exames() {
 
   const exportarPDF = async () => {
     if (!analise) return
+    if (demo) { avisoDemo('Demonstração: o PDF não é gerado.'); return }
     registrarAcesso({ acao: 'exportou', recurso: 'exame', detalhes: { tipo: analise.tipo || analise.tipo_exame || null } })
     const res = await fetch('/api/pdf-exame', {
       method: 'POST',
@@ -140,6 +168,7 @@ export default function Exames() {
     const paciente = pacientesList.find((p: any) => p.id === pacienteSelecionadoId)
     if (!paciente) return
 
+    if (demo) { setModalPaciente(false); setPacienteSelecionadoId(''); avisoDemo(); return }
     setSalvandoConsulta(true)
     try {
       // Monta texto formatado com todos os campos da análise pra entrar como "objetivo"
@@ -220,6 +249,12 @@ export default function Exames() {
 
   return (
     <main style={{ minHeight: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {demo && !imagem && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 13, color: tokens.text.tertiary }}>
+          <Button variant="secondary" size="sm" icon={FileText} onClick={() => handleImagem(new File(['Hemograma completo (exemplo)'], 'hemograma-exemplo.pdf', { type: 'application/pdf' }))}>Usar um exame de exemplo</Button>
+          Demonstração: a análise é fictícia, nenhum arquivo é enviado.
+        </div>
+      )}
       {/* Dropzone */}
       <div
         onDrop={handleDrop}

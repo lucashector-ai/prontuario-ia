@@ -8,6 +8,7 @@ import { PLANOS_PAGOS } from '@/lib/planos'
 import { CUSTO, PACOTES, PROFISSIONAL_EXTRA, fmtCreditos } from '@/lib/creditos'
 import { tokenSessao } from '@/lib/supabase'
 import { usePlano } from '@/lib/usePlano'
+import { avisoDemo, ehDemo } from '@/lib/demo'
 
 export function TabelaPlanos({ recurso }: { recurso?: string }) {
   const [ciclo, setCiclo] = useState<'mensal' | 'anual'>('mensal')
@@ -16,6 +17,7 @@ export function TabelaPlanos({ recurso }: { recurso?: string }) {
   const planoAtual = usePlano()
 
   async function pedir(id: string, nome: string) {
+    if (ehDemo()) { avisoDemo('Demonstração: nenhum pedido foi enviado.'); return }
     setEnviando(id)
     try {
       const t = tokenSessao()

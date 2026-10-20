@@ -76,7 +76,7 @@ export function useFaturamento() {
       setGuias(demoGuias())
       setLotes(demoLotes())
       setPendentes(demoPendentes())
-      setMedicos([{ id: 'demo', nome: 'Dra. Camila Andrade', crm: 'CRM-SP 145872', especialidade: 'Cardiologia' }])
+      setMedicos([{ id: 'demo-medico', nome: 'Dra. Helena Duarte', crm: 'CRM-SP 123456', especialidade: 'Clínica médica' }])
       setEscopo({ clinica_id: 'demo' })
       setCarregando(false)
       return

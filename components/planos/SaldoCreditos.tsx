@@ -6,6 +6,7 @@ import { tokens as T } from '@/lib/design-tokens'
 import { Card, ProgressBar } from '@/components/ui'
 import { tokenSessao } from '@/lib/supabase'
 import { fmtCreditos, type Saldo } from '@/lib/creditos'
+import { ehDemo } from '@/lib/demo'
 
 type Dados = { saldo: Saldo | null; porMotivo: Record<string, { vezes: number; creditos: number }> }
 
@@ -15,6 +16,8 @@ const NOME_PLANO: Record<string, string> = { gratis: 'Grátis', solo: 'Solo', cl
 export function useCreditos() {
   const [dados, setDados] = useState<Dados | null>(null)
   useEffect(() => {
+    // Demonstração: saldo de exemplo
+    if (ehDemo()) { setDados({ saldo: { plano: 'clinica', limite: 1000, extras: 0, usados: 386, disponivel: 614 }, porMotivo: { consulta: { vezes: 92, creditos: 276 }, exame: { vezes: 18, creditos: 54 }, assistente: { vezes: 31, creditos: 31 }, sofia: { vezes: 250, creditos: 25 } } }); return }
     const t = tokenSessao()
     fetch('/api/creditos', { headers: t ? { Authorization: `Bearer ${t}` } : {} })
       .then(r => r.ok ? r.json() : null).then(setDados).catch(() => {})

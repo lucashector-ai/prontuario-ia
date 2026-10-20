@@ -12,6 +12,17 @@ import {
   type Mensagem,
 } from '@/lib/ai/assistente'
 import { DISCLAIMER_UI } from '@/lib/ai/system-prompt-medico'
+import { ehDemo } from '@/lib/demo'
+
+// Modo demonstração: respostas fictícias locais (nada vai para a IA nem para o banco)
+function respostaDemo(pergunta: string): string {
+  const q = pergunta.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  if (/hipertens|pressao/.test(q)) return 'Na hipertensão arterial, um caminho comum de acompanhamento é:\n\n1. **Confirmar o diagnóstico** com medidas repetidas (consultório, MAPA ou MRPA).\n2. **Mudanças de estilo de vida**: menos sal, atividade física regular, controle de peso e do álcool.\n3. **Tratamento medicamentoso** quando indicado, conforme o risco cardiovascular e as diretrizes vigentes.\n4. **Reavaliar** a pressão e a adesão nas consultas seguintes.\n\n_Exemplo de demonstração — sempre confira as diretrizes atuais e o quadro do paciente._'
+  if (/diabet|glicem|hba1c|metformina/.test(q)) return 'Para acompanhamento de diabetes tipo 2, costuma-se observar:\n\n- **HbA1c** a cada 3–6 meses, com meta individualizada.\n- **Função renal** e **perfil lipídico** periódicos.\n- **Exame dos pés** e **fundo de olho** anuais.\n- Reforço de **orientação alimentar** e atividade física.\n\n_Exemplo de demonstração — confira as diretrizes vigentes._'
+  if (/atestado|declaracao|relatorio|carta/.test(q)) return 'Segue um modelo simples:\n\n> Atesto, para os devidos fins, que o(a) paciente **[nome]** esteve em consulta médica nesta data, necessitando de afastamento de suas atividades por **[n] dia(s)**, a partir de **[data]**.\n\nCidade, data.\nAssinatura e carimbo do médico.\n\n_Exemplo de demonstração._'
+  if (/interac|dose|posologia|medicament/.test(q)) return 'Posso ajudar a revisar doses e interações. Na versão completa, eu confiro a lista de medicamentos do paciente e aponto interações relevantes, ajustes para função renal e alternativas.\n\n_Nesta demonstração, as respostas são exemplos fixos — sempre confirme em fonte oficial (bula, diretrizes)._'
+  return 'Boa pergunta! Na versão completa, o Assistente IA responde com base em diretrizes clínicas, pode analisar arquivos anexados (exames, laudos) e ajuda a redigir documentos.\n\nAlguns exemplos do que você pode pedir:\n- "Resuma as metas de pressão para um paciente de 65 anos"\n- "Monte um atestado de 2 dias"\n- "Quais exames pedir no check-up anual?"\n\n_Esta é uma resposta de demonstração; nada foi enviado para a IA._'
+}
 
 import { primeiroNome } from '@/lib/nome'
 type Props = {
@@ -139,6 +150,24 @@ export default function ChatAssistente({
     const anexosEnvio = anexos
     setAnexos([])
     if (inputRef.current) inputRef.current.style.height = 'auto'
+
+    // Demonstração: resposta local "digitada" aos poucos; nada é gravado
+    if (ehDemo()) {
+      const msgUserDemo: MsgLocal = { papel: 'user', conteudo: pergunta, anexos: anexosEnvio.length > 0 ? anexosEnvio : undefined }
+      const comUser: MsgLocal[] = [...mensagens, msgUserDemo]
+      setMensagens(comUser); setStreaming(true); setRespostaParcial('')
+      const resposta = anexosEnvio.length > 0 && !pergunta
+        ? 'Recebi o arquivo. Na versão completa eu leio o conteúdo e destaco os achados principais.\n\n_Demonstração: o arquivo não foi enviado para a IA._'
+        : respostaDemo(pergunta)
+      await new Promise(r => setTimeout(r, 700))
+      for (let i = 0; i < resposta.length; i += 6) {
+        setRespostaParcial(resposta.slice(0, i + 6))
+        await new Promise(r => setTimeout(r, 18))
+      }
+      setMensagens([...comUser, { papel: 'assistant', conteudo: resposta }])
+      setRespostaParcial(''); setStreaming(false)
+      return
+    }
 
     let convId = conversaIdRef.current
     let conversaNova = false

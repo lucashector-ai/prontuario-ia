@@ -11,6 +11,17 @@ import { listarTemplatesClinica } from '@/lib/formularios/templates'
 import type { Template } from '@/lib/formularios/types'
 import Conteudo from './Conteudo'
 import { confirmar } from '@/components/ui/dialogos'
+import { avisoDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { TEMPLATES_DEMO } from '@/app/formularios/demo'
+
+/** Demonstração: pedidos de exemplo vindos da agenda online. */
+function solicitacoesDemo() {
+  const em = (dias: number, h: number) => { const d = new Date(); d.setDate(d.getDate() + dias); d.setHours(h, 0, 0, 0); return d.toISOString() }
+  return [
+    { id: 'demo-sol-1', nome_paciente: 'Larissa Gomes', telefone: '(11) 90000-2001', email: 'larissa@exemplo.com.br', data_hora: em(2, 9), motivo: 'Check-up anual', primeira_consulta: true, status: 'aguardando_confirmacao', criada_em: em(0, 8) },
+    { id: 'demo-sol-2', nome_paciente: 'Paulo Henrique Souza', telefone: '(11) 90000-1007', email: null, data_hora: em(3, 14), motivo: 'Retorno com exames', primeira_consulta: false, status: 'aguardando_confirmacao', criada_em: em(-1, 19) },
+  ]
+}
 
 type SolicitacaoPendente = {
   id: string
@@ -65,12 +76,14 @@ export default function AgendaPublicaPage() {
     setErroSlug(null)
     setSugestaoSlug(null)
     carregarSolicitacoes(medicoAtivo.id)
+    if (ehDemo()) { setTemplates(TEMPLATES_DEMO); return }
     if (medicoAtivo.clinica_id) {
       listarTemplatesClinica(medicoAtivo.clinica_id).then(setTemplates)
     }
   }, [medicoAtivo?.id])
 
   async function carregarSolicitacoes(medicoId: string) {
+    if (ehDemo()) { setSolicitacoes(medicoId === MEDICO_DEMO.id ? solicitacoesDemo() : []); return }
     setLoadingSolicitacoes(true)
     try {
       const { data } = await supabase
@@ -101,6 +114,9 @@ export default function AgendaPublicaPage() {
       setSugestaoSlug(null)
       return
     }
+
+    // Demonstração: não consulta o servidor
+    if (ehDemo()) { setStatusSlug('ok'); setErroSlug(null); setSugestaoSlug(null); return }
 
     setValidandoSlug(true)
     const timeoutId = setTimeout(async () => {
@@ -138,6 +154,10 @@ export default function AgendaPublicaPage() {
       return
     }
 
+    if (ehDemo()) {
+      atualizarMedicoAtivo({ slug_publico: slug, agenda_publica_ativa: ativa, agenda_publica_config: { ...config, intervalo_almoco: usarAlmoco ? config.intervalo_almoco : null } })
+      avisoDemo(); return
+    }
     setSalvando(true)
     setMensagem(null)
 
@@ -178,6 +198,7 @@ export default function AgendaPublicaPage() {
 
   async function confirmarSolicitacao(s: SolicitacaoPendente) {
     if (!medicoAtivo) return
+    if (ehDemo()) { setSolicitacoes(l => l.filter(x => x.id !== s.id)); avisoDemo(); return }
     try {
       await responderSolicitacao(s, 'confirmar')
       carregarSolicitacoes(medicoAtivo.id)
@@ -189,6 +210,7 @@ export default function AgendaPublicaPage() {
 
   async function rejeitarSolicitacao(s: SolicitacaoPendente) {
     if (!(await confirmar({ titulo: 'Recusar este pedido?', mensagem: 'O horário volta a ficar livre na agenda online. Se quiser, avise o paciente pelo Chat.', confirmar: 'Recusar', perigo: true }))) return
+    if (ehDemo()) { setSolicitacoes(l => l.filter(x => x.id !== s.id)); avisoDemo(); return }
     try {
       await responderSolicitacao(s, 'rejeitar')
       if (medicoAtivo) carregarSolicitacoes(medicoAtivo.id)

@@ -20,6 +20,7 @@ import type { BadgeTone } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
 import { DIAS_SEMANA_CURTOS, PERIODOS, periodoDaHora } from '@/components/confirmacoes/modelos'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { comDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
 
 const T = tokens
 
@@ -287,7 +288,8 @@ function AgendaContent() {
   const [filtroPaciente, setFiltroPaciente] = useState<string>('')
   const [profsOff, setProfsOff] = useState<string[]>([])
 
-  const demo = searchParams?.get('demo') === '1'
+  // ?demo=1 ou modo demonstração já ativo nesta aba (lib/demo.ts)
+  const demo = searchParams?.get('demo') === '1' || ehDemo()
   const [listaEsperaOpen, setListaEsperaOpen] = useState(false)
   const [listaEspera, setListaEspera] = useState<any[]>([])
   const [riscoOpen, setRiscoOpen] = useState(false)
@@ -374,11 +376,11 @@ function AgendaContent() {
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
     if (demo) {
-      const med = m ? JSON.parse(m) : { id: 'demo', nome: 'Helena Prado' }
+      const med = MEDICO_DEMO
       setMedico(med)
       const d = dadosDemo(med.id)
       setPacientes(d.pacientes); setAgendamentos(d.agendamentos); setListaEspera(ordenarEspera(d.listaEspera))
-      setMedicosClinica([{ id: med.id, nome: med.nome || 'Helena Prado' }])
+      setMedicosClinica([{ id: med.id, nome: med.nome }])
       return
     }
     if (!m) { router.push('/login'); return }
@@ -1721,7 +1723,7 @@ function AgendaContent() {
               if (ag.paciente_id) params.set('paciente_id', ag.paciente_id)
               if (ag.pacientes?.nome) params.set('paciente_nome', ag.pacientes.nome)
               if (ag.pacientes?.telefone) params.set('paciente_tel', ag.pacientes.telefone || '')
-              router.push('/nova-consulta?' + params.toString())
+              router.push(comDemo('/nova-consulta?' + params.toString()))
             }}>Iniciar consulta</Button>
             <Button variant="secondary" icon={CalendarClock} onClick={() => setEditando(true)}>Remarcar</Button>
             {ag.status !== 'cancelado' && ag.status !== 'realizado' && (

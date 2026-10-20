@@ -8,6 +8,8 @@ import { TIPOS_FORMULARIO, tipoDoTemplate } from './tipos'
 import { listarTemplatesGlobais, criarTemplate } from '@/lib/formularios/templates'
 import type { Template, Campo } from '@/lib/formularios/types'
 import { useToast } from '@/components/Toast'
+import { avisoDemo, ehDemo } from '@/lib/demo'
+import { TEMPLATES_DEMO } from './demo'
 
 type Props = {
   clinicaId: string
@@ -32,6 +34,7 @@ export default function ModalNovoTemplate({ clinicaId, onFechar, onCriado }: Pro
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
+    if (ehDemo()) { setGlobais(TEMPLATES_DEMO.map(t => ({ ...t, id: t.id + '-bib', publico: true }))); setLoadingGlobais(false); return }
     listarTemplatesGlobais().then(lista => {
       setGlobais(lista)
       setLoadingGlobais(false)
@@ -59,6 +62,7 @@ export default function ModalNovoTemplate({ clinicaId, onFechar, onCriado }: Pro
       toast('Dê um nome ao formulário', 'error')
       return
     }
+    if (ehDemo()) { avisoDemo('Demonstração: o formulário não foi criado.'); onFechar(); return }
     setSalvando(true)
     try {
       const campos: Campo[] = baseSelecionada

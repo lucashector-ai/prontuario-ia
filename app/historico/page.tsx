@@ -13,6 +13,18 @@ import { registrarAcesso } from '@/lib/auditoria'
 import CardAgendarRetorno from '@/components/retornos/CardAgendarRetorno'
 import { BotaoGerarGuia } from '@/components/tiss/BotaoGerarGuia'
 import ConversaConsulta from '@/components/ia/ConversaConsulta'
+import { avisoDemo, comDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { PACIENTES_DEMO, consultasDemo } from '@/lib/demo-dados'
+
+/** Demonstração: consultas fictícias dos pacientes compartilhados (mais recentes primeiro). */
+function consultasDoDemo() {
+  return PACIENTES_DEMO.flatMap(p => consultasDemo(p).map(c => ({
+    ...c,
+    pacientes: { id: p.id, nome: p.nome, convenio: p.convenio },
+    receita: p.medicamentos_uso ? `Uso contínuo:\n${p.medicamentos_uso.split('; ').map(x => '• ' + x).join('\n')}` : null,
+    transcricao: null, compartilhada: false,
+  }))).sort((a, b) => b.criado_em.localeCompare(a.criado_em))
+}
 
 const T = tokens
 
@@ -46,6 +58,13 @@ export default function Historico() {
   const [mapaMedicos, setMapaMedicos] = useState<Record<string, { nome: string, cor: string }>>({})
 
   useEffect(() => {
+    if (ehDemo()) {
+      setMedico(MEDICO_DEMO)
+      setConsultas(consultasDoDemo())
+      setMapaMedicos({ [MEDICO_DEMO.id]: { nome: MEDICO_DEMO.nome, cor: tokens.brand.primary } })
+      setCarregando(false)
+      return
+    }
     const ca = localStorage.getItem('clinica_admin')
     const m = ca || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
@@ -114,6 +133,11 @@ export default function Historico() {
 
   const salvar = async () => {
     if (!selecionada) return
+    if (ehDemo()) {
+      const atualizada = { ...selecionada, ...editForm }
+      setSelecionada(atualizada); setConsultas(prev => prev.map(c => c.id === atualizada.id ? atualizada : c)); setEditando(false)
+      avisoDemo(); return
+    }
     setSalvando(true)
     const { data, error } = await supabase
       .from('consultas')
@@ -137,6 +161,7 @@ export default function Historico() {
 
   const deletar = async (id: string) => {
     if (!(await confirmar({ titulo: 'Excluir esta consulta?', mensagem: 'O prontuário, a prescrição e os anexos dela serão apagados. Essa ação não pode ser desfeita.', confirmar: 'Excluir', perigo: true }))) return
+    if (ehDemo()) { avisoDemo('Demonstração: nada foi excluído.'); return }
     await supabase.from('consultas').delete().eq('id', id)
     setConsultas(prev => prev.filter(c => c.id !== id))
     if (selecionada && selecionada.id === id) setSelecionada(null)
@@ -176,6 +201,7 @@ export default function Historico() {
 
   const abrirPdf = (tipo: string) => {
     if (!selecionada || !medico) return
+    if (ehDemo()) { avisoDemo('Demonstração: o PDF não é gerado com dados de exemplo.'); return }
     const url = '/api/pdf-' + tipo + '?consulta_id=' + selecionada.id + '&medico_id=' + medico.id
     registrarAcesso({ acao: 'exportou', recurso: 'prontuario', recursoId: selecionada.id, pacienteId: selecionada.paciente_id || null, detalhes: { formato: tipo } })
     window.open(url, '_blank')
@@ -186,6 +212,7 @@ export default function Historico() {
   const alternarCompartilhada = async () => {
     if (!selecionada) return
     const v = !selecionada.compartilhada
+    if (ehDemo()) { setSelecionada({ ...selecionada, compartilhada: v }); avisoDemo(); return }
     const { error } = await supabase.from('consultas').update({ compartilhada: v }).eq('id', selecionada.id)
     if (error) { notificar('Não foi possível mudar o compartilhamento agora.', 'erro'); return }
     setSelecionada({ ...selecionada, compartilhada: v })
@@ -414,7 +441,7 @@ export default function Historico() {
                 descricao={consultas.length === 0
                   ? 'Comece gravando sua primeira consulta — o prontuário é gerado automaticamente.'
                   : 'Clique em qualquer consulta na lista para ver os detalhes.'}
-                acao={consultas.length === 0 ? <Button icon={Plus} onClick={() => router.push('/nova-consulta')}>Nova consulta</Button> : undefined}
+                acao={consultas.length === 0 ? <Button icon={Plus} onClick={() => router.push(comDemo('/nova-consulta'))}>Nova consulta</Button> : undefined}
               />
             </div>
           )}

@@ -20,7 +20,8 @@ import { listarNotificacoes, marcarNotificacao, marcarTodasLidas, destinoDaNotif
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 import { SaldoCurto } from '@/components/planos/SaldoCreditos'
-import { ehDemo } from '@/lib/demo'
+import { comDemo, ehDemo, CLINICA_DEMO, MEDICO_DEMO } from '@/lib/demo'
+import { buscarPacientesDemo } from '@/lib/demo-dados'
 const T = tokens
 
 // so: 'gestor' = dono/administrador · 'clinico' = quem atende (fora da recepção)
@@ -107,8 +108,15 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const modo: 'clinica' | 'medico' | null = clinicaAdmin ? 'clinica' : (medico ? 'medico' : null)
+  const [demo, setDemo] = useState(false)
 
   useEffect(() => {
+    // Demonstração: médica fictícia (gestora) e notificações de exemplo; nada vai ao banco
+    if (ehDemo()) {
+      setDemo(true); setMedico(MEDICO_DEMO); setClinica(CLINICA_DEMO)
+      recarregarNotifs()
+      return
+    }
     const ca = localStorage.getItem('clinica_admin')
     const c = localStorage.getItem('clinica')
 
@@ -203,7 +211,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
   const abrirNotif = (n: Notificacao) => {
     if (!n.lida) alternarLida(n, true)
     setAberto(null)
-    router.push(destinoDaNotificacao(n))
+    router.push(comDemo(destinoDaNotificacao(n)))
   }
 
   const lerTodas = async () => {
@@ -238,6 +246,14 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
       return
     }
     setBuscando(true)
+    // Demonstração: busca nos pacientes fictícios (lib/demo-dados.ts)
+    if (demo) {
+      const timer = setTimeout(() => {
+        setResultados({ pacientes: buscarPacientesDemo(busca), agendamentos: [] })
+        setBuscando(false)
+      }, 120)
+      return () => clearTimeout(timer)
+    }
     const timer = setTimeout(async () => {
       const termo = busca.trim()
       const dig = termo.replace(/\D/g, '')
@@ -250,7 +266,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
       setBuscando(false)
     }, 250)
     return () => clearTimeout(timer)
-  }, [busca, medico, modo])
+  }, [busca, medico, modo, demo])
 
   const paginasFiltradas = useMemo(() => {
     const q = semAcento(busca.trim())
@@ -264,7 +280,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
 
   const sair = () => router.push(sairDaConta())
 
-  const ir = (href: string) => { router.push(href); setBusca(''); setAberto(null); inputRef.current?.blur() }
+  const ir = (href: string) => { router.push(comDemo(href)); setBusca(''); setAberto(null); inputRef.current?.blur() }
 
   const nomeUsuario = clinicaAdmin?.nome || medico?.nome || ''
   const nomeClinica = clinica?.nome || nomeUsuario
@@ -361,7 +377,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
       {/* Atalhos */}
       {modo && (
         <div style={{ display: 'flex', flexShrink: 0, gap: 4, position: 'relative' }}>
-          {!atendente && <IconButton icon={Sparkles} size={38} title="Assistente IA" onClick={() => router.push('/assistente-ia')} />}
+          {!atendente && <IconButton icon={Sparkles} size={38} title="Assistente IA" onClick={() => router.push(comDemo('/assistente-ia'))} />}
           <span data-tour="notificacoes" style={{ display: 'inline-flex', borderRadius: 12 }}>
           <IconButton
             icon={Bell} size={38} title="Notificações"
@@ -453,7 +469,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
                 </>
               )}
               {!atendente && <button onClick={() => ir('/perfil')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><UserRound size={16} strokeWidth={1.6} color={T.text.secondary} />Meu perfil</button>}
-              {modo === 'clinica' && (
+              {(modo === 'clinica' || demo) && (
                 <>
                   <button onClick={() => ir('/admin')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><SlidersHorizontal size={16} strokeWidth={1.6} color={T.text.secondary} />Equipe</button>
                   <button onClick={() => ir('/minha-clinica')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Hospital size={16} strokeWidth={1.6} color={T.text.secondary} />Minha clínica</button>
