@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS, textoDaResposta } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
 import { log } from '@/lib/logger'
 import { frasesDe, montarConversa, promptPapeis } from '@/lib/transcricao/papeis'
 
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const prompt = promptPapeis(frases)
 
   try {
-    const r = await anthropic.messages.create({
+    const r = await anthropic.messages.create({ ...SEM_RACIOCINIO,
       model: MODELOS.rapido,
       max_tokens: Math.min(8000, 200 + frases.length * 6),
       messages: [{ role: 'user', content: prompt }],

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS, textoDaResposta } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -43,7 +43,7 @@ Receita por categoria: ${(m.categorias || []).map((c: any) => `${c.tipo}=${brl(c
 Projeção próximos 45 dias — entradas previstas: ${brl(m.projecao?.entradasPrevistas || 0)}, saídas previstas: ${brl(m.projecao?.saidasPrevistas || 0)}
 `.trim()
 
-    const message = await anthropic.messages.create({
+    const message = await anthropic.messages.create({ ...SEM_RACIOCINIO,
       model: MODELOS.rapido,
       max_tokens: 600,
       messages: [{

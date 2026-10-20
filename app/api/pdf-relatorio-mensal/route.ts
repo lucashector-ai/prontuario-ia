@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 import Anthropic from "@anthropic-ai/sdk"
-import { MODELOS, textoDaResposta } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -66,7 +66,7 @@ Dados do mes de ${nomeMes}:
 
 Destaque pontos positivos, alertas e sugestoes para o proximo mes.`
 
-    const res = await anthropic.messages.create({
+    const res = await anthropic.messages.create({ ...SEM_RACIOCINIO,
       model: MODELOS.rapido, max_tokens: 250,
       messages: [{ role: "user", content: prompt }]
     })

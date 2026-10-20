@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS, textoDaResposta } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
 import { log } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   }
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-    const msg = await anthropic.messages.create({
+    const msg = await anthropic.messages.create({ ...SEM_RACIOCINIO,
       model: MODELOS.rapido,
       max_tokens: 120,
       messages: [{

@@ -94,6 +94,7 @@ Formato: bullets curtos com "•" no início de cada linha. Sem cabeçalho, sem 
       },
       body: JSON.stringify({
         model: MODELOS.rapido,
+        thinking: { type: 'disabled' },
         max_tokens: 500,
         system: systemPrompt,
         messages: [

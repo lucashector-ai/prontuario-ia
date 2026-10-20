@@ -1,7 +1,7 @@
 import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS, textoDaResposta } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
 import { resolverModelo, ehModeloSoap, type ModeloProntuario, type CampoSoap } from '@/lib/ai/modelos-prontuario'
 import { cotaIaEsgotada } from '@/lib/planos-servidor'
 import { mensagemErroIA } from '@/lib/ai/erro-ia'
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
 
     const prompt = partes.filter(Boolean).join('\n')
 
-    const message = await anthropic.messages.create({
+    const message = await anthropic.messages.create({ ...SEM_RACIOCINIO,
       model: MODELOS.apoio,
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
@@ -149,7 +149,7 @@ async function estruturarComModelo(modelo: ModeloProntuario, transcricao: string
     partes.push(preConsulta)
   }
 
-  const message = await anthropic.messages.create({
+  const message = await anthropic.messages.create({ ...SEM_RACIOCINIO,
     model: MODELOS.apoio,
     max_tokens: 3000,
     messages: [{ role: 'user', content: partes.filter(Boolean).join('\n') }],

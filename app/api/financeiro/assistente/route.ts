@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS, textoDaResposta } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       { role: 'user' as const, content: pergunta },
     ]
 
-    const message = await anthropic.messages.create({
+    const message = await anthropic.messages.create({ ...SEM_RACIOCINIO,
       model: MODELOS.apoio,
       max_tokens: 700,
       system: `Você é o analista financeiro de uma clínica, dentro do sistema Clinical 360.
