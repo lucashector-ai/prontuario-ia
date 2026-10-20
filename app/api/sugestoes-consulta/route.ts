@@ -2,7 +2,7 @@ import { log } from '@/lib/logger'
 
 import { NextRequest, NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
-import { MODELOS, textoDaResposta } from '@/lib/ai/models'
+import { MODELOS, SEM_RACIOCINIO, textoDaResposta } from '@/lib/ai/models'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
     ]
 
     const message = await anthropic.messages.create({
+      ...SEM_RACIOCINIO,
       model: MODELOS.rapido,
       max_tokens: 400,
       messages: [{ role: "user", content: partes.filter(Boolean).join("\n") }]

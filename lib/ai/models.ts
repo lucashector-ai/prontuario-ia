@@ -31,3 +31,10 @@ export function textoDaResposta(msg: { content: Array<{ type: string }> }, padra
   const t = msg.content.filter((b): b is { type: 'text'; text: string } => b.type === 'text').map(b => b.text).join('')
   return t || padrao
 }
+
+/**
+ * Tarefas simples (resumos, JSON curto): sem o raciocínio prévio que os modelos 5.5 fazem por padrão.
+ * O raciocínio gastava o max_tokens e a resposta saía cortada. Use: messages.create({ ...SEM_RACIOCINIO, ... }).
+ * (SDK 0.24 não tem o tipo, por isso o cast.)
+ */
+export const SEM_RACIOCINIO = { thinking: { type: 'disabled' } } as any
