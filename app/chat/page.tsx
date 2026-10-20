@@ -95,7 +95,7 @@ export default function ChatPage() {
   if (!api.carregando && !api.medico) {
     return (
       <div style={{ padding: 24 }}>
-        <EmptyState icon={Users} titulo="Nenhum médico ativo na clínica" descricao="O Chat usa a caixa de entrada de um médico. Cadastre um médico no Painel admin para começar." />
+        <EmptyState icon={Users} titulo="Nenhum médico ativo na clínica" descricao="O Chat usa a caixa de entrada de um médico. Cadastre um médico em Equipe para começar." />
       </div>
     )
   }

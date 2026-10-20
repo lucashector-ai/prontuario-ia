@@ -225,7 +225,7 @@ export default function PainelPage({ params }: { params: { token: string } }) {
 
       {/* Rodapé */}
       <footer style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '1.6vh 2.4vw', background: 'rgba(0,0,0,.22)', fontSize: '2.2vh' }}>
-        <span style={{ flex: 1, opacity: 0.85 }}>{dados?.setor.mensagem || 'Aguarde ser chamado. Pacientes prioritários são atendidos conforme a lei.'}</span>
+        <span style={{ flex: 1, opacity: 0.85 }}>{dados?.setor.mensagem || 'Aguarde a chamada. Pacientes prioritários são atendidos conforme a lei.'}</span>
         <span style={{ opacity: 0.45, fontSize: '1.6vh' }}>Clinical 360</span>
       </footer>
 

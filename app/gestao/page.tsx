@@ -66,7 +66,7 @@ export default function GestaoPage() {
 
       <div className="c360-kpis" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <KpiCard label="Atendidos" valor={r?.atendidos ?? '—'} icon={Users} comparacao={`${r?.chegadas ?? 0} chegadas`} carregando={carregando} />
-        <KpiCard label="Espera até o médico" valor={min(r?.esperaMedia ?? null)} icon={Clock} comparacao={`metade espera até ${min(r?.esperaMediana ?? null)}`} cor={T.data.orange} carregando={carregando} />
+        <KpiCard label="Espera até o médico" valor={min(r?.esperaMedia ?? null)} icon={Clock} comparacao={`a maioria espera até ${min(r?.esperaMediana ?? null)}`} cor={T.data.orange} carregando={carregando} />
         <KpiCard label="Duração da consulta" valor={min(r?.consultaMedia ?? null)} icon={Timer} comparacao="média" cor={T.data.blue} carregando={carregando} />
         <KpiCard label="Faltas" valor={r?.taxaFaltas === null || r?.taxaFaltas === undefined ? '—' : `${r.taxaFaltas}%`} icon={CalendarX} comparacao={`${r?.faltas ?? 0} de ${r?.agendados ?? 0} agendados`} cor={T.status.danger} carregando={carregando} />
       </div>
@@ -139,7 +139,7 @@ export default function GestaoPage() {
             <Mini titulo="Retornos pedidos" valor={r?.retornosPedidos ?? 0} detalhe={r?.retornosPedidos ? `${Math.round(((r.retornosAgendados || 0) / r.retornosPedidos) * 100)}% já agendados` : '—'} />
             <Mini titulo="Saídas pendentes" valor={r?.saidasPendentes ?? 0} detalhe="esperando a recepção" />
             <Mini titulo="Senhas de balcão" valor={r?.balcaoSenhas ?? 0} detalhe={`espera média ${min(r?.balcaoEspera ?? null)}`} />
-            <Mini titulo="Não atenderam a chamada" valor={r?.naoAtenderamChamada ?? 0} detalhe="chamados e não vieram" />
+            <Mini titulo="Não responderam à chamada" valor={r?.naoAtenderamChamada ?? 0} detalhe="chamados e não vieram" />
           </div>
         </Card>
       </div>

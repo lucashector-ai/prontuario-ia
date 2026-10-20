@@ -513,7 +513,7 @@ const demo = {
     const s = e.setores[0]
     return {
       avisos: (e.avisos || []).filter(a => a.expira_em > new Date().toISOString()).map(a => a.texto),
-      setor: { nome: s?.nome || 'Recepção', voz: s?.painel_voz ?? true, mensagem: s?.painel_mensagem || 'Aguarde ser chamado. Mantenha o celular por perto: avisamos pelo WhatsApp quando estiver chegando a sua vez.' },
+      setor: { nome: s?.nome || 'Recepção', voz: s?.painel_voz ?? true, mensagem: s?.painel_mensagem || 'Aguarde a chamada. Mantenha o celular por perto: avisamos pelo WhatsApp quando estiver chegando a sua vez.' },
       clinica: { nome: 'Clínica Demonstração', logo_url: null },
       chamadas: e.chamadas.filter(c => !s || c.setor_id === s.id).slice(0, 8),
     }

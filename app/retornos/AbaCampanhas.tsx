@@ -34,7 +34,7 @@ export default function AbaCampanhas({ medico, demo, irParaReativacao }: { medic
     try {
       const r = await fetch(`/api/reativacao?medico_id=${medico.id}&campanhas=1`)
       const j = await r.json()
-      if (!r.ok) { setAviso(j.error || 'Erro ao carregar'); setLista([]) } else { setAviso(null); setLista(j.campanhas || []) }
+      if (!r.ok) { setAviso(j.error || 'Não foi possível carregar a lista. Tente de novo.'); setLista([]) } else { setAviso(null); setLista(j.campanhas || []) }
     } catch { setAviso('Sem conexão. Tente novamente.') }
     setCarregando(false)
   }, [demo, medico.id])
@@ -140,7 +140,7 @@ function DetalheCampanha({ c, medico, demo, onFechar }: { c: Campanha; medico: M
       const nomes = ['Adriana Lopes Martins', 'Bruno Carvalho', 'Cecília Duarte', 'Elaine Souza Campos', 'Fábio Guimarães', 'Gabriela Matos', 'Heitor Vasconcelos', 'Isabela Cunha']
       setEnvios(nomes.map((n, i) => ({
         id: String(i), paciente_nome: n, telefone: '551198' + String(1000000 + i * 1234567).slice(0, 7),
-        status: i === 3 ? 'falhou' : i % 3 === 0 ? 'respondeu' : 'enviado', erro: i === 3 ? 'Re-engagement message: fora da janela de 24h' : null,
+        status: i === 3 ? 'falhou' : i % 3 === 0 ? 'respondeu' : 'enviado', erro: i === 3 ? 'Fora do prazo de 24h do WhatsApp' : null,
         enviado_em: c.criado_em,
       })))
       return

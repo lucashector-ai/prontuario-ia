@@ -72,7 +72,7 @@ export default function TriagemPage() {
       {config && !triagemLigada && !demo && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, background: T.status.infoBg, color: T.status.infoStrong, fontSize: 13 }}>
           <HeartPulse size={18} />
-          <span style={{ flex: 1 }}>A triagem está desligada: hoje o check-in manda o paciente direto para o médico. Ligue na sala de espera em Minha clínica → Recepção e painel.</span>
+          <span style={{ flex: 1 }}>A triagem está desligada: hoje o check-in manda o paciente direto para o médico. Para ligar, vá em Minha clínica → Recepção e painel e ative “Triagem antes do médico”.</span>
           <Button size="sm" variant="secondary" onClick={() => router.push('/minha-clinica?aba=atendimento')}>Ligar triagem</Button>
         </div>
       )}
@@ -85,7 +85,7 @@ export default function TriagemPage() {
           </Select>
         )}
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 13, color: T.text.secondary }}><b style={{ color: T.text.primary }}>{espera.length}</b> aguardando · <b style={{ color: T.text.primary }}>{triadosHoje}</b> triados hoje</span>
+        <span style={{ fontSize: 13, color: T.text.secondary }}><b style={{ color: T.text.primary }}>{espera.length}</b> aguardando · <b style={{ color: T.text.primary }}>{triadosHoje}</b> triagens hoje</span>
         <Button icon={Megaphone} onClick={() => chamar()} disabled={chamando || !espera.length || !!atual || !salaId}>
           {chamando ? 'Chamando…' : espera.length ? `Chamar próximo · ${espera[0].senha}` : 'Fila vazia'}
         </Button>
@@ -201,7 +201,7 @@ function FormTriagem({ at, chamando, onRechamar, onAusente, onPronto }: { at: At
             {ficha?.paciente.alergias && <div style={{ marginTop: 6, fontSize: 12.5, fontWeight: 650, color: T.status.danger, display: 'flex', gap: 6, alignItems: 'center' }}><AlertTriangle size={14} /> Alergia: {ficha.paciente.alergias}</div>}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="ghost" icon={UserX} onClick={onAusente} style={{ color: T.status.danger }}>Não compareceu</Button>
+            <Button variant="ghost" icon={UserX} onClick={onAusente} style={{ color: T.status.danger }}>Não apareceu</Button>
             <Button variant="secondary" icon={BellRing} onClick={onRechamar} disabled={chamando}>Chamar de novo</Button>
           </div>
         </div>
@@ -218,8 +218,8 @@ function FormTriagem({ at, chamando, onRechamar, onAusente, onPronto }: { at: At
                 <Input value={v.pa_diastolica} onChange={set('pa_diastolica')} placeholder="80" inputMode="numeric" style={{ textAlign: 'center' }} />
               </div>
             </Field>
-            <Field label="Freq. cardíaca (bpm)"><Input value={v.fc} onChange={set('fc')} placeholder="78" inputMode="numeric" /></Field>
-            <Field label="Freq. respiratória"><Input value={v.fr} onChange={set('fr')} placeholder="16" inputMode="numeric" /></Field>
+            <Field label="Frequência cardíaca (bpm)"><Input value={v.fc} onChange={set('fc')} placeholder="78" inputMode="numeric" /></Field>
+            <Field label="Frequência respiratória (irpm)"><Input value={v.fr} onChange={set('fr')} placeholder="16" inputMode="numeric" /></Field>
             <Field label="Temperatura (°C)"><Input value={v.temperatura} onChange={set('temperatura')} placeholder="36,5" inputMode="decimal" /></Field>
             <Field label="Saturação (%)"><Input value={v.spo2} onChange={set('spo2')} placeholder="98" inputMode="numeric" /></Field>
             <Field label="Glicemia (mg/dL)"><Input value={v.glicemia} onChange={set('glicemia')} placeholder="opcional" inputMode="numeric" /></Field>

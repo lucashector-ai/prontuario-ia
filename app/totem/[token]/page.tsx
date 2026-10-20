@@ -61,7 +61,7 @@ export default function TotemPage({ params }: { params: { token: string } }) {
       if (!pendentes.length) { setMsg('Não encontramos consulta para hoje com este CPF.'); setTela('erro') }
       else if (pendentes.length === 1 && pendentes[0].senha) mostrarSenha(pendentes[0].senha, 'Sua chegada já estava confirmada', `${pendentes[0].hora}${pendentes[0].medico ? ` · ${pendentes[0].medico}` : ''}`, false)
       else { setAgs(pendentes); setTela('escolher') }
-    } catch (e: any) { setMsg(e.message || 'Não foi possível agora.'); setTela('erro') }
+    } catch (e: any) { setMsg(e.message || 'Não foi possível agora. Procure a recepção, por favor.'); setTela('erro') }
     finally { setOcupado(false) }
   }
 
@@ -73,9 +73,9 @@ export default function TotemPage({ params }: { params: { token: string } }) {
         mostrarSenha(r.senha, r.ja_existia ? 'Sua chegada já estava confirmada' : `Chegada confirmada${r.nome ? `, ${r.nome.split(' ')[0]}` : ''}!`, `${escolhido.hora}${r.medico ? ` · ${r.medico}` : ''}`, r.prioridade !== 'normal')
       } else {
         const r = await totemSenha(params.token, prioridade, cpf ? 'sem_cpf' : 'sem_horario')
-        mostrarSenha(r.senha, 'Aguarde ser chamado na recepção', r.na_frente ? `${r.na_frente} ${r.na_frente === 1 ? 'pessoa' : 'pessoas'} na sua frente` : 'Você é o próximo', prioridade !== 'normal')
+        mostrarSenha(r.senha, 'Aguarde a chamada na recepção', r.na_frente ? `${r.na_frente} ${r.na_frente === 1 ? 'pessoa' : 'pessoas'} na sua frente` : 'Você é o próximo', prioridade !== 'normal')
       }
-    } catch (e: any) { setMsg(e.message || 'Não foi possível agora.'); setTela('erro') }
+    } catch (e: any) { setMsg(e.message || 'Não foi possível agora. Procure a recepção, por favor.'); setTela('erro') }
     finally { setOcupado(false) }
   }
 
@@ -138,7 +138,7 @@ export default function TotemPage({ params }: { params: { token: string } }) {
                     <span style={{ display: 'block', fontSize: 28, fontWeight: 800, color: '#1d1b26' }}>{a.paciente}</span>
                     <span style={{ display: 'block', fontSize: 20, opacity: .65, color: '#1d1b26', marginTop: 4 }}>Hoje às {a.hora}{a.medico ? ` · ${a.medico}` : ''}</span>
                   </span>
-                  <span style={{ fontSize: 22, fontWeight: 800, color: COR }}>Sou eu ›</span>
+                  <span style={{ fontSize: 22, fontWeight: 800, color: COR }}>Sou eu</span>
                 </button>
               ))}
             </div>
@@ -172,7 +172,7 @@ export default function TotemPage({ params }: { params: { token: string } }) {
               <div style={{ fontSize: 'clamp(80px, 12vw, 140px)', fontWeight: 900, color: COR, lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{resultado.senha}</div>
               {resultado.prioritario && <div style={{ fontSize: 20, fontWeight: 800, color: '#B54708' }}>ATENDIMENTO PRIORITÁRIO</div>}
             </div>
-            <div style={{ fontSize: 22, marginTop: 26, opacity: .75 }}>Aguarde ser chamado no painel. 🙂</div>
+            <div style={{ fontSize: 22, marginTop: 26, opacity: .75 }}>Aguarde a chamada no painel. 🙂</div>
             <button className="t-btn" onClick={reiniciar} style={{ ...btnPri, marginTop: 26 }}>Pronto</button>
             {/* Comprovante para a impressora */}
             <div className="t-ticket" style={{ display: 'none' }}>
@@ -188,7 +188,7 @@ export default function TotemPage({ params }: { params: { token: string } }) {
 
         {tela === 'erro' && (
           <div style={{ textAlign: 'center', maxWidth: 680 }}>
-            <div style={{ fontSize: 'clamp(26px, 3.6vw, 40px)', fontWeight: 800 }}>{msg || 'Não foi possível agora.'}</div>
+            <div style={{ fontSize: 'clamp(26px, 3.6vw, 40px)', fontWeight: 800 }}>{msg || 'Não foi possível agora. Procure a recepção, por favor.'}</div>
             <div style={{ fontSize: 22, opacity: .65, marginTop: 12 }}>Pegue uma senha e a recepção te ajuda.</div>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', marginTop: 28, flexWrap: 'wrap' }}>
               <button className="t-btn" onClick={() => { setFluxo('balcao'); setTela('prioridade') }} style={btnPri}><Ticket size={24} /> Pegar senha</button>
