@@ -617,11 +617,11 @@ function AgendaContent() {
         setComVideo(true)
       } else {
         log.error('Erro criando sala:', tcData.error)
-        toast('Erro ao criar sala: ' + (tcData.error || 'desconhecido'))
+        toast('Não foi possível criar a sala de teleconsulta. Tente de novo.')
       }
     } catch (err) {
       log.error('Erro criando sala:', err)
-      toast('Erro ao criar sala')
+      toast('Não foi possível criar a sala de teleconsulta. Tente de novo.')
     }
   }
 
@@ -759,7 +759,7 @@ function AgendaContent() {
       } else {
         toast(data.error || 'Erro ao enviar pré-atendimento', 'error')
       }
-    } catch (e) { notificar('Erro de conexão', 'erro') }
+    } catch (e) { notificar('Sem conexão com a internet. Confira e tente de novo.', 'erro') }
     finally { setEnviandoPreConsulta(false) }
   }
 
@@ -826,7 +826,7 @@ function AgendaContent() {
         toast(data.error || 'Erro ao bloquear', 'error')
       }
     } catch (e: any) {
-      toast('Erro de conexao', 'error')
+      toast('Sem conexão com a internet. Confira e tente de novo.', 'error')
     } finally {
       setSalvandoBloqueio(false)
     }
@@ -905,7 +905,7 @@ function AgendaContent() {
       if (!r.ok) { notificar(d.error || 'Não foi possível enviar a oferta', 'erro'); return }
       atualizarItemEspera(w.id, { status: 'oferecido' })
       notificar(`Horário oferecido a ${nome.split(' ')[0]} pelo WhatsApp`)
-    } catch { notificar('Erro de conexão', 'erro') }
+    } catch { notificar('Sem conexão com a internet. Confira e tente de novo.', 'erro') }
     finally { setOferecendo(null) }
   }
 
@@ -958,7 +958,7 @@ function AgendaContent() {
       setListaEspera(l => ordenarEspera([...l, d.item]))
       setModalEspera(false)
       notificar(`${item.nome.split(' ')[0]} entrou na lista de espera`)
-    } catch { notificar('Erro de conexão', 'erro') }
+    } catch { notificar('Sem conexão com a internet. Confira e tente de novo.', 'erro') }
     finally { setSalvandoEspera(false) }
   }
 
@@ -2097,7 +2097,7 @@ function SubModalRealizado({ ag, onClose, onSaved }: { ag: any; onClose: () => v
 
     // 1. Atualiza agendamento pra status realizado
     const { error: errAg } = await supabase.from('agendamentos').update({ status: 'realizado' }).eq('id', ag.id)
-    if (errAg) { setErro('Erro ao atualizar agendamento: ' + errAg.message); setSalvando(false); return }
+    if (errAg) { log.error('Erro ao atualizar agendamento:', errAg.message); setErro('Não foi possível salvar o agendamento. Tente de novo.'); setSalvando(false); return }
 
     // 1.5 Verifica se paciente tem pacote ativo - se tiver, consome 1 sessao automaticamente
     let pacoteConsumido = null
@@ -2149,7 +2149,7 @@ function SubModalRealizado({ ag, onClose, onSaved }: { ag: any; onClose: () => v
           medico_id: ag.medico_id || null,
           agendamento_id: ag.id,
         })
-        if (errMov) { setErro('Erro ao criar movimentação financeira: ' + errMov.message); setSalvando(false); return }
+        if (errMov) { log.error('Erro ao criar movimentação financeira:', errMov.message); setErro('O agendamento foi salvo, mas o lançamento no financeiro falhou. Lance manualmente em Financeiro.'); setSalvando(false); return }
       }
     }
 

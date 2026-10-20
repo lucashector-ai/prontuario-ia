@@ -59,8 +59,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (!MEMED_API_KEY || !MEMED_SECRET_KEY) {
+      log.error('[memed/prescritor] Memed nao configurada: faltam MEMED_API_KEY e MEMED_SECRET_KEY')
       return NextResponse.json({
-        error: 'Memed nao configurada. Configure MEMED_API_KEY e MEMED_SECRET_KEY no Vercel.'
+        error: 'A receita Memed ainda não está ativa nesta conta. Fale com o suporte para liberar.'
       }, { status: 501 })
     }
 
@@ -90,19 +91,19 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (errMed || !medico) {
-      return NextResponse.json({ error: 'Medico nao encontrado' }, { status: 404 })
+      return NextResponse.json({ error: 'Não encontramos o seu cadastro de médico. Saia e entre de novo; se continuar, fale com o suporte.' }, { status: 404 })
     }
 
     // 3. Valida campos obrigatorios pro Memed
     const cpfLimpo = limparCpf(medico.cpf)
     if (!cpfLimpo || cpfLimpo.length !== 11) {
       return NextResponse.json({
-        error: 'CPF do medico ausente ou invalido. Atualize o perfil antes de usar a Memed.'
+        error: 'Seu CPF está faltando ou incompleto. Atualize em Meu perfil antes de usar a receita Memed.'
       }, { status: 400 })
     }
     if (!medico.crm) {
       return NextResponse.json({
-        error: 'CRM do medico ausente. Atualize o perfil antes de usar a Memed.'
+        error: 'Seu CRM não está cadastrado. Atualize em Meu perfil antes de usar a receita Memed.'
       }, { status: 400 })
     }
 
@@ -152,7 +153,7 @@ export async function POST(req: NextRequest) {
     } catch {
       log.error('[memed/prescritor] Memed retornou nao-JSON. Status:', res.status, 'Body:', respText.slice(0, 500))
       return NextResponse.json({
-        error: 'Memed nao retornou JSON valido. Status: ' + res.status + '. Resposta: ' + respText.slice(0, 200),
+        error: 'Não foi possível abrir a receita Memed agora. Tente de novo em instantes. Se continuar, fale com o suporte.',
         debug: {
           api_key_configurada: !!MEMED_API_KEY,
           api_key_preview: MEMED_API_KEY.slice(0, 8) + '...',
@@ -170,8 +171,9 @@ export async function POST(req: NextRequest) {
 
       // Caso CPF inválido (separadamente de conflito)
       if (errorLower.includes('precisa ser um cpf válido') || errorLower.includes('cpf invalido')) {
+        log.error('[memed/prescritor] CPF rejeitado pela Memed:', errorDetail)
         return NextResponse.json({
-          error: 'CPF do médico (' + cpfLimpo + ') foi rejeitado pela Memed: precisa ser um CPF válido. Use um CPF real válido em homologação.'
+          error: 'A Memed não aceitou o CPF do seu cadastro. Confira o CPF em Meu perfil e tente de novo.'
         }, { status: 400 })
       }
 
@@ -200,21 +202,23 @@ export async function POST(req: NextRequest) {
         if (getRes.ok) {
           memedData = await getRes.json()
           if (!memedData?.data?.attributes?.token) {
+            log.error('[memed/prescritor] Memed retornou dados mas sem token. external_id usado:', externalIdAntigo || externalId, 'Resposta:', JSON.stringify(memedData).slice(0, 300))
             return NextResponse.json({
-              error: 'Memed retornou dados mas sem token. external_id usado: ' + (externalIdAntigo || externalId) + '. Resposta: ' + JSON.stringify(memedData).slice(0, 300)
+              error: 'Não foi possível abrir a receita Memed agora. Tente de novo em instantes. Se continuar, fale com o suporte.'
             }, { status: 500 })
           }
         } else {
           const recoveryText = await getRes.text()
           log.error('[memed/prescritor] falha ao recuperar GET:', recoveryText.slice(0, 300))
+          log.error('[memed/prescritor] conflito ao cadastrar e nao foi possivel recuperar. Erro original:', errorDetail)
           return NextResponse.json({
-            error: 'Memed conflito ao cadastrar e nao foi possivel recuperar. Erro original: ' + errorDetail
+            error: 'Não foi possível abrir a receita Memed agora. Tente de novo em instantes. Se continuar, fale com o suporte.'
           }, { status: 500 })
         }
       } else {
         log.error('[memed/prescritor] erro Memed (nao-conflito):', JSON.stringify(memedData).slice(0, 500))
         return NextResponse.json({
-          error: 'Erro ao cadastrar prescritor na Memed: ' + errorDetail
+          error: 'Não foi possível abrir a receita Memed agora. Tente de novo em instantes. Se continuar, fale com o suporte.'
         }, { status: 500 })
       }
     }
@@ -223,8 +227,9 @@ export async function POST(req: NextRequest) {
     const status = memedData?.data?.attributes?.status
 
     if (!token) {
+      log.error('[memed/prescritor] Memed nao retornou token. Resposta:', JSON.stringify(memedData).slice(0, 300))
       return NextResponse.json({
-        error: 'Memed nao retornou token. Resposta: ' + JSON.stringify(memedData).slice(0, 300)
+        error: 'Não foi possível abrir a receita Memed agora. Tente de novo em instantes. Se continuar, fale com o suporte.'
       }, { status: 500 })
     }
 
@@ -240,6 +245,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ token, status, from_cache: false })
   } catch (e: any) {
     log.error('[memed/prescritor] exception:', e)
-    return NextResponse.json({ error: e?.message || 'erro desconhecido' }, { status: 500 })
+    return NextResponse.json({ error: 'Não foi possível abrir a receita Memed agora. Tente de novo em instantes. Se continuar, fale com o suporte.' }, { status: 500 })
   }
 }

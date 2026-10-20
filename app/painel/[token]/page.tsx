@@ -140,7 +140,7 @@ export default function PainelPage({ params }: { params: { token: string } }) {
       <Tela>
         <div style={{ margin: 'auto', textAlign: 'center', maxWidth: 560, padding: 24 }}>
           <div style={{ fontSize: 34, fontWeight: 800 }}>Painel não encontrado</div>
-          <div style={{ fontSize: 18, opacity: 0.75, marginTop: 12 }}>O link deste painel mudou ou foi desativado. Copie o link novo em Minha clínica → Atendimento.</div>
+          <div style={{ fontSize: 18, opacity: 0.75, marginTop: 12 }}>O link deste painel mudou ou foi desativado. Copie o link novo em Minha clínica → Recepção e painel.</div>
         </div>
       </Tela>
     )
