@@ -10,6 +10,8 @@ _Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 ví
 - [x] `supabase/migrations/0024_contas_unidades.sql`: contas com várias unidades (organização, pessoas e vínculos). Até rodar, a aba Unidades avisa que não está ativa e o resto segue igual.
 
 ## Decisões
+- [ ] Apagar contas de teste: o sistema não me deixa apagar dados de produção. Apague pelo Supabase (Table Editor) ou libere a permissão para eu escrever o script. Antes, confirme as clínicas "Enfermeiros Care" (itsmarisantos2000@gmail.com) e "Clínica ZenCardio" (juniorrosalvo2015@gmail.com), que parecem clientes reais, e a "Clínica Demonstração" (revisao.meta@clinical360.app), usada na revisão da Meta.
+- [ ] Cobrança automática dos planos: hoje "Quero o plano" manda um pedido por email e o plano é trocado no /superadmin. Para pagar e liberar sozinho, escolher o meio de pagamento (Asaas, Mercado Pago ou Stripe).
 - [x] Pedido de "plano completo": por email (feito).
 - [x] Plano Grátis: 1 usuário, 10 consultas com IA por mês (feito).
 
@@ -18,6 +20,7 @@ _Conferido em 20/10: 0021 a 0024 aplicadas (4 organizações, 10 pessoas, 10 ví
 - [ ] `RESEND_API_KEY` e `RESEND_FROM` (ex.: `Clinical 360 <nao-responda@seudominio.com.br>`, com o domínio verificado no Resend). Sem a chave o email não sai; o pedido fica guardado no banco mesmo assim.
 
 ## Testar com login real
+- [ ] Criar uma conta com o seu email (pode ser 1lucashector+teste@gmail.com, que cai na mesma caixa) para revisarmos o sistema juntos com dados reais.
 - [ ] Criar uma conta "Atendo sozinho(a)" em produção e fazer uma consulta (o cadastro de autônomo mudou).
 - [ ] Equipe: cadastrar e editar alguém (as rotas de equipe ganharam checagem de segurança).
 - [ ] Plano Grátis: numa conta nova, abrir a Central de atendimento e ver a tela de "plano completo".
