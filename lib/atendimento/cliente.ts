@@ -536,7 +536,10 @@ export const pacientesDemo = () => PACIENTES_EXTRA
 
 function semente(): EstadoDemo {
   const dia = hojeSP()
-  const hora = (h: number, m = 0) => new Date(`${dia}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00-03:00`).toISOString()
+  // Horários relativos ao momento da apresentação: os 2 primeiros acabaram de passar, o resto vem ao longo do dia
+  // (antes eram fixos das 8h às 13h30 e, à tarde, a fila inteira aparecia "atrasada").
+  const base = Math.floor((Date.now() - 45 * 60e3) / (30 * 60e3)) * 30 * 60e3
+  const hora = (h: number, m = 0) => new Date(base + ((h - 8) * 60 + m) * 60e3).toISOString()
   const setores: Setor[] = [{ id: 'demo-setor-1', nome: 'Ambulatório — 2º andar', ordem: 0, ativo: true, painel_token: 'demo', painel_exibicao: 'senha_nome', painel_voz: true, painel_mensagem: null, avisar_whatsapp: true, totem_ativo: true, totem_token: 'demo' }]
   const consultorios: Consultorio[] = [1, 2, 3].map(n => ({ id: 'demo-cons-' + n, setor_id: 'demo-setor-1', nome: 'Consultório ' + n, ordem: n, ativo: true }))
   const medicos = [

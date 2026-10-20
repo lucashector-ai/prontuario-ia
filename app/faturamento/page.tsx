@@ -7,7 +7,7 @@
 import React, { useEffect, useState } from 'react'
 import { FileText, Layers, Wallet, Building2, Info } from 'lucide-react'
 import { tokens as T } from '@/lib/design-tokens'
-import { Tabs, Badge, Icon } from '@/components/ui'
+import { Tabs, Icon } from '@/components/ui'
 import { usePageHeader } from '@/components/shell/header-context'
 import type { Guia } from '@/lib/tiss/tipos'
 import { useFaturamento } from './useFaturamento'
@@ -55,9 +55,8 @@ export default function FaturamentoPage() {
     <div className="c360-pagina">
       <style dangerouslySetInnerHTML={{ __html: CSS_FATURAMENTO }} />
 
-      {(fat.demo || fat.semMigration) && (
+      {fat.semMigration && !fat.demo && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-          {fat.demo && <Badge tone="accent" dot>Modo demonstração · nada é gravado</Badge>}
           {fat.semMigration && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: T.status.warning }}>
               <Icon icon={Info} size={14} /> O faturamento de convênios ainda não está ativo na sua conta. Fale com o suporte do Clinical 360 para liberar.
