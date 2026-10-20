@@ -71,14 +71,14 @@ export default function PrivacidadePage() {
 
           <h2>2. Encarregado pelo tratamento de dados (DPO)</h2>
           <p>
-            Em atendimento ao artigo 41 da LGPD, o encarregado pode ser contatado pelo e-mail <a href="mailto:privacidade@clinical360.app">privacidade@clinical360.app</a> para esclarecimentos, exercício de direitos do titular e demais comunicações relacionadas ao tratamento de dados pessoais.
+            Em atendimento ao artigo 41 da LGPD, o encarregado pode ser contatado pelo email <a href="mailto:privacidade@clinical360.app">privacidade@clinical360.app</a> para esclarecimentos, exercício de direitos do titular e demais comunicações relacionadas ao tratamento de dados pessoais.
           </p>
 
           <h2>3. Quais dados coletamos</h2>
 
           <h3>3.1. Dados do médico ou administrador da clínica</h3>
           <ul>
-            <li>Dados de identificação: nome completo, CPF, data de nascimento, e-mail, telefone</li>
+            <li>Dados de identificação: nome completo, CPF, data de nascimento, email, telefone</li>
             <li>Dados profissionais: CRM, especialidade, dados da clínica (CNPJ, endereço)</li>
             <li>Credenciais de acesso: senha (armazenada com hash criptográfico)</li>
             <li>Dados de uso: IP de acesso, horários de login, ações realizadas na plataforma</li>
@@ -86,7 +86,7 @@ export default function PrivacidadePage() {
 
           <h3>3.2. Dados de pacientes (inseridos pelo médico)</h3>
           <ul>
-            <li>Dados de identificação: nome, CPF, data de nascimento, e-mail, telefone, endereço</li>
+            <li>Dados de identificação: nome, CPF, data de nascimento, email, telefone, endereço</li>
             <li>Dados de saúde (categoria especial de dados pessoais sensíveis, conforme art. 5º, II da LGPD): histórico clínico, queixas, diagnósticos, CIDs, prescrições, exames, alergias, medicações em uso</li>
             <li>Gravações de áudio de consultas, quando autorizadas pelo paciente</li>
             <li>Transcrições e prontuários SOAP gerados a partir dessas gravações</li>
@@ -228,7 +228,7 @@ export default function PrivacidadePage() {
             Médicos e administradores cadastrados podem exercer estes direitos diretamente no painel da plataforma, na seção <strong>Privacidade e LGPD</strong>, ou enviando solicitação para <a href="mailto:privacidade@clinical360.app">privacidade@clinical360.app</a>.
           </p>
           <p>
-            Pacientes que tiveram dados inseridos por uma clínica devem, em primeiro lugar, contatar a clínica responsável (controladora dos dados). Caso não obtenham resposta adequada, podem nos acionar pelo mesmo e-mail para mediação.
+            Pacientes que tiveram dados inseridos por uma clínica devem, em primeiro lugar, contatar a clínica responsável (controladora dos dados). Caso não obtenham resposta adequada, podem nos acionar pelo mesmo email para mediação.
           </p>
 
           <h2>9. Uso de inteligência artificial</h2>
@@ -257,12 +257,12 @@ export default function PrivacidadePage() {
 
           <h2>12. Alterações nesta política</h2>
           <p>
-            Esta política pode ser atualizada para refletir mudanças legais, técnicas ou no funcionamento da plataforma. Alterações relevantes serão comunicadas por e-mail ao usuário cadastrado e por aviso na plataforma com antecedência mínima de 30 dias, exceto quando exigência legal impuser prazo diverso.
+            Esta política pode ser atualizada para refletir mudanças legais, técnicas ou no funcionamento da plataforma. Alterações relevantes serão comunicadas por email ao usuário cadastrado e por aviso na plataforma com antecedência mínima de 30 dias, exceto quando exigência legal impuser prazo diverso.
           </p>
 
           <h2>13. Contato e reclamações</h2>
           <p>
-            Para dúvidas, solicitações de direitos ou reclamações relacionadas ao tratamento dos seus dados, entre em contato pelo e-mail <a href="mailto:privacidade@clinical360.app">privacidade@clinical360.app</a>.
+            Para dúvidas, solicitações de direitos ou reclamações relacionadas ao tratamento dos seus dados, entre em contato pelo email <a href="mailto:privacidade@clinical360.app">privacidade@clinical360.app</a>.
           </p>
           <p>
             Caso entenda que sua solicitação não foi devidamente atendida, você tem o direito de apresentar reclamação à <strong>Autoridade Nacional de Proteção de Dados (ANPD)</strong> pelo site <a href="https://www.gov.br/anpd/" target="_blank" rel="noopener noreferrer">gov.br/anpd</a>.

@@ -22,7 +22,7 @@ function LoginForm() {
 
   useEffect(() => {
     if (searchParams?.get('cadastrado') === '1') {
-      setSucesso('Conta criada com sucesso! Faça login pra entrar.')
+      setSucesso('Conta criada. Entre com seu email e senha.')
     }
     if (searchParams?.get('expirou') === '1') {
       setSucesso('Atualizamos a segurança do sistema. Entre novamente para continuar.')

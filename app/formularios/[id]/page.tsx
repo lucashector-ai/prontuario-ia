@@ -114,7 +114,7 @@ export default function EditarTemplatePage() {
             cursor: 'pointer',
           }}
         >
-          Voltar pra lista
+          Voltar para lista
         </button>
       </div>
     )
@@ -187,7 +187,7 @@ export default function EditarTemplatePage() {
                   type="text"
                   value={descricao}
                   onChange={e => { setDescricao(e.target.value); setModificado(true) }}
-                  placeholder="Pra equipe lembrar pra que serve"
+                  placeholder="Para equipe lembrar para que serve"
                   style={inputStyle}
                 />
               </Field>

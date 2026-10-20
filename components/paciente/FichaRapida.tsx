@@ -117,7 +117,7 @@ export function FichaRapida({ pacienteId, onClose }: { pacienteId: string; onClo
       .ev{padding:6px 0;border-bottom:1px solid #f0f0f0} .q{color:#666;font-size:12px} .alerta{color:#b42318;font-weight:700}
     </style></head><body>
       <h1>${esc(p.nome)}</h1><div class="q">Ficha emitida em ${new Date().toLocaleString('pt-BR')} · Clinical 360</div>
-      <h2>Dados</h2><table>${linha('Nascimento', p.data_nascimento ? `${dataBR(p.data_nascimento)}${anos !== null ? ` (${anos} anos)` : ''}` : '')}${linha('CPF', p.cpf)}${linha('Celular', formatarTelefone(p.telefone))}${linha('E-mail', p.email)}${linha('Convênio', [p.convenio, p.nr_carteirinha].filter(Boolean).join(' · '))}${linha('Endereço', [p.endereco, p.cidade].filter(Boolean).join(' — '))}</table>
+      <h2>Dados</h2><table>${linha('Nascimento', p.data_nascimento ? `${dataBR(p.data_nascimento)}${anos !== null ? ` (${anos} anos)` : ''}` : '')}${linha('CPF', p.cpf)}${linha('Celular', formatarTelefone(p.telefone))}${linha('Email', p.email)}${linha('Convênio', [p.convenio, p.nr_carteirinha].filter(Boolean).join(' · '))}${linha('Endereço', [p.endereco, p.cidade].filter(Boolean).join(' — '))}</table>
       <h2>Saúde</h2><table>${p.alergias ? `<tr><th>Alergias</th><td class="alerta">${esc(p.alergias)}</td></tr>` : ''}${linha('Doenças', p.comorbidades)}${linha('Remédios em uso', p.medicamentos_uso)}</table>
       <h2>Histórico</h2>${eventos.map(e => `<div class="ev"><b>${esc(e.titulo)}</b>${e.selo ? ` — ${esc(e.selo.texto)}` : ''}<div class="q">${dataBR(e.quando, true)}${e.detalhe ? ` · ${esc(e.detalhe)}` : ''}</div></div>`).join('') || '<div class="q">Sem registros.</div>'}
     </body></html>`)

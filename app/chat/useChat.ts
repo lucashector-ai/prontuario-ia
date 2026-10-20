@@ -409,6 +409,6 @@ function mensagensDemo(id: string, medicoNome?: string): Mensagem[] {
     m(5, 'enviada', 'Paciente pediu remarcação — verificar agenda de quinta à tarde.', 20, { nota: true, remetente: 'Recepção Ana' }),
     m(6, 'recebida', 'Surgiu um imprevisto no trabalho 😔', 5),
     m(7, 'recebida', 'Consigo remarcar para quinta à tarde?', 3),
-    m(8, 'enviada', 'Consigo sim! Tenho 14h ou 16h30. Qual fica melhor pra você?', 1, { manual: true, remetente: medicoNome || 'Recepção' }),
+    m(8, 'enviada', 'Consigo sim! Tenho 14h ou 16h30. Qual fica melhor para você?', 1, { manual: true, remetente: medicoNome || 'Recepção' }),
   ]
 }

@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     const { data: existe } = await supabase
       .from("medicos").select("id").eq("email", emailNorm).maybeSingle()
     if (existe) {
-      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 400 })
+      return NextResponse.json({ error: "Email já cadastrado" }, { status: 400 })
     }
 
     // Adição de médico/recepção pela clínica → gera senha provisória

@@ -36,7 +36,7 @@ const STATUS_LABEL: Record<string, string> = { agendado: 'Agendado', confirmado:
 
 // Rótulos legíveis para os campos do formulário de edição
 const CAMPOS_TEXTO: { k: string; l: string }[] = [
-  { k: 'nome', l: 'Nome' }, { k: 'cpf', l: 'CPF' }, { k: 'telefone', l: 'Telefone' }, { k: 'email', l: 'E-mail' },
+  { k: 'nome', l: 'Nome' }, { k: 'cpf', l: 'CPF' }, { k: 'telefone', l: 'Telefone' }, { k: 'email', l: 'Email' },
   { k: 'endereco', l: 'Endereço' }, { k: 'convenio', l: 'Convênio' }, { k: 'nr_carteirinha', l: 'Nº da carteirinha' },
 ]
 const CAMPOS_CLINICOS: { k: string; l: string }[] = [
@@ -396,7 +396,7 @@ export default function PacienteDetalhe() {
                   const info: { icon: LucideIcon; l: string; v: any; mono?: boolean }[] = [
                     { icon: IdCard, l: 'CPF', v: paciente?.cpf, mono: true },
                     { icon: Phone, l: 'Telefone', v: paciente?.telefone, mono: true },
-                    { icon: Mail, l: 'E-mail', v: paciente?.email },
+                    { icon: Mail, l: 'Email', v: paciente?.email },
                     { icon: Cake, l: 'Idade', v: idadePac !== null ? idadePac + ' anos' : null },
                     { icon: MapPin, l: 'Endereço', v: paciente?.endereco },
                     { icon: Shield, l: 'Convênio', v: paciente?.convenio ? normalizarConvenio(paciente.convenio) : null },

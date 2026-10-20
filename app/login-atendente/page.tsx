@@ -52,7 +52,7 @@ export default function LoginAtendente() {
       rodape={<>É médico? <a href="/login" style={{ color: tokens.brand.primary, textDecoration: 'none', fontWeight: 600 }}>Acesso médico</a></>}
     >
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <Field label="E-mail">
+        <Field label="Email">
           <Input
             type="email" required value={form.email} autoFocus
             onChange={e => setForm(f => ({ ...f, email: e.target.value }))}

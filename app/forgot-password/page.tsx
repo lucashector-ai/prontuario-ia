@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
   if (enviado) {
     return (
       <TelaAcesso
-        titulo="E-mail enviado"
+        titulo="Email enviado"
         descricao="Verifique sua caixa de entrada e a pasta de spam para redefinir sua senha."
         icone={<MailCheck size={22} strokeWidth={1.6} />}
         tomIcone="success"
@@ -49,11 +49,11 @@ export default function ForgotPasswordPage() {
   return (
     <TelaAcesso
       titulo="Recuperar senha"
-      descricao="Enviaremos um link de recuperação para o seu e-mail."
+      descricao="Enviaremos um link de recuperação para o seu email."
       icone={<KeyRound size={22} strokeWidth={1.6} />}
       rodape={<Link href="/login" style={linkVoltar}><ArrowLeft size={15} strokeWidth={1.6} /> Voltar ao login</Link>}
     >
-      <Field label="E-mail">
+      <Field label="Email">
         <Input type="email" placeholder="seu@email.com" value={email} autoFocus
           onChange={e => setEmail(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && enviar()}

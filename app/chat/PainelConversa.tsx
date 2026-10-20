@@ -346,7 +346,7 @@ function PainelContato({ c, api, onFechar, onAbrirPaciente }: { c: Conversa; api
           </div>
         ) : (
           <div style={{ fontSize: 12.5, color: T.text.quaternary, lineHeight: 1.5 }}>
-            Contato ainda não vinculado a um paciente. A Sofia vincula automaticamente quando reconhece o telefone, CPF ou e-mail.
+            Contato ainda não vinculado a um paciente. A Sofia vincula automaticamente quando reconhece o telefone, CPF ou email.
           </div>
         )}
       </div>

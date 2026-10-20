@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (erroResposta || !respostaId) {
-      return NextResponse.json({ erro: erroResposta || 'Erro ao salvar' }, { status: 500 })
+      return NextResponse.json({ erro: erroResposta || 'Não foi possível enviar suas respostas. Tente de novo em instantes.' }, { status: 500 })
     }
 
     await marcarComoPreenchido(resultado.envio.id, respostaId)

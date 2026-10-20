@@ -177,7 +177,7 @@ export default function Ditado() {
                   }}>
                     <IconTile icon={Mic} size={48} radius={15} color={gravando ? T.status.danger : T.brand.primary} style={{ marginBottom: 6 }} />
                     <p style={{ fontSize: 14.5, fontWeight: 700, color: T.text.primary, margin: 0 }}>
-                      {gravando ? 'Aguardando fala…' : 'Pronto pra começar'}
+                      {gravando ? 'Aguardando fala…' : 'Pronto para começar'}
                     </p>
                     <p style={{ fontSize: 12.5, color: T.text.quaternary, margin: 0, maxWidth: 340, lineHeight: 1.45 }}>
                       {gravando

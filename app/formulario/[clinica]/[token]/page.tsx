@@ -44,7 +44,7 @@ export default function FormularioPublicoPage() {
           return
         }
         if (!res.ok || data.erro) {
-          setMensagemErro(data.erro || 'Link inválido')
+          setMensagemErro(data.erro || 'Este link não é válido. Peça um novo link à clínica.')
           setEstado('erro')
           return
         }
@@ -75,7 +75,7 @@ export default function FormularioPublicoPage() {
       })
       const data = await res.json()
       if (!data.sucesso) {
-        setErroValidacao(data.erro || 'Erro ao enviar')
+        setErroValidacao(data.erro || 'Não foi possível enviar suas respostas. Tente de novo em instantes.')
         setEnviando(false)
         return
       }

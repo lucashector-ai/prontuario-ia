@@ -49,7 +49,7 @@ export default function TermosPage() {
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <p style={{ fontSize: 12, fontWeight: 700, color: tokens.brand.primary, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Termos de Uso</p>
           <h1 style={{ fontSize: 38, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 14px', color: tokens.neutral[900] }}>
-            As regras pra usar o Clinical 360.
+            As regras para usar o Clinical 360.
           </h1>
           <p style={{ fontSize: 16, color: tokens.text.muted, margin: 0, lineHeight: 1.55 }}>
             Este documento estabelece os termos e condições para uso da plataforma Clinical 360. Ao se cadastrar ou utilizar nossos serviços, você concorda com tudo o que está descrito aqui.
@@ -123,7 +123,7 @@ export default function TermosPage() {
 
           <h3>4.5. Inadimplência</h3>
           <p>
-            Em caso de falha na cobrança, o Usuário será notificado por e-mail e disporá de 7 (sete) dias para regularizar o pagamento. Após esse prazo, o acesso poderá ser suspenso até a regularização. A persistência da inadimplência por mais de 30 dias autoriza o encerramento da conta, observado o disposto na cláusula 11.
+            Em caso de falha na cobrança, o Usuário será notificado por email e disporá de 7 (sete) dias para regularizar o pagamento. Após esse prazo, o acesso poderá ser suspenso até a regularização. A persistência da inadimplência por mais de 30 dias autoriza o encerramento da conta, observado o disposto na cláusula 11.
           </p>
 
           <h3>4.6. Custos de mensagens WhatsApp</h3>
@@ -218,7 +218,7 @@ export default function TermosPage() {
             <li>Suspeita fundada de risco à segurança da plataforma ou de outros usuários</li>
           </ul>
           <p>
-            Em caso de encerramento, o Usuário será notificado por e-mail e terá prazo de 30 (trinta) dias para exportar seus dados antes da exclusão definitiva, exceto quando o encerramento decorrer de ordem judicial que imponha procedimento diverso.
+            Em caso de encerramento, o Usuário será notificado por email e terá prazo de 30 (trinta) dias para exportar seus dados antes da exclusão definitiva, exceto quando o encerramento decorrer de ordem judicial que imponha procedimento diverso.
           </p>
 
           <h2>12. Limitação de responsabilidade</h2>
@@ -246,7 +246,7 @@ export default function TermosPage() {
 
           <h2>14. Comunicações</h2>
           <p>
-            As comunicações entre a Clinical 360 e o Usuário ocorrem preferencialmente por e-mail cadastrado e por notificações dentro da plataforma. É responsabilidade do Usuário manter dados de contato atualizados.
+            As comunicações entre a Clinical 360 e o Usuário ocorrem preferencialmente por email cadastrado e por notificações dentro da plataforma. É responsabilidade do Usuário manter dados de contato atualizados.
           </p>
           <p>
             Comunicações de caráter contratual relevante (mudanças de preço, alteração nestes Termos, encerramento de conta) serão enviadas com antecedência mínima conforme previsto em cada cláusula específica ou na legislação aplicável.
@@ -254,7 +254,7 @@ export default function TermosPage() {
 
           <h2>15. Alterações nestes Termos</h2>
           <p>
-            A Clinical 360 pode alterar estes Termos de Uso para refletir mudanças legais, regulatórias, técnicas ou no funcionamento da plataforma. Alterações materiais serão comunicadas com antecedência mínima de 30 (trinta) dias por e-mail e por aviso na plataforma.
+            A Clinical 360 pode alterar estes Termos de Uso para refletir mudanças legais, regulatórias, técnicas ou no funcionamento da plataforma. Alterações materiais serão comunicadas com antecedência mínima de 30 (trinta) dias por email e por aviso na plataforma.
           </p>
           <p>
             A continuidade do uso após a entrada em vigor da nova versão configura aceitação das alterações. Caso o Usuário não concorde, poderá cancelar a assinatura sem ônus antes da data de vigência.

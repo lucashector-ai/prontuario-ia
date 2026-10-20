@@ -164,7 +164,7 @@ export default function LGPD() {
           <Card padding={20}>
             <CabecalhoCard icon={Upload} titulo="Exportar meus dados" sub="Baixe um arquivo com tudo (formato JSON)" />
             <p style={{ fontSize: 13, color: T.text.secondary, margin: '0 0 16px', lineHeight: 1.6 }}>
-              O arquivo inclui todos os seus pacientes, consultas e agendamentos. Ideal pra migrar de plataforma ou fazer backup pessoal.
+              O arquivo inclui todos os seus pacientes, consultas e agendamentos. Ideal para migrar de plataforma ou fazer backup pessoal.
             </p>
             <Button icon={Download} onClick={exportarDados} disabled={exportando}>
               {exportando ? 'Exportando…' : 'Exportar meus dados'}

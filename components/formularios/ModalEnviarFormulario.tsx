@@ -103,7 +103,7 @@ export default function ModalEnviarFormulario({ clinicaId, medicoId, paciente, a
     <Modal titulo={urlGerada ? 'Link gerado' : 'Enviar formulário'} onClose={onFechar} largura={520}>
       <p style={{ fontSize: 13, color: T.text.quaternary, margin: '-6px 0 16px', lineHeight: 1.45 }}>
         {urlGerada
-          ? 'Copie o link ou envie direto pelo WhatsApp/e-mail do paciente.'
+          ? 'Copie o link ou envie direto pelo WhatsApp/email do paciente.'
           : `Para: ${paciente.nome}`}
       </p>
 
@@ -195,7 +195,7 @@ export default function ModalEnviarFormulario({ clinicaId, medicoId, paciente, a
 
             {paciente.email && (
               <Button variant="secondary" size="lg" block icon={Mail} onClick={enviarEmail}>
-                Enviar por e-mail
+                Enviar por email
               </Button>
             )}
 
