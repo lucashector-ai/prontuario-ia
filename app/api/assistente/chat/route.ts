@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     if (!anthropicRes.ok || !anthropicRes.body) {
       const errText = await anthropicRes.text().catch(() => '')
       log.error('Erro Anthropic API:', anthropicRes.status, errText)
-      return new Response(JSON.stringify({ erro: 'Erro ao processar a resposta' }), { status: 502 })
+      return new Response(JSON.stringify({ erro: 'Erro ao processar a resposta', diag: `${anthropicRes.status} ${errText.slice(0, 300)}` }), { status: 502 })
     }
 
     await debitarCreditos(cred.cobranca, 'assistente')
