@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
         email: emailNorm,
         telefone: telefone || null,
         tipo: 'autonomo',
+        plano: 'gratis',   // toda conta nova começa no Grátis (lib/planos.ts)
       })
       .select()
       .single()

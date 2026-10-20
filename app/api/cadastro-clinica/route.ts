@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
         email: clinica.email,
         telefone: clinica.telefone || null,
         tipo: 'clinica',
+        plano: 'gratis',   // toda conta nova começa no Grátis (lib/planos.ts)
       })
       .select()
       .single()

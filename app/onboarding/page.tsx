@@ -7,7 +7,9 @@ import {
   Mic, Users, UserPlus, Check, CircleCheck, CircleAlert, ChevronLeft, ArrowRight, Stethoscope, Building2,
   CalendarCheck, ConciergeBell, HeartPulse, DoorOpen, CalendarHeart, MessageCircle, Wallet, Video, Compass, Sparkles, FileSignature, ListChecks,
 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase, tokenSessao } from '@/lib/supabase'
+import { usePlano } from '@/lib/usePlano'
+import { ehGratis } from '@/lib/planos'
 import { tokens } from '@/lib/design-tokens'
 import { Marca } from '@/components/Marca'
 import { Button, Field, Input, IconTile, ProgressBar } from '@/components/ui'
@@ -74,6 +76,16 @@ export default function OnboardingPage() {
   const [erro, setErro] = useState('')
   const [etapaAberta, setEtapaAberta] = useState(0)
   const [objetivos, setObjetivos] = useState<string[]>([])
+  const plano = usePlano()
+  const [pedidoPlano, setPedidoPlano] = useState(false)
+  async function pedirPlanoCompleto() {
+    try {
+      const t = tokenSessao()
+      await fetch('/api/planos/interesse', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) }, body: JSON.stringify({ recurso: 'Equipe com mais pessoas' }) })
+      setPedidoPlano(true)
+    } catch { notificarErro() }
+  }
+  const notificarErro = () => setErro('Não foi possível enviar agora. Tente de novo.')
 
   const [formMedico, setFormMedico] = useState({ nome: '', crm: '', especialidade: '' })
   const [formClinica, setFormClinica] = useState({ nome: '', telefone: '', endereco: '' })
@@ -463,13 +475,31 @@ export default function OnboardingPage() {
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <Button size="lg" block icon={UserPlus} onClick={() => concluir({ tour: false, destino: '/admin?add=medico' })} disabled={salvando}>
-                    {salvando ? 'Salvando…' : 'Cadastrar a equipe agora'}
-                  </Button>
-                  <Button size="lg" block variant="secondary" onClick={avancar} disabled={salvando}>Depois — continuar</Button>
-                </div>
-                <p style={{ fontSize: 12.5, color: T.text.tertiary, margin: '12px 0 0', textAlign: 'center' }}>Cada pessoa recebe uma senha provisória para o primeiro acesso.</p>
+                {ehGratis(plano) ? (
+                  <>
+                    <div style={{ padding: '12px 14px', borderRadius: 12, background: T.brand.primarySoftBg, border: `1px solid ${T.border.default}`, fontSize: 13.5, color: T.text.secondary, lineHeight: 1.55, marginBottom: 14 }}>
+                      Sua conta começa no <b style={{ color: T.text.primary }}>plano Grátis</b>, para usar sozinho. Para cadastrar a equipe, peça o plano completo: a equipe do Clinical 360 fala com você e libera.
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {pedidoPlano ? (
+                        <div style={{ padding: '12px 14px', borderRadius: 12, background: T.status.successBg, color: T.status.success, fontSize: 13.5, fontWeight: 600 }}>Pedido recebido. Vamos falar com você.</div>
+                      ) : (
+                        <Button size="lg" block icon={UserPlus} onClick={pedirPlanoCompleto} disabled={salvando}>Quero o plano completo para a equipe</Button>
+                      )}
+                      <Button size="lg" block variant="secondary" onClick={avancar} disabled={salvando}>Continuar</Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <Button size="lg" block icon={UserPlus} onClick={() => concluir({ tour: false, destino: '/admin?add=medico' })} disabled={salvando}>
+                        {salvando ? 'Salvando…' : 'Cadastrar a equipe agora'}
+                      </Button>
+                      <Button size="lg" block variant="secondary" onClick={avancar} disabled={salvando}>Depois — continuar</Button>
+                    </div>
+                    <p style={{ fontSize: 12.5, color: T.text.tertiary, margin: '12px 0 0', textAlign: 'center' }}>Cada pessoa recebe uma senha provisória para o primeiro acesso.</p>
+                  </>
+                )}
               </div>
             )}
 

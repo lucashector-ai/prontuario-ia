@@ -11,6 +11,9 @@ import { BatimentoAutomacoes } from './shell/BatimentoAutomacoes'
 import { AvisosAoVivo } from './shell/AvisosAoVivo'
 import { FichaRapidaGlobal } from './paciente/FichaRapida'
 import { TourGuiado } from './shell/TourGuiado'
+import { PlanoCompleto } from './shell/PlanoCompleto'
+import { usePlano } from '@/lib/usePlano'
+import { recursoDaRota, recursoLiberado } from '@/lib/planos'
 import { tokenSessao } from '@/lib/supabase'
 import { sairDaConta } from '@/lib/sessao'
 import { tokens } from '@/lib/design-tokens'
@@ -31,6 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [layout, setLayout] = useState<Layout>('desktop')
   // Menu recolhido: escolha do usuário (lembrada no navegador). Telas < 1180px começam recolhidas.
   const [recolhido, setRecolhido] = useState(false)
+  const plano = usePlano()
 
   useEffect(() => {
     const check = () => {
@@ -75,6 +79,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (ehPublica) return <HeaderProvider>{children}</HeaderProvider>
 
+  // Plano Grátis: recurso fora do plano mostra a tela de plano completo no lugar da página
+  const recurso = recursoDaRota(pathname)
+  const conteudo = recurso && plano !== undefined && !recursoLiberado(plano, recurso) ? <PlanoCompleto recurso={recurso} /> : children
+
   const painel: React.CSSProperties = {
     flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain',
     background: tokens.bg.card, border: `1px solid ${tokens.border.default}`, borderRadius: tokens.radius['3xl'],
@@ -90,7 +98,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <AvisosAoVivo />
           <FichaRapidaGlobal />
           <TourGuiado />
-          <main className="appshell-main" style={painel}>{children}</main>
+          <main className="appshell-main" style={painel}>{conteudo}</main>
           <BottomNav />
         </div>
       </HeaderProvider>
@@ -108,7 +116,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <AvisosAoVivo />
           <FichaRapidaGlobal />
           <TourGuiado />
-          <main className="appshell-main" style={painel}>{children}</main>
+          <main className="appshell-main" style={painel}>{conteudo}</main>
         </div>
       </div>
     </HeaderProvider>

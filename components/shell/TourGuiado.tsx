@@ -76,6 +76,8 @@ function sugestoes(papel: Papel): Acao[] {
   try {
     objetivos = JSON.parse(localStorage.getItem(CHAVE_OBJETIVOS) || '[]')
     autonomo = localStorage.getItem(CHAVE_PERFIL_CADASTRO) === 'autonomo'
+    // Plano Grátis é para uso individual: nada de equipe/recepção nas sugestões
+    if (sessionStorage.getItem('c360-plano') === 'gratis') autonomo = true
   } catch {}
   const lista = ACOES.clinica.filter(a => !(autonomo && a.soEquipe))
   const peso = (a: Acao) => a.objetivo && objetivos.includes(a.objetivo) ? 0 : a.soEquipe ? 1 : a.objetivo ? 3 : 2

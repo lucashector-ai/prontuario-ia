@@ -7,12 +7,14 @@ import {
   LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, Sparkles, MessageCircle,
   CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, PanelLeftClose, PanelLeftOpen,
-  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2,
+  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2, Lock,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, Avatar } from '@/components/ui'
 import { SetupChecklist } from '@/components/SetupChecklist'
 import { Marca } from '@/components/Marca'
+import { usePlano } from '@/lib/usePlano'
+import { recursoDaRota, recursoLiberado } from '@/lib/planos'
 import { useChatNaoLidas } from '@/components/shell/useChatNaoLidas'
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
@@ -34,6 +36,8 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
   const [hover, setHover] = useState<string | null>(null)
   const [hoverLogo, setHoverLogo] = useState(false)
   const chatNaoLidas = useChatNaoLidas()
+  const plano = usePlano()
+  const bloqueado = (href: string) => { const r = recursoDaRota(href); return !!r && plano !== undefined && !recursoLiberado(plano, r) }
 
   useEffect(() => {
     const ca = localStorage.getItem('clinica_admin')
@@ -260,6 +264,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
                               background: T.brand.primary, color: '#fff', fontSize: 11, fontWeight: 700, lineHeight: '20px', ...fade(!rail),
                             }}>{contador > 99 ? '99+' : contador}</span>
                           )}
+                          {bloqueado(item.href) && !editando && <Lock size={13} color={T.text.tertiary} style={{ flexShrink: 0, ...fade(!rail) }} aria-label="Plano completo" />}
                           {item.emBreve && (
                             <span style={{ fontSize: 10, fontWeight: 600, color: '#8A6A1F', background: '#FBF3DF', padding: '2px 7px', borderRadius: 99, ...fade(!rail) }}>Em breve</span>
                           )}

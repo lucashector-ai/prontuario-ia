@@ -106,9 +106,9 @@ export default function TermosPage() {
             Os planos da Clinical 360 são oferecidos em ciclo mensal ou anual, com valores publicados na página de planos da plataforma. O Usuário escolhe a modalidade no ato da contratação.
           </p>
 
-          <h3>4.2. Trial gratuito</h3>
+          <h3>4.2. Plano Grátis</h3>
           <p>
-            O plano Solo oferece período de teste gratuito de 7 (sete) dias corridos, contados a partir do cadastro. Durante o trial, o Usuário tem acesso pleno ao plano, sem cobrança e sem necessidade de cadastrar meio de pagamento. Ao final do período, o acesso é interrompido até que a assinatura seja confirmada.
+            Toda conta nova começa no plano Grátis, sem cobrança, sem prazo e sem necessidade de cadastrar meio de pagamento. O plano Grátis é de uso individual (um usuário) e inclui agenda, cadastro de pacientes, até 20 (vinte) consultas por mês com prontuário estruturado por inteligência artificial, prescrição digital e teleconsulta. Recursos como equipe com mais usuários, recepção com fila e painel, assistente Sofia no WhatsApp, faturamento de convênios e análise de exames por IA estão disponíveis apenas nos planos pagos. Os limites do plano Grátis podem ser revistos, com aviso prévio ao Usuário.
           </p>
 
           <h3>4.3. Renovação automática</h3>

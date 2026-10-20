@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { MODELOS } from '@/lib/ai/models'
 import { resolverModelo, ehModeloSoap, type ModeloProntuario, type CampoSoap } from '@/lib/ai/modelos-prontuario'
+import { cotaIaEsgotada } from '@/lib/planos-servidor'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -34,6 +35,10 @@ export async function POST(req: NextRequest) {
     if (!transcricao || transcricao.trim().length < 20) {
       return NextResponse.json({ error: 'Transcricao muito curta' }, { status: 400 })
     }
+
+    // Plano Grátis: limite mensal de consultas com IA
+    const esgotou = await cotaIaEsgotada(req)
+    if (esgotou) return NextResponse.json({ error: esgotou, limite_plano: true }, { status: 402 })
 
     const template = getTemplate(especialidade || modelo?.especialidade || '')
 

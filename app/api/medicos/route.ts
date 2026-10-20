@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseServidor as supabase } from "@/lib/servidor"
 import { contextoDaRequisicao, naoAutenticado, proibido } from "@/lib/acesso"
+import { ehGratis } from "@/lib/planos"
+import { planoDaClinica } from "@/lib/planos-servidor"
 import bcrypt from "bcryptjs"
 
 // Gera senha aleatória com maiúscula, minúscula, número e símbolo
@@ -34,6 +36,7 @@ export async function POST(req: NextRequest) {
     if (!ctx) return naoAutenticado()
     if (!ctx.gestor || !ctx.clinica_id) return proibido('Só o administrador da clínica cadastra a equipe')
     const clinica_id = ctx.clinica_id
+    if (ehGratis(await planoDaClinica(clinica_id))) return proibido('O plano Grátis é para quem atende sozinho. Para cadastrar a equipe, passe para um plano completo.')
 
     const body = await req.json()
     const { nome, crm, especialidade, email, cargo: cargoBody, cor, comissao_tipo, comissao_valor, comissao_base, cpf, data_nascimento } = body

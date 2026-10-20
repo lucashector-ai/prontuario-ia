@@ -24,7 +24,7 @@ const LAV_TEXT = 'rgb(111,93,197)'
 const PLANS = [
   {
     name: 'SOLO', desc: 'Para médicos autônomos', monthly: '297', annualPerMonth: '237', annualTotal: '2.844', highlight: false, badge: '',
-    features: ['IA na consulta ilimitada', 'Prescrição Memed', 'Agenda + teleconsulta', '200 mensagens WhatsApp/mês', 'Suporte por e-mail', 'Trial de 7 dias'],
+    features: ['IA na consulta ilimitada', 'Prescrição Memed', 'Agenda + teleconsulta', '200 mensagens WhatsApp/mês', 'Suporte por email'],
   },
   {
     name: 'CLÍNICA', desc: 'Para clínicas de 2 a 10 médicos', monthly: '597', annualPerMonth: '477', annualTotal: '5.724', highlight: true, badge: 'MAIS VENDIDO',
@@ -41,7 +41,7 @@ const FAQS = [
   { q: 'A IA pode errar no prontuário?', a: 'A IA gera um rascunho do prontuário SOAP — você revisa e aprova antes de salvar. Nada é registrado sem a sua confirmação. O médico mantém total controle e responsabilidade clínica.' },
   { q: 'Preciso instalar algo?', a: 'Não. O Clinical 360 roda 100% no navegador. Acesse de qualquer computador, tablet ou celular — sem instalação e sem atualização manual.' },
   { q: 'Posso migrar de outro sistema?', a: 'Sim. Nossa equipe importa seus pacientes, prontuários e agenda do seu sistema atual sem custo. A migração leva em média 48 horas.' },
-  { q: 'Como funciona o trial gratuito?', a: 'São 7 dias com acesso completo, sem cartão de crédito. Ao final, você escolhe um plano ou cancela — seus dados ficam guardados por 30 dias.' },
+  { q: 'Como funciona o plano Grátis?', a: 'Você cria a conta sem cartão e usa sozinho, sem prazo: agenda, pacientes, 20 consultas por mês com prontuário pela IA, receitas Memed e teleconsulta. Equipe, recepção com fila e TV, Sofia no WhatsApp e faturamento de convênios ficam nos planos completos.' },
   { q: 'Quanto custa um médico extra?', a: 'No plano Clínica, cada médico adicional custa R$ 97/mês. No plano PRO, os usuários são ilimitados.' },
 ]
 
@@ -196,7 +196,7 @@ function Landing({ router, logado, destinoLogado }: { router: any; logado: boole
               {logado ? 'Ir para a plataforma' : 'Entrar'}
             </button>
             <button className="c360-btn c360-btn--primary" onClick={irCadastro} style={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap', border: 'none', cursor: 'pointer', borderRadius: 12, padding: '9px 18px', fontWeight: 500, fontSize: 15, letterSpacing: '-0.02em', background: PURPLE, color: '#fff', fontFamily: 'inherit' }}>
-              {logado ? 'Abrir dashboard' : 'Teste grátis'}
+              {logado ? 'Abrir a plataforma' : 'Começar grátis'}
             </button>
           </div>
         </div>
@@ -694,6 +694,15 @@ function Landing({ router, logado, destinoLogado }: { router: any; logado: boole
                 <button className="c360-btn c360-btn--primary" onClick={irCadastro} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', background: PURPLE, color: '#fff', borderRadius: 16, padding: 16, fontWeight: 500, fontSize: 16, letterSpacing: '-0.02em', marginTop: 8, fontFamily: 'inherit' }}>{logado ? 'Ir para a plataforma' : 'Comece grátis'}</button>
               </div>
             ))}
+          </div>
+          {/* Plano Grátis: uso individual, sem prazo (lib/planos.ts) */}
+          <div style={{ width: '100%', boxSizing: 'border-box', marginTop: 32, padding: '28px 32px', borderRadius: 24, border: `1px solid ${LAV_BORDER}`, background: LAV, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24 }}>
+            <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontWeight: 600, fontSize: 13, letterSpacing: '0.2em', color: ACCENT }}>GRÁTIS · R$ 0</span>
+              <span style={{ fontWeight: 500, fontSize: 24, letterSpacing: '-0.04em', color: INK }}>Comece sozinho, sem cartão e sem prazo.</span>
+              <span style={{ fontSize: 15, color: MUTED, letterSpacing: '-0.02em', lineHeight: 1.5 }}>Agenda, pacientes, 20 consultas por mês com prontuário pela IA, receitas Memed e teleconsulta. Quando a clínica crescer, é só passar para um plano completo.</span>
+            </div>
+            <button className="c360-btn c360-btn--primary" onClick={irCadastro} style={{ border: 'none', cursor: 'pointer', background: PURPLE, color: '#fff', borderRadius: 16, padding: '16px 28px', fontWeight: 500, fontSize: 16, letterSpacing: '-0.02em', fontFamily: 'inherit' }}>{logado ? 'Ir para a plataforma' : 'Criar conta grátis'}</button>
           </div>
         </div>
       </section>
