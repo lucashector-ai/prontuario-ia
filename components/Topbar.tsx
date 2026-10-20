@@ -19,6 +19,7 @@ import { listarNotificacoes, marcarNotificacao, marcarTodasLidas, destinoDaNotif
 
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { SaldoCurto } from '@/components/planos/SaldoCreditos'
 const T = tokens
 
 // so: 'gestor' = dono/administrador · 'clinico' = quem atende (fora da recepção)
@@ -458,7 +459,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
                 </>
               )}
               <button onClick={() => { setAberto(null); iniciarTour() }} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Compass size={16} strokeWidth={1.6} color={T.text.secondary} />Tour guiado</button>
-              <button onClick={() => ir('/planos')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Sparkles size={16} strokeWidth={1.6} color={T.text.secondary} />Planos</button>
+              <button onClick={() => ir('/planos')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Sparkles size={16} strokeWidth={1.6} color={T.text.secondary} /><span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.25 }}>Planos e créditos<SaldoCurto /></span></button>
               <div style={{ height: 1, background: T.border.muted, margin: '6px 4px' }} />
               <button onClick={sair} style={{ ...itemMenu, color: T.status.danger }} onMouseEnter={e => e.currentTarget.style.background = T.status.dangerBg} onMouseLeave={hoverOff}><LogOut size={16} strokeWidth={1.6} />Sair</button>
             </div>

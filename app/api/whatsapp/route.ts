@@ -9,6 +9,7 @@ import { importarHistorico, sincronizarContatos } from '@/lib/whatsapp/coexisten
 import { dispararConfirmacoes24h, detectarRespostaConfirmacao24h, notificarMedico, marcarConfirmadoVia, tratarRespostaListaEspera } from '@/lib/sofia/confirmacao'
 import { createClient } from '@supabase/supabase-js'
 import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
+import { cobrarConversaSofia } from '@/lib/creditos-servidor'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -962,6 +963,7 @@ export async function POST(req: NextRequest) {
       
       const textoComContexto = contextoExtra ? `${texto}\n\n[CONTEXTO DO SISTEMA: ${contextoExtra}]` : texto
       const { texto: resposta, humano, agendarData, botoes, encerrar } = await processarIA(textoComContexto, historico)
+      cobrarConversaSofia(MEDICO_ID, conversa?.id)
       const creds = await getWppCredentials(MEDICO_ID)
 
       if (agendarData) {

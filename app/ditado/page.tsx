@@ -45,7 +45,7 @@ export default function Ditado() {
     try {
       const res = await fetch('/api/estruturar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcricao: textoFinal, especialidade: medico?.especialidade || '' }),
+        body: JSON.stringify({ transcricao: textoFinal, especialidade: medico?.especialidade || '', origem: 'digitado' }),
       })
       const data = await res.json()
       if (data.prontuario) {

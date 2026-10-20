@@ -4,6 +4,7 @@ import { log } from '@/lib/logger'
 import { useState, useCallback, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FILTRO_APOIO } from '@/lib/cargos'
+import { lerAoVivo } from '@/lib/transcricao/aoVivo'
 import {
   Mic, Zap, Pause, Play, Sparkles, AudioLines, CircleCheck, CircleDashed, LoaderCircle, CircleAlert,
   Copy, Download, Check, Plus, FlaskConical, FileBadge, Printer, MessageCircle, RefreshCw, TriangleAlert, Lightbulb, Target,
@@ -257,7 +258,7 @@ export default function Home() {
     try {
       const res = await fetch('/api/estruturar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcricao: texto, ...(modelo ? { modelo: modeloParaRequisicao(modelo) } : {}) }),
+        body: JSON.stringify({ transcricao: texto, origem: segundos > 0 ? 'gravado' : 'digitado', ao_vivo: segundos > 0 && lerAoVivo(), ...(modelo ? { modelo: modeloParaRequisicao(modelo) } : {}) }),
       })
       const data = await res.json()
       if (data.prontuario) {

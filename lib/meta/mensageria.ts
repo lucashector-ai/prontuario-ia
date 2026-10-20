@@ -10,6 +10,7 @@ import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
 import { log } from '@/lib/logger'
 import { supabaseServidor as db } from '@/lib/servidor'
 import { GRAPH_IG, canalPorConta, graph, marcarErroCanal } from '@/lib/meta/graph'
+import { cobrarConversaSofia } from '@/lib/creditos-servidor'
 
 export type CanalSocial = 'instagram' | 'messenger'
 /** 'instagram' = conta conectada pelo login do Instagram (graph.instagram.com); 'facebook' = pela página */
@@ -130,6 +131,7 @@ export async function receberMensagemSocial(p: { canal: CanalSocial; contaId: st
 
   const ia = await anthropic.messages.create({ ...SEM_RACIOCINIO, model: MODELOS.apoio, max_tokens: 600, system: SISTEMA[p.canal], messages: alternadas })
   let resposta = textoDaResposta(ia)
+  cobrarConversaSofia(conv.medico_id, conv.id)
   const humano = resposta.includes('[HUMANO]')
   resposta = resposta.replace(/\[HUMANO\]/g, '').replace(/\[BOTOES:[^\]]+\]/g, '').trim()
   if (humano) await db.from('whatsapp_conversas').update({ modo: 'humano' }).eq('id', conv.id)

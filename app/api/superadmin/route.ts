@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const { token, action, medico_id, clinica_id, plano } = await req.json()
+  const { token, action, medico_id, clinica_id, plano, creditos } = await req.json()
   if (token !== ADMIN_TOKEN) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
   if (action === 'stats') {
@@ -83,8 +83,17 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === 'change_plano') {
-    if (!clinica_id || !plano) return NextResponse.json({ error: 'clinica_id e plano obrigatórios' }, { status: 400 })
-    await supabaseAdmin.from('clinicas').update({ plano }).eq('id', clinica_id)
+    if (!clinica_id || !['', 'gratis', 'solo', 'clinica', 'pro'].includes(plano ?? 'x')) return NextResponse.json({ error: 'clinica_id e plano válido obrigatórios' }, { status: 400 })
+    await supabaseAdmin.from('clinicas').update({ plano: plano || null }).eq('id', clinica_id)
+    return NextResponse.json({ ok: true })
+  }
+
+  // Pacote de créditos de IA (compra ou cortesia), válido por 60 dias
+  if (action === 'add_creditos') {
+    const n = Number(creditos)
+    if (!clinica_id || !(n > 0) || n > 100000) return NextResponse.json({ error: 'clinica_id e créditos (> 0) obrigatórios' }, { status: 400 })
+    const { error } = await supabaseAdmin.from('creditos_pacotes').insert({ clinica_chave: clinica_id, creditos: n, origem: 'compra', observacao: 'Liberado pelo superadmin' })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
   }
 

@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { MODELOS, textoDaResposta, SEM_RACIOCINIO } from '@/lib/ai/models'
 import { resolverModelo, ehModeloSoap, type ModeloProntuario, type CampoSoap } from '@/lib/ai/modelos-prontuario'
-import { cotaIaEsgotada } from '@/lib/planos-servidor'
+import { assinatura, conferirCreditos, debitarCreditos, jaCobrado } from '@/lib/creditos-servidor'
+import { contarPalavras, custoConsulta } from '@/lib/creditos'
 import { mensagemErroIA } from '@/lib/ai/erro-ia'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -37,14 +38,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Transcricao muito curta' }, { status: 400 })
     }
 
-    // Plano Grátis: limite mensal de consultas com IA
-    const esgotou = await cotaIaEsgotada(req)
-    if (esgotou) return NextResponse.json({ error: esgotou, limite_plano: true }, { status: 402 })
+    // Créditos de IA: consulta ~20 min = 1 crédito (+1 a cada ~20 min, +1 com texto ao vivo; digitado = 0,5).
+    // Gerar de novo o mesmo texto no mesmo dia não cobra outra vez.
+    const custo = custoConsulta({ palavras: contarPalavras(transcricao), aoVivo: body.ao_vivo === true, digitado: body.origem === 'digitado' })
+    const marca = 'consulta:' + assinatura(transcricao)
+    const cred = await conferirCreditos(req, custo)
+    const repetida = await jaCobrado(cred.cobranca, marca)
+    if (cred.erro && !repetida) return NextResponse.json({ error: cred.erro, limite_plano: true }, { status: 402 })
+    const cobrar = () => repetida ? Promise.resolve() : debitarCreditos(cred.cobranca, 'consulta', marca)
 
     const template = getTemplate(especialidade || modelo?.especialidade || '')
 
     if (modelo && !ehModeloSoap(modelo)) {
       const prontuario = await estruturarComModelo(modelo, transcricao, template, pre_consulta)
+      await cobrar()
       return NextResponse.json({ prontuario })
     }
 
@@ -96,6 +103,7 @@ export async function POST(req: NextRequest) {
     const jsonStr = inicio >= 0 && fim >= 0 ? conteudo.slice(inicio, fim + 1) : conteudo
     const prontuario = JSON.parse(jsonStr)
 
+    await cobrar()
     return NextResponse.json({ prontuario })
   } catch (error: any) {
     log.error('Erro Claude:', error)

@@ -1,4 +1,6 @@
 import { log } from '@/lib/logger'
+import { conferirCreditos, debitarCreditos } from '@/lib/creditos-servidor'
+import { CUSTO } from '@/lib/creditos'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { MODELOS, textoDaResposta } from '@/lib/ai/models'
@@ -16,6 +18,8 @@ export async function POST(req: NextRequest) {
     const isImage = file.type.startsWith('image/')
     const isPdf = file.type === 'application/pdf'
     if (!isImage && !isPdf) return NextResponse.json({ error: 'Formato invalido. Envie JPG, PNG ou PDF.' }, { status: 400 })
+    const cred = await conferirCreditos(req, CUSTO.exame)
+    if (cred.erro) return NextResponse.json({ error: cred.erro, limite_plano: true }, { status: 402 })
     const mediaType = file.type as any
     const srcBlock: any = isPdf
       ? { type: 'document', source: { type: 'base64', media_type: mediaType, data: base64 } }
@@ -70,6 +74,7 @@ export async function POST(req: NextRequest) {
     })
 
     const texto = textoDaResposta(message)
+    await debitarCreditos(cred.cobranca, 'exame', file.name)
     const inicio = texto.indexOf('{')
     const fim = texto.lastIndexOf('}')
     let analise: any = null

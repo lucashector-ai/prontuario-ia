@@ -1,6 +1,6 @@
 /**
- * Planos do Clinical 360. Por enquanto só o GRÁTIS tem limites aplicados pelo sistema;
- * contas antigas (plano vazio) e os planos pagos seguem sem limite até a cobrança existir.
+ * Planos do Clinical 360. Recursos bloqueados valem só para o GRÁTIS; os créditos de IA de cada
+ * plano estão em lib/creditos.ts (contas antigas, sem plano, não têm limite).
  *
  * clinicas.plano: 'gratis' | 'solo' | 'clinica' | 'pro' | null
  * O superadmin muda o plano em /superadmin (ação change_plano).
@@ -23,7 +23,7 @@ export const PLANO_GRATIS = {
   bloqueados: ['equipe', 'atendimento', 'sofia', 'tiss', 'exames'] as Recurso[],
   incluso: [
     'Agenda e cadastro de pacientes',
-    '10 consultas por mês com prontuário escrito pela IA',
+    '10 créditos de IA por mês (≈ 10 consultas com prontuário pela IA)',
     'Receitas Memed e documentos',
     'Teleconsulta',
     'Chat do WhatsApp (sem a Sofia)',
@@ -65,12 +65,12 @@ export function inicioDoMesSP(agora = new Date()) {
 }
 
 /** Planos pagos (mesmos valores da página inicial). A compra hoje vira um pedido para a equipe liberar. */
-export type PlanoPago = { id: 'solo' | 'clinica' | 'pro'; nome: string; para: string; mensal: string; anualMes: string; destaque?: boolean; itens: string[] }
+export type PlanoPago = { id: 'solo' | 'clinica' | 'pro'; nome: string; para: string; mensal: string; anualMes: string; creditos: number; destaque?: boolean; itens: string[] }
 export const PLANOS_PAGOS: PlanoPago[] = [
-  { id: 'solo', nome: 'Solo', para: 'Para quem atende sozinho', mensal: '297', anualMes: '237',
-    itens: ['Consultas com IA ilimitadas', 'Receitas Memed', 'Agenda e teleconsulta', '200 mensagens de WhatsApp por mês', 'Suporte por email'] },
-  { id: 'clinica', nome: 'Clínica', para: 'De 2 a 10 médicos', mensal: '597', anualMes: '477', destaque: true,
-    itens: ['Até 10 usuários', '1.000 consultas com IA por mês', 'Recepção, fila, triagem e TV', 'Sofia no WhatsApp', 'Faturamento de convênios', 'Suporte pelo WhatsApp'] },
-  { id: 'pro', nome: 'Pro', para: 'Clínicas grandes e redes', mensal: '1.197', anualMes: '957',
-    itens: ['Usuários ilimitados', 'Consultas com IA ilimitadas', 'Análise de exames com IA', 'Várias unidades', '5.000 mensagens de WhatsApp por mês', 'Suporte prioritário'] },
+  { id: 'solo', nome: 'Solo', para: 'Para quem atende sozinho', mensal: '297', anualMes: '267', creditos: 250,
+    itens: ['1 profissional', 'Prontuário pela IA, receitas Memed e documentos', 'Agenda, agenda online e teleconsulta', 'Portal do paciente e confirmação pelo WhatsApp', 'Suporte por email'] },
+  { id: 'clinica', nome: 'Clínica', para: 'Para clínicas com equipe', mensal: '597', anualMes: '537', creditos: 400, destaque: true,
+    itens: ['Até 3 profissionais e 10 usuários', 'Recepção, fila, triagem, TV e totem', 'Sofia no WhatsApp', 'Convênios (TISS) com recurso de glosa', 'Relatórios por profissional', 'Suporte pelo WhatsApp'] },
+  { id: 'pro', nome: 'Pro', para: 'Clínicas maiores e redes', mensal: '999', anualMes: '899', creditos: 1000,
+    itens: ['Até 10 profissionais e usuários ilimitados', 'Várias unidades na mesma conta', 'Análise de exames com IA', 'Tudo do plano Clínica', 'Suporte prioritário'] },
 ]

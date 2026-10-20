@@ -20,6 +20,7 @@ import { notificar } from '@/components/ui/dialogos'
 
 import { registrarAcesso } from '@/lib/auditoria'
 import ConversaConsulta from '@/components/ia/ConversaConsulta'
+import { lerAoVivo } from '@/lib/transcricao/aoVivo'
 const ICE = { iceServers: [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
@@ -497,7 +498,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
     try {
       const r = await fetch('/api/estruturar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcricao: textoTranscrição })
+        body: JSON.stringify({ transcricao: textoTranscrição, ao_vivo: lerAoVivo() })
       })
       const d = await r.json()
       if (d.estruturado || d.prontuario || d) {

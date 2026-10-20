@@ -23,16 +23,16 @@ const LAV_TEXT = 'rgb(111,93,197)'
 
 const PLANS = [
   {
-    name: 'SOLO', desc: 'Para médicos autônomos', monthly: '297', annualPerMonth: '237', annualTotal: '2.844', highlight: false, badge: '',
-    features: ['IA na consulta ilimitada', 'Prescrição Memed', 'Agenda + teleconsulta', '200 mensagens WhatsApp/mês', 'Suporte por email'],
+    name: 'SOLO', desc: 'Para quem atende sozinho', monthly: '297', annualPerMonth: '267', annualTotal: '3.204', highlight: false, badge: '',
+    features: ['250 créditos de IA por mês (≈ 250 consultas)', '1 profissional', 'Prescrição Memed e documentos', 'Agenda, agenda online e teleconsulta', 'Portal do paciente e confirmação no WhatsApp', 'Suporte por email'],
   },
   {
-    name: 'CLÍNICA', desc: 'Para clínicas de 2 a 10 médicos', monthly: '597', annualPerMonth: '477', annualTotal: '5.724', highlight: true, badge: 'MAIS VENDIDO',
-    features: ['Até 10 usuários', '1.000 consultas IA/mês', 'Sofia no WhatsApp', '1.000 mensagens WhatsApp/mês', 'Comparativo entre médicos', 'Multi-perfil (médico, recepção)', 'Suporte WhatsApp comercial'],
+    name: 'CLÍNICA', desc: 'Para clínicas com equipe', monthly: '597', annualPerMonth: '537', annualTotal: '6.444', highlight: true, badge: 'MAIS VENDIDO',
+    features: ['400 créditos de IA por mês (≈ 400 consultas)', 'Até 3 profissionais e 10 usuários', 'Recepção, fila, triagem, TV e totem', 'Sofia no WhatsApp', 'Convênios (TISS) com recurso de glosa', 'Relatórios por profissional', 'Suporte pelo WhatsApp'],
   },
   {
-    name: 'PRO', desc: 'Para clínicas grandes e redes', monthly: '1.197', annualPerMonth: '957', annualTotal: '11.484', highlight: false, badge: '',
-    features: ['Usuários ilimitados', 'Consultas IA ilimitadas', 'Análise de exames com IA', 'Multi-clínica', '5.000 mensagens WhatsApp/mês', 'API + integrações', 'Suporte prioritário + onboarding'],
+    name: 'PRO', desc: 'Para clínicas maiores e redes', monthly: '999', annualPerMonth: '899', annualTotal: '10.788', highlight: false, badge: '',
+    features: ['1.000 créditos de IA por mês (≈ 1.000 consultas)', 'Até 10 profissionais e usuários ilimitados', 'Várias unidades na mesma conta', 'Análise de exames com IA', 'Tudo do plano Clínica', 'Suporte prioritário e implantação'],
   },
 ]
 
@@ -42,7 +42,8 @@ const FAQS = [
   { q: 'Preciso instalar algo?', a: 'Não. O Clinical 360 roda 100% no navegador. Acesse de qualquer computador, tablet ou celular — sem instalação e sem atualização manual.' },
   { q: 'Posso migrar de outro sistema?', a: 'Sim. Nossa equipe importa seus pacientes, prontuários e agenda do seu sistema atual sem custo. A migração leva em média 48 horas.' },
   { q: 'Como funciona o plano Grátis?', a: 'Você cria a conta sem cartão e usa sozinho, sem prazo: agenda, pacientes, 10 consultas por mês com prontuário pela IA, receitas Memed e teleconsulta. Equipe, recepção com fila e TV, Sofia no WhatsApp e faturamento de convênios ficam nos planos completos.' },
-  { q: 'Quanto custa um médico extra?', a: 'No plano Clínica, cada médico adicional custa R$ 97/mês. No plano PRO, os usuários são ilimitados.' },
+  { q: 'Quanto custa um médico extra?', a: 'Cada profissional adicional custa R$ 97/mês e já vem com mais 100 créditos de IA por mês.' },
+  { q: 'O que são os créditos de IA?', a: '1 crédito é uma consulta gravada de até ~20 minutos com o prontuário escrito pela IA. Os créditos renovam todo mês. Agenda, prontuário digitado, confirmações e lembretes não gastam créditos. Se precisar de mais, há pacotes extras de 100 créditos (R$ 89) e 300 créditos (R$ 249).' },
 ]
 
 export default function HomePage() {
@@ -662,7 +663,7 @@ function Landing({ router, logado, destinoLogado }: { router: any; logado: boole
               return (
                 <button key={b} onClick={() => setBilling(b)} style={{ border: 'none', cursor: 'pointer', borderRadius: 11, padding: b === 'anual' ? '10px 18px' : '10px 22px', fontFamily: 'inherit', fontWeight: 600, fontSize: 15, letterSpacing: '-0.02em', transition: 'all .2s ease', display: 'inline-flex', alignItems: 'center', gap: 8, ...(on ? { background: '#fff', color: 'rgb(40,42,52)', boxShadow: '0 1px 3px rgba(20,20,40,0.14)' } : { background: 'transparent', color: 'rgb(122,124,132)' }) }}>
                   {b === 'mensal' ? 'Mensal' : 'Anual'}
-                  {b === 'anual' ? <span style={{ background: LAV, color: PURPLE, borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 700 }}>20% OFF</span> : null}
+                  {b === 'anual' ? <span style={{ background: LAV, color: PURPLE, borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 700 }}>10% OFF</span> : null}
                 </button>
               )
             })}

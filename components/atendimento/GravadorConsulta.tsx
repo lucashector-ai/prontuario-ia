@@ -15,6 +15,7 @@ import { useTranscricao } from '@/lib/transcricao/useTranscricao'
 import { supabase } from '@/lib/supabase'
 import { ehDemo } from '@/lib/atendimento/cliente'
 import { ChaveAoVivo } from '@/components/atendimento/ChaveAoVivo'
+import { lerAoVivo } from '@/lib/transcricao/aoVivo'
 
 type Estado = 'idle' | 'gravando' | 'processando' | 'pronto' | 'erro'
 type Prontuario = { subjetivo?: string; objetivo?: string; avaliacao?: string; plano?: string; cids?: { codigo: string; descricao: string }[]; [k: string]: any }
@@ -64,7 +65,7 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
     else { setEstado('idle'); notificar('Não deu para ouvir a consulta. Tente de novo mais perto do microfone.', 'erro') }
   }
 
-  const gerar = async (texto: string) => {
+  const gerar = async (texto: string, digitado = false) => {
     setEstado('processando'); setErroMsg('')
     try {
       if (ehDemo()) {
@@ -72,7 +73,7 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
         const p = { subjetivo: 'Paciente relata ' + texto.slice(0, 160), objetivo: 'PA 130x85 mmHg. Bom estado geral.', avaliacao: 'Quadro estável.', plano: 'Manter conduta. Retorno em 30 dias.', cids: [{ codigo: 'I10', descricao: 'Hipertensão essencial' }] }
         setProntuario(p); setConsultaId('demo-consulta'); setEstado('pronto'); return
       }
-      const r = await fetch('/api/estruturar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ transcricao: texto }) })
+      const r = await fetch('/api/estruturar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ transcricao: texto, origem: digitado ? 'digitado' : 'gravado', ao_vivo: !digitado && lerAoVivo() }) })
       const d = await r.json()
       if (!d.prontuario) throw new Error(d.error || 'A IA não conseguiu gerar o prontuário')
       setProntuario(d.prontuario); setEstado('pronto'); setEditado(false)
@@ -185,7 +186,7 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
           {(transcricao || textoDigitado).trim() && (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <Button size="sm" icon={FileText} onClick={() => salvarSemIA(transcricao || textoDigitado)}>Salvar o texto sem a IA</Button>
-              <Button size="sm" variant="secondary" onClick={() => gerar(transcricao || textoDigitado)}>Tentar a IA de novo</Button>
+              <Button size="sm" variant="secondary" onClick={() => gerar(transcricao || textoDigitado, digitar)}>Tentar a IA de novo</Button>
             </div>
           )}
         </div>
@@ -194,7 +195,7 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
         <>
           <Textarea value={textoDigitado} onChange={e => setTextoDigitado(e.target.value)} rows={6} placeholder="Escreva ou cole o relato da consulta: queixa, exame, conduta…" autoFocus />
           <div style={{ display: 'flex', gap: 8 }}>
-            <Button icon={FileText} onClick={() => { setTranscricao(textoDigitado); gerar(textoDigitado) }} disabled={textoDigitado.trim().length < 20}>Gerar prontuário</Button>
+            <Button icon={FileText} onClick={() => { setTranscricao(textoDigitado); gerar(textoDigitado, true) }} disabled={textoDigitado.trim().length < 20}>Gerar prontuário</Button>
             <Button variant="secondary" onClick={() => salvarSemIA(textoDigitado)} disabled={textoDigitado.trim().length < 5}>Salvar sem a IA</Button>
             <Button variant="ghost" onClick={() => setDigitar(false)}>Voltar a gravar</Button>
           </div>

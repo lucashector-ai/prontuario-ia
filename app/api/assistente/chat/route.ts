@@ -1,6 +1,8 @@
 import { log } from '@/lib/logger'
 import { NextRequest } from 'next/server'
 import { MODELOS, ANTHROPIC_API_URL, ANTHROPIC_API_VERSION } from '@/lib/ai/models'
+import { conferirCreditos, debitarCreditos } from '@/lib/creditos-servidor'
+import { CUSTO } from '@/lib/creditos'
 import { SYSTEM_PROMPT_MEDICO } from '@/lib/ai/system-prompt-medico'
 
 export const dynamic = 'force-dynamic'
@@ -26,6 +28,9 @@ export async function POST(req: NextRequest) {
     if (!Array.isArray(mensagens) || mensagens.length === 0) {
       return new Response(JSON.stringify({ erro: 'Sem mensagens' }), { status: 400 })
     }
+
+    const cred = await conferirCreditos(req, CUSTO.assistente)
+    if (cred.erro) return new Response(JSON.stringify({ erro: cred.erro, limite_plano: true }), { status: 402 })
 
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
@@ -86,6 +91,7 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ erro: 'Erro ao processar a resposta' }), { status: 502 })
     }
 
+    await debitarCreditos(cred.cobranca, 'assistente')
     const encoder = new TextEncoder()
     const decoder = new TextDecoder()
 

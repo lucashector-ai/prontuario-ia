@@ -82,6 +82,13 @@ export default function SuperAdmin() {
     toast('Plano atualizado')
   }
 
+  const adicionarCreditos = async (clinica_id: string) => {
+    const n = Number(window.prompt('Quantos créditos de IA adicionar? (pacote vale 60 dias)', '100'))
+    if (!(n > 0)) return
+    const r = await api('add_creditos', { clinica_id, creditos: n })
+    toast(r?.error ? 'Erro: ' + r.error : `${n} créditos adicionados`)
+  }
+
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
 
   if (!autenticado) return (
@@ -112,7 +119,8 @@ export default function SuperAdmin() {
     </div>
   )
 
-  const PLANOS = ['starter', 'pro', 'enterprise']
+  // '' = sem plano (contas antigas: sem limite de créditos)
+  const PLANOS = ['', 'gratis', 'solo', 'clinica', 'pro']
   const corPlano: Record<string, string> = { starter: tokens.brand.primary, pro: tokens.status.infoTeal, enterprise: tokens.status.warningAlt }
 
   return (
@@ -207,10 +215,11 @@ export default function SuperAdmin() {
                   <p style={{ fontSize: 12, color: tokens.text.slate500, margin: 0 }}>{cl.email_admin} · {cl.medicos || 0} médicos · desde {fmt(cl.criado_em)}</p>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-                  <select value={cl.plano || 'starter'} onChange={e => alterarPlano(cl.id, e.target.value)}
+                  <select value={cl.plano || ''} onChange={e => alterarPlano(cl.id, e.target.value)}
                     style={{ padding: '5px 10px', borderRadius: 7, border: `1px solid ${tokens.text.slate700}`, background: tokens.text.slate900, color: 'white', fontSize: 12, cursor: 'pointer' }}>
-                    {PLANOS.map(p => <option key={p} value={p}>{p}</option>)}
+                    {PLANOS.map(p => <option key={p} value={p}>{p || 'sem plano'}</option>)}
                   </select>
+                  <button onClick={() => adicionarCreditos(cl.id)} style={{ padding: '5px 10px', borderRadius: 7, border: `1px solid ${tokens.text.slate700}`, background: 'transparent', color: 'white', fontSize: 12, cursor: 'pointer' }}>+ créditos</button>
                   {confirmDelete === cl.id ? (
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => deletarClinica(cl.id)} style={{ padding: '5px 12px', borderRadius: 7, border: 'none', background: tokens.status.danger, color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Confirmar</button>
