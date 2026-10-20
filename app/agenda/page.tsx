@@ -11,6 +11,7 @@ import {
 import { useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
 import { tokens, tint } from '@/lib/design-tokens'
+import { riscosDaAgenda } from '@/lib/agenda/riscoFalta'
 import {
   Avatar, Badge, Button, Checkbox, Chip, Field, Icon, IconButton, IconTile, Input, Modal,
   SearchInput, SegmentedControl, Select, Textarea,
@@ -289,6 +290,7 @@ function AgendaContent() {
   const demo = searchParams?.get('demo') === '1'
   const [listaEsperaOpen, setListaEsperaOpen] = useState(false)
   const [listaEspera, setListaEspera] = useState<any[]>([])
+  const [riscoOpen, setRiscoOpen] = useState(false)
   const [avisoEspera, setAvisoEspera] = useState('')
   const [modalEspera, setModalEspera] = useState(false)
   const [formEspera, setFormEspera] = useState(FORM_ESPERA_VAZIO)
@@ -442,6 +444,16 @@ function AgendaContent() {
     }
     setBloqueios(blqsResp.bloqueios || [])
   }
+
+  // Risco de falta por regras (histórico do paciente, confirmação, antecedência, horário)
+  const riscos = useMemo(() => riscosDaAgenda(agendamentos), [agendamentos])
+  // Quem confirmar primeiro: próximos 3 dias, sem confirmação, do maior risco para o menor
+  const confirmarPrimeiro = useMemo(() => {
+    const limite = Date.now() + 3 * 86400000
+    return agendamentos
+      .filter(a => { const r = riscos.get(a.id); return r && r.nivel !== 'baixo' && a.status !== 'confirmado' && a.confirmacao_24h_status !== 'confirmado' && new Date(a.data_hora).getTime() < limite })
+      .sort((a, b) => riscos.get(b.id)!.pontos - riscos.get(a.id)!.pontos || a.data_hora.localeCompare(b.data_hora))
+  }, [agendamentos, riscos])
 
   const agendamentosFiltrados = useMemo(() => {
     return agendamentos.filter(a => {
@@ -1142,6 +1154,49 @@ function AgendaContent() {
           Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
         </Button>
       )}
+      {confirmarPrimeiro.length > 0 && (
+        <div style={{ position: 'relative' }}>
+          <Button variant="secondary" icon={TriangleAlert} onClick={() => setRiscoOpen(o => !o)} title="Pacientes com risco de falta nos próximos 3 dias, sem confirmação">
+            {isMobile ? '' : 'Confirmar primeiro'}
+            <span style={{
+              minWidth: 18, height: 18, padding: '0 5px', boxSizing: 'border-box', borderRadius: 9,
+              background: T.status.dangerBg, color: T.status.danger, fontSize: 11, fontWeight: 700, lineHeight: '18px', textAlign: 'center',
+            }}>{confirmarPrimeiro.length}</span>
+          </Button>
+          {riscoOpen && (
+            <>
+              <div onClick={() => setRiscoOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 49 }} />
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 380, maxWidth: 'calc(100vw - 32px)', maxHeight: 440, overflowY: 'auto',
+                background: '#fff', border: `1px solid ${T.border.default}`, borderRadius: T.radius.xl,
+                boxShadow: T.shadow.lg, padding: 8, zIndex: 50,
+              }}>
+                <div style={{ padding: '4px 8px 8px' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.text.primary }}>Confirmar primeiro</div>
+                  <div style={{ fontSize: 12, color: T.text.quaternary, lineHeight: 1.45 }}>Próximos 3 dias, sem confirmação, do maior risco de falta para o menor.</div>
+                </div>
+                {confirmarPrimeiro.map(ag => {
+                  const r = riscos.get(ag.id)!
+                  const alto = r.nivel === 'alto'
+                  const d = new Date(ag.data_hora)
+                  return (
+                    <button key={ag.id} type="button" onClick={() => { setRiscoOpen(false); abrirModal(undefined, ag) }}
+                      style={{ width: '100%', display: 'flex', gap: 10, alignItems: 'flex-start', textAlign: 'left', padding: '9px 8px', border: 'none', borderRadius: 10, background: 'transparent', cursor: 'pointer', fontFamily: 'inherit' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = T.bg.hover }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', marginTop: 5, flexShrink: 0, background: alto ? T.status.danger : T.status.warningAmber }} />
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: T.text.primary }}>{ag.pacientes?.nome || ag.paciente_nome || 'Paciente'}</span>
+                        <span style={{ display: 'block', fontSize: 11.5, color: T.text.secondary }}>{d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })} às {fmtHora(d)}{ag.pacientes?.telefone ? ' · ' + ag.pacientes.telefone : ''}</span>
+                        <span style={{ display: 'block', fontSize: 11.5, color: T.text.quaternary, lineHeight: 1.4 }}>{r.motivos.join(' · ')}</span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
       <div style={{ position: 'relative' }}>
         <Button variant="secondary" icon={Hourglass} onClick={() => setListaEsperaOpen(o => !o)}>
           Lista de espera
@@ -1242,7 +1297,9 @@ function AgendaContent() {
       : naoConfirmou ? { cor: T.status.warningAmber, halo: 'rgba(245,158,11,.28)', dica: 'Não confirmou — consulta em menos de 6h' }
       : pendente ? { cor: T.status.warningAmber, halo: '', dica: 'Confirmação pendente — lembrete de 24h enviado, sem resposta' }
       : null
-    const temIndicadores = !!(ag.meet_link || ag.pre_consulta_enviada || (confirmou && !cancelado) || ponto)
+    const risco = riscos.get(ag.id)
+    const riscoAlto = risco?.nivel === 'alto' && !confirmou && !recusou
+    const temIndicadores = !!(ag.meet_link || ag.pre_consulta_enviada || (confirmou && !cancelado) || ponto || riscoAlto)
     return (
       <div key={ag.id} style={{
         position: 'absolute', top: minToPx(d), height: h, left: `${(l / L) * 100}%`, width: `${100 / L}%`,
@@ -1281,6 +1338,7 @@ function AgendaContent() {
           {temIndicadores && (
             <span style={{ position: 'absolute', top: umaLinha ? 2 : 5, right: 5, display: 'flex', gap: 3 }}>
               {ag.meet_link && <span title="Teleconsulta" style={{ display: 'inline-grid' }}><Video size={12} strokeWidth={1.8} color={cor} /></span>}
+              {riscoAlto && <span title={'Risco alto de falta: ' + risco!.motivos.join('; ')} style={{ display: 'inline-grid' }}><TriangleAlert size={12} strokeWidth={1.9} color={T.status.danger} /></span>}
               {ag.pre_consulta_enviada && <span title="Pré-consulta enviada no WhatsApp" style={{ display: 'inline-grid' }}><MessageCircle size={12} strokeWidth={1.8} color={T.whatsapp.green} /></span>}
               {confirmou && !cancelado
                 ? <span title="Paciente confirmou a consulta" style={{ display: 'inline-grid' }}><CheckCircle2 size={12} strokeWidth={1.8} color={T.status.success} /></span>
@@ -1521,6 +1579,21 @@ function AgendaContent() {
               </div>
             )}
           </div>
+
+          {(() => {
+            const r = riscos.get(ag.id)
+            if (!r || r.nivel === 'baixo') return null
+            const alto = r.nivel === 'alto'
+            return (
+              <div style={{ display: 'flex', gap: 10, padding: '10px 12px', borderRadius: 12, background: alto ? T.status.dangerBg : T.status.warningBg, border: `1px solid ${alto ? T.status.danger : T.status.warningAmber}33` }}>
+                <TriangleAlert size={16} strokeWidth={1.8} color={alto ? T.status.danger : T.status.warningAmber} style={{ flexShrink: 0, marginTop: 1 }} />
+                <div style={{ fontSize: 12.5, color: T.text.secondary, lineHeight: 1.45 }}>
+                  <div style={{ fontWeight: 700, color: T.text.primary }}>{alto ? 'Risco alto de falta' : 'Risco médio de falta'}{alto ? ': vale confirmar por telefone' : ''}</div>
+                  {r.motivos.join(' · ')}
+                </div>
+              </div>
+            )
+          })()}
 
           {(() => {
             if (ag.status !== 'agendado' && ag.status !== 'confirmado') return null
