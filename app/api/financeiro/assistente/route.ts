@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -43,7 +43,7 @@ ${typeof contexto === 'string' ? contexto : JSON.stringify(contexto || {})}`,
       messages: mensagens,
     })
 
-    const resposta = message.content[0]?.type === 'text' ? message.content[0].text : ''
+    const resposta = textoDaResposta(message)
     return NextResponse.json({ resposta })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'erro ao consultar a IA' }, { status: 500 })

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -64,7 +64,7 @@ Responda APENAS com um array JSON válido, sem texto extra, no formato:
       }],
     })
 
-    const raw = message.content[0]?.type === 'text' ? message.content[0].text : '[]'
+    const raw = textoDaResposta(message, '[]')
     const jsonMatch = raw.match(/\[[\s\S]*\]/)
     let insights: any[] = []
     try {

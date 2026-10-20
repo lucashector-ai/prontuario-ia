@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 import Anthropic from "@anthropic-ai/sdk"
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -70,7 +70,7 @@ Destaque pontos positivos, alertas e sugestoes para o proximo mes.`
       model: MODELOS.rapido, max_tokens: 250,
       messages: [{ role: "user", content: prompt }]
     })
-    const resumoIA = res.content[0].type === "text" ? res.content[0].text : ""
+    const resumoIA = textoDaResposta(res)
 
     const hoje = new Date().toLocaleDateString("pt-BR", { timeZone: 'America/Sao_Paulo', day: "2-digit", month: "long", year: "numeric" })
 

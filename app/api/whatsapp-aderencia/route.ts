@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,7 +63,7 @@ Responda APENAS com JSON no formato:
       messages: [{ role: 'user', content: prompt }]
     })
 
-    const texto = res.content[0].type === 'text' ? res.content[0].text : '{}'
+    const texto = textoDaResposta(res, '{}')
     let analise: any = {}
     try {
       analise = JSON.parse(texto.replace(/```json|```/g, '').trim())

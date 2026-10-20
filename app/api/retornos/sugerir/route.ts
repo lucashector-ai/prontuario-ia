@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 import { log } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         ].join('\n'),
       }],
     })
-    const txt = msg.content[0]?.type === 'text' ? msg.content[0].text : ''
+    const txt = textoDaResposta(msg)
     const i = txt.indexOf('{'), f = txt.lastIndexOf('}')
     const j = JSON.parse(i >= 0 && f > i ? txt.slice(i, f + 1) : '{}')
     const d = Number(j.dias)

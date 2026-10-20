@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -47,7 +47,7 @@ Retorne APENAS este JSON:
       messages: [{ role: "user", content: prompt }]
     })
 
-    const txt = message.content[0].type === "text" ? message.content[0].text : "{}"
+    const txt = textoDaResposta(message, "{}")
     const clean = txt.split("\`\`\`json").join("").split("\`\`\`").join("").trim()
     const data = JSON.parse(clean)
     return NextResponse.json(data)

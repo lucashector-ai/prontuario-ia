@@ -1,7 +1,7 @@
 import { log } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 import { resolverModelo, ehModeloSoap, type ModeloProntuario, type CampoSoap } from '@/lib/ai/modelos-prontuario'
 import { cotaIaEsgotada } from '@/lib/planos-servidor'
 import { mensagemErroIA } from '@/lib/ai/erro-ia'
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       messages: [{ role: 'user', content: prompt }],
     })
 
-    const conteudo = message.content[0].type === 'text' ? message.content[0].text : ''
+    const conteudo = textoDaResposta(message)
     const inicio = conteudo.indexOf('{')
     const fim = conteudo.lastIndexOf('}')
     const jsonStr = inicio >= 0 && fim >= 0 ? conteudo.slice(inicio, fim + 1) : conteudo
@@ -155,7 +155,7 @@ async function estruturarComModelo(modelo: ModeloProntuario, transcricao: string
     messages: [{ role: 'user', content: partes.filter(Boolean).join('\n') }],
   })
 
-  const conteudo = message.content[0].type === 'text' ? message.content[0].text : ''
+  const conteudo = textoDaResposta(message)
   const inicio = conteudo.indexOf('{')
   const fim = conteudo.lastIndexOf('}')
   const prontuario = JSON.parse(inicio >= 0 && fim >= 0 ? conteudo.slice(inicio, fim + 1) : conteudo)

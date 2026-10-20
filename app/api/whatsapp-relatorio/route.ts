@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,7 +53,7 @@ ${relatorio.alertas_pendentes.length > 0 ? '- Alertas: ' + relatorio.alertas_pen
       model: MODELOS.rapido, max_tokens: 300,
       messages: [{ role: 'user', content: prompt }]
     })
-    relatorio.resumo_ia = res.content[0].type === 'text' ? res.content[0].text : ''
+    relatorio.resumo_ia = textoDaResposta(res)
 
     return NextResponse.json({ relatorio })
   } catch (e: any) {
@@ -88,6 +88,6 @@ Gere: 1) Resumo do estado atual 2) Sinais de alerta (se houver) 3) Recomendacao 
 
   return NextResponse.json({
     paciente: paciente?.nome,
-    relatorio: res.content[0].type === 'text' ? res.content[0].text : ''
+    relatorio: textoDaResposta(res)
   })
 }

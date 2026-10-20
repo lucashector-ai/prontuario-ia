@@ -6,7 +6,7 @@
  * por variável de ambiente continuam funcionando (modo legado), sem misturar clínicas.
  */
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 import { log } from '@/lib/logger'
 import { supabaseServidor as db } from '@/lib/servidor'
 import { GRAPH_IG, canalPorConta, graph, marcarErroCanal } from '@/lib/meta/graph'
@@ -129,7 +129,7 @@ export async function receberMensagemSocial(p: { canal: CanalSocial; contaId: st
   if (!alternadas.length) return
 
   const ia = await anthropic.messages.create({ model: MODELOS.apoio, max_tokens: 600, system: SISTEMA[p.canal], messages: alternadas })
-  let resposta = ia.content[0]?.type === 'text' ? ia.content[0].text : ''
+  let resposta = textoDaResposta(ia)
   const humano = resposta.includes('[HUMANO]')
   resposta = resposta.replace(/\[HUMANO\]/g, '').replace(/\[BOTOES:[^\]]+\]/g, '').trim()
   if (humano) await db.from('whatsapp_conversas').update({ modo: 'humano' }).eq('id', conv.id)

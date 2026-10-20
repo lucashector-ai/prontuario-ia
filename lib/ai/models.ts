@@ -25,3 +25,9 @@ export const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 
 /** Versão da API */
 export const ANTHROPIC_API_VERSION = '2023-06-01'
+
+/** Texto da resposta do Claude, juntando os blocos de texto (a resposta pode começar com outro tipo de bloco). */
+export function textoDaResposta(msg: { content: Array<{ type: string }> }, padrao = ''): string {
+  const t = msg.content.filter((b): b is { type: 'text'; text: string } => b.type === 'text').map(b => b.text).join('')
+  return t || padrao
+}

@@ -1,7 +1,7 @@
 import { log } from '@/lib/logger'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const supabase = createClient(
@@ -80,7 +80,7 @@ NUNCA inclua comentários, markdown, ou texto fora do JSON.`
         content: `Motivo da consulta que o paciente mencionou: "${motivoConsulta}"\n\nGere as perguntas.`
       }]
     })
-    const texto = res.content[0].type === 'text' ? res.content[0].text : ''
+    const texto = textoDaResposta(res)
     const jsonMatch = texto.match(/\{[\s\S]*\}/)
     if (!jsonMatch) return PERGUNTAS_FALLBACK
     const parsed = JSON.parse(jsonMatch[0])
@@ -125,7 +125,7 @@ export async function avaliarRespostaERedigirFollowup(
           content: `Pergunta original: "${pergunta.texto}"\nResposta do paciente: "${resposta}"\n\nReformule de forma mais aberta e acolhedora. Se a resposta foi "não sei" ou similar, aceita e faz uma pergunta que facilite.`
         }]
       })
-      return res.content[0].type === 'text' ? res.content[0].text.trim() : null
+      return (textoDaResposta(res).trim() || null)
     } catch {
       return null
     }

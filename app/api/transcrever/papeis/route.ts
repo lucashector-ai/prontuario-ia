@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 import { log } from '@/lib/logger'
 import { frasesDe, montarConversa, promptPapeis } from '@/lib/transcricao/papeis'
 
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       max_tokens: Math.min(8000, 200 + frases.length * 6),
       messages: [{ role: 'user', content: prompt }],
     })
-    const bruto = r.content[0]?.type === 'text' ? r.content[0].text : ''
+    const bruto = textoDaResposta(r)
     const json = JSON.parse(bruto.slice(bruto.indexOf('{'), bruto.lastIndexOf('}') + 1))
     const papeis: string[] = Array.isArray(json.papeis) ? json.papeis.map(String) : []
     if (papeis.length !== frases.length || papeis.some(p => !/^[MPA]$/i.test(p))) {

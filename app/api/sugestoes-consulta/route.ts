@@ -2,7 +2,7 @@ import { log } from '@/lib/logger'
 
 import { NextRequest, NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       messages: [{ role: "user", content: partes.filter(Boolean).join("\n") }]
     })
 
-    const txt = message.content[0].type === "text" ? message.content[0].text : "{}"
+    const txt = textoDaResposta(message, "{}")
     const inicio = txt.indexOf("{")
     const fim = txt.lastIndexOf("}")
     let json: any = {}

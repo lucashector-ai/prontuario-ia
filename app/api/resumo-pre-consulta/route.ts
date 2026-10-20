@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { supabaseServidor as supabase } from '@/lib/servidor'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 import { log } from '@/lib/logger'
 import type { ResumoPreConsulta, RespostaResumoPreConsulta } from './tipos'
 import { contextoDaRequisicao, regraDoProntuario } from '@/lib/acesso'
@@ -180,7 +180,7 @@ export async function POST(req: NextRequest) {
         max_tokens: 900,
         messages: [{ role: 'user', content: prompt }],
       })
-      const txt = msg.content[0]?.type === 'text' ? msg.content[0].text : ''
+      const txt = textoDaResposta(msg)
       const ini = txt.indexOf('{'), fim = txt.lastIndexOf('}')
       const j = JSON.parse(txt.slice(ini, fim + 1))
       const arr = (v: any, n: number) => (Array.isArray(v) ? v.filter((x: any) => typeof x === 'string' && x.trim()).map((x: string) => x.trim()).slice(0, n) : [])

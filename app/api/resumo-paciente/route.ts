@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -40,7 +40,7 @@ Estruture assim:
 Escreva em português brasileiro, tom acolhedor e profissional.`
       }]
     })
-    const texto = message.content[0].type === "text" ? message.content[0].text : ""
+    const texto = textoDaResposta(message)
     return NextResponse.json({ resumo: texto })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

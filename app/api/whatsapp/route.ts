@@ -8,7 +8,7 @@ import { checkinPeloWhatsApp } from '@/lib/atendimento/servidor'
 import { importarHistorico, sincronizarContatos } from '@/lib/whatsapp/coexistencia'
 import { dispararConfirmacoes24h, detectarRespostaConfirmacao24h, notificarMedico, marcarConfirmadoVia, tratarRespostaListaEspera } from '@/lib/sofia/confirmacao'
 import { createClient } from '@supabase/supabase-js'
-import { MODELOS } from '@/lib/ai/models'
+import { MODELOS, textoDaResposta } from '@/lib/ai/models'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -394,7 +394,7 @@ async function processarIA(mensagem: string, historico: any[]) {
     system: PROMPT_SOFIA, messages: msgs
   })
 
-  const texto = res.content[0].type === 'text' ? res.content[0].text : ''
+  const texto = textoDaResposta(res)
   const humano = texto.includes('[HUMANO]')
   const agendarMatch = texto.match(/\[AGENDAR:({[^}]+})\]/)
 
