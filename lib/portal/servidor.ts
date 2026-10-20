@@ -10,6 +10,7 @@ import { marcarConfirmadoVia } from '@/lib/sofia/confirmacao'
 import { urlFormularioPublico } from '@/lib/formularios/envios'
 export { linkDoPortal, linkDoPortalDoPaciente } from './link'
 import { anexosDoPaciente, documentosLiberados } from './arquivos'
+import { orcamentosNoPortal } from '@/lib/orcamentos/servidor'
 
 const MIN = 60000
 /** "Cheguei" vale de 60 min antes até 30 min depois do horário marcado. */
@@ -75,6 +76,7 @@ export async function dadosDoPortal(t: PortalToken) {
     } : null,
     formularios: (forms || []).map((f: any) => ({ nome: f.template?.nome || 'Formulário', url: urlFormularioPublico('c', f.token) })),
     documentos: await documentosLiberados(t.paciente_id).catch(() => []),
+    orcamentos: await orcamentosNoPortal(t.paciente_id, t.clinica_chave).catch(() => []),
     anexos: await anexosDoPaciente(t.paciente_id).catch(() => []),
     retorno: (rets || [])[0] ? { data_prevista: (rets as any)[0].data_prevista, motivo: (rets as any)[0].motivo || null } : null,
   }

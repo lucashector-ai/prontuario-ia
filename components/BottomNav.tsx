@@ -6,7 +6,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard, Calendar, CirclePlus, Users, Menu, Clock, Video, ScanSearch, Sparkles, MessageCircle,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, X, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
-  ConciergeBell, DoorOpen, HeartPulse, Gauge, Mic, BookA, Coins,
+  ConciergeBell, DoorOpen, HeartPulse, Gauge, Mic, BookA, Coins, Receipt,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon } from '@/components/ui'
@@ -86,6 +86,7 @@ export function BottomNav() {
     { href: '/pacientes', label: 'Pacientes', icon: Users },
     ...(enfermagem ? [] : [
       { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
+      { href: '/orcamentos', label: 'Orçamentos', icon: Receipt },
       { href: '/formularios', label: 'Formulários', icon: ClipboardList },
     ]),
     ...(naoRecep ? [

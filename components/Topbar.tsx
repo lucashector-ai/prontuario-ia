@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import {
   Search, Sparkles, Bell, MessageCircle, CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate, ChevronDown, CornerDownLeft, UserRound, Compass, Building2, Check, SlidersHorizontal, Hospital, LogOut,
-  LayoutDashboard, Calendar, Users, ConciergeBell, DoorOpen, HeartPulse, Gauge, Clock, CirclePlus, Video, ScanSearch, ClipboardList, CalendarCheck, CalendarClock, Mic, BookA,
+  LayoutDashboard, Calendar, Users, ConciergeBell, DoorOpen, HeartPulse, Gauge, Clock, CirclePlus, Video, ScanSearch, ClipboardList, CalendarCheck, CalendarClock, Mic, BookA, Receipt,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
@@ -31,6 +31,7 @@ const PAGINAS: { label: string; href: string; icon: LucideIcon; so?: 'gestor' | 
   { label: 'Pacientes', href: '/pacientes', icon: Users },
   { label: 'Histórico', href: '/historico', icon: Clock, so: 'clinico' },
   { label: 'Retornos e reativação', href: '/retornos', icon: CalendarHeart },
+  { label: 'Orçamentos', href: '/orcamentos', icon: Receipt },
   { label: 'Relatórios', href: '/relatorios', icon: ChartColumnBig, so: 'clinico' },
   { label: 'Convênios (faturamento TISS)', href: '/faturamento', icon: ReceiptText },
   { label: 'Modelos de prontuário', href: '/modelos-prontuario', icon: LayoutTemplate, so: 'clinico' },

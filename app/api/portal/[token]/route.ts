@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { log } from '@/lib/logger'
 import { ErroAtendimento } from '@/lib/atendimento/servidor'
+import { marcarVisto, responderNoPortal } from '@/lib/orcamentos/servidor'
 import { concluirUpload, documentoDoPaciente, prepararUpload } from '@/lib/portal/arquivos'
 import { checkinPeloPortal, confirmarPeloPortal, dadosDoPortal, remarcarPeloPortal, validarToken } from '@/lib/portal/servidor'
 
@@ -13,6 +14,8 @@ import { checkinPeloPortal, confirmarPeloPortal, dadosDoPortal, remarcarPeloPort
  *   POST { acao: 'upload', nome, tipo, tamanho } → { id, caminho, token } (envio direto ao storage)
  *   POST { acao: 'upload_ok', anexo_id }
  *   POST { acao: 'documento', documento_id }     → HTML do documento liberado
+ *   POST { acao: 'orcamentos_vistos' }           → marca os orçamentos enviados como vistos
+ *   POST { acao: 'orcamento', orcamento_id, resposta: 'aprovar'|'recusar', nome?, condicao?, motivo? }
  */
 export const dynamic = 'force-dynamic'
 
@@ -42,6 +45,13 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     if (b.acao === 'checkin') return NextResponse.json(await checkinPeloPortal(t, ag))
     if (b.acao === 'upload') return NextResponse.json(await prepararUpload(t.paciente_id, t.clinica_chave, String(b.nome || ''), String(b.tipo || ''), Number(b.tamanho) || 0))
     if (b.acao === 'upload_ok') return NextResponse.json(await concluirUpload(t.paciente_id, String(b.anexo_id || '')))
+    if (b.acao === 'orcamentos_vistos') { await marcarVisto(t.paciente_id, t.clinica_chave); return NextResponse.json({ ok: true }) }
+    if (b.acao === 'orcamento') {
+      return NextResponse.json(await responderNoPortal(t.paciente_id, t.clinica_chave, {
+        id: String(b.orcamento_id || ''), acao: b.resposta === 'aprovar' ? 'aprovar' : 'recusar', nome: b.nome, condicao: b.condicao, motivo: b.motivo,
+        ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null, navegador: req.headers.get('user-agent'),
+      }))
+    }
     if (b.acao === 'documento') {
       const html = await documentoDoPaciente(t.paciente_id, String(b.documento_id || ''))
       return html ? new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } }) : NextResponse.json({ erro: 'Documento não encontrado.' }, { status: 404 })

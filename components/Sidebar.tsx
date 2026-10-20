@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Calendar, Users, Clock, CirclePlus, Video, ScanSearch, Sparkles, MessageCircle,
   CalendarHeart, ChartColumnBig, ReceiptText, LayoutTemplate,
   Hospital, SlidersHorizontal, ClipboardList, CalendarCheck, UserRound, LogOut, PanelLeftClose, PanelLeftOpen,
-  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2, Lock, Mic, BookA, Coins,
+  ConciergeBell, DoorOpen, HeartPulse, Gauge, ChevronDown, Eye, EyeOff, Settings2, Lock, Mic, BookA, Coins, Receipt,
 } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { Icon, Avatar } from '@/components/ui'
@@ -79,6 +79,7 @@ export function Sidebar({ rail = false, onAlternar }: { rail?: boolean; onAltern
       { href: '/pacientes', label: 'Pacientes', icon: Users },
       ...(enfermagem ? [] : [
         { href: '/retornos', label: 'Retornos', icon: CalendarHeart },
+        { href: '/orcamentos', label: 'Orçamentos', icon: Receipt },
         { href: '/formularios', label: 'Formulários', icon: ClipboardList },
       ]),
     ] },

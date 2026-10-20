@@ -376,6 +376,7 @@ export default function PacienteDetalhe() {
               <Button variant="secondary" icon={CalendarPlus} onClick={() => setModalAg(true)}>Agendar</Button>
               <Button variant="secondary" icon={Send} onClick={() => demo ? avisoDemo('Demonstração: nenhum formulário foi enviado.') : setModalForm(true)}>Enviar formulário</Button>
               {paciente && <BotaoPortalPaciente paciente={paciente} demo={demo} />}
+              {paciente && <Button variant="secondary" icon={Receipt} onClick={() => router.push(comDemo(`/orcamentos?novo=1&paciente_id=${paciente.id}`))}>Orçamento</Button>}
               <Button variant="primary" icon={Mic} onClick={irNovaConsulta}>Nova consulta</Button>
             </div>
           </div>
