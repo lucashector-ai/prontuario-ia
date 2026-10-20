@@ -14,6 +14,7 @@ import { ehApoio } from '@/lib/cargos'
 import {
   BOTOES_CONFIRMACAO_24H, CONFIG_PADRAO, MODELOS_PADRAO, dataHoraSP, preencher, type ConfirmacaoConfig,
 } from './modelos'
+import { ehDemo } from '@/lib/demo'
 
 const T = tokens
 
@@ -23,7 +24,6 @@ type TipoModelo = '48h' | '24h' | '2h'
 const ESTAT_DEMO: Estatisticas = { enviados: 184, confirmados: 121, sem_resposta: 9, faltas: 6, taxa_comparecimento: 94 }
 const PLACEHOLDERS = ['{nome}', '{data}', '{hora}', '{medico}', '{clinica}']
 
-const ehDemo = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'
 
 export function ConfiguracaoConfirmacoes() {
   const demo = useMemo(ehDemo, [])
@@ -44,7 +44,7 @@ export function ConfiguracaoConfirmacoes() {
   useEffect(() => {
     (async () => {
       if (demo) {
-        setMedicos([{ id: 'demo', nome: 'Dra. Helena Prado' }]); setMedicoId('demo'); setClinicaNome('Clínica Bem Viver')
+        setMedicos([{ id: 'demo-medico', nome: 'Dra. Helena Duarte' }, { id: 'demo-medico-2', nome: 'Dr. Marcos Vieira' }]); setMedicoId('demo-medico'); setClinicaNome('Clínica Bem Viver')
         return
       }
       const ca = localStorage.getItem('clinica_admin')
@@ -94,7 +94,7 @@ export function ConfiguracaoConfirmacoes() {
 
   const alterado = JSON.stringify(config) !== JSON.stringify(salvo)
   const chaveModelo = `modelo_${tipo}` as const
-  const medicoNome = medicos.find(m => m.id === medicoId)?.nome || 'Dra. Helena Prado'
+  const medicoNome = medicos.find(m => m.id === medicoId)?.nome || 'Dra. Helena Duarte'
 
   const salvar = async () => {
     if (demo) { setSalvo(config); notificar('Modo demonstração: nada foi gravado', 'info'); return }

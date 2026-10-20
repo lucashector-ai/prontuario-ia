@@ -1,3 +1,4 @@
+import { ehDemo } from '@/lib/demo'
 /**
  * Registro de acessos ao prontuário (LGPD / CFM) — lado do NAVEGADOR.
  *
@@ -79,7 +80,7 @@ export function usuarioAtualAuditoria(): UsuarioAuditoria | null {
 }
 
 function emModoDemo(): boolean {
-  try { return new URLSearchParams(window.location.search).get('demo') === '1' } catch { return false }
+  try { return ehDemo() } catch { return false }
 }
 
 /** true se já registrou essa mesma chave nos últimos 5 min (e marca agora se não). */

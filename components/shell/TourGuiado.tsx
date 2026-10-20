@@ -20,6 +20,7 @@ import { tokens as T } from '@/lib/design-tokens'
 import { ehAtendente } from '@/lib/sessao'
 import { CHAVE_TOUR_PENDENTE as PENDENTE, CHAVE_OBJETIVOS, CHAVE_PERFIL_CADASTRO } from '@/lib/onboarding'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { comDemo, ehDemo } from '@/lib/demo'
 
 const EVENTO = 'c360:tour'
 const LARGURA = 340
@@ -90,6 +91,7 @@ function sugestoes(papel: Papel): Acao[] {
 }
 
 function usuarioAtual(): { id: string; papel: Papel } | null {
+  if (ehDemo()) return { id: 'demo', papel: 'clinica' } // demonstração: tour completo, de gestor
   try {
     const ca = localStorage.getItem('clinica_admin')
     if (ca) return { id: JSON.parse(ca).id || 'admin', papel: 'clinica' }
@@ -251,7 +253,7 @@ export function TourGuiado() {
   // id novo sempre que o alvo muda: o navegador redesenha a máscara na hora
   const idMascara = `c360-tour-furo-${idx}-${alvo ? [alvo.left, alvo.top, alvo.width, alvo.height].map(Math.round).join('-') : 'x'}`
   const ultimo = idx === passos.length - 1
-  const ir = (href: string) => { fechar(); router.push(href) }
+  const ir = (href: string) => { fechar(); router.push(comDemo(href)) }
 
   return (
     <div role="dialog" aria-modal="true" aria-label={passo.titulo} style={{ position: 'fixed', inset: 0, zIndex: 200 }}>

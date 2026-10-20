@@ -14,6 +14,7 @@ import { Icon } from '@/components/ui'
 import { ehAtendente, sairDaConta } from '@/lib/sessao'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
 import { usePlano } from '@/lib/usePlano'
+import { comDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
 const T = tokens
 type Item = { href: string; label: string; icon: LucideIcon }
 
@@ -29,6 +30,7 @@ export function BottomNav() {
   const [clinicaAdmin, setClinicaAdmin] = useState<any>(null)
 
   useEffect(() => {
+    if (ehDemo()) { setMedico(MEDICO_DEMO); return } // demonstração: médica com acesso de gestora
     const ca = localStorage.getItem('clinica_admin')
     if (ca) { setClinicaAdmin(JSON.parse(ca)); return }
     const m = localStorage.getItem('medico')
@@ -114,7 +116,7 @@ export function BottomNav() {
 
   const navegar = (href: string) => {
     setMaisAberto(false)
-    router.push(href)
+    router.push(comDemo(href))
   }
 
   const sair = () => router.push(sairDaConta())

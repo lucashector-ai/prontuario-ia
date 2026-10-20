@@ -17,6 +17,7 @@ import { useFila } from '@/lib/atendimento/useFila'
 import { useChatNaoLidas } from '@/components/shell/useChatNaoLidas'
 import { ehAtendente } from '@/lib/sessao'
 import { CHAVE_POSTO, perfilAtual, type Perfil, type Posto } from '@/lib/atendimento/posto'
+import { ehDemo } from '@/lib/demo'
 
 const ABAS: { id: Posto | 'mensagens'; label: string; icon: LucideIcon; href: string; perfis: Perfil[] }[] = [
   { id: 'agora', label: 'Agora', icon: Activity, href: '/atendimento/agora', perfis: ['gestor', 'recepcao', 'enfermagem', 'medico'] },
@@ -42,7 +43,7 @@ export default function AtendimentoLayout({ children }: { children: React.ReactN
     if (ehAtendente()) { router.replace('/chat'); return }
     setPerfil(perfilAtual())
     try { setPosto((localStorage.getItem(CHAVE_POSTO) as Posto) || null) } catch {}
-    setDemo(new URLSearchParams(window.location.search).get('demo') === '1' ? '?demo=1' : '')
+    setDemo(ehDemo() ? '?demo=1' : '')
   }, [router])
 
   // Tela cheia: a Central ocupa a tela toda (sem menu); F liga/desliga, Esc sai

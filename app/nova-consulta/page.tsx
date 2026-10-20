@@ -31,6 +31,9 @@ import CardAgendarRetorno from '@/components/retornos/CardAgendarRetorno'
 import { BotaoGerarGuia } from '@/components/tiss/BotaoGerarGuia'
 import { registrarAcesso } from '@/lib/auditoria'
 import ConversaConsulta from '@/components/ia/ConversaConsulta'
+import { avisoDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { PACIENTES_DEMO, pacienteDemo } from '@/lib/demo-dados'
+import { FALAS_DEMO, prontuarioDemo, simularTranscricaoDemo } from '@/components/atendimento/prontuarioDemo'
 
 const T = tokens
 const ONDA = '#8B74E8' // roxo médio da onda de áudio (protótipo)
@@ -168,6 +171,12 @@ export default function Home() {
 
   useEffect(() => {
     (async () => {
+      // Demonstração: médica e pacientes fictícios, sem sessão e sem banco
+      if (ehDemo()) {
+        setMedico(MEDICO_DEMO)
+        setPacientes(PACIENTES_DEMO.map(p => ({ id: p.id, nome: p.nome, telefone: p.telefone, cpf: p.cpf, data_nascimento: p.data_nascimento, convenio: p.convenio, sexo: p.sexo, email: p.email })))
+        return
+      }
       const ca_ = localStorage.getItem('clinica_admin')
       const m = ca_ || localStorage.getItem('medico')
       if (!m) { router.push('/login'); return }
@@ -214,6 +223,9 @@ export default function Home() {
     if (pid && pnome) {
       setPacienteSelecionado({ id: pid, nome: pnome, telefone: ptel || '' })
       setModalPaciente(false)
+    } else if (pid && ehDemo()) {
+      const pd = pacienteDemo(pid)
+      if (pd) { setPacienteSelecionado({ id: pd.id, nome: pd.nome, telefone: pd.telefone, cpf: pd.cpf, data_nascimento: pd.data_nascimento, convenio: pd.convenio }); setModalPaciente(false) }
     } else if (pid) {
       // Vindo do consultório: busca o paciente pelo id (o banco só devolve se for da clínica)
       supabase.from('pacientes').select('id, nome, telefone, cpf, data_nascimento, convenio').eq('id', pid).maybeSingle()
@@ -226,7 +238,7 @@ export default function Home() {
 
   // Cronômetro da gravação (só visual)
   useEffect(() => {
-    if (estado !== 'gravando' || !gravando || gravandoPausado) return
+    if (estado !== 'gravando' || (!gravando && !ehDemo()) || gravandoPausado) return
     const t = setInterval(() => setSegundos(s => s + 1), 1000)
     return () => clearInterval(t)
   }, [estado, gravando, gravandoPausado])
@@ -243,10 +255,19 @@ export default function Home() {
   const handleIniciar = async () => {
     limpar(); setProntuario(null)
     setConsultaSalva(false); setConsultaId(null); setEditado(false); setSegundos(0); setEstado('gravando')
+    // Demonstração: sem microfone — uma conversa de exemplo aparece aos poucos
+    if (ehDemo()) { pararSimulacao.current?.(); setTranscricao(''); pararSimulacao.current = simularTranscricaoDemo(setTranscricao); return }
     await iniciarGravacao()
   }
+  const pararSimulacao = useRef<(() => void) | null>(null)
+  useEffect(() => () => pararSimulacao.current?.(), [])
 
   const handleParar = async () => {
+    if (ehDemo()) {
+      pararSimulacao.current?.(); pararSimulacao.current = null
+      const texto = transcricao.trim().length > 10 ? transcricao : FALAS_DEMO.join('\n')
+      setTranscricao(texto); handleEstruturar(texto); return
+    }
     // Espera as últimas frases e a revisão do áudio inteiro antes de gerar o prontuário
     const final = await pararGravacao()
     if (final && final.trim().length > 10) handleEstruturar(final)
@@ -257,6 +278,14 @@ export default function Home() {
     const texto = textoParam ?? transcricao
     if (!texto.trim()) return
     setEstado('processando'); setErroMsg('')
+    if (ehDemo()) {
+      // Prontuário fictício que segue o assunto da conversa (nada vai para a IA nem para o banco)
+      await new Promise(r => setTimeout(r, 2400))
+      const p = prontuarioDemo(texto)
+      setProntuario(p); setEstado('pronto'); setEditado(false)
+      salvarConsulta(p, texto)
+      return
+    }
     try {
       const res = await fetch('/api/estruturar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -272,6 +301,7 @@ export default function Home() {
 
   const salvarConsulta = async (p: any, textoTranscricao: string = transcricao) => {
     if (!medico) return
+    if (ehDemo()) { setConsultaId('demo-consulta'); setConsultaSalva(true); avisoDemo('Prontuário de exemplo · demonstração, nada foi gravado.'); return }
     try {
       const r = await fetch('/api/consultas', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -302,6 +332,7 @@ export default function Home() {
 
   const salvarAlteracoes = async () => {
     if (!prontuario) return
+    if (ehDemo()) { setEditado(false); avisoDemo(); return }
     if (!consultaId) { await salvarConsulta(prontuario); setEditado(false); return }
     setSalvandoEdicao(true)
     const { error } = await supabase
@@ -336,6 +367,10 @@ const handleCopiar = () => {
 
   const handleGerarResumo = async () => {
     if (!prontuario) return
+    if (ehDemo()) {
+      setResumoPaciente('Olá! Resumo da sua consulta de hoje: ' + (prontuario.avaliacao || '') + ' O que fazer: ' + (prontuario.plano || '') + ' Qualquer dúvida, fale com a clínica.')
+      return
+    }
     setGerandoResumo(true)
     try {
       const res = await fetch('/api/resumo-paciente', {
@@ -350,6 +385,13 @@ const handleCopiar = () => {
 
   const handleGerarExames = async () => {
     if (!prontuario) return
+    if (ehDemo()) {
+      setExames({ exames: [
+        { nome: 'Hemograma completo', indicacao: 'Avaliação geral', urgencia: 'rotina' },
+        { nome: 'Glicemia de jejum', indicacao: 'Rastreamento', urgencia: 'rotina' },
+      ], observacoes: 'Exemplo da demonstração.' })
+      return
+    }
     setGerandoDoc(true)
     try {
       const res = await fetch('/api/documentos', {
@@ -368,6 +410,7 @@ const handleCopiar = () => {
   const [examesDigitados, setExamesDigitados] = useState('')
   const pacienteDoc = () => ({ paciente_id: pacienteSelecionado?.id || null, paciente_avulso: pacienteSelecionado ? null : pacienteAvulso, medico_id: medico?.id })
   const abrirDocumento = async (rota: string, corpo: any) => {
+    if (ehDemo()) { avisoDemo('Demonstração: o documento não é gerado nem gravado.'); return }
     const res = await fetch(rota, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) })
     if (!res.ok) { const j = await res.json().catch(() => ({})); notificar(j.error || 'Não foi possível gerar o documento. Tente de novo.', 'erro'); return }
     const html = await res.text()
@@ -387,6 +430,10 @@ const handleCopiar = () => {
 
   const buscarSugestoes = async (texto: string) => {
     if (!texto || texto.trim().length < 50 || carregandoSugestoes) return
+    if (ehDemo()) {
+      setSugestoes(['Perguntar sobre sinais de alarme', 'Investigar qualidade do sono', 'Checar uso de medicamentos'])
+      setFocoConsulta('Caracterizar a queixa principal'); return
+    }
     setCarregandoSugestoes(true)
     try {
       const res = await fetch('/api/sugestoes-consulta', {
@@ -411,6 +458,7 @@ const handleCopiar = () => {
 
   const enviarWhatsApp = async (tipo: string, conteudo: string) => {
     if (!pacienteSelecionado?.telefone) { notificar('Paciente sem telefone cadastrado', 'erro'); return }
+    if (ehDemo()) { avisoDemo('Demonstração: nenhuma mensagem foi enviada.'); return }
     const tel = pacienteSelecionado.telefone.replace(/[^0-9]/g, '')
     const telWpp = tel.startsWith('55') ? tel : '55' + tel
     const m = localStorage.getItem('medico')
@@ -638,7 +686,7 @@ const handleCopiar = () => {
         <div className="nc-grid">
           <div style={{ ...cardBase, height: 'max(520px, calc(100vh - 300px))', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: `1px solid ${T.border.muted}` }}>
-              <OndaAudio ativa={gravando && !gravandoPausado} nivel={nivel} />
+              <OndaAudio ativa={(gravando || ehDemo()) && !gravandoPausado} nivel={ehDemo() ? 0.25 + Math.random() * 0.35 : nivel} />
               <StatusConexao conexao={conexao} fase={fase} />
               <span style={{ fontSize: 12, fontWeight: 600, color: T.text.quaternary, background: T.bg.page, padding: '4px 10px', borderRadius: 99, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                 {palavras} palavras
@@ -955,6 +1003,7 @@ const handleCopiar = () => {
           } : pacienteAvulso}
           onClose={() => setMemedAberto(false)}
           onPrescricaoGerada={(dados) => {
+            if (ehDemo()) { setMemedAberto(false); avisoDemo(); return }
             // Salva prescricao no banco (Memed compliance)
             fetch('/api/prescricoes', {
               method: 'POST',

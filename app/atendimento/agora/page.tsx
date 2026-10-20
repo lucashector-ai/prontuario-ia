@@ -18,6 +18,7 @@ import { minutosDesde, ordenarFila } from '@/lib/atendimento/comum'
 import { SeloPrioridade, SeloRisco, SenhaChip, esperaTexto, horaCurta } from '@/components/atendimento/partes'
 import { MedicosAgora, cabecalho, tituloCard } from '@/components/atendimento/blocos'
 import { useChatNaoLidas } from '@/components/shell/useChatNaoLidas'
+import { ehDemo } from '@/lib/demo'
 
 type Cartao = { id: string; pacienteId: string | null; titulo: string; linha: string; senha?: string; risco?: string | null; prioridade?: any; alerta?: boolean }
 
@@ -31,7 +32,7 @@ export default function AgoraPage() {
 
   useEffect(() => {
     carregarConfig().then(setConfig).catch(() => {})
-    setDemo(new URLSearchParams(window.location.search).get('demo') === '1' ? '?demo=1' : '')
+    setDemo(ehDemo() ? '?demo=1' : '')
     const t = setInterval(() => setAgora(Date.now()), 30000)
     return () => clearInterval(t)
   }, [])

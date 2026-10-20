@@ -2,6 +2,7 @@
 /** Plano da clínica logada (clinicas.plano), com cache na sessão do navegador. */
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { ehDemo } from '@/lib/demo'
 
 const CHAVE = 'c360-plano'
 
@@ -12,7 +13,7 @@ export function usePlano() {
     try { const v = sessionStorage.getItem(CHAVE); if (v !== null) setPlano(v || null) } catch {}
     let clinicaId: string | null = null
     try {
-      if (new URLSearchParams(window.location.search).get('demo') === '1') { setPlano(null); return }
+      if (ehDemo()) { setPlano(null); return }
       const ca = JSON.parse(localStorage.getItem('clinica_admin') || 'null')
       const m = JSON.parse(localStorage.getItem('medico') || 'null')
       clinicaId = ca?.clinica_id || m?.clinica_id || null

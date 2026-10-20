@@ -7,6 +7,7 @@ import { Camera, KeyRound, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide
 import { tokens } from '@/lib/design-tokens'
 import { Input, Textarea, Button, Card, Field, Avatar, Badge, Icon, IconTile } from '@/components/ui'
 import { usePageHeader } from '@/components/shell/header-context'
+import { avisoDemo, comDemo, ehDemo, CLINICA_DEMO, MEDICO_DEMO } from '@/lib/demo'
 
 const T = tokens
 
@@ -26,8 +27,12 @@ export default function PerfilPage() {
   useEffect(() => {
     const ca = localStorage.getItem('clinica_admin')
     const m = localStorage.getItem('medico')
-    if (!ca && !m) { router.push('/login'); return }
-    const med = ca ? JSON.parse(ca) : JSON.parse(m!)
+    // Demonstração: perfil da médica fictícia
+    const demo = ehDemo()
+    if (!demo && !ca && !m) { router.push('/login'); return }
+    const med = demo
+      ? { ...MEDICO_DEMO, clinica: CLINICA_DEMO.nome, bio: 'Clínica médica com foco em prevenção e acompanhamento de doenças crônicas.' }
+      : ca ? JSON.parse(ca) : JSON.parse(m!)
     setMedico(med)
     setForm({
       nome: med.nome || '',
@@ -46,6 +51,7 @@ export default function PerfilPage() {
 
   const uploadFoto = async (file: File) => {
     if (!file || !medico) return
+    if (ehDemo()) { avisoDemo(); return }
     setUploadandoFoto(true)
     const reader = new FileReader()
     reader.onload = async (e) => {
@@ -61,6 +67,7 @@ export default function PerfilPage() {
   }
 
   async function salvarPerfil() {
+    if (ehDemo()) { setMedico({ ...medico, ...form }); avisoDemo(); return }
     setSalvando(true)
     try {
       const { error } = await supabase.from('medicos').update({
@@ -85,6 +92,7 @@ export default function PerfilPage() {
   async function salvarSenha() {
     if (!senhaForm.nova || senhaForm.nova.length < 6) return mostrarMsg('erro', 'Senha deve ter ao menos 6 caracteres')
     if (senhaForm.nova !== senhaForm.confirma) return mostrarMsg('erro', 'Senhas não coincidem')
+    if (ehDemo()) { setSenhaForm({ atual: '', nova: '', confirma: '' }); setSenhaAberta(false); avisoDemo(); return }
     setSalvandoSenha(true)
     try {
       const res = await fetch('/api/change-password', {
@@ -105,7 +113,7 @@ export default function PerfilPage() {
 
   if (!medico) return null
 
-  const ehAdmin = !!localStorage.getItem('clinica_admin')
+  const ehAdmin = !ehDemo() && !!localStorage.getItem('clinica_admin')
 
   return (
     <div style={{ padding: 20 }}>
@@ -244,7 +252,7 @@ export default function PerfilPage() {
                 <span style={{ fontSize: 13.5, fontWeight: 600, color: T.text.primary }}>Privacidade e dados (LGPD)</span>
                 <span style={{ fontSize: 12.5, color: T.text.quaternary }}>Exporte seus dados ou solicite a exclusão da conta.</span>
               </div>
-              <Button variant="secondary" onClick={() => router.push('/lgpd')}>Abrir privacidade</Button>
+              <Button variant="secondary" onClick={() => router.push(comDemo('/lgpd'))}>Abrir privacidade</Button>
             </div>
           </Card>
         </div>

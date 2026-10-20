@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase'
 import { usePageHeader } from '@/components/shell/header-context'
 import { Tabs, Select, EmptyState, Badge } from '@/components/ui'
 import { ehDemo } from '@/components/retornos/datas'
+import { CLINICA_DEMO, MEDICO_DEMO } from '@/lib/demo'
 import AbaRetornos from './AbaRetornos'
 import AbaReativacao from './AbaReativacao'
 import AbaCampanhas from './AbaCampanhas'
@@ -43,6 +44,14 @@ export default function RetornosPage() {
   // Quem está usando: admin da clínica / recepcionista → médicos da clínica; médico → ele mesmo
   useEffect(() => {
     (async () => {
+      // Demonstração: médicos fictícios, nada vai ao banco
+      if (demo) {
+        setClinicaNome(CLINICA_DEMO.nome)
+        setMedicos([{ id: MEDICO_DEMO.id, nome: MEDICO_DEMO.nome }, { id: 'demo-medico-2', nome: 'Dr. Marcos Vieira' }])
+        setMedicoId(MEDICO_DEMO.id)
+        setCarregando(false)
+        return
+      }
       try { const c = localStorage.getItem('clinica'); if (c) setClinicaNome(JSON.parse(c).nome || '') } catch {}
       const ca = localStorage.getItem('clinica_admin')
       const m = localStorage.getItem('medico')
@@ -53,7 +62,6 @@ export default function RetornosPage() {
       let lista: any[] = []
       if (ca || ehApoio(usuario.cargo)) lista = usuario.clinica_id ? await daClinica(usuario.clinica_id) : []
       else lista = [usuario]
-      if (demo && !lista.length) lista = [{ id: 'demo-medico', nome: usuario.nome || 'Dra. Helena Duarte' }]
       setMedicos(lista)
       let salvo = ''
       try { salvo = localStorage.getItem('c360-retornos-medico') || '' } catch {}

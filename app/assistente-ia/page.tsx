@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { tokens } from '@/lib/design-tokens'
 import { Button, Icon, IconButton } from '@/components/ui'
@@ -11,6 +11,22 @@ import {
 } from '@/lib/ai/assistente'
 import ChatAssistente from './ChatAssistente'
 import { confirmar } from '@/components/ui/dialogos'
+import { avisoDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+
+// Modo demonstração: conversas de exemplo (nada vai para o banco)
+const horasAtras = (h: number) => new Date(Date.now() - h * 3600e3).toISOString()
+const CONVERSAS_DEMO: Conversa[] = [
+  { id: 'demo-ia-1', medico_id: MEDICO_DEMO.id, clinica_id: 'demo', titulo: 'Metas de pressão no idoso', criado_em: horasAtras(3), atualizado_em: horasAtras(3) },
+  { id: 'demo-ia-2', medico_id: MEDICO_DEMO.id, clinica_id: 'demo', titulo: 'Modelo de atestado', criado_em: horasAtras(28), atualizado_em: horasAtras(28) },
+]
+const MENSAGENS_DEMO: Record<string, [string, string][]> = {
+  'demo-ia-1': [
+    ['Quais as metas de pressão para um paciente de 72 anos com hipertensão?', 'Em geral, as diretrizes recomendam individualizar a meta. Para idosos sem fragilidade importante, costuma-se buscar valores abaixo de **140/90 mmHg**, e mais baixos quando bem tolerados.\n\nPontos de atenção:\n- Hipotensão postural e risco de quedas\n- Função renal e interações\n- Adesão ao tratamento\n\n_Exemplo de demonstração — confira as diretrizes vigentes._'],
+  ],
+  'demo-ia-2': [
+    ['Monte um atestado de 2 dias', 'Atesto, para os devidos fins, que o(a) paciente **[nome]** esteve em consulta médica nesta data, necessitando de afastamento de suas atividades por **2 (dois) dias**, a partir de **[data]**.\n\nCidade, data.\nAssinatura e carimbo do médico.'],
+  ],
+}
 
 type Auth = {
   medicoId: string | null
@@ -28,8 +44,16 @@ export default function AssistenteIAPage() {
   const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [carregandoMensagens, setCarregandoMensagens] = useState(false)
   const [sidebarAberta, setSidebarAberta] = useState(true)
+  const demo = useRef(false)
 
   useEffect(() => {
+    if (ehDemo()) {
+      demo.current = true
+      if (window.innerWidth < 900) setSidebarAberta(false)
+      setAuth({ medicoId: MEDICO_DEMO.id, clinicaId: 'demo', nome: MEDICO_DEMO.nome, loading: false })
+      setConversas(CONVERSAS_DEMO)
+      return
+    }
     try {
       const rawMedico = localStorage.getItem('medico')
       const rawAdmin = localStorage.getItem('clinica_admin')
@@ -58,6 +82,14 @@ export default function AssistenteIAPage() {
   const abrirConversa = useCallback(async (conversaId: string) => {
     setConversaAtiva(conversaId)
     setCarregandoMensagens(true)
+    if (demo.current) {
+      setMensagens((MENSAGENS_DEMO[conversaId] || []).flatMap(([p, r], i) => [
+        { id: conversaId + '-u' + i, conversa_id: conversaId, papel: 'user', conteudo: p, criado_em: '' },
+        { id: conversaId + '-a' + i, conversa_id: conversaId, papel: 'assistant', conteudo: r, criado_em: '' },
+      ] as Mensagem[]))
+      setCarregandoMensagens(false)
+      return
+    }
     try {
       const msgs = await listarMensagens(conversaId)
       setMensagens(msgs)
@@ -74,6 +106,11 @@ export default function AssistenteIAPage() {
   async function handleDeletar(conversaId: string, e: React.MouseEvent) {
     e.stopPropagation()
     if (!(await confirmar({ titulo: 'Excluir esta conversa?', mensagem: 'O histórico desta conversa com o assistente será apagado.', confirmar: 'Excluir', perigo: true }))) return
+    if (demo.current) {
+      setConversas(l => l.filter(c => c.id !== conversaId))
+      if (conversaAtiva === conversaId) novaConversa()
+      avisoDemo(); return
+    }
     await deletarConversa(conversaId)
     if (auth.medicoId) {
       const lista = await listarConversas(auth.medicoId)
@@ -85,6 +122,7 @@ export default function AssistenteIAPage() {
   // Callback quando uma conversa nova é criada dentro do chat
   const onConversaCriada = useCallback(async (novaConversaId: string) => {
     setConversaAtiva(novaConversaId)
+    if (demo.current) return
     if (auth.medicoId) {
       const lista = await listarConversas(auth.medicoId)
       setConversas(lista)
@@ -93,6 +131,7 @@ export default function AssistenteIAPage() {
 
   // Callback quando o título muda (primeira pergunta)
   const onTituloAtualizado = useCallback(async () => {
+    if (demo.current) return
     if (auth.medicoId) {
       const lista = await listarConversas(auth.medicoId)
       setConversas(lista)

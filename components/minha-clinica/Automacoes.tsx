@@ -6,6 +6,7 @@ import { RefreshCw, CalendarCheck, Star, FileText, FileDown, Send, Lightbulb, Ch
 import { tokens } from '@/lib/design-tokens'
 import { Badge, Button, Card, Icon, IconTile, SegmentedControl } from '@/components/ui'
 import { ConfiguracaoConfirmacoes } from '@/components/confirmacoes/ConfiguracaoConfirmacoes'
+import { avisoDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
 
 const T = tokens
 
@@ -17,13 +18,14 @@ export function Automacoes() {
   const [aba, setAba] = useState<Tab>("followup")
   // ?demo=1 abre direto em Confirmações (para demonstração)
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("demo") === "1") setAba("confirmacao")
+    if (ehDemo()) setAba("confirmacao")
   }, [])
   const [carregando, setCarregando] = useState(false)
   const [resultado, setResultado] = useState<any>(null)
   const [msg, setMsg] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null)
 
   useEffect(() => {
+    if (ehDemo()) { setMedico(MEDICO_DEMO); return }
     const ca_ = localStorage.getItem("clinica_admin")
     const m = ca_ || localStorage.getItem("medico")
     if (!m) { router.push("/login"); return }
@@ -31,6 +33,7 @@ export function Automacoes() {
   }, [router])
 
   const chamarAPI = async (endpoint: string, body: any) => {
+    if (ehDemo()) { avisoDemo("Demonstração: nenhuma mensagem foi enviada."); return }
     setCarregando(true)
     setMsg(null)
     setResultado(null)
@@ -195,6 +198,7 @@ export function Automacoes() {
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <Button icon={FileDown} onClick={async () => {
               if (!medico) return
+              if (ehDemo()) { avisoDemo("Demonstração: o relatório em PDF usa os dados reais da clínica."); return }
               setCarregando(true)
               setMsg(null)
               try {

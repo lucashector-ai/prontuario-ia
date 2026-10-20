@@ -6,6 +6,8 @@ import { Plus, Stethoscope, Pencil, Power, RotateCcw, Check, Clock } from 'lucid
 import { tokens } from '@/lib/design-tokens'
 import { Badge, Button, Card, EmptyState, Field, Icon, IconButton, IconTile, Input, Modal, ModalAcoes, Overline, Select } from '@/components/ui'
 import { confirmar, notificar } from '@/components/ui/dialogos'
+import { avisoDemo, ehDemo } from '@/lib/demo'
+import { PROCEDIMENTOS_DEMO } from './demo'
 
 const T = tokens
 
@@ -21,6 +23,7 @@ export function Procedimentos() {
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
 
   useEffect(() => {
+    if (ehDemo()) { setClinicaId('demo'); setProcedimentos(PROCEDIMENTOS_DEMO); setCarregando(false); return }
     const ca = localStorage.getItem('clinica_admin')
     if (!ca) {
       // Só admin da clínica acessa
@@ -71,6 +74,12 @@ export function Procedimentos() {
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.nome.trim()) return toast('erro', 'Nome obrigatório')
+    if (ehDemo()) {
+      // Demonstração: só muda a lista na tela
+      const dados = { nome: form.nome.trim(), duracao: Number(form.duracao) || 30, valor: form.valor ? Number(form.valor) : null, custo_insumos: form.custo_insumos ? Number(form.custo_insumos) : null, custo_operacional: form.custo_operacional ? Number(form.custo_operacional) : null }
+      setProcedimentos(l => editando ? l.map(x => x.id === editando.id ? { ...x, ...dados } : x) : [...l, { id: 'demo-proc-' + Date.now(), ativo: true, ...dados }])
+      setModalAberto(false); avisoDemo(); return
+    }
     setSalvando(true)
     try {
       if (editando) {
@@ -101,6 +110,7 @@ export function Procedimentos() {
   }
 
   const toggleAtivo = async (p: any) => {
+    if (ehDemo()) { setProcedimentos(l => l.map(x => x.id === p.id ? { ...x, ativo: !x.ativo } : x)); avisoDemo(); return }
     await fetch('/api/procedimentos', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -111,6 +121,7 @@ export function Procedimentos() {
 
   const excluir = async (p: any) => {
     if (!(await confirmar({ titulo: `Desativar “${p.nome}”?`, mensagem: 'Ele deixa de aparecer na agenda e nas comandas. Você pode reativar depois.', confirmar: 'Desativar' }))) return
+    if (ehDemo()) { setProcedimentos(l => l.map(x => x.id === p.id ? { ...x, ativo: false } : x)); avisoDemo(); return }
     await fetch('/api/procedimentos?id=' + p.id, { method: 'DELETE' })
     carregar(clinicaId)
     toast('ok', 'Procedimento desativado')

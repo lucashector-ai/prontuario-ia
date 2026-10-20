@@ -17,6 +17,8 @@ import { recursoDaRota, recursoLiberado } from '@/lib/planos'
 import { tokenSessao } from '@/lib/supabase'
 import { sairDaConta } from '@/lib/sessao'
 import { tokens } from '@/lib/design-tokens'
+import { ehDemo, protegerRedeNoDemo } from '@/lib/demo'
+import { SeloDemo } from './shell/SeloDemo'
 
 const ROTAS_PUBLICAS = ['/login', '/login-atendente', '/cadastro', '/cadastro-sucesso', '/verificar-email', '/trocar-senha-obrigatoria', '/onboarding', '/forgot-password', '/reset-password', '/privacidade', '/termos', '/sobre', '/contato', '/dev-login']
 const PREFIXOS_PUBLICOS = ['/p/', '/convite/', '/sala/', '/painel/', '/totem/', '/pre-consulta/', '/paciente-publico/', '/agenda/', '/formulario/']
@@ -35,6 +37,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Menu recolhido: escolha do usuário (lembrada no navegador). Telas < 1180px começam recolhidas.
   const [recolhido, setRecolhido] = useState(false)
   const plano = usePlano()
+  // Modo demonstração: guardado na aba (lib/demo.ts, que também trava a rede para nada ser gravado)
+  const [demo, setDemo] = useState(false)
+  useEffect(() => { protegerRedeNoDemo(); setDemo(ehDemo()) }, [pathname])
 
   useEffect(() => {
     const check = () => {
@@ -60,7 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (ehPublica) return
     try {
-      if (new URLSearchParams(window.location.search).get('demo') === '1') return
+      if (ehDemo()) return
       if (localStorage.getItem('c360_dev') === '1') return
       const logado = localStorage.getItem('medico') || localStorage.getItem('clinica_admin')
       if (!tokenSessao()) {
@@ -93,6 +98,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <HeaderProvider>
         <div style={{ height: '100dvh', background: tokens.bg.page, display: 'flex', flexDirection: 'column', gap: 12, padding: 12, paddingBottom: 'calc(76px + env(safe-area-inset-bottom, 0px))', overflow: 'hidden' }}>
           <Topbar compacto />
+          {demo && <SeloDemo />}
           <AvisoConexao />
           <BatimentoAutomacoes />
           <AvisosAoVivo />
@@ -111,6 +117,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar rail={recolhido} onAlternar={alternarMenu} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <Topbar />
+          {demo && <SeloDemo />}
           <AvisoConexao />
           <BatimentoAutomacoes />
           <AvisosAoVivo />

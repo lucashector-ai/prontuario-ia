@@ -7,6 +7,7 @@ import { Eye, Upload, Pencil, Trash2, ShieldCheck, Lock, Download, Check, Triang
 import { tokens } from '@/lib/design-tokens'
 import { Badge, Button, Card, Field, Icon, IconTile, Input } from '@/components/ui'
 import { PrivacidadeProntuario } from './PrivacidadeProntuario'
+import { avisoDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
 
 const T = tokens
 
@@ -19,6 +20,7 @@ export function Lgpd() {
   const [msg, setMsg] = useState<{tipo:'ok'|'erro', texto:string}|null>(null)
 
   useEffect(() => {
+    if (ehDemo()) { setMedico(MEDICO_DEMO); return }
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
@@ -31,6 +33,7 @@ export function Lgpd() {
   }
 
   const exportarDados = async () => {
+    if (ehDemo()) { avisoDemo('Demonstração: a exportação gera um arquivo com os dados reais da conta.'); return }
     setExportando(true)
     try {
       const [{ data: pacientes }, { data: consultas }, { data: agendamentos }] = await Promise.all([
@@ -72,6 +75,7 @@ export function Lgpd() {
   }
 
   const deletarConta = async () => {
+    if (ehDemo()) { avisoDemo(); return }
     if (confirmDelete !== medico?.email) {
       mostrarMsg('erro', 'Email não confere')
       return

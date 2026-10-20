@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGravador } from '@/lib/useGravador'
 import { useToast } from '@/components/Toast'
@@ -9,6 +9,8 @@ import { tint } from '@/lib/design-tokens'
 import { usePageHeader } from '@/components/shell/header-context'
 import { Check, CircleAlert, Copy, FileText, Loader2, Mic, PenLine, RotateCcw, Square } from 'lucide-react'
 import { Badge, Button, Card, Icon, IconTile, Overline, SegmentedControl } from '@/components/ui'
+import { ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { prontuarioDemo, simularTranscricaoDemo } from '@/components/atendimento/prontuarioDemo'
 
 const T = tokens
 
@@ -25,6 +27,7 @@ export default function Ditado() {
   const [modo, setModo] = useState<'gravar' | 'digitar'>('gravar')
 
   useEffect(() => {
+    if (ehDemo()) { setDemo(true); setMedico(MEDICO_DEMO); return }
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
@@ -32,7 +35,25 @@ export default function Ditado() {
   }, [router])
 
   const handleNovoTexto = useCallback((t: string) => setTranscricao(t), [])
-  const { gravando, transcrevendo, iniciarGravacao, pararGravacao, limpar, erro } = useGravador(handleNovoTexto)
+  const grav = useGravador(handleNovoTexto)
+  // Demonstração: sem microfone — a "gravação" escreve uma conversa de exemplo
+  const [demo, setDemo] = useState(false)
+  const [gravandoDemo, setGravandoDemo] = useState(false)
+  const pararDemo = useRef<(() => void) | null>(null)
+  useEffect(() => () => pararDemo.current?.(), [])
+  const gravando = demo ? gravandoDemo : grav.gravando
+  const transcrevendo = demo ? false : grav.transcrevendo
+  const erro = demo ? null : grav.erro
+  const limpar = demo ? () => { pararDemo.current?.(); setGravandoDemo(false) } : grav.limpar
+  const iniciarGravacao = async () => {
+    if (!demo) return grav.iniciarGravacao()
+    setGravandoDemo(true)
+    pararDemo.current = simularTranscricaoDemo(setTranscricao, 1100)
+  }
+  const pararGravacao = () => {
+    if (!demo) return grav.pararGravacao()
+    pararDemo.current?.(); setGravandoDemo(false)
+  }
 
   const textoFinal = modo === 'gravar' ? transcricao : textoDireto
 
@@ -42,6 +63,12 @@ export default function Ditado() {
       return
     }
     setProcessando(true)
+    if (demo) {
+      await new Promise(r => setTimeout(r, 1800))
+      setProntuario(prontuarioDemo(textoFinal)); setProcessando(false)
+      toast('Prontuário estruturado (demonstração)')
+      return
+    }
     try {
       const res = await fetch('/api/estruturar', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },

@@ -9,8 +9,10 @@ import {
   hojeSP, nomeMinimo, nomeNoPainel, ordenarFila, prefixoSenha, prioridadePelaIdade,
   type Atendimento, type Consultorio, type Esperado, type Prioridade, type Setor,
 } from './comum'
+import { ehDemo } from '@/lib/demo'
+import { consultasDemo, pacienteDemo } from '@/lib/demo-dados'
+export { ehDemo }
 
-export const ehDemo = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'
 
 export type Saida = Atendimento & {
   saida_status?: 'pendente' | 'resolvida' | null; saida_obs?: string | null; saida_itens?: string[] | null; retorno_id?: string | null
@@ -296,9 +298,13 @@ export async function carregarFicha360(pacienteId: string): Promise<Ficha360> {
     const e = demo.estado()
     const p: any = [...e.esperados.map(x => x.paciente), ...PACIENTES_EXTRA].find(x => x?.id === pacienteId) || { id: pacienteId, nome: 'Paciente' }
     const d = (n: number, h = 10) => { const x = new Date(Date.now() - n * 864e5); x.setHours(h, 0, 0, 0); return x.toISOString() }
+    // Pacientes fictícios compartilhados (lib/demo-dados.ts): mesmos dados na lista, na busca e na ficha
+    const pd = pacienteDemo(pacienteId)
     return {
-      paciente: { ...p, cpf: '123.456.789-09', telefone: '(11) 98765-4321', email: 'paciente@email.com', convenio: 'Unimed', nr_carteirinha: '0012345678', alergias: 'Dipirona', comorbidades: 'Hipertensão arterial', medicamentos_uso: 'Losartana 50 mg 1x/dia', cidade: 'São Paulo' },
-      consultas: [
+      paciente: pd
+        ? { id: pd.id, nome: pd.nome, data_nascimento: pd.data_nascimento, cpf: pd.cpf, telefone: pd.telefone, email: pd.email, convenio: pd.convenio, nr_carteirinha: pd.convenio ? '0012345678' : null, alergias: pd.alergias, comorbidades: pd.comorbidades, medicamentos_uso: pd.medicamentos_uso, cidade: pd.cidade }
+        : { ...p, cpf: '000.000.000-00', telefone: '(11) 90000-0000', email: 'paciente@exemplo.com.br', convenio: 'Unimed', nr_carteirinha: '0012345678', alergias: 'Dipirona', comorbidades: 'Hipertensão arterial', medicamentos_uso: 'Losartana 50 mg 1x/dia', cidade: 'São Paulo' },
+      consultas: pd ? consultasDemo(pd).map(c => ({ id: c.id, criado_em: c.criado_em, data_hora: null, medico: 'Dra. Helena Duarte', subjetivo: c.subjetivo, avaliacao: c.avaliacao, plano: c.plano, diagnostico_principal: c.diagnostico_principal, cids: c.cids.map(x => ({ codigo: x.codigo })) })) : [
         { id: 'c1', criado_em: d(42), data_hora: null, medico: 'Dra. Helena Duarte', subjetivo: null, avaliacao: 'Hipertensão controlada.', plano: 'Manter losartana. Retorno com exames.', diagnostico_principal: 'Hipertensão essencial', cids: [{ codigo: 'I10' }] },
         { id: 'c2', criado_em: d(160), data_hora: null, medico: 'Dra. Helena Duarte', subjetivo: null, avaliacao: 'Cefaleia tensional.', plano: 'Analgesia e higiene do sono.', diagnostico_principal: 'Cefaleia tensional', cids: [{ codigo: 'G44.2' }] },
       ],
@@ -524,13 +530,16 @@ const espera = () => new Promise(r => setTimeout(r, 180))
 
 const PACIENTES_EXTRA = [
   { id: 'demo-pac-x1', nome: 'Rodrigo Teixeira Lima', telefone: null, data_nascimento: '1990-02-11' },
-  { id: 'demo-pac-x2', nome: 'Helena Prado', telefone: null, data_nascimento: '1941-07-30' },
+  { id: 'demo-pac-x2', nome: 'Lourdes Prado', telefone: null, data_nascimento: '1941-07-30' },
 ]
 export const pacientesDemo = () => PACIENTES_EXTRA
 
 function semente(): EstadoDemo {
   const dia = hojeSP()
-  const hora = (h: number, m = 0) => new Date(`${dia}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00-03:00`).toISOString()
+  // Horários relativos ao momento da apresentação: os 2 primeiros acabaram de passar, o resto vem ao longo do dia
+  // (antes eram fixos das 8h às 13h30 e, à tarde, a fila inteira aparecia "atrasada").
+  const base = Math.floor((Date.now() - 45 * 60e3) / (30 * 60e3)) * 30 * 60e3
+  const hora = (h: number, m = 0) => new Date(base + ((h - 8) * 60 + m) * 60e3).toISOString()
   const setores: Setor[] = [{ id: 'demo-setor-1', nome: 'Ambulatório — 2º andar', ordem: 0, ativo: true, painel_token: 'demo', painel_exibicao: 'senha_nome', painel_voz: true, painel_mensagem: null, avisar_whatsapp: true, totem_ativo: true, totem_token: 'demo' }]
   const consultorios: Consultorio[] = [1, 2, 3].map(n => ({ id: 'demo-cons-' + n, setor_id: 'demo-setor-1', nome: 'Consultório ' + n, ordem: n, ativo: true }))
   const medicos = [

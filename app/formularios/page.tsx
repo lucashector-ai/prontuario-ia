@@ -15,6 +15,8 @@ import ModalNovoTemplate from './ModalNovoTemplate'
 import ListaEnvios from './ListaEnvios'
 import { TIPOS_FORMULARIO, tipoDoTemplate, normalizarBusca, type TipoFormulario } from './tipos'
 import { confirmar } from '@/components/ui/dialogos'
+import { avisoDemo, comDemo, ehDemo, CLINICA_DEMO } from '@/lib/demo'
+import { TEMPLATES_DEMO } from './demo'
 
 const T = tokens
 
@@ -40,6 +42,12 @@ export default function FormulariosPage() {
   const [previa, setPrevia] = useState<Template | null>(null)
 
   useEffect(() => {
+    // Demonstração: modelos fictícios, nada vai ao banco
+    if (ehDemo()) {
+      setAuth({ tipo: 'medico', clinicaId: CLINICA_DEMO.id, loading: false })
+      setTemplates(TEMPLATES_DEMO); setLoadingTemplates(false)
+      return
+    }
     try {
       const rawMedico = localStorage.getItem('medico')
       const rawAdmin = localStorage.getItem('clinica_admin')
@@ -72,6 +80,7 @@ export default function FormulariosPage() {
 
   async function handleDeletar(t: Template) {
     if (!(await confirmar({ titulo: `Excluir o formulário “${t.nome}”?`, mensagem: 'Essa ação não pode ser desfeita.', confirmar: 'Excluir', perigo: true }))) return
+    if (ehDemo()) { avisoDemo('Demonstração: nada foi excluído.'); return }
     const { erro } = await deletarTemplate(t.id)
     if (erro) {
       toast(erro, 'error')
@@ -172,7 +181,7 @@ export default function FormulariosPage() {
         <DrawerPrevia
           template={previa}
           onClose={() => setPrevia(null)}
-          onEditar={() => router.push('/formularios/' + previa.id)}
+          onEditar={() => router.push(comDemo('/formularios/' + previa.id))}
           onDeletar={() => handleDeletar(previa)}
         />
       )}
@@ -183,7 +192,7 @@ export default function FormulariosPage() {
           onFechar={() => setModalAberto(false)}
           onCriado={(id) => {
             setModalAberto(false)
-            router.push('/formularios/' + id)
+            router.push(comDemo('/formularios/' + id))
           }}
         />
       )}

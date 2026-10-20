@@ -10,6 +10,20 @@ import { BookOpen, Info, Plus, Trash2, X } from 'lucide-react'
 import { Badge, Button, Card, Chip, EmptyState, Field, IconButton, IconTile, Input, SearchInput, Select, type BadgeTone } from '@/components/ui'
 
 import { confirmar } from '@/components/ui/dialogos'
+import { avisoDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+
+// Modo demonstração: termos de exemplo (nada é gravado)
+const TERMOS_DEMO = [
+  { id: 'demo-t1', termo: 'Losartana', descricao: 'Anti-hipertensivo (BRA)', categoria: 'Medicamento' },
+  { id: 'demo-t2', termo: 'Levotiroxina', descricao: 'Reposição de hormônio tireoidiano', categoria: 'Medicamento' },
+  { id: 'demo-t3', termo: 'Metformina', descricao: 'Antidiabético oral', categoria: 'Medicamento' },
+  { id: 'demo-t4', termo: 'Gonartrose', descricao: 'Artrose de joelho', categoria: 'Patologia' },
+  { id: 'demo-t5', termo: 'Dislipidemia', descricao: 'Alteração de colesterol e triglicerídeos', categoria: 'Patologia' },
+  { id: 'demo-t6', termo: 'MAPA', descricao: 'Monitorização ambulatorial da pressão arterial', categoria: 'Sigla' },
+  { id: 'demo-t7', termo: 'HbA1c', descricao: 'Hemoglobina glicada', categoria: 'Sigla' },
+  { id: 'demo-t8', termo: 'Lasègue', descricao: 'Manobra de exame da coluna lombar', categoria: 'Procedimento' },
+  { id: 'demo-t9', termo: 'Epigástrio', descricao: 'Região superior e central do abdome', categoria: 'Anatomia' },
+]
 const T = tokens
 
 const CATEGORIAS = ['Medicamento', 'Patologia', 'Procedimento', 'Anatomia', 'Sigla', 'Outro']
@@ -19,6 +33,7 @@ export default function Dicionario() {
   const router = useRouter()
   const { toast } = useToast()
   const [medico, setMedico] = useState<any>(null)
+  const [demo, setDemo] = useState(false)
   const [termos, setTermos] = useState<any[]>([])
   const [carregando, setCarregando] = useState(true)
   const [novoTermo, setNovoTermo] = useState('')
@@ -29,6 +44,7 @@ export default function Dicionario() {
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todas')
 
   useEffect(() => {
+    if (ehDemo()) { setDemo(true); setMedico(MEDICO_DEMO); setTermos(TERMOS_DEMO); setCarregando(false); return }
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
@@ -49,6 +65,12 @@ export default function Dicionario() {
 
   const handleAdicionar = async () => {
     if (!novoTermo.trim()) { toast('Digite o termo', 'error'); return }
+    if (demo) {
+      setTermos(prev => [...prev, { id: 'demo-t' + Date.now(), termo: novoTermo.trim(), descricao: novaDescricao.trim(), categoria: novaCategoria }])
+      setNovoTermo(''); setNovaDescricao('')
+      avisoDemo('Termo adicionado só nesta tela (demonstração, nada foi gravado).')
+      return
+    }
     setSalvando(true)
     const { data, error } = await supabase
       .from('dicionario_clinico')
@@ -66,6 +88,7 @@ export default function Dicionario() {
 
   const handleDeletar = async (id: string) => {
     if (!(await confirmar({ titulo: 'Remover este termo?', mensagem: 'A IA deixa de usar este termo nas próximas transcrições.', confirmar: 'Remover', perigo: true }))) return
+    if (demo) { setTermos(prev => prev.filter(t => t.id !== id)); avisoDemo(); return }
     await supabase.from('dicionario_clinico').delete().eq('id', id)
     setTermos(prev => prev.filter(t => t.id !== id))
     toast('Termo removido', 'info')

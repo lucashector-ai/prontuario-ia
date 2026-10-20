@@ -18,6 +18,7 @@ import { agruparParaLote, statusRetorno } from '@/lib/tiss/lotes'
 import { gerarXmlLote, xmlParaBytes } from '@/lib/tiss/xml'
 import { interpretarCsvPrecos } from '@/lib/tiss/csv'
 import { DEMO_OPERADORAS, DEMO_PRECOS, demoGuias, demoLotes, demoPendentes } from './demo'
+import { ehDemo as modoDemo } from '@/lib/demo'
 
 export type Pendente = { consulta_id: string; paciente: string; convenio: string; data: string; carteira?: string | null }
 export type Resultado = { ok: boolean; erros?: Problema[]; guia?: Guia; mensagem?: string }
@@ -66,7 +67,7 @@ export function useFaturamento() {
   // ── bootstrap ────────────────────────────────────────────────────────────
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search)
-    const ehDemo = sp.get('demo') === '1'
+    const ehDemo = modoDemo()
     setDemo(ehDemo)
     setGuiaInicial(sp.get('guia'))
     if (ehDemo) {
@@ -75,7 +76,7 @@ export function useFaturamento() {
       setGuias(demoGuias())
       setLotes(demoLotes())
       setPendentes(demoPendentes())
-      setMedicos([{ id: 'demo', nome: 'Dra. Camila Andrade', crm: 'CRM-SP 145872', especialidade: 'Cardiologia' }])
+      setMedicos([{ id: 'demo-medico', nome: 'Dra. Helena Duarte', crm: 'CRM-SP 123456', especialidade: 'Clínica médica' }])
       setEscopo({ clinica_id: 'demo' })
       setCarregando(false)
       return

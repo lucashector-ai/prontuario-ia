@@ -10,6 +10,8 @@ import { usePageHeader } from '@/components/shell/header-context'
 const T = tokens
 import { supabase } from '@/lib/supabase'
 import type { Campo } from '@/lib/formularios/types'
+import { comDemo, ehDemo } from '@/lib/demo'
+import { respostaDemo } from '../../demo'
 
 type DadosResposta = {
   envio: {
@@ -48,6 +50,8 @@ export default function VerRespostaPage() {
 
   useEffect(() => {
     async function carregar() {
+      // Demonstração: envio e resposta fictícios
+      if (ehDemo()) { setDados(respostaDemo(envioId) as any); setLoading(false); return }
       try {
         const rawMedico = localStorage.getItem('medico')
         const rawAdmin = localStorage.getItem('clinica_admin')
@@ -137,7 +141,7 @@ export default function VerRespostaPage() {
         <EmptyState
           icon={FileX}
           titulo={erro || 'Não encontrado'}
-          acao={<Button icon={ArrowLeft} variant="secondary" onClick={() => router.push('/formularios')}>Voltar</Button>}
+          acao={<Button icon={ArrowLeft} variant="secondary" onClick={() => router.push(comDemo('/formularios'))}>Voltar</Button>}
         />
       </div>
     )
@@ -156,7 +160,7 @@ export default function VerRespostaPage() {
       <div style={{ maxWidth: 880, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* Voltar + metadados */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <Button variant="secondary" size="sm" icon={ArrowLeft} onClick={() => router.push('/formularios')}>Formulários</Button>
+          <Button variant="secondary" size="sm" icon={ArrowLeft} onClick={() => router.push(comDemo('/formularios'))}>Formulários</Button>
           <span style={{ flex: 1 }} />
           {meta.map(([I, txt], i) => (
             <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: T.text.secondary }}>

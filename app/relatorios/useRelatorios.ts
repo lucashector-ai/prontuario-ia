@@ -14,6 +14,7 @@ import { gerarDemo } from '@/lib/relatorios/demo'
 import { paraInputData } from '@/lib/relatorios/periodo'
 import type { AgRel, DadosRelatorio, EsperaRel, Intervalo, MedRel, PacRel, RetornoRel } from '@/lib/relatorios/tipos'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { ehDemo as modoDemo } from '@/lib/demo'
 
 const faltaTabela = (e: any) => !!e && /column|relation|does not exist|schema cache|42P01|42703/i.test(String(e.message || e.code || e))
 
@@ -60,7 +61,7 @@ export function useRelatorios(carga: Intervalo) {
 
   // Bootstrap: quem é o usuário e quais médicos entram no relatório
   useEffect(() => {
-    const ehDemo = new URLSearchParams(window.location.search).get('demo') === '1'
+    const ehDemo = modoDemo()
     setDemo(ehDemo)
     if (ehDemo) {
       const d = gerarDemo(new Date())

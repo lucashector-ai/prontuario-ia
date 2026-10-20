@@ -3,6 +3,8 @@
  * Use `sairDaConta()` em todo botão "Sair" — limpa médico, admin, clínica e atendente.
  */
 
+import { sairDoDemo } from '@/lib/demo'
+
 /** Atendente da equipe de chat (login em /login-atendente): só tem acesso ao Chat. */
 export function ehAtendente(): boolean {
   if (typeof window === 'undefined') return false
@@ -19,11 +21,13 @@ export function guardarToken(token?: string | null) {
     if (token) localStorage.setItem('c360_token', token)
     localStorage.removeItem('c360_dev')
   } catch {}
+  sairDoDemo() // login de verdade encerra o modo demonstração desta aba
 }
 
 /** Limpa a sessão e devolve a rota de login adequada. */
 export function sairDaConta(): string {
   const atendente = ehAtendente()
+  sairDoDemo()
   fetch('/api/logout', { method: 'POST', keepalive: true }).catch(() => {})
   for (const k of ['medico', 'clinica_admin', 'clinica', 'atendente', 'c360_token', 'c360_dev']) {
     try { localStorage.removeItem(k) } catch {}

@@ -6,6 +6,8 @@ import { Send, Inbox, ChevronRight } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
 import { supabase } from '@/lib/supabase'
 import { Avatar, Badge, Card, EmptyState, Icon, SegmentedControl, type BadgeTone } from '@/components/ui'
+import { comDemo, ehDemo } from '@/lib/demo'
+import { enviosDemo } from './demo'
 
 const T = tokens
 
@@ -44,6 +46,7 @@ export default function ListaEnvios({ clinicaId }: { clinicaId: string }) {
 
   useEffect(() => {
     async function carregar() {
+      if (ehDemo()) { setEnvios(enviosDemo() as any); setLoading(false); return } // demonstração
       setLoading(true)
       try {
         const { data } = await supabase
@@ -129,7 +132,7 @@ export default function ListaEnvios({ clinicaId }: { clinicaId: string }) {
             return (
               <div
                 key={e.id}
-                onClick={() => clicavel && router.push('/formularios/respostas/' + e.id)}
+                onClick={() => clicavel && router.push(comDemo('/formularios/respostas/' + e.id))}
                 style={{
                   padding: '14px 18px',
                   borderTop: idx === 0 ? 'none' : '1px solid ' + T.border.muted,

@@ -13,6 +13,7 @@ import { Sofia } from '@/components/minha-clinica/Sofia'
 import ConfigAtendimento from '@/components/atendimento/ConfigAtendimento'
 import { Icon, PageHeader, Tabs } from '@/components/ui'
 import { Unidades } from '@/components/minha-clinica/Unidades'
+import { ehDemo } from '@/lib/demo'
 
 type TabKey = 'visao' | 'unidades' | 'atendimento' | 'canais' | 'procedimentos' | 'sofia' | 'automacoes' | 'lgpd'
 
@@ -40,6 +41,7 @@ export default function MinhaClinicaPage() {
   useEffect(() => {
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
+    if (ehDemo()) return // demonstração: abas com dados de exemplo
     if (!m) { router.push('/login'); return }
   }, [router])
 

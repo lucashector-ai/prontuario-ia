@@ -15,6 +15,8 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { ehApoio, NOME_CARGO } from '@/lib/cargos'
 import { AtendentesChat } from '@/components/equipe/AtendentesChat'
+import { avisoDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { EQUIPE_DEMO } from '@/components/minha-clinica/demo'
 import {
   KpiCard, Tabs, EmptyState, Button, Card, Avatar, Badge, Field, Input, Select, Modal, ModalAcoes,
   SegmentedControl, IconButton, Icon, Overline, PageHeader,
@@ -60,6 +62,19 @@ function Admin() {
   const [menuAberto, setMenuAberto] = useState<string | null>(null)
 
   useEffect(() => {
+    if (ehDemo()) {
+      // Demonstração: equipe fictícia, números de exemplo
+      setMedico(MEDICO_DEMO)
+      setMedicos(EQUIPE_DEMO)
+      setStats({
+        'demo-medico': { consultas: 1842, consultasMes: 168, pacientes: 712 },
+        'demo-medico-2': { consultas: 1210, consultasMes: 141, pacientes: 398 },
+        'demo-medico-3': { consultas: 455, consultasMes: 103, pacientes: 174 },
+      })
+      setKpis({ totalPacientes: 1284, consultasMes: 412, consultasTotal: 3507 })
+      setCarregando(false)
+      return
+    }
     const ca = localStorage.getItem('clinica_admin')
     if (ca) {
       const admin = JSON.parse(ca)
@@ -138,6 +153,10 @@ function Admin() {
 
   const handleCriar = async () => {
     if (!form.nome || !form.email) { toast('Preencha nome e email', 'error'); return }
+    if (ehDemo()) {
+      setMedicos(prev => [...prev, { id: 'demo-novo-' + Date.now(), nome: form.nome, email: form.email, crm: form.crm || null, especialidade: form.especialidade || null, cargo: modalNovoTipo, ativo: true, criado_em: new Date().toISOString(), foto_url: null }])
+      setModalNovoTipo(null); setForm({ ...FORM_VAZIO }); avisoDemo('Demonstração: nenhum convite foi enviado e nada foi gravado.'); return
+    }
     if (modalNovoTipo === 'medico') {
       const cpfDigits = form.cpf.replace(/\D/g, '')
       if (cpfDigits && cpfDigits.length !== 11) { toast('CPF incompleto: são 11 dígitos (ou deixe em branco)', 'error'); return }
@@ -179,6 +198,7 @@ function Admin() {
 
   const handleEditar = async () => {
     if (!modalEditar) return
+    if (ehDemo()) { setMedicos(prev => prev.map(m => m.id === modalEditar.id ? { ...m, ...formEditar } : m)); setModalEditar(null); avisoDemo(); return }
     setSalvando(true)
     try {
       const res = await fetch(`/api/medicos/${modalEditar.id}`, {
@@ -202,6 +222,7 @@ function Admin() {
 
   const handleExcluir = async () => {
     if (!modalExcluir) return
+    if (ehDemo()) { setMedicos(prev => prev.filter(m => m.id !== modalExcluir.id)); setModalExcluir(null); avisoDemo(); return }
     setSalvando(true)
     try {
       const res = await fetch(`/api/medicos/${modalExcluir.id}`, { method: 'DELETE' })
@@ -216,6 +237,7 @@ function Admin() {
   }
 
   const toggleAtivo = async (id: string, ativo: boolean) => {
+    if (ehDemo()) { setMedicos(prev => prev.map(m => m.id === id ? { ...m, ativo: !ativo } : m)); avisoDemo(); return }
     await supabase.from('medicos').update({ ativo: !ativo }).eq('id', id)
     setMedicos(prev => prev.map(m => m.id === id ? { ...m, ativo: !ativo } : m))
     const nomeMembro = medicos.find(m => m.id === id)?.nome || 'membro'

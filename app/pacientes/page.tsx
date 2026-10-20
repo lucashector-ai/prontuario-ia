@@ -23,6 +23,8 @@ import { ConvenioBadge } from '@/components/ConvenioBadge'
 import { primeiroNome } from '@/lib/nome'
 import { registrarAcesso } from '@/lib/auditoria'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { avisoDemo, comDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { pacientesListaDemo } from './demo'
 const T = tokens
 
 const CONVENIOS_LISTA = CONVENIOS
@@ -104,7 +106,18 @@ export default function Pacientes() {
   const [drawerId, setDrawerId] = useState<string | null>(null)
   const PACIENTES_POR_PAGINA = 10
 
+  const [demo, setDemo] = useState(false)
   useEffect(() => {
+    // Modo demonstração: pacientes fictícios, nada é lido nem gravado no banco
+    if (ehDemo()) {
+      setDemo(true)
+      setMedico(MEDICO_DEMO)
+      setEhClinicaAdmin(true)
+      setMedicosClinica([{ id: MEDICO_DEMO.id, nome: MEDICO_DEMO.nome.replace(/^Dra?\.\s*/, '') }, { id: 'demo-medico-2', nome: 'Marcos Vieira' }])
+      setPacientes(pacientesListaDemo())
+      setCarregando(false)
+      return
+    }
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
@@ -137,6 +150,7 @@ export default function Pacientes() {
   }, [router])
 
   const carregarPacientes = async (_id: string) => {
+    if (ehDemo()) { setPacientes(pacientesListaDemo()); setCarregando(false); return }
     setCarregando(true)
     // O servidor decide o escopo pela sessão (clínica inteira ou só o autônomo)
     const url = '/api/pacientes'
@@ -171,6 +185,7 @@ export default function Pacientes() {
 
   const deletarSelecionados = async () => {
     if (selecionados.size === 0) return
+    if (demo) { sairSelecao(); avisoDemo(); return }
     if (!(await confirmar({ titulo: `Excluir ${selecionados.size} paciente${selecionados.size !== 1 ? 's' : ''}?`, mensagem: 'Todas as consultas e agendamentos desses pacientes também serão removidos. Essa ação não pode ser desfeita.', confirmar: 'Excluir', perigo: true }))) return
     setDeletandoLote(true)
     const ids = Array.from(selecionados)
@@ -188,6 +203,7 @@ export default function Pacientes() {
   const salvarPaciente = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!medico) return
+    if (demo) { setMostrarForm(false); avisoDemo('Demonstração: o paciente não foi cadastrado.'); return }
     setSalvando(true)
     const convenioFinal = form.convenio === 'Outro' ? normalizarConvenio(form.convenio_outro) : form.convenio
     const medicoIdFinal = form.medico_id || medico.id
@@ -219,7 +235,7 @@ export default function Pacientes() {
       mostrarMsg('erro', 'Nenhum paciente para exportar')
       return
     }
-    registrarAcesso({ acao: 'exportou', recurso: 'paciente', detalhes: { quantidade: pacientes.length } })
+    if (!demo) registrarAcesso({ acao: 'exportou', recurso: 'paciente', detalhes: { quantidade: pacientes.length } })
     // Mesmas colunas do modelo de importação: exporta, edita no Excel e importa de volta
     const esc = (v: any) => {
       if (v === null || v === undefined) return ''
@@ -245,6 +261,7 @@ export default function Pacientes() {
 
   const deletar = async (e: React.MouseEvent, p: any) => {
     e.stopPropagation()
+    if (demo) { avisoDemo(); return }
     if (!(await confirmar({ titulo: `Excluir ${p.nome}?`, mensagem: 'Todas as consultas e agendamentos do paciente também serão removidos. Essa ação não pode ser desfeita.', confirmar: 'Excluir', perigo: true }))) return
     registrarAcesso({ acao: 'excluiu', recurso: 'paciente', recursoId: p.id, pacienteId: p.id, detalhes: { nome: p.nome }, forcar: true })
     await fetch(`/api/pacientes?id=${p.id}`, { method: 'DELETE' })
@@ -346,7 +363,7 @@ export default function Pacientes() {
         {pacientes.length > 0 && (
           <Button variant="secondary" icon={Download} onClick={exportarCSV} title={'Exportar ' + pacientes.length + ' pacientes para CSV'}>Exportar</Button>
         )}
-        <Button variant="secondary" icon={Upload} onClick={() => setMostrarImport(true)} className="pac-btn-importar">Importar</Button>
+        <Button variant="secondary" icon={Upload} onClick={() => demo ? avisoDemo('Demonstração: a importação fica desligada.') : setMostrarImport(true)} className="pac-btn-importar">Importar</Button>
         <Button variant="primary" icon={UserPlus} onClick={() => setMostrarForm(true)} className="pac-btn-novo">
           <span className="pac-btn-novo-text">Novo paciente</span>
         </Button>
@@ -443,7 +460,7 @@ export default function Pacientes() {
                   if (modoSelecao) toggleSelecionado(p.id)
                   else setDrawerId(p.id)
                 }}
-                onAbrir={() => router.push('/pacientes/' + p.id)}
+                onAbrir={() => router.push(comDemo('/pacientes/' + p.id))}
                 onDeletar={(e) => deletar(e, p)}
               />
             ))
@@ -542,8 +559,8 @@ export default function Pacientes() {
           p={pacienteDrawer}
           idade={calcularIdade(pacienteDrawer.data_nascimento)}
           onClose={() => setDrawerId(null)}
-          onAbrir={() => router.push('/pacientes/' + pacienteDrawer.id)}
-          onConsulta={() => router.push(urlNovaConsulta(pacienteDrawer))}
+          onAbrir={() => router.push(comDemo('/pacientes/' + pacienteDrawer.id))}
+          onConsulta={() => router.push(comDemo(urlNovaConsulta(pacienteDrawer)))}
           onDeletar={(e) => deletar(e, pacienteDrawer)}
         />
       )}
@@ -654,7 +671,7 @@ export default function Pacientes() {
       )}
 
       <ImportarPacientes
-        aberto={mostrarImport}
+        aberto={mostrarImport && !demo}
         onFechar={() => setMostrarImport(false)}
         onImportado={() => { if (medico) carregarPacientes(medico.id) }}
         medicoId={medico?.id || ''}

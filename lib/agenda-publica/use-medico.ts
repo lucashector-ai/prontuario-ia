@@ -4,6 +4,8 @@ import { log } from '@/lib/logger'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { ehDemo, CLINICA_DEMO, MEDICO_DEMO } from '@/lib/demo'
+import { CONFIG_DEFAULT } from '@/lib/agenda-publica/slots'
 
 export type MedicoSession = {
   id: string
@@ -40,6 +42,16 @@ export function useMedicoLogado() {
 
   useEffect(() => {
     async function carregar() {
+      // Demonstração: médicos fictícios com agenda online de exemplo (nada vai ao banco)
+      if (ehDemo()) {
+        const cfg = { ...CONFIG_DEFAULT, horario_inicio: '08:00', horario_fim: '17:00', modo_aprovacao: 'manual' as const }
+        const lista: MedicoSession[] = [
+          { id: MEDICO_DEMO.id, nome: MEDICO_DEMO.nome, email: MEDICO_DEMO.email, crm: MEDICO_DEMO.crm, especialidade: MEDICO_DEMO.especialidade, clinica_id: CLINICA_DEMO.id, slug_publico: 'dra-helena-duarte', agenda_publica_ativa: true, agenda_publica_config: cfg },
+          { id: 'demo-medico-2', nome: 'Dr. Marcos Vieira', email: 'marcos.vieira@exemplo.com.br', crm: '654321', especialidade: 'Cardiologia', clinica_id: CLINICA_DEMO.id, slug_publico: 'dr-marcos-vieira', agenda_publica_ativa: false, agenda_publica_config: cfg },
+        ]
+        setEstado({ tipo: 'admin', adminClinicaId: CLINICA_DEMO.id, medicoAtivo: lista[0], medicosDisponiveis: lista, loading: false })
+        return
+      }
       try {
         const rawMedico = localStorage.getItem('medico')
         const rawAdmin = localStorage.getItem('clinica_admin')
@@ -120,7 +132,7 @@ export function useMedicoLogado() {
     })
 
     // Se for o próprio médico logado, atualiza localStorage tbm
-    if (estado.tipo === 'medico') {
+    if (estado.tipo === 'medico' && !ehDemo()) {
       const raw = localStorage.getItem('medico')
       if (raw) {
         const med = JSON.parse(raw)

@@ -8,6 +8,7 @@ import type { LucideIcon } from 'lucide-react'
 import { Check, Download, Eye, Lock, PenLine, ShieldCheck, Trash2, TriangleAlert, Upload } from 'lucide-react'
 import { Button, Card, Field, IconTile, Input } from '@/components/ui'
 import { notificar } from '@/components/ui/dialogos'
+import { avisoDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
 
 const T = tokens
 
@@ -20,6 +21,7 @@ export default function LGPD() {
   const [confirmDelete, setConfirmDelete] = useState('')
 
   useEffect(() => {
+    if (ehDemo()) { setMedico(MEDICO_DEMO); return } // demonstração: nada é lido nem apagado
     const ca_ = localStorage.getItem('clinica_admin')
     const m = ca_ || localStorage.getItem('medico')
     if (!m) { router.push('/login'); return }
@@ -31,6 +33,7 @@ export default function LGPD() {
   }
 
   const exportarDados = async () => {
+    if (ehDemo()) { avisoDemo('Demonstração: nenhum dado foi exportado.'); return }
     setExportando(true)
     try {
       const [{ data: pacientes }, { data: consultas }, { data: agendamentos }] = await Promise.all([
@@ -76,6 +79,7 @@ export default function LGPD() {
       mostrarMsg('erro', 'Email não confere')
       return
     }
+    if (ehDemo()) { setConfirmDelete(''); avisoDemo('Demonstração: nada foi excluído.'); return }
     setDeletando(true)
     try {
       await supabase.from('consultas').delete().eq('medico_id', medico.id)

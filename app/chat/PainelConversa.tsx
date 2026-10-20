@@ -14,6 +14,7 @@ import { AvatarConversa, CanalIcone, EtapaBadge, ItemMenu, MenuConversa, Popover
 import { supabase } from '@/lib/supabase'
 
 import { ConvenioBadge } from '@/components/ConvenioBadge'
+import { comDemo, ehDemo } from '@/lib/demo'
 const T = tokens
 const EMOJIS = ['😊', '🙂', '😉', '👍', '🙏', '👏', '❤️', '😅', '😂', '🤝', '✅', '📅', '⏰', '📍', '💊', '🩺', '📄', '📞', '🎉', '😔', '🤒', '💬', '👋', '⭐']
 
@@ -229,7 +230,7 @@ export function PainelConversa({ api, c, onVoltar }: { api: ChatApi; c: Conversa
         </div>
       </div>
 
-      {painelContato && <PainelContato c={c} api={api} onFechar={() => setPainelContato(false)} onAbrirPaciente={id => router.push('/pacientes/' + id)} />}
+      {painelContato && <PainelContato c={c} api={api} onFechar={() => setPainelContato(false)} onAbrirPaciente={id => router.push(comDemo('/pacientes/' + id))} />}
     </div>
   )
 }
@@ -381,7 +382,7 @@ type StatusCanal = { canal: 'whatsapp' | 'instagram' | 'messenger'; contas: stri
 function useStatusCanais(): StatusCanal[] | null {
   const [st, setSt] = useState<StatusCanal[] | null>(null)
   useEffect(() => {
-    const demo = new URLSearchParams(window.location.search).get('demo') === '1'
+    const demo = ehDemo()
     const montar = (lista: { canal: string; nome: string | null; status: string }[]) =>
       (['whatsapp', 'instagram', 'messenger'] as const).map(canal => {
         const doCanal = lista.filter(c => c.canal === canal)
@@ -426,19 +427,19 @@ export function ChatVazio({ nome }: { nome: string }) {
                     )}
                   </div>
                   {s.erro ? (
-                    <a href="/minha-clinica?aba=canais" style={{ fontSize: 12.5, fontWeight: 600, color: T.status.danger, textDecoration: 'none' }}>Reconectar</a>
+                    <a href={comDemo('/minha-clinica?aba=canais')} style={{ fontSize: 12.5, fontWeight: 600, color: T.status.danger, textDecoration: 'none' }}>Reconectar</a>
                   ) : conectado ? (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: T.status.success, background: T.status.successBg, padding: '4px 10px', borderRadius: 99 }}>
                       <span style={{ width: 6, height: 6, borderRadius: 99, background: T.status.success }} />Conectado
                     </span>
                   ) : (
-                    <a href="/minha-clinica?aba=canais" style={{ fontSize: 12.5, fontWeight: 600, color: T.brand.primary, textDecoration: 'none', padding: '5px 12px', borderRadius: 9, border: `1px solid ${T.brand.primaryAccent}` }}>Conectar</a>
+                    <a href={comDemo('/minha-clinica?aba=canais')} style={{ fontSize: 12.5, fontWeight: 600, color: T.brand.primary, textDecoration: 'none', padding: '5px 12px', borderRadius: 9, border: `1px solid ${T.brand.primaryAccent}` }}>Conectar</a>
                   )}
                 </div>
               )
             })}
           </div>
-          <a href="/minha-clinica?aba=canais" style={{ fontSize: 12.5, color: T.text.tertiary, textDecoration: 'none' }}>Gerenciar canais</a>
+          <a href={comDemo('/minha-clinica?aba=canais')} style={{ fontSize: 12.5, color: T.text.tertiary, textDecoration: 'none' }}>Gerenciar canais</a>
         </div>
       </div>
     )
@@ -460,7 +461,7 @@ export function ChatVazio({ nome }: { nome: string }) {
           WhatsApp, Instagram Direct e Messenger chegam aqui. A Sofia responde sozinha; quando precisar, assuma a conversa,
           transfira para alguém da equipe e acompanhe tudo no Quadro.
         </div>
-        <a href="/minha-clinica?aba=canais" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#fff', textDecoration: 'none', padding: '9px 16px', borderRadius: 10, background: T.brand.primary }}>
+        <a href={comDemo('/minha-clinica?aba=canais')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#fff', textDecoration: 'none', padding: '9px 16px', borderRadius: 10, background: T.brand.primary }}>
           Conectar canais
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: T.text.tertiary }}><Lock size={13} />Notas internas ficam só para a equipe</div>

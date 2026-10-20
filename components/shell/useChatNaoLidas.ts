@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { ehApoio, FILTRO_APOIO } from '@/lib/cargos'
+import { ehDemo } from '@/lib/demo'
 
 /**
  * Quantas conversas do Chat têm mensagem recebida não lida (para o selo no menu).
@@ -13,7 +14,7 @@ export function useChatNaoLidas() {
   const [total, setTotal] = useState(0)
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('demo') === '1') { setTotal(3); return }
+    if (ehDemo()) { setTotal(3); return }
     let medicoId: string | null = null
     let parar = false
 

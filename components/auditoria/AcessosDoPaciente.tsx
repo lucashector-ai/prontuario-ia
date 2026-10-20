@@ -12,6 +12,7 @@ import { Avatar, Button, Card } from '@/components/ui'
 import type { RegistroAuditoria } from '@/lib/auditoria'
 import { ROTULO_USUARIO } from '@/lib/auditoria'
 import { buscarAuditoria, dadosDemoAuditoria, fmtDataHora, fmtRelativo, fraseAcesso } from './util'
+import { ehDemo as modoDemo } from '@/lib/demo'
 
 const T = tokens
 
@@ -29,7 +30,7 @@ export default function AcessosDoPaciente({ pacienteId, limite = 5, demo, onVerT
     if (!pacienteId) return
     let vivo = true
     let ehDemo = !!demo
-    try { if (new URLSearchParams(window.location.search).get('demo') === '1') ehDemo = true } catch {}
+    try { if (modoDemo()) ehDemo = true } catch {}
     if (ehDemo) {
       setRegistros(dadosDemoAuditoria(pacienteId).filter(r => r.paciente_id === pacienteId).slice(0, limite))
       setCarregando(false)

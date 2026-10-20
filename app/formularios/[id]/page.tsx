@@ -7,6 +7,8 @@ import { buscarTemplate, atualizarTemplate } from '@/lib/formularios/templates'
 import type { Template, Campo } from '@/lib/formularios/types'
 import { useToast } from '@/components/Toast'
 import BuilderCampos from './BuilderCampos'
+import { avisoDemo, comDemo, ehDemo } from '@/lib/demo'
+import { TEMPLATES_DEMO } from '../demo'
 
 export default function EditarTemplatePage() {
   const router = useRouter()
@@ -29,14 +31,16 @@ export default function EditarTemplatePage() {
   useEffect(() => {
     async function carregar() {
       try {
+        const demo = ehDemo()
         const rawMedico = localStorage.getItem('medico')
         const rawAdmin = localStorage.getItem('clinica_admin')
-        if (!rawMedico && !rawAdmin) {
+        if (!demo && !rawMedico && !rawAdmin) {
           router.replace('/login')
           return
         }
 
-        const t = await buscarTemplate(id)
+        // Demonstração: modelo fictício (qualquer id cai no primeiro)
+        const t = demo ? (TEMPLATES_DEMO.find(x => x.id === id) || TEMPLATES_DEMO[0]) : await buscarTemplate(id)
         if (!t) {
           setErro('Formulário não encontrado')
           return
@@ -65,6 +69,7 @@ export default function EditarTemplatePage() {
       toast('Dê um nome ao formulário', 'error')
       return
     }
+    if (ehDemo()) { setModificado(false); avisoDemo(); return }
     setSalvando(true)
     try {
       const { erro: erroSalvar } = await atualizarTemplate(id, {
@@ -101,7 +106,7 @@ export default function EditarTemplatePage() {
         </h2>
         <button
           type="button"
-          onClick={() => router.push('/formularios')}
+          onClick={() => router.push(comDemo('/formularios'))}
           style={{
             marginTop: 16,
             padding: '10px 18px',
@@ -126,7 +131,7 @@ export default function EditarTemplatePage() {
         {/* Breadcrumb */}
         <button
           type="button"
-          onClick={() => router.push('/formularios')}
+          onClick={() => router.push(comDemo('/formularios'))}
           style={{
             display: 'inline-flex',
             alignItems: 'center',

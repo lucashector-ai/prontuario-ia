@@ -1,3 +1,5 @@
+import { ehDemo } from '@/lib/demo'
+export { ehDemo }
 /** Datas de retorno ('YYYY-MM-DD', sem fuso) — utilitários do cliente. */
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
@@ -66,4 +68,3 @@ export function telefoneBonito(t?: string | null): string {
   return t || ''
 }
 
-export const ehDemo = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'

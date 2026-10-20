@@ -9,6 +9,16 @@ import { tokens as T } from '@/lib/design-tokens'
 import { Button, Card, EmptyState, Field, Input, Modal, ModalAcoes } from '@/components/ui'
 import { notificar } from '@/components/ui/dialogos'
 import { trocarDeUnidade } from '@/lib/unidades-cliente'
+import { avisoDemo, ehDemo } from '@/lib/demo'
+
+// Demonstração: rede fictícia com duas unidades
+const UNIDADES_DEMO: { organizacao: any; unidades: U[] } = {
+  organizacao: { nome: 'Rede Bem Viver' },
+  unidades: [
+    { id: 'demo', nome: 'Clínica Bem Viver', apelido: 'Centro', atual: true, equipe: 5, medicos: 3, pacientes: 1284, hoje: { agendados: 23, atendidos: 11 }, mes: { consultas: 412 } },
+    { id: 'demo-un-2', nome: 'Clínica Bem Viver — Zona Sul', apelido: 'Zona Sul', atual: false, equipe: 4, medicos: 2, pacientes: 638, hoje: { agendados: 14, atendidos: 6 }, mes: { consultas: 231 } },
+  ],
+}
 
 type U = { id: string; nome: string; apelido: string | null; atual: boolean; equipe: number; medicos: number; pacientes: number | null; hoje: { agendados: number | null; atendidos: number | null }; mes: { consultas: number | null } }
 
@@ -19,11 +29,12 @@ export function Unidades() {
   const [form, setForm] = useState({ nome: '', apelido: '', telefone: '', endereco: '' })
   const [salvando, setSalvando] = useState(false)
 
-  const carregar = () => fetch('/api/unidades').then(async r => { const j = await r.json(); if (!r.ok) setErro(j.error || 'Não foi possível carregar'); else setDados(j) }).catch(() => setErro('Sem conexão'))
+  const carregar = () => ehDemo() ? Promise.resolve(setDados(UNIDADES_DEMO)) : fetch('/api/unidades').then(async r => { const j = await r.json(); if (!r.ok) setErro(j.error || 'Não foi possível carregar'); else setDados(j) }).catch(() => setErro('Sem conexão'))
   useEffect(() => { carregar() }, [])
 
   async function criar() {
     if (!form.nome.trim()) return notificar('Dê um nome para a unidade', 'erro')
+    if (ehDemo()) { setNova(false); avisoDemo(); return }
     setSalvando(true)
     try {
       const r = await fetch('/api/unidades', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
@@ -64,7 +75,7 @@ export function Unidades() {
                 <div key={x.l}><div style={{ fontSize: 19, fontWeight: 750, fontVariantNumeric: 'tabular-nums' }}>{x.v}</div><div style={{ fontSize: 11.5, color: T.text.tertiary }}>{x.l}</div></div>
               ))}
             </div>
-            {!u.atual && <Button variant="secondary" icon={LogIn} onClick={() => trocarDeUnidade(u.id).catch(e => notificar(e.message, 'erro'))}>Entrar nesta unidade</Button>}
+            {!u.atual && <Button variant="secondary" icon={LogIn} onClick={() => ehDemo() ? avisoDemo('Demonstração: a troca de unidade não está disponível.') : trocarDeUnidade(u.id).catch(e => notificar(e.message, 'erro'))}>Entrar nesta unidade</Button>}
           </Card>
         ))}
       </div>

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { WifiOff, ServerCrash, RotateCw } from 'lucide-react'
 import { tokens } from '@/lib/design-tokens'
+import { ehDemo } from '@/lib/demo'
 
 const T = tokens
 type Estado = 'ok' | 'offline' | 'servidor'
@@ -17,7 +18,8 @@ export function AvisoConexao() {
   const checar = useCallback(async () => {
     if (typeof navigator !== 'undefined' && !navigator.onLine) { setEstado('offline'); return }
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    if (!url) return
+    // Demonstração não usa o banco: não há o que avisar
+    if (!url || ehDemo()) { setEstado('ok'); return }
     setChecando(true)
     try {
       // no-cors: só queremos saber se o servidor é alcançável (DNS/rede); a resposta é opaca

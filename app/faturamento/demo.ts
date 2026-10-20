@@ -41,13 +41,13 @@ export const DEMO_PRECOS: Record<string, ItemPreco[]> = {
   ],
 }
 
-const PROF = { nome: 'Dra. Camila Andrade', conselho: '06', numero: '145872', uf: '35', cbos: '225120' }
+const PROF = { nome: 'Dra. Helena Duarte', conselho: '06', numero: '123456', uf: '35', cbos: '225125' }
 const consulta = (valor: number): Procedimento[] => [{ codigo_tuss: '10101012', descricao: 'Consulta em consultório', quantidade: 1, valor_unitario: valor }]
 
 function g(n: number, op: string, nome: string, carteira: string, data: string, status: StatusGuia, extra: Partial<Guia> = {}): Guia {
   const procedimentos = extra.procedimentos || consulta(op === 'op-unimed' ? 120 : 150)
   return {
-    id: `guia-${n}`, operadora_id: op, medico_id: 'demo', paciente_id: `pac-${n}`, consulta_id: `cons-${n}`, tipo: 'consulta',
+    id: `guia-${n}`, operadora_id: op, medico_id: 'demo-medico', paciente_id: `pac-${n}`, consulta_id: `cons-${n}`, tipo: 'consulta',
     numero_guia_prestador: String(n), numero_carteira: carteira, nome_beneficiario: nome, data_atendimento: data,
     cid_principal: null, procedimentos, valor_total: totalProcedimentos(procedimentos), tipo_consulta: '2',
     indicacao_acidente: '9', carater_atendimento: '1', profissional: PROF, status,

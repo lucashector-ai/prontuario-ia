@@ -10,8 +10,30 @@ import { supabase } from '@/lib/supabase'
 import { tokens } from '@/lib/design-tokens'
 import { Avatar, Icon, IconButton, EmptyState, Button } from '@/components/ui'
 import { confirmar } from '@/components/ui/dialogos'
+import { avisoDemo, comDemo, ehDemo, MEDICO_DEMO } from '@/lib/demo'
+import { PACIENTES_DEMO } from '@/lib/demo-dados'
 
 const T = tokens
+
+// ── Modo demonstração: salas e agendamentos fictícios (nada é gravado) ──
+function dadosDemoTele() {
+  const p = (i: number) => ({ nome: PACIENTES_DEMO[i].nome, telefone: PACIENTES_DEMO[i].telefone })
+  const min = (n: number) => new Date(Date.now() + n * 60000).toISOString()
+  const proxHora = new Date(); proxHora.setMinutes(proxHora.getMinutes() < 30 ? 30 : 60, 0, 0)
+  const salas = [
+    { id: 'demo-tele-1', sala_id: 'demoa1b2c3', titulo: 'Consulta - K7Q2', status: 'em_andamento', criado_em: min(-12), iniciada_em: min(-9), pacientes: p(10) },
+    { id: 'demo-tele-2', sala_id: 'demod4e5f6', titulo: 'Consulta - M3X8', status: 'aguardando', criado_em: min(-3), pacientes: p(5) },
+    { id: 'demo-tele-3', sala_id: 'demog7h8i9', titulo: 'Consulta - R5T1', status: 'encerrada', criado_em: min(-60 * 26), encerrada_em: min(-60 * 25), duracao_segundos: 1140, pacientes: p(1) },
+    { id: 'demo-tele-4', sala_id: 'demoj1k2l3', titulo: 'Consulta - W9P4', status: 'encerrada', criado_em: min(-60 * 74), encerrada_em: min(-60 * 73), duracao_segundos: 960, pacientes: p(7) },
+  ]
+  const ag = (id: string, quando: string, i: number, motivo: string) => ({ id, data_hora: quando, motivo, meet_link: '/sala/' + id, status: 'agendado', pacientes: p(i) })
+  const amanha = new Date(); amanha.setDate(amanha.getDate() + 1); amanha.setHours(10, 0, 0, 0)
+  const agendadas = [
+    ag('demo-ag-tele-1', proxHora.toISOString(), 3, 'Retorno com exames'),
+    ag('demo-ag-tele-2', amanha.toISOString(), 9, 'Rinite alérgica — retorno'),
+  ]
+  return { salas, agendadas }
+}
 
 const linkSala = (salaId: string) => window.location.origin + '/sala/' + salaId
 const codigoSala = (salaId: string) => (salaId || '').slice(0, 3).toUpperCase() + '-' + (salaId || '').slice(3, 7).toUpperCase()
@@ -46,8 +68,21 @@ export default function Teleconsulta() {
   const [toast, setToast] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
+  const demo = useRef(false)
+  // Na demonstração a sala de vídeo não abre (não há chamada real)
+  const abrirSala = (url: string) => {
+    if (demo.current) { avisoDemo('Demonstração: a sala de vídeo não é aberta.'); return }
+    window.open(url, '_blank')
+  }
+
   useEffect(() => {
     (async () => {
+      if (ehDemo()) {
+        demo.current = true
+        const d = dadosDemoTele()
+        setMedico(MEDICO_DEMO); setSalas(d.salas); setAgendadas(d.agendadas); setCarregando(false)
+        return
+      }
       const ca = localStorage.getItem('clinica_admin')
       if (ca) {
         const admin = JSON.parse(ca)
@@ -95,6 +130,7 @@ export default function Teleconsulta() {
 
   const criarSala = async (abrir: boolean) => {
     if (!medico || criando) return
+    if (demo.current) { setMenuNovo(false); avisoDemo(); return }
     setCriando(true); setMenuNovo(false)
     const cod = Math.random().toString(36).slice(-4).toUpperCase()
     const r = await fetch('/api/teleconsulta', {
@@ -119,7 +155,7 @@ export default function Teleconsulta() {
     // Aceita link completo (…/sala/<id>) ou o próprio id da sala
     const m = v.match(/\/sala\/([^/?#\s]+)/)
     const id = m ? m[1] : v.replace(/\s/g, '')
-    window.open('/sala/' + id, '_blank')
+    abrirSala('/sala/' + id)
     setCodigo('')
   }
 
@@ -129,6 +165,7 @@ export default function Teleconsulta() {
   }
 
   const enviarWpp = async (nomeTelefone: { telefone?: string } | undefined, link: string) => {
+    if (demo.current) { avisoDemo('Demonstração: nenhuma mensagem foi enviada.'); return }
     const msgTxt = 'Olá! Dr(a). ' + medico.nome + ' te convidou para uma teleconsulta.\n\nAcesse pelo link (não precisa instalar nada):\n' + link
     if (nomeTelefone?.telefone) {
       await fetch('/api/whatsapp/enviar', {
@@ -144,6 +181,10 @@ export default function Teleconsulta() {
 
   const encerrar = async (id: string) => {
     if (!(await confirmar({ titulo: 'Encerrar esta sala?', mensagem: 'O link deixa de funcionar e quem estiver na chamada é desconectado.', confirmar: 'Encerrar sala', perigo: true }))) return
+    if (demo.current) {
+      setSalas(l => l.map(x => x.id === id ? { ...x, status: 'encerrada', encerrada_em: new Date().toISOString() } : x))
+      avisoDemo(); return
+    }
     await supabase.from('teleconsultas').update({ status: 'encerrada', encerrada_em: new Date().toISOString() }).eq('id', id)
     carregar(medico.id)
     avisar('Sala encerrada')
@@ -163,7 +204,7 @@ export default function Teleconsulta() {
 
   const opcoesNovo: { icon: LucideIcon; label: string; desc: string; fn: () => void }[] = [
     { icon: Zap, label: 'Iniciar agora', desc: 'Abre a sala e copia o link', fn: () => criarSala(true) },
-    { icon: CalendarPlus, label: 'Agendar para depois', desc: 'Marca na agenda com link de vídeo', fn: () => router.push('/agenda?nova_teleconsulta=1') },
+    { icon: CalendarPlus, label: 'Agendar para depois', desc: 'Marca na agenda com link de vídeo', fn: () => router.push(comDemo('/agenda?nova_teleconsulta=1')) },
     { icon: Link2, label: 'Criar link para enviar', desc: 'Gera a sala sem entrar agora', fn: () => criarSala(false) },
   ]
 
@@ -173,7 +214,7 @@ export default function Teleconsulta() {
         icon={VideoOff}
         titulo="Nenhum médico ativo na clínica"
         descricao="A teleconsulta é feita em nome de um médico. Cadastre ou reative um médico em Minha clínica para começar."
-        acao={<Button onClick={() => router.push('/minha-clinica')}>Ir para Minha clínica</Button>}
+        acao={<Button onClick={() => router.push(comDemo('/minha-clinica'))}>Ir para Minha clínica</Button>}
       />
     </div>
   )
@@ -265,7 +306,7 @@ export default function Teleconsulta() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <BotaoEscuro primario onClick={() => window.open(proxima.meet_link, '_blank')}><Video size={16} strokeWidth={1.6} />Entrar na sala</BotaoEscuro>
+                <BotaoEscuro primario onClick={() => abrirSala(proxima.meet_link)}><Video size={16} strokeWidth={1.6} />Entrar na sala</BotaoEscuro>
                 <BotaoEscuro titulo="Copiar link" onClick={() => copiar(proxima.meet_link)}><Link2 size={16} strokeWidth={1.6} /></BotaoEscuro>
                 <BotaoEscuro titulo="Enviar lembrete por WhatsApp" onClick={() => enviarWpp(proxima.pacientes, proxima.meet_link)}><MessageCircle size={16} strokeWidth={1.6} /></BotaoEscuro>
               </div>
@@ -277,7 +318,7 @@ export default function Teleconsulta() {
               </span>
               <span style={{ fontSize: 16, fontWeight: 700 }}>Nenhuma teleconsulta agendada</span>
               <span style={{ fontSize: 12.5, color: '#A8A5B8', lineHeight: 1.5 }}>Agende pela agenda marcando “com vídeo” — o link é enviado ao paciente automaticamente.</span>
-              <div><BotaoEscuro onClick={() => router.push('/agenda?nova_teleconsulta=1')}><CalendarPlus size={16} strokeWidth={1.6} />Agendar teleconsulta</BotaoEscuro></div>
+              <div><BotaoEscuro onClick={() => router.push(comDemo('/agenda?nova_teleconsulta=1'))}><CalendarPlus size={16} strokeWidth={1.6} />Agendar teleconsulta</BotaoEscuro></div>
             </div>
           )}
         </div>
@@ -299,7 +340,7 @@ export default function Teleconsulta() {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-            {ativas.map(s => <CartaoSala key={s.id} sala={s} medico={medico} onEntrar={() => window.open('/sala/' + s.sala_id, '_blank')}
+            {ativas.map(s => <CartaoSala key={s.id} sala={s} medico={medico} onEntrar={() => abrirSala('/sala/' + s.sala_id)}
               onCopiar={() => copiar(linkSala(s.sala_id))} onWpp={() => enviarWpp(s.pacientes, linkSala(s.sala_id))} onEncerrar={() => encerrar(s.id)} />)}
           </div>
         )}
@@ -310,7 +351,7 @@ export default function Teleconsulta() {
         <div style={lista}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
             <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', flex: 1 }}>Agendadas</h3>
-            <button onClick={() => router.push('/agenda?nova_teleconsulta=1')} style={linkBtn}
+            <button onClick={() => router.push(comDemo('/agenda?nova_teleconsulta=1'))} style={linkBtn}
               onMouseEnter={e => e.currentTarget.style.background = T.brand.primarySubtle} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <Plus size={14} />Agendar
             </button>
@@ -328,7 +369,7 @@ export default function Teleconsulta() {
                 <span style={{ fontSize: 12, color: T.text.quaternary }}>{a.motivo || 'Teleconsulta'}</span>
               </span>
               <IconButton icon={Link2} size={32} title="Copiar link" onClick={() => copiar(a.meet_link)} />
-              <Button variant="secondary" size="sm" onClick={() => window.open(a.meet_link, '_blank')}>Iniciar</Button>
+              <Button variant="secondary" size="sm" onClick={() => abrirSala(a.meet_link)}>Iniciar</Button>
             </div>
           ))}
         </div>
@@ -352,7 +393,7 @@ export default function Teleconsulta() {
                   <span style={nomeLinha}>{e.pacientes?.nome || e.titulo || 'Teleconsulta'}</span>
                   <span style={{ fontSize: 12, color: T.text.quaternary }}>{[dur, quando].filter(Boolean).join(' · ')}</span>
                 </span>
-                <button onClick={() => window.open('/sala/' + e.sala_id + '/historico', '_blank')} style={{
+                <button onClick={() => abrirSala('/sala/' + e.sala_id + '/historico')} style={{
                   display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: T.brand.primary,
                   background: T.brand.primarySubtle, padding: '5px 9px', borderRadius: 99, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit',
                 }}>

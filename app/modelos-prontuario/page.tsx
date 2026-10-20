@@ -22,6 +22,7 @@ import {
   type CampoSoap, type ModeloProntuario, type SecaoModelo,
 } from '@/lib/ai/modelos-prontuario'
 import { useModelosProntuario } from '@/components/ia/useModelosProntuario'
+import { ehDemo } from '@/lib/demo'
 
 const T = tokens
 
@@ -43,7 +44,7 @@ export default function ModelosProntuarioPage() {
   const [demo, setDemo] = useState(false)
   const [pronto, setPronto] = useState(false)
   useEffect(() => {
-    setDemo(new URLSearchParams(window.location.search).get('demo') === '1')
+    setDemo(ehDemo())
     setPronto(true)
   }, [])
 

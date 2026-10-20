@@ -10,6 +10,7 @@ import { tokens as T } from '@/lib/design-tokens'
 import { Button, EmptyState, Field, Input, Modal, ModalAcoes, Select } from '@/components/ui'
 import { notificar } from '@/components/ui/dialogos'
 import { SenhaStrength, senhaEhForte } from '@/components/SenhaStrength'
+import { avisoDemo, ehDemo } from '@/lib/demo'
 
 type Atendente = { id: string; nome: string; email: string; cargo: string; ativo: boolean; medico_id?: string }
 
@@ -20,6 +21,7 @@ export function AtendentesChat({ medicos }: { medicos: { id: string; nome: strin
   const [salvando, setSalvando] = useState(false)
 
   async function carregar() {
+    if (ehDemo()) { setLista([{ id: 'demo-at-1', nome: 'Carla Nogueira', email: 'carla.atendimento@exemplo.com.br', cargo: 'atendente', ativo: true, medico_id: medicos[0]?.id, caixa: medicos[0]?.nome || 'Dra. Helena Duarte' }]); return }
     const todas = await Promise.all(medicos.map(async m => {
       const r = await fetch('/api/atendentes?medico_id=' + m.id).then(r => r.json()).catch(() => ({ atendentes: [] }))
       return (r.atendentes || []).map((a: Atendente) => ({ ...a, medico_id: m.id, caixa: m.nome }))
@@ -31,6 +33,7 @@ export function AtendentesChat({ medicos }: { medicos: { id: string; nome: strin
   async function criar() {
     if (!form.nome.trim() || !form.email.trim() || !form.medico_id) return notificar('Preencha nome, email e a caixa de mensagens', 'erro')
     if (!senhaEhForte(form.senha)) return notificar('A senha precisa de 8+ caracteres, com maiúscula, minúscula e número', 'erro')
+    if (ehDemo()) { setNovo(false); setForm({ nome: '', email: '', senha: '', medico_id: '' }); avisoDemo(); return }
     setSalvando(true)
     try {
       const r = await fetch('/api/atendentes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, email: form.email.trim().toLowerCase() }) })
@@ -42,6 +45,7 @@ export function AtendentesChat({ medicos }: { medicos: { id: string; nome: strin
   }
 
   async function desativar(a: Atendente) {
+    if (ehDemo()) { setLista(l => (l || []).filter(x => x.id !== a.id)); avisoDemo(); return }
     await fetch('/api/atendentes?id=' + a.id, { method: 'DELETE' }).catch(() => {})
     notificar(`${a.nome} não tem mais acesso ao chat`); carregar()
   }

@@ -32,19 +32,19 @@ type Perfil = { med: MedRel; slot: number; duracao: number; preenchimento: numbe
 
 const PERFIS: Perfil[] = [
   {
-    med: { id: 'demo-m1', nome: 'Dra. Mariana Albuquerque', especialidade: 'Cardiologia', cor: tokens.data.purple,
+    med: { id: 'demo-medico', nome: 'Dra. Helena Duarte', especialidade: 'Clínica médica', cor: tokens.data.purple,
       jornada: { dias_semana: [1, 2, 3, 4, 5], horario_inicio: '08:00', horario_fim: '18:00', intervalo_almoco: ['12:00', '13:00'] } },
     slot: 30, duracao: 30, preenchimento: 0.8, tele: 0.08, faltaBase: 0.06,
   },
   {
-    med: { id: 'demo-m2', nome: 'Dr. Rafael Montenegro', especialidade: 'Dermatologia', cor: tokens.data.pink,
+    med: { id: 'demo-medico-2', nome: 'Dr. Marcos Vieira', especialidade: 'Cardiologia', cor: tokens.data.pink,
       jornada: { dias_semana: [1, 2, 3, 4, 5], horario_inicio: '09:00', horario_fim: '19:00', intervalo_almoco: ['13:00', '14:00'] } },
     slot: 30, duracao: 30, preenchimento: 0.66, tele: 0.04, faltaBase: 0.07,
   },
   {
-    med: { id: 'demo-m3', nome: 'Dra. Camila Torres', especialidade: 'Psiquiatria', cor: tokens.data.green,
+    med: { id: 'demo-medico-3', nome: 'Dra. Paula Rezende', especialidade: 'Pediatria', cor: tokens.data.green,
       jornada: { dias_semana: [1, 2, 4, 5], horario_inicio: '08:00', horario_fim: '17:00', intervalo_almoco: ['12:00', '13:00'] } },
-    slot: 60, duracao: 50, preenchimento: 0.58, tele: 0.42, faltaBase: 0.09,
+    slot: 30, duracao: 30, preenchimento: 0.62, tele: 0.1, faltaBase: 0.09,
   },
 ]
 
