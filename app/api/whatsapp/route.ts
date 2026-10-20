@@ -1028,7 +1028,7 @@ export async function POST(req: NextRequest) {
               tipo: agendarData.tipo || 'consulta',
               motivo: agendarData.motivo || 'Consulta via WhatsApp',
               status: 'agendado',
-              observacoes: `Agendado pela Sofia IA via WhatsApp — ${conversa.nome_contato || telefone}${agendarData.modalidade ? ' · ' + agendarData.modalidade : ''}`,
+              observacoes: `Agendado pela Sofia pelo WhatsApp — ${conversa.nome_contato || telefone}${agendarData.modalidade ? ' · ' + agendarData.modalidade : ''}`,
               meet_link: agendarData.modalidade === 'online' ? `https://prontuario-ia-five.vercel.app/sala/${Math.random().toString(36).substring(2, 10)}` : null,
               meet_code: agendarData.modalidade === 'online' ? Math.random().toString(36).substring(2, 10) : null,
             }).select().single()

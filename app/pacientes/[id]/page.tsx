@@ -36,7 +36,7 @@ const STATUS_LABEL: Record<string, string> = { agendado: 'Agendado', confirmado:
 
 // Rótulos legíveis para os campos do formulário de edição
 const CAMPOS_TEXTO: { k: string; l: string }[] = [
-  { k: 'nome', l: 'Nome' }, { k: 'cpf', l: 'CPF' }, { k: 'telefone', l: 'Telefone' }, { k: 'email', l: 'E-mail' },
+  { k: 'nome', l: 'Nome' }, { k: 'cpf', l: 'CPF' }, { k: 'telefone', l: 'Telefone' }, { k: 'email', l: 'Email' },
   { k: 'endereco', l: 'Endereço' }, { k: 'convenio', l: 'Convênio' }, { k: 'nr_carteirinha', l: 'Nº da carteirinha' },
 ]
 const CAMPOS_CLINICOS: { k: string; l: string }[] = [
@@ -396,7 +396,7 @@ export default function PacienteDetalhe() {
                   const info: { icon: LucideIcon; l: string; v: any; mono?: boolean }[] = [
                     { icon: IdCard, l: 'CPF', v: paciente?.cpf, mono: true },
                     { icon: Phone, l: 'Telefone', v: paciente?.telefone, mono: true },
-                    { icon: Mail, l: 'E-mail', v: paciente?.email },
+                    { icon: Mail, l: 'Email', v: paciente?.email },
                     { icon: Cake, l: 'Idade', v: idadePac !== null ? idadePac + ' anos' : null },
                     { icon: MapPin, l: 'Endereço', v: paciente?.endereco },
                     { icon: Shield, l: 'Convênio', v: paciente?.convenio ? normalizarConvenio(paciente.convenio) : null },
@@ -509,7 +509,7 @@ export default function PacienteDetalhe() {
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             <div style={{ flex: '1 1 300px', maxWidth: 360, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {consultas.length === 0 ? (
-                <Card><EmptyState icon={Stethoscope} titulo="Nenhuma consulta ainda" descricao="Inicie uma nova consulta pra registrar." /></Card>
+                <Card><EmptyState icon={Stethoscope} titulo="Nenhuma consulta ainda" descricao="Inicie uma nova consulta para registrar." /></Card>
               ) : consultas.map(c => {
                 const ativa = consultaAberta?.id === c.id
                 const ehTele = !!(c.meet_link || c.sala_id)
@@ -602,7 +602,7 @@ export default function PacienteDetalhe() {
                 </Card>
               ) : (
                 <div style={{ border: `1px dashed ${T.border.strong}`, borderRadius: T.radius['2xl'], minHeight: 360, display: 'grid', placeItems: 'center' }}>
-                  <EmptyState icon={ClipboardList} titulo="Selecione uma consulta" descricao="Clique em qualquer consulta na lista pra ver os detalhes." />
+                  <EmptyState icon={ClipboardList} titulo="Selecione uma consulta" descricao="Escolha uma consulta na lista para ver os detalhes." />
                 </div>
               )}
             </div>
@@ -650,7 +650,7 @@ export default function PacienteDetalhe() {
                           <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
                             {!passado && ag.status === 'agendado' && <>
                               <Button size="sm" variant="secondary" icon={Check} onClick={() => atualizarAg(ag.id, 'confirmado')}>Confirmar</Button>
-                              <Button size="sm" variant="danger" icon={X} onClick={() => atualizarAg(ag.id, 'cancelado')}>Cancelar</Button>
+                              <Button size="sm" variant="danger" icon={X} onClick={() => atualizarAg(ag.id, 'cancelado')}>Cancelar consulta</Button>
                             </>}
                             {passado && ag.status !== 'realizado' && ag.status !== 'cancelado' && (
                               <Button size="sm" variant="secondary" icon={Check} onClick={() => atualizarAg(ag.id, 'realizado')}>Marcar realizado</Button>
@@ -747,7 +747,7 @@ export default function PacienteDetalhe() {
               {consultas.length} consulta{consultas.length !== 1 ? 's' : ''} registrada{consultas.length !== 1 ? 's' : ''}
             </span>
             {consultas.length === 0 ? (
-              <Card><EmptyState icon={Stethoscope} titulo="Nenhuma consulta registrada ainda" /></Card>
+              <Card><EmptyState icon={Stethoscope} titulo="Nenhuma consulta registrada ainda" descricao="Inicie uma nova consulta para gerar o primeiro prontuário." /></Card>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {consultas.map((c: any, i: number) => {
@@ -866,7 +866,7 @@ export default function PacienteDetalhe() {
               {carregandoComandas ? (
                 <p style={{ fontSize: 13, color: T.text.tertiary, textAlign: 'center', padding: 30, margin: 0 }}>Carregando...</p>
               ) : comandasPaciente.length === 0 ? (
-                <EmptyState icon={Receipt} titulo="Nenhuma comanda ainda" descricao='Clique em "Nova comanda" pra criar.' />
+                <EmptyState icon={Receipt} titulo="Nenhuma comanda ainda" descricao='Use "Nova comanda" para criar a primeira.' />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {comandasPaciente.map((c: any) => {

@@ -29,7 +29,7 @@ const PAGINAS: { label: string; href: string; icon: LucideIcon; so?: 'gestor' | 
   { label: 'Histórico', href: '/historico', icon: Clock, so: 'clinico' },
   { label: 'Retornos e reativação', href: '/retornos', icon: CalendarHeart },
   { label: 'Relatórios', href: '/relatorios', icon: ChartColumnBig, so: 'clinico' },
-  { label: 'Faturamento de convênios (TISS)', href: '/faturamento', icon: ReceiptText },
+  { label: 'Faturamento de convênios', href: '/faturamento', icon: ReceiptText },
   { label: 'Modelos de prontuário', href: '/modelos-prontuario', icon: LayoutTemplate, so: 'clinico' },
   { label: 'Central de atendimento', href: '/atendimento', icon: ConciergeBell },
   { label: 'Recepção (chegadas e senhas)', href: '/atendimento/recepcao', icon: ConciergeBell },
@@ -388,7 +388,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
                   <><EsqueletoNotificacao compacto /><EsqueletoNotificacao compacto /><EsqueletoNotificacao compacto /></>
                 ) : notifs.length === 0 ? (
                   <div style={{ padding: '30px 16px', textAlign: 'center', fontSize: 13, color: T.text.quaternary }}>
-                    {filtroNotif === 'nao_lidas' ? 'Nenhuma notificação não lida' : 'Nenhuma notificação ainda'}
+                    {filtroNotif === 'nao_lidas' ? 'Você leu tudo.' : 'Nenhuma notificação ainda'}
                   </div>
                 ) : notifs.map(n => (
                   <ItemNotificacao key={n.id} n={n} compacto onAbrir={abrirNotif} onAlternarLida={x => alternarLida(x)} />
@@ -452,7 +452,7 @@ export function Topbar({ compacto = false }: { compacto?: boolean }) {
               {modo === 'clinica' && (
                 <>
                   <button onClick={() => ir('/admin')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><SlidersHorizontal size={16} strokeWidth={1.6} color={T.text.secondary} />Equipe</button>
-                  <button onClick={() => ir('/minha-clinica')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Hospital size={16} strokeWidth={1.6} color={T.text.secondary} />Dados da clínica</button>
+                  <button onClick={() => ir('/minha-clinica')} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Hospital size={16} strokeWidth={1.6} color={T.text.secondary} />Minha clínica</button>
                 </>
               )}
               <button onClick={() => { setAberto(null); iniciarTour() }} style={itemMenu} onMouseEnter={hoverOn} onMouseLeave={hoverOff}><Compass size={16} strokeWidth={1.6} color={T.text.secondary} />Tour guiado</button>

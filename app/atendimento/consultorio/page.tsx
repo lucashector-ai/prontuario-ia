@@ -28,7 +28,7 @@ const PRAZOS_RETORNO = [7, 15, 30, 60, 90, 180]
 
 export default function ConsultorioPage() {
   const router = useRouter()
-  usePageHeader('Consultório', 'Chame, atenda e registre — tudo nesta tela')
+  usePageHeader('Consultório', 'Sua fila de hoje: chame, atenda e registre')
 
   const [medicoLogado, setMedicoLogado] = useState<string | null>(null)
   const [medicoId, setMedicoId] = useState<string>('')
@@ -157,7 +157,7 @@ export default function ConsultorioPage() {
               Atraso avisado · <button onClick={async () => { try { await encerrarAtraso(medicoId); avisarFila(); recarregar(); notificar('Recado de atraso retirado da TV') } catch (e: any) { notificar(e.message, 'erro') } }}
                 style={{ border: 'none', background: 'none', padding: 0, marginLeft: 4, cursor: 'pointer', color: 'inherit', fontWeight: 700, textDecoration: 'underline', fontFamily: 'inherit', fontSize: 'inherit' }}>encerrar</button>
             </Badge>
-          ) : <Button variant="ghost" icon={AlarmClock} onClick={() => setAtrasoAberto(true)} disabled={!medicoId}>Estou atrasado</Button>
+          ) : <Button variant="ghost" icon={AlarmClock} onClick={() => setAtrasoAberto(true)} disabled={!medicoId}>Avisar atraso</Button>
         })()}
                 <Switch checked={autoChamar} onChange={trocarAuto} label="Chamada automática" />
         <span style={{ fontSize: 13, color: T.text.secondary }}><b style={{ color: T.text.primary }}>{espera.length}</b> na espera · <b style={{ color: T.text.primary }}>{atendidos.length}</b> atendidos</span>
@@ -203,11 +203,11 @@ export default function ConsultorioPage() {
               ))}
             {ausentes.length > 0 && (
               <div style={{ borderTop: `1px solid ${T.border.muted}`, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ fontSize: 11.5, fontWeight: 700, color: T.text.tertiary, textTransform: 'uppercase', letterSpacing: '.05em' }}>Não atenderam à chamada</div>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: T.text.tertiary, textTransform: 'uppercase', letterSpacing: '.05em' }}>Não responderam à chamada</div>
                 {ausentes.map(a => (
                   <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                     <SenhaChip senha={a.senha} /><span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.paciente?.nome?.split(' ')[0]}</span>
-                    <Button size="sm" variant="ghost" icon={BellRing} onClick={() => chamarProximo(a.id)} disabled={chamando || !!atual}>De novo</Button>
+                    <Button size="sm" variant="ghost" icon={BellRing} onClick={() => chamarProximo(a.id)} disabled={chamando || !!atual}>Chamar de novo</Button>
                   </div>
                 ))}
               </div>
@@ -349,9 +349,9 @@ function PacienteAtual({ at, medicoId, agora, chamando, onEntrou, onAusente, onR
               <Button variant="dark" icon={CheckCircle2} onClick={onFinalizar}>Finalizar atendimento</Button>
             ) : (
               <>
-                <Button variant="ghost" icon={UserX} onClick={onAusente} style={{ color: T.status.danger }}>Não compareceu</Button>
+                <Button variant="ghost" icon={UserX} onClick={onAusente} style={{ color: T.status.danger }}>Não apareceu</Button>
                 <Button variant="secondary" icon={BellRing} onClick={onRechamar} disabled={chamando}>Chamar de novo</Button>
-                <Button icon={Play} onClick={onEntrou}>Paciente entrou</Button>
+                <Button icon={Play} onClick={onEntrou}>Iniciar consulta</Button>
               </>
             )}
           </div>
@@ -368,7 +368,7 @@ function PacienteAtual({ at, medicoId, agora, chamando, onEntrou, onAusente, onR
             <GravadorConsulta chave={at.id} medicoId={medicoId} paciente={{ id: at.paciente_id, nome: at.paciente?.nome || '' }} onProntuario={onProntuario} />
           ) : (
             <div style={{ fontSize: 13.5, color: T.text.secondary, padding: '8px 0' }}>
-              Quando {at.paciente?.nome?.split(' ')[0] || 'o paciente'} entrar, clique em <b>Paciente entrou</b> para começar a consulta e a gravação.
+              Quando {at.paciente?.nome?.split(' ')[0] || 'o paciente'} entrar, toque em <b>Iniciar consulta</b> para começar a gravação.
             </div>
           )}
         </Card>

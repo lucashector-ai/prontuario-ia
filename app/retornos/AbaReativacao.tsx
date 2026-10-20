@@ -41,8 +41,8 @@ export default function AbaReativacao({ medico, demo, onCampanhaCriada, irParaCa
     try {
       const r = await fetch(`/api/reativacao?medico_id=${medico.id}&meses=${meses}`)
       const j = await r.json()
-      if (!r.ok) { setAviso(j.error || 'Erro ao carregar'); setLista([]) } else { setAviso(null); setLista(j.pacientes || []) }
-    } catch { setAviso('Sem conexão. Tente novamente.') }
+      if (!r.ok) { setAviso(j.error || 'Não foi possível carregar a lista. Tente de novo.'); setLista([]) } else { setAviso(null); setLista(j.pacientes || []) }
+    } catch { setAviso('Sem conexão com a internet. Confira e tente de novo.') }
     setCarregando(false)
   }, [demo, medico.id, meses])
   useEffect(() => { carregar() }, [carregar])
@@ -240,7 +240,7 @@ function ModalCampanha({ medico, demo, meses, destinatarios, onFechar, irParaCam
       if (j.foraHorario) setForaHorario(true)
       setEtapa('fim')
     } catch {
-      setErro('Conexão perdida. O que faltou será enviado automaticamente no próximo ciclo (10h).'); setEtapa('fim')
+      setErro('Sem conexão com a internet. O que faltou será enviado automaticamente no próximo envio do dia, às 10h.'); setEtapa('fim')
     }
   }
 
@@ -248,7 +248,7 @@ function ModalCampanha({ medico, demo, meses, destinatarios, onFechar, irParaCam
     if (etapa === 'enviando') {
       const ok = await confirmar({
         titulo: 'Interromper o envio?', confirmar: 'Interromper', perigo: true,
-        mensagem: 'As mensagens que faltam ficam na fila e serão enviadas automaticamente no próximo ciclo diário (10h).',
+        mensagem: 'As mensagens que faltam ficam na fila e serão enviadas automaticamente no próximo envio do dia, às 10h.',
       })
       if (!ok) return
       parar.current = true
@@ -318,7 +318,7 @@ function ModalCampanha({ medico, demo, meses, destinatarios, onFechar, irParaCam
           </div>
           <div style={{ fontSize: 13, color: T.text.muted, lineHeight: 1.55 }}>
             A campanha <b>{nome}</b> será enviada pelo WhatsApp da clínica, uma mensagem a cada {PAUSA_S}s, apenas entre 8h e 20h.
-            Mantenha esta janela aberta até o fim — se fechar, o que faltar é enviado no próximo ciclo automático (10h).
+            Mantenha esta janela aberta até o fim — se fechar, o que faltar é enviado automaticamente no próximo envio do dia, às 10h.
             Cada mensagem aparece no Chat, e as respostas chegam lá.
           </div>
           <AvisoJanela total={total} janelaAberta={janelaAberta} />
@@ -365,7 +365,7 @@ function AvisoJanela({ total, janelaAberta }: { total: number; janelaAberta: num
       <Info size={16} strokeWidth={1.6} style={{ flexShrink: 0, marginTop: 1 }} />
       <span>
         <b>Regra do WhatsApp:</b> mensagem de texto livre só é entregue a quem falou com a clínica nas últimas 24h.
-        {' '}{fora === total ? 'Nenhum destinatário selecionado tem' : `${fora} dos ${total} destinatários não ${fora === 1 ? 'tem' : 'têm'}`} conversa recente — para eles, o WhatsApp exige uma <b>mensagem de modelo aprovada pela Meta</b>, e sem ela o envio pode falhar.
+        {' '}{fora === total ? 'Nenhum destinatário selecionado tem' : `${fora} dos ${total} destinatários não ${fora === 1 ? 'tem' : 'têm'}`} conversa recente — para eles, é preciso usar uma <b>mensagem pré-aprovada pelo WhatsApp</b>, e sem ela o envio pode falhar.
       </span>
     </div>
   )

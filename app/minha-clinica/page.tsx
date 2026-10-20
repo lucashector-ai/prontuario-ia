@@ -22,9 +22,9 @@ const TABS: Array<{ key: TabKey; label: string; icon: LucideIcon }> = [
   { key: 'atendimento', label: 'Recepção e painel', icon: MonitorPlay },
   { key: 'canais', label: 'Canais', icon: Plug },
   { key: 'procedimentos', label: 'Procedimentos', icon: Stethoscope },
-  { key: 'sofia', label: 'Sofia · IA', icon: Bot },
+  { key: 'sofia', label: 'Sofia', icon: Bot },
   { key: 'automacoes', label: 'Automações', icon: Zap },
-  { key: 'lgpd', label: 'Privacidade & LGPD', icon: ShieldCheck },
+  { key: 'lgpd', label: 'Privacidade e LGPD', icon: ShieldCheck },
 ]
 
 export default function MinhaClinicaPage() {

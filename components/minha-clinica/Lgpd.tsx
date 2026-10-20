@@ -94,7 +94,7 @@ export function Lgpd() {
 
   const direitos: Array<{ titulo: string; desc: string; icon: LucideIcon; cor: string }> = [
     { titulo: 'Acesso', desc: 'Veja todos os dados armazenados sobre você', icon: Eye, cor: T.data.purple },
-    { titulo: 'Portabilidade', desc: 'Exporte em formato legível (JSON)', icon: Upload, cor: T.data.blue },
+    { titulo: 'Portabilidade', desc: 'Leve seus dados para outro sistema', icon: Upload, cor: T.data.blue },
     { titulo: 'Correção', desc: 'Ajuste dados incorretos no seu perfil', icon: Pencil, cor: T.data.green },
     { titulo: 'Eliminação', desc: 'Delete sua conta permanentemente', icon: Trash2, cor: T.data.pink },
   ]
@@ -102,7 +102,7 @@ export function Lgpd() {
   const consentimentos = [
     { label: 'Armazenamento de prontuários médicos', desc: 'Essencial para o funcionamento da plataforma', obrig: true },
     { label: 'Transcrição de consultas com IA', desc: 'Áudios processados pela Deepgram e Anthropic', obrig: true },
-    { label: 'Envio de mensagens pelo WhatsApp', desc: 'Integração com Meta WhatsApp Business API', obrig: false },
+    { label: 'Envio de mensagens pelo WhatsApp', desc: 'Envio pelo WhatsApp oficial (Meta)', obrig: false },
     { label: 'Análise de métricas e relatórios', desc: 'Dados agregados para o dashboard', obrig: false },
   ]
 
@@ -175,12 +175,12 @@ export function Lgpd() {
         {/* Coluna direita */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
           <Card>
-            {cabecalho(Download, 'Exportar meus dados', 'Baixe tudo em formato JSON', T.data.blue)}
+            {cabecalho(Download, 'Exportar meus dados', 'Baixe um arquivo com tudo (formato JSON)', T.data.blue)}
             <p style={{ fontSize: 13, color: T.text.secondary, margin: '0 0 16px', lineHeight: 1.55 }}>
               O arquivo inclui todos os seus pacientes, consultas e agendamentos. Ideal para migrar de plataforma ou fazer backup pessoal.
             </p>
             <Button icon={Download} onClick={exportarDados} disabled={exportando}>
-              {exportando ? 'Exportando…' : 'Exportar tudo em JSON'}
+              {exportando ? 'Exportando…' : 'Exportar meus dados'}
             </Button>
           </Card>
 

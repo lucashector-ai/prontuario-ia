@@ -93,7 +93,7 @@ export function AvisosAoVivo() {
               {a.descricao && <div style={{ fontSize: 12.5, color: T.text.secondary, marginTop: 2, lineHeight: 1.45 }}>{a.descricao}</div>}
               {a.link && (
                 <button onClick={() => abrir(a)} style={{ marginTop: 8, height: 30, padding: '0 12px', borderRadius: 9, border: 'none', cursor: 'pointer', background: T.brand.primary, color: '#fff', fontSize: 12.5, fontWeight: 650, fontFamily: 'inherit' }}>
-                  {a.tipo === 'saida_recepcao' ? 'Ver e agendar' : a.tipo === 'triagem_urgente' ? 'Ver no consultório' : 'Abrir'}
+                  {a.tipo === 'saida_recepcao' ? 'Ver e agendar' : a.tipo === 'triagem_urgente' ? 'Ver paciente' : a.tipo === 'atraso_medico' ? 'Ver na recepção' : 'Ver detalhes'}
                 </button>
               )}
             </div>

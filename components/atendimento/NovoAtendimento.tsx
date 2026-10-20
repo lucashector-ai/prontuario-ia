@@ -56,7 +56,7 @@ export function NovoAtendimento({ fila, buscaInicial, medicoInicial, onClose, on
         onSenha(r.atendimento)
       } else {
         await entrarListaEspera({ medico_id: medicoId, paciente_id: paciente.id, nome: paciente.nome, telefone: paciente.telefone, preferencia_periodo: periodo, observacao: obs.trim() || undefined })
-        notificar(`${paciente.nome.split(' ')[0]} entrou na lista de espera. Avisamos pelo WhatsApp quando abrir vaga.`)
+        notificar(`${paciente.nome.split(' ')[0]} entrou na lista de espera. Quando abrir vaga, a recepção oferece o horário pelo WhatsApp.`)
         onClose()
       }
     } catch (e: any) { notificar(e.message, 'erro'); setSalvando(false) }
@@ -130,7 +130,7 @@ export function NovoAtendimento({ fila, buscaInicial, medicoInicial, onClose, on
         <ModalAcoes>
           <Button variant="secondary" onClick={onClose}>Cancelar</Button>
           <Button icon={destino === 'agora' ? Ticket : destino === 'agendar' ? CalendarPlus : ListPlus} onClick={concluir} disabled={salvando}>
-            {salvando ? 'Salvando…' : destino === 'agora' ? 'Gerar senha' : destino === 'agendar' ? 'Abrir agenda' : 'Colocar na lista'}
+            {salvando ? 'Salvando…' : destino === 'agora' ? 'Gerar senha' : destino === 'agendar' ? 'Abrir agenda' : 'Colocar na lista de espera'}
           </Button>
         </ModalAcoes>
       )}

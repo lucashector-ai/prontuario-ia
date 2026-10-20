@@ -198,7 +198,7 @@ export default function RecepcaoPage() {
                     {[e.medico?.nome, e.tipo === 'retorno' ? 'Retorno' : null, e.motivo, e.paciente?.convenio].filter(Boolean).join(' · ')}
                   </div>
                 </div>
-                <IconButton icon={UserX} size={32} tone="danger" title="Não veio (marcar falta)" onClick={() => naoVeio(e)} />
+                <IconButton icon={UserX} size={32} tone="danger" title="Marcar falta" onClick={() => naoVeio(e)} />
                 <Button size="sm" icon={UserCheck} onClick={() => setCheckinDe(e)}>Chegou</Button>
               </div>
             )
@@ -224,7 +224,7 @@ export default function RecepcaoPage() {
                   <IconButton icon={XCircle} size={30} tone="danger" title="Tirar da fila" onClick={() => acao(a, 'cancelar')} />
                 </LinhaNaClinica>
               ))}
-              {naClinica.ausentes.length > 0 && <Secao titulo="Não atenderam à chamada" />}
+              {naClinica.ausentes.length > 0 && <Secao titulo="Não responderam à chamada" />}
               {naClinica.ausentes.map(a => (
                 <LinhaNaClinica key={a.id} a={a} agora={agora}>
                   <Button size="sm" variant="secondary" icon={RotateCcw} onClick={() => acao(a, 'voltar_fila')}>Voltar à fila</Button>
@@ -249,7 +249,7 @@ export default function RecepcaoPage() {
 
       {erro && !erro.faltaMigration && (
         <div style={{ fontSize: 13, color: T.status.danger, display: 'flex', alignItems: 'center', gap: 10 }}>
-          {erro.msg} <Button size="sm" variant="secondary" onClick={recarregar}>Tentar de novo</Button>
+          Não foi possível atualizar a fila. <Button size="sm" variant="secondary" onClick={recarregar}>Tentar de novo</Button>
         </div>
       )}
 
@@ -370,7 +370,7 @@ function Balcao({ senhas, agora, onAtender, onMudou }: { senhas: SenhaBalcao[]; 
     try {
       const r = await chamarBalcao({ id, guiche: guiche.trim() || 'Recepção' })
       if (r.fila_vazia || !r.senha) notificar('Nenhuma senha aguardando', 'info')
-      else notificar(`Chamando ${r.senha.senha} no painel`)
+      else notificar(`Chamando ${r.senha.senha} na TV`)
       onMudou()
     } catch (e: any) { notificar(e.message, 'erro') } finally { setChamando(false) }
   }
@@ -383,8 +383,8 @@ function Balcao({ senhas, agora, onAtender, onMudou }: { senhas: SenhaBalcao[]; 
       <div style={cabecalho}>
         <span style={{ ...tituloCard, display: 'inline-flex', alignItems: 'center', gap: 8 }}><Ticket size={17} color={T.brand.primary} /> Senhas no balcão · {aguardando.length}</span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Input value={guiche} onChange={e => trocarGuiche(e.target.value)} aria-label="Nome do guichê" title="Como a TV chama este balcão" style={{ width: 130, height: 32 }} />
-          <Button size="sm" icon={Megaphone} onClick={() => chamar()} disabled={chamando || !aguardando.length}>{aguardando.length ? `Chamar ${aguardando[0].senha}` : 'Sem senhas'}</Button>
+          <Input value={guiche} onChange={e => trocarGuiche(e.target.value)} aria-label="Nome do guichê" title="Nome que a TV anuncia (ex.: Guichê 2)" style={{ width: 130, height: 32 }} />
+          <Button size="sm" icon={Megaphone} onClick={() => chamar()} disabled={chamando || !aguardando.length}>{aguardando.length ? `Chamar ${aguardando[0].senha}` : 'Nenhuma senha na fila'}</Button>
         </div>
       </div>
       {chamadas.map(s => (
@@ -393,7 +393,7 @@ function Balcao({ senhas, agora, onAtender, onMudou }: { senhas: SenhaBalcao[]; 
           <span style={{ flex: 1, fontSize: 13 }}>Chamada{s.guiche ? ` · ${s.guiche}` : ''} · {s.motivo === 'sem_cpf' ? 'não sabia o CPF' : 'sem horário'}</span>
           <Button size="sm" icon={UserPlus} onClick={() => { concluir(s, 'atendido'); onAtender() }}>Atender</Button>
           <IconButton icon={RotateCcw} size={30} title="Chamar de novo" onClick={() => chamar(s.id)} />
-          <IconButton icon={XCircle} size={30} tone="danger" title="Desistiu / não apareceu" onClick={() => concluir(s, 'desistiu')} />
+          <IconButton icon={XCircle} size={30} tone="danger" title="Não apareceu" onClick={() => concluir(s, 'desistiu')} />
         </div>
       ))}
       {aguardando.map(s => (

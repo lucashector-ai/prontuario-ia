@@ -26,7 +26,7 @@ export default function ConvitePage() {
       const j = await r.json()
       if (!r.ok) setErro(j.error || 'Convite inválido.')
       else setDados(j)
-    }).catch(() => setErro('Sem conexão. Tente de novo.'))
+    }).catch(() => setErro('Sem conexão com a internet. Confira e tente de novo.'))
   }, [token])
 
   async function criar() {

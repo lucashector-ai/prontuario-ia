@@ -508,7 +508,7 @@ function ModalDados(props: any) {
         <Field label="WhatsApp *">
           <Input type="tel" inputMode="tel" value={telefone} onChange={e => setTelefone(e.target.value)} placeholder="(11) 99999-9999" autoComplete="tel" />
         </Field>
-        <Field label="E-mail (opcional)">
+        <Field label="Email (opcional)">
           <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" autoComplete="email" />
         </Field>
         <Field label="Motivo da consulta (opcional)">

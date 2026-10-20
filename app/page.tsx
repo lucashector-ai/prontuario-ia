@@ -763,7 +763,7 @@ function Landing({ router, logado, destinoLogado }: { router: any; logado: boole
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <span style={{ fontWeight: 600, fontSize: 13, letterSpacing: '0.2em', color: INK }}>CONTATO</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><span style={{ fontSize: 14, color: 'rgb(194,196,202)' }}>E-mail para contato</span><span style={{ fontSize: 16, color: MUTED }}>contato@clinical360.app</span></div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><span style={{ fontSize: 14, color: 'rgb(194,196,202)' }}>Email para contato</span><span style={{ fontSize: 16, color: MUTED }}>contato@clinical360.app</span></div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><span style={{ fontSize: 14, color: 'rgb(194,196,202)' }}>WhatsApp</span><span style={{ fontSize: 16, color: MUTED }}>+55 11 91257 0058</span></div>
               </div>
             </div>

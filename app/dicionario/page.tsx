@@ -15,7 +15,7 @@ const T = tokens
 const CATEGORIAS = ['Medicamento', 'Patologia', 'Procedimento', 'Anatomia', 'Sigla', 'Outro']
 
 export default function Dicionario() {
-  usePageHeader('Dicionário clínico', 'Termos personalizados pra melhorar a transcrição da IA e gerar prontuários mais precisos')
+  usePageHeader('Dicionário clínico', 'Termos personalizados para melhorar a transcrição da IA e gerar prontuários mais precisos')
   const router = useRouter()
   const { toast } = useToast()
   const [medico, setMedico] = useState<any>(null)
@@ -59,7 +59,7 @@ export default function Dicionario() {
       setNovoTermo(''); setNovaDescricao('')
       toast('Termo adicionado!')
     } else {
-      toast(error?.message || 'Erro ao salvar', 'error')
+      toast('Não foi possível salvar. Confira a conexão e tente de novo.', 'error')
     }
     setSalvando(false)
   }
@@ -134,7 +134,7 @@ export default function Dicionario() {
               <div>
                 <p style={{ fontSize: 13.5, fontWeight: 700, color: T.text.primary, margin: '0 0 4px' }}>Como funciona</p>
                 <p style={{ fontSize: 12.5, color: T.text.secondary, margin: 0, lineHeight: 1.55 }}>
-                  Os termos aqui cadastrados são usados pela IA pra corrigir a transcrição da consulta e gerar prontuários mais precisos pra sua especialidade.
+                  Os termos aqui cadastrados são usados pela IA para corrigir a transcrição da consulta e gerar prontuários mais precisos para sua especialidade.
                 </p>
               </div>
             </div>

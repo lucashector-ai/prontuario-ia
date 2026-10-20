@@ -111,7 +111,7 @@ export const minutosDesde = (iso: string | null | undefined, agora = Date.now())
 export const ROTULO_STATUS: Record<StatusAtendimento, string> = {
   aguardando_triagem: 'Aguardando triagem', em_triagem: 'Em triagem',
   aguardando: 'Aguardando', chamado: 'Chamado', em_atendimento: 'Em atendimento',
-  finalizado: 'Finalizado', ausente: 'Não compareceu', cancelado: 'Cancelado',
+  finalizado: 'Atendido', ausente: 'Não apareceu', cancelado: 'Cancelado',
 }
 
 /** "Cheguei", "já estou aqui", "bom dia, cheguei"… (mensagens curtas de chegada no WhatsApp). */

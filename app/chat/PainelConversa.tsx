@@ -65,7 +65,7 @@ export function PainelConversa({ api, c, onVoltar }: { api: ChatApi; c: Conversa
   const humano = c.modo === 'humano'
   const sub = [
     canal === 'whatsapp' ? '+' + c.telefone : CANAIS.find(x => x.id === canal)!.label,
-    humano ? (c.atendente_nome ? `atendido por ${c.atendente_nome}` : 'aguardando atendente') : 'Sofia IA respondendo',
+    humano ? (c.atendente_nome ? `atendido por ${c.atendente_nome}` : 'aguardando atendente') : 'Sofia respondendo',
   ].join(' · ')
 
   // Agrupa mensagens por dia
@@ -116,7 +116,7 @@ export function PainelConversa({ api, c, onVoltar }: { api: ChatApi; c: Conversa
 
           {/* IA / humano */}
           {humano
-            ? <Button variant="secondary" size="sm" icon={Sparkles} onClick={() => api.devolverIA(c)} title="Devolver a conversa para a Sofia IA">Devolver à IA</Button>
+            ? <Button variant="secondary" size="sm" icon={Sparkles} onClick={() => api.devolverIA(c)} title="Devolver a conversa para a Sofia">Devolver à Sofia</Button>
             : <Button size="sm" icon={Hand} onClick={() => api.assumir(c)} title="Pausar a Sofia e assumir a conversa">Assumir</Button>}
 
           {/* Transferir */}
@@ -245,7 +245,7 @@ function Bolha({ m, anterior }: { m: Mensagem; anterior?: Mensagem }) {
   const nota = ehNota(m)
   const enviada = m.tipo === 'enviada'
   const mesmoLado = anterior && anterior.tipo === m.tipo && ehNota(anterior) === nota && !ehSistema(anterior)
-  const autor = nota ? (m.metadata?.remetente || 'Equipe') : enviada ? (m.metadata?.ia ? 'Sofia IA' : m.metadata?.remetente) : null
+  const autor = nota ? (m.metadata?.remetente || 'Equipe') : enviada ? (m.metadata?.ia ? 'Sofia' : m.metadata?.remetente) : null
   const mostrarAutor = autor && (!mesmoLado || anterior?.metadata?.remetente !== m.metadata?.remetente || !!anterior?.metadata?.ia !== !!m.metadata?.ia)
   const bg = nota ? '#FFF4C2' : enviada ? '#D9FDD3' : '#fff'
   return (
@@ -304,8 +304,8 @@ function PainelContato({ c, api, onFechar, onAbrirPaciente }: { c: Conversa; api
             <CanalIcone canal={canal} size={14} />{CANAIS.find(x => x.id === canal)!.label}
           </div>
         </div>
-        <InfoLinha icon={canal === 'whatsapp' ? Phone : UserRound} label={canal === 'whatsapp' ? 'Telefone' : 'ID do contato'} valor={canal === 'whatsapp' ? '+' + c.telefone : c.telefone} mono />
-        <InfoLinha icon={UserRoundCog} label="Atendimento" valor={c.modo === 'humano' ? (c.atendente_nome || 'Sem atendente') : 'Sofia IA'} />
+        <InfoLinha icon={canal === 'whatsapp' ? Phone : UserRound} label={canal === 'whatsapp' ? 'Telefone' : 'Contato'} valor={canal === 'whatsapp' ? '+' + c.telefone : c.telefone} mono />
+        <InfoLinha icon={UserRoundCog} label="Atendimento" valor={c.modo === 'humano' ? (c.atendente_nome || 'Sem atendente') : 'Sofia'} />
         <div>
           <div style={rotulo}>Etapa</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -346,7 +346,7 @@ function PainelContato({ c, api, onFechar, onAbrirPaciente }: { c: Conversa; api
           </div>
         ) : (
           <div style={{ fontSize: 12.5, color: T.text.quaternary, lineHeight: 1.5 }}>
-            Contato ainda não vinculado a um paciente. A Sofia vincula automaticamente quando reconhece o telefone, CPF ou e-mail.
+            Contato ainda não vinculado a um paciente. A Sofia vincula automaticamente quando reconhece o telefone, CPF ou email.
           </div>
         )}
       </div>
@@ -457,8 +457,8 @@ export function ChatVazio({ nome }: { nome: string }) {
           ))}
         </div>
         <div style={{ fontSize: 13.5, color: T.text.quaternary, lineHeight: 1.6 }}>
-          WhatsApp, Instagram Direct e Messenger chegam aqui. A Sofia IA responde sozinha; quando precisar, assuma a conversa,
-          transfira para alguém da equipe e acompanhe tudo no Kanban.
+          WhatsApp, Instagram Direct e Messenger chegam aqui. A Sofia responde sozinha; quando precisar, assuma a conversa,
+          transfira para alguém da equipe e acompanhe tudo no Quadro.
         </div>
         <a href="/minha-clinica?aba=canais" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#fff', textDecoration: 'none', padding: '9px 16px', borderRadius: 10, background: T.brand.primary }}>
           Conectar canais

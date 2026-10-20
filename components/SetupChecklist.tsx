@@ -73,7 +73,7 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
       const temPacientes = conta0(pacientes as any) > 0
 
       const P = {
-        clinica: { key: 'clinica', label: individual ? 'Dados do consultório' : 'Dados da clínica', desc: clinicaConfigurada ? 'Informações completas' : 'Telefone, logo e endereço aparecem para o paciente', completo: clinicaConfigurada, href: '/minha-clinica', ctaLabel: clinicaConfigurada ? 'Editar' : 'Completar' },
+        clinica: { key: 'clinica', label: individual ? 'Complete os dados do consultório' : 'Complete os dados da clínica', desc: clinicaConfigurada ? 'Dados completos' : 'Telefone, logo e endereço aparecem para o paciente', completo: clinicaConfigurada, href: '/minha-clinica', ctaLabel: clinicaConfigurada ? 'Editar' : 'Completar' },
         equipe: { key: 'equipe', label: 'Convide a equipe', desc: equipe > 1 ? `${equipe} pessoas com acesso` : 'Médicos, recepção e enfermagem, cada um com seu acesso', completo: equipe > 1, href: '/admin?add=medico', ctaLabel: equipe > 1 ? 'Gerenciar' : 'Convidar' },
         salas: { key: 'salas', label: 'Salas de espera e TV', desc: conta0(setores as any) > 0 ? 'Recepção e painel prontos' : 'Cadastre a sala, os consultórios e abra o painel na TV', completo: conta0(setores as any) > 0, href: '/minha-clinica?aba=atendimento', ctaLabel: conta0(setores as any) > 0 ? 'Ver' : 'Configurar' },
         whatsapp: { key: 'whatsapp', label: 'Conecte o WhatsApp', desc: whatsappConectado ? 'Conversas chegando no Chat' : 'Atenda e confirme consultas pelo Chat', completo: whatsappConectado, href: whatsappConectado ? '/chat' : '/minha-clinica?aba=canais', ctaLabel: whatsappConectado ? 'Ver conversas' : 'Conectar' },
@@ -215,7 +215,7 @@ export function SetupChecklist({ variante = 'fab' }: { variante?: 'fab' | 'sideb
                 </h2>
                 <p style={{ fontSize: 12, color: tokens.text.secondary, margin: 0 }}>
                   {tudoPronto
-                    ? 'Sua clínica está 100% pronta pra operar'
+                    ? 'Tudo pronto para atender.'
                     : (completos + ' de ' + total + ' passos concluídos')
                   }
                 </p>

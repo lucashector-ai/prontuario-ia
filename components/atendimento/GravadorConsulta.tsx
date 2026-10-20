@@ -86,7 +86,7 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
     })
     const d = await r.json().catch(() => null)
     if (d?.id) { setConsultaId(d.id); notificar('Prontuário salvo no histórico do paciente') }
-    else notificar('Prontuário gerado, mas não foi salvo. Clique em Salvar.', 'erro')
+    else notificar('Prontuário gerado, mas não foi salvo. Toque em Salvar alterações.', 'erro')
   }
 
   const salvarEdicao = async () => {
@@ -95,7 +95,7 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
     if (ehDemo()) { setEditado(false); notificar('Alterações salvas'); return }
     const { error } = await supabase.from('consultas')
       .update({ subjetivo: prontuario.subjetivo, objetivo: prontuario.objetivo, avaliacao: prontuario.avaliacao, plano: prontuario.plano }).eq('id', consultaId)
-    if (error) { notificar('Erro ao salvar alterações', 'erro'); return }
+    if (error) { notificar('Não foi possível salvar as alterações. Confira a conexão e tente de novo.', 'erro'); return }
     setEditado(false); notificar('Alterações salvas')
   }
 
@@ -166,7 +166,7 @@ export function GravadorConsulta({ chave, medicoId, paciente, onProntuario }: {
   // idle / erro
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {estado === 'erro' && <div style={{ fontSize: 13, color: T.status.danger }}>{erroMsg || 'Algo deu errado.'} {transcricao && <button onClick={() => gerar(transcricao)} style={{ border: 'none', background: 'none', color: T.brand.primary, fontWeight: 600, cursor: 'pointer', padding: 0 }}>Tentar gerar de novo</button>}</div>}
+      {estado === 'erro' && <div style={{ fontSize: 13, color: T.status.danger }}>{erroMsg || 'Não foi possível gerar o prontuário. Tente gravar de novo ou digite o relato.'} {transcricao && <button onClick={() => gerar(transcricao)} style={{ border: 'none', background: 'none', color: T.brand.primary, fontWeight: 600, cursor: 'pointer', padding: 0 }}>Tentar gerar de novo</button>}</div>}
       {digitar ? (
         <>
           <Textarea value={textoDigitado} onChange={e => setTextoDigitado(e.target.value)} rows={6} placeholder="Escreva ou cole o relato da consulta: queixa, exame, conduta…" autoFocus />

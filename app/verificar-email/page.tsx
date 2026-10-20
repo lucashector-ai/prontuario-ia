@@ -57,7 +57,7 @@ function VerificarContent() {
       })
       .catch(() => {
         setStatus('erro')
-        setMensagem('Erro de conexão')
+        setMensagem('Sem conexão com a internet. Confira e tente de novo.')
       })
   }, [searchParams, router])
 

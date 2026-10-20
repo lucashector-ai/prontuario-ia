@@ -72,7 +72,7 @@ export default function RetornosPage() {
   if (!carregando && !ctx) {
     return (
       <div className="c360-pagina">
-        <EmptyState icon={Stethoscope} titulo="Nenhum médico ativo na clínica" descricao="Retornos e campanhas pertencem à agenda de um médico. Cadastre um médico no Painel admin para começar." />
+        <EmptyState icon={Stethoscope} titulo="Nenhum médico ativo na clínica" descricao="Retornos e campanhas pertencem à agenda de um médico. Cadastre um médico em Equipe para começar." />
       </div>
     )
   }

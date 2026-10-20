@@ -438,7 +438,7 @@ export default function Exames() {
         >
           <p style={{ fontSize: 12.5, color: tokens.text.quaternary, margin: '0 0 14px' }}>A análise será adicionada ao histórico do paciente.</p>
           {pacientesList.length === 0 ? (
-            <EmptyState icon={Users} titulo="Nenhum paciente cadastrado" />
+            <EmptyState icon={Users} titulo="Nenhum paciente cadastrado" descricao="Cadastre ou importe pacientes em Pacientes." />
           ) : (
             <Field label="Paciente">
               <Select value={pacienteSelecionadoId} onChange={e => setPacienteSelecionadoId(e.target.value)}>

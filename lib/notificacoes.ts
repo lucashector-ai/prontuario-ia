@@ -88,7 +88,7 @@ export async function listarNotificacoes(p: { filtro: FiltroNotificacoes; antes?
   const q = new URLSearchParams({ filtro: p.filtro, limite: String(p.limite || 20) })
   if (p.antes) q.set('antes', p.antes)
   const r = await fetch('/api/notificacoes-sofia?' + q.toString())
-  if (!r.ok) throw new Error('Não foi possível carregar as notificações')
+  if (!r.ok) throw new Error('Não foi possível carregar as notificações. Tente de novo em instantes.')
   const d = await r.json()
   const itens: Notificacao[] = d.notificacoes || []
   return { itens, naoLidas: d.nao_lidas || 0, temMais: !!d.tem_mais, cursor: itens.length ? itens[itens.length - 1].criada_em : null }

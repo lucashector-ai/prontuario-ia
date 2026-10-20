@@ -138,7 +138,7 @@ export default function OnboardingPage() {
 
   async function salvarMedico(): Promise<boolean> {
     if (!usuario || tipo !== 'medico') return false
-    if (!formMedico.nome.trim()) { setErro('Preencha seu nome pra continuar.'); return false }
+    if (!formMedico.nome.trim()) { setErro('Preencha seu nome para continuar.'); return false }
     if (!recepcao && !formMedico.crm.trim()) { setErro('Preencha o CRM — ele sai nos prontuários e receitas.'); return false }
     setSalvando(true); setErro('')
     try {
@@ -152,7 +152,7 @@ export default function OnboardingPage() {
       localStorage.setItem('medico', JSON.stringify(novo))
       return true
     } catch (e: any) {
-      setErro(e.message || 'Erro ao salvar')
+      setErro(e.message || 'Não foi possível salvar seus dados. Tente de novo.')
       return false
     } finally {
       setSalvando(false)
@@ -174,7 +174,7 @@ export default function OnboardingPage() {
       } catch {}
       return true
     } catch (e: any) {
-      setErro(e.message || 'Erro ao salvar')
+      setErro(e.message || 'Não foi possível salvar seus dados. Tente de novo.')
       return false
     } finally {
       setSalvando(false)
@@ -202,7 +202,7 @@ export default function OnboardingPage() {
 
   async function avancar() {
     setErro('')
-    if (kind === 'perfil' && !perfil) { setErro('Escolha uma opção pra continuar.'); return }
+    if (kind === 'perfil' && !perfil) { setErro('Escolha uma opção para continuar.'); return }
     if (kind === 'medico-form' || kind === 'recepcao-form') { if (!(await salvarMedico())) return }
     if (kind === 'clinica-form') { if (!(await salvarClinica())) return }
     if (kind === 'jornada') setEtapaAberta(0)

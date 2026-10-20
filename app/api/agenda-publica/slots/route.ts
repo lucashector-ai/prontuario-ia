@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!medico.agenda_publica_ativa) {
-      return NextResponse.json({ erro: 'Agenda pública desativada' }, { status: 403 })
+      return NextResponse.json({ erro: 'Agenda online desativada' }, { status: 403 })
     }
 
     const config = parseConfig(medico.agenda_publica_config)

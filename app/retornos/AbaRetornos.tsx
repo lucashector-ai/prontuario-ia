@@ -48,9 +48,9 @@ export default function AbaRetornos({ medico, demo }: { medico: MedicoCtx; demo:
     try {
       const r = await fetch(`/api/retornos?medico_id=${medico.id}`)
       const j = await r.json()
-      if (!r.ok) { setAviso(j.falta_migration ? 'Os retornos ainda não estão ativos na sua conta. Fale com o suporte do Clinical 360 para liberar.' : (j.error || 'Erro ao carregar')); setRetornos([]) }
+      if (!r.ok) { setAviso(j.falta_migration ? 'Os retornos ainda não estão ativos na sua conta. Fale com o suporte do Clinical 360 para liberar.' : (j.error || 'Não foi possível carregar a lista. Tente de novo.')); setRetornos([]) }
       else { setAviso(null); setRetornos(j.retornos || []) }
-    } catch { setAviso('Sem conexão. Tente novamente.') }
+    } catch { setAviso('Sem conexão com a internet. Confira e tente de novo.') }
     setCarregando(false)
   }, [demo, medico.id])
   useEffect(() => { carregar() }, [carregar])
@@ -278,7 +278,7 @@ function LinhaRetorno({ r, primeira, hoje, ocupado, onAgendar, onLembrar, onConc
       </div>
       <div className="ret-acoes">
         {aberto && <Button size="sm" variant="secondary" icon={CalendarPlus} onClick={onAgendar} disabled={ocupado} style={{ marginRight: 4 }}>Agendar</Button>}
-        {aberto && <IconButton icon={MessageCircle} size={32} onClick={onLembrar} disabled={ocupado} title="Lembrar agora pelo WhatsApp" aria-label="Lembrar agora" />}
+        {aberto && <IconButton icon={MessageCircle} size={32} onClick={onLembrar} disabled={ocupado} title="Lembrar pelo WhatsApp" aria-label="Lembrar pelo WhatsApp" />}
         {(aberto || r.status === 'agendado') && <IconButton icon={Check} size={32} onClick={onConcluir} disabled={ocupado} title="Concluir" aria-label="Concluir" />}
         {aberto && <IconButton icon={Pencil} size={32} onClick={onEditar} disabled={ocupado} title="Editar data e motivo" aria-label="Editar" />}
         {aberto && <IconButton icon={X} size={32} tone="danger" onClick={onDescartar} disabled={ocupado} title="Descartar" aria-label="Descartar" />}

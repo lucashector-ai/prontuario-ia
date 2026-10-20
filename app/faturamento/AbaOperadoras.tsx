@@ -26,7 +26,7 @@ export function AbaOperadoras({ fat }: { fat: Faturamento }) {
     setVForm(v)
     if (!v.ok) return
     const r = await fat.salvarOperadora(form)
-    if (!r.ok) { notificar(r.mensagem || 'Erro ao salvar', 'erro'); if (r.erros) setVForm({ ok: false, erros: r.erros, avisos: [] }); return }
+    if (!r.ok) { notificar(r.mensagem || 'Não foi possível salvar. Confira a conexão e tente de novo.', 'erro'); if (r.erros) setVForm({ ok: false, erros: r.erros, avisos: [] }); return }
     setForm(null)
   }
   async function excluir(o: Operadora) {

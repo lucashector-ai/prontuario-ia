@@ -41,7 +41,7 @@ function limpar(b: any, parcial: boolean) {
 
 function erro(e: any) {
   if (ehErroDeSchema(e)) return NextResponse.json({ error: AVISO_MIGRATION, aviso: AVISO_MIGRATION }, { status: 409 })
-  return NextResponse.json({ error: e?.message || 'Erro' }, { status: 500 })
+  return NextResponse.json({ error: e?.message || 'Não foi possível concluir. Tente de novo.' }, { status: 500 })
 }
 
 export async function GET(req: NextRequest) {

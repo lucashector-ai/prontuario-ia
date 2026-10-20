@@ -249,7 +249,7 @@ export default function ConectarCanais() {
           <div style={{ flex: '1 1 320px', minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 650, color: T.text.primary }}>Conecte seus canais em poucos minutos</div>
             <p style={{ margin: '4px 0 0', fontSize: 13, lineHeight: 1.6, color: T.text.secondary }}>
-              WhatsApp do celular (o app continua funcionando), Instagram com a própria conta do Instagram e Messenger com o Facebook. As janelas são oficiais da Meta — a Clinical 360 nunca vê sua senha.
+              WhatsApp do celular (o app continua funcionando), Instagram com a própria conta do Instagram e Messenger com o Facebook. As janelas são oficiais da Meta — o Clinical 360 nunca vê sua senha.
             </p>
           </div>
           {estado.medicos.length > 1 && (
@@ -348,7 +348,7 @@ export default function ConectarCanais() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: T.text.tertiary }}>
         <Icon icon={ShieldCheck} size={14} />
-        Os acessos ficam guardados só no servidor e você pode desconectar quando quiser — também pelo painel da Meta.
+        Os acessos ficam guardados com segurança e você pode desconectar quando quiser — também pelo painel da Meta.
       </div>
 
       {paginas && (

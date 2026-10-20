@@ -653,7 +653,7 @@ export default function Sala({ params }: { params: { sala_id: string } }) {
       if (!chatAberto) { setChatAberto(true); setNaoLidas(0) }
     } catch (err) {
       log.error('Erro ao enviar anexo:', err)
-      notificar('Erro ao enviar anexo. Tente novamente.', 'erro')
+      notificar('Não foi possível enviar o anexo. Tente de novo.', 'erro')
     }
     setEnviandoAnexo(false)
   }

@@ -22,7 +22,7 @@ function LoginForm() {
 
   useEffect(() => {
     if (searchParams?.get('cadastrado') === '1') {
-      setSucesso('Conta criada com sucesso! Faça login pra entrar.')
+      setSucesso('Conta criada. Entre com seu email e senha.')
     }
     if (searchParams?.get('expirou') === '1') {
       setSucesso('Atualizamos a segurança do sistema. Entre novamente para continuar.')
@@ -78,7 +78,7 @@ function LoginForm() {
 
       setErro('Resposta inesperada do servidor')
     } catch {
-      setErro('Erro de conexão')
+      setErro('Sem conexão com a internet. Confira e tente de novo.')
     } finally {
       setCarregando(false)
     }
@@ -115,7 +115,7 @@ function LoginForm() {
           {/* Título */}
           <div style={{ textAlign: 'center' as const, marginBottom: 28 }}>
             <h1 style={{ fontSize: 26, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px', letterSpacing: '-0.03em' as const }}>
-              Bem-vindo de volta
+              Que bom ver você de novo
             </h1>
             <p style={{ fontSize: 14, color: tokens.text.quaternary, margin: 0 }}>
               Entre na sua conta para continuar

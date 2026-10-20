@@ -52,7 +52,7 @@ export function AbaRecebimentos({ fat, abrirGuia }: { fat: Faturamento; abrirGui
     if (!isFinite(valorPago) || valorPago < 0) { notificar('Informe o valor pago (0 se glosa total)', 'erro'); return }
     if (valorPago > ret.valor_total + 0.001) { notificar('Valor pago maior que o valor da guia', 'erro'); return }
     const r = await fat.registrarRetorno(ret, valorPago, motivo)
-    if (!r.ok) { notificar(r.mensagem || 'Erro', 'erro'); return }
+    if (!r.ok) { notificar(r.mensagem || 'Não foi possível concluir. Confira os dados e tente de novo.', 'erro'); return }
     setRet(null)
   }
   async function reapresentar(g: Guia) {
@@ -63,7 +63,7 @@ export function AbaRecebimentos({ fat, abrirGuia }: { fat: Faturamento; abrirGui
     }))) return
     const r = await fat.reapresentar(g)
     if (r.ok && r.guia) abrirGuia(r.guia)
-    else notificar(r.mensagem || 'Erro', 'erro')
+    else notificar(r.mensagem || 'Não foi possível concluir. Confira os dados e tente de novo.', 'erro')
   }
 
   const temEnvio = fat.guias.some(g => ['enviada', 'paga', 'glosada', 'paga_parcial'].includes(g.status))

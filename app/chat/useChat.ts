@@ -234,7 +234,7 @@ export function useChat() {
   const assumir = (c: Conversa) => transferir(c, nomeUsuario)
   const devolverIA = async (c: Conversa) => {
     const ok = await atualizar(c.id, { modo: 'ia', atendente_nome: null }, 'Devolver para a Sofia')
-    if (ok) avisar('Sofia IA voltou a responder')
+    if (ok) avisar('Sofia voltou a responder')
   }
 
   const marcarNaoLida = async (c: Conversa) => {
@@ -264,7 +264,7 @@ export function useChat() {
     const { data } = demo ? { data: mensagensDemo(c.id, medico?.nome) } : await supabase.from('whatsapp_mensagens').select('*').eq('conversa_id', c.id).order('criado_em')
     const linhas = (data || []).map((m: any) => {
       const quem = m.metadata?.nota ? '[NOTA] ' + (m.metadata?.remetente || 'Equipe')
-        : m.tipo === 'recebida' ? nomeDe(c) : (m.metadata?.ia ? 'Sofia IA' : m.metadata?.remetente || 'Clínica')
+        : m.tipo === 'recebida' ? nomeDe(c) : (m.metadata?.ia ? 'Sofia' : m.metadata?.remetente || 'Clínica')
       return `[${new Date(m.criado_em).toLocaleString('pt-BR')}] ${quem}: ${m.conteudo}`
     })
     const blob = new Blob([linhas.join('\n')], { type: 'text/plain;charset=utf-8' })
@@ -393,7 +393,7 @@ function mensagensDemo(id: string, medicoNome?: string): Mensagem[] {
     m(1, 'recebida', 'Boa tarde! Vocês atendem pelo convênio Unimed?', 200),
     m(2, 'enviada', 'Olá, Beatriz! Sou a *Sofia*, assistente da clínica 😊 Atendemos Unimed, Bradesco Saúde e SulAmérica.', 199, { ia: true }),
     m(3, 'recebida', 'Qual o valor da consulta particular?', 180),
-    m(4, 'enviada', 'Paciente pediu valor — transferido para a recepção confirmar a tabela atual.', 179, { nota: true, remetente: 'Sofia IA' }),
+    m(4, 'enviada', 'Paciente pediu valor — transferido para a recepção confirmar a tabela atual.', 179, { nota: true, remetente: 'Sofia' }),
   ]
   if (id === 'demo-2') return [
     m(1, 'recebida', 'Oi! Queria marcar uma consulta com a dermatologista', 45),
@@ -409,6 +409,6 @@ function mensagensDemo(id: string, medicoNome?: string): Mensagem[] {
     m(5, 'enviada', 'Paciente pediu remarcação — verificar agenda de quinta à tarde.', 20, { nota: true, remetente: 'Recepção Ana' }),
     m(6, 'recebida', 'Surgiu um imprevisto no trabalho 😔', 5),
     m(7, 'recebida', 'Consigo remarcar para quinta à tarde?', 3),
-    m(8, 'enviada', 'Consigo sim! Tenho 14h ou 16h30. Qual fica melhor pra você?', 1, { manual: true, remetente: medicoNome || 'Recepção' }),
+    m(8, 'enviada', 'Consigo sim! Tenho 14h ou 16h30. Qual fica melhor para você?', 1, { manual: true, remetente: medicoNome || 'Recepção' }),
   ]
 }

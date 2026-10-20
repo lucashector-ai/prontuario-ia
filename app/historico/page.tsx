@@ -130,7 +130,7 @@ export default function Historico() {
       showToast('ok', 'Alterações salvas')
       registrarAcesso({ acao: 'editou', recurso: 'consulta', recursoId: data.id, pacienteId: data.paciente_id || null, detalhes: { campos: Object.keys(editForm) } })
     } else {
-      showToast('erro', 'Erro ao salvar')
+      showToast('erro', 'Não foi possível salvar. Confira a conexão e tente de novo.')
     }
     setSalvando(false)
   }

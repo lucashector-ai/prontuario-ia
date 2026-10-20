@@ -220,7 +220,7 @@ export default function Pacientes() {
 
   const exportarCSV = () => {
     if (pacientes.length === 0) {
-      mostrarMsg('erro', 'Nenhum paciente pra exportar')
+      mostrarMsg('erro', 'Nenhum paciente para exportar')
       return
     }
     registrarAcesso({ acao: 'exportou', recurso: 'paciente', detalhes: { quantidade: pacientes.length } })
@@ -590,7 +590,7 @@ export default function Pacientes() {
                   maxLength={15}
                 />
               </Field>
-              <Field label="E-mail">
+              <Field label="Email">
                 <Input
                   type="email"
                   value={form.email}
@@ -830,7 +830,7 @@ function DrawerPaciente({ p, idade, onClose, onAbrir, onConsulta, onDeletar }: {
   ]
   const info: { icon: LucideIcon; label: string; valor: React.ReactNode }[] = [
     ...(p.telefone ? [{ icon: Phone, label: 'Telefone', valor: <span className="mono">{p.telefone}</span> }] : []),
-    ...(p.email ? [{ icon: Mail, label: 'E-mail', valor: p.email }] : []),
+    ...(p.email ? [{ icon: Mail, label: 'Email', valor: p.email }] : []),
     ...(p.cpf ? [{ icon: IdCard, label: 'CPF', valor: <span className="mono">{p.cpf}</span> }] : []),
     ...(p.data_nascimento ? [{ icon: Cake, label: 'Nascimento', valor: fmtNascimento(p.data_nascimento) + (idade !== null ? ` (${idade} anos)` : '') }] : []),
     ...(p.convenio ? [{ icon: Shield, label: 'Convênio', valor: normalizarConvenio(p.convenio) }] : []),

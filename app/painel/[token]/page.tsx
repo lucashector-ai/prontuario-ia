@@ -140,7 +140,7 @@ export default function PainelPage({ params }: { params: { token: string } }) {
       <Tela>
         <div style={{ margin: 'auto', textAlign: 'center', maxWidth: 560, padding: 24 }}>
           <div style={{ fontSize: 34, fontWeight: 800 }}>Painel não encontrado</div>
-          <div style={{ fontSize: 18, opacity: 0.75, marginTop: 12 }}>O link deste painel mudou ou foi desativado. Copie o link novo em Minha clínica → Atendimento.</div>
+          <div style={{ fontSize: 18, opacity: 0.75, marginTop: 12 }}>O link deste painel mudou ou foi desativado. Copie o link novo em Minha clínica → Recepção e painel.</div>
         </div>
       </Tela>
     )
@@ -191,7 +191,7 @@ export default function PainelPage({ params }: { params: { token: string } }) {
             </div>
           ) : (
             <div style={{ opacity: 0.8 }}>
-              <div style={{ fontSize: '5vh', fontWeight: 800 }}>Bem-vindo</div>
+              <div style={{ fontSize: '5vh', fontWeight: 800 }}>Boas-vindas</div>
               <div style={{ fontSize: '2.6vh', marginTop: 10 }}>Aguarde. As chamadas aparecem aqui.</div>
             </div>
           )}
@@ -225,7 +225,7 @@ export default function PainelPage({ params }: { params: { token: string } }) {
 
       {/* Rodapé */}
       <footer style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '1.6vh 2.4vw', background: 'rgba(0,0,0,.22)', fontSize: '2.2vh' }}>
-        <span style={{ flex: 1, opacity: 0.85 }}>{dados?.setor.mensagem || 'Aguarde ser chamado. Pacientes prioritários são atendidos conforme a lei.'}</span>
+        <span style={{ flex: 1, opacity: 0.85 }}>{dados?.setor.mensagem || 'Aguarde a chamada. Pacientes prioritários são atendidos conforme a lei.'}</span>
         <span style={{ opacity: 0.45, fontSize: '1.6vh' }}>Clinical 360</span>
       </footer>
 

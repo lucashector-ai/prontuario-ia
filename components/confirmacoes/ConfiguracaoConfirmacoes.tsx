@@ -105,10 +105,10 @@ export function ConfiguracaoConfirmacoes() {
         body: JSON.stringify({ medico_id: medicoId, ...config }),
       })
       const d = await r.json()
-      if (!r.ok) { notificar(d.error || 'Erro ao salvar', 'erro'); return }
+      if (!r.ok) { notificar(d.error || 'Não foi possível salvar. Confira a conexão e tente de novo.', 'erro'); return }
       setConfig(d.config); setSalvo(d.config)
       notificar('Configurações salvas')
-    } catch { notificar('Erro de conexão', 'erro') }
+    } catch { notificar('Sem conexão com a internet. Confira e tente de novo.', 'erro') }
     finally { setSalvando(false) }
   }
 
@@ -124,7 +124,7 @@ export function ConfiguracaoConfirmacoes() {
       if (r.ok) notificar('Teste enviado para o seu WhatsApp')
       else if (d.error === 'sem_telefone') notificar('Cadastre seu celular em Meu perfil para receber o teste', 'info')
       else notificar(d.error || 'Não foi possível enviar o teste', 'erro')
-    } catch { notificar('Erro de conexão', 'erro') }
+    } catch { notificar('Sem conexão com a internet. Confira e tente de novo.', 'erro') }
     finally { setEnviandoTeste(false) }
   }
 

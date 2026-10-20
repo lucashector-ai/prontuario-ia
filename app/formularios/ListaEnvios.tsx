@@ -121,7 +121,7 @@ export default function ListaEnvios({ clinicaId }: { clinicaId: string }) {
       {/* Lista */}
       <div style={{ border: `1px solid ${T.border.default}`, borderRadius: 16, overflow: 'hidden', background: '#fff' }}>
         {filtrados.length === 0 ? (
-          <EmptyState icon={Inbox} titulo="Nenhum envio com esse filtro" />
+          <EmptyState icon={Inbox} titulo="Nenhum envio com esse filtro" descricao="Mude o filtro para ver outros envios." />
         ) : (
           filtrados.map((e, idx) => {
             const statusInfo = STATUS_LABEL[e.status] || STATUS_LABEL.pendente

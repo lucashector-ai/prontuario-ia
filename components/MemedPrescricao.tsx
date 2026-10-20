@@ -52,7 +52,7 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
         const tokData = await tokRes.json()
         if (abortou) return
         if (!tokRes.ok || !tokData.token) {
-          setErro(tokData.error || 'Não foi possível obter token Memed')
+          setErro(tokData.error || 'Não foi possível abrir a receita Memed agora. Tente de novo em instantes. Se continuar, fale com o suporte.')
           setEstado('erro')
           return
         }
@@ -70,7 +70,8 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
 
         script.onerror = () => {
           if (abortou) return
-          setErro('Falha ao carregar script Memed')
+          log.error('[Memed] falha ao carregar o script')
+          setErro('Não foi possível abrir a receita Memed agora. Tente de novo em instantes. Se continuar, fale com o suporte.')
           setEstado('erro')
         }
 
@@ -90,7 +91,8 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
         const timeoutId = setTimeout(() => {
           clearInterval(checkReady)
           if (!abortou && !prontoOuErro) {
-            setErro('Timeout ao carregar Memed (30s). Tente fechar e reabrir.')
+            log.error('[Memed] timeout de 30s ao carregar')
+            setErro('A receita Memed demorou demais para abrir. Feche e abra de novo.')
             setEstado('erro')
           }
         }, 30000)
@@ -98,7 +100,8 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
         ;(window as any).__memedReadyMark = () => { prontoOuErro = true; clearTimeout(timeoutId) }
       } catch (e: any) {
         if (abortou) return
-        setErro('Erro ao iniciar Memed: ' + (e?.message || 'desconhecido'))
+        log.error('[Memed] erro ao iniciar:', e)
+        setErro('Não foi possível abrir a receita Memed agora. Tente de novo em instantes. Se continuar, fale com o suporte.')
         setEstado('erro')
       }
     }
@@ -182,7 +185,7 @@ export function MemedPrescricao({ medicoId, paciente, onClose, onPrescricaoGerad
           setEstado('pronto')
         } catch (err: any) {
           log.error('[Memed] erro setPaciente:', err)
-          setErro('Erro ao configurar paciente: ' + (err?.message || 'desconhecido'))
+          setErro('Não foi possível enviar os dados do paciente para a Memed. Feche e abra de novo.')
           setEstado('erro')
         }
       })

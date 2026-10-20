@@ -156,7 +156,7 @@ function CartaoSetor({ setor, consultorios, salvar, recarregar }: {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
           <Switch checked={setor.painel_voz} onChange={v => patch({ painel_voz: v })} label="Chamar por voz" descricao="A TV fala a senha, o nome e o consultório." />
           <Switch checked={setor.avisar_whatsapp} onChange={v => patch({ avisar_whatsapp: v })} label="Avisar no WhatsApp" descricao="“Você é o próximo” e “É a sua vez” para o paciente." />
-          <Switch checked={!!setor.usa_triagem} onChange={v => patch({ usa_triagem: v }, v ? 'Triagem ligada: o check-in agora vai para a triagem' : 'Triagem desligada')} label="Triagem antes do médico" descricao="Enfermagem registra sinais vitais e a cor de risco; a fila do médico ordena pela gravidade." />
+          <Switch checked={!!setor.usa_triagem} onChange={v => patch({ usa_triagem: v }, v ? 'Triagem ligada: depois do check-in, o paciente vai para a triagem' : 'Triagem desligada')} label="Triagem antes do médico" descricao="Enfermagem registra sinais vitais e a cor de risco; a fila do médico ordena pela gravidade." />
         </div>
 
         <div style={{ padding: 12, borderRadius: 12, border: `1px solid ${T.border.default}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -172,7 +172,7 @@ function CartaoSetor({ setor, consultorios, salvar, recarregar }: {
               }} />
             </div>
           )}
-          {setor.totem_ativo && <div style={{ fontSize: 12, color: T.text.tertiary }}>Dica: com impressora térmica, abra o link com <span className="mono">?imprimir=1</span> no Chrome em modo quiosque para imprimir a senha sozinho.</div>}
+          {setor.totem_ativo && <div style={{ fontSize: 12, color: T.text.tertiary }}>Dica: com uma impressora térmica, o totem imprime a senha sozinho. Peça ao suporte para configurar.</div>}
         </div>
 
         <Field label="Mensagem no rodapé da TV (opcional)">

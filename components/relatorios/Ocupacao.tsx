@@ -28,7 +28,7 @@ export function Ocupacao({ porDia, porHora, total, ociosos, listaEspera, carrega
       ) : undefined}>
       {carregando ? <SkeletonBloco altura={200} /> : !total || total.disp === 0 ? (
         <EmptyState icon={CalendarClock} titulo="Sem horário de atendimento no período"
-          descricao="Configure dias e horários em Agenda pública para estimarmos a ocupação." />
+          descricao="Configure dias e horários em Agenda online para estimarmos a ocupação." />
       ) : (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 22 }}>

@@ -85,7 +85,7 @@ export function SaindoDoConsultorio({ saidas, onMudou }: { saidas: Saida[]; onMu
     <Card padding={0} style={{ border: `1px solid ${T.data.orange}`, overflow: 'hidden' }}>
       <div style={{ ...cabecalho, background: 'color-mix(in srgb, ' + T.data.orange + ' 10%, #fff)' }}>
         <span style={{ ...tituloCard, display: 'inline-flex', alignItems: 'center', gap: 8 }}><DoorOpen size={17} color={T.data.orange} /> Saindo do consultório · {saidas.length}</span>
-        <span style={{ fontSize: 12.5, color: T.text.secondary }}>O médico pediu — resolva com o paciente antes de ele ir embora</span>
+        <span style={{ fontSize: 12.5, color: T.text.secondary }}>Pedidos do médico — resolva antes de o paciente ir embora</span>
       </div>
       {saidas.map((s, i) => {
         const agendado = s.retorno?.status === 'agendado' || !!s.retorno?.agendamento_id
@@ -107,9 +107,9 @@ export function SaindoDoConsultorio({ saidas, onMudou }: { saidas: Saida[]; onMu
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
               {(s.saida_itens || []).includes('retorno') && !agendado && <Button size="sm" icon={CalendarPlus} onClick={() => agendar(s)}>Agendar retorno</Button>}
               {s.paciente?.telefone && (s.saida_itens || []).includes('retorno') && !agendado && (
-                <Button size="sm" variant="secondary" icon={MessageCircle} onClick={() => whatsapp(s)} disabled={enviando === s.id}>{enviando === s.id ? 'Enviando…' : 'Pelo WhatsApp'}</Button>
+                <Button size="sm" variant="secondary" icon={MessageCircle} onClick={() => whatsapp(s)} disabled={enviando === s.id}>{enviando === s.id ? 'Enviando…' : 'Enviar pelo WhatsApp'}</Button>
               )}
-              <Button size="sm" variant={agendado ? 'primary' : 'secondary'} icon={Check} onClick={() => concluir(s)}>Concluído</Button>
+              <Button size="sm" variant={agendado ? 'primary' : 'secondary'} icon={Check} onClick={() => concluir(s)}>Concluir saída</Button>
             </div>
           </div>
         )

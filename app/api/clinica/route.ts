@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     const emailNorm = String(email).trim().toLowerCase()
     const { data: existe } = await supabase.from("medicos").select("id").eq("email", emailNorm).limit(1).maybeSingle()
-    if (existe) return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 400 })
+    if (existe) return NextResponse.json({ error: "Email já cadastrado" }, { status: 400 })
 
     const hash = await bcrypt.hash(senha, 10)
     const { data: medico, error } = await supabase

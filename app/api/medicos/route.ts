@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       const { data: unidades } = await supabase.from("clinicas").select("id, organizacao_id").in("id", [clinica_id, ...existentes.map((m: any) => m.clinica_id)])
       const minhaOrg = (unidades || []).find((c: any) => c.id === clinica_id)?.organizacao_id
       const outra = existentes.find((m: any) => minhaOrg && (unidades || []).find((c: any) => c.id === m.clinica_id)?.organizacao_id === minhaOrg)
-      if (!outra) return NextResponse.json({ error: "E-mail já cadastrado em outra clínica" }, { status: 400 })
+      if (!outra) return NextResponse.json({ error: "Email já cadastrado em outra clínica" }, { status: 400 })
       const { data: novo, error: e2 } = await supabase.from("medicos").insert({
         nome: nome || (outra as any).nome, email: emailNorm, crm: crm || null, especialidade: especialidade || null, senha_hash: (outra as any).senha_hash,
         senha_provisoria: false, ativo: true, clinica_id, cargo: cargoFinal, verificado: true, cor: cor || '#6043C1',

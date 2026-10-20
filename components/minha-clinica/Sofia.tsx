@@ -334,7 +334,7 @@ export function Sofia() {
                 onChange={e => setConfig({ ...config, relatorio_whatsapp: e.target.value })}
                 placeholder="+55 47 99999-9999" />
             </Field>
-            <Field label="E-mail do médico" style={{ gridColumn: '1 / -1' }}>
+            <Field label="Email do médico" style={{ gridColumn: '1 / -1' }}>
               <Input type="email" value={config.relatorio_email || ''}
                 onChange={e => setConfig({ ...config, relatorio_email: e.target.value })}
                 placeholder="medico@clinica.com" />
@@ -352,7 +352,7 @@ export function Sofia() {
                       const novos = ativo ? canais.filter(c => c !== canal) : [...canais, canal]
                       setConfig({ ...config, relatorio_diario_canais: novos })
                     }}>
-                    {canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'}
+                    {canal === 'whatsapp' ? 'WhatsApp' : 'Email'}
                   </Chip>
                 )
               })}

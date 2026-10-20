@@ -82,7 +82,7 @@ export default function EditorCampo({ campo, onChange }: Props) {
       </Field>
 
       {/* Descrição/hint */}
-      <Field label="Texto de ajuda (opcional)" hint="Aparece abaixo da pergunta pra dar contexto.">
+      <Field label="Texto de ajuda (opcional)" hint="Aparece abaixo da pergunta para dar contexto.">
         <input
           type="text"
           value={campo.descricao || ''}

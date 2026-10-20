@@ -96,7 +96,7 @@ function CartaoKanban({ c, api, arrastando, onDragStart, onDragEnd, onAbrir }: {
       <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: T.text.secondary }}>
         {c.modo === 'humano'
           ? <><UserRound size={13} />{c.atendente_nome || 'Sem atendente'}</>
-          : <><Sparkles size={13} color={T.brand.primary} />Sofia IA</>}
+          : <><Sparkles size={13} color={T.brand.primary} />Sofia</>}
       </div>
       {(h || menu) && (
         <button onClick={e => { e.stopPropagation(); setMenu(!menu) }} aria-label="Opções" style={{

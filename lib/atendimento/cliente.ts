@@ -480,7 +480,7 @@ const demo = {
     if (!at) throw new ErroApi('Atendimento não encontrado.')
     Object.assign(at, { status: 'aguardando', risco: dados.risco })
     e.triagens = { ...(e.triagens || {}), [id]: { id: 'demo-tri-' + id, criado_em: new Date().toISOString(), ...dados } as any }
-    if (dados.risco === 'vermelho' || dados.risco === 'laranja') avisarNaTela({ id: 'demo-tri-' + id, tipo: 'triagem_urgente', titulo: `${dados.risco === 'vermelho' ? 'EMERGÊNCIA' : 'Muito urgente'}: ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ')}`, descricao: `Triagem ${dados.risco}${dados.queixa ? ` · ${dados.queixa}` : ''}`, link: '/consultorio?demo=1' })
+    if (dados.risco === 'vermelho' || dados.risco === 'laranja') avisarNaTela({ id: 'demo-tri-' + id, tipo: 'triagem_urgente', titulo: dados.risco === 'vermelho' ? `Emergência — ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ')}. Atender agora.` : `Muito urgente — ${at.paciente?.nome?.split(' ').slice(0, 2).join(' ')}`, descricao: `Triagem ${dados.risco}${dados.queixa ? ` · ${dados.queixa}` : ''}`, link: '/consultorio?demo=1' })
     this.gravar(e)
     return { atendimento: at }
   },
@@ -513,7 +513,7 @@ const demo = {
     const s = e.setores[0]
     return {
       avisos: (e.avisos || []).filter(a => a.expira_em > new Date().toISOString()).map(a => a.texto),
-      setor: { nome: s?.nome || 'Recepção', voz: s?.painel_voz ?? true, mensagem: s?.painel_mensagem || 'Aguarde ser chamado. Mantenha o celular por perto: avisamos pelo WhatsApp quando estiver chegando a sua vez.' },
+      setor: { nome: s?.nome || 'Recepção', voz: s?.painel_voz ?? true, mensagem: s?.painel_mensagem || 'Aguarde a chamada. Mantenha o celular por perto: avisamos pelo WhatsApp quando estiver chegando a sua vez.' },
       clinica: { nome: 'Clínica Demonstração', logo_url: null },
       chamadas: e.chamadas.filter(c => !s || c.setor_id === s.id).slice(0, 8),
     }

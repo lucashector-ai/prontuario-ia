@@ -48,7 +48,7 @@ export function Automacoes() {
         setMsg({ tipo: "ok", texto: total !== null ? `${total} mensagem${total !== 1 ? "s" : ""} enviada${total !== 1 ? "s" : ""} com sucesso` : "Concluído com sucesso" })
       }
     } catch {
-      setMsg({ tipo: "erro", texto: "Erro de conexão" })
+      setMsg({ tipo: "erro", texto: "Sem conexão com a internet. Confira e tente de novo." })
     } finally {
       setCarregando(false)
     }
@@ -211,7 +211,7 @@ export function Automacoes() {
                   const d = await res.json()
                   setMsg({ tipo: "erro", texto: d.error })
                 }
-              } catch { setMsg({ tipo: "erro", texto: "Erro de conexão" }) }
+              } catch { setMsg({ tipo: "erro", texto: "Sem conexão com a internet. Confira e tente de novo." }) }
               finally { setCarregando(false) }
             }} disabled={carregando}>
                 {carregando ? "Gerando…" : "Gerar relatório do mês"}

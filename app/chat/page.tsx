@@ -95,7 +95,7 @@ export default function ChatPage() {
   if (!api.carregando && !api.medico) {
     return (
       <div style={{ padding: 24 }}>
-        <EmptyState icon={Users} titulo="Nenhum médico ativo na clínica" descricao="O Chat usa a caixa de entrada de um médico. Cadastre um médico no Painel admin para começar." />
+        <EmptyState icon={Users} titulo="Nenhum médico ativo na clínica" descricao="O Chat usa a caixa de entrada de um médico. Cadastre um médico em Equipe para começar." />
       </div>
     )
   }
@@ -108,7 +108,7 @@ export default function ChatPage() {
       {/* Barra de ferramentas */}
       <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 6 : 10, flexWrap: mobile ? 'nowrap' : 'wrap', flexShrink: 0, overflowX: mobile ? 'auto' : undefined, scrollbarWidth: 'none' }}>
         <Segmentado
-          opcoes={[{ id: 'conversas', label: 'Conversas', icon: <MessagesSquare size={15} strokeWidth={1.6} />, classeRotulo: 'chat-rotulo-visao' }, { id: 'kanban', label: 'Kanban', icon: <Columns3 size={15} strokeWidth={1.6} />, classeRotulo: 'chat-rotulo-visao' }]}
+          opcoes={[{ id: 'conversas', label: 'Conversas', icon: <MessagesSquare size={15} strokeWidth={1.6} />, classeRotulo: 'chat-rotulo-visao' }, { id: 'kanban', label: 'Quadro', icon: <Columns3 size={15} strokeWidth={1.6} />, classeRotulo: 'chat-rotulo-visao' }]}
           valor={visao} onChange={v => trocarVisao(v as Visao)}
         />
 
