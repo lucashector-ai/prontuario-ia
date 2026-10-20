@@ -24,9 +24,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nome da empresa/consultório é obrigatório' }, { status: 400 })
     }
 
-    const { data: medicoExistente } = await supabase
-      .from('medicos').select('id').eq('email', email).maybeSingle()
-    if (medicoExistente) {
+    const emailNorm = String(email).trim().toLowerCase()
+    const [{ data: medicoExistente }, { data: adminExistente }] = await Promise.all([
+      supabase.from('medicos').select('id').ilike('email', emailNorm).maybeSingle(),
+      supabase.from('clinica_admins').select('id').ilike('email', emailNorm).maybeSingle(),
+    ])
+    if (medicoExistente || adminExistente) {
       return NextResponse.json({ error: 'Email já cadastrado' }, { status: 400 })
     }
 
@@ -34,6 +37,8 @@ export async function POST(req: NextRequest) {
       .from('clinicas')
       .insert({
         nome: empresa_nome,
+        email: emailNorm,
+        telefone: telefone || null,
         tipo: 'autonomo',
       })
       .select()
@@ -49,7 +54,7 @@ export async function POST(req: NextRequest) {
       .insert({
         clinica_id: novaClinica.id,
         nome,
-        email,
+        email: emailNorm,
         senha_hash: senhaHash,
         crm: crm || null,
         especialidade: especialidade || null,

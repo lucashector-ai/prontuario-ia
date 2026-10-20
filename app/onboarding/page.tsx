@@ -111,12 +111,15 @@ export default function OnboardingPage() {
     'clinica-form', 'jornada', 'objetivos',
     ...(perfil === 'clinica' ? ['equipe' as Kind] : []),
     'done',
-  ] : recepcao ? ['welcome', 'recepcao-form', 'jornada', 'done'] : ['welcome', 'medico-form', 'jornada', 'done']
+  ] : recepcao ? ['welcome', 'recepcao-form', 'jornada', 'done']
+    : perfil === 'autonomo' ? ['welcome', 'medico-form', 'jornada', 'objetivos', 'done']
+    : ['welcome', 'medico-form', 'jornada', 'done']
 
   const kind = kinds[passoIdx]
   const total = kinds.length
   const progresso = total > 0 ? ((passoIdx + 1) / total) * 100 : 0
-  const jornada = tipo === 'medico' ? (recepcao ? JORNADA_RECEPCAO : JORNADA_MEDICO) : perfil === 'autonomo' ? JORNADA_AUTONOMO : JORNADA_CLINICA
+  // Autônomo entra como médico-administrador (tipo 'medico'), mas a jornada é a de quem atende sozinho
+  const jornada = perfil === 'autonomo' ? JORNADA_AUTONOMO : tipo === 'medico' ? (recepcao ? JORNADA_RECEPCAO : JORNADA_MEDICO) : JORNADA_CLINICA
 
   async function salvarMedico(): Promise<boolean> {
     if (!usuario || tipo !== 'medico') return false
@@ -270,7 +273,7 @@ export default function OnboardingPage() {
             {kind === 'welcome' && (
               <div>
                 <IconTile icon={Sparkles} size={52} radius={16} style={{ marginBottom: 22 }} />
-                <p style={overline}>{tipo === 'clinica' ? 'Conta criada' : 'Bem-vindo à equipe'}</p>
+                <p style={overline}>{tipo === 'clinica' || perfil === 'autonomo' ? 'Conta criada' : 'Boas-vindas à equipe'}</p>
                 <h1 style={{ ...titulo, fontSize: 32 }}>{nome ? `Olá, ${nome}!` : 'Olá!'} Que bom ter você aqui.</h1>
                 <p style={{ ...descricao, fontSize: 16 }}>
                   {tipo === 'clinica'
@@ -376,7 +379,7 @@ export default function OnboardingPage() {
             {kind === 'jornada' && (
               <div>
                 <p style={overline}>Como funciona</p>
-                <h1 style={titulo}>{tipo === 'medico' ? (recepcao ? 'Seu dia na recepção' : 'Seu dia no consultório') : 'O caminho do paciente'}</h1>
+                <h1 style={titulo}>{perfil === 'autonomo' ? 'O caminho do paciente' : tipo === 'medico' ? (recepcao ? 'Seu dia na recepção' : 'Seu dia no consultório') : 'O caminho do paciente'}</h1>
                 <p style={descricao}>Cada etapa avisa a próxima sozinha — ninguém precisa sair da tela para chamar o outro. Toque numa etapa para ver.</p>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {jornada.map((e, i) => {

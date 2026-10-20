@@ -63,10 +63,16 @@ export default function CadastroPage() {
 
     setSalvando(true)
     try {
-      const res = await fetch('/api/cadastro-clinica', {
+      // Autônomo: a pessoa é médica E administradora (registro em medicos, cargo admin) —
+      // assim Consultório, Agenda, Retornos e Nova consulta já funcionam com ela.
+      // Clínica com equipe: conta de administrador; os médicos vêm depois pelo convite.
+      const autonomo = perfil === 'autonomo'
+      const res = await fetch(autonomo ? '/api/cadastro-autonomo' : '/api/cadastro-clinica', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify(autonomo ? {
+          nome: form.nome.trim(), email: form.email, senha: form.senha, telefone: form.telefone, empresa_nome: form.nome_clinica.trim(),
+        } : {
           clinica: { nome: form.nome_clinica.trim(), email: form.email, telefone: form.telefone },
           admin: { nome: form.nome.trim(), email: form.email, senha: form.senha },
           medicos: [],
@@ -82,7 +88,7 @@ export default function CadastroPage() {
       const verifyRes = await fetch('/api/verificar-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: data.token_verificacao, tipo: 'admin' }),
+        body: JSON.stringify({ token: data.token_verificacao, tipo: autonomo ? 'medico' : 'admin' }),
       })
       const verifyData = await verifyRes.json()
 
@@ -92,6 +98,12 @@ export default function CadastroPage() {
         localStorage.setItem('clinica', JSON.stringify(verifyData.clinica))
         localStorage.removeItem('medico')
         try { if (perfil) localStorage.setItem(CHAVE_PERFIL_CADASTRO, perfil) } catch {}
+        router.push('/onboarding')
+      } else if (verifyData.ok && verifyData.tipo_conta === 'medico') {
+        localStorage.setItem('medico', JSON.stringify(verifyData.medico))
+        if (verifyData.clinica) localStorage.setItem('clinica', JSON.stringify(verifyData.clinica))
+        localStorage.removeItem('clinica_admin')
+        try { localStorage.setItem(CHAVE_PERFIL_CADASTRO, 'autonomo') } catch {}
         router.push('/onboarding')
       } else {
         router.push('/login')
