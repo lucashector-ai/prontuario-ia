@@ -115,7 +115,7 @@ function LoginForm() {
           {/* Título */}
           <div style={{ textAlign: 'center' as const, marginBottom: 28 }}>
             <h1 style={{ fontSize: 26, fontWeight: 700, color: tokens.text.primary, margin: '0 0 8px', letterSpacing: '-0.03em' as const }}>
-              Bem-vindo de volta
+              Que bom ver você de novo
             </h1>
             <p style={{ fontSize: 14, color: tokens.text.quaternary, margin: 0 }}>
               Entre na sua conta para continuar

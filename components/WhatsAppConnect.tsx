@@ -96,7 +96,7 @@ export function WhatsAppConnect({ medicoId, onConnected }: Props) {
               Conecte seu WhatsApp Business
             </h1>
             <p style={{ fontSize: 13, color: tokens.text.secondary, margin: 0, lineHeight: 1.5 }}>
-              Atenda pacientes e use a Sofia IA dentro da plataforma
+              Atenda pacientes e use a Sofia dentro da plataforma
             </p>
           </div>
         </div>

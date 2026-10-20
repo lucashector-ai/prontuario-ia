@@ -32,19 +32,19 @@ type Acao = { label: string; desc: string; href: string; icon: LucideIcon; objet
 type Passo = { alvo?: string; lado?: Lado; icon: LucideIcon; titulo: string; texto: string; papeis?: Papel[]; acoes?: boolean; opcional?: boolean; celular?: boolean }
 
 const PASSOS: Passo[] = [
-  { icon: Sparkles, titulo: 'Bem-vindo ao Clinical 360', texto: 'Em um minuto você vê onde fica cada coisa. Use as setas do teclado ou os botões — dá para sair quando quiser.' },
+  { icon: Sparkles, titulo: 'Boas-vindas ao Clinical 360', texto: 'Em um minuto você vê onde fica cada coisa. Use as setas do teclado ou os botões — dá para sair quando quiser.' },
   { alvo: 'nav-celular', lado: 'cima', icon: LayoutDashboard, titulo: 'O menu fica aqui embaixo', celular: true, texto: 'Os quatro lugares do seu dia a dia ficam aqui. Em "Mais" está todo o resto do sistema.' },
-  { alvo: 'menu-inicio', lado: 'direita', icon: LayoutDashboard, titulo: 'Início: o seu dia', texto: 'Dashboard com o resumo do dia e a Agenda, onde você marca, confirma, remarca e encaixa consultas.' },
+  { alvo: 'menu-inicio', lado: 'direita', icon: LayoutDashboard, titulo: 'Início: o seu dia', texto: 'O resumo do dia e a Agenda, onde você marca, confirma, remarca e encaixa consultas.' },
   { alvo: 'menu-atendimento', lado: 'direita', icon: ConciergeBell, titulo: 'Atendimento: o caminho do paciente', texto: 'A Central de atendimento junta tudo do dia: Agora (a clínica neste momento), Recepção, Triagem, Consultório, Saídas e retornos e as telas da TV. Fixe o seu posto e use tela cheia (tecla F). O Chat junta WhatsApp, Instagram e Messenger.' },
   { alvo: 'menu-pacientes', lado: 'direita', icon: Users, titulo: 'Pacientes', texto: 'Cadastro, histórico completo, retornos pendentes e formulários. Importe sua base por planilha em Pacientes → Importar.' },
   { alvo: 'menu-clinico', lado: 'direita', icon: Stethoscope, titulo: 'Consulta e IA', papeis: ['clinica', 'medico'], texto: 'Grave a consulta e a IA escreve o prontuário. Teleconsulta, análise de exames, assistente e seus modelos de prontuário ficam aqui.' },
   { alvo: 'menu-gestao', lado: 'direita', icon: ChartColumnBig, titulo: 'Gestão', texto: 'Indicadores do dia em tempo real, relatórios e faturamento de convênios (TISS).' },
-  { alvo: 'menu-config', lado: 'direita', icon: Settings2, titulo: 'Configurações', texto: 'Dados da clínica, equipe, salas, painel da TV, totem e a sua agenda pública para o paciente marcar sozinho.' },
-  { alvo: 'personalizar', opcional: true, lado: 'direita', icon: Settings2, titulo: 'Deixe o menu do seu jeito', texto: 'Clique no nome de uma seção para recolher. Em "Personalizar menu" você esconde o que não usa.' },
+  { alvo: 'menu-config', lado: 'direita', icon: Settings2, titulo: 'Configurações', texto: 'Minha clínica, equipe, salas, painel da TV, totem e a sua agenda online para o paciente marcar sozinho.' },
+  { alvo: 'personalizar', opcional: true, lado: 'direita', icon: Settings2, titulo: 'Deixe o menu do seu jeito', texto: 'Toque no nome de uma seção para recolher. Em "Personalizar menu" você esconde o que não usa.' },
   { alvo: 'busca', lado: 'baixo', icon: Search, titulo: 'Busca rápida (⌘K)', texto: 'Ache qualquer paciente por nome, CPF ou telefone — abre a ficha na hora, em qualquer tela. Também leva a qualquer página.' },
   { alvo: 'notificacoes', lado: 'baixo', icon: Bell, titulo: 'Tudo avisa você', texto: 'Chegadas, saídas do consultório, retornos, confirmações e mensagens aparecem aqui e num aviso no canto da tela.' },
   { alvo: 'checklist', opcional: true, lado: 'direita', icon: ListChecks, titulo: 'Primeiros passos', papeis: ['clinica'], texto: 'Esta lista mostra o que falta configurar. Siga de cima para baixo e a clínica fica pronta para atender.' },
-  { alvo: 'conta', lado: 'baixo', icon: UserRound, titulo: 'Sua conta', texto: 'Perfil, dados da clínica e sair. Este tour fica aqui também, em "Tour guiado".' },
+  { alvo: 'conta', lado: 'baixo', icon: UserRound, titulo: 'Sua conta', texto: 'Meu perfil, Minha clínica e sair. Este tour fica aqui também, em "Tour guiado".' },
   { icon: Compass, titulo: 'Por onde começar', texto: 'Sugestões para o primeiro dia:', acoes: true },
 ]
 

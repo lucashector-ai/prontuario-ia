@@ -103,7 +103,7 @@ export default function TotemPage({ params }: { params: { token: string } }) {
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2vh 5vw 4vh', gap: 24 }}>
         {tela === 'inicio' && (
           <>
-            <div style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 800, textAlign: 'center', letterSpacing: '-.02em' }}>Bem-vindo! 👋</div>
+            <div style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 800, textAlign: 'center', letterSpacing: '-.02em' }}>Boas-vindas! 👋</div>
             <div style={{ fontSize: 'clamp(18px, 2.4vw, 26px)', opacity: .65, textAlign: 'center', marginTop: -10 }}>Toque numa opção para fazer seu check-in</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, width: '100%', maxWidth: 920 }}>
               <BotaoGrande icon={CalendarCheck} titulo="Tenho consulta marcada" detalhe="Confirme sua chegada com o CPF" principal onClick={() => { setFluxo('consulta'); setTela('cpf') }} />

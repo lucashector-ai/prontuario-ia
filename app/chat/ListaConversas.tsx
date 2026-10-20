@@ -25,7 +25,7 @@ export function ListaConversas({ api, conversas, busca, setBusca, filtro, setFil
     { id: 'naoLidas', label: 'Não lidas' },
     { id: 'minhas', label: 'Minhas' },
     { id: 'semAtendente', label: 'Sem atendente' },
-    { id: 'ia', label: 'Sofia IA' },
+    { id: 'ia', label: 'Sofia' },
     { id: 'arquivadas', label: 'Arquivadas' },
   ]
   return (
@@ -108,7 +108,7 @@ function ItemConversa({ c, api, ativa }: { c: Conversa; api: ChatApi; ativa: boo
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 7 }}>
           <EtapaBadge etapa={etapaDe(c)} />
           <span style={{ fontSize: 11.5, color: T.text.tertiary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {c.modo !== 'humano' ? 'Sofia IA' : c.atendente_nome || 'Sem atendente'}
+            {c.modo !== 'humano' ? 'Sofia' : c.atendente_nome || 'Sem atendente'}
           </span>
         </div>
       </div>

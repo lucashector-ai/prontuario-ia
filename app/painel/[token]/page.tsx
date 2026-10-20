@@ -191,7 +191,7 @@ export default function PainelPage({ params }: { params: { token: string } }) {
             </div>
           ) : (
             <div style={{ opacity: 0.8 }}>
-              <div style={{ fontSize: '5vh', fontWeight: 800 }}>Bem-vindo</div>
+              <div style={{ fontSize: '5vh', fontWeight: 800 }}>Boas-vindas</div>
               <div style={{ fontSize: '2.6vh', marginTop: 10 }}>Aguarde. As chamadas aparecem aqui.</div>
             </div>
           )}
